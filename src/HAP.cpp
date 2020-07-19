@@ -1443,7 +1443,7 @@ void HAPClient::removeController(uint8_t *id){
 
     if(nAdminControllers()==0){       // if no more admins, remove all controllers
       removeControllers();
-      LOG2("That was last Admin Controller!  Removing any remaining Regular Controllers and unpairing Accessory\n");  
+      LOG1("That was last Admin Controller!  Removing any remaining Regular Controllers and unpairing Accessory\n");  
       mdns_service_txt_item_set("_hap","_tcp","sf","1");           // set Status Flag = 1 (Table 6-8)
     }
 

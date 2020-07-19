@@ -36,15 +36,10 @@ void setup() {
 
     new Service::LightBulb();                      
       new Characteristic::On();                    
-      new Characteristic::Name("Light Control");      //  Adding a Name Characteristic allows us to name this specific Service (see below)
+  new SpanRange(20,100,5);
 
     new Service::Fan();                             
       new Characteristic::Active();             
-      new Characteristic::Name("Fan Control");        //  Adding a Name Characteristic allows us to name this specific Service (see below)
-
-   // A Note about Names: HomeKit generally uses the name of the primary Service (first one defined) as the name to display on a Tile.  However, you can
-   // set HomeKit (from within the Controller) to display each Service as its own tile.  In that case the names of the Light and Fan Tiles with both display
-   // as "My Ceiling Fan."  By setting individual names for each Service you can create your own display names when Tiles are shown separately.
 
 } // end of setup()
 

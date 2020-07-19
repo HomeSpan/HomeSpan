@@ -186,7 +186,7 @@ struct SpanRange{
   int max;
   int step;
 
-  SpanRange(int _min, int _max, int _step) : min{_min}, max{_max}, step{_step} {};
+  SpanRange(int min, int max, int step);
 };
 
 ///////////////////////////////

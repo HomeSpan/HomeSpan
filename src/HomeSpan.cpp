@@ -802,6 +802,7 @@ SpanCharacteristic::SpanCharacteristic(char *type, uint8_t perms){
   aid=homeSpan.Accessories.back()->aid;
 }
 
+///////////////////////////////
 
 SpanCharacteristic::SpanCharacteristic(char *type, uint8_t perms, boolean value) : SpanCharacteristic(type, perms) {
   this->format=BOOL;
@@ -1054,4 +1055,23 @@ void SpanCharacteristic::autoOff(int waitTime){
   (*pb)->waitTime=waitTime;
 }
 
-//////////////////////////////////////
+///////////////////////////////
+//        SpanRange          //
+///////////////////////////////
+
+SpanRange::SpanRange(int min, int max, int step){
+  this->min=min;
+  this->max=max;
+  this->step=step;
+
+  if(homeSpan.Accessories.empty() || homeSpan.Accessories.back()->Services.empty() || homeSpan.Accessories.back()->Services.back()->Characteristics.empty() ){
+    Serial.print("*** FATAL ERROR:  Can't create new Range without a defined Characteristic.  Program halted!\n\n");
+    while(1);    
+  }
+  
+  homeSpan.Accessories.back()->Services.back()->Characteristics.back()->range=this;  
+}
+
+///////////////////////////////
+
+ 
