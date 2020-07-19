@@ -32,10 +32,10 @@ void setup() {
       new Characteristic::FirmwareRevision("0.9");    // Firmware of the Accessory (arbitrary text string, and can be the same for every Accessory) 
       new Characteristic::Identify();                 // Create the required Identify  
       
-    new Service::HAPProtocolInformation();            // Create the HAP Protcol Information Service  
-      new Characteristic::Version("1.1.0");             // Set the Version Characteristicto "1.1.0" as required by HAP
+    new Service::HAPProtocolInformation();          // Create the HAP Protcol Information Service  
+      new Characteristic::Version("1.1.0");           // Set the Version Characteristicto "1.1.0" as required by HAP
 
-    new Service::LightBulb();                         // Create the Light Bulb Service
+    new Service::LightBulb();                       // Create the Light Bulb Service
       new Characteristic::On();                       // This Service requires the "On" Characterstic to turn the light on and off
 
   // Now we create a second Accessory, which is just a duplicate of Accessory 1 with the exception of changing the Name from "My Table Lamp" to "My Floor Lamp"
@@ -50,10 +50,10 @@ void setup() {
       new Characteristic::FirmwareRevision("0.9");    // Firmware of the Accessory (arbitrary text string, and can be the same for every Accessory) 
       new Characteristic::Identify();                 // Create the required Identify  
       
-    new Service::HAPProtocolInformation();            // Create the HAP Protcol Information Service  
-      new Characteristic::Version("1.1.0");             // Set the Version Characteristicto "1.1.0" as required by HAP
+    new Service::HAPProtocolInformation();          // Create the HAP Protcol Information Service  
+      new Characteristic::Version("1.1.0");           // Set the Version Characteristicto "1.1.0" as required by HAP
 
-    new Service::LightBulb();                         // Create the Light Bulb Service
+    new Service::LightBulb();                       // Create the Light Bulb Service
       new Characteristic::On();                       // This Service requires the "On" Characterstic to turn the light on and off
 
   // That's it - our device now has two Accessories!

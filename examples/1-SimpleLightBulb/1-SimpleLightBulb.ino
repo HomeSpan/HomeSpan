@@ -17,9 +17,9 @@ void setup() {
   Serial.begin(115200);      // Start a serial connection - this is needed for you to type in your WiFi credentials
 
   // Begin a HomeSpan Session.  Required parameters are Category and Name.
-  // These are used by HomeKit to configure the icon and name of the device shown when initially pairing.
-  // There are no other effects of these settings and they are ignored by HomeKit after pairing is complete.
-  // You can even specify a Lighting Category for a Faucet.  This effects nothing but the initial incon.
+  // These are used by HomeKit to configure the icon and name of the device shown when initially pairing, as well
+  // as set the icon (but not the name) of defined Accessories in some cases.
+  // There are no other effects.  You can even specify a "Lighting" Category for a Faucet with no ill effects (except the icons)
   // A complete list of Categories can be found in Settings.h, which is based on Section 13 of Apple's
   // HomeKit Accessory Protocol (HAP) Specifications Document.
 
@@ -67,19 +67,19 @@ void setup() {
   // some implementation code (such as blinking an LED, or flashing the light).  HomeSpan defaults to take no action if there is no
   // implementation code, so we can simply create the Identify Characteristic for now and let HomeSpan default to no action.
   
-      new Characteristic::Identify();                    // Create the required Identify
+      new Characteristic::Identify();                 // Create the required Identify
 
   // HAP requires every Accessory (with the exception of those in Bridges) to implement the HAP Protocol Information Service.
   // This Serrvice supports a single required Characteristic that defined the version number of HAP used by the device.
   // HAP Release R2 requires this version to be set to "1.1.0" 
   
-    new Service::HAPProtocolInformation();            // Create the HAP Protcol Information Service  
-      new Characteristic::Version("1.1.0");             // Set the Version Characteristicto "1.1.0" as required by HAP
+    new Service::HAPProtocolInformation();          // Create the HAP Protcol Information Service  
+      new Characteristic::Version("1.1.0");           // Set the Version Characteristicto "1.1.0" as required by HAP
 
   // Now that the required "informational" Services have been defined, we can finally create the Light Bulb Service
   // NOTE: The order of the Services is not important - we could have created the LightBulb first.
 
-    new Service::LightBulb();                         // Create the Light Bulb Service
+    new Service::LightBulb();                       // Create the Light Bulb Service
       new Characteristic::On();                       // This Service requires the "On" Characterstic to turn the light on and off
 
   // That's all that's needed to define a database from scratch, including all required HAP elements, to control a single lightbulb.
