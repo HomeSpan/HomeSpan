@@ -43,7 +43,7 @@ void setup() {
       new Characteristic::Active();             
       new Characteristic::RotationDirection();  // NEW: This allows control of the Rotation Direction of the Fan
       new Characteristic::RotationSpeed(25);    // NEW: This allows control of the Rotation Speed of the Fan, with an initial value of 25% upon start-up (Note 1)       
-        new SpanRange(25,100,25);                 // NEW: This sets the range of the Rotation Speed to be from a min of 25%, to a max of 100%, in steps of 25% (Note 2)
+        new SpanRange(0,100,25);                 // NEW: This sets the range of the Rotation Speed to be from a min of 0%, to a max of 100%, in steps of 25%
 
 
   // NOTE 1: Setting the initial value of the Brightness Characteristic to 50% does not by itself cause HomeKit to turn the light on to 50% upon start-up.
@@ -60,7 +60,7 @@ void setup() {
   // HomeKit experience.  This is because the LightBulb power is controlled by the On Characteristic, and allowing Brightness to be as low as 0%
   // sometimes results in HomeKit turning on the LightBulb but with Brightness=0%, which is not very intuitive.  This can occur when asking Siri
   // to lower the Brightness all the way, and turnign on the LightBulb.  By setting a minumum value of 20%, HomeKit always ensures that there is
-  // some Brightness value whenever the LightBulb is turned on.  The same logic applies to other range-enabled Characteristics (such as RotationSpeed).
+  // some Brightness value whenever the LightBulb is turned on.
 
 } // end of setup()
 
