@@ -1051,7 +1051,7 @@ int HAPClient::putCharacteristicsURL(char *json){
 
   int multiCast=0;                                        // check if all status is OK, or if multicast response is request
   for(int i=0;i<n;i++)
-    if(pObj[i].status)
+    if(pObj[i].status!=StatusCode::OK)
       multiCast=1;    
 
   if(!multiCast){                                         // JSON object has no content
@@ -1156,7 +1156,7 @@ void HAPClient::checkNotifications(){
   while(pb){                                    // PASS 2: loop through all characteristics registered as Push Buttons
     if(pb->trigger){                            // characteristic is triggered
       pb->characteristic->value.BOOL=false;     // turn off characteristic
-      pObj[n].status=SC_OK;                     // populate pObj
+      pObj[n].status=StatusCode::OK;                     // populate pObj
       pObj[n].characteristic=pb->characteristic;                   
       pObj[n].val="";                           // dummy object needed to ensure sprintfNotify knows to consider this "update"                         
       n++;                                      // increment number of Push Buttons found that need to be turned off

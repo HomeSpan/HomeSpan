@@ -555,17 +555,17 @@ int Span::updateCharacteristics(char *buf, SpanPut *pObj){
     pObj[i].characteristic = find(pObj[i].aid,pObj[i].iid);    // find characteristic with matching aid/iid and store pointer          
 
     if(pObj[i].characteristic)                                                      // if found, initialize characterstic update with new val/ev
-      pObj[i].status=pObj[i].characteristic->loadUpdate(pObj[i].val,pObj[i].ev);    // save status code, which is either an error, or SC_TBD (in which case isUpdated for the characteristic has been set to true) 
+      pObj[i].status=pObj[i].characteristic->loadUpdate(pObj[i].val,pObj[i].ev);    // save status code, which is either an error, or TBD (in which case isUpdated for the characteristic has been set to true) 
     else
-      pObj[i].status=SC_UnknownResource;                                            // if not found, set HAP error            
+      pObj[i].status=StatusCode::UnknownResource;                                            // if not found, set HAP error            
       
   } // first pass
       
   for(int i=0;i<nObj;i++){                                     // PASS 2: loop again over all objects       
-    if(pObj[i].status==SC_TBD){                                // if object status still TBD
+    if(pObj[i].status==StatusCode::TBD){                                // if object status still TBD
 
       SpanService *svc=pObj[i].characteristic->service;        // set service containing the characteristic underlying the object
-      statusCode status=svc->update();                         // update service and save returned statusCode
+      StatusCode status=svc->update();                         // update service and save returned statusCode
 
       for(int j=i;j<nObj;j++){                                 // loop over this object plus any remaining objects to update values and save status for any other characteristics in this service
         if(pObj[j].characteristic->service==svc){              // if service matches
@@ -574,7 +574,7 @@ int Span::updateCharacteristics(char *buf, SpanPut *pObj){
           LOG1(svc->Characteristics[j]->aid);
           LOG1(" iid=");  
           LOG1(svc->Characteristics[j]->iid);
-          if(status==SC_OK){                                   // if status is okay
+          if(status==StatusCode::OK){                                   // if status is okay
             pObj[j].characteristic->value
               =pObj[j].characteristic->newValue;               // update characteristic value with new value
             LOG1(" (okay)\n");
@@ -587,7 +587,7 @@ int Span::updateCharacteristics(char *buf, SpanPut *pObj){
         }
       }
 
-    } // object had SC_TBD status
+    } // object had TBD status
   } // loop over all objects
       
   return(1);
@@ -616,7 +616,7 @@ int Span::sprintfNotify(SpanPut *pObj, int nObj, char *cBuf, int conNum, int &nu
 
   for(int i=0;i<nObj;i++){                              // loop over all objects
     
-    if(pObj[i].status==SC_OK && pObj[i].val){           // characteristic was successfully updated with a new value (i.e. not just an EV request)
+    if(pObj[i].status==StatusCode::OK && pObj[i].val){           // characteristic was successfully updated with a new value (i.e. not just an EV request)
       
       if(pObj[i].characteristic->ev[conNum]){           // if notifications requested for this characteristic by specified connection number
       
@@ -662,24 +662,24 @@ int Span::sprintfAttributes(char **ids, int numIDs, int flags, char *cBuf){
   int aid, iid;
   
   SpanCharacteristic *Characteristics[numIDs];
-  int status[numIDs];
+  StatusCode status[numIDs];
   boolean sFlag=false;
 
-  for(int i=0;i<numIDs;i++){              // PASS 1: loop over all ids requested to check status codes, which are only included if there is at least one error
+  for(int i=0;i<numIDs;i++){              // PASS 1: loop over all ids requested to check status codes - only errors are if characteristic not found, or not readable
     sscanf(ids[i],"%d.%d",&aid,&iid);     // parse aid and iid
     Characteristics[i]=find(aid,iid);      // find matching chararacteristic
     
     if(Characteristics[i]){                                          // if found
       if(Characteristics[i]->perms&SpanCharacteristic::PR){          // if permissions allow reading
-        status[i]=0;
+        status[i]=StatusCode::OK;                                    // always set status to OK (since no actual reading of device is needed)
       } else {
         Characteristics[i]=NULL;                                     
-        status[i]=SC_WriteOnly;
-        sFlag=true;
+        status[i]=StatusCode::WriteOnly;
+        sFlag=true;                                                  // set flag indicating there was an error
       }
     } else {
-      status[i]=SC_UnknownResource;
-      sFlag=true;
+      status[i]=StatusCode::UnknownResource;
+      sFlag=true;                                                    // set flag indicating there was an error
     }
   }
 
@@ -963,7 +963,7 @@ int SpanCharacteristic::sprintfAttributes(char *cBuf, int flags){
 
 ///////////////////////////////
 
-statusCode SpanCharacteristic::loadUpdate(char *val, char *ev){
+StatusCode SpanCharacteristic::loadUpdate(char *val, char *ev){
 
   if(ev){                // request for notification
     boolean evFlag;
@@ -973,10 +973,10 @@ statusCode SpanCharacteristic::loadUpdate(char *val, char *ev){
     else if(!strcmp(ev,"1") || !strcmp(ev,"true"))
       evFlag=true;
     else
-      return(SC_InvalidValue);
+      return(StatusCode::InvalidValue);
     
     if(evFlag && !(perms&EV))         // notification is not supported for characteristic
-      return(SC_NotifyNotAllowed);
+      return(StatusCode::NotifyNotAllowed);
       
     LOG1("Notification Request for aid=");
     LOG1(aid);
@@ -989,10 +989,10 @@ statusCode SpanCharacteristic::loadUpdate(char *val, char *ev){
   }
 
   if(!val)                // no request to update value
-    return(SC_OK);
+    return(StatusCode::OK);
   
   if(!(perms&PW))         // cannot write to read only characteristic
-    return(SC_ReadOnly);
+    return(StatusCode::ReadOnly);
 
   switch(format){
     
@@ -1002,43 +1002,43 @@ statusCode SpanCharacteristic::loadUpdate(char *val, char *ev){
       else if(!strcmp(val,"1") || !strcmp(val,"true"))
         newValue.BOOL=true;
       else
-        return(SC_InvalidValue);
+        return(StatusCode::InvalidValue);
       break;
 
     case INT:
       if(!sscanf(val,"%d",&newValue.INT))
-        return(SC_InvalidValue);
+        return(StatusCode::InvalidValue);
       break;
 
     case UINT8:
       if(!sscanf(val,"%u",&newValue.UINT8))
-        return(SC_InvalidValue);
+        return(StatusCode::InvalidValue);
       break;
             
     case UINT16:
       if(!sscanf(val,"%u",&newValue.UINT16))
-        return(SC_InvalidValue);
+        return(StatusCode::InvalidValue);
       break;
       
     case UINT32:
       if(!sscanf(val,"%llu",&newValue.UINT32))
-        return(SC_InvalidValue);
+        return(StatusCode::InvalidValue);
       break;
       
     case UINT64:
       if(!sscanf(val,"%llu",&newValue.UINT64))
-        return(SC_InvalidValue);
+        return(StatusCode::InvalidValue);
       break;
 
     case FLOAT:
       if(!sscanf(val,"%lg",&newValue.FLOAT))
-        return(SC_InvalidValue);
+        return(StatusCode::InvalidValue);
       break;
 
   } // switch
 
   isUpdated=true;
-  return(SC_TBD);
+  return(StatusCode::TBD);
 }
 
 ///////////////////////////////

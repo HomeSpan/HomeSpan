@@ -5,18 +5,6 @@
 
 using std::vector;
 
-enum statusCode {                  // HAP Table 6-11
-  SC_OK=0,
-  SC_Unable=-70402,
-  SC_Busy=-70403,
-  SC_ReadOnly=-70404,
-  SC_WriteOnly=-70405,
-  SC_NotifyNotAllowed=-70406,
-  SC_UnknownResource=-70409,
-  SC_InvalidValue=-70410,
-  SC_TBD=-1                       // status To-Be-Determined (TBD) once service.update() called
-};
-
 enum {
   GET_AID=1,
   GET_META=2,
@@ -111,7 +99,7 @@ struct SpanService{
   SpanService(const char *type, ServiceType mod=ServiceType::Regular);
 
   int sprintfAttributes(char *cBuf);                      // prints Service JSON records into buf; return number of characters printed, excluding null terminator
-  virtual statusCode update() {return(SC_OK);}            // update Service and return final statusCode based on updated Characteristics - should be overridden by DEVICE-SPECIFIC Services
+  virtual StatusCode update() {return(StatusCode::OK);}            // update Service and return final statusCode based on updated Characteristics - should be overridden by DEVICE-SPECIFIC Services
 };
 
 ///////////////////////////////
@@ -175,7 +163,7 @@ struct SpanCharacteristic{
   SpanCharacteristic(char *type, uint8_t perms, const char* value);
 
   int sprintfAttributes(char *cBuf, int flags);   // prints Characteristic JSON records into buf, according to flags mask; return number of characters printed, excluding null terminator  
-  statusCode loadUpdate(char *val, char *ev);     // load updated val/ev from PUT /characteristic JSON request.  Return intiial HAP status code (checks to see if characteristic is found, is writable, etc.)
+  StatusCode loadUpdate(char *val, char *ev);     // load updated val/ev from PUT /characteristic JSON request.  Return intiial HAP status code (checks to see if characteristic is found, is writable, etc.)
   void autoOff(int waitTime=250);                 // turns Characteristic off (false) automatically after waitTime milliseconds; only applicable to BOOL characteristics
 };
 
@@ -196,7 +184,7 @@ struct SpanPut{                               // storage to process PUT /charact
   int iid;                                    // iid to update
   char *val=NULL;                             // updated value (optional, though either at least 'val' or 'ev' must be specified)
   char *ev=NULL;                              // updated event notification flag (optional, though either at least 'val' or 'ev' must be specified)
-  statusCode status;                          // return status (HAP Table 6-11)
+  StatusCode status;                          // return status (HAP Table 6-11)
   SpanCharacteristic *characteristic=NULL;    // Characteristic to update (NULL if not found)
 };
   

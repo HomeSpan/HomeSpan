@@ -70,3 +70,19 @@ enum class Category {
   Faucets=29,
   ShowerSystems=30
 };
+
+//////////////////////////////////////////////////////
+//   Types of Status Codes for use with update()    //
+//   Reference: HAP Table 6-11                      //
+
+enum class StatusCode {
+  OK=0,
+  Unable=-70402,
+  Busy=-70403,
+  ReadOnly=-70404,
+  WriteOnly=-70405,
+  NotifyNotAllowed=-70406,
+  UnknownResource=-70409,
+  InvalidValue=-70410,
+  TBD=-1                       // status To-Be-Determined (TBD) once service.update() called
+};

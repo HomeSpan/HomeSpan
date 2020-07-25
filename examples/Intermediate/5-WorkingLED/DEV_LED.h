@@ -21,13 +21,13 @@ struct DEV_LED : Service::LightBulb {               // First we create a derived
     
   } // end constructor
 
-  // Finally, we over-ride the default update() method with instructions that actually turn on/off the LED.  Note update() returns type "statusCode"
+  // Finally, we over-ride the default update() method with instructions that actually turn on/off the LED.  Note update() returns type "StatusCode"
 
-  statusCode update(){            
+  StatusCode update(){            
 
     digitalWrite(ledPin,power->newValue.BOOL);      // use a standard Arduino function to turn on/off ledPin based on the boolean variable power->newValue.BOOL
    
-    return(SC_OK);                                  // return OKAY status code.  There are other possibilties we will explore in later examples.
+    return(StatusCode::OK);                         // return OK status code.  There are other possibilties we will explore in later examples.
   
   } // update
 };
