@@ -3,7 +3,7 @@
 //   DEVICE-SPECIFIC LED SERVICES //
 ////////////////////////////////////
 
-#include "PwmPin.h"                                 // NEW! Include this HomeSpan "extra" to create LED-compatible PWM signals on one or more pins
+#include "extras/PwmPin.h"                          // NEW! Include this HomeSpan "extra" to create LED-compatible PWM signals on one or more pins
 
 struct DEV_LED : Service::LightBulb {               // ON/OFF LED
 
@@ -58,7 +58,7 @@ struct DEV_DimmableLED : Service::LightBulb {       // Dimmable LED
     // request the LED be turned off, but retain the brightness level so that it does not need to be resent if
     // the LED is turned back on.  Multiplying the newValue of the power Characteristic (as a boolean) with the
     // newValue of the Brightness Characteristic (as an int) is a short-hand way of creating the logic to
-    // determing the PWM level when the LED is off (always zero) or on (whatever the brightness level is).
+    // set the PWM level when the LED is off (always zero) or on (whatever the brightness level is).
     
     pwmPin->set(channel,power->newValue.BOOL*level->newValue.INT);    
    

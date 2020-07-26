@@ -29,7 +29,7 @@ void setup() {
   // you can download that mimics or reproduces analogWrite() in some form or another.  HomeSpan conveniently comes with
   // it own version of a wrapper around the ESP32 PWM classes that make it very easy to define PWM "channel," attach a pin,
   // and set the PWM level (or duty cycle) from 0-100%.  These functions are encapsualted in the PwmPin class, as defined in
-  // PwmPin.h.  We will include this file in our updated DEV_LED.h for use with DEV_DimmableLED.
+  // extras/PwmPin.h.  We will include this file in our updated DEV_LED.h for use with DEV_DimmableLED.
   
   Serial.begin(115200);
 
