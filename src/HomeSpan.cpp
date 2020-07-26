@@ -40,6 +40,10 @@ void Span::begin(Category catID, char *displayName, char *hostNameBase, char *mo
   Serial.print(resetPin);
   Serial.print(" to delete all stored WiFi Network and HomeKit Pairing data (factory reset)\n\n");                 
 
+  Serial.print("ESP-IDF Version: ");
+  Serial.print(esp_get_idf_version());
+  Serial.print("\n");
+
   if(!digitalRead(resetPin)){                       // factory reset pin is low
     nvs_flash_erase();                              // erase NVS storage
     Serial.print("** FACTORY RESET PIN LOW!  ALL STORED DATA ERASED **\n** PROGRAM HALTED **\n");
