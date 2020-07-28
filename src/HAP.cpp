@@ -1350,7 +1350,7 @@ Controller *HAPClient::findController(uint8_t *id){
     
     if(controllers[i].allocated && !memcmp(controllers[i].ID,id,36)){     // found matching ID
       LOG2("Found Controller: ");
-      if(DEBUG_LEVEL>1)
+      if(VERBOSITY>1)
         charPrintRow(id,36);
       LOG2(controllers[i].admin?" (admin)\n":" (regular)\n");    
       return(controllers+i);                                              // return with pointer to matching controller
@@ -1383,7 +1383,7 @@ Controller *HAPClient::addController(uint8_t *id, uint8_t *ltpk, boolean admin){
     memcpy(slot->LTPK,ltpk,32);
     slot->admin=admin;
     LOG2("\n*** Updated Controller: ");
-    if(DEBUG_LEVEL>1)
+    if(VERBOSITY>1)
       charPrintRow(id,36);
     LOG2(slot->admin?" (admin)\n\n":" (regular)\n\n");
     return(slot);    
@@ -1395,7 +1395,7 @@ Controller *HAPClient::addController(uint8_t *id, uint8_t *ltpk, boolean admin){
     memcpy(slot->LTPK,ltpk,32);
     slot->admin=admin;
     LOG2("\n*** Added Controller: ");
-    if(DEBUG_LEVEL>1)
+    if(VERBOSITY>1)
       charPrintRow(id,36);
     LOG2(slot->admin?" (admin)\n\n":" (regular)\n\n");
     return(slot);       
@@ -1436,7 +1436,7 @@ void HAPClient::removeController(uint8_t *id){
 
   if(slot=findController(id)){      // remove controller if found
     LOG2("\n***Removed Controller: ");
-    if(DEBUG_LEVEL>1)
+    if(VERBOSITY>1)
       charPrintRow(id,36);
     LOG2(slot->admin?" (admin)\n":" (regular)\n");
     slot->allocated=false;

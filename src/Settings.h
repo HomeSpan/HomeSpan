@@ -10,20 +10,20 @@
 const int MAX_CONNECTIONS=8;  
 
 /////////////////////////////////////////////////////
-//    Debug level -- controls message output       //
+//    Verbosity -- controls message output       //
 //       0=Minimal, 1=Informative, 2=All           //
 
-#define DEBUG_LEVEL   1
+#define VERBOSITY   1
 
 //-------------------------------------------------//
 
-#if DEBUG_LEVEL>1
+#if VERBOSITY>1
   #define LOG2(x) Serial.print(x)
 #else
   #define LOG2(x)
 #endif
 
-#if DEBUG_LEVEL>0
+#if VERBOSITY>0
   #define LOG1(x) Serial.print(x)
 #else
   #define LOG1(x)

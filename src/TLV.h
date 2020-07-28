@@ -166,7 +166,7 @@ uint8_t *TLV<tagType, maxTags>::buf(tagType tag, int len){
 template<class tagType, int maxTags>
 void TLV<tagType, maxTags>::print(){
 
-  if(DEBUG_LEVEL<2)
+  if(VERBOSITY<2)
     return;
     
   char buf[3];
