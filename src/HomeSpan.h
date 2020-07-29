@@ -23,7 +23,7 @@ struct SpanService;
 struct SpanCharacteristic;
 struct SpanRange;
 struct SpanPut;
-struct SpanPBList;
+struct SpanTimedReset;
 
 ///////////////////////////////
 
@@ -43,9 +43,9 @@ struct Span{
 
   int resetPin=21;                              // drive this pin low to "factory" reset NVS data on start-up
   
-  SpanPBList *pbHead=NULL;                      // head of linked-list of characteristics to auto-turnoff after they are turned on (to emulate a single-shot PushButton)
   SpanConfig hapConfig;                         // track configuration changes to the HAP Accessory database; used to increment the configuration number (c#) when changes found
   vector<SpanAccessory *> Accessories;          // vector of pointers to all Accessories
+  vector<SpanTimedReset *> TimedResets;         // vector of pointers to all TimedResets
   
   void begin(Category catID,
              char *displayName="HomeSpan Server",
@@ -164,7 +164,6 @@ struct SpanCharacteristic{
 
   int sprintfAttributes(char *cBuf, int flags);   // prints Characteristic JSON records into buf, according to flags mask; return number of characters printed, excluding null terminator  
   StatusCode loadUpdate(char *val, char *ev);     // load updated val/ev from PUT /characteristic JSON request.  Return intiial HAP status code (checks to see if characteristic is found, is writable, etc.)
-  void autoOff(int waitTime=250);                 // turns Characteristic off (false) automatically after waitTime milliseconds; only applicable to BOOL characteristics
 };
 
 ///////////////////////////////
@@ -190,15 +189,15 @@ struct SpanPut{                               // storage to process PUT /charact
   
 ///////////////////////////////
 
-struct SpanPBList{
-  SpanPBList *next=NULL;                      // next item in linked-list
-  SpanCharacteristic *characteristic;         // characteristic to auto-turnoff whenever activated
-  int waitTime;                               // time to wait until auto-turnoff (in milliseconds)
-  unsigned long alarmTime;                    // alarm time for trigger to auto-turnoff
+struct SpanTimedReset{
+  SpanCharacteristic *characteristic;         // characteristic to auto-reset whenever activated
+  int waitTime;                               // time to wait until auto-reset (in milliseconds)
+  unsigned long alarmTime;                    // alarm time for trigger to auto-reset
   boolean start=false;                        // alarm timer started
   boolean trigger=false;                      // alarm timer triggered
-};
 
+  SpanTimedReset(int waitTime);
+};
 
 /////////////////////////////////////////////////
 // Extern Variables

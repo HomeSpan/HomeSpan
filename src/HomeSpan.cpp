@@ -1054,17 +1054,25 @@ StatusCode SpanCharacteristic::loadUpdate(char *val, char *ev){
 }
 
 ///////////////////////////////
+//      SpanTimedReset       //
+///////////////////////////////
 
-void SpanCharacteristic::autoOff(int waitTime){
+SpanTimedReset::SpanTimedReset(int waitTime){
 
-  SpanPBList **pb=&homeSpan.pbHead;
+  if(homeSpan.Accessories.empty() || homeSpan.Accessories.back()->Services.empty() || homeSpan.Accessories.back()->Services.back()->Characteristics.empty() ){
+    Serial.print("*** FATAL ERROR:  Can't create new TimedReset without a defined Characteristic.  Program halted!\n\n");
+    while(1);    
+  }
 
-  while(*pb)                 // traverse list until end
-    pb=&((*pb)->next);
+  if(homeSpan.Accessories.back()->Services.back()->Characteristics.back()->format!=SpanCharacteristic::BOOL){
+    Serial.print("*** FATAL ERROR:  Can't create new TimedReset for non-Boolean Characteristic.  Program halted!\n\n");
+    while(1);    
+  }
 
-  *pb=new SpanPBList;
-  (*pb)->characteristic=this;
-  (*pb)->waitTime=waitTime;
+  this->characteristic=homeSpan.Accessories.back()->Services.back()->Characteristics.back();
+  this->waitTime=waitTime;
+  homeSpan.TimedResets.push_back(this);
+
 }
 
 ///////////////////////////////

@@ -1126,11 +1126,10 @@ int HAPClient::putCharacteristicsURL(char *json){
 
 void HAPClient::checkNotifications(){
 
-  SpanPBList *pb=homeSpan.pbHead;
-
   int n=0;
 
-  while(pb){                                    // PASS 1: loop through all characteristics registered as Push Buttons
+  for(int i=0;i<homeSpan.TimedResets.size();i++){  // PASS 1: loop through all defined Timed Resets
+    SpanTimedReset *pb=homeSpan.TimedResets[i];
     if(!pb->characteristic->value.BOOL){        // characteristic is off
       pb->start=false;                          // ensure timer is not started
       pb->trigger=false;                        // turn off trigger
@@ -1143,17 +1142,16 @@ void HAPClient::checkNotifications(){
       pb->trigger=true;                         // set trigger
       n++;                                      // increment number of Push Buttons found that need to be turned off
     }
-    pb=pb->next;
   }
 
   if(!n)                                        // nothing to do (either no Push Button characteristics, or none that need to be turned off)
     return;
 
   SpanPut pObj[n];                              // use a SpanPut object (for convenience) to load characteristics to be updated
-  pb=homeSpan.pbHead;                           // reset Push Button list
   n=0;                                          // reset number of PBs found that need to be turned off
   
-  while(pb){                                    // PASS 2: loop through all characteristics registered as Push Buttons
+  for(int i=0;i<homeSpan.TimedResets.size();i++){  // PASS 2: loop through all defined Timed Resets
+    SpanTimedReset *pb=homeSpan.TimedResets[i];
     if(pb->trigger){                            // characteristic is triggered
       pb->characteristic->value.BOOL=false;     // turn off characteristic
       pObj[n].status=StatusCode::OK;                     // populate pObj
@@ -1161,7 +1159,6 @@ void HAPClient::checkNotifications(){
       pObj[n].val="";                           // dummy object needed to ensure sprintfNotify knows to consider this "update"                         
       n++;                                      // increment number of Push Buttons found that need to be turned off
     }
-    pb=pb->next;
   }
 
   for(int i=0;i<MAX_CONNECTIONS;i++){           // loop over all connection slots
