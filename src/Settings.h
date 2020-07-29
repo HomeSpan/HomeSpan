@@ -4,6 +4,11 @@
 #pragma once
 
 //////////////////////////////////////////////////////
+//              HomeSpan Version                    //
+
+const char HOMESPAN_VERSION[]="1.0.0";  
+
+//////////////////////////////////////////////////////
 //   Maximum number of simultaenous IP connections  //
 //   HAP requires at least 8                        //
 
