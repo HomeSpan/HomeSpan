@@ -4,38 +4,53 @@
 //    HomeSpan: A HomeKit implementation for the ESP32    //
 //    ------------------------------------------------    //
 //                                                        //
-// Example 9: Logging messages to the Serial Monitor      //
-//                                                        //
+// Example 10: Timed Resets - emulating a "pushbutton"    //
+//             in HomeKit                                 //
 //                                                        //
 ////////////////////////////////////////////////////////////
 
 #include "HomeSpan.h" 
-#include "DEV_LED.h"     
+#include "DEV_Blinker.h"     
 #include "DEV_Identify.h"       
 
 void setup() {
 
-  // HomeSpan sends a variety of messages to the Serial Monitor of the Arduino IDE whenever the device is connected
-  // to a computer.  Message output is performed either by the usual Serial.print() function, or by one of two macros,
-  // LOG1() and LOG2().  These two macros are defined as Serial.print() or as no operation (), depending on the
-  // level of the VERBOSITY constant specified in the "Settings.h" file.  Setting VERBOSITY to 0 sets both LOG1() and
-  // LOG2() to no-op, which means only messages explicitly sent with Serial.print() will be output by HomeSpan.  Setting
-  // VERBOSITY to 1 means messages formed by the LOG1() macros will also be sent.  And setting VERBOSITY to 2 causes
-  // both LOG1() and LOG2() messages to be sent.
-  //
-  // You can create your own log messages as needed through Serial.print() statements, but you can also create them with
-  // the LOG1() or LOG2() macros enabling you can turn them on or off by setting VERBOSITY to the appropriate level.
-  // Use LOG1() and LOG2() just as you would Serial.print().
-  //
-  // Example 9 illustrates how to add such log messages.  The code is identical to Example 8 (without comments), except
-  // that Serial.print() and LOG1() messages have been added to DEV_LED.h.  The Serial.print() messages will always be
-  // output to the Arduino Serial Monitor.  The LOG1() messages will only be output if VERBOSITY is set to 1 or 2.
-  //
-  // RECOMMENDATION: Since a HomeSpan ESP32 is meant to be physically connected to real-world devices, you may find
-  // yourself with numerous ESP32s each configured with a different set of Accessories.  To aid in identification
-  // you may want to add Serial.print() statements containing some sort of initialization message to the constructors for
-  // each derived Service, such as DEV_LED.  Doing so allows HomeSpan to "report" on its configuration upon start-up.  See
-  // DEV_LED for examples.
+   // Though HomeKit and the HomeKit Accessory Protocol (HAP) Specification provide a very flexible framework
+   // for creating iOS- and MacOS-controlled devices, they does not contain every possible desired feature.
+   //
+   // One very common Characteristic HomeKit does not seem to contain is a simple pushbutton, like the type you
+   // would find on a remote control.  Unlike switches that can be "on" or "off", a pushbutton has no state.
+   // Rather, a pushbutton performs some action when it's pushed, and that's all it does until it's pushed
+   // again.
+   //
+   // Though HomeKit does not contain such a Characteristic, it's easy to emulate in HomeSpan.  To do so, simply
+   // define a Service with a boolen Characteristic (such as the On Characteristic), and create an update()
+   // method to peform the operations to be executed when the "pushbutton" is "pressed".  The update() method
+   // should ignore the newValue requested by HomeKit, since the only thing that matters is that update() is called.
+   // 
+   // You could stop there and have something in HomeKit that acts like a pushbutton, but it won't look like a
+   // pushbutton because every time you press the tile for your device in HomeKit, the Controller will toggle
+   // between showing it's on and showing it's off.  Pressing a tile that shows the status is already on, in order
+   // to cause HomeKit to trigger the update() to perform a new action, is not very satisfying.
+   //
+   // Ideally, we'd like HomeKit to acknowledge you've pressed the tile for the device, maybe by lighting up for a
+   // second or so, and then it should reset to the "off" position.  This would emulate a light-up pushbutton.
+   //
+   // Fortunately, HomeSpan includes a way of doing exactly this, using an object called SpanTimedReset().  Similar
+   // to SpanRange(), you create a new SpanTimedReset() object with a single argument representing the number of
+   // milliseconds HomeSpan should wait before telling HomeKit to reset, or "turn off", the device tile it just turned
+   // on when you pressed it.  How does SpanTimedReset() know which Characteristic it should attach itself to?
+   // Similar to all other HomeSpan objects, SpanTimedReset() attaches to the last object you instantiated (and
+   // will throw an error message at start-up if you try to instantiate a new SpanTimedReset() object without having just
+   // instantiated a boolean Characteristic of some type).
+   //
+   // In Example 10 below we create a single pushbutton that blinks an LED three times.  This is not very useful, but
+   // you can think about the LED as an IR LED that is transmitting a Volume-Up command to a TV, or an RF signal to
+   // some remote device, like a ceiling fan.
+   //
+   // All the functionality is wrapped up in a newly-defined "DEV_Blinker" Service, which can be found in DEV_Blinker.h.
+   // This new Service is a copy of the DEV_LED service we've been working so far, with modifications to make it into 
+   // a generic blinking LED.  As usual, changes and new lines are notably commented.
   
   Serial.begin(115200);
 
@@ -48,18 +63,11 @@ void setup() {
     new Service::HAPProtocolInformation();
       new Characteristic::Version("1.1.0");
   
-  // Defines an ON/OFF LED Accessory attached to pin 16
+  // *** NEW *** defines an LED Blinker Accessory attached to pin 16 which blinks 3 times
 
   new SpanAccessory();                                                          
-    new DEV_Identify("LED #1","HomeSpan","123-ABC","20mA LED","0.9",0);
-    new DEV_LED(16);
-    new SpanTimedReset(2000);
-
-  // Defines a Dimmable LED Accessory attached to pin 17 using PWM channel 0
-  
-  new SpanAccessory();                                                        
-    new DEV_Identify("LED #2","HomeSpan","123-ABC","20mA LED","0.9",0);       
-    new DEV_DimmableLED(0,17);                                            
+    new DEV_Identify("LED Blinker","HomeSpan","123-ABC","20mA LED","0.9",0);
+    new DEV_Blinker(16,3);                                                      // DEV_Blinker takes two arguments - pin, and number of times to blink
 
 } // end of setup()
 
