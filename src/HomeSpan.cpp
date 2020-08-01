@@ -569,24 +569,24 @@ int Span::updateCharacteristics(char *buf, SpanPut *pObj){
     if(pObj[i].characteristic)                                                      // if found, initialize characterstic update with new val/ev
       pObj[i].status=pObj[i].characteristic->loadUpdate(pObj[i].val,pObj[i].ev);    // save status code, which is either an error, or TBD (in which case isUpdated for the characteristic has been set to true) 
     else
-      pObj[i].status=StatusCode::UnknownResource;                                            // if not found, set HAP error            
+      pObj[i].status=StatusCode::UnknownResource;                                   // if not found, set HAP error            
       
   } // first pass
       
   for(int i=0;i<nObj;i++){                                     // PASS 2: loop again over all objects       
-    if(pObj[i].status==StatusCode::TBD){                                // if object status still TBD
+    if(pObj[i].status==StatusCode::TBD){                       // if object status still TBD
 
-      SpanService *svc=pObj[i].characteristic->service;        // set service containing the characteristic underlying the object
-      StatusCode status=svc->update();                         // update service and save returned statusCode
+      StatusCode status=pObj[i].characteristic->service->update();                  // update service and save returned statusCode
 
-      for(int j=i;j<nObj;j++){                                 // loop over this object plus any remaining objects to update values and save status for any other characteristics in this service
-        if(pObj[j].characteristic->service==svc){              // if service matches
-          pObj[j].status=status;                               // save statusCode for this object
+      for(int j=i;j<nObj;j++){                                                      // loop over this object plus any remaining objects to update values and save status for any other characteristics in this service
+        
+        if(pObj[j].characteristic->service==pObj[i].characteristic->service){       // if service of this characteristic matches service that was updated
+          pObj[j].status=status;                                                    // save statusCode for this object
           LOG1("Updating aid=");
-          LOG1(svc->Characteristics[j]->aid);
+          LOG1(pObj[j].characteristic->aid);
           LOG1(" iid=");  
-          LOG1(svc->Characteristics[j]->iid);
-          if(status==StatusCode::OK){                                   // if status is okay
+          LOG1(pObj[j].characteristic->iid);
+          if(status==StatusCode::OK){                          // if status is okay
             pObj[j].characteristic->value
               =pObj[j].characteristic->newValue;               // update characteristic value with new value
             LOG1(" (okay)\n");
