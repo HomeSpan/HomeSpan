@@ -1060,12 +1060,12 @@ StatusCode SpanCharacteristic::loadUpdate(char *val, char *ev){
 SpanTimedReset::SpanTimedReset(int waitTime){
 
   if(homeSpan.Accessories.empty() || homeSpan.Accessories.back()->Services.empty() || homeSpan.Accessories.back()->Services.back()->Characteristics.empty() ){
-    Serial.print("*** FATAL ERROR:  Can't create new TimedReset without a defined Characteristic.  Program halted!\n\n");
+    Serial.print("*** FATAL ERROR:  Can't create new Timed Reset without a defined Characteristic.  Program halted!\n\n");
     while(1);    
   }
 
-  if(homeSpan.Accessories.back()->Services.back()->Characteristics.back()->format!=SpanCharacteristic::BOOL){
-    Serial.print("*** FATAL ERROR:  Can't create new TimedReset for non-Boolean Characteristic.  Program halted!\n\n");
+  if(!(homeSpan.Accessories.back()->Services.back()->Characteristics.back()->perms&SpanCharacteristic::PW)){
+    Serial.print("*** FATAL ERROR:  Can't create new Timed Reset for Read-Only Characteristic.  Program halted!\n\n");
     while(1);    
   }
 

@@ -906,7 +906,7 @@ int HAPClient::postPairingsURL(){
     case 5:                     
       LOG1("List...\n");
 
-      // NEEDS TO BE IMPLEMENTED
+      // NEEDS TO BE IMPLEMENTED - UNSURE IF THIS IS EVER USED BY HOMEKIT
 
       tlv8.clear();                                         // clear TLV records
       tlv8.val(kTLVType_State,pairState_M2);                // set State=<M2>
@@ -1127,37 +1127,46 @@ int HAPClient::putCharacteristicsURL(char *json){
 void HAPClient::checkNotifications(){
 
   int n=0;
+  SpanTimedReset *tReset;
 
-  for(int i=0;i<homeSpan.TimedResets.size();i++){  // PASS 1: loop through all defined Timed Resets
-    SpanTimedReset *pb=homeSpan.TimedResets[i];
-    if(!pb->characteristic->value.BOOL){        // characteristic is off
-      pb->start=false;                          // ensure timer is not started
-      pb->trigger=false;                        // turn off trigger
+  for(int i=0;i<homeSpan.TimedResets.size();i++){     // PASS 1: loop through all defined Timed Resets
+    tReset=homeSpan.TimedResets[i];
+    if(!tReset->characteristic->value.BOOL){          // characteristic is off
+      tReset->start=false;                            // ensure timer is not started
+      tReset->trigger=false;                          // turn off trigger
     }
-    else if(!pb->start){                        // else characteristic is on but timer is not started
-      pb->start=true;                           // start timer
-      pb->alarmTime=millis()+pb->waitTime;      // set alarm time
+    else if(!tReset->start){                          // else characteristic is on but timer is not started
+      tReset->start=true;                             // start timer
+      tReset->alarmTime=millis()+tReset->waitTime;    // set alarm time
     }
-    else if(millis()>pb->alarmTime){            // else characteristic is on, timer is started, and timer is expired
-      pb->trigger=true;                         // set trigger
-      n++;                                      // increment number of Push Buttons found that need to be turned off
+    else if(millis()>tReset->alarmTime){              // else characteristic is on, timer is started, and timer is expired
+      tReset->trigger=true;                           // set trigger
+      n++;                                            // increment number of Push Buttons found that need to be turned off
     }
   }
 
-  if(!n)                                        // nothing to do (either no Push Button characteristics, or none that need to be turned off)
+  if(!n)                                              // nothing to do (either no Timed Reset characteristics, or none that need to be turned off)
     return;
 
-  SpanPut pObj[n];                              // use a SpanPut object (for convenience) to load characteristics to be updated
-  n=0;                                          // reset number of PBs found that need to be turned off
+  SpanPut pObj[n];                                    // use a SpanPut object (for convenience) to load characteristics to be updated
+  n=0;                                                // reset number of tResets found that need to be turned off
   
-  for(int i=0;i<homeSpan.TimedResets.size();i++){  // PASS 2: loop through all defined Timed Resets
-    SpanTimedReset *pb=homeSpan.TimedResets[i];
-    if(pb->trigger){                            // characteristic is triggered
-      pb->characteristic->value.BOOL=false;     // turn off characteristic
-      pObj[n].status=StatusCode::OK;                     // populate pObj
-      pObj[n].characteristic=pb->characteristic;                   
-      pObj[n].val="";                           // dummy object needed to ensure sprintfNotify knows to consider this "update"                         
-      n++;                                      // increment number of Push Buttons found that need to be turned off
+  for(int i=0;i<homeSpan.TimedResets.size();i++){     // PASS 2: loop through all defined Timed Resets
+    tReset=homeSpan.TimedResets[i];
+    if(tReset->trigger){                              // characteristic is triggered     
+      
+      LOG1("Resetting aid=");
+      LOG1(tReset->characteristic->aid);
+      LOG1(" iid=");  
+      LOG1(tReset->characteristic->iid);
+      LOG1("\n");
+      
+      memset(&(tReset->characteristic->value),0,sizeof(tReset->characteristic->value));
+      
+      pObj[n].status=StatusCode::OK;                  // populate pObj
+      pObj[n].characteristic=tReset->characteristic;                   
+      pObj[n].val="";                                 // dummy object needed to ensure sprintfNotify knows to consider this "update"                         
+      n++;                                            // increment number of Push Buttons found that need to be turned off
     }
   }
 
