@@ -800,9 +800,7 @@ int HAPClient::getAccessoriesURL(){
   LOG2("\n");
   
   sendEncrypted(body,(uint8_t *)jBuf.buf,nBytes);
-  
-  LOG2("-------- SENT ENCRYPTED! --------\n");    
-      
+       
   return(1);
   
 } // getAccessories
@@ -1020,9 +1018,7 @@ int HAPClient::getCharacteristicsURL(char *urlBuf){
   LOG2("\n");
   
   sendEncrypted(body,(uint8_t *)jsonBuf,nBytes);        // note recasting of jsonBuf into uint8_t*
-  
-  LOG2("-------- SENT ENCRYPTED! --------\n");
-    
+      
   return(1);
 }
 
@@ -1064,9 +1060,7 @@ int HAPClient::putCharacteristicsURL(char *json){
     LOG2(body);  
 
     sendEncrypted(body,NULL,0);  
-    
-    LOG2("-------- SENT ENCRYPTED! --------\n");        
-    
+        
   } else {                                                       // multicast respose is required
 
     int nBytes=homeSpan.sprintfAttributes(pObj,n,NULL);          // get JSON response - includes terminating null (will be recast to uint8_t* below)
@@ -1086,7 +1080,6 @@ int HAPClient::putCharacteristicsURL(char *json){
   
     sendEncrypted(body,(uint8_t *)jsonBuf,nBytes);        // note recasting of jsonBuf into uint8_t*
   
-    LOG2("-------- SENT ENCRYPTED! --------\n");
   }
 
   // Create and send Event Notifications if needed
@@ -1225,7 +1218,6 @@ void HAPClient::tlvRespond(){
     LOG2("------------ SENT! --------------\n");
   } else {
     sendEncrypted(body,tlvData,nBytes);
-    LOG2("-------- SENT ENCRYPTED! --------\n");    
   }
 
 } // tlvRespond
@@ -1305,7 +1297,9 @@ void HAPClient::sendEncrypted(char *body, uint8_t *dataBuf, int dataLen){
   }
     
   client.write(httpBuf,count);   // transmit all encrypted frames to Client
-        
+
+  LOG2("-------- SENT ENCRYPTED! --------\n");
+      
 } // sendEncrypted
 
 /////////////////////////////////////////////////////////////////////////////////
