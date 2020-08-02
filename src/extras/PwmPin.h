@@ -18,4 +18,8 @@ class PwmPin {
   public:
     PwmPin(uint8_t channel, uint8_t pin);               // assigns pin to be output of one of 16 PWM channels (0-15)
     void set(uint8_t channel, uint8_t level);           // sets the PWM duty of channel to level (0-100)
+    int getPin(){return pin;}                           // returns the pin number
+    
+    static void HSVtoRGB(double h, double s, double v, double *r, double *g, double *b );
+
 };

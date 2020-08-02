@@ -18,7 +18,7 @@ const int MAX_CONNECTIONS=8;
 //    Verbosity -- controls message output       //
 //       0=Minimal, 1=Informative, 2=All           //
 
-#define VERBOSITY   2
+#define VERBOSITY   1
 
 //-------------------------------------------------//
 
