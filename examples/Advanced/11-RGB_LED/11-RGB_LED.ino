@@ -4,15 +4,14 @@
 //    HomeSpan: A HomeKit implementation for the ESP32    //
 //    ------------------------------------------------    //
 //                                                        //
-// Example 11: Controlling an RGB LED using the           //
-//             LightBulb Service                          //
+// Example 9: Logging messages to the Serial Monitor      //
+//                                                        //
 //                                                        //
 ////////////////////////////////////////////////////////////
 
-
 #include "HomeSpan.h" 
-#include "DEV_Identify.h"
-#include "DEV_LED.h"          
+#include "DEV_LED.h"     
+#include "DEV_Identify.h"       
 
 void setup() {
 
