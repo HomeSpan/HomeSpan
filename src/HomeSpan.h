@@ -164,6 +164,37 @@ struct SpanCharacteristic{
 
   int sprintfAttributes(char *cBuf, int flags);   // prints Characteristic JSON records into buf, according to flags mask; return number of characters printed, excluding null terminator  
   StatusCode loadUpdate(char *val, char *ev);     // load updated val/ev from PUT /characteristic JSON request.  Return intiial HAP status code (checks to see if characteristic is found, is writable, etc.)
+  
+  template <class T> T getVal(){return(getValue<T>(value));}                    // returns UVal value
+  template <class T> T getNewVal(){return(getValue<T>(newValue));}              // returns UVal newValue
+  template <class T> T getValue(UVal v);                                        // returns UVal v
+  
+};
+
+///////////////////////////////
+
+template <class T> T SpanCharacteristic::getValue(UVal v){
+
+  switch(format){
+    case BOOL:
+      return((T) v.BOOL);
+    case INT:
+      return((T) v.INT);
+    case UINT8:
+      return((T) v.UINT8);
+    case UINT16:
+      return((T) v.UINT16);
+    case UINT32:
+      return((T) v.UINT32);
+    case UINT64:
+      return((T) v.UINT64);
+    case FLOAT:
+      return((T) v.FLOAT);
+    case STRING:
+      Serial.print("*** ERROR:  Can't use getVal() or getNewVal() for string Characteristics.\n\n");
+      return(0);
+  }
+    
 };
 
 ///////////////////////////////

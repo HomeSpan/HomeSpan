@@ -1093,5 +1093,3 @@ SpanRange::SpanRange(int min, int max, int step){
 }
 
 ///////////////////////////////
-
- 

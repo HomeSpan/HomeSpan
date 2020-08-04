@@ -74,22 +74,23 @@ struct DEV_DimmableLED : Service::LightBulb {       // Dimmable LED
     LOG1(ledPin);
     LOG1(":  Current Power=");
     LOG1(power->value.BOOL?"true":"false");
+    LOG1(power->getVal<boolean>()?"true":"false");
     LOG1("  Current Brightness=");
-    LOG1(level->value.INT);
+    LOG1(level->getVal<int>());
   
     if(power->isUpdated){
       LOG1("  New Power=");
-      LOG1(power->newValue.BOOL?"true":"false");
+      LOG1(power->getNewVal<boolean>()?"true":"false");
     }
 
     if(level->isUpdated){
       LOG1("  New Brightness=");
-      LOG1(level->newValue.INT);
+      LOG1(level->getNewVal<boolean>());
     } 
 
     LOG1("\n");
     
-    pwmPin->set(channel,power->newValue.BOOL*level->newValue.INT);    
+    pwmPin->set(channel,power->getNewVal<boolean>()*level->getNewVal<boolean>());    
    
     return(StatusCode::OK);                         // return OK status code
   
@@ -138,42 +139,42 @@ struct DEV_RgbLED : Service::LightBulb {            // RGB LED (Command Cathode)
     int v;
     double h, s, r, g, b;
 
-    h=H->value.FLOAT;       // get all current values
-    s=S->value.FLOAT;
-    v=V->value.INT;
-    p=power->value.BOOL;
+    h=H->getVal<double>();       // get all current values
+    s=S->getVal<double>();
+    v=V->getVal<int>();
+    p=power->getVal<boolean>();
 
     char cBuf[128];
     sprintf(cBuf,"Updating RGB LED on pins=(%d,%d,%d): ",redPin->getPin(),greenPin->getPin(),bluePin->getPin());
     LOG1(cBuf);
 
     if(power->isUpdated){
-      p=power->newValue.BOOL;
-      sprintf(cBuf,"Power=%s->%s, ",power->value.BOOL?"true":"false",p?"true":"false");
+      p=power->getNewVal<boolean>();
+      sprintf(cBuf,"Power=%s->%s, ",power->getVal<boolean>()?"true":"false",p?"true":"false");
     } else {
       sprintf(cBuf,"Power=%s, ",p?"true":"false");
     }
     LOG1(cBuf);
       
     if(H->isUpdated){
-      h=H->newValue.FLOAT;
-      sprintf(cBuf,"H=%d->%d, ",(int)H->value.FLOAT,(int)h);
+      h=H->getNewVal<double>();
+      sprintf(cBuf,"H=%d->%d, ",(int)H->getVal<double>(),(int)h);
     } else {
       sprintf(cBuf,"H=%d, ",(int)h);
     }
     LOG1(cBuf);
 
     if(S->isUpdated){
-      s=S->newValue.FLOAT;
-      sprintf(cBuf,"S=%d->%d, ",(int)S->value.FLOAT,(int)s);
+      s=S->getNewVal<double>();
+      sprintf(cBuf,"S=%d->%d, ",(int)S->getVal<double>(),(int)s);
     } else {
       sprintf(cBuf,"S=%d, ",(int)s);
     }
     LOG1(cBuf);
 
     if(V->isUpdated){
-      v=V->newValue.INT;
-      sprintf(cBuf,"V=%d->%d ",V->value.INT,v);
+      v=V->getNewVal<int>();
+      sprintf(cBuf,"V=%d->%d ",V->getVal<int>(),v);
     } else {
       sprintf(cBuf,"V=%d  ",v);
     }
