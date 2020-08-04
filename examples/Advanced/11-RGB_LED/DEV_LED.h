@@ -136,12 +136,11 @@ struct DEV_RgbLED : Service::LightBulb {            // RGB LED (Command Cathode)
   StatusCode update(){                              // update() method
 
     boolean p;
-    int v;
-    double h, s, r, g, b;
+    double v, h, s, r, g, b;
 
     h=H->getVal<double>();       // get all current values
     s=S->getVal<double>();
-    v=V->getVal<int>();
+    v=V->getVal<double>();
     p=power->getVal<boolean>();
 
     char cBuf[128];
@@ -173,10 +172,10 @@ struct DEV_RgbLED : Service::LightBulb {            // RGB LED (Command Cathode)
     LOG1(cBuf);
 
     if(V->isUpdated){
-      v=V->getNewVal<int>();
-      sprintf(cBuf,"V=%d->%d ",V->getVal<int>(),v);
+      v=V->getNewVal<double>();
+      sprintf(cBuf,"V=%d->%d ",(int)V->getVal<double>(),(int)v);
     } else {
-      sprintf(cBuf,"V=%d  ",v);
+      sprintf(cBuf,"V=%d  ",(int)v);
     }
     LOG1(cBuf);
 
