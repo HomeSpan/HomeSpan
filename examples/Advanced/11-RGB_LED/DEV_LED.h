@@ -3,7 +3,9 @@
 //   DEVICE-SPECIFIC LED SERVICES //
 ////////////////////////////////////
 
-#include "extras/PwmPin.h"                          // allows PWM control of LED brightness
+#include "extras/PwmPin.h"                          // library of various PWM functions
+
+////////////////////////////////////
 
 struct DEV_LED : Service::LightBulb {               // ON/OFF LED
 
@@ -44,7 +46,7 @@ struct DEV_LED : Service::LightBulb {               // ON/OFF LED
 struct DEV_DimmableLED : Service::LightBulb {       // Dimmable LED
 
   PwmPin *pwmPin;                                   // reference to PWM Pin
-  int ledPin;                                       // pin number defined for this LED <- NEW!!
+  int ledPin;                                       // pin number defined for this LED
   int channel;                                      // PWM channel used for this LED (should be unique for each LED)
   SpanCharacteristic *power;                        // reference to the On Characteristic
   SpanCharacteristic *level;                        // reference to the Brightness Characteristic
@@ -100,12 +102,9 @@ struct DEV_DimmableLED : Service::LightBulb {       // Dimmable LED
 
 struct DEV_RgbLED : Service::LightBulb {       // RGB LED (Command Cathode)
 
-  PwmPin *redPin;                                   
-  PwmPin *greenPin;                                 
-  PwmPin *bluePin;
-  int redChannel;                                   
-  int greenChannel;                                   
-  int blueChannel;                                   
+  PwmPin *redPin, *greenPin, *bluePin;
+  int redChannel, greenChannel, blueChannel;
+  
   SpanCharacteristic *power;                   // reference to the On Characteristic
   SpanCharacteristic *H;                       // reference to the Hue Characteristic
   SpanCharacteristic *S;                       // reference to the Saturation Characteristic
@@ -120,12 +119,12 @@ struct DEV_RgbLED : Service::LightBulb {       // RGB LED (Command Cathode)
     new SpanRange(5,100,1);                    // sets the range of the Brightness to be from a min of 5%, to a max of 100%, in steps of 1%
 
     this->redChannel=redChannel;               // save the channel number (from 0-15)
-    this->greenChannel=greenChannel;           // save the channel number (from 0-15)
-    this->blueChannel=blueChannel;             // save the channel number (from 0-15)
+    this->greenChannel=greenChannel;           
+    this->blueChannel=blueChannel;            
     
-    this->redPin=new PwmPin(redChannel, redPin);        // configure the PWM channel and attach the specified pin
-    this->greenPin=new PwmPin(greenChannel, greenPin);  // configure the PWM channel and attach the specified pin
-    this->bluePin=new PwmPin(blueChannel, bluePin);     // configure the PWM channel and attach the specified pin
+    this->redPin=new PwmPin(redChannel, redPin);        // instantiate the PWM channel and attach the specified pin
+    this->greenPin=new PwmPin(greenChannel, greenPin);
+    this->bluePin=new PwmPin(blueChannel, bluePin);
 
     char cBuf[128];
     sprintf(cBuf,"Configuring RGB LED: Pins=(%d,%d,%d)  Channels=(%d,%d,%d)\n",redPin,greenPin,bluePin,redChannel,greenChannel,blueChannel);
@@ -138,9 +137,9 @@ struct DEV_RgbLED : Service::LightBulb {       // RGB LED (Command Cathode)
     boolean p;
     float v, h, s, r, g, b;
 
-    h=H->getVal<float>();                      // get and store all current values
+    h=H->getVal<float>();                      // get and store all current values.  Note the use of the <float> template to properly read the values
     s=S->getVal<float>();
-    v=V->getVal<float>();
+    v=V->getVal<float>();                      // though H and S are defined as FLOAT in HAP, V (which is brightness) is defined as INT, but will be re-cast appropriately
     p=power->getVal();
 
     char cBuf[128];
