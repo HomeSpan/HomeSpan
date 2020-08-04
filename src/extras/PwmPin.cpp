@@ -33,7 +33,7 @@ void PwmPin::set(uint8_t channel, uint8_t level){
 
 ///////////////////
 
-void PwmPin::HSVtoRGB(double h, double s, double v, double *r, double *g, double *b ){
+void PwmPin::HSVtoRGB(float h, float s, float v, float *r, float *g, float *b ){
 
   // The algorithm below was provided on the web at https://www.cs.rit.edu/~ncs/color/t_convert.html
   // h = [0,360]
@@ -41,7 +41,7 @@ void PwmPin::HSVtoRGB(double h, double s, double v, double *r, double *g, double
   // v = [0,1]
 
   int i;
-  double f, p, q, t;
+  float f, p, q, t;
   
   if( s == 0 ){
     *r = *g = *b = v;

@@ -27,12 +27,12 @@ struct DEV_LED : Service::LightBulb {               // ON/OFF LED
     LOG1("Updating On/Off LED on pin=");
     LOG1(ledPin);
     LOG1(":  Current Power=");
-    LOG1(power->value.BOOL?"true":"false");
+    LOG1(power->getVal()?"true":"false");
     LOG1("  New Power=");
-    LOG1(power->newValue.BOOL?"true":"false");
+    LOG1(power->getNewVal()?"true":"false");
     LOG1("\n");
 
-    digitalWrite(ledPin,power->newValue.BOOL);      
+    digitalWrite(ledPin,power->getNewVal());      
    
     return(StatusCode::OK);                         // return OK status code
   
@@ -73,24 +73,23 @@ struct DEV_DimmableLED : Service::LightBulb {       // Dimmable LED
     LOG1("Updating Dimmable LED on pin=");
     LOG1(ledPin);
     LOG1(":  Current Power=");
-    LOG1(power->value.BOOL?"true":"false");
-    LOG1(power->getVal<boolean>()?"true":"false");
+    LOG1(power->getVal()?"true":"false");
     LOG1("  Current Brightness=");
-    LOG1(level->getVal<int>());
+    LOG1(level->getVal());
   
-    if(power->isUpdated){
+    if(power->updated()){
       LOG1("  New Power=");
-      LOG1(power->getNewVal<boolean>()?"true":"false");
+      LOG1(power->getNewVal()?"true":"false");
     }
 
-    if(level->isUpdated){
+    if(level->updated()){
       LOG1("  New Brightness=");
-      LOG1(level->getNewVal<boolean>());
+      LOG1(level->getNewVal());
     } 
 
     LOG1("\n");
     
-    pwmPin->set(channel,power->getNewVal<boolean>()*level->getNewVal<boolean>());    
+    pwmPin->set(channel,power->getNewVal()*level->getNewVal());    
    
     return(StatusCode::OK);                         // return OK status code
   
@@ -98,7 +97,8 @@ struct DEV_DimmableLED : Service::LightBulb {       // Dimmable LED
 };
       
 //////////////////////////////////
-struct DEV_RgbLED : Service::LightBulb {            // RGB LED (Command Cathode)
+
+struct DEV_RgbLED : Service::LightBulb {       // RGB LED (Command Cathode)
 
   PwmPin *redPin;                                   
   PwmPin *greenPin;                                 
@@ -133,64 +133,68 @@ struct DEV_RgbLED : Service::LightBulb {            // RGB LED (Command Cathode)
     
   } // end constructor
 
-  StatusCode update(){                              // update() method
+  StatusCode update(){                         // update() method
 
     boolean p;
-    double v, h, s, r, g, b;
+    float v, h, s, r, g, b;
 
-    h=H->getVal<double>();       // get all current values
-    s=S->getVal<double>();
-    v=V->getVal<double>();
-    p=power->getVal<boolean>();
+    h=H->getVal<float>();                      // get and store all current values
+    s=S->getVal<float>();
+    v=V->getVal<float>();
+    p=power->getVal();
 
     char cBuf[128];
     sprintf(cBuf,"Updating RGB LED on pins=(%d,%d,%d): ",redPin->getPin(),greenPin->getPin(),bluePin->getPin());
     LOG1(cBuf);
 
-    if(power->isUpdated){
-      p=power->getNewVal<boolean>();
-      sprintf(cBuf,"Power=%s->%s, ",power->getVal<boolean>()?"true":"false",p?"true":"false");
+    if(power->updated()){
+      p=power->getNewVal();
+      sprintf(cBuf,"Power=%s->%s, ",power->getVal()?"true":"false",p?"true":"false");
     } else {
       sprintf(cBuf,"Power=%s, ",p?"true":"false");
     }
     LOG1(cBuf);
       
-    if(H->isUpdated){
-      h=H->getNewVal<double>();
-      sprintf(cBuf,"H=%d->%d, ",(int)H->getVal<double>(),(int)h);
+    if(H->updated()){
+      h=H->getNewVal<float>();
+      sprintf(cBuf,"H=%.0f->%.0f, ",H->getVal<float>(),h);
     } else {
-      sprintf(cBuf,"H=%d, ",(int)h);
+      sprintf(cBuf,"H=%.0f, ",h);
     }
     LOG1(cBuf);
 
-    if(S->isUpdated){
-      s=S->getNewVal<double>();
-      sprintf(cBuf,"S=%d->%d, ",(int)S->getVal<double>(),(int)s);
+    if(S->updated()){
+      s=S->getNewVal<float>();
+      sprintf(cBuf,"S=%.0f->%.0f, ",S->getVal<float>(),s);
     } else {
-      sprintf(cBuf,"S=%d, ",(int)s);
+      sprintf(cBuf,"S=%.0f, ",s);
     }
     LOG1(cBuf);
 
-    if(V->isUpdated){
-      v=V->getNewVal<double>();
-      sprintf(cBuf,"V=%d->%d ",(int)V->getVal<double>(),(int)v);
+    if(V->updated()){
+      v=V->getNewVal<float>();
+      sprintf(cBuf,"V=%.0f->%.0f  ",V->getVal<float>(),v);
     } else {
-      sprintf(cBuf,"V=%d  ",(int)v);
+      sprintf(cBuf,"V=%.0f  ",v);
     }
     LOG1(cBuf);
 
-    PwmPin::HSVtoRGB(h,s/100.0,v/100.0,&r,&g,&b);
+    // Here we call a static function of PwmPin that converts HSV to RGB.
+    // Parameters must all be floats in range of H[0,360], S[0,1], and V[0,1]
+    // R, G, B, returned [0,1] range as well
+
+    PwmPin::HSVtoRGB(h,s/100.0,v/100.0,&r,&g,&b);   // since HomeKit provides S and V in percent, scale down by 100
 
     int R, G, B;
 
-    R=p*r*100;
+    R=p*r*100;                                      // since PwmPin uses percent, scale back up by 100, and multiple by status fo power (either 0 or 1)
     G=p*g*100;
     B=p*b*100;
 
     sprintf(cBuf,"RGB=(%d,%d,%d)\n",R,G,B);
     LOG1(cBuf);
 
-    redPin->set(redChannel,R);    
+    redPin->set(redChannel,R);                      // update the PWM channels with new values
     greenPin->set(greenChannel,G);    
     bluePin->set(blueChannel,B);    
       

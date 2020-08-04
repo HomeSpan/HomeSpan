@@ -165,9 +165,11 @@ struct SpanCharacteristic{
   int sprintfAttributes(char *cBuf, int flags);   // prints Characteristic JSON records into buf, according to flags mask; return number of characters printed, excluding null terminator  
   StatusCode loadUpdate(char *val, char *ev);     // load updated val/ev from PUT /characteristic JSON request.  Return intiial HAP status code (checks to see if characteristic is found, is writable, etc.)
   
-  template <class T> T getVal(){return(getValue<T>(value));}                    // returns UVal value
-  template <class T> T getNewVal(){return(getValue<T>(newValue));}              // returns UVal newValue
-  template <class T> T getValue(UVal v);                                        // returns UVal v
+  template <class T=int> T getVal(){return(getValue<T>(value));}                    // returns UVal value
+  template <class T=int> T getNewVal(){return(getValue<T>(newValue));}              // returns UVal newValue
+  template <class T> T getValue(UVal v);                                            // returns UVal v
+
+  boolean updated(){return(isUpdated);}                                             // returns isUpdated
   
 };
 

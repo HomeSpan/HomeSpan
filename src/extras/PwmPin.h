@@ -20,6 +20,6 @@ class PwmPin {
     void set(uint8_t channel, uint8_t level);           // sets the PWM duty of channel to level (0-100)
     int getPin(){return pin;}                           // returns the pin number
     
-    static void HSVtoRGB(double h, double s, double v, double *r, double *g, double *b );
+    static void HSVtoRGB(float h, float s, float v, float *r, float *g, float *b );
 
 };
