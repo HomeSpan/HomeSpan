@@ -22,8 +22,8 @@ void setup() {
   // these control did not actually operate anything on the ESP32.  To operate actual devices HomeSpan needs to be programmed to
   // respond to "update" requests from HomeKit by performing some form of operation.
   
-  // Though HomeKit sends "update' requests to individual Characteristics,this is not intuitive and leads to complex coding requirements
-  // when a Service has more than one Characteristic, such as "On" and "Brightness."  To make this MUCH easier for the user, HomeSpan
+  // Though HomeKit sends "updat" requests to individual Characteristics, this is not intuitive and leads to complex coding requirements
+  // when a Service has more than one Characteristic, such as both "On" and "Brightness."  To make this MUCH easier for the user, HomeSpan
   // uses a framework in which Services are updated instead of individual Characteristics.  It does so by calling the update() method of
   // each Service with flags indicating all the Characteristics in that Service that HomeKit requested to update.  The user simply
   // implements code to perform the actual operation, and returns a status flag (okay or not okay).  HomeSpan takes care of all the underlying
@@ -34,7 +34,9 @@ void setup() {
   // method with your own code.  The easiest way to do this is by creating a DERIVED class based on one of the built-in HomeSpan Services.
   // Within this derived class you can perform initial set-up routines (if needed), over-ride the update() method with your own code, and even create
   // any other methods or class-specific variables you need to fully operate complex devices.  Most importantly, the derived class can take arguments
-  // so that you can make them more generic, re-use them multiple times (as will be seen below), and convert them to standalone modules (see Example 7).
+  // so that you can make them more generic, re-use them multiple times (as will be seen below), and convert them to standalone modules (see below).
+
+  // All of the HomeKit Services implemented by HomeSpan can be found in the Services.h file.  Any can be used as the parent for a derived Service.
 
   // We begin by repeating nearly the same code from Example 2, but with a few key changes. For ease of reading, all prior comments have been removed
   // from lines that simply repeat Example 2, and new comments have been added to explictly show the new code.

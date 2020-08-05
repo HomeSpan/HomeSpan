@@ -37,12 +37,12 @@ struct DEV_LED : Service::LightBulb {               // ON/OFF LED
     LOG1("Updating On/Off LED on pin=");
     LOG1(ledPin);
     LOG1(":  Current Power=");
-    LOG1(power->value.BOOL?"true":"false");
+    LOG1(power->getVal()?"true":"false");
     LOG1("  New Power=");
-    LOG1(power->newValue.BOOL?"true":"false");
+    LOG1(power->getNewVal()?"true":"false");
     LOG1("\n");
 
-    digitalWrite(ledPin,power->newValue.BOOL);      
+    digitalWrite(ledPin,power->getNewVal());      
    
     return(StatusCode::OK);                         // return OK status code
   
@@ -97,9 +97,9 @@ struct DEV_DimmableLED : Service::LightBulb {       // Dimmable LED
     LOG1("Updating Dimmable LED on pin=");
     LOG1(ledPin);
     LOG1(":  Current Power=");
-    LOG1(power->value.BOOL?"true":"false");
+    LOG1(power->getVal()?"true":"false");
     LOG1("  Current Brightness=");
-    LOG1(level->value.INT);
+    LOG1(level->getVal());
 
     // Note that since Dimmable_LED has two updateable Characteristics,
     // HomeKit may be requesting either or both to be updated.  We can
@@ -109,19 +109,19 @@ struct DEV_DimmableLED : Service::LightBulb {       // Dimmable LED
     // one of the Characteristics in a Service, either power, level, or both
     // will have its "isUpdated" flag set.
   
-    if(power->isUpdated){
+    if(power->updated()){
       LOG1("  New Power=");
-      LOG1(power->newValue.BOOL?"true":"false");
+      LOG1(power->getNewVal()?"true":"false");
     }
 
-    if(level->isUpdated){
+    if(level->updated()){
       LOG1("  New Brightness=");
-      LOG1(level->newValue.INT);
+      LOG1(level->getNewVal());
     } 
 
     LOG1("\n");
     
-    pwmPin->set(channel,power->newValue.BOOL*level->newValue.INT);    
+    pwmPin->set(channel,power->getNewVal()*level->getNewVal());      
    
     return(StatusCode::OK);                         // return OK status code
   

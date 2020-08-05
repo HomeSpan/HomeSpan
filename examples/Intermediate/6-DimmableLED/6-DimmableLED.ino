@@ -38,7 +38,7 @@ void setup() {
   new SpanAccessory(); 
   
     new Service::AccessoryInformation(); 
-      new Characteristic::Name("LED #1"); 
+      new Characteristic::Name("On/Off LED"); 
       new Characteristic::Manufacturer("HomeSpan"); 
       new Characteristic::SerialNumber("123-ABC"); 
       new Characteristic::Model("20mA LED"); 
@@ -53,7 +53,7 @@ void setup() {
   new SpanAccessory(); 
   
     new Service::AccessoryInformation();    
-      new Characteristic::Name("LED #2");    
+      new Characteristic::Name("Dimmable LED");    
       new Characteristic::Manufacturer("HomeSpan"); 
       new Characteristic::SerialNumber("123-ABC");  
       new Characteristic::Model("20mA LED");   

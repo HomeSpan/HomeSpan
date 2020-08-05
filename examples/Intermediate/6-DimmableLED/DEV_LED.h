@@ -20,7 +20,7 @@ struct DEV_LED : Service::LightBulb {               // ON/OFF LED
 
   StatusCode update(){                              // update() method
 
-    digitalWrite(ledPin,power->newValue.BOOL);      
+    digitalWrite(ledPin,power->getNewVal());      
    
     return(StatusCode::OK);                         // return OK status code
   
@@ -60,7 +60,7 @@ struct DEV_DimmableLED : Service::LightBulb {       // Dimmable LED
     // newValue of the Brightness Characteristic (as an int) is a short-hand way of creating the logic to
     // set the PWM level when the LED is off (always zero) or on (whatever the brightness level is).
     
-    pwmPin->set(channel,power->newValue.BOOL*level->newValue.INT);    
+    pwmPin->set(channel,power->getNewVal()*level->getNewVal());    
    
     return(StatusCode::OK);                         // return OK status code
   

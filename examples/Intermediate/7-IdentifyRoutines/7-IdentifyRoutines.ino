@@ -39,7 +39,7 @@ void setup() {
   // we'll delete these line (comment them out)...
   
   //  new Service::AccessoryInformation(); 
-  //    new Characteristic::Name("LED #1"); 
+  //    new Characteristic::Name("On/Off LED"); 
   //    new Characteristic::Manufacturer("HomeSpan"); 
   //    new Characteristic::SerialNumber("123-ABC"); 
   //    new Characteristic::Model("20mA LED"); 
@@ -50,7 +50,7 @@ void setup() {
   // details on how this is defined.  Note there is an extra argument at the end we set to 3.
   // This optional argument will be used to run the identify routine (see code for details)
 
-    new DEV_Identify("LED #1","HomeSpan","123-ABC","20mA LED","0.9",3);    // NEW!  This implements all the Characteristics above
+    new DEV_Identify("On/Off LED","HomeSpan","123-ABC","20mA LED","0.9",3);    // NEW!  This implements all the Characteristics above
 
     new Service::HAPProtocolInformation();      
       new Characteristic::Version("1.1.0");     
@@ -62,7 +62,7 @@ void setup() {
   // Same as above, we can replace all of this...
   
   //  new Service::AccessoryInformation();    
-  //    new Characteristic::Name("LED #2");    
+  //    new Characteristic::Name("Dimmable LED");    
   //    new Characteristic::Manufacturer("HomeSpan"); 
   //    new Characteristic::SerialNumber("123-ABC");  
   //    new Characteristic::Model("20mA LED");   
@@ -71,7 +71,7 @@ void setup() {
 
   // ...with this (note we set last argument to 5 this time - see code for what this does)
 
-    new DEV_Identify("LED #2","HomeSpan","123-ABC","20mA LED","0.9",5);    // NEW!  This implements all the Characteristics above
+    new DEV_Identify("Dimmable LED","HomeSpan","123-ABC","20mA LED","0.9",5);    // NEW!  This implements all the Characteristics above
       
     new Service::HAPProtocolInformation();          
       new Characteristic::Version("1.1.0");         

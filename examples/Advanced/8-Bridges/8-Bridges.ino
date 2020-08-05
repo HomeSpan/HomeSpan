@@ -58,7 +58,7 @@ void setup() {
   //    minute or more for all the blinking to finish while pairing.
   
   new SpanAccessory(); 
-    new DEV_Identify("LED #1","HomeSpan","123-ABC","20mA LED","0.9",0);    // CHANGED! The number of blinks is now set to zero
+    new DEV_Identify("On/Off LED","HomeSpan","123-ABC","20mA LED","0.9",0);    // CHANGED! The number of blinks is now set to zero
 
   //  new Service::HAPProtocolInformation();      - DELETED - NO LONGER NEEDED
   //    new Characteristic::Version("1.1.0");     - DELETED - NO LONGER NEEDED
@@ -67,7 +67,7 @@ void setup() {
 
   new SpanAccessory(); 
 
-    new DEV_Identify("LED #2","HomeSpan","123-ABC","20mA LED","0.9",0);    // CHANGED! The number of blinks is now set to zero
+    new DEV_Identify("Dimmable LED","HomeSpan","123-ABC","20mA LED","0.9",0);    // CHANGED! The number of blinks is now set to zero
       
   //  new Service::HAPProtocolInformation();      - DELETED - NO LONGER NEEDED
   //    new Characteristic::Version("1.1.0");     - DELETED - NO LONGER NEEDED

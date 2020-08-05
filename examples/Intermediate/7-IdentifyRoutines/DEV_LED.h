@@ -20,7 +20,7 @@ struct DEV_LED : Service::LightBulb {               // ON/OFF LED
 
   StatusCode update(){                              // update() method
 
-    digitalWrite(ledPin,power->newValue.BOOL);      
+    digitalWrite(ledPin,power->getNewVal());      
    
     return(StatusCode::OK);                         // return OK status code
   
@@ -50,7 +50,7 @@ struct DEV_DimmableLED : Service::LightBulb {       // Dimmable LED
 
   StatusCode update(){                              // update() method
     
-    pwmPin->set(channel,power->newValue.BOOL*level->newValue.INT);    
+    pwmPin->set(channel,power->getNewVal()*level->getNewVal());    
    
     return(StatusCode::OK);                         // return OK status code
   

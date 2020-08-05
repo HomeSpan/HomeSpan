@@ -35,7 +35,7 @@ struct DEV_Blinker : Service::LightBulb {           // LED Blinker
     // Note that in practice you'll want to set the reset time to 500ms or less to better emulate a pushbutton.
     // We've used a full 2 seconds in this example for illustrative purposes only.
     
-    new SpanTimedReset(1000);                        // *** NEW!! instantiate SpanTimedRest with a delay of 2000 milliseconds
+    new SpanTimedReset(1000);                        // *** NEW!! instantiate SpanTimedReset with a delay of 2000 milliseconds
     
     this->ledPin=ledPin;                            
     this->nBlinks=nBlinks;                           // NEW! number of blinks
@@ -55,11 +55,11 @@ struct DEV_Blinker : Service::LightBulb {           // LED Blinker
     // the number of times specified, and leave it in the off position when finished.
     // This line is deleted...
     
-    // digitalWrite(ledPin,power->newValue.BOOL);      
+    // digitalWrite(ledPin,power->getNewVal());      
 
     // and is replaced by...
 
-    if(power->newValue.BOOL){                       // check to ensure HomeKit is requesting we "turn on" this device (else ignore)
+    if(power->getNewVal()){                       // check to ensure HomeKit is requesting we "turn on" this device (else ignore)
 
       LOG1("Activating the LED Blinker on pin=");
       LOG1(ledPin);
@@ -72,7 +72,7 @@ struct DEV_Blinker : Service::LightBulb {           // LED Blinker
         delay(250);                                   // wait 250 ms
       }
       
-    } // if power->newValue==true
+    } // if newVal=true
 
     // Note that the delays above of 100ms and 250ms are for illustrative purposes only
     // (and so you can see the LED blink). In practice, if you were controlling an IR LED

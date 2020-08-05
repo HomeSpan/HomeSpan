@@ -16,9 +16,9 @@
 void setup() {
 
   // Example 11 illustrates how to control an RGB LED to set any color and brightness.
-  // The config below should look familiar by now.  We've created a new derived Service,
+  // The configuration below should look familiar by now.  We've created a new derived Service,
   // call RgbLED to house all the required logic.  You'll find all the code in DEV_LED.h.
-  // For completeness, the config also contains an on/off LED and a dimmable LED as shown
+  // For completeness, this configuration also contains an on/off LED and a dimmable LED as shown
   // in prior examples.
   
   Serial.begin(115200);

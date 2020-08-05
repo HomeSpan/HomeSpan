@@ -25,7 +25,7 @@ struct DEV_LED : Service::LightBulb {               // First we create a derived
 
   StatusCode update(){            
 
-    digitalWrite(ledPin,power->newValue.BOOL);      // use a standard Arduino function to turn on/off ledPin based on the boolean variable power->newValue.BOOL (see below for more info)
+    digitalWrite(ledPin,power->getNewVal());        // use a standard Arduino function to turn on/off ledPin based on the return of a call to power->getNewVal() (see below for more info)
    
     return(StatusCode::OK);                         // return OK status code.  There are other possibilties we will explore in later examples.
   
@@ -34,7 +34,8 @@ struct DEV_LED : Service::LightBulb {               // First we create a derived
       
 //////////////////////////////////
 
-// How update() works:
+// HOW update() WORKS:
+// ------------------
 //
 // Whenever a HomeKit controller requests HomeSpan to update a Characteristic, HomeSpan calls the update() method for the SERVICE that contains the
 // Characteristic.  It calls this only one time, even if multiple Characteristics updates are requested for that Service.  For example, if you
@@ -46,36 +47,41 @@ struct DEV_LED : Service::LightBulb {               // First we create a derived
 // that change at the same time.  In the example above, we only have a single Characteristic to deal with, so this does not mean much.  But in later
 // examples we'll see how this works with multiple Characteristics.
 
-// How to access Characteristic values:
+// HOW TO ACCESS A CHARACTERISTIC'S NEW AND CURRENT VALUES
+// -------------------------------------------------------
 //
-// HomeSpan stores the values for its Characteristics in a union structure that allows for different types.  The current value of a Characteristic
-// is stored in a union named "value" whereas upon an update request, the requested value is stored in a union named "newValue."  To access the data
-// underlying either "value" or "newValue" you need to select the element of the union that matches the type.  This is arguably sloppy, but using
-// C++ templates did not seem to make the process any less cumbersome.  The names of each element are based on those specified in HAP Table 6-5, and map
-// to the Arduino data types as follows:
+// HomeSpan stores the values for its Characteristics in a union structure that allows for different types, such as floats, booleans, etc.  The specific
+// types are defined by HAP for each Characteristic.  Looking up whether a Characteristic is a uint8 or uint16 can be tiresome, so HomeSpan abstracts
+// all these details.  Since C++ adheres to strict variable typing, this is done through the use of template methods.  Every Characteristic supports
+// the following two methods:
 //
-//    BOOL -> (boolean)
-//    UINT8 -> (uint8_t)
-//    UINT16 -> (uint16_t)
-//    UINT32 -> (uint32_t)
-//    UINT64 -> (uint64_t)
-//    INT -> (int)
-//    FLOAT -> (double)
-//    STRING -> (const char *)
+//    getVal<type>()     - returns the CURRENT value of the Characterisic, after casting into "type"
+//    getNewVal<type>()  - returns the NEW value (i.e. to be updated) of the Characteritic, after casting into "type"
 //
-// In the above example we created pointer named "power" to point to our newly-created "On" Characteristic.  Hence, to access the current value of that
-// Characteristic we use "power->value.BOOL"  To access to new value requested by HomeKit for this update, we use "power->newValue.BOOL" as shown above.
-// In most cases, we can manage the update by just reading the newValue requested, regardless of the whatever the current value is, but access to the
-// current value is available if neeed.
+// For example, MyChar->getVal<int>() returns the current value of SpanCharacterstic MyChar as an int, REGARDLESS of how the value is stored by HomeSpan.
+// Similarly, MyChar->getVal<double>() returns a value as a double, even it is stored as as a boolean (in which case you'll either get 0.00 or 1.00).
+// Of course you need to make sure you understand the range of expected values so that you don't try to access a value stored as 2-byte int using getVal<uint8_t>().
+// But it's perfectly okay to use getVal<int>() to access the value of a Characteristic that HAP insists on storing as a float, even though its range is
+// strictly between 0 and 100 in steps of 1.  Knowing the range and step size is all you need to know in determining you can access this as an <int> or even a <uint8_t>.
+//
+// Because most Characteristic values can properly be cast into int, getVal and getNewVal both default to <int> if the template parameter is not specified.
+// As you can see above, we retrieved the new value HomeKit requested for the On Characteristic that we named "power" by simply calling power->getNewVal().
+// Since no template parameter is specified, getNewVal() will return an int.  And since the On Characteristic is natively stored as a boolean, getNewVal()
+// will either return a 0 or a 1, depending on whether HomeKit is requesting the Characteristic to be turned off or on. 
+//
+// You may also note that in the above example we needed to use getNewVal(), but did not use getVal() anywhere.  This is because we know exactly what
+// to do if HomeKit requests an LED to be turned on or off.  The current status of the LED (on or off) does not matter.  In latter examples we will see
+// instances where the current state of the device DOES matter, and we will need to access both current and new values.
+//
+// Finally, there is one additional method for Characteristics that is not used above but will be in later examples: updated().  This method returns a
+// boolean indicating whether HomeKit has requested a Characteristic to be updated, which means that getNewVal() will contain the new value it wants to set
+// for that Characteristic.  For a Service with only one Characteristic, as above, we don't need to ask if "power" was updated using power->updated() because
+// the fact the the update() method for the Service is being called means that HomeKit is requesting an update, and the only thing to update is "power".
+// But for Services with two or more Characteristics, update() can be called with a request to update only a subset of the Characteristics.  We will
+// find good use for the updated() method in later, multi-Characteristic examples.
 
-// How to determine the value type for any Characteristic:
-//
-// All HomeKit Characteristics that have been implemented in HomeSpan are defined in "Services.h" in the HomeSpan library.  The top part of "Services.h" defines
-// all the implemented Services.  The bottom part defines the collection of Characteristics needed for those Services.  Within the definition of each
-// Characteristic you'll see the HAP ID number, as well as the data type, such as (boolean), (uint16_t), etc.  Select the corresponding element name
-// from the table above to access the underlying "value" or "newValue" data elements.
-
-// What the return code means:
+// WHAT THE RETURN CODE FOR update() MEANS
+// ---------------------------------------
 //
 // HomeKit requires each Characteristic to return a status code when an attempt to update it's value is made.  HomeSpan automatically takes care of
 // some of errors, such as a Characteristic not being found, or a request to update a Characteristic that is read only.  In these cases update() is never
@@ -99,3 +105,4 @@ struct DEV_LED : Service::LightBulb {               // First we create a derived
 // Final note:  There are very few reasons you should need to return an error code since so much checking is done in advance by either HomeSpan or HomeKit
 // itself.  For instance, HomeKit does not allow you to use the Controller, or even Siri, to change the brightness of LightBulb to a value outside the
 // range of allowable values you specified.  This means that any update() requests you receive should only contain newValue data element that are in-range.
+//
