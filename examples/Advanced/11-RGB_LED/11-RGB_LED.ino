@@ -4,7 +4,7 @@
 //    HomeSpan: A HomeKit implementation for the ESP32    //
 //    ------------------------------------------------    //
 //                                                        //
-// Example 9: Logging messages to the Serial Monitor      //
+// Example 11: Controlling a full-color RGB LED           //
 //                                                        //
 //                                                        //
 ////////////////////////////////////////////////////////////
