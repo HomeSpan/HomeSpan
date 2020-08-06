@@ -20,7 +20,7 @@ void setup() {
   
   Serial.begin(115200);
 
-  homeSpan.begin(Category::Lighting,"HomeSpan LEDs");
+  homeSpan.begin(Category::Bridges,"HomeSpan Bridge");
 
   new SpanAccessory();  
     new DEV_Identify("Bridge #1","HomeSpan","123-ABC","HS Bridge","0.9",3);
@@ -42,17 +42,32 @@ void setup() {
       new Characteristic::Active();             
       new Characteristic::RotationDirection();
       new Characteristic::RotationSpeed(0);
-
+      
   new SpanAccessory();                                                          
     new DEV_Identify("Ceiling Fan #3","HomeSpan","123-ABC","20mA LED","0.9",0);
-    new DEV_DimmableLED(0,17);
-    new Characteristic::Name("Main Light");
+    new DEV_DimmableLED(0,17);    
+      new Characteristic::Name("Main Light");
+    new DEV_LED(16);    
+      new Characteristic::Name("Night Light");
     new Service::Fan(ServiceType::Primary);                             
       new Characteristic::Active();             
       new Characteristic::RotationDirection();
       new Characteristic::RotationSpeed(0);
       new Characteristic::Name("Fan");
-      
+
+  new SpanAccessory();                                                          
+    new DEV_Identify("Ceiling Fan #4","HomeSpan","123-ABC","20mA LED","0.9",0,ServiceType::Primary);
+    new DEV_DimmableLED(0,17);    
+      new Characteristic::Name("Main Light");
+    new DEV_LED(16);    
+      new Characteristic::Name("Night Light");
+    new Service::Fan();                             
+      new Characteristic::Active();             
+      new Characteristic::RotationDirection();
+      new Characteristic::RotationSpeed(0);
+      new Characteristic::Name("Fan");
+
+
 } // end of setup()
 
 //////////////////////////////////////

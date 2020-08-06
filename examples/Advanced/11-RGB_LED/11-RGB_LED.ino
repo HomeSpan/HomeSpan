@@ -23,7 +23,7 @@ void setup() {
   
   Serial.begin(115200);
 
-  homeSpan.begin(Category::Lighting,"HomeSpan LEDs");
+  homeSpan.begin(Category::Bridges,"HomeSpan Bridge");
 
 
   new SpanAccessory();  
