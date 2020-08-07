@@ -12,7 +12,7 @@ struct DEV_LED : Service::LightBulb {               // ON/OFF LED
   int ledPin;                                       // pin number defined for this LED
   SpanCharacteristic *power;                        // reference to the On Characteristic
   
-  DEV_LED(int ledPin, ServiceType sType=ServiceType::Regular) : Service::LightBulb(sType){        // constructor() method
+  DEV_LED(int ledPin, ServiceType sType=ServiceType::Regular) : Service::LightBulb(sType){        // NEW! modified constructor() method to include optional ServiceType argument
 
     power=new Characteristic::On();                 
     this->ledPin=ledPin;                            
@@ -51,7 +51,7 @@ struct DEV_DimmableLED : Service::LightBulb {       // Dimmable LED
   SpanCharacteristic *power;                        // reference to the On Characteristic
   SpanCharacteristic *level;                        // reference to the Brightness Characteristic
   
-  DEV_DimmableLED(int channel, int ledPin, ServiceType sType=ServiceType::Regular) : Service::LightBulb(sType){        // constructor() method
+  DEV_DimmableLED(int channel, int ledPin, ServiceType sType=ServiceType::Regular) : Service::LightBulb(sType){        // // NEW!  modified constructor() method
 
     power=new Characteristic::On();     
                 
