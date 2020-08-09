@@ -66,8 +66,8 @@ struct Span{
   int sprintfAttributes(SpanPut *pObj, int nObj, char *cBuf);             // prints SpanPut object into buf, unless buf=NULL; return number of characters printed, excluding null terminator, even if buf=NULL
   int sprintfAttributes(char **ids, int numIDs, int flags, char *cBuf);   // prints accessory.characteristic ids into buf, unless buf=NULL; return number of characters printed, excluding null terminator, even if buf=NULL
 
-  void clearNotify(int slotNum);                                                         // set ev notification flags for connection 'slotNum' to false across all characteristics 
-  int sprintfNotify(SpanPut *pObj, int nObj, char *cBuf, int conNum, int &numNotify);    // prints notification JSON into buf based on SpanPut objects and specified connection number
+  void clearNotify(int slotNum);                                          // set ev notification flags for connection 'slotNum' to false across all characteristics 
+  int sprintfNotify(SpanPut *pObj, int nObj, char *cBuf, int conNum);     // prints notification JSON into buf based on SpanPut objects and specified connection number
 
   void setResetPin(int pin){resetPin=pin;}      // sets new pin to be used for factory reset
 

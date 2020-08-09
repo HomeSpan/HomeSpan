@@ -2,7 +2,7 @@
 #include <ESPmDNS.h>
 #include <sodium.h>
 
-#include "HomeSpan.h"
+//#include "HomeSpan.h"
 #include "HAP.h"
 
 //////////////////////////////////////
@@ -1084,16 +1084,17 @@ int HAPClient::putCharacteristicsURL(char *json){
 
   // Create and send Event Notifications if needed
 
+  eventNotify(pObj,n,HAPClient::conNum);                  // transmit EVENT Notification for "n" pObj objects, except DO NOT notify client making request
+
+/*
   for(int i=0;i<MAX_CONNECTIONS;i++){                 // loop over all connection slots
     if(hap[i].client && i!=HAPClient::conNum){        // if there is a client connected to this slot and it is NOT the current client requesting this update
 
-      int numNotify=0;
-      int nBytes=homeSpan.sprintfNotify(pObj,n,NULL,i,numNotify);          // get JSON response - includes terminating null (will be recast to uint8_t* below)
+      int nBytes=homeSpan.sprintfNotify(pObj,n,NULL,i);          // get JSON response - includes terminating null (will be recast to uint8_t* below)
 
-      if(numNotify){
-        numNotify=0;
+      if(nBytes>0){
         char jsonBuf[nBytes+1];
-        homeSpan.sprintfNotify(pObj,n,jsonBuf,i,numNotify);
+        homeSpan.sprintfNotify(pObj,n,jsonBuf,i);
 
         int nChars=snprintf(NULL,0,"EVENT/1.0 200 OK\r\nContent-Type: application/hap+json\r\nContent-Length: %d\r\n\r\n",nBytes);      // create Body with Content Length = size of JSON Buf
         char body[nChars+1];
@@ -1111,6 +1112,7 @@ int HAPClient::putCharacteristicsURL(char *json){
       } // if there are characteristic updates to notify     
     } // if client exists
   }
+*/
     
   return(1);
 }
@@ -1163,31 +1165,37 @@ void HAPClient::checkNotifications(){
     }
   }
 
-  for(int i=0;i<MAX_CONNECTIONS;i++){           // loop over all connection slots
-    if(hap[i].client){                          // if there is a client connected to this slot
+  eventNotify(pObj,n);                                // transmit EVENT Notification for "n" pObj objects
 
-      int numNotify=0;
-      int nBytes=homeSpan.sprintfNotify(pObj,n,NULL,i,numNotify);          // get JSON response - includes terminating null (will be recast to uint8_t* below)
+}
 
-      if(numNotify){
-        numNotify=0;
+//////////////////////////////////////
+
+void HAPClient::eventNotify(SpanPut *pObj, int nObj, int ignoreClient){
+  
+  for(int cNum=0;cNum<MAX_CONNECTIONS;cNum++){        // loop over all connection slots
+    if(hap[cNum].client && cNum!=ignoreClient){       // if there is a client connected to this slot and it is NOT flagged to be ignored (in cases where it is the client making a PUT request
+
+      int nBytes=homeSpan.sprintfNotify(pObj,nObj,NULL,cNum);          // get JSON response for notifications to client cNum - includes terminating null (will be recast to uint8_t* below)
+
+      if(nBytes>0){                                                    // if there are notifications to send to client cNum
         char jsonBuf[nBytes+1];
-        homeSpan.sprintfNotify(pObj,n,jsonBuf,i,numNotify);
+        homeSpan.sprintfNotify(pObj,nObj,jsonBuf,cNum);
 
         int nChars=snprintf(NULL,0,"EVENT/1.0 200 OK\r\nContent-Type: application/hap+json\r\nContent-Length: %d\r\n\r\n",nBytes);      // create Body with Content Length = size of JSON Buf
         char body[nChars+1];
         sprintf(body,"EVENT/1.0 200 OK\r\nContent-Type: application/hap+json\r\nContent-Length: %d\r\n\r\n",nBytes);
 
         LOG2("\n>>>>>>>>>> ");
-        LOG2(hap[i].client.remoteIP());
+        LOG2(hap[cNum].client.remoteIP());
         LOG2(" >>>>>>>>>>\n");    
         LOG2(body);
         LOG2(jsonBuf);
         LOG2("\n");
   
-        hap[i].sendEncrypted(body,(uint8_t *)jsonBuf,nBytes);        // note recasting of jsonBuf into uint8_t*
+        hap[cNum].sendEncrypted(body,(uint8_t *)jsonBuf,nBytes);        // note recasting of jsonBuf into uint8_t*
 
-      } // if there are characteristic updates to notify     
+      } // if there are characteristic updates to notify client cNum
     } // if client exists
   }
 

@@ -6,6 +6,7 @@
 #include "HAPConstants.h"
 #include "HKDF.h"
 #include "SRP.h"
+#include "HomeSpan.h"
 
 /////////////////////////////////////////////////
 // NONCE Structure (HAP used last 64 of 96 bits)
@@ -111,6 +112,7 @@ struct HAPClient {
   static void removeController(uint8_t *id);                                           // removes specific Controller.  If no remaining admin Controllers, remove all others (if any) as per HAP requirements.
   static void printControllers();                                                      // prints IDs of all allocated (paired) Controller
   static void checkNotifications();                                                    // checks for notifications and reports to controllers as needed (HAP Section 6.8)
+  static void eventNotify(SpanPut *pObj, int nObj, int ignoreClient=-1);               // transmits EVENT Notifications for nObj SpanPut objects, pObj, with optional flag to ignore a specific client
     
 };
 

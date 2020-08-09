@@ -5,7 +5,7 @@
 
 #include "Utils.h"
 #include "HAP.h"
-#include "HomeSpan.h"
+//#include "HomeSpan.h"
 
 using namespace Utils;
 
@@ -620,9 +620,10 @@ void Span::clearNotify(int slotNum){
 
 ///////////////////////////////
 
-int Span::sprintfNotify(SpanPut *pObj, int nObj, char *cBuf, int conNum, int &numNotify){
+int Span::sprintfNotify(SpanPut *pObj, int nObj, char *cBuf, int conNum){
 
   int nChars=0;
+  boolean notifyFlag=false;
   
   nChars+=snprintf(cBuf,cBuf?64:0,"{\"characteristics\":[");
 
@@ -632,11 +633,11 @@ int Span::sprintfNotify(SpanPut *pObj, int nObj, char *cBuf, int conNum, int &nu
       
       if(pObj[i].characteristic->ev[conNum]){           // if notifications requested for this characteristic by specified connection number
       
-        if(numNotify>0)                                                                // already printed at least one other characteristic
-          nChars+=snprintf(cBuf?(cBuf+nChars):NULL,cBuf?64:0,",");
+        if(notifyFlag)                                                           // already printed at least one other characteristic
+          nChars+=snprintf(cBuf?(cBuf+nChars):NULL,cBuf?64:0,",");               // add preceeding comma before printing next characteristic
         
         nChars+=pObj[i].characteristic->sprintfAttributes(cBuf?(cBuf+nChars):NULL,GET_AID);    // get JSON attributes for characteristic
-        numNotify++;
+        notifyFlag=true;
         
       } // notification requested
     } // characteristic updated
@@ -644,7 +645,7 @@ int Span::sprintfNotify(SpanPut *pObj, int nObj, char *cBuf, int conNum, int &nu
 
   nChars+=snprintf(cBuf?(cBuf+nChars):NULL,cBuf?64:0,"]}");
 
-  return(nChars);    
+  return(notifyFlag?nChars:0);                          // if notifyFlag is not set, return 0, else return number of characters printed to cBuf
 }
 
 ///////////////////////////////
