@@ -22,7 +22,7 @@ struct SpanAccessory;
 struct SpanService;
 struct SpanCharacteristic;
 struct SpanRange;
-struct SpanPut;
+struct SpanBuf;
 struct SpanTimedReset;
 
 ///////////////////////////////
@@ -62,12 +62,12 @@ struct Span{
   SpanCharacteristic *find(int aid, int iid);   // return Characteristic with matching aid and iid (else NULL if not found)
   
   int countCharacteristics(char *buf);                                    // return number of characteristic objects referenced in PUT /characteristics JSON request
-  int updateCharacteristics(char *buf, SpanPut *pObj);                    // parses PUT /characteristics JSON request 'buf into 'pObj' and updates referenced characteristics; returns 1 on success, 0 on fail
-  int sprintfAttributes(SpanPut *pObj, int nObj, char *cBuf);             // prints SpanPut object into buf, unless buf=NULL; return number of characters printed, excluding null terminator, even if buf=NULL
+  int updateCharacteristics(char *buf, SpanBuf *pObj);                    // parses PUT /characteristics JSON request 'buf into 'pObj' and updates referenced characteristics; returns 1 on success, 0 on fail
+  int sprintfAttributes(SpanBuf *pObj, int nObj, char *cBuf);             // prints SpanBuf object into buf, unless buf=NULL; return number of characters printed, excluding null terminator, even if buf=NULL
   int sprintfAttributes(char **ids, int numIDs, int flags, char *cBuf);   // prints accessory.characteristic ids into buf, unless buf=NULL; return number of characters printed, excluding null terminator, even if buf=NULL
 
   void clearNotify(int slotNum);                                          // set ev notification flags for connection 'slotNum' to false across all characteristics 
-  int sprintfNotify(SpanPut *pObj, int nObj, char *cBuf, int conNum);     // prints notification JSON into buf based on SpanPut objects and specified connection number
+  int sprintfNotify(SpanBuf *pObj, int nObj, char *cBuf, int conNum);     // prints notification JSON into buf based on SpanBuf objects and specified connection number
 
   void setResetPin(int pin){resetPin=pin;}      // sets new pin to be used for factory reset
 
@@ -211,9 +211,9 @@ struct SpanRange{
 
 ///////////////////////////////
 
-struct SpanPut{                               // storage to process PUT /characteristics request
-  int aid;                                    // aid to update
-  int iid;                                    // iid to update
+struct SpanBuf{                               // temporary storage buffer for use with putCharacteristicsURL() and checkNotifications() 
+  int aid;                                    // updated aid 
+  int iid;                                    // updated iid
   char *val=NULL;                             // updated value (optional, though either at least 'val' or 'ev' must be specified)
   char *ev=NULL;                              // updated event notification flag (optional, though either at least 'val' or 'ev' must be specified)
   StatusCode status;                          // return status (HAP Table 6-11)

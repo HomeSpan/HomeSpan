@@ -5,7 +5,6 @@
 
 #include "Utils.h"
 #include "HAP.h"
-//#include "HomeSpan.h"
 
 using namespace Utils;
 
@@ -504,7 +503,7 @@ int Span::countCharacteristics(char *buf){
 
 ///////////////////////////////
 
-int Span::updateCharacteristics(char *buf, SpanPut *pObj){
+int Span::updateCharacteristics(char *buf, SpanBuf *pObj){
 
   int nObj=0;
   char *p1;
@@ -620,7 +619,7 @@ void Span::clearNotify(int slotNum){
 
 ///////////////////////////////
 
-int Span::sprintfNotify(SpanPut *pObj, int nObj, char *cBuf, int conNum){
+int Span::sprintfNotify(SpanBuf *pObj, int nObj, char *cBuf, int conNum){
 
   int nChars=0;
   boolean notifyFlag=false;
@@ -650,7 +649,7 @@ int Span::sprintfNotify(SpanPut *pObj, int nObj, char *cBuf, int conNum){
 
 ///////////////////////////////
 
-int Span::sprintfAttributes(SpanPut *pObj, int nObj, char *cBuf){
+int Span::sprintfAttributes(SpanBuf *pObj, int nObj, char *cBuf){
 
   int nChars=0;
 

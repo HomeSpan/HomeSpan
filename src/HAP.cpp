@@ -2,7 +2,6 @@
 #include <ESPmDNS.h>
 #include <sodium.h>
 
-//#include "HomeSpan.h"
 #include "HAP.h"
 
 //////////////////////////////////////
@@ -1041,7 +1040,7 @@ int HAPClient::putCharacteristicsURL(char *json){
   if(n==0)                                      // if no objects found, return
     return(0);
  
-  SpanPut pObj[n];                                        // reserve space for objects
+  SpanBuf pObj[n];                                        // reserve space for objects
   if(!homeSpan.updateCharacteristics(json, pObj))         // perform update
     return(0);                                            // return if failed to update (error message will have been printed in update)
 
@@ -1085,34 +1084,6 @@ int HAPClient::putCharacteristicsURL(char *json){
   // Create and send Event Notifications if needed
 
   eventNotify(pObj,n,HAPClient::conNum);                  // transmit EVENT Notification for "n" pObj objects, except DO NOT notify client making request
-
-/*
-  for(int i=0;i<MAX_CONNECTIONS;i++){                 // loop over all connection slots
-    if(hap[i].client && i!=HAPClient::conNum){        // if there is a client connected to this slot and it is NOT the current client requesting this update
-
-      int nBytes=homeSpan.sprintfNotify(pObj,n,NULL,i);          // get JSON response - includes terminating null (will be recast to uint8_t* below)
-
-      if(nBytes>0){
-        char jsonBuf[nBytes+1];
-        homeSpan.sprintfNotify(pObj,n,jsonBuf,i);
-
-        int nChars=snprintf(NULL,0,"EVENT/1.0 200 OK\r\nContent-Type: application/hap+json\r\nContent-Length: %d\r\n\r\n",nBytes);      // create Body with Content Length = size of JSON Buf
-        char body[nChars+1];
-        sprintf(body,"EVENT/1.0 200 OK\r\nContent-Type: application/hap+json\r\nContent-Length: %d\r\n\r\n",nBytes);
-
-        LOG2("\n>>>>>>>>>> ");
-        LOG2(hap[i].client.remoteIP());
-        LOG2(" >>>>>>>>>>\n");    
-        LOG2(body);
-        LOG2(jsonBuf);
-        LOG2("\n");
-  
-        hap[i].sendEncrypted(body,(uint8_t *)jsonBuf,nBytes);        // note recasting of jsonBuf into uint8_t*
-
-      } // if there are characteristic updates to notify     
-    } // if client exists
-  }
-*/
     
   return(1);
 }
@@ -1143,7 +1114,7 @@ void HAPClient::checkNotifications(){
   if(!n)                                              // nothing to do (either no Timed Reset characteristics, or none that need to be turned off)
     return;
 
-  SpanPut pObj[n];                                    // use a SpanPut object (for convenience) to load characteristics to be updated
+  SpanBuf pObj[n];                                    // use a SpanBuf object to load characteristics to be updated
   n=0;                                                // reset number of tResets found that need to be turned off
   
   for(int i=0;i<homeSpan.TimedResets.size();i++){     // PASS 2: loop through all defined Timed Resets
@@ -1171,7 +1142,7 @@ void HAPClient::checkNotifications(){
 
 //////////////////////////////////////
 
-void HAPClient::eventNotify(SpanPut *pObj, int nObj, int ignoreClient){
+void HAPClient::eventNotify(SpanBuf *pObj, int nObj, int ignoreClient){
   
   for(int cNum=0;cNum<MAX_CONNECTIONS;cNum++){        // loop over all connection slots
     if(hap[cNum].client && cNum!=ignoreClient){       // if there is a client connected to this slot and it is NOT flagged to be ignored (in cases where it is the client making a PUT request
