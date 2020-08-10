@@ -111,7 +111,8 @@ struct HAPClient {
   static void removeControllers();                                                     // removes all Controllers (sets allocated flags to false for all slots)
   static void removeController(uint8_t *id);                                           // removes specific Controller.  If no remaining admin Controllers, remove all others (if any) as per HAP requirements.
   static void printControllers();                                                      // prints IDs of all allocated (paired) Controller
-  static void checkNotifications();                                                    // checks for notifications and reports to controllers as needed (HAP Section 6.8)
+  static void checkTimedResets();                                                      // checks for Timed Resets and reports to controllers as needed (HAP Section 6.8)
+  static void checkEvents();                                                           // checks for Event Notifications and reports to controllers as needed (HAP Section 6.8)
   static void eventNotify(SpanBuf *pObj, int nObj, int ignoreClient=-1);               // transmits EVENT Notifications for nObj SpanBuf objects, pObj, with optional flag to ignore a specific client
     
 };

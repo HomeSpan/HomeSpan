@@ -24,6 +24,7 @@ struct SpanCharacteristic;
 struct SpanRange;
 struct SpanBuf;
 struct SpanTimedReset;
+struct SpanEvent;
 
 ///////////////////////////////
 
@@ -46,6 +47,7 @@ struct Span{
   SpanConfig hapConfig;                         // track configuration changes to the HAP Accessory database; used to increment the configuration number (c#) when changes found
   vector<SpanAccessory *> Accessories;          // vector of pointers to all Accessories
   vector<SpanTimedReset *> TimedResets;         // vector of pointers to all TimedResets
+  vector<SpanEvent *> Events;                   // vector of pointer to all Events
   
   void begin(Category catID,
              char *displayName="HomeSpan Server",
@@ -99,7 +101,8 @@ struct SpanService{
   SpanService(const char *type, ServiceType mod=ServiceType::Regular);
 
   int sprintfAttributes(char *cBuf);                      // prints Service JSON records into buf; return number of characters printed, excluding null terminator
-  virtual StatusCode update() {return(StatusCode::OK);}            // update Service and return final statusCode based on updated Characteristics - should be overridden by DEVICE-SPECIFIC Services
+  virtual StatusCode update() {return(StatusCode::OK);}   // update Service and return final statusCode based on updated Characteristics - should be overridden by DEVICE-SPECIFIC Services
+  virtual SpanCharacteristic* event(){return(NULL);}      // event generation for Services that create their own events and need to notify HomeKit of a new Characteristic value
 };
 
 ///////////////////////////////
@@ -211,7 +214,7 @@ struct SpanRange{
 
 ///////////////////////////////
 
-struct SpanBuf{                               // temporary storage buffer for use with putCharacteristicsURL() and checkNotifications() 
+struct SpanBuf{                               // temporary storage buffer for use with putCharacteristicsURL() and checkTimedResets() 
   int aid;                                    // updated aid 
   int iid;                                    // updated iid
   char *val=NULL;                             // updated value (optional, though either at least 'val' or 'ev' must be specified)
@@ -230,6 +233,16 @@ struct SpanTimedReset{
   boolean trigger=false;                      // alarm timer triggered
 
   SpanTimedReset(int waitTime);
+};
+
+///////////////////////////////
+
+struct SpanEvent{
+  SpanService *service;                       // service to check for events
+  int period;                                 // time period between checks (in milliseconds)
+  unsigned long alarmTime=0;                  // alarm time to trigger next check
+
+  SpanEvent(int period);
 };
 
 /////////////////////////////////////////////////

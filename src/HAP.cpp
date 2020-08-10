@@ -1090,7 +1090,33 @@ int HAPClient::putCharacteristicsURL(char *json){
 
 //////////////////////////////////////
 
-void HAPClient::checkNotifications(){
+void HAPClient::checkEvents(){
+
+  unsigned long cTime=millis();                   // current time
+  int nObj=0;
+  SpanBuf pObj[homeSpan.Events.size()];           // maximum number of objects needed if every Event is triggered and each requires a Notification
+
+  for(int i=0;i<homeSpan.Events.size();i++){                                         // loop over all defined Events
+    if(cTime>homeSpan.Events[i]->alarmTime){                                         // if alarm time has passed
+      homeSpan.Events[i]->alarmTime=cTime+homeSpan.Events[i]->period;                // set new alarm time to current time plus alarm period
+      SpanCharacteristic *characteristic=homeSpan.Events[i]->service->event();       // check service for new EVENT
+      if(characteristic){                                                            // if the service has responded with a characteristic to update
+        pObj[nObj].status=StatusCode::OK;                                            // populate pObj
+        pObj[nObj].characteristic=characteristic;                   
+        pObj[nObj].val="";                                                           // dummy object needed to ensure sprintfNotify knows to consider this "update"                         
+        nObj++;                                                                      // increment number of characteristics found that need to be turned off
+      }
+    }
+  }
+
+  if(nObj>0)
+    eventNotify(pObj,nObj);                       // transmit EVENT Notification for "n" pObj objects
+
+}
+
+//////////////////////////////////////
+
+void HAPClient::checkTimedResets(){
 
   int n=0;
   SpanTimedReset *tReset;
@@ -1107,7 +1133,7 @@ void HAPClient::checkNotifications(){
     }
     else if(millis()>tReset->alarmTime){              // else characteristic is on, timer is started, and timer is expired
       tReset->trigger=true;                           // set trigger
-      n++;                                            // increment number of Push Buttons found that need to be turned off
+      n++;                                            // increment number of characteristics found that need to be turned off
     }
   }
 
@@ -1132,7 +1158,7 @@ void HAPClient::checkNotifications(){
       pObj[n].status=StatusCode::OK;                  // populate pObj
       pObj[n].characteristic=tReset->characteristic;                   
       pObj[n].val="";                                 // dummy object needed to ensure sprintfNotify knows to consider this "update"                         
-      n++;                                            // increment number of Push Buttons found that need to be turned off
+      n++;                                            // increment number of characteristics found that need to be turned off
     }
   }
 

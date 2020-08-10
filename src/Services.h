@@ -109,6 +109,8 @@ namespace Characteristic {
 
   struct SwingMode : SpanCharacteristic { SwingMode(uint8_t value=0) : SpanCharacteristic{"B6",PR+PW+EV,(uint8_t)value}{} };
 
+  struct CurrentTemperature : SpanCharacteristic { CurrentTemperature(double value=0) : SpanCharacteristic{"11",PR+EV,(double)value}{} };
+
   struct Version : SpanCharacteristic { Version(char *value) : SpanCharacteristic{"37",PR,(char *)value}{} };
   
 }
