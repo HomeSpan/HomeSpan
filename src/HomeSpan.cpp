@@ -1055,6 +1055,49 @@ StatusCode SpanCharacteristic::loadUpdate(char *val, char *ev){
 }
 
 ///////////////////////////////
+
+void SpanCharacteristic::setVal(int val){
+
+    switch(format){
+      
+      case BOOL:
+        value.BOOL=(boolean)val;
+      break;
+
+      case INT:
+        value.INT=(int)val;
+      break;
+
+      case UINT8:
+        value.UINT8=(uint8_t)val;
+      break;
+
+      case UINT16:
+        value.UINT16=(uint16_t)val;
+      break;
+
+      case UINT32:
+        value.UINT32=(uint32_t)val;
+      break;
+
+      case UINT64:
+        value.UINT64=(uint64_t)val;
+      break;
+    }
+
+    isUpdated=true;
+
+}
+
+///////////////////////////////
+
+void SpanCharacteristic::setVal(double val){
+  
+    value.FLOAT=(double)val;  
+    isUpdated=true;
+}
+
+///////////////////////////////
 //      SpanTimedReset       //
 ///////////////////////////////
 

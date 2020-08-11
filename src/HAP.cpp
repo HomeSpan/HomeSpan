@@ -1098,8 +1098,27 @@ void HAPClient::checkEvents(){
 
   for(int i=0;i<homeSpan.Events.size();i++){                                         // loop over all defined Events
     if(cTime>homeSpan.Events[i]->alarmTime){                                         // if alarm time has passed
+      
       homeSpan.Events[i]->alarmTime=cTime+homeSpan.Events[i]->period;                // set new alarm time to current time plus alarm period
-      SpanCharacteristic *characteristic=homeSpan.Events[i]->service->event();       // check service for new EVENT
+      homeSpan.Events[i]->service->event();                                          // check service for new EVENTS
+      
+      for(int j=0;j<homeSpan.Events[i]->service->Characteristics.size();j++){        // loop over all characteristics
+        if(homeSpan.Events[i]->service->Characteristics[j]->isUpdated){              // if characteristic is updated
+          
+          Serial.print("Event for aid=");
+          Serial.print(homeSpan.Events[i]->service->Characteristics[j]->aid);
+          Serial.print(" iid=");
+          Serial.print(homeSpan.Events[i]->service->Characteristics[j]->iid);
+          Serial.print("\n");          
+              
+          homeSpan.Events[i]->service->Characteristics[j]->isUpdated=false;         // reset isUpdated flag
+        }
+      } 
+    }
+  }
+}
+
+/*      
       if(characteristic){                                                            // if the service has responded with a characteristic to update
         pObj[nObj].status=StatusCode::OK;                                            // populate pObj
         pObj[nObj].characteristic=characteristic;                   
@@ -1113,6 +1132,8 @@ void HAPClient::checkEvents(){
     eventNotify(pObj,nObj);                       // transmit EVENT Notification for "n" pObj objects
 
 }
+
+*/
 
 //////////////////////////////////////
 

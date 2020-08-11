@@ -47,7 +47,7 @@ void setup() {
   new SpanAccessory();                                                          
     new DEV_Identify("Temp Sensor","HomeSpan","123-ABC","Celsius","0.9",0);
     new DEV_TempSensor();                                                                // Create a Temperature Sensor
-    new SpanEvent(60000);
+    new SpanEvent(5000);
 
 } // end of setup()
 

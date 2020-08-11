@@ -102,7 +102,7 @@ struct SpanService{
 
   int sprintfAttributes(char *cBuf);                      // prints Service JSON records into buf; return number of characters printed, excluding null terminator
   virtual StatusCode update() {return(StatusCode::OK);}   // update Service and return final statusCode based on updated Characteristics - should be overridden by DEVICE-SPECIFIC Services
-  virtual SpanCharacteristic* event(){return(NULL);}      // event generation for Services that create their own events and need to notify HomeKit of a new Characteristic value
+  virtual void event(){}                                  // event generation for Services that create their own events and need to notify HomeKit of a new Characteristic value(s)
 };
 
 ///////////////////////////////
@@ -151,7 +151,7 @@ struct SpanCharacteristic{
   boolean ev[MAX_CONNECTIONS]={false};     // Characteristic Event Notify Enable (per-connection)
   
   int aid=0;                               // Accessory ID - passed through from Service containing this Characteristic
-  boolean isUpdated=false;                 // set to true when new value has been requested by PUT /characteristic
+  boolean isUpdated=false;                 // set to true when new value has been requested by PUT /characteristic, or when value is updated with setVal()
   UVal newValue;                           // the updated value requested by PUT /characteristic
   SpanService *service=NULL;               // pointer to Service containing this Characteristic
       
@@ -171,6 +171,9 @@ struct SpanCharacteristic{
   template <class T=int> T getVal(){return(getValue<T>(value));}                    // returns UVal value
   template <class T=int> T getNewVal(){return(getValue<T>(newValue));}              // returns UVal newValue
   template <class T> T getValue(UVal v);                                            // returns UVal v
+
+  void setVal(int value);                                                           // sets value of UVal value for all integer-based Characterstic types
+  void setVal(double value);                                                        // sets value of UVal value for FLOAT Characteristic type
 
   boolean updated(){return(isUpdated);}                                             // returns isUpdated
   
