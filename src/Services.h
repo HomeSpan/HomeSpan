@@ -19,6 +19,8 @@ namespace Service {
 
   struct ContactSensor : SpanService { ContactSensor(ServiceType mod=ServiceType::Regular) : SpanService{"80", mod}{} };
 
+  struct Door : SpanService { Door(ServiceType mod=ServiceType::Regular) : SpanService{"81", mod}{} };
+
   struct Doorbell : SpanService { Doorbell(ServiceType mod=ServiceType::Regular) : SpanService{"121", mod}{} };
 
   struct Fan : SpanService { Fan(ServiceType mod=ServiceType::Regular) : SpanService{"B7", mod}{} };
@@ -54,6 +56,8 @@ namespace Service {
   struct ServiceLabel : SpanService { ServiceLabel(ServiceType mod=ServiceType::Regular) : SpanService{"47", mod}{} };
 
   struct Slat : SpanService { Slat(ServiceType mod=ServiceType::Regular) : SpanService{"B9", mod}{} };
+
+  struct SmokeSensor : SpanService { SmokeSensor(ServiceType mod=ServiceType::Regular) : SpanService{"87", mod}{} };
 
   struct StatelessProgrammableSwitch : SpanService { StatelessProgrammableSwitch(ServiceType mod=ServiceType::Regular) : SpanService{"89", mod}{} };
 
