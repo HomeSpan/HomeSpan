@@ -1111,7 +1111,7 @@ void HAPClient::checkEvents(){
           Serial.print(homeSpan.Events[i]->service->Characteristics[j]->iid);
           Serial.print("\n");          
               
-          homeSpan.Events[i]->service->Characteristics[j]->isUpdated=false;         // reset isUpdated flag
+          homeSpan.Events[i]->service->Characteristics[j]->isUpdated=false;          // reset isUpdated flag
         }
       } 
     }

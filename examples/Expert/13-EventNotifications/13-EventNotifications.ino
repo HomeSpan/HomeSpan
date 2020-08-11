@@ -12,7 +12,7 @@
 #include "HomeSpan.h" 
 #include "DEV_LED.h"     
 #include "DEV_Identify.h"      
-#include "DEV_Temperature.h" 
+#include "DEV_Sensors.h" 
 
 void setup() {
 
@@ -48,6 +48,11 @@ void setup() {
     new DEV_Identify("Temp Sensor","HomeSpan","123-ABC","Celsius","0.9",0);
     new DEV_TempSensor();                                                                // Create a Temperature Sensor
     new SpanEvent(5000);
+
+  new SpanAccessory();                                                          
+    new DEV_Identify("Air Quality","HomeSpan","123-ABC","Sensor","0.9",0);
+    new DEV_AirQualitySensor();                                                           // Create an Air Quality Sensor
+    new SpanEvent(10000);
 
 } // end of setup()
 
