@@ -9,6 +9,7 @@ struct DEV_TempSensor : Service::TemperatureSensor {     // A standalone Tempera
   
   DEV_TempSensor(ServiceType sType=ServiceType::Regular) : Service::TemperatureSensor(sType){       // constructor() method
 
+    new SpanEvent(5000);
     temp=new Characteristic::CurrentTemperature();                 
     
     Serial.print("Configuring Temperature Sensor");   // initialization message
@@ -18,7 +19,10 @@ struct DEV_TempSensor : Service::TemperatureSensor {     // A standalone Tempera
 
   void event(){
 
-    temp->setVal((double)random(15,25));
+    float temperature=temp->getVal<float>()+1.0;
+    if(temperature>35)
+      temperature=10;
+    temp->setVal(temperature);
        
   } // event
 };
@@ -48,7 +52,7 @@ struct DEV_AirQualitySensor : Service::AirQualitySensor {     // A standalone Ai
 
   void event(){
 
-    airQuality->setVal((int)random(1,6));
+    airQuality->setVal((airQuality->getVal()+1)%6);
     o3Density->setVal((double)random(200,500));
     if(!random(2)){
       no2Density->setVal((double)random(600,800));

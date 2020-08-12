@@ -218,8 +218,8 @@ struct SpanRange{
 ///////////////////////////////
 
 struct SpanBuf{                               // temporary storage buffer for use with putCharacteristicsURL() and checkTimedResets() 
-  int aid;                                    // updated aid 
-  int iid;                                    // updated iid
+  int aid=0;                                  // updated aid 
+  int iid=0;                                  // updated iid
   char *val=NULL;                             // updated value (optional, though either at least 'val' or 'ev' must be specified)
   char *ev=NULL;                              // updated event notification flag (optional, though either at least 'val' or 'ev' must be specified)
   StatusCode status;                          // return status (HAP Table 6-11)
