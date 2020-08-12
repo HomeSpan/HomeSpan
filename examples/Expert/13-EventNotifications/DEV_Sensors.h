@@ -51,7 +51,6 @@ struct DEV_AirQualitySensor : Service::AirQualitySensor {     // A standalone Ai
     airQuality->setVal((int)random(1,6));
     o3Density->setVal((double)random(200,500));
     if(!random(2)){
-      Serial.println("HERE\n");
       no2Density->setVal((double)random(600,800));
     }
        

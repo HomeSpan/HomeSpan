@@ -1108,14 +1108,13 @@ void HAPClient::checkEvents(){
           sb.characteristic=homeSpan.Events[i]->service->Characteristics[j];         // set characteristic          
           sb.status=StatusCode::OK;                                                  // set status
           sb.val="";                                                                 // set dummy "val" so that sprintfNotify knows to consider this "update"
-
           spanBuf.push_back(sb);
                  
-          Serial.print("Event for aid=");
-          Serial.print(homeSpan.Events[i]->service->Characteristics[j]->aid);
-          Serial.print(" iid=");
-          Serial.print(homeSpan.Events[i]->service->Characteristics[j]->iid);
-          Serial.print("\n");          
+          LOG1("Event Notification for aid=");
+          LOG1(homeSpan.Events[i]->service->Characteristics[j]->aid);
+          LOG1(" iid=");
+          LOG1(homeSpan.Events[i]->service->Characteristics[j]->iid);
+          LOG1("\n");          
               
           homeSpan.Events[i]->service->Characteristics[j]->isUpdated=false;          // reset isUpdated flag
           
@@ -1133,51 +1132,37 @@ void HAPClient::checkEvents(){
 
 void HAPClient::checkTimedResets(){
 
-  int n=0;
-  SpanTimedReset *tReset;
+  unsigned long cTime=millis();                   // current time
+  vector<SpanBuf> spanBuf;                        // vector to SpanBuf objects
 
-  for(int i=0;i<homeSpan.TimedResets.size();i++){     // PASS 1: loop through all defined Timed Resets
-    tReset=homeSpan.TimedResets[i];
-    if(!tReset->characteristic->value.BOOL){          // characteristic is off
-      tReset->start=false;                            // ensure timer is not started
-      tReset->trigger=false;                          // turn off trigger
+  for(int i=0;i<homeSpan.TimedResets.size();i++){                                    // loop through all defined Timed Resets
+    if(!homeSpan.TimedResets[i]->characteristic->value.BOOL){                        // characteristic is off
+      homeSpan.TimedResets[i]->start=false;                                          // ensure timer is not started
     }
-    else if(!tReset->start){                          // else characteristic is on but timer is not started
-      tReset->start=true;                             // start timer
-      tReset->alarmTime=millis()+tReset->waitTime;    // set alarm time
+    else if(!homeSpan.TimedResets[i]->start){                                        // else characteristic is on but timer is not started
+      homeSpan.TimedResets[i]->start=true;                                           // start timer
+      homeSpan.TimedResets[i]->alarmTime=cTime+homeSpan.TimedResets[i]->waitTime;    // set alarm time
     }
-    else if(millis()>tReset->alarmTime){              // else characteristic is on, timer is started, and timer is expired
-      tReset->trigger=true;                           // set trigger
-      n++;                                            // increment number of characteristics found that need to be turned off
-    }
-  }
-
-  if(!n)                                              // nothing to do (either no Timed Reset characteristics, or none that need to be turned off)
-    return;
-
-  SpanBuf pObj[n];                                    // use a SpanBuf object to load characteristics to be updated
-  n=0;                                                // reset number of tResets found that need to be turned off
-  
-  for(int i=0;i<homeSpan.TimedResets.size();i++){     // PASS 2: loop through all defined Timed Resets
-    tReset=homeSpan.TimedResets[i];
-    if(tReset->trigger){                              // characteristic is triggered     
+    else if(cTime>homeSpan.TimedResets[i]->alarmTime){                               // else characteristic is on, timer is started, and timer is expired
       
       LOG1("Resetting aid=");
-      LOG1(tReset->characteristic->aid);
+      LOG1(homeSpan.TimedResets[i]->characteristic->aid);
       LOG1(" iid=");  
-      LOG1(tReset->characteristic->iid);
+      LOG1(homeSpan.TimedResets[i]->characteristic->iid);
       LOG1("\n");
       
-      memset(&(tReset->characteristic->value),0,sizeof(tReset->characteristic->value));
+      memset(&(homeSpan.TimedResets[i]->characteristic->value),0,sizeof(SpanCharacteristic::UVal));
       
-      pObj[n].status=StatusCode::OK;                  // populate pObj
-      pObj[n].characteristic=tReset->characteristic;                   
-      pObj[n].val="";                                 // dummy object needed to ensure sprintfNotify knows to consider this "update"                         
-      n++;                                            // increment number of characteristics found that need to be turned off
+      SpanBuf sb;                                                                    // create SpanBuf object
+      sb.characteristic=homeSpan.TimedResets[i]->characteristic;                     // set characteristic          
+      sb.status=StatusCode::OK;                                                      // set status
+      sb.val="";                                                                     // set dummy "val" so that sprintfNotify knows to consider this "update"
+      spanBuf.push_back(sb);
     }
   }
 
-  eventNotify(pObj,n);                                // transmit EVENT Notification for "n" pObj objects
+  if(spanBuf.size()>0)                            // if updated items are found
+    eventNotify(&spanBuf[0],spanBuf.size());      // transmit EVENT Notifications
 
 }
 
