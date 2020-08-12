@@ -1093,8 +1093,7 @@ int HAPClient::putCharacteristicsURL(char *json){
 void HAPClient::checkEvents(){
 
   unsigned long cTime=millis();                   // current time
-  int nObj=0;
-  SpanBuf pObj[homeSpan.Events.size()];           // maximum number of objects needed if every Event is triggered and each requires a Notification
+  vector<SpanBuf> spanBuf;                        // vector to SpanBuf objects
 
   for(int i=0;i<homeSpan.Events.size();i++){                                         // loop over all defined Events
     if(cTime>homeSpan.Events[i]->alarmTime){                                         // if alarm time has passed
@@ -1104,7 +1103,14 @@ void HAPClient::checkEvents(){
       
       for(int j=0;j<homeSpan.Events[i]->service->Characteristics.size();j++){        // loop over all characteristics
         if(homeSpan.Events[i]->service->Characteristics[j]->isUpdated){              // if characteristic is updated
-          
+
+          SpanBuf sb;                                                                // create SpanBuf object
+          sb.characteristic=homeSpan.Events[i]->service->Characteristics[j];         // set characteristic          
+          sb.status=StatusCode::OK;                                                  // set status
+          sb.val="";                                                                 // set dummy "val" so that sprintfNotify knows to consider this "update"
+
+          spanBuf.push_back(sb);
+                 
           Serial.print("Event for aid=");
           Serial.print(homeSpan.Events[i]->service->Characteristics[j]->aid);
           Serial.print(" iid=");
@@ -1112,28 +1118,16 @@ void HAPClient::checkEvents(){
           Serial.print("\n");          
               
           homeSpan.Events[i]->service->Characteristics[j]->isUpdated=false;          // reset isUpdated flag
-        }
-      } 
-    }
-  }
-}
+          
+        } // if characteristic is updated
+      } // characteristic loop 
+    } // alarm triggered
+  } // events loop
 
-/*      
-      if(characteristic){                                                            // if the service has responded with a characteristic to update
-        pObj[nObj].status=StatusCode::OK;                                            // populate pObj
-        pObj[nObj].characteristic=characteristic;                   
-        pObj[nObj].val="";                                                           // dummy object needed to ensure sprintfNotify knows to consider this "update"                         
-        nObj++;                                                                      // increment number of characteristics found that need to be turned off
-      }
-    }
-  }
-
-  if(nObj>0)
-    eventNotify(pObj,nObj);                       // transmit EVENT Notification for "n" pObj objects
+  if(spanBuf.size()>0)                            // if updated items are found
+    eventNotify(&spanBuf[0],spanBuf.size());      // transmit EVENT Notifications
 
 }
-
-*/
 
 //////////////////////////////////////
 

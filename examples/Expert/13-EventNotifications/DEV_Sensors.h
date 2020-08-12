@@ -18,7 +18,7 @@ struct DEV_TempSensor : Service::TemperatureSensor {     // A standalone Tempera
 
   void event(){
 
-    temp->setVal(22.0);
+    temp->setVal((double)random(15,25));
        
   } // event
 };
@@ -48,11 +48,11 @@ struct DEV_AirQualitySensor : Service::AirQualitySensor {     // A standalone Ai
 
   void event(){
 
-    airQuality->setVal(1);
-    o3Density->setVal(10.8);
+    airQuality->setVal((int)random(1,6));
+    o3Density->setVal((double)random(200,500));
     if(!random(2)){
       Serial.println("HERE\n");
-      no2Density->setVal(50.3);
+      no2Density->setVal((double)random(600,800));
     }
        
   } // event

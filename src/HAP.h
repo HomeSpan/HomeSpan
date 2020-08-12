@@ -114,7 +114,6 @@ struct HAPClient {
   static void checkTimedResets();                                                      // checks for Timed Resets and reports to controllers as needed (HAP Section 6.8)
   static void checkEvents();                                                           // checks for Event Notifications and reports to controllers as needed (HAP Section 6.8)
   static void eventNotify(SpanBuf *pObj, int nObj, int ignoreClient=-1);               // transmits EVENT Notifications for nObj SpanBuf objects, pObj, with optional flag to ignore a specific client
-    
 };
 
 /////////////////////////////////////////////////
