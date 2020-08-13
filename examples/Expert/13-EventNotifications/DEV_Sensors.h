@@ -62,7 +62,7 @@ struct DEV_AirQualitySensor : Service::AirQualitySensor {     // A standalone Ai
   // An Air Quality Sensor is similar to a Temperature Sensor except that it supports a wide variety of measurements.
   // We will use three of them.  The first is required, the second two are optional.
 
-  SpanCharacteristic *airQuality;                 // reference to the Air Quality Characteristic, which is in integer from 0 to 5
+  SpanCharacteristic *airQuality;                 // reference to the Air Quality Characteristic, which is an integer from 0 to 5
   SpanCharacteristic *o3Density;                  // reference to the Ozone Density Characteristic, which is a float from 0 to 1000
   SpanCharacteristic *no2Density;                 // reference to the Nitrogen Dioxide Characteristic, which is a float from 0 to 1000
   
@@ -81,16 +81,33 @@ struct DEV_AirQualitySensor : Service::AirQualitySensor {     // A standalone Ai
 
   void event(){
 
-    airQuality->setVal((airQuality->getVal()+1)%6);           // simulate a change in Air Quality by incrementing its current value by one, and keeping in range 0-5
-    o3Density->setVal((double)random(200,500));               // change the Ozone Density to some random value between 200 and 499.  Note use of (double) cast since random returns an integer.
+    airQuality->setVal((airQuality->getVal()+1)%6);           // simulate a change in Air Quality by incrementing the current value by one, and keeping in range 0-5
+    o3Density->setVal((double)random(200,500));               // change the Ozone Density to some random value between 200 and 499.  Note use of (double) cast since random returns an integer
 
-    // Note we are NOT updating the Nitrogen Dioxide Density Characteristic.  This should therefore remain steady at 700.0
+    // Note we are NOT updating the Nitrogen Dioxide Density Characteristic.  This should therefore remain steady at its initial value of 700.0
        
   } // event
 };
       
 //////////////////////////////////
 
-// WHERE ARE THE READINGS FOR the AIR Quality Sensor DISPLAYED?
+// What you should see in your HomeKit Application
 //
+// If you load the above example, your HomeKit App should display two new tiles: one labeled "Temp Sensor" and the other labeled "Air Quality".
+// The Temp Sensor should indicate a temperature in the range of 10C to 35C (50F to 95F), which automatically updates every 5 seconds. 
+// The Air Quality, ranging from 0-5, should change states once every 10 seconds.  States are displayed in HomeKit as "Unknown", "Excellent", "Good", "Fair",
+// "Inferior" and "Poor".
 //
+// HomeKit Tiles generally only display the value of one required Characteristic and maybe one optional Characteristic.  In the case of an Air Quality Sensor,
+// only the state of the Air Quality is displayed.  To see all the oher Characteristics, such as Ozone Density and Nitrogen Dioxide Density, you need to click
+// on the tile, AND open the settings screen (would be nicer if HomeKit displayed these values on the control screen instead of making you open the settings screen).
+// On the setting screen you should see the values of all three of the Characteristics we instantiated: Air Quality, Nitrogen Dioxide Density, and Ozone Density.
+// Both the Air Quality and Ozone Density should change every 10 seconds.  The Nitrogen Dioxide Density should remain steady at the initial value of 700.0.
+//
+// If you run HomeSpan at a VERBOSITY level of 2 (specified in the library's Settings.h file), you can see the under the hood HomeSpan is sending Event Notification
+// messages to all registered controllers every 5 seconds for the Temp Sensor, and every 10 seconds for the Air Quality Sensor.  If you lok carefully you'll see that
+// the Event Notification message for the Air Quality Sensor only include two values - one for the Air Quality state and one for the Ozone Density.  HomeSpan is NOT
+// sending a value for the Nitrogen Dioxide Density Characteristic since it has not been changed with a setVal() function.  This is an important design feature and
+// shows that the instantiation of a new SpanEvent only determines how often the event() method is checked by HomeSpan.  If the event() method ALWAYS updates a
+// Characteristic, then an Event Notification will always be generated.  However, if event() does not update a Characteristic, then no message will be generated.
+// This allows you to create a SpanEvent.
