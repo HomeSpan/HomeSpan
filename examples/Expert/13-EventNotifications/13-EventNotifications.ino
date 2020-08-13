@@ -5,8 +5,8 @@
 //    ------------------------------------------------    //
 //                                                        //
 // Example 13: Event Notifications                        //
-//             * implementing a temperature sensor        //
-//             * implementing an air quality sensor       //
+//             * implementing a Temperature Sensor        //
+//             * implementing an Air Quality Sensor       //
 //                                                        //
 ////////////////////////////////////////////////////////////
 

@@ -92,22 +92,29 @@ struct DEV_AirQualitySensor : Service::AirQualitySensor {     // A standalone Ai
 //////////////////////////////////
 
 // What you should see in your HomeKit Application
-//
+// -----------------------------------------------
+
 // If you load the above example, your HomeKit App should display two new tiles: one labeled "Temp Sensor" and the other labeled "Air Quality".
-// The Temp Sensor should indicate a temperature in the range of 10C to 35C (50F to 95F), which automatically updates every 5 seconds. 
-// The Air Quality, ranging from 0-5, should change states once every 10 seconds.  States are displayed in HomeKit as "Unknown", "Excellent", "Good", "Fair",
+// The Temp Sensor tile should indicate a temperature in the range of 10C to 35C (50F to 95F), which automatically increments and updates 0.5C every 5 seconds. 
+// The Air Quality tile should cycle through "quality" states once every 10 seconds.  States are displayed in HomeKit as "Unknown", "Excellent", "Good", "Fair",
 // "Inferior" and "Poor".
-//
-// HomeKit Tiles generally only display the value of one required Characteristic and maybe one optional Characteristic.  In the case of an Air Quality Sensor,
-// only the state of the Air Quality is displayed.  To see all the oher Characteristics, such as Ozone Density and Nitrogen Dioxide Density, you need to click
-// on the tile, AND open the settings screen (would be nicer if HomeKit displayed these values on the control screen instead of making you open the settings screen).
+
+// Note that HomeKit only displays the values of a subset of Characteristics within the tile itself.  In the case of an Air Quality Sensor,
+// only the quality state of the Air Quality is displayed.  To see the values of other Characteristics, such as Ozone Density and Nitrogen Dioxide Density, you need to click
+// on the tile, AND open the settings screen (it would be nicer if HomeKit displayed these values on the control screen instead of making you open the settings screen).
 // On the setting screen you should see the values of all three of the Characteristics we instantiated: Air Quality, Nitrogen Dioxide Density, and Ozone Density.
-// Both the Air Quality and Ozone Density should change every 10 seconds.  The Nitrogen Dioxide Density should remain steady at the initial value of 700.0.
-//
-// If you run HomeSpan at a VERBOSITY level of 2 (specified in the library's Settings.h file), you can see the under the hood HomeSpan is sending Event Notification
-// messages to all registered controllers every 5 seconds for the Temp Sensor, and every 10 seconds for the Air Quality Sensor.  If you lok carefully you'll see that
+// Both the Air Quality and Ozone Density should change every 10 seconds.  The Nitrogen Dioxide Density should remain steady at the initial value of 700.0, since we
+// never use setVal() to update this Characteristic.
+
+// If you run HomeSpan at a VERBOSITY level of 2 (as specified in the library's Settings.h file), you can see that under the hood HomeSpan is sending Event Notification
+// messages to all registered controllers every 5 seconds for the Temp Sensor, and every 10 seconds for the Air Quality Sensor.  If you look carefully you'll see that
 // the Event Notification message for the Air Quality Sensor only include two values - one for the Air Quality state and one for the Ozone Density.  HomeSpan is NOT
 // sending a value for the Nitrogen Dioxide Density Characteristic since it has not been changed with a setVal() function.  This is an important design feature and
-// shows that the instantiation of a new SpanEvent only determines how often the event() method is checked by HomeSpan.  If the event() method ALWAYS updates a
-// Characteristic, then an Event Notification will always be generated.  However, if event() does not update a Characteristic, then no message will be generated.
-// This allows you to create a SpanEvent.
+// shows that the instantiation of a new SpanEvent only determines how often the event() method is checked by HomeSpan, not whether Event Notifications are actually sent.
+// If the event() method ALWAYS updates a Characteristic, then an Event Notification will always be generated.  However, if event() does not update a Characteristic,
+// or only updates it under certain circumstances, then no message will be generated.  This allows you to create a SpanEvent that frequenty checks a Service for an
+// event update, without generating Event Notifications that simply repeat the existing value of a Characteristic.  We will see how this comes into play in the next example.
+
+// FINAL NOTE: The number of decimals HomeKit displays for temperature in the HomeKit app is independent of the step size of the value itself.  This seems to be
+// hardcoded by HomeKit: for Fahrenheit a Temperature Sensor tile shows no decimals and ROUNDS to the nearest whole degree (e.g. 72, 73, 74 degrees); for Celsius
+// the tile allows for half-degree resolution and ROUNDS accordingly (e.g. 22.7 is displayed as 22.5 and 22.8 is displayed as 23.0).
