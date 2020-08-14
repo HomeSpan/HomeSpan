@@ -91,10 +91,14 @@ namespace Characteristic {
 
   struct CurrentDoorState : SpanCharacteristic { CurrentDoorState(uint8_t value=1) : SpanCharacteristic{"E",PR+EV,(uint8_t)value}{} };
 
+  struct CurrentPosition : SpanCharacteristic { CurrentPosition(uint8_t value=0) : SpanCharacteristic{"6D",PR+EV,(uint8_t)value}{} };
+
   struct CurrentTemperature : SpanCharacteristic { CurrentTemperature(double value=0) : SpanCharacteristic{"11",PR+EV,(double)value}{} };
 
   struct FirmwareRevision : SpanCharacteristic { FirmwareRevision(char *value) : SpanCharacteristic{"52",PR,(char *)value}{} };
   
+  struct HoldPosition : SpanCharacteristic { HoldPosition(boolean value=false) : SpanCharacteristic{"6F",PW,(boolean)value}{} };
+
   struct Hue : SpanCharacteristic { Hue(double value=0) : SpanCharacteristic{"13",PR+PW+EV,(double)value}{} };
   
   struct Identify : SpanCharacteristic { Identify() : SpanCharacteristic{"14",PW,(boolean)false}{} };
@@ -118,6 +122,8 @@ namespace Characteristic {
   struct PM10Density : SpanCharacteristic { PM10Density(double value=0) : SpanCharacteristic{"C7",PR+EV,(double)value}{} };
 
   struct PM25Density : SpanCharacteristic { PM25Density(double value=0) : SpanCharacteristic{"C6",PR+EV,(double)value}{} };
+
+  struct PositionState : SpanCharacteristic { PositionState(uint8_t value=2) : SpanCharacteristic{"72",PR+EV,(uint8_t)value}{} };
 
   struct RotationDirection : SpanCharacteristic { RotationDirection(int value=0) : SpanCharacteristic{"28",PR+PW+EV,(int)value}{} };
 
@@ -146,6 +152,8 @@ namespace Characteristic {
   struct SwingMode : SpanCharacteristic { SwingMode(uint8_t value=0) : SpanCharacteristic{"B6",PR+PW+EV,(uint8_t)value}{} };
 
   struct TargetDoorState : SpanCharacteristic { TargetDoorState(uint8_t value=1) : SpanCharacteristic{"32",PR+PW+EV,(uint8_t)value}{} };
+
+  struct TargetPosition : SpanCharacteristic { TargetPosition(uint8_t value=0) : SpanCharacteristic{"7C",PR+PW+EV,(uint8_t)value}{} };
 
   struct TemperatureDisplayUnits : SpanCharacteristic { TemperatureDisplayUnits(uint8_t value=0) : SpanCharacteristic{"36",PR+PW+EV,(uint8_t)value}{} };
 

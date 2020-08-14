@@ -10,7 +10,7 @@
 
 #include "HomeSpan.h" 
 #include "DEV_Identify.h"      
-#include "DEV_Doors.h" 
+#include "DEV_DoorsWindows.h" 
 
 void setup() {
 
@@ -74,7 +74,11 @@ void setup() {
       
   new SpanAccessory();                                                          
     new DEV_Identify("Garage Door","HomeSpan","123-ABC","Door","0.9",0);
-    new DEV_GarageDoor();                                                               // Create a Garage Door Opener (see DEV_Doors.h for definition)
+    new DEV_GarageDoor();                                                               // Create a Garage Door Opener (see DEV_DoorsWindows.h for definition)
+
+  new SpanAccessory();                                                          
+    new DEV_Identify("Window Shade","HomeSpan","123-ABC","Shade","0.9",0);
+    new DEV_WindowShade();                                                               // Create a motorized Window Shade (see DEV_DoorsWindows.h for definition)
 
 } // end of setup()
 
