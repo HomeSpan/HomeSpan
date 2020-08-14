@@ -1,9 +1,11 @@
 
 #include <Arduino.h>
+#include <unordered_map>
 
 #include "Settings.h"
 
 using std::vector;
+using std::unordered_map;
 
 enum {
   GET_AID=1,
@@ -44,10 +46,11 @@ struct Span{
 
   int resetPin=21;                              // drive this pin low to "factory" reset NVS data on start-up
   
-  SpanConfig hapConfig;                         // track configuration changes to the HAP Accessory database; used to increment the configuration number (c#) when changes found
-  vector<SpanAccessory *> Accessories;          // vector of pointers to all Accessories
-  vector<SpanTimedReset *> TimedResets;         // vector of pointers to all TimedResets
-  vector<SpanEvent *> Events;                   // vector of pointer to all Events
+  SpanConfig hapConfig;                             // track configuration changes to the HAP Accessory database; used to increment the configuration number (c#) when changes found
+  vector<SpanAccessory *> Accessories;              // vector of pointers to all Accessories
+  vector<SpanTimedReset *> TimedResets;             // vector of pointers to all TimedResets
+  vector<SpanEvent *> Events;                       // vector of pointer to all Events
+  unordered_map<uint64_t, uint32_t> TimedWrites;    // map of timed-write PIDs and Alarm Times (based on TTLs)
   
   void begin(Category catID,
              char *displayName="HomeSpan Server",

@@ -227,6 +227,17 @@ void HAPClient::processRequest(){
       putCharacteristicsURL((char *)content);                           // process URL
       return;
     }
+
+    if(!strncmp(body,"PUT /prepare ",13) &&                          // PUT PREPARE
+       strstr(body,"Content-Type: application/hap+json")){                   // check that content is JSON
+
+      content[cLen]='\0';                                                    // add a trailing null on end of JSON
+      LOG2((char *)content);                                         // print JSON
+      LOG2("\n------------ END JSON! ------------\n");
+               
+      putPrepareURL((char *)content);                           // process URL
+      return;
+    }
       
     notFoundError();
     Serial.print("\n*** ERROR:  Bad PUT request - URL not found\n\n");
@@ -1086,6 +1097,78 @@ int HAPClient::putCharacteristicsURL(char *json){
   eventNotify(pObj,n,HAPClient::conNum);                  // transmit EVENT Notification for "n" pObj objects, except DO NOT notify client making request
     
   return(1);
+}
+
+//////////////////////////////////////
+
+int HAPClient::putPrepareURL(char *json){
+
+  if(!cPair){                       // unverified, unencrypted session
+    unauthorizedError();
+    return(0);
+  }
+
+  LOG1("In Put Prepare #");
+  LOG1(conNum);
+  LOG1(" (");
+  LOG1(client.remoteIP());
+  LOG1(")...\n");
+
+  char ttlToken[]="\"ttl\":";
+  char pidToken[]="\"pid\":";
+  
+  char *cBuf;
+  uint32_t ttl;
+  uint64_t pid;
+   
+  if(cBuf=strstr(json,ttlToken))
+    sscanf(cBuf+strlen(ttlToken),"%lu",&ttl);
+
+  if(cBuf=strstr(json,pidToken))
+    sscanf(cBuf+strlen(ttlToken),"%llu",&pid);
+
+  char jsonBuf[32];
+  int status=0;
+
+  if(ttl>0 && pid>0){                           // found required elements
+    homeSpan.TimedWrites[pid]=ttl+millis();     // store this pid/alarmTime combination 
+  } else {                                      // problems parsing request
+    status=-70410;
+  }
+
+  sprintf(jsonBuf,"{\"status\":%d}",status);
+  int nBytes=strlen(jsonBuf);
+  int nChars=snprintf(NULL,0,"HTTP/1.1 200 OK\r\nContent-Type: application/hap+json\r\nContent-Length: %d\r\n\r\n",nBytes);      // create Body with Content Length = size of JSON Buf
+  char body[nChars+1];
+  sprintf(body,"HTTP/1.1 200 OK\r\nContent-Type: application/hap+json\r\nContent-Length: %d\r\n\r\n",nBytes);
+  
+  LOG2("\n>>>>>>>>>> ");
+  LOG2(client.remoteIP());
+  LOG2(" >>>>>>>>>>\n");    
+  LOG2(body);
+  LOG2(jsonBuf);
+  LOG2("\n");
+  
+  sendEncrypted(body,(uint8_t *)jsonBuf,nBytes);        // note recasting of jsonBuf into uint8_t*
+    
+  return(1);
+ 
+/*  
+
+  char c[100];
+  sprintf(c,"FOUND: %lu %llu\n",ttl,pid);
+  Serial.print(c);
+
+  Serial.println(homeSpan.TimedWrites.count((uint64_t)213456));
+  Serial.println(homeSpan.TimedWrites.count(pid));
+  Serial.println(homeSpan.TimedWrites[pid]);
+
+  homeSpan.TimedWrites.erase(pid);
+
+  Serial.println(homeSpan.TimedWrites.count(pid));
+
+*/  
+
 }
 
 //////////////////////////////////////

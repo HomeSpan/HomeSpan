@@ -87,6 +87,7 @@ struct HAPClient {
   int postPairingsURL();                       // POST /pairings (HAP Sections 5.10-5.12)  
   int getCharacteristicsURL(char *urlBuf);     // GET /characteristics (HAP Section 6.7.4)  
   int putCharacteristicsURL(char *json);       // PUT /characteristics (HAP Section 6.7.2)
+  int putPrepareURL(char *json);               // PUT /prepare (HAP Section 6.7.2.4)
 
   void tlvRespond();                                                // respond to client with HTTP OK header and all defined TLV data records (those with length>0)
   void sendEncrypted(char *body, uint8_t *dataBuf, int dataLen);    // send client complete ChaCha20-Poly1305 encrypted HTTP mesage comprising a null-terminated 'body' and 'dataBuf' with 'dataLen' bytes
