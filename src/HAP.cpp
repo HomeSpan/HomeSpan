@@ -1128,12 +1128,12 @@ int HAPClient::putPrepareURL(char *json){
     sscanf(cBuf+strlen(ttlToken),"%llu",&pid);
 
   char jsonBuf[32];
-  int status=0;
+  StatusCode status=StatusCode::OK;
 
   if(ttl>0 && pid>0){                           // found required elements
     homeSpan.TimedWrites[pid]=ttl+millis();     // store this pid/alarmTime combination 
   } else {                                      // problems parsing request
-    status=-70410;
+    status=StatusCode::InvalidValue;
   }
 
   sprintf(jsonBuf,"{\"status\":%d}",status);
@@ -1152,23 +1152,6 @@ int HAPClient::putPrepareURL(char *json){
   sendEncrypted(body,(uint8_t *)jsonBuf,nBytes);        // note recasting of jsonBuf into uint8_t*
     
   return(1);
- 
-/*  
-
-  char c[100];
-  sprintf(c,"FOUND: %lu %llu\n",ttl,pid);
-  Serial.print(c);
-
-  Serial.println(homeSpan.TimedWrites.count((uint64_t)213456));
-  Serial.println(homeSpan.TimedWrites.count(pid));
-  Serial.println(homeSpan.TimedWrites[pid]);
-
-  homeSpan.TimedWrites.erase(pid);
-
-  Serial.println(homeSpan.TimedWrites.count(pid));
-
-*/  
-
 }
 
 //////////////////////////////////////

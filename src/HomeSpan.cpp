@@ -509,6 +509,7 @@ int Span::updateCharacteristics(char *buf, SpanBuf *pObj){
   int nObj=0;
   char *p1;
   int cFound=0;
+  boolean twFail=false;
   
   while(char *t1=strtok_r(buf,"{",&p1)){           // parse 'buf' and extract objects into 'pObj' unless NULL
    buf=NULL;
@@ -543,6 +544,17 @@ int Span::updateCharacteristics(char *buf, SpanBuf *pObj){
       if(!strcmp(t2,"ev") && (t3=strtok_r(t1,"}[]:, \"\t\n\r",&p2))){
         pObj[nObj].ev=t3;
         okay|=8;
+      } else 
+      if(!strcmp(t2,"pid") && (t3=strtok_r(t1,"}[]:, \"\t\n\r",&p2))){        
+        uint64_t pid=strtoull(t3,NULL,0);        
+        if(!TimedWrites.count(pid)){
+          Serial.print("\n*** ERROR:  Timed Write PID not found\n\n");
+          twFail=true;
+        } else        
+        if(millis()>TimedWrites[pid]){
+          Serial.print("\n*** ERROR:  Timed Write Expired\n\n");
+          twFail=true;
+        }        
       } else {
         Serial.print("\n*** ERROR:  Problems parsing JSON characteristics object - unexpected property \"");
         Serial.print(t2);
@@ -564,12 +576,17 @@ int Span::updateCharacteristics(char *buf, SpanBuf *pObj){
 
   for(int i=0;i<nObj;i++){                                     // PASS 1: loop over all objects, identify characteristics, and initialize update for those found
 
-    pObj[i].characteristic = find(pObj[i].aid,pObj[i].iid);    // find characteristic with matching aid/iid and store pointer          
+    if(twFail){                                                // this is a timed-write request that has either expired or for which there was no PID
+      pObj[i].status=StatusCode::InvalidValue;                 // set error for all characteristics      
+      
+    } else {
+      pObj[i].characteristic = find(pObj[i].aid,pObj[i].iid);  // find characteristic with matching aid/iid and store pointer          
 
-    if(pObj[i].characteristic)                                                      // if found, initialize characterstic update with new val/ev
-      pObj[i].status=pObj[i].characteristic->loadUpdate(pObj[i].val,pObj[i].ev);    // save status code, which is either an error, or TBD (in which case isUpdated for the characteristic has been set to true) 
-    else
-      pObj[i].status=StatusCode::UnknownResource;                                   // if not found, set HAP error            
+      if(pObj[i].characteristic)                                                      // if found, initialize characterstic update with new val/ev
+        pObj[i].status=pObj[i].characteristic->loadUpdate(pObj[i].val,pObj[i].ev);    // save status code, which is either an error, or TBD (in which case isUpdated for the characteristic has been set to true) 
+      else
+        pObj[i].status=StatusCode::UnknownResource;                                   // if not found, set HAP error            
+    }
       
   } // first pass
       

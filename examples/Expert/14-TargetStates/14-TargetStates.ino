@@ -10,7 +10,6 @@
 
 #include "HomeSpan.h" 
 #include "DEV_Identify.h"      
-#include "DEV_Sensors.h" 
 #include "DEV_Doors.h" 
 
 void setup() {
@@ -65,7 +64,7 @@ void setup() {
   
   Serial.begin(115200);
 
-  homeSpan.begin(Category::Bridges,"HomeSpan Bridge");
+  homeSpan.begin(Category::Bridges,"HomeSpan Bridge Test");
 
 
   new SpanAccessory();  
@@ -73,14 +72,6 @@ void setup() {
     new Service::HAPProtocolInformation();
       new Characteristic::Version("1.1.0");
       
-  new SpanAccessory();                                                          
-    new DEV_Identify("Temp Sensor","HomeSpan","123-ABC","Sensor","0.9",0);
-    new DEV_TempSensor();                                                                // Create a Temperature Sensor (see DEV_Sensors.h for definition)
-
-  new SpanAccessory();                                                          
-    new DEV_Identify("Air Quality","HomeSpan","123-ABC","Sensor","0.9",0);
-    new DEV_AirQualitySensor();                                                          // Create an Air Quality Sensor (see DEV_Sensors.h for definition)
-
   new SpanAccessory();                                                          
     new DEV_Identify("Garage Door","HomeSpan","123-ABC","Door","0.9",0);
     new DEV_GarageDoor();                                                               // Create a Garage Door Opener (see DEV_Doors.h for definition)

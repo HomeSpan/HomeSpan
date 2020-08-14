@@ -28,10 +28,12 @@ struct DEV_GarageDoor : Service::GarageDoorOpener {     // A Garage Door Opener
 
     if(target->getNewVal()==0){
       LOG1("Opening Garage Door\n");
-      current->setVal(2);      
+      current->setVal(2);     
+      obstruction->setVal(false); 
     } else {
       LOG1("Closing Garage Door\n");
       current->setVal(3);            
+      obstruction->setVal(false); 
     }
     
     alarmTime=millis()+10000;
@@ -43,6 +45,15 @@ struct DEV_GarageDoor : Service::GarageDoorOpener {     // A Garage Door Opener
   void event(){                                     // event() method
 
     if(current->getVal()==target->getVal())
+      return;
+
+    if(random(20)==0){
+      current->setVal(4);
+      obstruction->setVal(true);       
+      LOG1("Garage Door Obstruction Detected!\n");
+    }
+
+    if(current->getVal()==4)
       return;
 
     if(millis()>alarmTime)
