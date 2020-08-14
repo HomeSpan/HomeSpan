@@ -114,6 +114,7 @@ struct HAPClient {
   static void printControllers();                                                      // prints IDs of all allocated (paired) Controller
   static void checkTimedResets();                                                      // checks for Timed Resets and reports to controllers as needed (HAP Section 6.8)
   static void checkEvents();                                                           // checks for Event Notifications and reports to controllers as needed (HAP Section 6.8)
+  static void checkTimedWrites();                                                      // checks for expired Timed Write PIDs, and clears any found (HAP Section 6.7.2.4)
   static void eventNotify(SpanBuf *pObj, int nObj, int ignoreClient=-1);               // transmits EVENT Notifications for nObj SpanBuf objects, pObj, with optional flag to ignore a specific client
 };
 

@@ -1234,6 +1234,24 @@ void HAPClient::checkTimedResets(){
 
 //////////////////////////////////////
 
+void  HAPClient::checkTimedWrites(){
+
+  unsigned long cTime=millis();                                       // get current time
+
+  char c[64];
+  
+  for(auto tw=homeSpan.TimedWrites.begin(); tw!=homeSpan.TimedWrites.end(); tw++){      // loop over all Timed Writes using an iterator
+    if(cTime>tw->second){                                                               // timer has expired
+       sprintf(c,"Removing PID=%llu  ALARM=%lu\n",tw->first,tw->second);
+       LOG1(c);
+       homeSpan.TimedWrites.erase(tw);
+      }
+  }
+}
+
+//////////////////////////////////////
+
+
 void HAPClient::eventNotify(SpanBuf *pObj, int nObj, int ignoreClient){
   
   for(int cNum=0;cNum<MAX_CONNECTIONS;cNum++){        // loop over all connection slots

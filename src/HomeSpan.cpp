@@ -149,6 +149,7 @@ void Span::poll() {
 
   HAPClient::checkTimedResets();
   HAPClient::checkEvents();
+  HAPClient::checkTimedWrites();
   
 } // poll
 
@@ -400,7 +401,6 @@ void Span::processSerialCommand(char *c){
       Serial.print("** Unknown command: '");
       Serial.print(c);
       Serial.print("' - type '?' for list of commands.\n");
-
     break;
     
   } // switch
