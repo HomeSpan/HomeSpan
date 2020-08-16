@@ -52,6 +52,9 @@ struct DEV_TempSensor : Service::TemperatureSensor {     // A standalone Tempera
     temp->setVal(temperature);                              // don't forgot to update the temperature Characteristic to the new value!
        
   } // event
+
+  void loop(){
+  } // loop
   
 };
       
@@ -87,6 +90,9 @@ struct DEV_AirQualitySensor : Service::AirQualitySensor {     // A standalone Ai
     // Note we are NOT updating the Nitrogen Dioxide Density Characteristic.  This should therefore remain steady at its initial value of 700.0
        
   } // event
+
+  void loop(){
+  } // loop
 };
       
 //////////////////////////////////

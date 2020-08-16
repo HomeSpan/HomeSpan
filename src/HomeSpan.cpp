@@ -148,6 +148,7 @@ void Span::poll() {
   } // for-loop over connection slots
 
   HAPClient::checkTimedResets();
+  HAPClient::callServiceLoops();
   HAPClient::checkEvents();
   HAPClient::checkTimedWrites();
   

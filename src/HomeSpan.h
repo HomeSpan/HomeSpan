@@ -43,6 +43,7 @@ struct Span{
   char *hostNameBase;                           // base of host name of this device - full host name broadcast by Bonjour MDNS will have 6-byte accessoryID as well as '.local' automatically appended
   char *modelName;                              // model name of this device - broadcast as Bonjour field "md" 
   char category[3]="";                          // category ID of primary accessory - broadcast as Bonjour field "ci" (HAP Section 13)
+  unsigned long snapTime;                       // current time (in millis) snapped before entering Service loops() or updates()
 
   int resetPin=21;                              // drive this pin low to "factory" reset NVS data on start-up
   
@@ -50,6 +51,7 @@ struct Span{
   vector<SpanAccessory *> Accessories;              // vector of pointers to all Accessories
   vector<SpanTimedReset *> TimedResets;             // vector of pointers to all TimedResets
   vector<SpanEvent *> Events;                       // vector of pointer to all Events
+  vector<SpanService *> Loops;                      // vector of pointer to all Services that have over-ridden loop() methods
   unordered_map<uint64_t, uint32_t> TimedWrites;    // map of timed-write PIDs and Alarm Times (based on TTLs)
   
   void begin(Category catID,
@@ -106,6 +108,7 @@ struct SpanService{
   int sprintfAttributes(char *cBuf);                      // prints Service JSON records into buf; return number of characters printed, excluding null terminator
   virtual StatusCode update() {return(StatusCode::OK);}   // update Service and return final statusCode based on updated Characteristics - should be overridden by DEVICE-SPECIFIC Services
   virtual void event(){}                                  // event generation for Services that create their own events and need to notify HomeKit of a new Characteristic value(s)
+  virtual void loop(){}                                   // loops for each service
 };
 
 ///////////////////////////////

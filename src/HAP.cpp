@@ -93,6 +93,15 @@ void HAPClient::init(){
     Serial.print(homeSpan.hapConfig.configNumber);
     Serial.print("\n\n");    
   }
+
+  for(int i=0;i<homeSpan.Accessories.size();i++){                             // identify all services with over-ridden loop() methods
+    for(int j=0;j<homeSpan.Accessories[i]->Services.size();j++){
+      SpanService *s=homeSpan.Accessories[i]->Services[j];
+      
+      if((void*)(s->*(&SpanService::loop)) != (void*)(&SpanService::loop))    // save pointers to services in Loops vector
+        homeSpan.Loops.push_back(s);
+    }
+  }
   
 }
 
@@ -1152,6 +1161,16 @@ int HAPClient::putPrepareURL(char *json){
   sendEncrypted(body,(uint8_t *)jsonBuf,nBytes);        // note recasting of jsonBuf into uint8_t*
     
   return(1);
+}
+
+//////////////////////////////////////
+
+void HAPClient::callServiceLoops(){
+
+  homeSpan.snapTime=millis();                     // snap the current time for use in ALL loop routines
+  
+  for(int i=0;i<homeSpan.Loops.size();i++)        // loop over all services with over-ridden loop() methods
+    homeSpan.Loops[i]->loop();                    // call the loop() method
 }
 
 //////////////////////////////////////
