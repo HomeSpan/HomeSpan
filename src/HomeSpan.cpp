@@ -149,7 +149,7 @@ void Span::poll() {
 
   HAPClient::checkTimedResets();
   HAPClient::callServiceLoops();
-  HAPClient::checkEvents();
+  HAPClient::checkNotifications();
   HAPClient::checkTimedWrites();
   
 } // poll
@@ -574,6 +574,8 @@ int Span::updateCharacteristics(char *buf, SpanBuf *pObj){
     }
       
   } // parse objects
+
+  snapTime=millis();                                           // timestamp for this series of updates, assigned to each characteristic in loadUpdate()
 
   for(int i=0;i<nObj;i++){                                     // PASS 1: loop over all objects, identify characteristics, and initialize update for those found
 
@@ -1069,6 +1071,7 @@ StatusCode SpanCharacteristic::loadUpdate(char *val, char *ev){
   } // switch
 
   isUpdated=true;
+  updateTime=homeSpan.snapTime;
   return(StatusCode::TBD);
 }
 
@@ -1103,8 +1106,13 @@ void SpanCharacteristic::setVal(int val){
       break;
     }
 
-    isUpdated=true;
+    updateTime=homeSpan.snapTime;
 
+    SpanBuf sb;                             // create SpanBuf object
+    sb.characteristic=this;                 // set characteristic          
+    sb.status=StatusCode::OK;               // set status
+    sb.val="";                              // set dummy "val" so that sprintfNotify knows to consider this "update"
+    homeSpan.Notifications.push_back(sb);   // store SpanBuf in Notifications vector
 }
 
 ///////////////////////////////
@@ -1112,7 +1120,20 @@ void SpanCharacteristic::setVal(int val){
 void SpanCharacteristic::setVal(double val){
   
     value.FLOAT=(double)val;  
-    isUpdated=true;
+    updateTime=homeSpan.snapTime;
+
+    SpanBuf sb;                             // create SpanBuf object
+    sb.characteristic=this;                 // set characteristic          
+    sb.status=StatusCode::OK;               // set status
+    sb.val="";                              // set dummy "val" so that sprintfNotify knows to consider this "update"
+    homeSpan.Notifications.push_back(sb);   // store SpanBuf in Notifications vector
+}
+
+///////////////////////////////
+
+int SpanCharacteristic::timeVal(){
+  
+  return(homeSpan.snapTime-updateTime);
 }
 
 ///////////////////////////////

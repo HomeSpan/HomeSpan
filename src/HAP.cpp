@@ -1175,6 +1175,16 @@ void HAPClient::callServiceLoops(){
 
 //////////////////////////////////////
 
+void HAPClient::checkNotifications(){
+
+  if(!homeSpan.Notifications.empty()){                                          // if there are Notifications to process    
+    eventNotify(&homeSpan.Notifications[0],homeSpan.Notifications.size());      // transmit EVENT Notifications
+    homeSpan.Notifications.clear();                                             // clear Notifications vector
+  }
+}
+
+//////////////////////////////////////
+
 void HAPClient::checkEvents(){
 
   unsigned long cTime=millis();                   // current time

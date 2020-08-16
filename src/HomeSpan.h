@@ -52,6 +52,7 @@ struct Span{
   vector<SpanTimedReset *> TimedResets;             // vector of pointers to all TimedResets
   vector<SpanEvent *> Events;                       // vector of pointer to all Events
   vector<SpanService *> Loops;                      // vector of pointer to all Services that have over-ridden loop() methods
+  vector<SpanBuf> Notifications;                    // vector of SpanBuf objects that store info for Characteristics that are updated with setVal() and require a Notification Event
   unordered_map<uint64_t, uint32_t> TimedWrites;    // map of timed-write PIDs and Alarm Times (based on TTLs)
   
   void begin(Category catID,
@@ -157,7 +158,8 @@ struct SpanCharacteristic{
   boolean ev[MAX_CONNECTIONS]={false};     // Characteristic Event Notify Enable (per-connection)
   
   int aid=0;                               // Accessory ID - passed through from Service containing this Characteristic
-  boolean isUpdated=false;                 // set to true when new value has been requested by PUT /characteristic, or when value is updated with setVal()
+  boolean isUpdated=false;                 // set to true when new value has been requested by PUT /characteristic
+  unsigned long updateTime;                // last time value was updated (in millis) either by PUT /characteristic OR by setVal()
   UVal newValue;                           // the updated value requested by PUT /characteristic
   SpanService *service=NULL;               // pointer to Service containing this Characteristic
       
@@ -182,6 +184,7 @@ struct SpanCharacteristic{
   void setVal(double value);                                                        // sets value of UVal value for FLOAT Characteristic type
 
   boolean updated(){return(isUpdated);}                                             // returns isUpdated
+  int timeVal();                                                                    // returns time elapsed (in millis) since value was last updated
   
 };
 
