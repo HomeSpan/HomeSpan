@@ -1185,46 +1185,6 @@ void HAPClient::checkNotifications(){
 
 //////////////////////////////////////
 
-void HAPClient::checkEvents(){
-
-  unsigned long cTime=millis();                   // current time
-  vector<SpanBuf> spanBuf;                        // vector to SpanBuf objects
-
-  for(int i=0;i<homeSpan.Events.size();i++){                                         // loop over all defined Events
-    if(cTime>homeSpan.Events[i]->alarmTime){                                         // if alarm time has passed
-      
-      homeSpan.Events[i]->alarmTime=cTime+homeSpan.Events[i]->period;                // set new alarm time to current time plus alarm period
-      homeSpan.Events[i]->service->event();                                          // check service for new EVENTS
-      
-      for(int j=0;j<homeSpan.Events[i]->service->Characteristics.size();j++){        // loop over all characteristics
-        if(homeSpan.Events[i]->service->Characteristics[j]->isUpdated){              // if characteristic is updated
-
-          SpanBuf sb;                                                                // create SpanBuf object
-          sb.characteristic=homeSpan.Events[i]->service->Characteristics[j];         // set characteristic          
-          sb.status=StatusCode::OK;                                                  // set status
-          sb.val="";                                                                 // set dummy "val" so that sprintfNotify knows to consider this "update"
-          spanBuf.push_back(sb);
-                 
-          LOG1("Event Notification for aid=");
-          LOG1(homeSpan.Events[i]->service->Characteristics[j]->aid);
-          LOG1(" iid=");
-          LOG1(homeSpan.Events[i]->service->Characteristics[j]->iid);
-          LOG1("\n");          
-              
-          homeSpan.Events[i]->service->Characteristics[j]->isUpdated=false;          // reset isUpdated flag
-          
-        } // if characteristic is updated
-      } // characteristic loop 
-    } // alarm triggered
-  } // events loop
-
-  if(spanBuf.size()>0)                            // if updated items are found
-    eventNotify(&spanBuf[0],spanBuf.size());      // transmit EVENT Notifications
-
-}
-
-//////////////////////////////////////
-
 void HAPClient::checkTimedResets(){
 
   unsigned long cTime=millis();                   // current time

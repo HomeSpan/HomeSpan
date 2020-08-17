@@ -64,7 +64,7 @@ void setup() {
   
   Serial.begin(115200);
 
-  homeSpan.begin(Category::Bridges,"HomeSpan Bridge Test");
+  homeSpan.begin(Category::Bridges,"HomeSpan Bridge");
 
 
   new SpanAccessory();  

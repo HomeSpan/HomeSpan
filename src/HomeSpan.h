@@ -26,7 +26,6 @@ struct SpanCharacteristic;
 struct SpanRange;
 struct SpanBuf;
 struct SpanTimedReset;
-struct SpanEvent;
 
 ///////////////////////////////
 
@@ -50,7 +49,6 @@ struct Span{
   SpanConfig hapConfig;                             // track configuration changes to the HAP Accessory database; used to increment the configuration number (c#) when changes found
   vector<SpanAccessory *> Accessories;              // vector of pointers to all Accessories
   vector<SpanTimedReset *> TimedResets;             // vector of pointers to all TimedResets
-  vector<SpanEvent *> Events;                       // vector of pointer to all Events
   vector<SpanService *> Loops;                      // vector of pointer to all Services that have over-ridden loop() methods
   vector<SpanBuf> Notifications;                    // vector of SpanBuf objects that store info for Characteristics that are updated with setVal() and require a Notification Event
   unordered_map<uint64_t, uint32_t> TimedWrites;    // map of timed-write PIDs and Alarm Times (based on TTLs)
@@ -245,16 +243,6 @@ struct SpanTimedReset{
   boolean trigger=false;                      // alarm timer triggered
 
   SpanTimedReset(int waitTime);
-};
-
-///////////////////////////////
-
-struct SpanEvent{
-  SpanService *service;                       // service to check for events
-  int period;                                 // time period between checks (in milliseconds)
-  unsigned long alarmTime=0;                  // alarm time to trigger next check
-
-  SpanEvent(int period);
 };
 
 /////////////////////////////////////////////////

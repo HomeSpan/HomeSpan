@@ -1159,23 +1159,6 @@ SpanTimedReset::SpanTimedReset(int waitTime){
 }
 
 ///////////////////////////////
-//        SpanEvent          //
-///////////////////////////////
-
-SpanEvent::SpanEvent(int period){
-
-  if(homeSpan.Accessories.empty() || homeSpan.Accessories.back()->Services.empty() ){
-    Serial.print("*** FATAL ERROR:  Can't create new Timed Reset without a defined Service.  Program halted!\n\n");
-    while(1);    
-  }
-
-  this->service=homeSpan.Accessories.back()->Services.back();
-  this->period=period;
-  homeSpan.Events.push_back(this);
-
-}
-
-///////////////////////////////
 //        SpanRange          //
 ///////////////////////////////
 
