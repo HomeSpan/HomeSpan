@@ -4,14 +4,17 @@
 ////////////////////////////////////
 
 // NOTE: This example is constructed only for the purpose of demonstrating how to
-// use SpanTimedReset() to emulate a pushbutton in HomeSpan.  The length of the blinking
-// routine is much longer than HomeSpan should spend on an update().  To see how this
-// effects HomeKit, try changing the number of blinks to 50, or keep it at 3 and
-// increase the delay times in update() so that the blink routine takes 10 seconds or more.
-// When activated, HomeKit will think the device has become non-responsive.
-//
+// emulate a pushbutton in HomeSpan.  The length of the blinking routine is MUCH longer
+// than HomeSpan should spend on an update().  To see how this effects HomeKit, try changing
+// the number of blinks to 50, or keep it at 3 and increase the delay times in update() so
+// that the blink routine takes 10 seconds or more. When activated, HomeKit will think the
+// device has become non-responsive if it does not receive a return message from update() within
+// a certain period of time.
+
 // In practice, pushbuton emulation is used for very short routines, such as driving
 // an IR LED or an RF transmitter to send a code to a remote device.
+
+// New and changed lines in comparison with Example 9 are noted as "NEW!"
 
 struct DEV_Blinker : Service::LightBulb {           // LED Blinker
 
@@ -23,17 +26,6 @@ struct DEV_Blinker : Service::LightBulb {           // LED Blinker
   DEV_Blinker(int ledPin, int nBlinks) : Service::LightBulb(){       // constructor() method
 
     power=new Characteristic::On();                 
-
-    // Here we create a new Timed Reset of 2000 milliseconds. Similar to SpanRange(), SpanTimedReset() automatically
-    // attaches to the last Characteristic instantiated, which in this case the the "power" Characteristic::On above.
-    // SpanTimedReset() will notify HomeKit that the Characteristic has been turned off by HomeSpan 2000 milliseconds
-    // after HomeKit requests it be turned on.  This DOES NOT cause HomeKit to send an "off" request to HomeSpan (with
-    // one exception --- see * below). Rather, HomeSpan is notifying HomeKit that HomeSpan itself has turned "off" the
-    // Characteristic, and that HomeKit should reflect this new "off" status in the Tile shown for this device in the
-    // HomeKit Controller.
-    //
-    // Note that in practice you'll want to set the reset time to 500ms or less to better emulate a pushbutton.
-    // We've used a full 2 seconds in this example for illustrative purposes only.
         
     this->ledPin=ledPin;                            
     this->nBlinks=nBlinks;                           // NEW! number of blinks
@@ -49,7 +41,7 @@ struct DEV_Blinker : Service::LightBulb {           // LED Blinker
 
   StatusCode update(){                              // update() method
 
-    // Instead of turning on or off the LED according to newValue, we blink it for
+    // NEW! Instead of turning on or off the LED according to newValue, we blink it for
     // the number of times specified, and leave it in the off position when finished.
     // This line is deleted...
     
@@ -80,11 +72,14 @@ struct DEV_Blinker : Service::LightBulb {           // LED Blinker
   
   } // update
 
+  // NEW! Here we implement a very simple loop() method that checks to see if the power Characteristic
+  // is "on" for at least 3 seconds.  If so, it resets the value to "off" (false).
+
   void loop(){
 
-    if(power->getVal() && power->timeVal()>3000){
-      LOG1("Resetting Blinking LED Control\n");
-      power->setVal(false);
+    if(power->getVal() && power->timeVal()>3000){   // check that power is true, and that time since last modification is greater than 3 seconds 
+      LOG1("Resetting Blinking LED Control\n");     // log message  
+      power->setVal(false);                         // set power to false
     }      
     
   } // loop
@@ -93,9 +88,9 @@ struct DEV_Blinker : Service::LightBulb {           // LED Blinker
       
 //////////////////////////////////
 
-// * EXCEPTION:  There is an apparent bug in HomeKit such that if you have an Accessory with three or more
-// Services, and the Accessory receives a notification message from the device, AND the HomeKit interface is
-// open to show the detailed control for Service in the Accessory, then for some reason HomeKit tries to
-// update the device with the same status it just received from the device, even though this is contrary to
-// the purpose of notification requests.  This is why it's a good idea to check that newValue.BOOL==true.  It
-// avoids triggering the device if for some reason HomeKit should send a reqeust to update newValue to false.
+// HomeKit Bug Note:  There is an apparent bug in HomeKit uncovered during the development of this example.
+// If you have an Accessory with three or more Services, and the Accessory receives a notification message
+// from the device, AND the HomeKit interface is open to show the detailed control for this Service tile
+// in the HomeKit app, then for some reason HomeKit sends an update() request back to the device asking to 
+// set the Characteristic to the value that it just received from an Event Notification.  HomeKit is not supposed
+// to send update requests in response to an Event Notification.

@@ -4,8 +4,7 @@
 //    HomeSpan: A HomeKit implementation for the ESP32    //
 //    ------------------------------------------------    //
 //                                                        //
-// Example 10: Timed Resets - emulating a "pushbutton"    //
-//             in HomeKit                                 //
+// Example 14: Pushbuttons                                //
 //                                                        //
 ////////////////////////////////////////////////////////////
 
@@ -25,32 +24,30 @@ void setup() {
    //
    // Though HomeKit does not contain such a Characteristic, it's easy to emulate in HomeSpan.  To do so, simply
    // define a Service with a boolen Characteristic (such as the On Characteristic), and create an update()
-   // method to peform the operations to be executed when the "pushbutton" is "pressed".  The update() method
-   // should ignore the newValue requested by HomeKit, since the only thing that matters is that update() is called.
+   // method to peform the operations to be executed when the "pushbutton" is "pressed" (i.e. set to true).
    // 
    // You could stop there and have something in HomeKit that acts like a pushbutton, but it won't look like a
    // pushbutton because every time you press the tile for your device in HomeKit, the Controller will toggle
-   // between showing it's on and showing it's off.  Pressing a tile that shows the status is already on, in order
-   // to cause HomeKit to trigger the update() to perform a new action, is not very satisfying.
+   // between showing it's on and showing it's off.  Pressing a tile that shows the status is already ON, and will
+   // change to OFF, when you actually want to re-trigger some sort of "on" action is not very satisfying.
    //
-   // Ideally, we'd like HomeKit to acknowledge you've pressed the tile for the device, maybe by lighting up for a
-   // second or so, and then it should reset to the "off" position.  This would emulate a light-up pushbutton.
+   // Ideally, we'd like HomeKit to acknowledge you've pressed the tile for the device by lighting up, sending
+   // a request to update(), AND THEN resetting itself automatically to the "off" position a second or two later.
+   // This would indeed emulate a light-up pushbutton.
    //
-   // Fortunately, HomeSpan includes a way of doing exactly this, using an object called SpanTimedReset().  Similar
-   // to SpanRange(), you create a new SpanTimedReset() object with a single argument representing the number of
-   // milliseconds HomeSpan should wait before telling HomeKit to reset, or "turn off", the device tile it just turned
-   // on when you pressed it.  How does SpanTimedReset() know which Characteristic it should attach itself to?
-   // Similar to all other HomeSpan objects, SpanTimedReset() attaches to the last object you instantiated (and
-   // will throw an error message at start-up if you try to instantiate a new SpanTimedReset() object without having just
-   // instantiated a boolean Characteristic of some type).
+   // Fortunately, it is easy to emulate this in HomeSpan through the use of a Service's loop() function. Simply
+   // code a derived Service as you normally would with its own update() method, and implement a loop() method
+   // that "resets" one or more Characteristics after a set period of time.  This is similar to what we did in the
+   // with loop() methods in the prior two examples, except a lot simpler since the only logic is to set the value
+   // of a Characteristic to "off" after a few seconds using timeVal() and setVal().
    //
-   // In Example 10 below we create a single pushbutton that blinks an LED three times.  This is not very useful, but
-   // you can think about the LED as an IR LED that is transmitting a Volume-Up command to a TV, or an RF signal to
-   // some remote device, like a ceiling fan.
+   // Example 14 demonstrates this by implementing a "pushbutton" Service to blink an LED three times.  By itself, this
+   // is not very useful.  But it is a good model for showing how to implement an IR LED that sends a Volume-Up command to
+   // a TV; or an RF Transmitter to control to some remote device, like a ceiling fan.
    //
    // All the functionality is wrapped up in a newly-defined "DEV_Blinker" Service, which can be found in DEV_Blinker.h.
-   // This new Service is a copy of the DEV_LED service we've been working so far, with modifications to make it into 
-   // a generic blinking LED.  As usual, changes and new lines are notably commented.
+   // This new Service is a copy of the DEV_LED service from Example 9, with modifications to make it into a generic
+   // blinking LED.  As usual, changes and new lines between this Example 14, and original Example 9, are notably commented.
   
   Serial.begin(115200);
 
