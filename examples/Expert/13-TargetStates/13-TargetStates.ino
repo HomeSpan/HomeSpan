@@ -4,7 +4,7 @@
 //    HomeSpan: A HomeKit implementation for the ESP32    //
 //    ------------------------------------------------    //
 //                                                        //
-// Example 14: Target States and Current States           //
+// Example 13: Target States and Current States           //
 //                                                        //
 ////////////////////////////////////////////////////////////
 

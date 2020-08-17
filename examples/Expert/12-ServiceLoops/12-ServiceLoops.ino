@@ -4,7 +4,7 @@
 //    HomeSpan: A HomeKit implementation for the ESP32    //
 //    ------------------------------------------------    //
 //                                                        //
-// Example 13: Service Loops (and Event Notifications)    //
+// Example 12: Service Loops (and Event Notifications)    //
 //             * implementing a Temperature Sensor        //
 //             * implementing an Air Quality Sensor       //
 //                                                        //
@@ -25,7 +25,7 @@ void setup() {
   // your derived Service.  At the end of each HomeSpan polling cycle, the loop() method is called for each Service that implements its own code.
   // In this fashion, the loop() method is similar to the main loop() method in the Arduino IDE itself - except it can be customized for each Service.
 
-  // In this Example 13 we explore the use of loop() methods to implement two new accessories - a Temperature Sensor and an Air Quality Sensor.  Of course
+  // In this Example 12 we explore the use of loop() methods to implement two new accessories - a Temperature Sensor and an Air Quality Sensor.  Of course
   // we won't actually have these physical devices attached to the ESP32 for the purpoe of this example, but we will simulate "reading" their properties.
   // This is one of the main purposes of implementing a loop() method.  It allows you to read a sensor or perform some sort of repetitive, Service-specific
   // action.

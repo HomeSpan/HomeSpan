@@ -4,7 +4,7 @@
 //    HomeSpan: A HomeKit implementation for the ESP32    //
 //    ------------------------------------------------    //
 //                                                        //
-// Example 12: Service Options:                           //
+// Example 11: Service Options:                           //
 //             * setting the Primary Service              //
 //             * setting Service Names                    //
 //                                                        //

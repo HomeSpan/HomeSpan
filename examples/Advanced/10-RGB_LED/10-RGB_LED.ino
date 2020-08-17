@@ -4,7 +4,7 @@
 //    HomeSpan: A HomeKit implementation for the ESP32    //
 //    ------------------------------------------------    //
 //                                                        //
-// Example 11: Controlling a full-color RGB LED           //
+// Example 10: Controlling a full-color RGB LED           //
 //                                                        //
 //                                                        //
 ////////////////////////////////////////////////////////////
@@ -15,7 +15,7 @@
 
 void setup() {
 
-  // Example 11 illustrates how to control an RGB LED to set any color and brightness.
+  // Example 10 illustrates how to control an RGB LED to set any color and brightness.
   // The configuration below should look familiar by now.  We've created a new derived Service,
   // call RgbLED to house all the required logic.  You'll find all the code in DEV_LED.h.
   // For completeness, this configuration also contains an on/off LED and a dimmable LED as shown
