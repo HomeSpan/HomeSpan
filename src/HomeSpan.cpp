@@ -147,7 +147,6 @@ void Span::poll() {
     } // process HAP Client 
   } // for-loop over connection slots
 
-  HAPClient::checkTimedResets();
   HAPClient::callServiceLoops();
   HAPClient::checkNotifications();
   HAPClient::checkTimedWrites();
@@ -1134,28 +1133,6 @@ void SpanCharacteristic::setVal(double val){
 int SpanCharacteristic::timeVal(){
   
   return(homeSpan.snapTime-updateTime);
-}
-
-///////////////////////////////
-//      SpanTimedReset       //
-///////////////////////////////
-
-SpanTimedReset::SpanTimedReset(int waitTime){
-
-  if(homeSpan.Accessories.empty() || homeSpan.Accessories.back()->Services.empty() || homeSpan.Accessories.back()->Services.back()->Characteristics.empty() ){
-    Serial.print("*** FATAL ERROR:  Can't create new Timed Reset without a defined Characteristic.  Program halted!\n\n");
-    while(1);    
-  }
-
-  if(!(homeSpan.Accessories.back()->Services.back()->Characteristics.back()->perms&SpanCharacteristic::PW)){
-    Serial.print("*** FATAL ERROR:  Can't create new Timed Reset for Read-Only Characteristic.  Program halted!\n\n");
-    while(1);    
-  }
-
-  this->characteristic=homeSpan.Accessories.back()->Services.back()->Characteristics.back();
-  this->waitTime=waitTime;
-  homeSpan.TimedResets.push_back(this);
-
 }
 
 ///////////////////////////////

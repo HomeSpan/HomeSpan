@@ -25,7 +25,6 @@ struct SpanService;
 struct SpanCharacteristic;
 struct SpanRange;
 struct SpanBuf;
-struct SpanTimedReset;
 
 ///////////////////////////////
 
@@ -48,7 +47,6 @@ struct Span{
   
   SpanConfig hapConfig;                             // track configuration changes to the HAP Accessory database; used to increment the configuration number (c#) when changes found
   vector<SpanAccessory *> Accessories;              // vector of pointers to all Accessories
-  vector<SpanTimedReset *> TimedResets;             // vector of pointers to all TimedResets
   vector<SpanService *> Loops;                      // vector of pointer to all Services that have over-ridden loop() methods
   vector<SpanBuf> Notifications;                    // vector of SpanBuf objects that store info for Characteristics that are updated with setVal() and require a Notification Event
   unordered_map<uint64_t, uint32_t> TimedWrites;    // map of timed-write PIDs and Alarm Times (based on TTLs)
@@ -233,18 +231,6 @@ struct SpanBuf{                               // temporary storage buffer for us
   SpanCharacteristic *characteristic=NULL;    // Characteristic to update (NULL if not found)
 };
   
-///////////////////////////////
-
-struct SpanTimedReset{
-  SpanCharacteristic *characteristic;         // characteristic to auto-reset whenever activated
-  int waitTime;                               // time to wait until auto-reset (in milliseconds)
-  unsigned long alarmTime;                    // alarm time for trigger to auto-reset
-  boolean start=false;                        // alarm timer started
-  boolean trigger=false;                      // alarm timer triggered
-
-  SpanTimedReset(int waitTime);
-};
-
 /////////////////////////////////////////////////
 // Extern Variables
 

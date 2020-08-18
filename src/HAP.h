@@ -112,7 +112,6 @@ struct HAPClient {
   static void removeControllers();                                                     // removes all Controllers (sets allocated flags to false for all slots)
   static void removeController(uint8_t *id);                                           // removes specific Controller.  If no remaining admin Controllers, remove all others (if any) as per HAP requirements.
   static void printControllers();                                                      // prints IDs of all allocated (paired) Controller
-  static void checkTimedResets();                                                      // checks for Timed Resets and reports to controllers as needed (HAP Section 6.8)
   static void callServiceLoops();                                                      // call the loop() method for any Service with that over-rode the default method
   static void checkNotifications();                                                    // checks for Event Notifications and reports to controllers as needed (HAP Section 6.8)
   static void checkTimedWrites();                                                      // checks for expired Timed Write PIDs, and clears any found (HAP Section 6.7.2.4)

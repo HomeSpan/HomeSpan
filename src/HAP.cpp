@@ -1185,44 +1185,6 @@ void HAPClient::checkNotifications(){
 
 //////////////////////////////////////
 
-void HAPClient::checkTimedResets(){
-
-  unsigned long cTime=millis();                   // current time
-  vector<SpanBuf> spanBuf;                        // vector to SpanBuf objects
-
-  for(int i=0;i<homeSpan.TimedResets.size();i++){                                    // loop through all defined Timed Resets
-    if(!homeSpan.TimedResets[i]->characteristic->value.BOOL){                        // characteristic is off
-      homeSpan.TimedResets[i]->start=false;                                          // ensure timer is not started
-    }
-    else if(!homeSpan.TimedResets[i]->start){                                        // else characteristic is on but timer is not started
-      homeSpan.TimedResets[i]->start=true;                                           // start timer
-      homeSpan.TimedResets[i]->alarmTime=cTime+homeSpan.TimedResets[i]->waitTime;    // set alarm time
-    }
-    else if(cTime>homeSpan.TimedResets[i]->alarmTime){                               // else characteristic is on, timer is started, and timer is expired
-      
-      LOG1("Resetting aid=");
-      LOG1(homeSpan.TimedResets[i]->characteristic->aid);
-      LOG1(" iid=");  
-      LOG1(homeSpan.TimedResets[i]->characteristic->iid);
-      LOG1("\n");
-      
-      memset(&(homeSpan.TimedResets[i]->characteristic->value),0,sizeof(SpanCharacteristic::UVal));
-      
-      SpanBuf sb;                                                                    // create SpanBuf object
-      sb.characteristic=homeSpan.TimedResets[i]->characteristic;                     // set characteristic          
-      sb.status=StatusCode::OK;                                                      // set status
-      sb.val="";                                                                     // set dummy "val" so that sprintfNotify knows to consider this "update"
-      spanBuf.push_back(sb);
-    }
-  }
-
-  if(spanBuf.size()>0)                            // if updated items are found
-    eventNotify(&spanBuf[0],spanBuf.size());      // transmit EVENT Notifications
-
-}
-
-//////////////////////////////////////
-
 void  HAPClient::checkTimedWrites(){
 
   unsigned long cTime=millis();                                       // get current time
