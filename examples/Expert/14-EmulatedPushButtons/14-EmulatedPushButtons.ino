@@ -4,7 +4,7 @@
 //    HomeSpan: A HomeKit implementation for the ESP32    //
 //    ------------------------------------------------    //
 //                                                        //
-// Example 14: Pushbuttons                                //
+// Example 14: Emulated PushButtons                       //
 //                                                        //
 ////////////////////////////////////////////////////////////
 

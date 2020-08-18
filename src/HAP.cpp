@@ -1232,7 +1232,7 @@ void  HAPClient::checkTimedWrites(){
   for(auto tw=homeSpan.TimedWrites.begin(); tw!=homeSpan.TimedWrites.end(); tw++){      // loop over all Timed Writes using an iterator
     if(cTime>tw->second){                                                               // timer has expired
        sprintf(c,"Removing PID=%llu  ALARM=%lu\n",tw->first,tw->second);
-       LOG1(c);
+       LOG2(c);
        homeSpan.TimedWrites.erase(tw);
       }
   }
