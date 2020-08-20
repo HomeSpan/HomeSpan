@@ -148,6 +148,7 @@ void Span::poll() {
   } // for-loop over connection slots
 
   HAPClient::callServiceLoops();
+  HAPClient::checkPushButtons();
   HAPClient::checkNotifications();
   HAPClient::checkTimedWrites();
   
@@ -1151,5 +1152,53 @@ SpanRange::SpanRange(int min, int max, int step){
   
   homeSpan.Accessories.back()->Services.back()->Characteristics.back()->range=this;  
 }
+
+///////////////////////////////
+//        SpanButton         //
+///////////////////////////////
+
+SpanButton::SpanButton(int pin, unsigned long longTime, unsigned long shortTime){
+
+  if(homeSpan.Accessories.empty() || homeSpan.Accessories.back()->Services.empty()){
+    Serial.print("*** FATAL ERROR:  Can't create new PushButton without a defined Service.  Program halted!\n\n");
+    while(1);    
+  }
+
+  Serial.print("Configuring PushButton: Pin=");     // initialization message
+  Serial.print(pin);
+  Serial.print("\n");
+  
+  this->pin=pin;
+  this->shortTime=shortTime;
+  this->longTime=longTime;
+  service=homeSpan.Accessories.back()->Services.back();
+
+  homeSpan.PushButtons.push_back(this);
+
+  pinMode(pin,INPUT_PULLUP);  
+}
+
+///////////////////////////////
+
+void SpanButton::check(){
+
+ if(state==UNTRIGGERED && !digitalRead(pin)){
+  state=TRIGGERED;
+  unsigned long cTime=millis();
+  shortAlarm=cTime+shortTime;
+  longAlarm=cTime+longTime;
+ } else
+ 
+ if(state==TRIGGERED && digitalRead(pin)){
+  unsigned long cTime=millis();
+  if(cTime>longAlarm)
+    service->button(pin, true);
+  else if(cTime>shortAlarm)
+    service->button(pin, false);
+  state=UNTRIGGERED;
+ }
+  
+}
+
 
 ///////////////////////////////

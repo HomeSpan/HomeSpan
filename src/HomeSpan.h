@@ -25,6 +25,7 @@ struct SpanService;
 struct SpanCharacteristic;
 struct SpanRange;
 struct SpanBuf;
+struct SpanButton;
 
 ///////////////////////////////
 
@@ -49,6 +50,7 @@ struct Span{
   vector<SpanAccessory *> Accessories;              // vector of pointers to all Accessories
   vector<SpanService *> Loops;                      // vector of pointer to all Services that have over-ridden loop() methods
   vector<SpanBuf> Notifications;                    // vector of SpanBuf objects that store info for Characteristics that are updated with setVal() and require a Notification Event
+  vector<SpanButton *> PushButtons;                 // vector of pointer to all PushButtons
   unordered_map<uint64_t, uint32_t> TimedWrites;    // map of timed-write PIDs and Alarm Times (based on TTLs)
   
   void begin(Category catID,
@@ -105,7 +107,8 @@ struct SpanService{
   int sprintfAttributes(char *cBuf);                      // prints Service JSON records into buf; return number of characters printed, excluding null terminator
   virtual StatusCode update() {return(StatusCode::OK);}   // update Service and return final statusCode based on updated Characteristics - should be overridden by DEVICE-SPECIFIC Services
   virtual void event(){}                                  // event generation for Services that create their own events and need to notify HomeKit of a new Characteristic value(s)
-  virtual void loop(){}                                   // loops for each service
+  virtual void loop(){}                                   // loops for each Service
+  virtual void button(int pin, boolean isLong){}          // method called for a Service when a button attached to "pin" has a Short-Press or Long-Press, according to "isLong"
 };
 
 ///////////////////////////////
@@ -231,6 +234,28 @@ struct SpanBuf{                               // temporary storage buffer for us
   SpanCharacteristic *characteristic=NULL;    // Characteristic to update (NULL if not found)
 };
   
+///////////////////////////////
+
+struct SpanButton{
+
+  int pin;                       // pin number  
+  unsigned long shortTime;       // time (in millis) required to register a short press
+  unsigned long longTime;        // time (in millis) required to register a long press
+  unsigned long shortAlarm;      // alarm time to trigger a short press
+  unsigned long longAlarm;       // alarm time to triger a long press
+  SpanService *service;          // Service to which this PushButton is attached
+
+  enum {
+    UNTRIGGERED,
+    TRIGGERED,
+    SHORT,
+    LONG
+  } state=UNTRIGGERED;
+
+  SpanButton(int pin, unsigned long longTime=2000, unsigned long shortTime=5);
+  void check();
+};
+
 /////////////////////////////////////////////////
 // Extern Variables
 

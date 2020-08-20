@@ -102,7 +102,16 @@ void HAPClient::init(){
         homeSpan.Loops.push_back(s);
     }
   }
-  
+
+
+  for(int i=0;i<homeSpan.PushButtons.size();i++){
+    Serial.print("PushButton Found on pin: ");
+    Serial.print(homeSpan.PushButtons[i]->pin);
+    Serial.print("  iid: ");
+    Serial.print(homeSpan.PushButtons[i]->service->iid);
+    Serial.print("\n");
+  }
+
 }
 
 //////////////////////////////////////
@@ -1171,6 +1180,16 @@ void HAPClient::callServiceLoops(){
   
   for(int i=0;i<homeSpan.Loops.size();i++)        // loop over all services with over-ridden loop() methods
     homeSpan.Loops[i]->loop();                    // call the loop() method
+}
+
+
+//////////////////////////////////////
+
+void HAPClient::checkPushButtons(){
+
+  for(int i=0;i<homeSpan.PushButtons.size();i++)    // loop over all defined pushbuttons
+    homeSpan.PushButtons[i]->check();                  // check if long- or short-pressed, which calls button() method in attached Service if needed
+    
 }
 
 //////////////////////////////////////
