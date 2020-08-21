@@ -7,8 +7,6 @@ struct DEV_Identify : Service::AccessoryInformation {
 
   int nBlinks;                    // number of times to blink built-in LED in identify routine
   SpanCharacteristic *identify;   // reference to the Identify Characteristic
-
-  // NEW!  modified constructor() method to include optional ServiceType argument
   
   DEV_Identify(char *name, char *manu, char *sn, char *model, char *version, int nBlinks, ServiceType sType=ServiceType::Regular) : Service::AccessoryInformation(sType){
     
