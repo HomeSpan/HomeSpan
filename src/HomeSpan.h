@@ -239,18 +239,12 @@ struct SpanBuf{                               // temporary storage buffer for us
 struct SpanButton{
 
   int pin;                       // pin number  
+  boolean isTriggered=false;     // flag triggered when button is pressed
   unsigned long shortTime;       // time (in millis) required to register a short press
   unsigned long longTime;        // time (in millis) required to register a long press
   unsigned long shortAlarm;      // alarm time to trigger a short press
   unsigned long longAlarm;       // alarm time to triger a long press
   SpanService *service;          // Service to which this PushButton is attached
-
-  enum {
-    UNTRIGGERED,
-    TRIGGERED,
-    SHORT,
-    LONG
-  } state=UNTRIGGERED;
 
   SpanButton(int pin, unsigned long longTime=2000, unsigned long shortTime=5);
   void check();

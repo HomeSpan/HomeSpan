@@ -96,20 +96,10 @@ void HAPClient::init(){
 
   for(int i=0;i<homeSpan.Accessories.size();i++){                             // identify all services with over-ridden loop() methods
     for(int j=0;j<homeSpan.Accessories[i]->Services.size();j++){
-      SpanService *s=homeSpan.Accessories[i]->Services[j];
-      
-      if((void*)(s->*(&SpanService::loop)) != (void*)(&SpanService::loop))    // save pointers to services in Loops vector
+      SpanService *s=homeSpan.Accessories[i]->Services[j];      
+      if((void(*)())(s->*(&SpanService::loop)) != (void(*)())(&SpanService::loop))    // save pointers to services in Loops vector
         homeSpan.Loops.push_back(s);
     }
-  }
-
-
-  for(int i=0;i<homeSpan.PushButtons.size();i++){
-    Serial.print("PushButton Found on pin: ");
-    Serial.print(homeSpan.PushButtons[i]->pin);
-    Serial.print("  iid: ");
-    Serial.print(homeSpan.PushButtons[i]->service->iid);
-    Serial.print("\n");
   }
 
 }

@@ -386,10 +386,29 @@ void Span::processSerialCommand(char *c){
     }
     break;
 
+    case 'i':{
+      Serial.print("\n*** HomeSpan Info ***\n\n");
+      char cBuf[128];
+      for(int i=0;i<Accessories.size();i++){                             // identify all services with over-ridden loop() methods
+        for(int j=0;j<Accessories[i]->Services.size();j++){
+          SpanService *s=Accessories[i]->Services[j];        
+          sprintf(cBuf,"Service aid=%2d iid=%2d  Update: %3s  Loop: %3s  Button: %3s\n",Accessories[i]->aid,s->iid, 
+                 (void(*)())(s->*(&SpanService::update))!=(void(*)())(&SpanService::update)?"YES":"NO",
+                 (void(*)())(s->*(&SpanService::loop))!=(void(*)())(&SpanService::loop)?"YES":"NO",
+                 (void(*)(int,boolean))(s->*(&SpanService::button))!=(void(*)(int,boolean))(&SpanService::button)?"YES":"NO"
+                 );
+          Serial.print(cBuf);
+        }
+      }
+      Serial.print("\n*** End Status ***\n");
+    }
+    break;
+
     case '?': {    
       Serial.print("\n*** HomeSpan Commands ***\n\n");
       Serial.print("  s - print connection status\n");
       Serial.print("  d - print attributes database\n");
+      Serial.print("  i - print detailed info about configuration\n");
       Serial.print("  W - delete stored WiFi data and restart\n");      
       Serial.print("  H - delete stored HomeKit Pairing data and restart\n");      
       Serial.print("  F - delete all stored WiFi Network and HomeKit Pairing data and restart\n");      
@@ -1167,11 +1186,14 @@ SpanButton::SpanButton(int pin, unsigned long longTime, unsigned long shortTime)
   Serial.print("Configuring PushButton: Pin=");     // initialization message
   Serial.print(pin);
   Serial.print("\n");
-  
+
   this->pin=pin;
   this->shortTime=shortTime;
   this->longTime=longTime;
   service=homeSpan.Accessories.back()->Services.back();
+
+  if((void(*)(int,boolean))(service->*(&SpanService::button))==(void(*)(int,boolean))(&SpanService::button))
+    Serial.print("*** WARNING:  No button() method defined for this PushButton!\n\n");
 
   homeSpan.PushButtons.push_back(this);
 
@@ -1182,20 +1204,20 @@ SpanButton::SpanButton(int pin, unsigned long longTime, unsigned long shortTime)
 
 void SpanButton::check(){
 
- if(state==UNTRIGGERED && !digitalRead(pin)){
-  state=TRIGGERED;
+ if(!isTriggered && !digitalRead(pin)){
+  isTriggered=true;
   unsigned long cTime=millis();
   shortAlarm=cTime+shortTime;
   longAlarm=cTime+longTime;
  } else
  
- if(state==TRIGGERED && digitalRead(pin)){
+ if(isTriggered && digitalRead(pin)){
   unsigned long cTime=millis();
   if(cTime>longAlarm)
     service->button(pin, true);
   else if(cTime>shortAlarm)
     service->button(pin, false);
-  state=UNTRIGGERED;
+  isTriggered=false;
  }
   
 }

@@ -26,9 +26,8 @@ void setup() {
       new Characteristic::Version("1.1.0");
 
   new SpanAccessory();                                                          
-
     new DEV_Identify("Switched LED","HomeSpan","123-ABC","20mA LED","0.9",0);
-    new DEV_DimmableLED(0,17);    
+    new DEV_DimmableLED(0,17,19,5,18);    
  
 } // end of setup()
 
