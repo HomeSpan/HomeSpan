@@ -5,13 +5,9 @@ char *Utils::readSerial(char *c, int max){
   int i=0;
   char buf;
 
-  long sTime=millis();
- 
   while(1){
 
-    while(!Serial.available()){       // wait until there is a new character
-      digitalWrite(LED_BUILTIN,((millis()-sTime)/200)%2);
-    }
+    while(!Serial.available());       // wait until there is a new character
     
     buf=Serial.read();
     
@@ -27,8 +23,6 @@ char *Utils::readSerial(char *c, int max){
       i++;
   
   } // while(1)
-
-  digitalWrite(LED_BUILTIN,LOW);
   
 } // readSerial
 

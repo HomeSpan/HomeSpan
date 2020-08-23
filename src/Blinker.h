@@ -50,4 +50,12 @@ class Blinker {
 
 //    Stops current blinking pattern.
 
+  void on();
+
+//    Stops current blinknig pattern and turns on LED
+
+  void off();
+
+//    Stops current blinknig pattern and turns off LED
+
 };

@@ -23,8 +23,7 @@ void Span::begin(Category catID, char *displayName, char *hostNameBase, char *mo
   this->hostNameBase=hostNameBase;
   this->modelName=modelName;
   sprintf(this->category,"%d",catID);
-
-  pinMode(LED_BUILTIN,OUTPUT);
+  
   pinMode(resetPin,INPUT_PULLUP);
 
   delay(2000);
@@ -78,8 +77,12 @@ void Span::poll() {
     HAPClient::init();        // read NVS and load HAP settings  
     initWifi();               // initialize WiFi
 
-    if(!HAPClient::nAdminControllers())
+    if(!HAPClient::nAdminControllers()){
       Serial.print("DEVICE NOT YET PAIRED -- PLEASE PAIR WITH HOMEKIT APP\n\n");
+      statusLED.start(500,0.5,2,1000);
+    } else {
+      statusLED.on();
+    }
 
     Serial.print(displayName);
     Serial.print(" is READY!\n\n");        
@@ -186,6 +189,8 @@ void Span::initWifi(){
   if(!nvs_get_blob(wifiHandle,"WIFIDATA",NULL,&len)){                   // if found WiFi data in NVS
     nvs_get_blob(wifiHandle,"WIFIDATA",&wifiData,&len);                 // retrieve data
   } else {
+    statusLED.start(300,0.3);
+    
     Serial.print("Please configure network...\n");
     sprintf(wifiData.ssid,"MyNetwork");
     sprintf(wifiData.pwd,"MyPassword");
@@ -218,6 +223,8 @@ void Span::initWifi(){
   sprintf(hostName,"%s-%.2s_%.2s_%.2s_%.2s_%.2s_%.2s",hostNameBase,id,id+3,id+6,id+9,id+12,id+15);
 
   int nTries=0;
+
+  statusLED.start(1000);
   
   while(WiFi.status()!=WL_CONNECTED){
     Serial.print("Connecting to: ");
@@ -227,14 +234,12 @@ void Span::initWifi(){
 
     if(WiFi.begin(wifiData.ssid,wifiData.pwd)!=WL_CONNECTED){
       int delayTime=nTries%6?5000:60000;
-      int blinkTime=nTries%6?500:1000;
       char buf[8]="";
       Serial.print("Can't connect. Re-trying in ");
       Serial.print(delayTime/1000);
       Serial.print(" seconds (or type 'W <return>' to reset WiFi data)...\n");
       long sTime=millis();
       while(millis()-sTime<delayTime){
-        digitalWrite(LED_BUILTIN,((millis()-sTime)/blinkTime)%2);
         if(Serial.available()){
           readSerial(buf,1);
           if(buf[0]=='W'){
@@ -251,7 +256,6 @@ void Span::initWifi(){
     }
   } // WiFi not yet connected
 
-  digitalWrite(LED_BUILTIN,HIGH);            
   Serial.print("Success!  IP:  ");
   Serial.print(WiFi.localIP());
   Serial.print("\n");
@@ -292,6 +296,8 @@ void Span::initWifi(){
   Serial.print(MAX_CONNECTIONS);
   Serial.print(" simultaneous connections...\n\n");
   hapServer.begin();
+
+  statusLED.stop();
   
 } // initWiFi
 

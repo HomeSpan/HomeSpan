@@ -582,6 +582,7 @@ int HAPClient::postPairSetupURL(){
       mdns_service_txt_item_set("_hap","_tcp","sf","0");           // broadcast new status
       
       LOG1("\n*** ACCESSORY PAIRED! ***\n");
+      homeSpan.statusLED.on();
       
       return(1);        
              
@@ -1494,6 +1495,7 @@ void HAPClient::removeController(uint8_t *id){
       removeControllers();
       LOG1("That was last Admin Controller!  Removing any remaining Regular Controllers and unpairing Accessory\n");  
       mdns_service_txt_item_set("_hap","_tcp","sf","1");           // set Status Flag = 1 (Table 6-8)
+      homeSpan.statusLED.start(500,0.5,2,1000);
     }
 
     LOG2("\n");

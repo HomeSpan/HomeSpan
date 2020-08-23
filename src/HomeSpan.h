@@ -3,6 +3,7 @@
 #include <unordered_map>
 
 #include "Settings.h"
+#include "Blinker.h"
 
 using std::vector;
 using std::unordered_map;
@@ -45,6 +46,8 @@ struct Span{
   unsigned long snapTime;                       // current time (in millis) snapped before entering Service loops() or updates()
 
   int resetPin=21;                              // drive this pin low to "factory" reset NVS data on start-up
+
+  Blinker statusLED=Blinker(LED_BUILTIN);       // indicates HomeSpan status
   
   SpanConfig hapConfig;                             // track configuration changes to the HAP Accessory database; used to increment the configuration number (c#) when changes found
   vector<SpanAccessory *> Accessories;              // vector of pointers to all Accessories

@@ -82,3 +82,13 @@ void Blinker::start(int period, float dutyCycle, int nBlinks, int delayTime){
 void Blinker::stop(){
   timer_pause(group,idx);  
 }
+
+void Blinker::on(){
+  stop();
+  digitalWrite(pin,1);
+}
+
+void Blinker::off(){
+  stop();
+  digitalWrite(pin,0);
+}
