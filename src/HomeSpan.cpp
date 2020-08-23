@@ -154,6 +154,37 @@ void Span::poll() {
   HAPClient::checkPushButtons();
   HAPClient::checkNotifications();
   HAPClient::checkTimedWrites();
+
+  switch(resetPressed){
+    case 0:
+      if(!digitalRead(resetPin)){
+        resetPressed=1;
+        resetTime=millis()+5000;
+      }
+    break;
+
+    case 1:
+      if(digitalRead(resetPin)){
+        resetPressed=0;
+      } else 
+      if(millis()>resetTime){
+        resetPressed=2;
+        statusLED.start(200,0.5,4,800);
+        resetTime=millis()+6000;
+      }
+      break;
+
+    case 2:
+      if(digitalRead(resetPin)){
+        statusLED.off();
+        processSerialCommand("H");
+      } else
+      if(millis()>resetTime){
+        statusLED.off();
+        processSerialCommand("F");
+      }
+      break;
+  } // switch
   
 } // poll
 
@@ -379,7 +410,7 @@ void Span::processSerialCommand(char *c){
       nvs_erase_all(HAPClient::nvsHandle);
       nvs_commit(HAPClient::nvsHandle);      
       Serial.print("\n** HomeKit Pairing Data DELETED **\n** Restarting...\n\n");
-      delay(2000);
+      delay(1000);
       ESP.restart();
     }
     break;
@@ -387,7 +418,7 @@ void Span::processSerialCommand(char *c){
     case 'F': {
       nvs_flash_erase();
       Serial.print("\n** FACTORY RESET **\n** Restarting...\n\n");
-      delay(2000);
+      delay(1000);
       ESP.restart();
     }
     break;

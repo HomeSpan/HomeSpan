@@ -46,6 +46,8 @@ struct Span{
   unsigned long snapTime;                       // current time (in millis) snapped before entering Service loops() or updates()
 
   int resetPin=21;                              // drive this pin low to "factory" reset NVS data on start-up
+  int resetPressed=0;                           // tracks pressing of reset button
+  unsigned long resetTime;                      // tracks time once reset button is pressed
 
   Blinker statusLED=Blinker(LED_BUILTIN);       // indicates HomeSpan status
   
