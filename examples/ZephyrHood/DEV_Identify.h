@@ -6,33 +6,29 @@
 struct DEV_Identify : Service::AccessoryInformation {
 
   int nBlinks;                    // number of times to blink built-in LED in identify routine
-  SpanCharacteristic *identify;
+  SpanCharacteristic *identify;   // reference to the Identify Characteristic
   
-  DEV_Identify(int nBlinks, char *name, char *model, char *manu, char *sn, char *firm, ServiceType mod=ServiceType::Regular) : Service::AccessoryInformation(mod){
+  DEV_Identify(char *name, char *manu, char *sn, char *model, char *version, int nBlinks, ServiceType sType=ServiceType::Regular) : Service::AccessoryInformation(sType){
     
-    new Characteristic::FirmwareRevision(firm);
+    new Characteristic::Name(name);                   // create all the required Characteristics with values set based on above arguments
     new Characteristic::Manufacturer(manu);
-    new Characteristic::Model(model);
-    new Characteristic::Name(name);
     new Characteristic::SerialNumber(sn);    
-    identify=new Characteristic::Identify();
+    new Characteristic::Model(model);
+    new Characteristic::FirmwareRevision(version);
+    identify=new Characteristic::Identify();          // store a reference to the Identify Characteristic for use below
 
-    this->nBlinks=nBlinks;
+    this->nBlinks=nBlinks;                            // store the number of times to blink the built-in LED
 
-    pinMode(LED_BUILTIN,OUTPUT);
+    pinMode(LED_BUILTIN,OUTPUT);                      // make sure built-in LED is set for output
   }
 
-
   StatusCode update(){
-  
-    if(identify->newValue.BOOL){
-      
-      for(int i=0;i<nBlinks;i++){
-        digitalWrite(LED_BUILTIN,LOW);
-        delay(250);
-        digitalWrite(LED_BUILTIN,HIGH);
-        delay(250);
-      }
+       
+    for(int i=0;i<nBlinks;i++){
+      digitalWrite(LED_BUILTIN,LOW);
+      delay(250);
+      digitalWrite(LED_BUILTIN,HIGH);
+      delay(250);
     }
 
     return(StatusCode::OK);

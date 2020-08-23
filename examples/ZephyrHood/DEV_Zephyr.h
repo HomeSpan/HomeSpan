@@ -23,37 +23,50 @@ struct DEV_ZephyrLight : Service::LightBulb {
 
   uint32_t code;
   SpanCharacteristic *power;
+  int buttonPin;
 
-  DEV_ZephyrLight(uint32_t code, ServiceType mod=ServiceType::Regular) : Service::LightBulb(mod){
+  DEV_ZephyrLight(uint32_t code, int buttonPin, ServiceType mod=ServiceType::Regular) : Service::LightBulb(mod){
 
     power=new Characteristic::On();
-    new SpanTimedReset(500);
     new Characteristic::Name("Vent Light");
     this->code=code;
+    this->buttonPin=buttonPin;
 
     Serial.print("Configuring Zephyr Vent Hood Light 433MHz Transmitter with code: ");
     Serial.print(code,HEX);
     Serial.print("\n");
+
+    new SpanButton(buttonPin);
   }
 
   StatusCode update(){
-
-    LOG1("Updating Zephyr Vent Hood Light:  Power=");
-    LOG1(power->value.BOOL?"true":"false");
   
-    if(power->isUpdated){
-      LOG1("  New Power=");
-      LOG1(power->newValue.BOOL?"true":"false");
-    }
-
-    LOG1("\n");
-
-    if(power->newValue.BOOL)
+    if(power->getNewVal()){
+      LOG1("Activating Zephyr Vent Hood Light\n");
       transmitZephyr(code);
+    }
 
     return(StatusCode::OK);
       
   } // update
+
+  void loop(){
+
+    if(power->getVal() && power->timeVal()>500){   // check that power is true, and that time since last modification is greater than 3 seconds 
+      LOG1("Resetting Zephyr Vent Hood Light Control\n");     // log message  
+      power->setVal(false);                         // set power to false
+    }      
+    
+  } // loop  
+
+  void button(int pin, boolean isLong) override {
+
+    LOG1("Activating Zephyr Vent Hood Light\n");
+    transmitZephyr(code);
+    power->setVal(true); 
+
+  } // button
+    
 };
       
 //////////////////////////////////
@@ -62,37 +75,50 @@ struct DEV_ZephyrFan : Service::Fan {
 
   uint32_t code;
   SpanCharacteristic *power;
+  int buttonPin;
 
-  DEV_ZephyrFan(uint32_t code, ServiceType mod=ServiceType::Regular) : Service::Fan(mod){
+  DEV_ZephyrFan(uint32_t code, int buttonPin, ServiceType mod=ServiceType::Regular) : Service::Fan(mod){
 
     power=new Characteristic::Active();
-    new SpanTimedReset(500);
     new Characteristic::Name("Vent Fan");
     this->code=code;
-
+    this->buttonPin=buttonPin;
+    
     Serial.print("Configuring Zephyr Vent Hood Fan 433MHz Transmitter with code: ");
     Serial.print(code,HEX);
     Serial.print("\n");
+
+    new SpanButton(buttonPin);
   }
 
   StatusCode update(){
 
-    LOG1("Updating Zephyr Vent Hood Fan:  Power=");
-    LOG1(power->value.BOOL?"true":"false");                 // power is actually a UINT8, but only 0 and 1 are defined so BOOL works as well
-  
-    if(power->isUpdated){
-      LOG1("  New Power=");
-      LOG1(power->newValue.BOOL?"true":"false");
+    if(power->getNewVal()){
+      LOG1("Activating Zephyr Vent Hood Fan\n");
+      transmitZephyr(code);
     }
 
-    LOG1("\n");
-
-    if(power->newValue.BOOL)
-      transmitZephyr(code);
-    
     return(StatusCode::OK);
     
   } // update
+
+  void loop(){
+
+    if(power->getVal() && power->timeVal()>500){   // check that power is true, and that time since last modification is greater than 3 seconds 
+      LOG1("Resetting Zephyr Vent Hood Fan Control\n");     // log message  
+      power->setVal(false);                         // set power to false
+    }      
+    
+  } // loop  
+
+  void button(int pin, boolean isLong) override {
+
+    LOG1("Activating Zephyr Vent Hood Fan\n");
+    transmitZephyr(code);
+    power->setVal(true); 
+
+  } // button
+    
 };
       
 //////////////////////////////////
@@ -101,37 +127,50 @@ struct DEV_ZephyrPower : Service::Switch {
 
   uint32_t code;
   SpanCharacteristic *power;
+  int buttonPin;
 
-  DEV_ZephyrPower(uint32_t code, ServiceType mod=ServiceType::Regular) : Service::Switch(mod){
+  DEV_ZephyrPower(uint32_t code, int buttonPin, ServiceType mod=ServiceType::Regular) : Service::Switch(mod){
 
     power=new Characteristic::On();
-    new SpanTimedReset(500);
     new Characteristic::Name("Vent Power");
     this->code=code;
+    this->buttonPin=buttonPin;
 
     Serial.print("Configuring Zephyr Vent Hood Power 433MHz Transmitter with code: ");
     Serial.print(code,HEX);
     Serial.print("\n");
+    new SpanButton(buttonPin);
+
   }
 
   StatusCode update(){
 
-    LOG1("Updating Zephyr Vent Hood Power:  Power=");
-    LOG1(power->value.BOOL?"true":"false");
-  
-    if(power->isUpdated){
-      LOG1("  New Power=");
-      LOG1(power->newValue.BOOL?"true":"false");
-    }
-
-    LOG1("\n");
-
-    if(power->newValue.BOOL)
+    if(power->getNewVal()){
+      LOG1("Activating Zephyr Vent Hood Power\n");
       transmitZephyr(code);
+    }
     
     return(StatusCode::OK);
 
   } // update
+
+  void loop(){
+
+    if(power->getVal() && power->timeVal()>500){   // check that power is true, and that time since last modification is greater than 3 seconds 
+      LOG1("Resetting Zephyr Vent Hood Power Control\n");     // log message  
+      power->setVal(false);                         // set power to false
+    }      
+    
+  } // loop  
+
+  void button(int pin, boolean isLong) override {
+
+    LOG1("Activating Zephyr Vent Hood Power\n");
+    transmitZephyr(code);
+    power->setVal(true); 
+
+  } // button
+      
 };
       
 //////////////////////////////////
