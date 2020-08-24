@@ -23,10 +23,6 @@ void setup() {
     new DEV_Identify("Zephyr Fan","HomeSpan","ZVH-1","RF-Control","1.0",0);
     new DEV_ZephyrFan(0x51388,0x61398,16);
 
-  new SpanAccessory();
-    new DEV_Identify("Zephyr Power","HomeSpan","ZVH-1","RF-Control","1.0",0);
-    new DEV_ZephyrPower(0x61398,19);
-
 }
 
 //////////////////////////////////////
