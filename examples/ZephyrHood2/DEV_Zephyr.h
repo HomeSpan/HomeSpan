@@ -17,7 +17,7 @@
 
 void transmitZephyr(uint32_t code);
 
-boolean masterPower=false;
+boolean resetLight=false;
 
 //////////////////////////////////
 
@@ -25,11 +25,14 @@ struct DEV_ZephyrLight : Service::LightBulb {
 
   uint32_t code;
   SpanCharacteristic *power;
+  SpanCharacteristic *level;
   int buttonPin;
 
   DEV_ZephyrLight(uint32_t code, int buttonPin, ServiceType mod=ServiceType::Regular) : Service::LightBulb(mod){
 
-    power=new Characteristic::On();
+    power=new Characteristic::On(false);
+    level=new Characteristic::Brightness(3);
+    new SpanRange(0,3,1);
     new Characteristic::Name("Vent Light");
     this->code=code;
     this->buttonPin=buttonPin;
@@ -42,32 +45,56 @@ struct DEV_ZephyrLight : Service::LightBulb {
   }
 
   StatusCode update(){
-  
-    if(power->getNewVal()){
-      LOG1("Activating Zephyr Vent Hood Light\n");
+
+    LOG1("Zephyr Vent Hood Light Power: ");
+    LOG1(power->getVal());
+    if(power->updated()){
+      LOG1("->");
+      LOG1(power->getNewVal());
+    }
+    LOG1("  Level: ");
+    LOG1(level->getVal());
+    if(level->updated()){
+      LOG1("->");
+      LOG1(level->getNewVal());
+    }
+    LOG1("\n");    
+
+    int oldState=power->getVal()*(4-level->getVal());    
+    int newState=(power->updated()?power->getNewVal():power->getVal())
+              *(4-(level->updated()?level->getNewVal():level->getVal()));
+ 
+    while(newState!=oldState){
       transmitZephyr(code);
+      delay(200);
+      oldState=(oldState+1)%4;
     }
 
     return(StatusCode::OK);
       
   } // update
 
-  void loop(){
-
-    if(power->getVal() && power->timeVal()>500){   // check that power is true, and that time since last modification is greater than 3 seconds 
-      LOG1("Resetting Zephyr Vent Hood Light Control\n");     // log message  
-      power->setVal(false);                         // set power to false
-    }      
-    
-  } // loop  
-
   void button(int pin, boolean isLong) override {
 
-    LOG1("Activating Zephyr Vent Hood Light\n");
+    LOG1("Zephyr Vent Hood Light Short Button Press\n");
     transmitZephyr(code);
-    power->setVal(true); 
+
+    int newLevel=level->getVal()-1;
+    if(newLevel<0)
+      newLevel=3;
+    level->setVal(newLevel);
+    power->setVal(newLevel>0);
 
   } // button
+
+  void loop(){
+
+    if(resetLight){
+      power->setVal(false);
+      resetLight=false;
+    }
+    
+  } // loop
     
 };
       
@@ -99,27 +126,19 @@ struct DEV_ZephyrFan : Service::Fan {
 
   StatusCode update(){
 
-    if(power->getNewVal()){
+    if(power->getNewVal()){                           // it's okay to repease ON commands - this just cycles through fan speed
       LOG1("Zephyr Vent Hood Fan: Power On\n");
       transmitZephyr(fanCode);
     } else 
-    if(power->getVal()){                              // only transmit power code if we know power is really on
+    if(power->getVal()){                              // only transmit power code if we know power is really on, else this OFF command will turn fan ON!
       LOG1("Zephyr Vent Hood Fan: Power Off\n");
       transmitZephyr(powerCode);
+      resetLight=true;
     }
 
     return(StatusCode::OK);
     
   } // update
-
-  void loop(){
-
-//    if(power->getVal() && power->timeVal()>500){   // check that power is true, and that time since last modification is greater than 3 seconds 
-//      LOG1("Resetting Zephyr Vent Hood Fan Control\n");     // log message  
-//      power->setVal(false);                         // set power to false
-//    }      
-    
-  } // loop  
 
   void button(int pin, boolean isLong) override {
 
@@ -133,8 +152,10 @@ struct DEV_ZephyrFan : Service::Fan {
       LOG1("Zephyr Vent Hood Fan Long Button Press: Power Off\n");
       transmitZephyr(powerCode);
       power->setVal(false);      
+      resetLight=true;
     } else {
       LOG1("Zephyr Vent Hood Fan Long Button Press: Power is already off!\n");      
+      resetLight=true;
     }
 
   } // button
