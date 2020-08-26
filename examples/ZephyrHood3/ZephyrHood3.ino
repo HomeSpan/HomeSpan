@@ -17,11 +17,11 @@ void setup() {
 
   new SpanAccessory();
     new DEV_Identify("Zephyr Light","HomeSpan","ZVH-1","RF-Control","1.0",0);
-    new DEV_ZephyrLight(0x51390,17);
+    new DEV_ZephyrLight(0x51390,19);
 
   new SpanAccessory();
     new DEV_Identify("Zephyr Fan","HomeSpan","ZVH-1","RF-Control","1.0",0);
-    new DEV_ZephyrFan(0x51388,0x61398,16);
+    new DEV_ZephyrFan(0x51388,0x61398,18);
 
 }
 
