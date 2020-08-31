@@ -2,6 +2,7 @@
 #include <ESPmDNS.h>
 #include <nvs_flash.h>
 #include <sodium.h>
+#include <DNSServer.h>
 
 #include "Utils.h"
 #include "HAP.h"
@@ -212,6 +213,16 @@ void Span::initWifi(){
     char pwd[MAX_PWD+1];
   } wifiData;
 
+  char id[18];                              // create string version of Accessory ID for MDNS broadcast
+  memcpy(id,HAPClient::accessory.ID,17);    // copy ID bytes
+  id[17]='\0';                              // add terminating null
+
+  // create broadcaset name from server base name plus accessory ID (with ':' replaced by '_')
+  
+  int nChars=snprintf(NULL,0,"%s-%.2s_%.2s_%.2s_%.2s_%.2s_%.2s",hostNameBase,id,id+3,id+6,id+9,id+12,id+15);       
+  char hostName[nChars+1];
+  sprintf(hostName,"%s-%.2s_%.2s_%.2s_%.2s_%.2s_%.2s",hostNameBase,id,id+3,id+6,id+9,id+12,id+15);
+
   nvs_handle wifiHandle;
   size_t len;             // not used but required to read blobs from NVS
 
@@ -220,7 +231,9 @@ void Span::initWifi(){
   if(!nvs_get_blob(wifiHandle,"WIFIDATA",NULL,&len)){                   // if found WiFi data in NVS
     nvs_get_blob(wifiHandle,"WIFIDATA",&wifiData,&len);                 // retrieve data
   } else {
-    statusLED.start(300,0.3);
+    statusLED.start(500,0.3,2,1000);
+
+    configure(hostName);
     
     Serial.print("Please configure network...\n");
     sprintf(wifiData.ssid,"MyNetwork");
@@ -243,16 +256,6 @@ void Span::initWifi(){
     nvs_commit(wifiHandle);                                            // commit to NVS
   }
   
-  char id[18];                              // create string version of Accessory ID for MDNS broadcast
-  memcpy(id,HAPClient::accessory.ID,17);    // copy ID bytes
-  id[17]='\0';                              // add terminating null
-
-  // create broadcaset name from server base name plus accessory ID (with ':' replaced by '_')
-  
-  int nChars=snprintf(NULL,0,"%s-%.2s_%.2s_%.2s_%.2s_%.2s_%.2s",hostNameBase,id,id+3,id+6,id+9,id+12,id+15);       
-  char hostName[nChars+1];
-  sprintf(hostName,"%s-%.2s_%.2s_%.2s_%.2s_%.2s_%.2s",hostNameBase,id,id+3,id+6,id+9,id+12,id+15);
-
   int nTries=0;
 
   statusLED.start(1000);
@@ -331,6 +334,104 @@ void Span::initWifi(){
   statusLED.stop();
   
 } // initWiFi
+
+///////////////////////////////
+
+void Span::configure(char *apName){
+
+  Serial.print("WiFi Configuration required.  Please connect to Access Point: ");
+  Serial.print(apName);
+  Serial.print("\n");
+
+  const byte DNS_PORT = 53;
+  WiFiServer apServer(80);
+  DNSServer dnsServer;
+  IPAddress apIP(192, 168, 4, 1);
+
+  WiFi.mode(WIFI_AP);
+  WiFi.softAP(apName,"homespan2020");
+  dnsServer.start(DNS_PORT, "*", apIP);
+  apServer.begin();
+
+  String responseHTML = ""
+  "<!DOCTYPE html><html><head><title>CaptivePortal</title></head><body>"
+  "<h1>Hello World!</h1><p>This is a captive portal example. All requests will "
+  "be redirected here.</p></body></html>";
+
+  boolean configured=false;
+
+  while(!configured){
+    dnsServer.processNextRequest();
+    WiFiClient apClient=apServer.available();
+
+    if(apClient){                           // found a new HTTP client
+      Serial.print("Client Found: ");
+      Serial.println(apClient.remoteIP());
+      
+      while(apClient.available()){      // data is available
+
+        int nBytes=apClient.read(HAPClient::httpBuf,HAPClient::MAX_HTTP);      // read all available bytes up to maximum allowed
+        char *p=(char *)HAPClient::httpBuf;
+        p[nBytes]='\0';
+        Serial.print(p);        
+        Serial.print("\n");
+
+        if(!strncmp(p,"GET /",5)){
+          apClient.println("HTTP/1.1 200 OK");
+          apClient.println("Content-type:text/html");
+          apClient.println();
+        
+          apClient.print("<html><head><title>HomeSpan Configuration</title><style>p{font-size:300%; margin:25px}label{font-size:300%; margin:25px}input{font-size:250%; margin:25px}</style></head>");
+          apClient.print("<body style=\"background-color:lightyellow;\"><center><p><b>HomeSpan_12_54_DD_E4_23_F5</b></p></center>");
+          apClient.print("<p>Welcome to HomeSpan! This page allows you to configure the above HomeSpan device to connect to your WiFi network, and to  create a Setup Code for pairing this device to HomeKit.</p>");
+          apClient.print("<p><em>WiFi Network</em> is a required field.  If your network name is broadcast you can select it from the dropdown list.  If you don't see your network name in the dropdown list you may type it into the text box.</p>");
+          apClient.print("<p><em>WiFi Password</em> is required only if your network is password-protected.</p>");
+          apClient.print("<p>Every HomeKit device requires an 8-digit <em>Setup Code</em>. If this device is being configured for the first time, or if the device has been factory reset, you must create a new <em>Setup Code</em>. ");
+          apClient.print("Otherwise, either leave this field blank to retain the current <em>Setup Code</em>, or type a new 8-digit <em>Setup Code</em> to replace the current one.</p>");
+          apClient.print("<p>Note that HomeSpan cannot display a previously saved <em>Setup Code</em>, so if you've forgotten what it is, this is the place to create a new one.</p>");
+          apClient.print("<p>The LED on this device should be <em>double-blinking</em> during this configuration.<p>");
+
+          apClient.print("<form method=\"post\">");
+          apClient.print("<label for=\"ssid\">WiFi Network:</label>");
+          apClient.print("<input list=\"network\" name=\"network\" placeholder=\"Type/Select\" required>");
+          apClient.print("<datalist id=\"network\">");
+          apClient.print("<option value=\"SEA-SHORE\">SEA-SHORE</option>");
+          apClient.print("<option value=\"NetworkA\">Network A</option>");
+          apClient.print("<option value=\"NetworkB\">Network B</option>");
+          apClient.print("<option value=\"MyNet\">My Network</option>");
+          apClient.print("</datalist><br><br>");
+
+          apClient.print("<label for=\"pwd\">WiFi Password:</label>");
+          apClient.print("<input type=\"password\" id=\"pwd\" name=\"pwd\">");
+          apClient.print("<br><br>");
+
+          apClient.print("<label for=\"code\">Setup Code:</label>");
+          apClient.print("<input type=\"tel\" id=\"code\" name=\"code\" placeholder=\"12345678\" pattern=\"[0-9]{8}\">");
+  
+          apClient.print("<p><em>");
+          apClient.print("This device already has a Setup Code.  You may leave Setup Code blank to retain the current one, or type a new Setup Code to change.");
+          apClient.print("This device does not yet have a Setup Code.  You must create one above.");
+          apClient.print("</p>");
+
+          apClient.print("<center><input style=\"font-size:300%\" type=\"submit\" value=\"SUBMIT\"></center>");
+          apClient.print("</form></body></html>");
+        } // GET
+        
+        if(!strncmp(p,"POST /",6)){
+          apClient.println("HTTP/1.1 200 OK");
+          apClient.println("Content-type:text/html");
+          apClient.println();
+          apClient.println("SUCCESS");
+        }
+          
+      } // data available
+
+      apClient.stop();
+    }
+
+  }
+  
+}
 
 ///////////////////////////////
 

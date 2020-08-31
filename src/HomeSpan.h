@@ -1,4 +1,8 @@
 
+#ifndef ARDUINO_ARCH_ESP32
+#error ERROR: HOMESPAN IS ONLY AVAILABLE FOR ESP32 MICROCONTROLLERS!
+#endif
+
 #include <Arduino.h>
 #include <unordered_map>
 
@@ -67,6 +71,7 @@ struct Span{
   int getFreeSlot();                            // returns free HAPClient slot number. HAPClients slot keep track of each active HAPClient connection
   void initWifi();                              // initialize and connect to WiFi network
   void processSerialCommand(char *c);           // process command 'c' (typically from readSerial, though can be called with any 'c')
+  void configure(char *hostName);               // configure homeSpan WiFi and Setup Code using temporary Captive Access Point 'hostName'
 
   int sprintfAttributes(char *cBuf);            // prints Attributes JSON database into buf, unless buf=NULL; return number of characters printed, excluding null terminator, even if buf=NULL
   void prettyPrint(char *buf, int nsp=2);       // print arbitrary JSON from buf to serial monitor, formatted with indentions of 'nsp' spaces
