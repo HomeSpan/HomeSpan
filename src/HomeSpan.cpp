@@ -217,11 +217,11 @@ void Span::initWifi(){
   memcpy(id,HAPClient::accessory.ID,17);    // copy ID bytes
   id[17]='\0';                              // add terminating null
 
-  // create broadcaset name from server base name plus accessory ID (with ':' replaced by '_')
+  // create broadcaset name from server base name plus accessory ID (without ':')
   
-  int nChars=snprintf(NULL,0,"%s-%.2s_%.2s_%.2s_%.2s_%.2s_%.2s",hostNameBase,id,id+3,id+6,id+9,id+12,id+15);       
+  int nChars=snprintf(NULL,0,"%s-%.2s%.2s%.2s%.2s%.2s%.2s",hostNameBase,id,id+3,id+6,id+9,id+12,id+15);       
   char hostName[nChars+1];
-  sprintf(hostName,"%s-%.2s_%.2s_%.2s_%.2s_%.2s_%.2s",hostNameBase,id,id+3,id+6,id+9,id+12,id+15);
+  sprintf(hostName,"%s-%.2s%.2s%.2s%.2s%.2s%.2s",hostNameBase,id,id+3,id+6,id+9,id+12,id+15);
 
   nvs_handle wifiHandle;
   size_t len;             // not used but required to read blobs from NVS
@@ -349,16 +349,51 @@ void Span::configure(char *apName){
   IPAddress apIP(192, 168, 4, 1);
 
   WiFi.mode(WIFI_AP);
-  WiFi.softAP(apName,"homespan2020");
+  WiFi.softAP(apName,"homespan");
   dnsServer.start(DNS_PORT, "*", apIP);
   apServer.begin();
 
-  String responseHTML = ""
-  "<!DOCTYPE html><html><head><title>CaptivePortal</title></head><body>"
-  "<h1>Hello World!</h1><p>This is a captive portal example. All requests will "
-  "be redirected here.</p></body></html>";
-
   boolean configured=false;
+
+  TODO:  Eliminate these two lines and replace with a new generic CaptiveAP flag to trackAP mode
+  ALSO CHANGE HAP[0] to POINTER REFERENCES
+
+  hap[0].cPair=NULL;                          // reset pointer to verified ID
+  HAPClient::pairStatus=pairState_M1;         // reset starting PAIR STATE (which may be needed if Accessory failed in middle of pair-setup)
+
+  while(!configured){
+
+    dnsServer.processNextRequest();
+
+    if(hap[0].client=apServer.available()){         // found a new HTTP client
+      LOG2("=======================================\n");
+      LOG1("** Access Point Client Connected: (");
+      LOG1(millis()/1000);
+      LOG1(" sec) ");
+      LOG1(hap[0].client.remoteIP());
+      LOG1("\n");
+      LOG2("\n");
+    }
+    
+    if(hap[0].client && hap[0].client.available()){       // if connection exists and data is available
+
+      HAPClient::conNum=0;                                // set connection number
+      hap[0].processRequest();                            // process HAP request
+      
+      if(!hap[0].client){                                 // client disconnected by server
+        LOG1("** Disconnecting AP Client (");
+        LOG1(millis()/1000);
+        LOG1(" sec)\n");
+      }
+
+      LOG2("\n");
+
+    } // process HAP Client
+
+  }
+
+  while(1);
+
 
   while(!configured){
     dnsServer.processNextRequest();

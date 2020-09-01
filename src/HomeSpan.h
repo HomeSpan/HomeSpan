@@ -64,7 +64,7 @@ struct Span{
   
   void begin(Category catID,
              char *displayName="HomeSpan Server",
-             char *hostNameBase="homespan",
+             char *hostNameBase="HomeSpan",
              char *modelName="HS-ESP32");        
              
   void poll();                                  // poll HAP Clients and process any new HAP requests
