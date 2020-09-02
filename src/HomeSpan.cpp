@@ -353,15 +353,9 @@ void Span::configure(char *apName){
   dnsServer.start(DNS_PORT, "*", apIP);
   apServer.begin();
 
-  boolean configured=false;
+  needsConfiguration=true;
 
-  TODO:  Eliminate these two lines and replace with a new generic CaptiveAP flag to trackAP mode
-  ALSO CHANGE HAP[0] to POINTER REFERENCES
-
-  hap[0].cPair=NULL;                          // reset pointer to verified ID
-  HAPClient::pairStatus=pairState_M1;         // reset starting PAIR STATE (which may be needed if Accessory failed in middle of pair-setup)
-
-  while(!configured){
+  while(needsConfiguration){
 
     dnsServer.processNextRequest();
 
@@ -395,7 +389,7 @@ void Span::configure(char *apName){
   while(1);
 
 
-  while(!configured){
+  while(!needsConfiguration){
     dnsServer.processNextRequest();
     WiFiClient apClient=apServer.available();
 

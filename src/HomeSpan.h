@@ -54,7 +54,9 @@ struct Span{
   unsigned long resetTime;                      // tracks time once reset button is pressed
 
   Blinker statusLED=Blinker(LED_BUILTIN);       // indicates HomeSpan status
-  
+
+  boolean needsConfiguration=false;             // tracks whether device needs to be configured with WiFi credentials and a Setup Code
+    
   SpanConfig hapConfig;                             // track configuration changes to the HAP Accessory database; used to increment the configuration number (c#) when changes found
   vector<SpanAccessory *> Accessories;              // vector of pointers to all Accessories
   vector<SpanService *> Loops;                      // vector of pointer to all Services that have over-ridden loop() methods
