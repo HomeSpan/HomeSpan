@@ -176,6 +176,11 @@ void HAPClient::processRequest(){
       return;
     }
 
+    if(!strncmp(body,"GET /wifi-status ",17)){                              // GET WIFI-STATUS
+      getWiFiStatusURL();
+      return;
+    }    
+
     captiveAccessURL();                // default action for all other URLs when in captive Access Point mode
     return;
     
@@ -407,8 +412,9 @@ int HAPClient::postConfigureURL(char *formData){
 
   LOG1("In Post Configure...\n");
 
-  String s="HTTP/1.1 200 OK\r\nContent-type: text/html\r\nRefresh: 5\r\n\r\n";
-  s+="OKAY";
+  String s="HTTP/1.1 200 OK\r\nContent-type: text/html\r\n\r\n";
+  s+="<html><head><title>Initiating</title><meta http-equiv = \"refresh\" content = \"2; url = /wifi-status\" /></head><body style=\"background-color:lightyellow;\">";
+  s+="<p style=\"font-size:300%;\">Initiating WiFi Connection...</p></body></html>";
 
   LOG2("\n>>>>>>>>>> ");
   LOG2(client.remoteIP());
@@ -418,6 +424,28 @@ int HAPClient::postConfigureURL(char *formData){
   client.print(s);
   LOG2("------------ SENT! --------------\n");
   
+  return(1);
+}
+
+//////////////////////////////////////
+
+int HAPClient::getWiFiStatusURL(){
+
+  LOG1("In Get WiFi Status...\n");
+
+  String s="HTTP/1.1 200 OK\r\nContent-type: text/html\r\nRefresh: 5\r\n\r\n";
+  s+="<html><head><title>Connection Status</title></head><body style=\"background-color:lightyellow;\">";
+  s+="<p style=\"font-size:300%;\">Trying to Connect (";
+  s+=String(millis()/1000) + "sec)...</p></body></html>";
+
+  LOG2("\n>>>>>>>>>> ");
+  LOG2(client.remoteIP());
+  LOG2(" >>>>>>>>>>\n");
+  LOG2(s);
+  LOG2("\n");
+  client.print(s);
+  LOG2("------------ SENT! --------------\n");
+
   return(1);
 }
 
