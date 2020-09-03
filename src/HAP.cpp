@@ -165,10 +165,21 @@ void HAPClient::processRequest(){
 
   if(homeSpan.needsConfiguration){     // device not yet configured - only allow certain URLs
 
+    if(!strncmp(body,"POST /configure ",16) &&                              // POST CONFIGURE
+       strstr(body,"Content-Type: application/x-www-form-urlencoded")){     // check that content is from a form
+
+      content[cLen]='\0';                                                   // add a trailing null on end of POST data
+      LOG2((char *)content);                                                // print data
+      LOG2("\n------------ END DATA! ------------\n");
+               
+      postConfigureURL((char *)content);                                    // process URL
+      return;
+    }
+
     captiveAccessURL();                // default action for all other URLs when in captive Access Point mode
     return;
     
-  } // captive access point URLs only
+  } // captive access point URLs only - everything below is for normal HAP requests
 
   if(!strncmp(body,"POST ",5)){                       // this is a POST request
 
@@ -345,13 +356,13 @@ int HAPClient::captiveAccessURL(){
 
   int n=WiFi.scanNetworks();
 
-  String s="HTTP/1.1 200 OK\r\nContent-type:text/html\r\n\r\n";
+  String s="HTTP/1.1 200 OK\r\nContent-type: text/html\r\n\r\n";
   s+="<html><head><title>HomeSpan Configuration</title><style>p{font-size:300%; margin:25px}label{font-size:300%; margin:25px}input{font-size:250%; margin:25px}</style></head>";
   s+="<body style=\"background-color:lightyellow;\"><center><p><b>HomeSpan_12_54_DD_E4_23_F5</b></p></center>";
   s+="<p>Welcome to HomeSpan! This page allows you to configure the above HomeSpan device to connect to your WiFi network, and (if needed) to create a Setup Code for pairing this device to HomeKit.</p>";
   s+="<p>The LED on this device should be <em>double-blinking</em> during this configuration.<p>";
 
-  s+="<form method=\"post\">";
+  s+="<form action=\"/configure\" method=\"post\">";
   s+="<label for=\"ssid\">WiFi Network:</label>";
   s+="<input list=\"network\" name=\"network\" placeholder=\"Choose or Type\" required>";
   s+="<datalist id=\"network\">";
@@ -386,8 +397,28 @@ int HAPClient::captiveAccessURL(){
   LOG2("\n");
   client.print(s);
   LOG2("------------ SENT! --------------\n");
-  return(1);
   
+  return(1);
+}
+
+//////////////////////////////////////
+
+int HAPClient::postConfigureURL(char *formData){
+
+  LOG1("In Post Configure...\n");
+
+  String s="HTTP/1.1 200 OK\r\nContent-type: text/html\r\nRefresh: 5\r\n\r\n";
+  s+="OKAY";
+
+  LOG2("\n>>>>>>>>>> ");
+  LOG2(client.remoteIP());
+  LOG2(" >>>>>>>>>>\n");
+  LOG2(s);
+  LOG2("\n");
+  client.print(s);
+  LOG2("------------ SENT! --------------\n");
+  
+  return(1);
 }
 
 //////////////////////////////////////
