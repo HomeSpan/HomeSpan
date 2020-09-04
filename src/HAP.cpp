@@ -163,28 +163,11 @@ void HAPClient::processRequest(){
   LOG2(body);
   LOG2("\n------------ END BODY! ------------\n");
 
-  if(homeSpan.needsConfiguration){     // device not yet configured - only allow certain URLs
-
-    if(!strncmp(body,"POST /configure ",16) &&                              // POST CONFIGURE
-       strstr(body,"Content-Type: application/x-www-form-urlencoded")){     // check that content is from a form
-
-      content[cLen]='\0';                                                   // add a trailing null on end of POST data
-      LOG2((char *)content);                                                // print data
-      LOG2("\n------------ END DATA! ------------\n");
-               
-      postConfigureURL((char *)content);                                    // process URL
-      return;
-    }
-
-    if(!strncmp(body,"GET /wifi-status ",17)){                              // GET WIFI-STATUS
-      getWiFiStatusURL();
-      return;
-    }    
-
-    captiveAccessURL();                // default action for all other URLs when in captive Access Point mode
-    return;
-    
-  } // captive access point URLs only - everything below is for normal HAP requests
+  if(homeSpan.needsConfiguration){     // device not yet configured
+    content[cLen]='\0';                                                   // add a trailing null on end of any contents, which should always be text-based
+    configure.processRequest(client, body, (char *)content);              // process request
+    return;    
+  }
 
   if(!strncmp(body,"POST ",5)){                       // this is a POST request
 
@@ -1684,5 +1667,5 @@ Accessory HAPClient::accessory;
 Controller HAPClient::controllers[MAX_CONTROLLERS];    
 SRP6A HAPClient::srp;
 int HAPClient::conNum;
-
+Configure HAPClient::configure;
  
