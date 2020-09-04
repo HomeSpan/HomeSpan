@@ -205,9 +205,6 @@ int Span::getFreeSlot(){
 
 void Span::initWifi(){
 
-  const int MAX_SSID=32;
-  const int MAX_PWD=64;
-
   struct {                           
     char ssid[MAX_SSID+1];            
     char pwd[MAX_PWD+1];
