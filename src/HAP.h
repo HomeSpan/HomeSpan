@@ -82,11 +82,7 @@ struct HAPClient {
 
   // define member methods
 
-  void processRequest();                       // process HAP request
-  int captiveAccessURL();                      // default process for requests made when in captive access point mode
-  int postConfigureURL(char *formData);        // POST /configure (used to process captive access mode form)
-  int getWiFiStatusURL();                      // GET /wifi-status (used to check status of connecting to WiFi network)
-  
+  void processRequest();                       // process HAP request  
   int postPairSetupURL();                      // POST /pair-setup (HAP Section 5.6)
   int postPairVerifyURL();                     // POST /pair-verify (HAP Section 5.7)
   int getAccessoriesURL();                     // GET /accessories (HAP Section 6.6)
