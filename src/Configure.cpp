@@ -7,6 +7,10 @@
 void Configure::processRequest(WiFiClient &client, char *body, char *formData){
 
   String s;
+  String header;
+
+  header+="<html><head><style>p{font-size:300%; margin:25px}label{font-size:300%; margin:25px}input{font-size:250%; margin:25px}</style></head>";
+  header+="<body style=\"background-color:lightyellow;\"><center><p><b>HomeSpan Setup</b></p></center>";
 
   if(!strncmp(body,"POST /configure ",16) &&                              // POST CONFIGURE
      strstr(body,"Content-Type: application/x-www-form-urlencoded")){     // check that content is from a form
@@ -16,12 +20,9 @@ void Configure::processRequest(WiFiClient &client, char *body, char *formData){
                
     LOG1("In Post Configure...\n");
 
-    s+="HTTP/1.1 200 OK\r\nContent-type: text/html\r\n\r\n";
-//    s+="<html><head><title>Initiating</title><meta http-equiv = \"refresh\" content = \"2; url = /wifi-status\" /></head><body style=\"background-color:lightyellow;\">";
-    s+="<html><head><title>Initiating</title></head><body style=\"background-color:lightyellow;\">";
-
+    s+="HTTP/1.1 200 OK\r\nContent-type: text/html\r\n\r\n" + header;
     s+="<meta http-equiv = \"refresh\" content = \"2; url = /wifi-status\" />";    
-    s+="<p style=\"font-size:300%;\">Initiating WiFi Connection...</p></body></html>";
+    s+="<p>Initiating WiFi Connection...</p></body></html>";
   
   } else
 
@@ -29,9 +30,8 @@ void Configure::processRequest(WiFiClient &client, char *body, char *formData){
 
     LOG1("In Get WiFi Status...\n");
 
-    s+="HTTP/1.1 200 OK\r\nContent-type: text/html\r\nRefresh: 5\r\n\r\n";
-    s+="<html><head><title>Connection Status</title></head><body style=\"background-color:lightyellow;\">";
-    s+="<p style=\"font-size:300%;\">Trying to Connect (";
+    s+="HTTP/1.1 200 OK\r\nContent-type: text/html\r\nRefresh: 5\r\n\r\n" + header;
+    s+="<p>Trying to Connect (";
     s+=String(millis()/1000) + "sec)...</p></body></html>";
   
   } else {                                                                // LOGIN PAGE
@@ -40,9 +40,7 @@ void Configure::processRequest(WiFiClient &client, char *body, char *formData){
 
     int n=WiFi.scanNetworks();
 
-    s+="HTTP/1.1 200 OK\r\nContent-type: text/html\r\n\r\n";
-    s+="<html><head><title>HomeSpan Configuration</title><style>p{font-size:300%; margin:25px}label{font-size:300%; margin:25px}input{font-size:250%; margin:25px}</style></head>";
-    s+="<body style=\"background-color:lightyellow;\"><center><p><b>HomeSpan_12_54_DD_E4_23_F5</b></p></center>";
+    s+="HTTP/1.1 200 OK\r\nContent-type: text/html\r\n\r\n" + header;
     s+="<p>Welcome to HomeSpan! This page allows you to configure the above HomeSpan device to connect to your WiFi network, and (if needed) to create a Setup Code for pairing this device to HomeKit.</p>";
     s+="<p>The LED on this device should be <em>double-blinking</em> during this configuration.<p>";
 
