@@ -18,10 +18,15 @@ void Configure::processRequest(WiFiClient &client, char *body, char *formData){
                
     LOG1("In Post Configure...\n");
 
+    getFormValue(formData,"network",wifiData.ssid,MAX_SSID);
+    getFormValue(formData,"pwd",wifiData.pwd,MAX_PWD);
+    getFormValue(formData,"code",setupCode,8);
     
+    timer=millis();
+    WiFi.begin(wifiData.ssid,wifiData.pwd);
 
-    responseBody+="<meta http-equiv = \"refresh\" content = \"2; url = /wifi-status\" />"
-                  "<p>Initiating WiFi Connection...</p>";
+    responseBody+="<meta http-equiv = \"refresh\" content = \"5; url = /wifi-status\" />"
+                  "<p>Initiating WiFi connection to:</p><p>" + String(wifiData.ssid) + "</p>";
   
   } else
 
@@ -29,8 +34,12 @@ void Configure::processRequest(WiFiClient &client, char *body, char *formData){
 
     LOG1("In Get WiFi Status...\n");
 
-    responseHead+="Refresh: 5\r\n";     
-    responseBody+="<p>Trying to Connect (" + String(millis()/1000) + "sec)...</p>";
+    if(WiFi.status()!=WL_CONNECTED){
+      responseHead+="Refresh: 5\r\n";     
+      responseBody+="<p>Re-trying (" + String((millis()-timer)/1000) + "sec) connection to:</p><p>" + String(wifiData.ssid) + "</p>";
+    } else {
+      responseBody+="<p>SUCCESS! Connected to:</p><p>" + String(wifiData.ssid) + "</p>";      
+    }
   
   } else {                                                                // LOGIN PAGE
 
@@ -86,6 +95,27 @@ void Configure::processRequest(WiFiClient &client, char *body, char *formData){
 //////////////////////////////////////
 
 int Configure::getFormValue(char *formData, char *tag, char *value, int maxSize){
+
+  char *s=strstr(formData,tag);     // find start of tag
+  
+  if(!s)                            // if not found, return -1
+    return(-1);
+
+  char *v=index(s,'=');             // find '='
+
+  if(!v)                            // if not found, return -1 (this should not happen)
+    return(-1);
+
+  v++;                              // point to begining of value 
+  int len=0;                        // track length of value
+  
+  while(*v!='\0' && *v!='&' && len<maxSize){      // copy the value until null, '&', or maxSize is reached
+    len++;
+    *value++=*v++;
+  }
+
+  *value='\0';                      // add terminating null
+  return(len);
   
 }
 

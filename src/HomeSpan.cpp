@@ -346,7 +346,7 @@ void Span::configure(char *apName){
   IPAddress apIP(192, 168, 4, 1);
 
   WiFi.mode(WIFI_AP);
-  WiFi.softAP(apName,"homespan");
+  WiFi.softAP(apName,"homespan",1,false,1);
   dnsServer.start(DNS_PORT, "*", apIP);
   apServer.begin();
 
