@@ -1,6 +1,5 @@
 
 #include "Configure.h"
-#include "Settings.h"
 
 ///////////////////////////////
 
@@ -18,6 +17,8 @@ void Configure::processRequest(WiFiClient &client, char *body, char *formData){
     LOG2("\n------------ END DATA! ------------\n");
                
     LOG1("In Post Configure...\n");
+
+    
 
     responseBody+="<meta http-equiv = \"refresh\" content = \"2; url = /wifi-status\" />"
                   "<p>Initiating WiFi Connection...</p>";
@@ -51,10 +52,10 @@ void Configure::processRequest(WiFiClient &client, char *body, char *formData){
     
     responseBody+="</datalist><br><br>"
                   "<label for=\"pwd\">WiFi Password:</label>"
-                  "<input type=\"password\" id=\"pwd\" name=\"pwd\">"
+                  "<input type=\"password\" id=\"pwd\" name=\"pwd\" maxlength=" + String(MAX_PWD) + ">"
                   "<br><br>"
                   "<label for=\"code\">Setup Code:</label>"
-                  "<input type=\"tel\" id=\"code\" name=\"code\" placeholder=\"12345678\" pattern=\"[0-9]{8}\">";
+                  "<input type=\"tel\" id=\"code\" name=\"code\" placeholder=\"12345678\" pattern=\"[0-9]{8}\" maxlength=8>";
 
   /*
           apClient.print("<p><em>");
@@ -81,5 +82,11 @@ void Configure::processRequest(WiFiClient &client, char *body, char *formData){
   LOG2("------------ SENT! --------------\n");
     
 } // processRequest
+
+//////////////////////////////////////
+
+int Configure::getFormValue(char *formData, char *tag, char *value, int maxSize){
+  
+}
 
 //////////////////////////////////////
