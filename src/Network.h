@@ -17,6 +17,7 @@ struct Network {
 
   WiFiClient client;            // client used for HTTP calls
   unsigned long timer;          // time of trying to connect to WiFi
+  unsigned long alarmTimeOut;   // alarm time after which access point is shut down and HomeSpan is paused until reset 
 
   void configure(char *hostName);                                           // configure homeSpan WiFi and Setup Code using temporary Captive Access Point 'hostName'
   void processRequest(char *body, char *formData);                          // process the HTTP request
