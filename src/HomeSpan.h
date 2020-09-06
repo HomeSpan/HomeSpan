@@ -54,8 +54,6 @@ struct Span{
   unsigned long resetTime;                      // tracks time once reset button is pressed
 
   Blinker statusLED=Blinker(LED_BUILTIN);       // indicates HomeSpan status
-
-  boolean needsConfiguration=false;             // tracks whether device needs to be configured with WiFi credentials and a Setup Code
     
   SpanConfig hapConfig;                             // track configuration changes to the HAP Accessory database; used to increment the configuration number (c#) when changes found
   vector<SpanAccessory *> Accessories;              // vector of pointers to all Accessories
@@ -73,7 +71,6 @@ struct Span{
   int getFreeSlot();                            // returns free HAPClient slot number. HAPClients slot keep track of each active HAPClient connection
   void initWifi();                              // initialize and connect to WiFi network
   void processSerialCommand(char *c);           // process command 'c' (typically from readSerial, though can be called with any 'c')
-  void configure(char *hostName);               // configure homeSpan WiFi and Setup Code using temporary Captive Access Point 'hostName'
 
   int sprintfAttributes(char *cBuf);            // prints Attributes JSON database into buf, unless buf=NULL; return number of characters printed, excluding null terminator, even if buf=NULL
   void prettyPrint(char *buf, int nsp=2);       // print arbitrary JSON from buf to serial monitor, formatted with indentions of 'nsp' spaces

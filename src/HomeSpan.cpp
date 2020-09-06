@@ -2,10 +2,10 @@
 #include <ESPmDNS.h>
 #include <nvs_flash.h>
 #include <sodium.h>
-#include <DNSServer.h>
 
 #include "Utils.h"
 #include "HAP.h"
+#include "Network.h"
 
 using namespace Utils;
 
@@ -205,6 +205,8 @@ int Span::getFreeSlot(){
 
 void Span::initWifi(){
 
+  Network network;                          // initialization of WiFi credentials and Setup Code
+
   struct {                           
     char ssid[MAX_SSID+1];            
     char pwd[MAX_PWD+1];
@@ -230,7 +232,7 @@ void Span::initWifi(){
   } else {
     statusLED.start(500,0.3,2,1000);
 
-    configure(hostName);
+    network.configure(hostName);
     
     Serial.print("Please configure network...\n");
     sprintf(wifiData.ssid,"MyNetwork");
@@ -331,61 +333,6 @@ void Span::initWifi(){
   statusLED.stop();
   
 } // initWiFi
-
-///////////////////////////////
-
-void Span::configure(char *apName){
-
-  Serial.print("WiFi Configuration required.  Please connect to Access Point: ");
-  Serial.print(apName);
-  Serial.print("\n");
-
-  const byte DNS_PORT = 53;
-  WiFiServer apServer(80);
-  DNSServer dnsServer;
-  IPAddress apIP(192, 168, 4, 1);
-
-  WiFi.mode(WIFI_AP);
-  WiFi.softAP(apName,"homespan",1,false,1);
-  dnsServer.start(DNS_PORT, "*", apIP);
-  apServer.begin();
-
-  needsConfiguration=true;
-
-  while(needsConfiguration){
-
-    dnsServer.processNextRequest();
-
-    if(hap[0].client=apServer.available()){         // found a new HTTP client
-      LOG2("=======================================\n");
-      LOG1("** Access Point Client Connected: (");
-      LOG1(millis()/1000);
-      LOG1(" sec) ");
-      LOG1(hap[0].client.remoteIP());
-      LOG1("\n");
-      LOG2("\n");
-    }
-    
-    if(hap[0].client && hap[0].client.available()){       // if connection exists and data is available
-
-      HAPClient::conNum=0;                                // set connection number
-      hap[0].processRequest();                            // process HAP request
-      
-      if(!hap[0].client){                                 // client disconnected by server
-        LOG1("** Disconnecting AP Client (");
-        LOG1(millis()/1000);
-        LOG1(" sec)\n");
-      }
-
-      LOG2("\n");
-
-    } // process HAP Client
-
-  }
-
-  while(1);
-  
-}
 
 ///////////////////////////////
 

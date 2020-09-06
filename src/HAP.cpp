@@ -3,6 +3,7 @@
 #include <sodium.h>
 
 #include "HAP.h"
+#include "Utils.h"
 
 //////////////////////////////////////
 
@@ -162,12 +163,6 @@ void HAPClient::processRequest(){
 
   LOG2(body);
   LOG2("\n------------ END BODY! ------------\n");
-
-  if(homeSpan.needsConfiguration){                                // device not yet configured
-    content[cLen]='\0';                                           // add a trailing null on end of any contents, which should always be text-based
-    configure.processRequest(client, body, (char *)content);      // process request
-    return;    
-  }
 
   if(!strncmp(body,"POST ",5)){                       // this is a POST request
 
@@ -1571,5 +1566,4 @@ Accessory HAPClient::accessory;
 Controller HAPClient::controllers[MAX_CONTROLLERS];    
 SRP6A HAPClient::srp;
 int HAPClient::conNum;
-Configure HAPClient::configure;
  

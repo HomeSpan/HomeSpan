@@ -1,9 +1,108 @@
 
-#include "Configure.h"
+#include <DNSServer.h>
+
+#include "Network.h"
+#include "Utils.h"
 
 ///////////////////////////////
 
-void Configure::processRequest(WiFiClient &client, char *body, char *formData){
+void Network::configure(char *apName){
+
+  Serial.print("WiFi Configuration required.  Please enter details here of connect to Access Point: ");
+  Serial.print(apName);
+  Serial.print("\n");
+
+  WiFiServer apServer(80);
+
+  TempBuffer <uint8_t> tempBuffer(MAX_HTTP+1);
+  uint8_t *httpBuf=tempBuffer.buf;
+  
+  const byte DNS_PORT = 53;
+  DNSServer dnsServer;
+  IPAddress apIP(192, 168, 4, 1);
+
+  WiFi.mode(WIFI_AP);
+  WiFi.softAP(apName,"homespan",1,false,1);             // only allow one connection at a time
+  dnsServer.start(DNS_PORT, "*", apIP);
+  apServer.begin();
+
+  boolean needsConfiguration=true;
+
+  while(needsConfiguration){
+
+    dnsServer.processNextRequest();
+
+    if(client=apServer.available()){                    // found a new HTTP client
+      LOG2("=======================================\n");
+      LOG1("** Access Point Client Connected: (");
+      LOG1(millis()/1000);
+      LOG1(" sec) ");
+      LOG1(client.remoteIP());
+      LOG1("\n");
+      LOG2("\n");
+    }
+    
+    if(client && client.available()){                   // if connection exists and data is available
+
+      LOG2("<<<<<<<<< ");
+      LOG2(client.remoteIP());
+      LOG2(" <<<<<<<<<\n");
+    
+      int nBytes=client.read(httpBuf,MAX_HTTP+1);       // read all available bytes up to maximum allowed+1
+       
+      if(nBytes>MAX_HTTP){                              // exceeded maximum number of bytes allowed
+        badRequestError();
+        Serial.print("\n*** ERROR:  Exceeded maximum HTTP message length\n\n");
+        continue;
+      }
+
+      httpBuf[nBytes]='\0';                             // add null character to enable string functions    
+      char *body=(char *)httpBuf;                       // char pointer to start of HTTP Body
+      char *p;                                          // char pointer used for searches
+      
+      if(!(p=strstr((char *)httpBuf,"\r\n\r\n"))){
+        badRequestError();
+        Serial.print("\n*** ERROR:  Malformed HTTP request (can't find blank line indicating end of BODY)\n\n");
+        continue;      
+      }
+
+      *p='\0';                                          // null-terminate end of HTTP Body to faciliate additional string processing
+      uint8_t *content=(uint8_t *)p+4;                  // byte pointer to start of optional HTTP Content
+      int cLen=0;                                       // length of optional HTTP Content
+
+      if((p=strstr(body,"Content-Length: ")))           // Content-Length is specified
+        cLen=atoi(p+16);
+      if(nBytes!=strlen(body)+4+cLen){
+        badRequestError();
+        Serial.print("\n*** ERROR:  Malformed HTTP request (Content-Length plus Body Length does not equal total number of bytes read)\n\n");
+        continue;        
+      }
+
+      LOG2(body);
+      LOG2("\n------------ END BODY! ------------\n");
+
+      content[cLen]='\0';                               // add a trailing null on end of any contents, which should always be text-based
+      processRequest(body, (char *)content);            // process request    
+      
+      if(!client){                                      // client disconnected by server
+        LOG1("** Disconnecting AP Client (");
+        LOG1(millis()/1000);
+        LOG1(" sec)\n");
+      }
+
+      LOG2("\n");
+
+    } // process HAP Client
+
+  }
+
+  while(1);
+  
+}
+
+///////////////////////////////
+
+void Network::processRequest(char *body, char *formData){
 
   String responseHead="HTTP/1.1 200 OK\r\nContent-type: text/html\r\n";
   
@@ -94,7 +193,7 @@ void Configure::processRequest(WiFiClient &client, char *body, char *formData){
 
 //////////////////////////////////////
 
-int Configure::getFormValue(char *formData, char *tag, char *value, int maxSize){
+int Network::getFormValue(char *formData, char *tag, char *value, int maxSize){
 
   char *s=strstr(formData,tag);     // find start of tag
   
@@ -117,6 +216,24 @@ int Configure::getFormValue(char *formData, char *tag, char *value, int maxSize)
   *value='\0';                      // add terminating null
   return(len);
   
+}
+
+//////////////////////////////////////
+
+int Network::badRequestError(){
+
+  char s[]="HTTP/1.1 400 Bad Request\r\n\r\n";
+  LOG2("\n>>>>>>>>>> ");
+  LOG2(client.remoteIP());
+  LOG2(" >>>>>>>>>>\n");
+  LOG2(s);
+  client.print(s);
+  LOG2("------------ SENT! --------------\n");
+  
+  delay(1);
+  client.stop();
+
+  return(-1);
 }
 
 //////////////////////////////////////

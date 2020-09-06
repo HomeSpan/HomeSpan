@@ -7,7 +7,6 @@
 #include "HKDF.h"
 #include "SRP.h"
 #include "HomeSpan.h"
-#include "Configure.h"
 
 /////////////////////////////////////////////////
 // NONCE Structure (HAP used last 64 of 96 bits)
@@ -59,7 +58,6 @@ struct HAPClient {
   static Accessory accessory;                         // Accessory ID and Ed25519 public and secret keys- permanently stored
   static Controller controllers[MAX_CONTROLLERS];     // Paired Controller IDs and ED25519 long-term public keys - permanently stored
   static int conNum;                                  // connection number - used to keep track of per-connection EV notifications
-  static Configure configure;                         // initial configuration of WiFi credentials and Setup Code
 
   // individual structures and data defined for each Hap Client connection
   
@@ -119,30 +117,6 @@ struct HAPClient {
   static void checkNotifications();                                                    // checks for Event Notifications and reports to controllers as needed (HAP Section 6.8)
   static void checkTimedWrites();                                                      // checks for expired Timed Write PIDs, and clears any found (HAP Section 6.7.2.4)
   static void eventNotify(SpanBuf *pObj, int nObj, int ignoreClient=-1);               // transmits EVENT Notifications for nObj SpanBuf objects, pObj, with optional flag to ignore a specific client
-};
-
-/////////////////////////////////////////////////
-// Creates a temporary buffer that is freed after
-// going out of scope
-
-template <class bufType>
-struct TempBuffer {
-  bufType *buf;
-  int nBytes;
-  
-  TempBuffer(size_t len){
-    nBytes=len*sizeof(bufType);
-    buf=(bufType *)heap_caps_malloc(nBytes,MALLOC_CAP_8BIT);      
-   }
-
-  ~TempBuffer(){
-    heap_caps_free(buf);
-  }
-
-  int len(){
-    return(nBytes);
-  }
-  
 };
 
 /////////////////////////////////////////////////
