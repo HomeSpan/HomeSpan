@@ -212,6 +212,8 @@ void Span::initWifi(){
     char pwd[MAX_PWD+1];
   } wifiData;
 
+  char setupCode[9]; 
+
   char id[18];                              // create string version of Accessory ID for MDNS broadcast
   memcpy(id,HAPClient::accessory.ID,17);    // copy ID bytes
   id[17]='\0';                              // add terminating null
@@ -230,26 +232,45 @@ void Span::initWifi(){
   if(!nvs_get_blob(wifiHandle,"WIFIDATA",NULL,&len)){                   // if found WiFi data in NVS
     nvs_get_blob(wifiHandle,"WIFIDATA",&wifiData,&len);                 // retrieve data
   } else {
-    statusLED.start(500,0.3,2,1000);
 
-    network.configure(hostName);
+    statusLED.start(250);
+    Serial.print("Network configuration required!\nPress control button for 3 seconds to start AccessPoint or enter network data here.\n\n");
+    Serial.print(">>> WiFi SSID: ");
+
+    resetPressed=0;
+    int status=0;
+
+    while(status==0){                   // loop until a configuration method is chosen and completed
+
+      if(!resetPressed){
+        if(!digitalRead(resetPin)){
+          resetPressed=1;
+          resetTime=millis()+3000;          
+        }
+      } else if(digitalRead(resetPin)){
+        resetPressed=0;
+      } else if(millis()>resetTime){
+        statusLED.start(100,0.3,3,500);
+//        statusLED.start(2000,0.75);
+        Serial.print("(skipping)\n\n");
+        status=network.apConfigure(hostName);              
+      }
+
+      if(Serial.available())
+        status=network.serialConfigure();              
+      
+    } // while loop   
+
+    Serial.println(status);
+    Serial.print("'"); Serial.print(network.ssid); Serial.println("'");
+    Serial.print("'"); Serial.print(network.pwd); Serial.println("'");
+    Serial.print("'"); Serial.print(network.setupCode); Serial.println("'");
+    while(1);
+
+//      delay(2000);                                      // pause while prior page is displayed
+//      WiFi.softAPdisconnect(true);                      // terminate connections and shut down captive access point
+//      ESP.restart();                                  // re-start device   
     
-    Serial.print("Please configure network...\n");
-    sprintf(wifiData.ssid,"MyNetwork");
-    sprintf(wifiData.pwd,"MyPassword");
-    
-    Serial.print(">>> WiFi SSID (");
-    Serial.print(wifiData.ssid);
-    Serial.print("): ");
-    readSerial(wifiData.ssid,MAX_SSID);
-    Serial.print(wifiData.ssid);
-    
-    Serial.print("\n>>> WiFi Password (");
-    Serial.print(wifiData.pwd);
-    Serial.print("): ");
-    readSerial(wifiData.pwd,MAX_PWD);
-    Serial.print(mask(wifiData.pwd,2));
-    Serial.print("\n\n");
 
     nvs_set_blob(wifiHandle,"WIFIDATA",&wifiData,sizeof(wifiData));    // update data
     nvs_commit(wifiHandle);                                            // commit to NVS

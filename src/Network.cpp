@@ -3,13 +3,48 @@
 
 #include "Network.h"
 #include "Utils.h"
+#include "HAP.h"
+
+using namespace Utils;
 
 ///////////////////////////////
 
-void Network::configure(char *apName){
+int Network::serialConfigure(){
 
-  Serial.print("WiFi Configuration required.  Please enter details here, or connect to Access Point: ");
+  sprintf(ssid,"");
+  sprintf(pwd,"");
+
+  readSerial(ssid,MAX_SSID);
+  Serial.print(ssid);
+  Serial.print("\n");
+ 
+  while(!strlen(ssid)){
+    Serial.print(">>> WiFi SSID: ");
+    readSerial(ssid,MAX_SSID);    
+    Serial.print(ssid);
+    Serial.print("\n");
+  }
+  
+  while(!strlen(pwd)){
+    Serial.print(">>> WiFi PASS: ");
+    readSerial(pwd,MAX_PWD);    
+    Serial.print(mask(pwd,2));
+    Serial.print("\n");
+  }
+
+  Serial.print("Done");
+  while(1);
+
+}
+
+///////////////////////////////
+
+int Network::apConfigure(char *apName){
+
+  Serial.print("Starting Access Point: ");
   Serial.print(apName);
+  Serial.print(" / ");
+  Serial.print(apPassword);
   Serial.print("\n");
 
   WiFiServer apServer(80);
@@ -22,13 +57,21 @@ void Network::configure(char *apName){
   IPAddress apIP(192, 168, 4, 1);
 
   WiFi.mode(WIFI_AP);
-  WiFi.softAP(apName,"homespan");             // start access point
+  WiFi.softAP(apName,apPassword);             // start access point
   dnsServer.start(DNS_PORT, "*", apIP);       // start DNS server that resolves every request to the address of this device
   apServer.begin();
 
-  boolean needsConfiguration=true;
+  int status=0;                              // initialize status
+  alarmTimeOut=millis()+lifetime;            // Access Point will stay alive until alarmTimeOut is reached
 
-  while(needsConfiguration){
+  while(status==0){
+
+    if(millis()>alarmTimeOut){
+      Serial.print("\n*** ERROR:  Access Point timed Out (");
+      Serial.print(lifetime/1000);
+      Serial.print(" seconds)\n\n");
+      return(-1);
+    }
 
     dnsServer.processNextRequest();
 
@@ -82,35 +125,25 @@ void Network::configure(char *apName){
       LOG2("\n------------ END BODY! ------------\n");
 
       content[cLen]='\0';                               // add a trailing null on end of any contents, which should always be text-based
-      processRequest(body, (char *)content);            // process request  
 
-      delay(1);
-      client.stop();
-
-      /*
-      if(!client){                                      // client disconnected by server
-        LOG1("** Disconnecting AP Client (");
-        LOG1(millis()/1000);
-        LOG1(" sec)\n");
-      }
-      */
+      status=processRequest(body, (char *)content);     // process request; returns 0=continue, 1=exit and save settings, 2=exit and cancel changes
       
       LOG2("\n");
 
     } // process HAP Client
 
-  }
+  } // while status==0
 
-  while(1);
+  return(status);
   
 }
 
 ///////////////////////////////
 
-void Network::processRequest(char *body, char *formData){
+int Network::processRequest(char *body, char *formData){
 
-  boolean restart=false;
-
+  int returnCode=0;
+  
   String responseHead="HTTP/1.1 200 OK\r\nContent-type: text/html\r\n";
   
   String responseBody="<html><head><style>"
@@ -130,27 +163,27 @@ void Network::processRequest(char *body, char *formData){
                
     LOG1("In Post Configure...\n");
 
-    getFormValue(formData,"network",wifiData.ssid,MAX_SSID);
-    getFormValue(formData,"pwd",wifiData.pwd,MAX_PWD);
+    getFormValue(formData,"network",ssid,MAX_SSID);
+    getFormValue(formData,"pwd",pwd,MAX_PWD);
     getFormValue(formData,"code",setupCode,8);
     
     timer=millis();
-    WiFi.begin(wifiData.ssid,wifiData.pwd);
+    WiFi.begin(ssid,pwd);
 
     responseBody+="<meta http-equiv = \"refresh\" content = \"5; url = /wifi-status\" />"
-                  "<p>Initiating WiFi connection to:</p><p><b>" + String(wifiData.ssid) + "</p>";
+                  "<p>Initiating WiFi connection to:</p><p><b>" + String(ssid) + "</p>";
     responseBody+="<center><button onclick=\"document.location='/'\">Cancel</button></center>";
   
   } else
 
   if(!strncmp(body,"GET /confirm-restart ",21)){                          // GET CONFIRM-RESTART 
-    responseBody+="<p>Settings saved!</p><p>Restarting HomeSpan in 2 seconds...</p>";
-    restart=true;    
+    responseBody+="<p><b>Settings saved!</b></p><p>Restarting HomeSpan in 2 seconds...</p>";
+    returnCode=1;    
   } else
 
   if(!strncmp(body,"GET /cancel-restart ",20)){                          // GET CANCEL-RESTART 
-    responseBody+="<p>Update canceled!</p><p>Restarting HomeSpan in 2 seconds...</p>";
-    restart=true;        
+    responseBody+="<p><b>Update canceled!</b></p><p>Restarting HomeSpan in 2 seconds...</p>";
+    returnCode=-1;        
   } else
 
   if(!strncmp(body,"GET /wifi-status ",17)){                              // GET WIFI-STATUS
@@ -159,10 +192,10 @@ void Network::processRequest(char *body, char *formData){
 
     if(WiFi.status()!=WL_CONNECTED){
       responseHead+="Refresh: 5\r\n";     
-      responseBody+="<p>Re-trying (" + String((millis()-timer)/1000) + " seconds) connection to:</p><p><b>" + String(wifiData.ssid) + "</p>";
+      responseBody+="<p>Re-trying (" + String((millis()-timer)/1000) + " seconds) connection to:</p><p><b>" + String(ssid) + "</p>";
       responseBody+="<center><button onclick=\"document.location='/'\">Cancel</button></center>";
     } else {
-      responseBody+="<p>SUCCESS! Connected to:</p><p><b>" + String(wifiData.ssid) + "</p>";
+      responseBody+="<p>SUCCESS! Connected to:</p><p><b>" + String(ssid) + "</p>";
       responseBody+="<center><button onclick=\"document.location='/confirm-restart'\">SAVE Settings and Re-Start</button></center>"
                     "<center><button onclick=\"document.location='/cancel-restart'\">CANCEL Changes and Re-Start</button></center>";
     }
@@ -170,6 +203,8 @@ void Network::processRequest(char *body, char *formData){
   } else {                                                                // LOGIN PAGE
 
     LOG1("In Captive Access...\n");
+
+    homeSpan.statusLED.start(500,0.3,2,1000);
 
     int n=WiFi.scanNetworks();
 
@@ -209,10 +244,10 @@ void Network::processRequest(char *body, char *formData){
   client.print(responseBody);
   LOG2("------------ SENT! --------------\n");
 
-  if(restart){
-    //delay(2000);
-    //ESP.restart();
-  }
+  delay(1);
+  client.stop();
+
+  return(returnCode);
     
 } // processRequest
 
