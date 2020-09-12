@@ -9,18 +9,42 @@ using namespace Utils;
 
 ///////////////////////////////
 
-int Network::serialConfigure(){
+void Network::scan(){
+
+  int n=WiFi.scanNetworks();
+
+  free(ssidList);
+  ssidList=(char **)calloc(n,sizeof(char *));
+  numSSID=0;
+
+  for(int i=0;i<n;i++){
+    boolean found=false;
+    for(int j=0;j<numSSID;j++){
+      if(!strcmp(WiFi.SSID(i).c_str(),ssidList[j]))
+        found=true;
+    }
+    if(!found){
+      ssidList[numSSID]=(char *)calloc(WiFi.SSID(i).length()+1,sizeof(char));
+      sprintf(ssidList[numSSID],"%s",WiFi.SSID(i).c_str());
+      numSSID++;
+    }
+  }
+
+}
+
+///////////////////////////////
+
+boolean Network::serialConfigure(){
 
   sprintf(ssid,"");
   sprintf(pwd,"");
-
-  readSerial(ssid,MAX_SSID);
-  Serial.print(ssid);
-  Serial.print("\n");
  
   while(!strlen(ssid)){
     Serial.print(">>> WiFi SSID: ");
-    readSerial(ssid,MAX_SSID);    
+    readSerial(ssid,MAX_SSID);
+    if(atoi(ssid)>0 && atoi(ssid)<=numSSID){
+      strcpy(ssid,ssidList[atoi(ssid)-1]);
+    }
     Serial.print(ssid);
     Serial.print("\n");
   }
@@ -32,9 +56,85 @@ int Network::serialConfigure(){
     Serial.print("\n");
   }
 
-  Serial.print("Done");
-  while(1);
+  homeSpan.statusLED.start(1000);   // slowly blink Status LED
 
+  while(WiFi.status()!=WL_CONNECTED){
+    Serial.print("\nConnecting to: ");
+    Serial.print(ssid);
+    Serial.print("... ");
+
+    if(WiFi.begin(ssid,pwd)!=WL_CONNECTED){
+      char buf[8]="";
+      Serial.print("Can't connect. Re-trying in 5 seconds (or type 'X <return>' to cancel)...");
+      long sTime=millis();
+      while(millis()-sTime<5000){
+        if(Serial.available()){
+          readSerial(buf,1);
+          if(buf[0]=='X'){
+            Serial.print("Canceled!\n\n");
+            return(0);
+          }
+        }
+      }
+    }
+  } // WiFi not yet connected
+
+  Serial.print("Success!  IP:  ");
+  Serial.print(WiFi.localIP());
+  Serial.print("\n\n");
+
+  homeSpan.statusLED.start(250);   // rapidly blink Status LED
+  
+  boolean okay=false;
+  Serial.print("Specify new 8-digit Setup Code or leave blank to retain existing code...\n\n");
+  
+  while(!okay){
+    Serial.print("Setup Code: ");
+    sprintf(setupCode,"");
+    readSerial(setupCode,8);
+        
+    if(strlen(setupCode)==0){
+      okay=true;
+      Serial.print("(skipping)\n\n");
+    } else { 
+      Serial.print(setupCode);
+
+      int n=0;
+      while(setupCode[n]!='\0' && setupCode[n]>='0' && setupCode[n]<='9')
+        n++;
+
+      if(n<8)
+        Serial.print("\n** Invalid format!\n\n");
+      else if(!allowedCode(setupCode))
+        Serial.print("\n** Disallowed code!\n\n");
+      else {
+        Serial.print("  Accepted!\n\n");
+        okay=true; 
+      }
+             
+    } // if Setup Code not blank
+  } // while !okay
+
+  char k[2]="";
+  while(k[0]!='y' && k[0]!='n'){
+    Serial.print("Confirm settings (y/n)? ");
+    readSerial(k,1);
+    Serial.print(k);
+    Serial.print("\n");
+  }
+
+  Serial.print("\n");
+    
+  return(k[0]=='y');
+}
+
+///////////////////////////////
+
+boolean Network::allowedCode(char *s){
+  return(
+    strcmp(s,"00000000") && strcmp(s,"11111111") && strcmp(s,"22222222") && strcmp(s,"33333333") && 
+    strcmp(s,"44444444") && strcmp(s,"55555555") && strcmp(s,"66666666") && strcmp(s,"77777777") &&
+    strcmp(s,"88888888") && strcmp(s,"99999999") && strcmp(s,"12345678") && strcmp(s,"87654321"));
 }
 
 ///////////////////////////////
@@ -169,6 +269,7 @@ int Network::processRequest(char *body, char *formData){
     
     timer=millis();
     WiFi.begin(ssid,pwd);
+    homeSpan.statusLED.start(1000);
 
     responseBody+="<meta http-equiv = \"refresh\" content = \"5; url = /wifi-status\" />"
                   "<p>Initiating WiFi connection to:</p><p><b>" + String(ssid) + "</p>";

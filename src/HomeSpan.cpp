@@ -232,16 +232,35 @@ void Span::initWifi(){
   if(!nvs_get_blob(wifiHandle,"WIFIDATA",NULL,&len)){                   // if found WiFi data in NVS
     nvs_get_blob(wifiHandle,"WIFIDATA",&wifiData,&len);                 // retrieve data
   } else {
+  
+    
+    network.scan();         // scan for networks    
+    
+    resetPressed=0;   
+    int status=-1;
+    char key[2];
+    
+    while(status<1){                   // loop until a configuration method is chosen and completed
 
-    statusLED.start(250);
-    Serial.print("Network configuration required!\nPress control button for 3 seconds to start AccessPoint or enter network data here.\n\n");
-    Serial.print(">>> WiFi SSID: ");
+      if(status==-1){
+        if(WiFi.status()==WL_CONNECTED)
+          WiFi.disconnect();
+          
+        Serial.print("Network configuration required!  Found the following SSIDs:\n\n");
+        statusLED.start(250);   // rapidly blink Status LED
+      
+        for(int i=0;i<network.numSSID;i++){
+          Serial.print("  ");
+          Serial.print(i+1);
+          Serial.print(") ");
+          Serial.print(network.ssidList[i]);
+          Serial.print("\n");
+        }
 
-    resetPressed=0;
-    int status=0;
-
-    while(status==0){                   // loop until a configuration method is chosen and completed
-
+        Serial.print("\nType 'W' <return> to set WiFi credentials or press control button for 3 seconds to start Access Point...\n\n");
+        status=0;
+      }
+    
       if(!resetPressed){
         if(!digitalRead(resetPin)){
           resetPressed=1;
@@ -251,19 +270,18 @@ void Span::initWifi(){
         resetPressed=0;
       } else if(millis()>resetTime){
         statusLED.start(100,0.3,3,500);
-//        statusLED.start(2000,0.75);
-        Serial.print("(skipping)\n\n");
-        status=network.apConfigure(hostName);              
+        network.apConfigure(hostName);       
       }
 
-      if(Serial.available())
-        status=network.serialConfigure();              
+      if(Serial.available() && *readSerial(key,1)=='W'){
+        status=network.serialConfigure()?1:-1;         
+      }
       
-    } // while loop   
+    } // while loop  
 
     Serial.println(status);
     Serial.print("'"); Serial.print(network.ssid); Serial.println("'");
-    Serial.print("'"); Serial.print(network.pwd); Serial.println("'");
+    Serial.print("'"); Serial.print(mask(network.pwd,2)); Serial.println("'");
     Serial.print("'"); Serial.print(network.setupCode); Serial.println("'");
     while(1);
 
