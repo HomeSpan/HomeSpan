@@ -259,6 +259,7 @@ void Span::initWifi(){
 
         Serial.print("\nType 'W' <return> to set WiFi credentials or press control button for 3 seconds to start Access Point...\n\n");
         status=0;
+        sprintf(key,"");
       }
     
       if(!resetPressed){
@@ -269,8 +270,7 @@ void Span::initWifi(){
       } else if(digitalRead(resetPin)){
         resetPressed=0;
       } else if(millis()>resetTime){
-        statusLED.start(100,0.3,3,500);
-        network.apConfigure(hostName);       
+        status=network.apConfigure(hostName)?1:-1;       
       }
 
       if(Serial.available() && *readSerial(key,1)=='W'){

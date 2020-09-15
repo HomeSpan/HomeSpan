@@ -139,13 +139,15 @@ boolean Network::allowedCode(char *s){
 
 ///////////////////////////////
 
-int Network::apConfigure(char *apName){
+boolean Network::apConfigure(char *apName){
 
   Serial.print("Starting Access Point: ");
   Serial.print(apName);
   Serial.print(" / ");
   Serial.print(apPassword);
   Serial.print("\n");
+
+  homeSpan.statusLED.start(100,0.5,2,500);     // fast double blink
 
   WiFiServer apServer(80);
 
@@ -162,15 +164,15 @@ int Network::apConfigure(char *apName){
   apServer.begin();
 
   int status=0;                              // initialize status
-  alarmTimeOut=millis()+lifetime;            // Access Point will stay alive until alarmTimeOut is reached
+  alarmTimeOut=millis()+lifetime;            // Access Point will shut down when alarmTimeOut is reached
 
   while(status==0){
 
     if(millis()>alarmTimeOut){
-      Serial.print("\n*** ERROR:  Access Point timed Out (");
+      Serial.print("\n*** WARNING:  Access Point timed Out (");
       Serial.print(lifetime/1000);
       Serial.print(" seconds)\n\n");
-      return(-1);
+      ESP.restart();
     }
 
     dnsServer.processNextRequest();
@@ -226,7 +228,7 @@ int Network::apConfigure(char *apName){
 
       content[cLen]='\0';                               // add a trailing null on end of any contents, which should always be text-based
 
-      status=processRequest(body, (char *)content);     // process request; returns 0=continue, 1=exit and save settings, 2=exit and cancel changes
+      status=processRequest(body, (char *)content);     // process request; returns 0=continue, 1=exit and save settings, -1=cancel changes and restart
       
       LOG2("\n");
 
@@ -234,8 +236,12 @@ int Network::apConfigure(char *apName){
 
   } // while status==0
 
-  return(status);
+  delay(2000);
+
+  if(status==-1)
+    ESP.restart();
   
+  return(1);
 }
 
 ///////////////////////////////
@@ -265,71 +271,84 @@ int Network::processRequest(char *body, char *formData){
 
     getFormValue(formData,"network",ssid,MAX_SSID);
     getFormValue(formData,"pwd",pwd,MAX_PWD);
-    getFormValue(formData,"code",setupCode,8);
     
     timer=millis();
-    WiFi.begin(ssid,pwd);
     homeSpan.statusLED.start(1000);
 
-    responseBody+="<meta http-equiv = \"refresh\" content = \"5; url = /wifi-status\" />"
+    responseBody+="<meta http-equiv = \"refresh\" content = \"2; url = /wifi-status\" />"
                   "<p>Initiating WiFi connection to:</p><p><b>" + String(ssid) + "</p>";
-    responseBody+="<center><button onclick=\"document.location='/'\">Cancel</button></center>";
   
   } else
 
-  if(!strncmp(body,"GET /confirm-restart ",21)){                          // GET CONFIRM-RESTART 
+  if(!strncmp(body,"POST /confirm-restart ",21)){                         // GET CONFIRM-RESTART 
     responseBody+="<p><b>Settings saved!</b></p><p>Restarting HomeSpan in 2 seconds...</p>";
+    getFormValue(formData,"code",setupCode,8);
+    // insert code to check whether setup Code allowed or not
     returnCode=1;    
   } else
 
-  if(!strncmp(body,"GET /cancel-restart ",20)){                          // GET CANCEL-RESTART 
+  if(!strncmp(body,"GET /cancel-restart ",20)){                           // GET CANCEL-RESTART 
     responseBody+="<p><b>Update canceled!</b></p><p>Restarting HomeSpan in 2 seconds...</p>";
-    returnCode=-1;        
+    returnCode=-1;    
   } else
 
   if(!strncmp(body,"GET /wifi-status ",17)){                              // GET WIFI-STATUS
 
     LOG1("In Get WiFi Status...\n");
 
-    if(WiFi.status()!=WL_CONNECTED){
+    if(WiFi.status()!=WL_CONNECTED && WiFi.begin(ssid,pwd)!=WL_CONNECTED){
       responseHead+="Refresh: 5\r\n";     
-      responseBody+="<p>Re-trying (" + String((millis()-timer)/1000) + " seconds) connection to:</p><p><b>" + String(ssid) + "</p>";
-      responseBody+="<center><button onclick=\"document.location='/'\">Cancel</button></center>";
+      
+      responseBody+="<p>Re-trying connection to:</p><p><b>" + String(ssid) + "</p>";
+      responseBody+="<p>Timeout in " + String((alarmTimeOut-millis())/1000) + " seconds.</p>";
+      responseBody+="<center><button onclick=\"document.location='/landing-page'\">Cancel</button></center>";
     } else {
-      responseBody+="<p>SUCCESS! Connected to:</p><p><b>" + String(ssid) + "</p>";
-      responseBody+="<center><button onclick=\"document.location='/confirm-restart'\">SAVE Settings and Re-Start</button></center>"
-                    "<center><button onclick=\"document.location='/cancel-restart'\">CANCEL Changes and Re-Start</button></center>";
+      
+      homeSpan.statusLED.start(500,0.3,2,1000);   // slow double-blink
+      
+      responseBody+="<p>SUCCESS! Connected to:</p><p><b>" + String(ssid) + "</b></p>";
+      responseBody+="<p>You may enter new 8-digit Setup Code below, or leave blank to retain existing code.</p>";
+
+      responseBody+="<form action=\"/confirm-restart\" method=\"post\">"
+                    "<label for=\"code\">Setup Code:</label>"
+                    "<center><input size=\"32\" type=\"tel\" id=\"code\" name=\"code\" placeholder=\"12345678\" pattern=\"[0-9]{8}\" maxlength=8></center>"
+                    "<center><input style=\"font-size:300%\" type=\"submit\" value=\"SAVE Settings\"></center>"
+                    "</form>";
+                    
+      responseBody+="<center><button style=\"font-size:300%\" onclick=\"document.location='/cancel-restart'\">CANCEL Configuration</button></center>";
     }
   
-  } else {                                                                // LOGIN PAGE
+  } else                                                                
 
-    LOG1("In Captive Access...\n");
+  if(!strncmp(body,"GET /landing-page ",18)){                             // GET LANDING-PAGE
 
-    homeSpan.statusLED.start(500,0.3,2,1000);
+    LOG1("In Landing Page...\n");
 
-    int n=WiFi.scanNetworks();
+    landingPage=true;
 
-    responseBody+="<p>Welcome to HomeSpan! This page allows you to configure the above HomeSpan device to connect to your WiFi network, and (if needed) to create a Setup Code for pairing this device to HomeKit.</p>"
+    homeSpan.statusLED.start(500,0.3,2,1000);   // slow double-blink
+
+    responseBody+="<p>Welcome to HomeSpan! This page allows you to configure the above HomeSpan device to connect to your WiFi network.</p>"
                   "<p>The LED on this device should be <em>double-blinking</em> during this configuration.</p>"
                   "<form action=\"/configure\" method=\"post\">"
                   "<label for=\"ssid\">WiFi Network:</label>"
                   "<center><input size=\"32\" list=\"network\" name=\"network\" placeholder=\"Choose or Type\" required maxlength=" + String(MAX_SSID) + "></center>"
                   "<datalist id=\"network\">";
 
-    for(int i=0;i<n;i++){
-      if(responseBody.indexOf(WiFi.SSID(i))==-1)                                                   // first time this SSID found
-        responseBody+="<option value=\"" + WiFi.SSID(i) + "\">" + WiFi.SSID(i) + "</option>";
-    }  
+    for(int i=0;i<numSSID;i++)
+        responseBody+="<option value=\"" + String(ssidList[i]) + "\">" + String(ssidList[i]) + "</option>";  
     
     responseBody+="</datalist><br><br>"
                   "<label for=\"pwd\">WiFi Password:</label>"
-                  "<center><input size=\"32\" type=\"password\" id=\"pwd\" name=\"pwd\" maxlength=" + String(MAX_PWD) + "></center>"
-                  "<br><br>"
-                  "<label for=\"code\">Setup Code:</label>"
-                  "<center><input size=\"32\" type=\"tel\" id=\"code\" name=\"code\" placeholder=\"12345678\" pattern=\"[0-9]{8}\" maxlength=8></center>";
-
+                  "<center><input size=\"32\" type=\"password\" id=\"pwd\" name=\"pwd\" required maxlength=" + String(MAX_PWD) + "></center>"
+                  "<br><br>";
+                  
     responseBody+="<center><input style=\"font-size:300%\" type=\"submit\" value=\"SUBMIT\"></center>"
                   "</form>";
+  } else {
+
+    if(!landingPage)
+      responseHead="HTTP/1.1 307 Temporary Redirect\r\nLocation: /landing-page\r\n";
   }
 
   responseHead+="\r\n";               // add blank line between reponse header and body
@@ -344,9 +363,6 @@ int Network::processRequest(char *body, char *formData){
   client.print(responseHead);
   client.print(responseBody);
   LOG2("------------ SENT! --------------\n");
-
-  delay(1);
-  client.stop();
 
   return(returnCode);
     
