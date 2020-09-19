@@ -139,7 +139,7 @@ boolean Network::allowedCode(char *s){
 
 ///////////////////////////////
 
-boolean Network::apConfigure(char *apName){
+void Network::apConfigure(char *apName){
 
   Serial.print("Starting Access Point: ");
   Serial.print(apName);
@@ -163,16 +163,27 @@ boolean Network::apConfigure(char *apName){
   dnsServer.start(DNS_PORT, "*", apIP);       // start DNS server that resolves every request to the address of this device
   apServer.begin();
 
-  int status=0;                              // initialize status
   alarmTimeOut=millis()+lifetime;            // Access Point will shut down when alarmTimeOut is reached
+  apStatus=0;                                // status will be "timed out" unless changed
 
-  while(status==0){
+  while(1){                                  // loop until we get timed out (which will be accelerated if save/cancel selected)
 
     if(millis()>alarmTimeOut){
-      Serial.print("\n*** WARNING:  Access Point timed Out (");
-      Serial.print(lifetime/1000);
-      Serial.print(" seconds)\n\n");
-      ESP.restart();
+      WiFi.softAPdisconnect(true);           // terminate connections and shut down captive access point
+      delay(100);
+      if(apStatus==1){
+        Serial.print("\n*** Access Point: Exiting and Saving Settings\n\n");
+        return;
+      } else {
+        if(apStatus==0){
+          Serial.print("\n*** Access Point: Timed Out (");
+          Serial.print(lifetime/1000);
+          Serial.print(" seconds).");
+        } else
+          Serial.print("\n*** Access Point: Configuration Canceled.");
+        Serial.print("  Restarting...\n\n");
+        ESP.restart();
+      }
     }
 
     dnsServer.processNextRequest();
@@ -228,27 +239,19 @@ boolean Network::apConfigure(char *apName){
 
       content[cLen]='\0';                               // add a trailing null on end of any contents, which should always be text-based
 
-      status=processRequest(body, (char *)content);     // process request; returns 0=continue, 1=exit and save settings, -1=cancel changes and restart
+      processRequest(body, (char *)content);            // process request
       
       LOG2("\n");
 
     } // process HAP Client
 
-  } // while status==0
+  } // while 1
 
-  delay(2000);
-
-  if(status==-1)
-    ESP.restart();
-  
-  return(1);
 }
 
 ///////////////////////////////
 
-int Network::processRequest(char *body, char *formData){
-
-  int returnCode=0;
+void Network::processRequest(char *body, char *formData){
   
   String responseHead="HTTP/1.1 200 OK\r\nContent-type: text/html\r\n";
   
@@ -280,16 +283,25 @@ int Network::processRequest(char *body, char *formData){
   
   } else
 
-  if(!strncmp(body,"POST /confirm-restart ",21)){                         // GET CONFIRM-RESTART 
-    responseBody+="<p><b>Settings saved!</b></p><p>Restarting HomeSpan in 2 seconds...</p>";
+  if(!strncmp(body,"POST /save ",11)){                                    // GET SAVE
     getFormValue(formData,"code",setupCode,8);
-    // insert code to check whether setup Code allowed or not
-    returnCode=1;    
+
+    if(allowedCode(setupCode)){
+      responseBody+="<p><b>Settings saved!</b></p><p>Restarting HomeSpan.</p><p>Please close this window...</p>";
+      alarmTimeOut=millis()+2000;
+      apStatus=1;
+      
+    } else {
+    responseBody+="<meta http-equiv = \"refresh\" content = \"4; url = /wifi-status\" />"
+                  "<p><b>Disallowed Setup Code - too simple!</b></p><p>Returning to configuration page...</p>";      
+    }
+    
   } else
 
-  if(!strncmp(body,"GET /cancel-restart ",20)){                           // GET CANCEL-RESTART 
-    responseBody+="<p><b>Update canceled!</b></p><p>Restarting HomeSpan in 2 seconds...</p>";
-    returnCode=-1;    
+  if(!strncmp(body,"GET /cancel ",12)){                                   // GET CANCEL
+    responseBody+="<p><b>Configuration Canceled!</b></p><p>Restarting HomeSpan.</p><p>Please close this window...</p>";
+    alarmTimeOut=millis()+2000;
+    apStatus=-1;
   } else
 
   if(!strncmp(body,"GET /wifi-status ",17)){                              // GET WIFI-STATUS
@@ -309,13 +321,13 @@ int Network::processRequest(char *body, char *formData){
       responseBody+="<p>SUCCESS! Connected to:</p><p><b>" + String(ssid) + "</b></p>";
       responseBody+="<p>You may enter new 8-digit Setup Code below, or leave blank to retain existing code.</p>";
 
-      responseBody+="<form action=\"/confirm-restart\" method=\"post\">"
+      responseBody+="<form action=\"/save\" method=\"post\">"
                     "<label for=\"code\">Setup Code:</label>"
                     "<center><input size=\"32\" type=\"tel\" id=\"code\" name=\"code\" placeholder=\"12345678\" pattern=\"[0-9]{8}\" maxlength=8></center>"
                     "<center><input style=\"font-size:300%\" type=\"submit\" value=\"SAVE Settings\"></center>"
                     "</form>";
                     
-      responseBody+="<center><button style=\"font-size:300%\" onclick=\"document.location='/cancel-restart'\">CANCEL Configuration</button></center>";
+      responseBody+="<center><button style=\"font-size:300%\" onclick=\"document.location='/cancel'\">CANCEL Configuration</button></center>";
     }
   
   } else                                                                
@@ -345,11 +357,10 @@ int Network::processRequest(char *body, char *formData){
                   
     responseBody+="<center><input style=\"font-size:300%\" type=\"submit\" value=\"SUBMIT\"></center>"
                   "</form>";
-  } else {
+  } else
 
-    if(!landingPage)
-      responseHead="HTTP/1.1 307 Temporary Redirect\r\nLocation: /landing-page\r\n";
-  }
+  if(!landingPage)
+    responseHead="HTTP/1.1 307 Temporary Redirect\r\nLocation: /landing-page\r\n";
 
   responseHead+="\r\n";               // add blank line between reponse header and body
   responseBody+="</body></html>";     // close out body and html tags
@@ -363,8 +374,6 @@ int Network::processRequest(char *body, char *formData){
   client.print(responseHead);
   client.print(responseBody);
   LOG2("------------ SENT! --------------\n");
-
-  return(returnCode);
     
 } // processRequest
 

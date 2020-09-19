@@ -270,7 +270,8 @@ void Span::initWifi(){
       } else if(digitalRead(resetPin)){
         resetPressed=0;
       } else if(millis()>resetTime){
-        status=network.apConfigure(hostName)?1:-1;       
+        network.apConfigure(hostName);       
+        status=1;
       }
 
       if(Serial.available() && *readSerial(key,1)=='W'){
