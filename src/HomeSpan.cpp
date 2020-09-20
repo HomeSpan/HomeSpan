@@ -51,15 +51,14 @@ void Span::begin(Category catID, char *displayName, char *hostNameBase, char *mo
   Serial.print(__TIME__);
   Serial.print("\n\n");
 
-  if(!digitalRead(resetPin)){                       // factory reset pin is low
+  if(!digitalRead(resetPin)){                       // factory reset pin is low upon start-up
     nvs_flash_erase();                              // erase NVS storage
-    Serial.print("** FACTORY RESET PIN LOW!  ALL STORED DATA ERASED **\n** PROGRAM HALTED **\n");
-    while(1){
-      digitalWrite(LED_BUILTIN,HIGH);
-      delay(100);
-      digitalWrite(LED_BUILTIN,LOW);
-      delay(500);
-    }
+    Serial.print("** FACTORY RESET PIN LOW!  ALL STORED DATA ERASED **\n");
+    statusLED.start(100);
+    delay(5000);
+    Serial.print("Re-starting...\n\n");
+    statusLED.off();
+    ESP.restart();
   }
       
 }  // begin
@@ -207,13 +206,6 @@ void Span::initWifi(){
 
   Network network;                          // initialization of WiFi credentials and Setup Code
 
-  struct {                           
-    char ssid[MAX_SSID+1];            
-    char pwd[MAX_PWD+1];
-  } wifiData;
-
-  char setupCode[9]; 
-
   char id[18];                              // create string version of Accessory ID for MDNS broadcast
   memcpy(id,HAPClient::accessory.ID,17);    // copy ID bytes
   id[17]='\0';                              // add terminating null
@@ -230,9 +222,9 @@ void Span::initWifi(){
   nvs_open("WIFI",NVS_READWRITE,&wifiHandle);     // open WIFI data namespace in NVS
   
   if(!nvs_get_blob(wifiHandle,"WIFIDATA",NULL,&len)){                   // if found WiFi data in NVS
-    nvs_get_blob(wifiHandle,"WIFIDATA",&wifiData,&len);                 // retrieve data
-  } else {
-  
+    nvs_get_blob(wifiHandle,"WIFIDATA",&network.wifiData,&len);         // retrieve data
+    
+  } else {                                                              // configure network and setup code
     
     network.scan();         // scan for networks    
     
@@ -280,32 +272,36 @@ void Span::initWifi(){
       
     } // while loop  
 
-    Serial.println(status);
-    Serial.print("'"); Serial.print(network.ssid); Serial.println("'");
-    Serial.print("'"); Serial.print(mask(network.pwd,2)); Serial.println("'");
-    Serial.print("'"); Serial.print(network.setupCode); Serial.println("'");
-    while(1);
+    Serial.print("Saving WiFi credentials for: ");
+    Serial.print(network.wifiData.ssid);
+    Serial.print("...\n");
 
-//      delay(2000);                                      // pause while prior page is displayed
-//      WiFi.softAPdisconnect(true);                      // terminate connections and shut down captive access point
-//      ESP.restart();                                  // re-start device   
-    
+    nvs_set_blob(wifiHandle,"WIFIDATA",&network.wifiData,sizeof(network.wifiData));    // update data
+    nvs_commit(wifiHandle);                                                            // commit to NVS
 
-    nvs_set_blob(wifiHandle,"WIFIDATA",&wifiData,sizeof(wifiData));    // update data
-    nvs_commit(wifiHandle);                                            // commit to NVS
-  }
+    if(strlen(network.setupCode)){
+      Serial.print("Saving new Setup Code: ");
+      Serial.print(network.setupCode);
+      Serial.print("...\n");
+    }
+
+    Serial.print("\n*** Re-starting ***\n\n");
+    delay(500);
+    ESP.restart();                                  // re-start device   
+
+  } // configure network
   
   int nTries=0;
-
+  
   statusLED.start(1000);
   
   while(WiFi.status()!=WL_CONNECTED){
     Serial.print("Connecting to: ");
-    Serial.print(wifiData.ssid);
+    Serial.print(network.wifiData.ssid);
     Serial.print("... ");
     nTries++;
 
-    if(WiFi.begin(wifiData.ssid,wifiData.pwd)!=WL_CONNECTED){
+    if(WiFi.begin(network.wifiData.ssid,network.wifiData.pwd)!=WL_CONNECTED){
       int delayTime=nTries%6?5000:60000;
       char buf[8]="";
       Serial.print("Can't connect. Re-trying in ");

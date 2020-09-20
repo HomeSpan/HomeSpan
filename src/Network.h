@@ -22,8 +22,11 @@ struct Network {
   boolean landingPage=false;              // check to see if captive access point landing page is accessed
   int apStatus;                           // tracks access point status (0=timed-out, -1=cancel, 1=save)
 
-  char ssid[MAX_SSID+1];
-  char pwd[MAX_PWD+1];
+  struct {
+    char ssid[MAX_SSID+1];
+    char pwd[MAX_PWD+1];
+  } wifiData;
+  
   char setupCode[8+1];  
 
   void scan();                                                              // scan for WiFi networks and save only those with unique SSIDs

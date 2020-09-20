@@ -36,23 +36,23 @@ void Network::scan(){
 
 boolean Network::serialConfigure(){
 
-  sprintf(ssid,"");
-  sprintf(pwd,"");
+  sprintf(wifiData.ssid,"");
+  sprintf(wifiData.pwd,"");
  
-  while(!strlen(ssid)){
+  while(!strlen(wifiData.ssid)){
     Serial.print(">>> WiFi SSID: ");
-    readSerial(ssid,MAX_SSID);
-    if(atoi(ssid)>0 && atoi(ssid)<=numSSID){
-      strcpy(ssid,ssidList[atoi(ssid)-1]);
+    readSerial(wifiData.ssid,MAX_SSID);
+    if(atoi(wifiData.ssid)>0 && atoi(wifiData.ssid)<=numSSID){
+      strcpy(wifiData.ssid,ssidList[atoi(wifiData.ssid)-1]);
     }
-    Serial.print(ssid);
+    Serial.print(wifiData.ssid);
     Serial.print("\n");
   }
   
-  while(!strlen(pwd)){
+  while(!strlen(wifiData.pwd)){
     Serial.print(">>> WiFi PASS: ");
-    readSerial(pwd,MAX_PWD);    
-    Serial.print(mask(pwd,2));
+    readSerial(wifiData.pwd,MAX_PWD);    
+    Serial.print(mask(wifiData.pwd,2));
     Serial.print("\n");
   }
 
@@ -60,10 +60,10 @@ boolean Network::serialConfigure(){
 
   while(WiFi.status()!=WL_CONNECTED){
     Serial.print("\nConnecting to: ");
-    Serial.print(ssid);
+    Serial.print(wifiData.ssid);
     Serial.print("... ");
 
-    if(WiFi.begin(ssid,pwd)!=WL_CONNECTED){
+    if(WiFi.begin(wifiData.ssid,wifiData.pwd)!=WL_CONNECTED){
       char buf[8]="";
       Serial.print("Can't connect. Re-trying in 5 seconds (or type 'X <return>' to cancel)...");
       long sTime=millis();
@@ -245,6 +245,11 @@ void Network::apConfigure(char *apName){
 
     } // process HAP Client
 
+    if(client){
+      Serial.print("*** Stopping Client ***\n");
+      client.stop();
+    }
+
   } // while 1
 
 }
@@ -272,14 +277,14 @@ void Network::processRequest(char *body, char *formData){
                
     LOG1("In Post Configure...\n");
 
-    getFormValue(formData,"network",ssid,MAX_SSID);
-    getFormValue(formData,"pwd",pwd,MAX_PWD);
+    getFormValue(formData,"network",wifiData.ssid,MAX_SSID);
+    getFormValue(formData,"pwd",wifiData.pwd,MAX_PWD);
     
     timer=millis();
     homeSpan.statusLED.start(1000);
 
     responseBody+="<meta http-equiv = \"refresh\" content = \"2; url = /wifi-status\" />"
-                  "<p>Initiating WiFi connection to:</p><p><b>" + String(ssid) + "</p>";
+                  "<p>Initiating WiFi connection to:</p><p><b>" + String(wifiData.ssid) + "</p>";
   
   } else
 
@@ -287,7 +292,7 @@ void Network::processRequest(char *body, char *formData){
     getFormValue(formData,"code",setupCode,8);
 
     if(allowedCode(setupCode)){
-      responseBody+="<p><b>Settings saved!</b></p><p>Restarting HomeSpan.</p><p>Please close this window...</p>";
+      responseBody+="<p><b>Settings saved!</b></p><p>Restarting HomeSpan.</p><p>Closing window...</p>";
       alarmTimeOut=millis()+2000;
       apStatus=1;
       
@@ -299,7 +304,7 @@ void Network::processRequest(char *body, char *formData){
   } else
 
   if(!strncmp(body,"GET /cancel ",12)){                                   // GET CANCEL
-    responseBody+="<p><b>Configuration Canceled!</b></p><p>Restarting HomeSpan.</p><p>Please close this window...</p>";
+    responseBody+="<p><b>Configuration Canceled!</b></p><p>Restarting HomeSpan.</p><p>Closing window...</p>";
     alarmTimeOut=millis()+2000;
     apStatus=-1;
   } else
@@ -308,17 +313,17 @@ void Network::processRequest(char *body, char *formData){
 
     LOG1("In Get WiFi Status...\n");
 
-    if(WiFi.status()!=WL_CONNECTED && WiFi.begin(ssid,pwd)!=WL_CONNECTED){
+    if(WiFi.status()!=WL_CONNECTED && WiFi.begin(wifiData.ssid,wifiData.pwd)!=WL_CONNECTED){
       responseHead+="Refresh: 5\r\n";     
       
-      responseBody+="<p>Re-trying connection to:</p><p><b>" + String(ssid) + "</p>";
+      responseBody+="<p>Re-trying connection to:</p><p><b>" + String(wifiData.ssid) + "</p>";
       responseBody+="<p>Timeout in " + String((alarmTimeOut-millis())/1000) + " seconds.</p>";
       responseBody+="<center><button onclick=\"document.location='/landing-page'\">Cancel</button></center>";
     } else {
       
       homeSpan.statusLED.start(500,0.3,2,1000);   // slow double-blink
       
-      responseBody+="<p>SUCCESS! Connected to:</p><p><b>" + String(ssid) + "</b></p>";
+      responseBody+="<p>SUCCESS! Connected to:</p><p><b>" + String(wifiData.ssid) + "</b></p>";
       responseBody+="<p>You may enter new 8-digit Setup Code below, or leave blank to retain existing code.</p>";
 
       responseBody+="<form action=\"/save\" method=\"post\">"
