@@ -24,6 +24,7 @@ void HAPClient::init(){
   
   if(!nvs_get_blob(srpHandle,"VERIFYDATA",NULL,&len)){                   // if found verification code data in NVS
     nvs_get_blob(srpHandle,"VERIFYDATA",&verifyData,&len);               // retrieve data
+    srp.loadVerifyCode(verifyData.verifyCode,verifyData.salt);           // load verification code and salt into SRP structure
 //    Serial.print("Found SRP Verification Data\n\n");
 //    hexPrintRow(verifyData.salt,16); Serial.print("\n");
 //    hexPrintRow(verifyData.verifyCode,384); Serial.print("\n");   

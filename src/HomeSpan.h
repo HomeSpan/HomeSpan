@@ -48,7 +48,8 @@ struct Span{
   char *modelName;                              // model name of this device - broadcast as Bonjour field "md" 
   char category[3]="";                          // category ID of primary accessory - broadcast as Bonjour field "ci" (HAP Section 13)
   unsigned long snapTime;                       // current time (in millis) snapped before entering Service loops() or updates()
-  char *defaultSetupCode="46637726";            // default Setup Code upon factory reset; user will change to desired code when configuring network
+  
+  char *defaultSetupCode=(char *)DEFAULT_SETUP_CODE;    // default Setup Code upon factory reset; user will change to desired code when configuring network
 
   int resetPin=21;                              // drive this pin low to "factory" reset NVS data on start-up
   int resetPressed=0;                           // tracks pressing of reset button

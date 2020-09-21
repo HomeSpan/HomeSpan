@@ -42,6 +42,7 @@ struct SRP6A {
   SRP6A();                                         // initializes N, G, and computes k
   
   void createVerifyCode(const char *setupCode, uint8_t *verifyCode, uint8_t *salt);
+  void loadVerifyCode(uint8_t *verifyCode, uint8_t *salt);
   
   void getSalt();                                  // generates and stores random 16-byte salt, s
   void getPrivateKey();                            // generates and stores random 32-byte private key, b

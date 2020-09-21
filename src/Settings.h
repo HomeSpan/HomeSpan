@@ -9,6 +9,11 @@
 const char HOMESPAN_VERSION[]="1.0.0";  
 
 //////////////////////////////////////////////////////
+//              DEFAULT SETUP CODE                  //
+
+const char DEFAULT_SETUP_CODE[]="46637726";  
+
+//////////////////////////////////////////////////////
 //   Maximum number of simultaenous IP connections  //
 //   HAP requires at least 8                        //
 

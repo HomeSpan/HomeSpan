@@ -89,27 +89,19 @@ void SRP6A::createVerifyCode(const char *setupCode, uint8_t *verifyCode, uint8_t
 
 //////////////////////////////////////
 
-void SRP6A::createPublicKey(){
-
-  uint8_t tBuf[80];     // temporary buffer for staging 
-  uint8_t tHash[64];    // temporary buffer for storing SHA-512 results 
-  char icp[22];         // storage for I:P
-    
-  getSalt();                 // create and load s (random 16 bytes)
-  getPrivateKey();           // create and load b (random 32 bytes)
-  getSetupCode(icp);         // I="Pair-Setup" and P=Pair-Setup Code (in form XXX-XX-XXX)
-    
-  // compute x = SHA512( s | SHA512( I | ":" | P ) )
-
-  mbedtls_mpi_write_binary(&s,tBuf,16);                          // write s into first 16 bytes of staging buffer            
-  mbedtls_sha512_ret((uint8_t *)icp,strlen(icp),tBuf+16,0);      // create hash of username:password and write into last 64 bytes of staging buffer
-  mbedtls_sha512_ret(tBuf,80,tHash,0);                           // create second hash of salted, hashed username:password 
-  mbedtls_mpi_read_binary(&x,tHash,64);                          // load hash result into mpi structure x
-
-  // compute v = g^x % N
+void SRP6A::loadVerifyCode(uint8_t *verifyCode, uint8_t *salt){
   
-  mbedtls_mpi_exp_mod(&v,&g,&x,&N,&_rr);              // create verifier, v (_rr is an internal "helper" structure that mbedtls uses to speed up subsequent exponential calculations)
+  mbedtls_mpi_read_binary(&s,salt,16);
+  mbedtls_mpi_read_binary(&v,verifyCode,384);
 
+}
+
+//////////////////////////////////////
+
+void SRP6A::createPublicKey(){
+    
+  getPrivateKey();           // create and load b (random 32 bytes)
+    
   // compute B = kv + g^b %N
   
   mbedtls_mpi_mul_mpi(&t1,&k,&v);                     // t1 = k*v
@@ -121,45 +113,14 @@ void SRP6A::createPublicKey(){
 
 //////////////////////////////////////
 
-void SRP6A::getSalt(){
-
-  uint8_t salt[16];
-  randombytes_buf(salt,16);            // generate 16 random bytes using libsodium (which uses the ESP32 hardware-based random number generator)
-    
-  mbedtls_mpi_read_binary(&s,salt,16);
-}
-
-//////////////////////////////////////
-
 void SRP6A::getPrivateKey(){
 
   uint8_t privateKey[32];
-  randombytes_buf(privateKey,16);            // generate 32 random bytes using libsodium (which uses the ESP32 hardware-based random number generator)
+  randombytes_buf(privateKey,16);                     // generate 32 random bytes using libsodium (which uses the ESP32 hardware-based random number generator)
 
   mbedtls_mpi_read_binary(&b,privateKey,32);
 }
   
-//////////////////////////////////////
-
- void SRP6A::getSetupCode(char *c){
-
-  sprintf(c,"Pair-Setup:%d%d%d-%d%d-%d%d%d",
-    randombytes_uniform(10),
-    randombytes_uniform(10),
-    randombytes_uniform(10),
-    randombytes_uniform(10),
-    randombytes_uniform(10),
-    randombytes_uniform(10),
-    randombytes_uniform(10),
-    randombytes_uniform(10)
-    );
-
-  Serial.print("\n\n");
-  Serial.print("SET-UP CODE:  ");
-  Serial.print(c+11);  
-  Serial.print("\n\n");
-}
-
 //////////////////////////////////////
 
 void SRP6A::createSessionKey(){
