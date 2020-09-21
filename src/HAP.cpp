@@ -13,6 +13,34 @@ void HAPClient::init(){
 
   Serial.print("\n");
 
+  nvs_handle srpHandle;
+  
+  struct {                                      // temporary structure to hold SRP verification code and salt stored in NVS
+    uint8_t salt[16];
+    uint8_t verifyCode[384];
+  } verifyData;
+  
+  nvs_open("SRP",NVS_READWRITE,&srpHandle);     // open SRP data namespace in NVS
+  
+  if(!nvs_get_blob(srpHandle,"VERIFYDATA",NULL,&len)){                   // if found verification code data in NVS
+    nvs_get_blob(srpHandle,"VERIFYDATA",&verifyData,&len);               // retrieve data
+//    Serial.print("Found SRP Verification Data\n\n");
+//    hexPrintRow(verifyData.salt,16); Serial.print("\n");
+//    hexPrintRow(verifyData.verifyCode,384); Serial.print("\n");   
+  } else {
+    char c[128];
+    sprintf(c,"Generating SRP verification data for default Setup Code: %.3s-%.2s-%.3s\n\n",homeSpan.defaultSetupCode,homeSpan.defaultSetupCode+3,homeSpan.defaultSetupCode+5);
+    Serial.print(c);
+    srp.createVerifyCode(homeSpan.defaultSetupCode,verifyData.verifyCode,verifyData.salt);         // create verification code from default Setup Code and random salt
+    nvs_set_blob(srpHandle,"VERIFYDATA",&verifyData,sizeof(verifyData));                           // update data
+    nvs_commit(srpHandle);                                                                         // commit to NVS
+    
+//    hexPrintRow(verifyData.salt,16); Serial.print("\n");
+//    hexPrintRow(verifyData.verifyCode,384); Serial.print("\n");   
+  }
+
+  nvs_close(srpHandle);
+
   nvs_open("HAP",NVS_READWRITE,&nvsHandle);     // open HAP data namespace in NVS
   
   if(!nvs_get_blob(nvsHandle,"ACCESSORY",NULL,&len)){                    // if found long-term Accessory data in NVS
@@ -52,7 +80,7 @@ void HAPClient::init(){
 
   printControllers();                                                         
 
-  tlv8.create(kTLVType_State,1,"STATE");                 // define each the actual TLV records needed for the implementation of HAP; one for each kTLVType needed (HAP Table 5-6)
+  tlv8.create(kTLVType_State,1,"STATE");                 // define the actual TLV records needed for the implementation of HAP; one for each kTLVType needed (HAP Table 5-6)
   tlv8.create(kTLVType_PublicKey,384,"PUBKEY");
   tlv8.create(kTLVType_Method,1,"METHOD");
   tlv8.create(kTLVType_Salt,16,"SALT");
@@ -384,8 +412,8 @@ int HAPClient::postPairSetupURL(){
       tlv8.clear();
       tlv8.val(kTLVType_State,pairState_M2);            // set State=<M2>
       srp.createPublicKey();                          // create accessory public key from random Pair-Setup code (displayed to user)
-      srp.loadTLV(kTLVType_PublicKey,&srp.B);         // load server public key, B (MUST MAKE THIS A LIVE CALCULATION TO GENERATE RANDOM SET-UP CODE)
-      srp.loadTLV(kTLVType_Salt,&srp.s);              // load salt, s (MUST MAKE THIS RANDOM AS WELL)
+      srp.loadTLV(kTLVType_PublicKey,&srp.B);         // load server public key, B
+      srp.loadTLV(kTLVType_Salt,&srp.s);              // load salt, s
       tlvRespond();                                   // send response to client
 
       pairStatus=pairState_M3;                        // set next expected pair-state request from client

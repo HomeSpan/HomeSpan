@@ -62,6 +62,33 @@ SRP6A::SRP6A(){
 
 //////////////////////////////////////
 
+void SRP6A::createVerifyCode(const char *setupCode, uint8_t *verifyCode, uint8_t *salt){
+
+  uint8_t tBuf[80];     // temporary buffer for staging 
+  uint8_t tHash[64];    // temporary buffer for storing SHA-512 results 
+  char icp[22];         // storage for I:P
+
+  randombytes_buf(salt,16);                 // generate 16 random bytes using libsodium (which uses the ESP32 hardware-based random number generator)    
+  mbedtls_mpi_read_binary(&s,salt,16);
+
+  sprintf(icp,"Pair-Setup:%.3s-%.2s-%.3s",setupCode,setupCode+3,setupCode+5);
+
+  // compute x = SHA512( s | SHA512( I | ":" | P ) )
+
+  mbedtls_mpi_write_binary(&s,tBuf,16);                          // write s into first 16 bytes of staging buffer            
+  mbedtls_sha512_ret((uint8_t *)icp,strlen(icp),tBuf+16,0);      // create hash of username:password and write into last 64 bytes of staging buffer
+  mbedtls_sha512_ret(tBuf,80,tHash,0);                           // create second hash of salted, hashed username:password 
+  mbedtls_mpi_read_binary(&x,tHash,64);                          // load hash result into mpi structure x
+
+  // compute v = g^x % N
+  
+  mbedtls_mpi_exp_mod(&v,&g,&x,&N,&_rr);                         // create verifier, v (_rr is an internal "helper" structure that mbedtls uses to speed up subsequent exponential calculations)
+  mbedtls_mpi_write_binary(&v,verifyCode,384);                   // write v into verifyCode
+  
+}
+
+//////////////////////////////////////
+
 void SRP6A::createPublicKey(){
 
   uint8_t tBuf[80];     // temporary buffer for staging 

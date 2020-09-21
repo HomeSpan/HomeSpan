@@ -53,7 +53,7 @@ void Span::begin(Category catID, char *displayName, char *hostNameBase, char *mo
 
   if(!digitalRead(resetPin)){                       // factory reset pin is low upon start-up
     nvs_flash_erase();                              // erase NVS storage
-    Serial.print("** FACTORY RESET PIN LOW!  ALL STORED DATA ERASED **\n");
+    Serial.print("** FACTORY RESET PIN LOW!  ALL STORED DATA ERASED **\n\n");
     statusLED.start(100);
     delay(5000);
     Serial.print("Re-starting...\n\n");

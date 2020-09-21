@@ -40,6 +40,9 @@ struct SRP6A {
   uint8_t sharedSecret[64];                        // permanent storage for binary version of SHARED SECRET KEY for ease of use upstream
 
   SRP6A();                                         // initializes N, G, and computes k
+  
+  void createVerifyCode(const char *setupCode, uint8_t *verifyCode, uint8_t *salt);
+  
   void getSalt();                                  // generates and stores random 16-byte salt, s
   void getPrivateKey();                            // generates and stores random 32-byte private key, b
   void getSetupCode(char *c);                      // generates and displays random 8-digit Pair-Setup code, P, in format XXX-XX-XXX
