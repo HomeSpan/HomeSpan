@@ -216,13 +216,10 @@ void Span::initWifi(){
   char hostName[nChars+1];
   sprintf(hostName,"%s-%.2s%.2s%.2s%.2s%.2s%.2s",hostNameBase,id,id+3,id+6,id+9,id+12,id+15);
 
-  nvs_handle wifiHandle;
   size_t len;             // not used but required to read blobs from NVS
-
-  nvs_open("WIFI",NVS_READWRITE,&wifiHandle);     // open WIFI data namespace in NVS
   
-  if(!nvs_get_blob(wifiHandle,"WIFIDATA",NULL,&len)){                   // if found WiFi data in NVS
-    nvs_get_blob(wifiHandle,"WIFIDATA",&network.wifiData,&len);         // retrieve data
+  if(!nvs_get_blob(HAPClient::wifiNVS,"WIFIDATA",NULL,&len)){                   // if found WiFi data in NVS
+    nvs_get_blob(HAPClient::wifiNVS,"WIFIDATA",&network.wifiData,&len);         // retrieve data
     
   } else {                                                              // configure network and setup code
     
@@ -276,8 +273,8 @@ void Span::initWifi(){
     Serial.print(network.wifiData.ssid);
     Serial.print("...\n");
 
-    nvs_set_blob(wifiHandle,"WIFIDATA",&network.wifiData,sizeof(network.wifiData));    // update data
-    nvs_commit(wifiHandle);                                                            // commit to NVS
+    nvs_set_blob(HAPClient::wifiNVS,"WIFIDATA",&network.wifiData,sizeof(network.wifiData));    // update data
+    nvs_commit(HAPClient::wifiNVS);                                                            // commit to NVS
 
     if(strlen(network.setupCode)){
       Serial.print("Saving new Setup Code: ");
@@ -312,10 +309,8 @@ void Span::initWifi(){
         if(Serial.available()){
           readSerial(buf,1);
           if(buf[0]=='W'){
-            nvs_handle wifiHandle;
-            nvs_open("WIFI",NVS_READWRITE,&wifiHandle);     // open WIFI data namespace in NVS  
-            nvs_erase_all(wifiHandle);
-            nvs_commit(wifiHandle);      
+            nvs_erase_all(HAPClient::wifiNVS);
+            nvs_commit(HAPClient::wifiNVS);      
             Serial.print("\n** WIFI Network Data DELETED **\n** Restarting...\n\n");
             delay(2000);
             ESP.restart();
@@ -434,10 +429,8 @@ void Span::processSerialCommand(char *c){
     break;
 
     case 'W': {
-      nvs_handle wifiHandle;
-      nvs_open("WIFI",NVS_READWRITE,&wifiHandle);     // open WIFI data namespace in NVS  
-      nvs_erase_all(wifiHandle);
-      nvs_commit(wifiHandle);      
+      nvs_erase_all(HAPClient::wifiNVS);
+      nvs_commit(HAPClient::wifiNVS);      
       Serial.print("\n** WIFI Network Data DELETED **\n** Restarting...\n\n");
       delay(2000);
       ESP.restart();
@@ -445,8 +438,8 @@ void Span::processSerialCommand(char *c){
     break;
 
     case 'H': {
-      nvs_erase_all(HAPClient::nvsHandle);
-      nvs_commit(HAPClient::nvsHandle);      
+      nvs_erase_all(HAPClient::hapNVS);
+      nvs_commit(HAPClient::hapNVS);      
       Serial.print("\n** HomeKit Pairing Data DELETED **\n** Restarting...\n\n");
       delay(1000);
       ESP.restart();

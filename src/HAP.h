@@ -50,7 +50,9 @@ struct HAPClient {
   static const int MAX_CONTROLLERS=16;                // maximum number of paired controllers (HAP requires at least 16)
   
   static TLV<kTLVType,10> tlv8;                       // TLV8 structure (HAP Section 14.1) with space for 10 TLV records of type kTLVType (HAP Table 5-6)
-  static nvs_handle nvsHandle;                        // handle for non-volatile-storage of HAP data
+  static nvs_handle hapNVS;                           // handle for non-volatile-storage of HAP data
+  static nvs_handle wifiNVS;                          // handle for non-volatile-storage of WiFi data
+  static nvs_handle srpNVS;                           // handle for non-volatile-storage of SRP data
   static uint8_t httpBuf[MAX_HTTP+1];                 // buffer to store HTTP messages (+1 to leave room for storing an extra 'overflow' character)
   static HKDF hkdf;                                   // generates (and stores) HKDF-SHA-512 32-byte keys derived from an inputKey of arbitrary length, a salt string, and an info string
   static pairState pairStatus;                        // tracks pair-setup status

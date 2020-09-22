@@ -11,41 +11,30 @@ void HAPClient::init(){
 
   size_t len;             // not used but required to read blobs from NVS
 
-  Serial.print("\n");
-
-  nvs_handle srpHandle;
+  nvs_open("HAP",NVS_READWRITE,&hapNVS);        // open HAP data namespace in NVS
+  nvs_open("SRP",NVS_READWRITE,&srpNVS);        // open SRP data namespace in NVS 
+  nvs_open("WIFI",NVS_READWRITE,&wifiNVS);      // open WIFI data namespace in NVS
   
   struct {                                      // temporary structure to hold SRP verification code and salt stored in NVS
     uint8_t salt[16];
     uint8_t verifyCode[384];
   } verifyData;
   
-  nvs_open("SRP",NVS_READWRITE,&srpHandle);     // open SRP data namespace in NVS
-  
-  if(!nvs_get_blob(srpHandle,"VERIFYDATA",NULL,&len)){                   // if found verification code data in NVS
-    nvs_get_blob(srpHandle,"VERIFYDATA",&verifyData,&len);               // retrieve data
+  if(!nvs_get_blob(srpNVS,"VERIFYDATA",NULL,&len)){                   // if found verification code data in NVS
+    nvs_get_blob(srpNVS,"VERIFYDATA",&verifyData,&len);               // retrieve data
     srp.loadVerifyCode(verifyData.verifyCode,verifyData.salt);           // load verification code and salt into SRP structure
-//    Serial.print("Found SRP Verification Data\n\n");
-//    hexPrintRow(verifyData.salt,16); Serial.print("\n");
-//    hexPrintRow(verifyData.verifyCode,384); Serial.print("\n");   
   } else {
+    
     char c[128];
     sprintf(c,"Generating SRP verification data for default Setup Code: %.3s-%.2s-%.3s\n\n",homeSpan.defaultSetupCode,homeSpan.defaultSetupCode+3,homeSpan.defaultSetupCode+5);
     Serial.print(c);
     srp.createVerifyCode(homeSpan.defaultSetupCode,verifyData.verifyCode,verifyData.salt);         // create verification code from default Setup Code and random salt
-    nvs_set_blob(srpHandle,"VERIFYDATA",&verifyData,sizeof(verifyData));                           // update data
-    nvs_commit(srpHandle);                                                                         // commit to NVS
-    
-//    hexPrintRow(verifyData.salt,16); Serial.print("\n");
-//    hexPrintRow(verifyData.verifyCode,384); Serial.print("\n");   
+    nvs_set_blob(srpNVS,"VERIFYDATA",&verifyData,sizeof(verifyData));                           // update data
+    nvs_commit(srpNVS);                                                                         // commit to NVS    
   }
-
-  nvs_close(srpHandle);
-
-  nvs_open("HAP",NVS_READWRITE,&nvsHandle);     // open HAP data namespace in NVS
   
-  if(!nvs_get_blob(nvsHandle,"ACCESSORY",NULL,&len)){                    // if found long-term Accessory data in NVS
-    nvs_get_blob(nvsHandle,"ACCESSORY",&accessory,&len);                 // retrieve data
+  if(!nvs_get_blob(hapNVS,"ACCESSORY",NULL,&len)){                    // if found long-term Accessory data in NVS
+    nvs_get_blob(hapNVS,"ACCESSORY",&accessory,&len);                 // retrieve data
   } else {      
     Serial.print("Generating new random Accessory ID and Long-Term Ed25519 Signature Keys...\n");
     uint8_t buf[6];
@@ -58,19 +47,19 @@ void HAPClient::init(){
     memcpy(accessory.ID,cBuf,17);                                        // copy into Accessory ID for permanent storage
     crypto_sign_keypair(accessory.LTPK,accessory.LTSK);                  // generate new random set of keys using libsodium public-key signature
     
-    nvs_set_blob(nvsHandle,"ACCESSORY",&accessory,sizeof(accessory));    // update data
-    nvs_commit(nvsHandle);                                               // commit to NVS
+    nvs_set_blob(hapNVS,"ACCESSORY",&accessory,sizeof(accessory));    // update data
+    nvs_commit(hapNVS);                                               // commit to NVS
   }
 
-  if(!nvs_get_blob(nvsHandle,"CONTROLLERS",NULL,&len)){                 // if found long-term Controller Pairings data from NVS
-    nvs_get_blob(nvsHandle,"CONTROLLERS",controllers,&len);             // retrieve data
+  if(!nvs_get_blob(hapNVS,"CONTROLLERS",NULL,&len)){                 // if found long-term Controller Pairings data from NVS
+    nvs_get_blob(hapNVS,"CONTROLLERS",controllers,&len);             // retrieve data
   } else {
     Serial.print("Initializing storage for Paired Controllers data...\n\n");               
     
     HAPClient::removeControllers();                                             // clear all Controller data
         
-    nvs_set_blob(nvsHandle,"CONTROLLERS",controllers,sizeof(controllers));      // update data
-    nvs_commit(nvsHandle);                                                      // commit to NVS
+    nvs_set_blob(hapNVS,"CONTROLLERS",controllers,sizeof(controllers));      // update data
+    nvs_commit(hapNVS);                                                      // commit to NVS
   }
 
   Serial.print("Accessory ID:      ");
@@ -92,12 +81,12 @@ void HAPClient::init(){
   tlv8.create(kTLVType_Identifier,64,"IDENTIFIER");
   tlv8.create(kTLVType_Permissions,1,"PERMISSION");
 
-  if(!nvs_get_blob(nvsHandle,"HAPHASH",NULL,&len)){                 // if found HAP HASH structure
-    nvs_get_blob(nvsHandle,"HAPHASH",&homeSpan.hapConfig,&len);     // retrieve data    
+  if(!nvs_get_blob(hapNVS,"HAPHASH",NULL,&len)){                 // if found HAP HASH structure
+    nvs_get_blob(hapNVS,"HAPHASH",&homeSpan.hapConfig,&len);     // retrieve data    
   } else {
     Serial.print("Resetting Accessory Configuration number...\n");
-    nvs_set_blob(nvsHandle,"HAPHASH",&homeSpan.hapConfig,sizeof(homeSpan.hapConfig));     // update data
-    nvs_commit(nvsHandle);                                                                // commit to NVS
+    nvs_set_blob(hapNVS,"HAPHASH",&homeSpan.hapConfig,sizeof(homeSpan.hapConfig));     // update data
+    nvs_commit(hapNVS);                                                                // commit to NVS
   }
 
   Serial.print("\n");
@@ -116,8 +105,8 @@ void HAPClient::init(){
     Serial.print("Accessory configuration has changed.  Updating configuration number to ");
     Serial.print(homeSpan.hapConfig.configNumber);
     Serial.print("\n\n");
-    nvs_set_blob(nvsHandle,"HAPHASH",&homeSpan.hapConfig,sizeof(homeSpan.hapConfig));     // update data
-    nvs_commit(nvsHandle);                                                                // commit to NVS
+    nvs_set_blob(hapNVS,"HAPHASH",&homeSpan.hapConfig,sizeof(homeSpan.hapConfig));     // update data
+    nvs_commit(hapNVS);                                                                // commit to NVS
   } else {
     Serial.print("Accessory configuration number: ");
     Serial.print(homeSpan.hapConfig.configNumber);
@@ -557,8 +546,8 @@ int HAPClient::postPairSetupURL(){
 
       addController(iosDevicePairingID,iosDeviceLTPK,true);        // save Pairing ID and LTPK for this Controller with admin privileges
 
-      nvs_set_blob(nvsHandle,"CONTROLLERS",controllers,sizeof(controllers));      // update data
-      nvs_commit(nvsHandle);                                                      // commit to NVS
+      nvs_set_blob(hapNVS,"CONTROLLERS",controllers,sizeof(controllers));      // update data
+      nvs_commit(hapNVS);                                                      // commit to NVS
 
       // Now perform the above steps in reverse to securely transmit the AccessoryLTPK to the Controller (HAP Section 5.6.6.2)
 
@@ -966,8 +955,8 @@ int HAPClient::postPairingsURL(){
       break;      
   }
 
-  nvs_set_blob(nvsHandle,"CONTROLLERS",controllers,sizeof(controllers));      // update Controller data
-  nvs_commit(nvsHandle);                                                      // commit to NVS
+  nvs_set_blob(hapNVS,"CONTROLLERS",controllers,sizeof(controllers));      // update Controller data
+  nvs_commit(hapNVS);                                                      // commit to NVS
 
   tlvRespond();
 
@@ -1587,7 +1576,9 @@ void Nonce::inc(){
 // instantiate all static HAP Client structures and data
 
 TLV<kTLVType,10> HAPClient::tlv8;
-nvs_handle HAPClient::nvsHandle;                        
+nvs_handle HAPClient::hapNVS;
+nvs_handle HAPClient::wifiNVS;
+nvs_handle HAPClient::srpNVS;
 uint8_t HAPClient::httpBuf[MAX_HTTP+1];                 
 HKDF HAPClient::hkdf;                                   
 pairState HAPClient::pairStatus;                        
