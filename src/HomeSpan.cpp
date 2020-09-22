@@ -428,6 +428,59 @@ void Span::processSerialCommand(char *c){
     }
     break;
 
+    case 'S': {
+      Serial.print("\n** Change Setup Code (no entry=cancel change)**\n\n");
+
+      Network network;                          // initialization of WiFi credentials and Setup Code
+      
+      struct {                                      // temporary structure to hold SRP verification code and salt stored in NVS
+        uint8_t salt[16];
+        uint8_t verifyCode[384];
+      } verifyData;      
+      
+      char c[128];
+      char setupCode[9];
+  
+      while(1){
+        Serial.print("Setup Code: ");
+        sprintf(setupCode,"");
+        readSerial(setupCode,8);
+        
+        if(strlen(setupCode)==0){
+          Serial.print("(canceled)\n\n");
+          Serial.print("** End Change Setup Code **\n\n");
+          return;
+        }
+        
+        Serial.print(setupCode);
+
+        int n=0;
+        while(setupCode[n]!='\0' && setupCode[n]>='0' && setupCode[n]<='9')
+        n++;
+
+        if(n<8){
+          Serial.print("\n** Invalid format!\n\n");
+          continue;
+        }
+        
+        if(!network.allowedCode(setupCode)){
+          Serial.print("\n** Disallowed code!\n\n");
+          continue;
+        }
+        
+        sprintf(c,"\n\nGenerating SRP verification data for new Setup Code: %.3s-%.2s-%.3s\n\n",setupCode,setupCode+3,setupCode+5);
+        Serial.print(c);
+        HAPClient::srp.createVerifyCode(setupCode,verifyData.verifyCode,verifyData.salt);                         // create verification code from default Setup Code and random salt
+        nvs_set_blob(HAPClient::srpNVS,"VERIFYDATA",&verifyData,sizeof(verifyData));                              // update data
+        nvs_commit(HAPClient::srpNVS);                                                                            // commit to NVS         
+        Serial.print("** End Change Setup Code **\n\n");
+        return;
+        
+      } // while loop
+      
+    }
+    break;
+
     case 'W': {
       nvs_erase_all(HAPClient::wifiNVS);
       nvs_commit(HAPClient::wifiNVS);      
@@ -477,6 +530,7 @@ void Span::processSerialCommand(char *c){
       Serial.print("  s - print connection status\n");
       Serial.print("  d - print attributes database\n");
       Serial.print("  i - print detailed info about configuration\n");
+      Serial.print("  S - change Setup Code\n");
       Serial.print("  W - delete stored WiFi data and restart\n");      
       Serial.print("  H - delete stored HomeKit Pairing data and restart\n");      
       Serial.print("  F - delete all stored WiFi Network and HomeKit Pairing data and restart\n");      
