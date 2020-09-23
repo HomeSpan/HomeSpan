@@ -88,10 +88,10 @@ void Span::poll() {
     Serial.print(" is READY!\n\n");        
   }
 
-  char cBuf[8]="?";
+  char cBuf[17]="?";
   
   if(Serial.available()){
-    readSerial(cBuf,1);
+    readSerial(cBuf,16);
     processSerialCommand(cBuf);
   }
 
@@ -277,9 +277,20 @@ void Span::initWifi(){
     nvs_commit(HAPClient::wifiNVS);                                                            // commit to NVS
 
     if(strlen(network.setupCode)){
-      Serial.print("Saving new Setup Code: ");
-      Serial.print(network.setupCode);
-      Serial.print("...\n");
+
+      char buf[128];
+
+      struct {                                      // temporary structure to hold SRP verification code and salt stored in NVS
+        uint8_t salt[16];
+        uint8_t verifyCode[384];
+      } verifyData;      
+
+      sprintf(buf,"\nGenerating SRP verification data for new Setup Code: %.3s-%.2s-%.3s ... ",network.setupCode,network.setupCode+3,network.setupCode+5);
+      Serial.print(buf);
+      HAPClient::srp.createVerifyCode(network.setupCode,verifyData.verifyCode,verifyData.salt);                 // create verification code from default Setup Code and random salt
+      nvs_set_blob(HAPClient::srpNVS,"VERIFYDATA",&verifyData,sizeof(verifyData));                              // update data
+      nvs_commit(HAPClient::srpNVS);                                                                            // commit to NVS
+      Serial.print("New Code Saved!\n");
     }
 
     Serial.print("\n*** Re-starting ***\n\n");
@@ -372,6 +383,7 @@ void Span::processSerialCommand(char *c){
   switch(c[0]){
 
     case 's': {    
+      
       Serial.print("\n*** HomeSpan Status ***\n\n");
 
       Serial.print("IP Address:        ");
@@ -415,6 +427,7 @@ void Span::processSerialCommand(char *c){
     break;
 
     case 'd': {      
+      
       TempBuffer <char> qBuf(sprintfAttributes(NULL)+1);
       sprintfAttributes(qBuf.buf);  
 
@@ -429,59 +442,38 @@ void Span::processSerialCommand(char *c){
     break;
 
     case 'S': {
-      Serial.print("\n** Change Setup Code (no entry=cancel change)**\n\n");
-
-      Network network;                          // initialization of WiFi credentials and Setup Code
       
+      Network network;                        
+      char buf[128];
+      char setupCode[10];
+
       struct {                                      // temporary structure to hold SRP verification code and salt stored in NVS
         uint8_t salt[16];
         uint8_t verifyCode[384];
       } verifyData;      
+
+      sscanf(c+1," %9[0-9]",setupCode);
       
-      char c[128];
-      char setupCode[9];
-  
-      while(1){
-        Serial.print("Setup Code: ");
-        sprintf(setupCode,"");
-        readSerial(setupCode,8);
+      if(strlen(setupCode)!=8){
+        Serial.print("\n*** Invalid request to change Setup Code.  Code must be exactly 8 digits.\n");
+      } else
+      
+      if(!network.allowedCode(setupCode)){
+        Serial.print("\n*** Invalid request to change Setup Code.  Code too simple.\n");
+      } else {
         
-        if(strlen(setupCode)==0){
-          Serial.print("(canceled)\n\n");
-          Serial.print("** End Change Setup Code **\n\n");
-          return;
-        }
-        
-        Serial.print(setupCode);
-
-        int n=0;
-        while(setupCode[n]!='\0' && setupCode[n]>='0' && setupCode[n]<='9')
-        n++;
-
-        if(n<8){
-          Serial.print("\n** Invalid format!\n\n");
-          continue;
-        }
-        
-        if(!network.allowedCode(setupCode)){
-          Serial.print("\n** Disallowed code!\n\n");
-          continue;
-        }
-        
-        sprintf(c,"\n\nGenerating SRP verification data for new Setup Code: %.3s-%.2s-%.3s\n\n",setupCode,setupCode+3,setupCode+5);
-        Serial.print(c);
+        sprintf(buf,"\n\nGenerating SRP verification data for new Setup Code: %.3s-%.2s-%.3s ... ",setupCode,setupCode+3,setupCode+5);
+        Serial.print(buf);
         HAPClient::srp.createVerifyCode(setupCode,verifyData.verifyCode,verifyData.salt);                         // create verification code from default Setup Code and random salt
         nvs_set_blob(HAPClient::srpNVS,"VERIFYDATA",&verifyData,sizeof(verifyData));                              // update data
-        nvs_commit(HAPClient::srpNVS);                                                                            // commit to NVS         
-        Serial.print("** End Change Setup Code **\n\n");
-        return;
-        
-      } // while loop
-      
+        nvs_commit(HAPClient::srpNVS);                                                                            // commit to NVS
+        Serial.print("New Code Saved!\n");
+      }            
     }
     break;
 
     case 'W': {
+      
       nvs_erase_all(HAPClient::wifiNVS);
       nvs_commit(HAPClient::wifiNVS);      
       Serial.print("\n** WIFI Network Data DELETED **\n** Restarting...\n\n");
@@ -491,6 +483,7 @@ void Span::processSerialCommand(char *c){
     break;
 
     case 'H': {
+      
       nvs_erase_all(HAPClient::hapNVS);
       nvs_commit(HAPClient::hapNVS);      
       Serial.print("\n** HomeKit Pairing Data DELETED **\n** Restarting...\n\n");
@@ -500,6 +493,7 @@ void Span::processSerialCommand(char *c){
     break;
 
     case 'F': {
+      
       nvs_flash_erase();
       Serial.print("\n** FACTORY RESET **\n** Restarting...\n\n");
       delay(1000);
@@ -508,6 +502,7 @@ void Span::processSerialCommand(char *c){
     break;
 
     case 'i':{
+      
       Serial.print("\n*** HomeSpan Info ***\n\n");
       char cBuf[128];
       for(int i=0;i<Accessories.size();i++){                             // identify all services with over-ridden loop() methods
@@ -526,15 +521,16 @@ void Span::processSerialCommand(char *c){
     break;
 
     case '?': {    
+      
       Serial.print("\n*** HomeSpan Commands ***\n\n");
       Serial.print("  s - print connection status\n");
       Serial.print("  d - print attributes database\n");
       Serial.print("  i - print detailed info about configuration\n");
-      Serial.print("  S - change Setup Code\n");
       Serial.print("  W - delete stored WiFi data and restart\n");      
       Serial.print("  H - delete stored HomeKit Pairing data and restart\n");      
-      Serial.print("  F - delete all stored WiFi Network and HomeKit Pairing data and restart\n");      
+      Serial.print("  F - delete all stored data (Factory Reset) and restart\n");      
       Serial.print("  ? - print this list of commands\n");
+      Serial.print("  S <code> - change Setup Code to 8-digit <code>\n");
       Serial.print("\n*** End Commands ***\n\n");
     }
     break;
