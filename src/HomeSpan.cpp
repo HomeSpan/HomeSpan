@@ -33,19 +33,15 @@ void Span::begin(Category catID, char *displayName, char *hostNameBase, char *mo
                  "Welcome to HomeSpan!\n"
                  "Apple HomeKit for the Espressif ESP-32 WROOM and Arduino IDE\n"
                  "************************************************************\n\n"
-                 "** Please ensure serial monitor is set to transmit <newlines>\n");
+                 "** Please ensure serial monitor is set to transmit <newlines>\n\n");
 
-  Serial.print("** Ground pin ");
-  Serial.print(resetPin);
-  Serial.print(" to delete all stored WiFi Network and HomeKit Pairing data (factory reset)\n\n");                 
-  
-  Serial.print("HomeSpan Version: ");
+  Serial.print("Device Control:  Pin ");
+  Serial.print(resetPin);  
+  Serial.print("\nHomeSpan Version: ");
   Serial.print(HOMESPAN_VERSION);
-  Serial.print("\n");
-  Serial.print("ESP-IDF Version:  ");
+  Serial.print("\nESP-IDF Version:  ");
   Serial.print(esp_get_idf_version());
-  Serial.print("\n");
-  Serial.print("Sketch Compiled:  ");
+  Serial.print("\nSketch Compiled:  ");
   Serial.print(__DATE__);
   Serial.print(" ");
   Serial.print(__TIME__);
@@ -177,11 +173,13 @@ void Span::poll() {
     case 2:
       if(digitalRead(resetPin)){
         statusLED.off();
-        processSerialCommand("H");
+        resetPressed=0;
+        processSerialCommand("U");        // UPAIR Device
       } else
       if(millis()>resetTime){
-        statusLED.off();
-        processSerialCommand("F");
+        statusLED.on();
+        delay(1000);
+        processSerialCommand("W");        // Delete WiFi Data and Restart
       }
       break;
   } // switch
@@ -472,12 +470,34 @@ void Span::processSerialCommand(char *c){
     }
     break;
 
+    case 'U': {
+
+      HAPClient::removeControllers();                                                                           // clear all Controller data  
+      nvs_set_blob(HAPClient::hapNVS,"CONTROLLERS",HAPClient::controllers,sizeof(HAPClient::controllers));      // update data
+      nvs_commit(HAPClient::hapNVS);                                                                            // commit to NVS
+      Serial.print("\n** HomeSpan Pairing Data DELETED **\n\n");
+      
+      for(int i=0;i<MAX_CONNECTIONS;i++){     // loop over all connection slots
+        if(hap[i].client){                    // if slot is connected
+          LOG1("*** Terminating Client #");
+          LOG1(i);
+          LOG1("\n");
+          hap[i].client.stop();
+        }
+      }
+      
+      Serial.print("\nDEVICE NOT YET PAIRED -- PLEASE PAIR WITH HOMEKIT APP\n\n");
+      mdns_service_txt_item_set("_hap","_tcp","sf","1");                                                        // set Status Flag = 1 (Table 6-8)
+      statusLED.start(500,0.5,2,1000);
+    }
+    break;
+
     case 'W': {
       
       nvs_erase_all(HAPClient::wifiNVS);
       nvs_commit(HAPClient::wifiNVS);      
       Serial.print("\n** WIFI Network Data DELETED **\n** Restarting...\n\n");
-      delay(2000);
+      delay(1000);
       ESP.restart();
     }
     break;
@@ -486,7 +506,7 @@ void Span::processSerialCommand(char *c){
       
       nvs_erase_all(HAPClient::hapNVS);
       nvs_commit(HAPClient::hapNVS);      
-      Serial.print("\n** HomeKit Pairing Data DELETED **\n** Restarting...\n\n");
+      Serial.print("\n** HomeSpan Device ID and Pairing Data DELETED **\n** Restarting...\n\n");
       delay(1000);
       ESP.restart();
     }
@@ -526,6 +546,7 @@ void Span::processSerialCommand(char *c){
       Serial.print("  s - print connection status\n");
       Serial.print("  d - print attributes database\n");
       Serial.print("  i - print detailed info about configuration\n");
+      Serial.print("  U - unpair device by deleting all Controller data\n");
       Serial.print("  W - delete stored WiFi data and restart\n");      
       Serial.print("  H - delete stored HomeKit Pairing data and restart\n");      
       Serial.print("  F - delete all stored data (Factory Reset) and restart\n");      

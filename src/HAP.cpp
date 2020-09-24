@@ -966,7 +966,7 @@ int HAPClient::postPairingsURL(){
   for(int i=0;i<MAX_CONNECTIONS;i++){     // loop over all connection slots
     if(hap[i].client){                    // if slot is connected
       
-      if(!nAdminControllers() || (hap[i].cPair && !hap[i].cPair->allocated)){    // accessory unpaired, OR client connection is verified but points to an unallocated controller
+      if(!nAdminControllers() || (hap[i].cPair && !hap[i].cPair->allocated)){    // accessory unpaired, OR client connection is verified but points to a newly *unallocated* controller
         LOG1("*** Terminating Client #");
         LOG1(i);
         LOG1("\n");
