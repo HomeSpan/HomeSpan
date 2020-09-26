@@ -3,7 +3,6 @@
 #include <nvs_flash.h>
 #include <sodium.h>
 
-#include "Utils.h"
 #include "HAP.h"
 #include "Network.h"
 
@@ -35,7 +34,7 @@ void Span::begin(Category catID, char *displayName, char *hostNameBase, char *mo
                  "************************************************************\n\n"
                  "** Please ensure serial monitor is set to transmit <newlines>\n\n");
 
-  Serial.print("Device Control:  Pin ");
+  Serial.print("Device Control:   Pin ");
   Serial.print(resetPin);  
   Serial.print("\nHomeSpan Version: ");
   Serial.print(HOMESPAN_VERSION);

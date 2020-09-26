@@ -3,7 +3,6 @@
 #include <sodium.h>
 
 #include "HAP.h"
-#include "Utils.h"
 
 //////////////////////////////////////
 

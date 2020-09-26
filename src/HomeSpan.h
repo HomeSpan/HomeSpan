@@ -7,7 +7,7 @@
 #include <unordered_map>
 
 #include "Settings.h"
-#include "Blinker.h"
+#include "Utils.h"
 
 using std::vector;
 using std::unordered_map;
@@ -55,7 +55,8 @@ struct Span{
   int resetPressed=0;                           // tracks pressing of reset button
   unsigned long resetTime;                      // tracks time once reset button is pressed
 
-  Blinker statusLED=Blinker(LED_BUILTIN);       // indicates HomeSpan status
+  Blinker statusLED{LED_BUILTIN};                   // indicates HomeSpan status
+  PushButton controlButton{DEFAULT_CONTROL_PIN};    // controls HomeSpan configuration and resets
     
   SpanConfig hapConfig;                             // track configuration changes to the HAP Accessory database; used to increment the configuration number (c#) when changes found
   vector<SpanAccessory *> Accessories;              // vector of pointers to all Accessories
