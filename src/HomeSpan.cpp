@@ -24,8 +24,6 @@ void Span::begin(Category catID, char *displayName, char *hostNameBase, char *mo
   this->modelName=modelName;
   sprintf(this->category,"%d",catID);
   
-  pinMode(resetPin,INPUT_PULLUP);
-
   delay(2000);
  
   Serial.print("\n************************************************************\n"
@@ -35,7 +33,7 @@ void Span::begin(Category catID, char *displayName, char *hostNameBase, char *mo
                  "** Please ensure serial monitor is set to transmit <newlines>\n\n");
 
   Serial.print("Device Control:   Pin ");
-  Serial.print(resetPin);  
+  Serial.print(CONTROL_PIN);  
   Serial.print("\nHomeSpan Version: ");
   Serial.print(HOMESPAN_VERSION);
   Serial.print("\nESP-IDF Version:  ");
@@ -46,9 +44,9 @@ void Span::begin(Category catID, char *displayName, char *hostNameBase, char *mo
   Serial.print(__TIME__);
   Serial.print("\n\n");
 
-  if(!digitalRead(resetPin)){                       // factory reset pin is low upon start-up
+  if(!digitalRead(CONTROL_PIN)){                    // factory reset pin is low upon start-up
     nvs_flash_erase();                              // erase NVS storage
-    Serial.print("** FACTORY RESET PIN LOW!  ALL STORED DATA ERASED **\n\n");
+    Serial.print("** CONTROL BUTTON PRESSED DURING STARTUP!  ALL STORED DATA ERASED **\n\n");
     statusLED.start(100);
     delay(5000);
     Serial.print("Re-starting...\n\n");
@@ -79,8 +77,10 @@ void Span::poll() {
       statusLED.on();
     }
 
+    controlButton.reset();        
+
     Serial.print(displayName);
-    Serial.print(" is READY!\n\n");        
+    Serial.print(" is READY!\n\n");
   }
 
   char cBuf[17]="?";
@@ -147,42 +147,21 @@ void Span::poll() {
 
   HAPClient::callServiceLoops();
   HAPClient::checkPushButtons();
-  HAPClient::checkNotifications();
+  HAPClient::checkNotifications();  
   HAPClient::checkTimedWrites();
 
-  switch(resetPressed){
-    case 0:
-      if(!digitalRead(resetPin)){
-        resetPressed=1;
-        resetTime=millis()+5000;
-      }
-    break;
-
-    case 1:
-      if(digitalRead(resetPin)){
-        resetPressed=0;
-      } else 
-      if(millis()>resetTime){
-        resetPressed=2;
-        statusLED.start(200,0.5,4,800);
-        resetTime=millis()+6000;
-      }
-      break;
-
-    case 2:
-      if(digitalRead(resetPin)){
-        statusLED.off();
-        resetPressed=0;
-        processSerialCommand("U");        // UPAIR Device
-      } else
-      if(millis()>resetTime){
-        statusLED.on();
-        delay(1000);
-        processSerialCommand("W");        // Delete WiFi Data and Restart
-      }
-      break;
-  } // switch
-  
+  if(controlButton.triggered(2000,10000)){
+    if(controlButton.longPress()){
+      statusLED.start(200);
+      delay(2000);
+      processSerialCommand("W");        // Delete WiFi Data and Restart      
+    } else {
+      statusLED.off();
+      controlButton.reset();
+      processSerialCommand("U");        // UPAIR Device
+    }
+  }
+    
 } // poll
 
 ///////////////////////////////
@@ -222,9 +201,10 @@ void Span::initWifi(){
     
     network.scan();         // scan for networks    
     
-    resetPressed=0;   
     int status=-1;
     char key[2];
+
+    controlButton.reset();
     
     while(status<1){                   // loop until a configuration method is chosen and completed
 
@@ -243,19 +223,12 @@ void Span::initWifi(){
           Serial.print("\n");
         }
 
-        Serial.print("\nType 'W' <return> to set WiFi credentials or press control button for 3 seconds to start Access Point...\n\n");
+        Serial.print("\nType 'W <return>' to set WiFi credentials or press Control Button for 3 seconds to start Access Point...\n\n");
         status=0;
         sprintf(key,"");
       }
-    
-      if(!resetPressed){
-        if(!digitalRead(resetPin)){
-          resetPressed=1;
-          resetTime=millis()+3000;          
-        }
-      } else if(digitalRead(resetPin)){
-        resetPressed=0;
-      } else if(millis()>resetTime){
+
+      if(controlButton.triggered(9999,3000)){    
         network.apConfigure(hostName);       
         status=1;
       }
@@ -299,30 +272,30 @@ void Span::initWifi(){
   int nTries=0;
   
   statusLED.start(1000);
+  controlButton.reset();
   
   while(WiFi.status()!=WL_CONNECTED){
     Serial.print("Connecting to: ");
     Serial.print(network.wifiData.ssid);
     Serial.print("... ");
     nTries++;
-
+    
     if(WiFi.begin(network.wifiData.ssid,network.wifiData.pwd)!=WL_CONNECTED){
       int delayTime=nTries%6?5000:60000;
       char buf[8]="";
-      Serial.print("Can't connect. Re-trying in ");
+      Serial.print("Can't connect --- Re-trying in ");
       Serial.print(delayTime/1000);
-      Serial.print(" seconds (or type 'W <return>' to reset WiFi data)...\n");
+      Serial.print(" seconds. Type 'W <return>' or press Control Button for 3 seconds to reset WiFi data...\n");
       long sTime=millis();
-      while(millis()-sTime<delayTime){
-        if(Serial.available()){
-          readSerial(buf,1);
-          if(buf[0]=='W'){
-            nvs_erase_all(HAPClient::wifiNVS);
-            nvs_commit(HAPClient::wifiNVS);      
-            Serial.print("\n** WIFI Network Data DELETED **\n** Restarting...\n\n");
-            delay(2000);
-            ESP.restart();
-          }
+      
+      while(millis()-sTime<delayTime){        
+        if(controlButton.triggered(9999,3000) || (Serial.available() && readSerial(buf,1) && (buf[0]=='W'))){
+          statusLED.start(100);
+          Serial.print("\n** Deleting WIFI Network Data **\n** Restarting...\n\n");
+          nvs_erase_all(HAPClient::wifiNVS);
+          nvs_commit(HAPClient::wifiNVS);      
+          delay(2000);
+          ESP.restart();
         }
       }
     }

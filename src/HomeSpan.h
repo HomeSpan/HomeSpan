@@ -51,12 +51,8 @@ struct Span{
   
   char *defaultSetupCode=(char *)DEFAULT_SETUP_CODE;    // default Setup Code upon factory reset; user will change to desired code when configuring network
 
-  int resetPin=21;                              // drive this pin low to "factory" reset NVS data on start-up
-  int resetPressed=0;                           // tracks pressing of reset button
-  unsigned long resetTime;                      // tracks time once reset button is pressed
-
-  Blinker statusLED{LED_BUILTIN};                   // indicates HomeSpan status
-  PushButton controlButton{DEFAULT_CONTROL_PIN};    // controls HomeSpan configuration and resets
+  Blinker statusLED{LED_BUILTIN};                 // indicates HomeSpan status
+  PushButton controlButton{CONTROL_PIN};          // controls HomeSpan configuration and resets
     
   SpanConfig hapConfig;                             // track configuration changes to the HAP Accessory database; used to increment the configuration number (c#) when changes found
   vector<SpanAccessory *> Accessories;              // vector of pointers to all Accessories
@@ -86,8 +82,6 @@ struct Span{
 
   void clearNotify(int slotNum);                                          // set ev notification flags for connection 'slotNum' to false across all characteristics 
   int sprintfNotify(SpanBuf *pObj, int nObj, char *cBuf, int conNum);     // prints notification JSON into buf based on SpanBuf objects and specified connection number
-
-  void setResetPin(int pin){resetPin=pin;}      // sets new pin to be used for factory reset
 
 };
 
