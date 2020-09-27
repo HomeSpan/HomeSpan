@@ -6,17 +6,14 @@
 //////////////////////////////////////////////////////
 //              HomeSpan Version                    //
 
-const char HOMESPAN_VERSION[]="1.0.0";  
+#define     HOMESPAN_VERSION      "1.0.0"
 
 //////////////////////////////////////////////////////
-//              DEFAULT SETUP CODE                  //
+//                DEFAULT SETTINGS                    
 
-const char DEFAULT_SETUP_CODE[]="46637726";  
-
-//////////////////////////////////////////////////////
-//              CONTROL BUTTON PIN                  //
-
-const int CONTROL_PIN=21;
+#define     DEFAULT_SETUP_CODE    "46637726"        // changed during network setup or with 'S' command
+#define     DEFAULT_CONTROL_PIN   21                // changed with homeSpan.setControlPin(pin)
+#define     DEFAULT_STATUS_PIN    LED_BUILTIN       // changed with homeSpan.setStatusPin(pin)
 
 //////////////////////////////////////////////////////
 //   Maximum number of simultaenous IP connections  //

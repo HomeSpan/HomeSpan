@@ -49,10 +49,12 @@ struct Span{
   char category[3]="";                          // category ID of primary accessory - broadcast as Bonjour field "ci" (HAP Section 13)
   unsigned long snapTime;                       // current time (in millis) snapped before entering Service loops() or updates()
   
-  char *defaultSetupCode=(char *)DEFAULT_SETUP_CODE;    // default Setup Code upon factory reset; user will change to desired code when configuring network
+  char *defaultSetupCode=DEFAULT_SETUP_CODE;    // default configuration parameters
+  uint8_t statusPin=DEFAULT_STATUS_PIN;             
+  uint8_t controlPin=DEFAULT_CONTROL_PIN;
 
-  Blinker statusLED{LED_BUILTIN};                 // indicates HomeSpan status
-  PushButton controlButton{CONTROL_PIN};          // controls HomeSpan configuration and resets
+  Blinker statusLED;                                // indicates HomeSpan status
+  PushButton controlButton;                         // controls HomeSpan configuration and resets
     
   SpanConfig hapConfig;                             // track configuration changes to the HAP Accessory database; used to increment the configuration number (c#) when changes found
   vector<SpanAccessory *> Accessories;              // vector of pointers to all Accessories
@@ -82,6 +84,9 @@ struct Span{
 
   void clearNotify(int slotNum);                                          // set ev notification flags for connection 'slotNum' to false across all characteristics 
   int sprintfNotify(SpanBuf *pObj, int nObj, char *cBuf, int conNum);     // prints notification JSON into buf based on SpanBuf objects and specified connection number
+
+  void setControlPin(uint8_t pin){controlPin=pin;}                        // sets Control Pin
+  void setStatusPin(uint8_t pin){statusPin=pin;}                          // sets Status Pin
 
 };
 

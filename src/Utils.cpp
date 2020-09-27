@@ -58,9 +58,19 @@ String Utils::mask(char *c, int n){
 //         PushButton         //
 ////////////////////////////////
 
+PushButton::PushButton(){}
+
+//////////////////////////////////////
+
 PushButton::PushButton(uint8_t pin){
-  this->pin=pin;
+  init(pin);
+}
+
+//////////////////////////////////////
+
+void PushButton::init(uint8_t pin){
   status=0;
+  this->pin=pin;
   pinMode(pin, INPUT_PULLUP);
 }
 
@@ -120,7 +130,18 @@ void PushButton::reset(){
 //         Blinker            //
 ////////////////////////////////
 
+Blinker::Blinker(){
+}
+
+//////////////////////////////////////
+
 Blinker::Blinker(int pin, int timerNum){
+  init(pin, timerNum);
+}
+
+//////////////////////////////////////
+
+void Blinker::init(int pin, int timerNum){
   this->pin=pin;
   pinMode(pin,OUTPUT);
   digitalWrite(pin,0);

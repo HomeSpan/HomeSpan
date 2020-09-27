@@ -64,7 +64,7 @@ boolean Network::serialConfigure(){
 
     if(WiFi.begin(wifiData.ssid,wifiData.pwd)!=WL_CONNECTED){
       char buf[8]="";
-      Serial.print("Can't connect. Re-trying in 5 seconds (or type 'X <return>' to cancel)...");
+      Serial.print("Can't connect. Re-trying in 5 seconds. Type 'X <return>' to cancel...");
       long sTime=millis();
       while(millis()-sTime<5000){
         if(Serial.available()){

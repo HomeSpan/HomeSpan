@@ -23,6 +23,9 @@ void Span::begin(Category catID, char *displayName, char *hostNameBase, char *mo
   this->hostNameBase=hostNameBase;
   this->modelName=modelName;
   sprintf(this->category,"%d",catID);
+
+  controlButton.init(controlPin);
+  statusLED.init(statusPin);
   
   delay(2000);
  
@@ -32,8 +35,10 @@ void Span::begin(Category catID, char *displayName, char *hostNameBase, char *mo
                  "************************************************************\n\n"
                  "** Please ensure serial monitor is set to transmit <newlines>\n\n");
 
-  Serial.print("Device Control:   Pin ");
-  Serial.print(CONTROL_PIN);  
+  Serial.print("Status LED:       Pin ");
+  Serial.print(statusPin);  
+  Serial.print("\nDevice Control:   Pin ");
+  Serial.print(controlPin);  
   Serial.print("\nHomeSpan Version: ");
   Serial.print(HOMESPAN_VERSION);
   Serial.print("\nESP-IDF Version:  ");
@@ -44,7 +49,7 @@ void Span::begin(Category catID, char *displayName, char *hostNameBase, char *mo
   Serial.print(__TIME__);
   Serial.print("\n\n");
 
-  if(!digitalRead(CONTROL_PIN)){                    // factory reset pin is low upon start-up
+  if(!digitalRead(controlPin)){                     // factory reset pin is low upon start-up
     nvs_flash_erase();                              // erase NVS storage
     Serial.print("** CONTROL BUTTON PRESSED DURING STARTUP!  ALL STORED DATA ERASED **\n\n");
     statusLED.start(100);
@@ -283,7 +288,7 @@ void Span::initWifi(){
     if(WiFi.begin(network.wifiData.ssid,network.wifiData.pwd)!=WL_CONNECTED){
       int delayTime=nTries%6?5000:60000;
       char buf[8]="";
-      Serial.print("Can't connect --- Re-trying in ");
+      Serial.print("Can't connect. Re-trying in ");
       Serial.print(delayTime/1000);
       Serial.print(" seconds. Type 'W <return>' or press Control Button for 3 seconds to reset WiFi data...\n");
       long sTime=millis();
