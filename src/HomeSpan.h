@@ -115,6 +115,9 @@ struct SpanService{
   
   SpanService(const char *type, ServiceType mod=ServiceType::Regular);
 
+  SpanService *setPrimary();                              // sets the Service Type to be primary and returns pointer to self
+  SpanService *setHidden();                               // sets the Service Type to be hidden and returns pointer to self
+
   int sprintfAttributes(char *cBuf);                      // prints Service JSON records into buf; return number of characters printed, excluding null terminator
   virtual StatusCode update() {return(StatusCode::OK);}   // update Service and return final statusCode based on updated Characteristics - should be overridden by DEVICE-SPECIFIC Services
   virtual void event(){}                                  // event generation for Services that create their own events and need to notify HomeKit of a new Characteristic value(s)

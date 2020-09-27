@@ -933,6 +933,20 @@ SpanService::SpanService(const char *type, ServiceType mod){
 
 ///////////////////////////////
 
+SpanService *SpanService::setPrimary(){
+  primary=true;
+  return(this);
+}
+
+///////////////////////////////
+
+SpanService *SpanService::setHidden(){
+  hidden=true;
+  return(this);
+}
+
+///////////////////////////////
+
 int SpanService::sprintfAttributes(char *cBuf){
   int nBytes=0;
 
