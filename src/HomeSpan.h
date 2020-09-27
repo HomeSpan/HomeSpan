@@ -113,7 +113,7 @@ struct SpanService{
   boolean primary=false;                                  // optional property indicating service is primary
   vector<SpanCharacteristic *> Characteristics;           // vector of pointers to all Characteristics in this Service  
   
-  SpanService(const char *type, ServiceType mod=ServiceType::Regular);
+  SpanService(const char *type);
 
   SpanService *setPrimary();                              // sets the Service Type to be primary and returns pointer to self
   SpanService *setHidden();                               // sets the Service Type to be hidden and returns pointer to self

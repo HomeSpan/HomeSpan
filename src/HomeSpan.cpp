@@ -915,11 +915,9 @@ int SpanAccessory::sprintfAttributes(char *cBuf){
 //       SpanService         //
 ///////////////////////////////
 
-SpanService::SpanService(const char *type, ServiceType mod){
+SpanService::SpanService(const char *type){
 
   this->type=type;
-  hidden=(mod==ServiceType::Hidden);
-  primary=(mod==ServiceType::Primary);
 
   if(homeSpan.Accessories.empty()){
     Serial.print("*** FATAL ERROR:  Can't create new Service without a defined Accessory.  Program halted!\n\n");

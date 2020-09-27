@@ -5,73 +5,73 @@
 
 namespace Service {
 
-  struct AccessoryInformation : SpanService { AccessoryInformation(ServiceType mod=ServiceType::Regular) : SpanService{"3E", mod}{} };
+  struct AccessoryInformation : SpanService { AccessoryInformation() : SpanService{"3E"}{} };
 
-  struct AirPurifier : SpanService { AirPurifier(ServiceType mod=ServiceType::Regular) : SpanService{"BB", mod}{} };
+  struct AirPurifier : SpanService { AirPurifier() : SpanService{"BB"}{} };
 
-  struct AirQualitySensor : SpanService { AirQualitySensor(ServiceType mod=ServiceType::Regular) : SpanService{"8D", mod}{} };
+  struct AirQualitySensor : SpanService { AirQualitySensor() : SpanService{"8D"}{} };
 
-  struct BatteryService : SpanService { BatteryService(ServiceType mod=ServiceType::Regular) : SpanService{"96", mod}{} };
+  struct BatteryService : SpanService { BatteryService() : SpanService{"96"}{} };
 
-  struct CarbonDioxideSensor : SpanService { CarbonDioxideSensor(ServiceType mod=ServiceType::Regular) : SpanService{"97", mod}{} };
+  struct CarbonDioxideSensor : SpanService { CarbonDioxideSensor() : SpanService{"97"}{} };
 
-  struct CarbonMonoxideSensor : SpanService { CarbonMonoxideSensor(ServiceType mod=ServiceType::Regular) : SpanService{"7F", mod}{} };
+  struct CarbonMonoxideSensor : SpanService { CarbonMonoxideSensor() : SpanService{"7F"}{} };
 
-  struct ContactSensor : SpanService { ContactSensor(ServiceType mod=ServiceType::Regular) : SpanService{"80", mod}{} };
+  struct ContactSensor : SpanService { ContactSensor() : SpanService{"80"}{} };
 
-  struct Door : SpanService { Door(ServiceType mod=ServiceType::Regular) : SpanService{"81", mod}{} };
+  struct Door : SpanService { Door() : SpanService{"81"}{} };
 
-  struct Doorbell : SpanService { Doorbell(ServiceType mod=ServiceType::Regular) : SpanService{"121", mod}{} };
+  struct Doorbell : SpanService { Doorbell() : SpanService{"121"}{} };
 
-  struct Fan : SpanService { Fan(ServiceType mod=ServiceType::Regular) : SpanService{"B7", mod}{} };
+  struct Fan : SpanService { Fan() : SpanService{"B7"}{} };
 
-  struct Faucet : SpanService { Faucet(ServiceType mod=ServiceType::Regular) : SpanService{"D7", mod}{} };
+  struct Faucet : SpanService { Faucet() : SpanService{"D7"}{} };
 
-  struct FilterMaintenance : SpanService { FilterMaintenance(ServiceType mod=ServiceType::Regular) : SpanService{"BA", mod}{} };
+  struct FilterMaintenance : SpanService { FilterMaintenance() : SpanService{"BA"}{} };
 
-  struct GarageDoorOpener : SpanService { GarageDoorOpener(ServiceType mod=ServiceType::Regular) : SpanService{"41", mod}{} };
+  struct GarageDoorOpener : SpanService { GarageDoorOpener() : SpanService{"41"}{} };
 
-  struct HAPProtocolInformation : SpanService { HAPProtocolInformation(ServiceType mod=ServiceType::Regular) : SpanService{"A2", mod}{} };
+  struct HAPProtocolInformation : SpanService { HAPProtocolInformation() : SpanService{"A2"}{} };
 
-  struct HeaterCooler : SpanService { HeaterCooler(ServiceType mod=ServiceType::Regular) : SpanService{"BC", mod}{} };
+  struct HeaterCooler : SpanService { HeaterCooler() : SpanService{"BC"}{} };
 
-  struct HumidifierDehumidifier : SpanService { HumidifierDehumidifier(ServiceType mod=ServiceType::Regular) : SpanService{"BD", mod}{} };
+  struct HumidifierDehumidifier : SpanService { HumidifierDehumidifier() : SpanService{"BD"}{} };
 
-  struct HumiditySensor : SpanService { HumiditySensor(ServiceType mod=ServiceType::Regular) : SpanService{"82", mod}{} };
+  struct HumiditySensor : SpanService { HumiditySensor() : SpanService{"82"}{} };
 
-  struct IrrigationSystem : SpanService { IrrigationSystem(ServiceType mod=ServiceType::Regular) : SpanService{"CF", mod}{} };
+  struct IrrigationSystem : SpanService { IrrigationSystem() : SpanService{"CF"}{} };
 
-  struct LeakSensor : SpanService { LeakSensor(ServiceType mod=ServiceType::Regular) : SpanService{"83", mod}{} };
+  struct LeakSensor : SpanService { LeakSensor() : SpanService{"83"}{} };
 
-  struct LightBulb : SpanService { LightBulb(ServiceType mod=ServiceType::Regular) : SpanService{"43", mod}{} };
+  struct LightBulb : SpanService { LightBulb() : SpanService{"43"}{} };
 
-  struct LightSensor : SpanService { LightSensor(ServiceType mod=ServiceType::Regular) : SpanService{"84", mod}{} };
+  struct LightSensor : SpanService { LightSensor() : SpanService{"84"}{} };
 
-  struct MotionSensor : SpanService { MotionSensor(ServiceType mod=ServiceType::Regular) : SpanService{"85", mod}{} };
+  struct MotionSensor : SpanService { MotionSensor() : SpanService{"85"}{} };
 
-  struct OccupancySensor : SpanService { OccupancySensor(ServiceType mod=ServiceType::Regular) : SpanService{"86", mod}{} };
+  struct OccupancySensor : SpanService { OccupancySensor() : SpanService{"86"}{} };
 
-  struct Outlet : SpanService { Outlet(ServiceType mod=ServiceType::Regular) : SpanService{"47", mod}{} };
+  struct Outlet : SpanService { Outlet() : SpanService{"47"}{} };
 
-  struct ServiceLabel : SpanService { ServiceLabel(ServiceType mod=ServiceType::Regular) : SpanService{"47", mod}{} };
+  struct ServiceLabel : SpanService { ServiceLabel() : SpanService{"47"}{} };
 
-  struct Slat : SpanService { Slat(ServiceType mod=ServiceType::Regular) : SpanService{"B9", mod}{} };
+  struct Slat : SpanService { Slat() : SpanService{"B9"}{} };
 
-  struct SmokeSensor : SpanService { SmokeSensor(ServiceType mod=ServiceType::Regular) : SpanService{"87", mod}{} };
+  struct SmokeSensor : SpanService { SmokeSensor() : SpanService{"87"}{} };
 
-  struct StatelessProgrammableSwitch : SpanService { StatelessProgrammableSwitch(ServiceType mod=ServiceType::Regular) : SpanService{"89", mod}{} };
+  struct StatelessProgrammableSwitch : SpanService { StatelessProgrammableSwitch() : SpanService{"89"}{} };
 
-  struct Switch : SpanService { Switch(ServiceType mod=ServiceType::Regular) : SpanService{"49", mod}{} };
+  struct Switch : SpanService { Switch() : SpanService{"49"}{} };
 
-  struct TemperatureSensor : SpanService { TemperatureSensor(ServiceType mod=ServiceType::Regular) : SpanService{"8A", mod}{} };
+  struct TemperatureSensor : SpanService { TemperatureSensor() : SpanService{"8A"}{} };
 
-  struct Thermostat : SpanService { Thermostat(ServiceType mod=ServiceType::Regular) : SpanService{"4A", mod}{} };
+  struct Thermostat : SpanService { Thermostat() : SpanService{"4A"}{} };
 
-  struct Valve : SpanService { Valve(ServiceType mod=ServiceType::Regular) : SpanService{"D0", mod}{} };
+  struct Valve : SpanService { Valve() : SpanService{"D0"}{} };
 
-  struct Window : SpanService { Window(ServiceType mod=ServiceType::Regular) : SpanService{"8B", mod}{} };
+  struct Window : SpanService { Window() : SpanService{"8B"}{} };
 
-  struct WindowCovering : SpanService { WindowCovering(ServiceType mod=ServiceType::Regular) : SpanService{"8C", mod}{} };
+  struct WindowCovering : SpanService { WindowCovering() : SpanService{"8C"}{} };
   
 }
 

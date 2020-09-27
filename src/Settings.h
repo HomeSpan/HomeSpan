@@ -46,16 +46,6 @@ const int MAX_PWD=64;
 #else
   #define LOG1(x)
 #endif
-
-//////////////////////////////////////////////////////
-//   Types of Services (default is Regular)         //
-//   Reference: HAP Table 6-2                       //
-
-enum ServiceType {
-  Regular,
-  Hidden,
-  Primary
-};  
    
 //////////////////////////////////////////////////////
 //   Types of Accessory Categories                  //

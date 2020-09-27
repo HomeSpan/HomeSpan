@@ -33,31 +33,12 @@ void setup() {
   // lightbulb or a fan?
   
   // HomeKit determines which icon to show on the combined tile according to what is considered the Primary Service of the Accessory.
-  // This can be set directly in HomeSpan for any given Service by setting its "ServiceType".  ServiceType is an optional argument to the
-  // Service object constructor.  Note that as an optional argument, it needs to be placed last.
- 
-  // There are three possible ServiceTypes:  Regular, Primary, and Hidden, as defined in the HomeSpan library Settings.h file.
-  // ServiceType::Regular is used to specifiy a service that has no special settings.  This is the default used if you don't specify any
-  // ServiceType.  In all our previous examples, ServiceType::Regular has been implied.
-
-  // Specifying ServiceType::Primary for a Service tells HomeSpan to set the "primary" attribute for that Service to "true" in the attribute
-  // database.  HomeKit will use this information to deermine which icon to display for a combined tile.  HomeKit will also list the Primary Service
-  // first when you click a combined tile to open its controls.
+  // HomeKit will also list the Primary Service first when you click a combined tile to open its controls.
   
-  // Specifying ServiceType::Hidden for a Service tells HomeSpan to set the "hidden" attribute for that Service to "true". This tells HomeKit
-  // to completely hide the controls for this service in the HomeKit interface.  We've not used this feature in any of our examples.  It's generally
-  // only needed to create an "internal" Service to be used by other Services, but not by the actual end-user.
-
-  // As noted, ServiceType is an optional argument for the new Service constructor, so ServiceType::Primary can simply be added as the last
-  // argument whenever we create a new Service to indicate it's the Primary one for the Accessory.  But this won't work for the derived Services
-  // we created, such as DEV_LED or DEV_DimmableLED.  This is because when we created those derived classes we did not include an optional
-  // ServiceType argument in the constructor.  Doing so is very easy - you just need to modify the constructors, as shown for DEV_LED and
-  // DEV_DimmableLED in the the DEV_LED.h file.  We even modified the constructor for DEV_Identify in DEV_Identify.h so we can specify when
-  // it should be considered the Primary Service.  There is a good use case for that as we'll see below.  Please see DEV_Identify.h and DEV_LED.h
-  // for exactly how these new constructors are formulated.
-
-  // Once we've modified our constructors accordingly, we're ready to specify which is the Primary Service for any given Accessory, as shown below.
-  // First, we need to initialize HomeSpan and define our Bridge Accessory as in the previous examples:
+  // A Service can be set to Primary with the setPrimary() method.  The easiest way to do this is by "chaining" setPrimary() to the 
+  // end of a new Service when first instantiated.  See below for examples of how to do this.
+ 
+  // To begin, we first initialize HomeSpan and define our Bridge Accessory as in the previous examples:
   
   Serial.begin(115200);
 
@@ -76,7 +57,7 @@ void setup() {
 
   new SpanAccessory();                                                          
     new DEV_Identify("Ceiling Fan #1","HomeSpan","123-ABC","20mA LED","0.9",0);
-    new DEV_DimmableLED(0,17,ServiceType::Primary);                                     // Here we specify DEV_DimmableLED as the Primary Service
+    (new DEV_DimmableLED(0,17))->setPrimary();                                      // Here we specify DEV_DimmableLED as the Primary Service by "chaining" setPrimary() to the pointer return by new.  Note parentheses!
     new Service::Fan();                             
       new Characteristic::Active();             
       new Characteristic::RotationDirection();
@@ -85,7 +66,7 @@ void setup() {
   new SpanAccessory();                                                          
     new DEV_Identify("Ceiling Fan #2","HomeSpan","123-ABC","20mA LED","0.9",0);
     new DEV_DimmableLED(0,17);    
-    new Service::Fan(ServiceType::Primary);                                             // Here we specify the Fan as the Primary Service
+    (new Service::Fan())->setPrimary();                                             // Here we specify the Fan as the Primary Service.  Again, note how we encapsulated the "new" command in parentheses, then chained setPrimary()
       new Characteristic::Active();             
       new Characteristic::RotationDirection();
       new Characteristic::RotationSpeed(0);
@@ -118,7 +99,7 @@ void setup() {
       new Characteristic::Name("Main Light");                                           // Here we create a name for the Dimmable LED
     new DEV_LED(16);    
       new Characteristic::Name("Night Light");                                          // Here we create a name for the On/Off LED
-    new Service::Fan(ServiceType::Primary);                             
+    (new Service::Fan())->setPrimary();                             
       new Characteristic::Active();             
       new Characteristic::RotationDirection();
       new Characteristic::RotationSpeed(0);
@@ -141,7 +122,7 @@ void setup() {
   // This is easily done by specifying DEV_Identify as the Primary Service, instead of Fan, as follows:    
 
   new SpanAccessory();                                                          
-    new DEV_Identify("Ceiling Fan #4","HomeSpan","123-ABC","20mA LED","0.9",0,ServiceType::Primary);      // specify DEV_Identify as the Primary Service
+    (new DEV_Identify("Ceiling Fan #4","HomeSpan","123-ABC","20mA LED","0.9",0))->setPrimary();      // specify DEV_Identify as the Primary Service
     new DEV_DimmableLED(0,17);    
       new Characteristic::Name("Main Light");
     new DEV_LED(16);    
@@ -152,14 +133,14 @@ void setup() {
       new Characteristic::RotationSpeed(0);
       new Characteristic::Name("Fan");
 
-  // HomeKit now shows the name "Ceiling Fan #3" for the combined tile AND it still shows the individual names for each control when you click open the tile.
+  // HomeKit now shows the name "Ceiling Fan #4" for the combined tile AND it still shows the individual names for each control when you click open the tile.
   // The only downside to this configuration is that since the Fan is no longer specified as the Primary Service, the main icon on the combined tile now shows
   // as a lightbulb, instead of the fan.  HomeKit documentation is not clear on how the main icon is chosen under these circumstances, but I've found
   // that changing the order of Services as they are instantiated can impact the icon.  Here is the same example as above, but with the Fan 
-  // instantiated as the first opertional Service, ahead of the Main Light and Night Night:
+  // instantiated as the first operational Service, ahead of the Main Light and Night Night:
 
   new SpanAccessory();                                                          
-    new DEV_Identify("Ceiling Fan #5","HomeSpan","123-ABC","20mA LED","0.9",0,ServiceType::Primary);      // specify DEV_Identify as the Primary Service
+    (new DEV_Identify("Ceiling Fan #5","HomeSpan","123-ABC","20mA LED","0.9",0))->setPrimary();      // specify DEV_Identify as the Primary Service
     new Service::Fan();                             
       new Characteristic::Active();             
       new Characteristic::RotationDirection();
