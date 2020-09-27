@@ -9,7 +9,7 @@ struct DEV_GarageDoor : Service::GarageDoorOpener {     // A Garage Door Opener
   SpanCharacteristic *target;             // reference to the Target Door State Characteristic (specific to Garage Door Openers)  
   SpanCharacteristic *obstruction;        // reference to the Obstruction Detected Characteristic (specific to Garage Door Openers)
 
-  DEV_GarageDoor(ServiceType sType=ServiceType::Regular) : Service::GarageDoorOpener(sType){       // constructor() method
+  DEV_GarageDoor() : Service::GarageDoorOpener(){       // constructor() method
         
     current=new Characteristic::CurrentDoorState(1);              // initial value of 1 means closed
     target=new Characteristic::TargetDoorState(1);                // initial value of 1 means closed
@@ -69,7 +69,7 @@ struct DEV_WindowShade : Service::WindowCovering {     // A motorized Window Sha
   SpanCharacteristic *current;                     // reference to a "generic" Current Position Characteristic (used by a variety of different Service)
   SpanCharacteristic *target;                      // reference to a "generic" Target Position Characteristic (used by a variety of different Service)
 
-  DEV_WindowShade(ServiceType sType=ServiceType::Regular) : Service::WindowCovering(sType){       // constructor() method
+  DEV_WindowShade() : Service::WindowCovering(){       // constructor() method
         
     current=new Characteristic::CurrentPosition(0);     // Windows Shades have positions that range from 0 (fully lowered) to 100 (fully raised)
     new SpanRange(0,100,10);                            // set the allowable current-position range to 0-100 IN STEPS of 10

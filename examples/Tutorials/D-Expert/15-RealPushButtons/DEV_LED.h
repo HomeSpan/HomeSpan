@@ -27,7 +27,7 @@ struct DEV_DimmableLED : Service::LightBulb {       // Dimmable LED
 
   // NEW!  Consructor includes 3 additionl arguments to specify pin numbers for power, raise, and lower buttons
   
-  DEV_DimmableLED(int channel, int ledPin, int powerPin, int raisePin, int lowerPin, ServiceType sType=ServiceType::Regular) : Service::LightBulb(sType){
+  DEV_DimmableLED(int channel, int ledPin, int powerPin, int raisePin, int lowerPin) : Service::LightBulb(){
 
     power=new Characteristic::On();     
                 

@@ -7,7 +7,7 @@ struct DEV_TempSensor : Service::TemperatureSensor {     // A standalone Tempera
 
   SpanCharacteristic *temp;                         // reference to the Current Temperature Characteristic
   
-  DEV_TempSensor(ServiceType sType=ServiceType::Regular) : Service::TemperatureSensor(sType){       // constructor() method
+  DEV_TempSensor() : Service::TemperatureSensor(){       // constructor() method
     
     // First we instantiate the main Characteristic for a Temperature Sensor, namely the Current Temperature, and set its initial value
     // to 20 degrees.  For a real sensor, we would take a reading and initialize it to that value instead.  NOTE:  HomeKit uses
@@ -64,7 +64,7 @@ struct DEV_AirQualitySensor : Service::AirQualitySensor {     // A standalone Ai
   SpanCharacteristic *o3Density;                  // reference to the Ozone Density Characteristic, which is a float from 0 to 1000
   SpanCharacteristic *no2Density;                 // reference to the Nitrogen Dioxide Characteristic, which is a float from 0 to 1000
   
-  DEV_AirQualitySensor(ServiceType sType=ServiceType::Regular) : Service::AirQualitySensor(sType){       // constructor() method
+  DEV_AirQualitySensor() : Service::AirQualitySensor(){       // constructor() method
     
     airQuality=new Characteristic::AirQuality(1);                         // instantiate the Air Quality Characteristic and set initial value to 1
     o3Density=new Characteristic::OzoneDensity(300.0);                    // instantiate the Ozone Density Characteristic and set initial value to 300.0
