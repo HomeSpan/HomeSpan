@@ -86,6 +86,11 @@ class PushButton{
 //  return false until there is a new trigger.  After a Long Press, the button must be released to permit a subsequent
 //  trigger.
 
+  boolean primed();
+
+//  Returns true if button has been pressed and held for greater than shortTime, but has not yet been released.
+//  After returning true, subsequent calls will always return false until the button has been released and reset.
+
   boolean longPress();
 
 //  Returns true if last trigger event was a Long Press, or false if last trigger was a Short Press  

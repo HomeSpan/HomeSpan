@@ -89,6 +89,7 @@ boolean PushButton::triggered(uint16_t shortTime, uint16_t longTime){
     break;
 
     case 1:
+    case 2:
       if(digitalRead(pin)){         // button is released          
         status=0;
         if(millis()>shortAlarm){
@@ -98,19 +99,31 @@ boolean PushButton::triggered(uint16_t shortTime, uint16_t longTime){
       } else
       
       if(millis()>longAlarm){       // button is long-pressed
-        status=2;
+        status=3;
         isLongPress=true;
         return(true);
       }
     break;
 
-    case 2:
+    case 3:
       if(digitalRead(pin))          // button has been released after a long press
         status=0;
     break;
 
   }
 
+  return(false);
+}
+
+//////////////////////////////////////
+
+boolean PushButton::primed(){
+  
+  if(millis()>shortAlarm && status==1){
+    status=2;
+    return(true);
+  }
+  
   return(false);
 }
 

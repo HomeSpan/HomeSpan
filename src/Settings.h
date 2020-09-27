@@ -12,8 +12,8 @@
 //                DEFAULT SETTINGS                    
 
 #define     DEFAULT_SETUP_CODE    "46637726"        // changed during network setup or with 'S' command
-#define     DEFAULT_CONTROL_PIN   21                // changed with homeSpan.setControlPin(pin)
-#define     DEFAULT_STATUS_PIN    LED_BUILTIN       // changed with homeSpan.setStatusPin(pin)
+#define     DEFAULT_CONTROL_PIN   21                // change with homeSpan.setControlPin(pin)
+#define     DEFAULT_STATUS_PIN    LED_BUILTIN       // change with homeSpan.setStatusPin(pin)
 
 //////////////////////////////////////////////////////
 //   Maximum number of simultaenous IP connections  //

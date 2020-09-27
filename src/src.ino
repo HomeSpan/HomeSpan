@@ -7,8 +7,6 @@
 void setup() {
  
   Serial.begin(115200);
-
-  homeSpan.setStatusPin(22);
   
   homeSpan.begin(Category::Lighting,"HomeSpan Benchmark");
 

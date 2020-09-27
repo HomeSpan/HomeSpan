@@ -155,15 +155,21 @@ void Span::poll() {
   HAPClient::checkNotifications();  
   HAPClient::checkTimedWrites();
 
-  if(controlButton.triggered(2000,10000)){
+  if(controlButton.primed()){
+    statusLED.start(500);
+  }
+  
+  if(controlButton.triggered(3000,10000)){
     if(controlButton.longPress()){
       statusLED.start(200);
       delay(2000);
-      processSerialCommand("W");        // Delete WiFi Data and Restart      
+      statusLED.off();
+      ESP.restart();
+      processSerialCommand("W");        // DELETE WiFi Data and Restart      
     } else {
       statusLED.off();
       controlButton.reset();
-      processSerialCommand("U");        // UPAIR Device
+      processSerialCommand("U");        // UNPAIR Device
     }
   }
     
@@ -470,7 +476,7 @@ void Span::processSerialCommand(char *c){
     break;
 
     case 'W': {
-      
+
       nvs_erase_all(HAPClient::wifiNVS);
       nvs_commit(HAPClient::wifiNVS);      
       Serial.print("\n** WIFI Network Data DELETED **\n** Restarting...\n\n");
