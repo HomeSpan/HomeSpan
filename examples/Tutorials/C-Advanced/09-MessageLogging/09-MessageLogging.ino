@@ -17,20 +17,23 @@ void setup() {
 
   // HomeSpan sends a variety of messages to the Serial Monitor of the Arduino IDE whenever the device is connected
   // to a computer.  Message output is performed either by the usual Serial.print() function, or by one of two macros,
-  // LOG1() and LOG2().  These two macros are defined as Serial.print() or as no operation (), depending on the
-  // level of the VERBOSITY constant specified in the "Settings.h" file.  Setting VERBOSITY to 0 sets both LOG1() and
-  // LOG2() to no-op, which means only messages explicitly sent with Serial.print() will be output by HomeSpan.  Setting
-  // VERBOSITY to 1 means messages formed by the LOG1() macros will also be sent.  And setting VERBOSITY to 2 causes
-  // both LOG1() and LOG2() messages to be sent.
-  //
-  // You can create your own log messages as needed through Serial.print() statements, but you can also create them with
-  // the LOG1() or LOG2() macros enabling you can turn them on or off by setting VERBOSITY to the appropriate level.
-  // Use LOG1() and LOG2() just as you would Serial.print().
-  //
+  // LOG1() and LOG2().  These two macros call Serial.print() depending on HomeSpan's Log Level setting.  A setting
+  // of 0 means that LOG1() and LOG2() messages are ignored.  A setting of 1 causes HomeSpan to print LOG1() messages
+  // to the Serial Monitor, but ignores LOG2() message.  And a setting of 2 causes HomeSpan to print both LOG1() and
+  // LOG2() messages.
+  
   // Example 9 illustrates how to add such log messages.  The code is identical to Example 8 (without comments), except
   // that Serial.print() and LOG1() messages have been added to DEV_LED.h.  The Serial.print() messages will always be
-  // output to the Arduino Serial Monitor.  The LOG1() messages will only be output if VERBOSITY is set to 1 or 2.
-  //
+  // output to the Arduino Serial Monitor.  The LOG1() messages will only be output if the Log Level is set to 1 or 2.
+
+  // The setLogLevel() method of homeSpan is used to change the log level as follows:
+  
+  //    homeSpan.setLogLevel(0)     - sets Log Level to 0
+  //    homeSpan.setLogLevel(1)     - sets Log Level to 1
+  //    homeSpan.setLogLevel(2)     - sets Log Level to 2
+
+  // The method should be called BEFORE homeSpan.begin() - see below for proper use.
+  
   // RECOMMENDATION: Since a HomeSpan ESP32 is meant to be physically connected to real-world devices, you may find
   // yourself with numerous ESP32s each configured with a different set of Accessories.  To aid in identification
   // you may want to add Serial.print() statements containing some sort of initialization message to the constructors for
@@ -38,6 +41,8 @@ void setup() {
   // DEV_LED for examples.
   
   Serial.begin(115200);
+
+  homeSpan.setLogLevel(1);                                // NEW - Sets Log Level to 1, which causes LOG1() messages to be output
 
   homeSpan.begin(Category::Bridges,"HomeSpan Bridge");
   
