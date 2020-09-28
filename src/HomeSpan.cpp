@@ -4,7 +4,6 @@
 #include <sodium.h>
 
 #include "HAP.h"
-#include "Network.h"
 
 using namespace Utils;
 
@@ -159,12 +158,11 @@ void Span::poll() {
     statusLED.start(500);
   }
   
-  if(controlButton.triggered(3000,10000)){
+  if(controlButton.triggered(5000,10000)){
     if(controlButton.longPress()){
       statusLED.start(200);
       delay(2000);
       statusLED.off();
-      ESP.restart();
       processSerialCommand("W");        // DELETE WiFi Data and Restart      
     } else {
       statusLED.off();
@@ -191,7 +189,7 @@ int Span::getFreeSlot(){
 
 void Span::initWifi(){
 
-  Network network;                          // initialization of WiFi credentials and Setup Code
+//  Network network;                          // initialization of WiFi credentials and Setup Code
 
   char id[18];                              // create string version of Accessory ID for MDNS broadcast
   memcpy(id,HAPClient::accessory.ID,17);    // copy ID bytes
@@ -424,7 +422,7 @@ void Span::processSerialCommand(char *c){
 
     case 'S': {
       
-      Network network;                        
+//      Network network;                        
       char buf[128];
       char setupCode[10];
 

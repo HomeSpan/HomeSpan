@@ -9,9 +9,9 @@ using std::unordered_set;
 
 struct Network {
 
-  const int MAX_HTTP=4095;                // max number of bytes in HTTP message
-  const char *apPassword="homespan";      // Access Point password (does not need to be secret - only used to ensure excrypted WiFi connection)
-  const unsigned long lifetime=120000;    // length of time (in milliseconds) to keep Access Point alive before shutting down and re-starting
+  const int MAX_HTTP=4095;                            // max number of bytes in HTTP message
+  char *apPassword=DEFAULT_AP_PASSWORD;               // Access Point password (does not need to be secret - only used to ensure excrypted WiFi connection)
+  unsigned long lifetime=DEFAULT_AP_TIMEOUT*1000;     // length of time (in milliseconds) to keep Access Point alive before shutting down and re-starting
   
   char **ssidList=NULL;
   int numSSID;

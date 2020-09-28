@@ -7,7 +7,7 @@
 void setup() {
  
   Serial.begin(115200);
-  
+ 
   homeSpan.begin(Category::Lighting,"HomeSpan Benchmark");
 
   new SpanAccessory();                                  // Begin by creating a new Accessory using SpanAccessory(), which takes no arguments

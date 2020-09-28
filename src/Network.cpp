@@ -1,8 +1,7 @@
 
 #include <DNSServer.h>
 
-#include "Network.h"
-#include "HAP.h"
+#include "HomeSpan.h"
 
 using namespace Utils;
 
@@ -242,7 +241,7 @@ void Network::apConfigure(char *apName){
       
       LOG2("\n");
 
-    } // process HAP Client
+    } // process Client
 
     if(client){
       Serial.print("*** Stopping Client ***\n");

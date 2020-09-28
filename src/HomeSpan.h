@@ -8,6 +8,7 @@
 
 #include "Settings.h"
 #include "Utils.h"
+#include "Network.h"
 
 using std::vector;
 using std::unordered_map;
@@ -55,6 +56,7 @@ struct Span{
 
   Blinker statusLED;                                // indicates HomeSpan status
   PushButton controlButton;                         // controls HomeSpan configuration and resets
+  Network network;                                  // configures WiFi and Setup Code via either serial monitor or temporary Access Point
     
   SpanConfig hapConfig;                             // track configuration changes to the HAP Accessory database; used to increment the configuration number (c#) when changes found
   vector<SpanAccessory *> Accessories;              // vector of pointers to all Accessories
@@ -87,7 +89,8 @@ struct Span{
 
   void setControlPin(uint8_t pin){controlPin=pin;}                        // sets Control Pin
   void setStatusPin(uint8_t pin){statusPin=pin;}                          // sets Status Pin
-
+  void setApPassword(char *pwd){network.apPassword=pwd;}                  // sets Access Point Password
+  void setApTimeout(uint16_t nSec){network.lifetime=nSec*1000;}           // sets Access Point Timeout (seconds)
 };
 
 ///////////////////////////////
