@@ -34,7 +34,9 @@ void Span::begin(Category catID, char *displayName, char *hostNameBase, char *mo
                  "************************************************************\n\n"
                  "** Please ensure serial monitor is set to transmit <newlines>\n\n");
 
-  Serial.print("Status LED:       Pin ");
+  Serial.print("Message Logs:     Level ");
+  Serial.print(homeSpan.logLevel);  
+  Serial.print("\nStatus LED:       Pin ");
   Serial.print(statusPin);  
   Serial.print("\nDevice Control:   Pin ");
   Serial.print(controlPin);  

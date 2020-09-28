@@ -1,4 +1,6 @@
 
+#pragma once
+
 #include <mbedtls/sha512.h>
 #include <mbedtls/bignum.h>
 

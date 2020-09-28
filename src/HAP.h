@@ -1,4 +1,6 @@
 
+#pragma once
+
 #include <WiFi.h>
 #include <nvs.h>
 

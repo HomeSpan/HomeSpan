@@ -1,4 +1,6 @@
 
+#pragma once
+
 #ifndef ARDUINO_ARCH_ESP32
 #error ERROR: HOMESPAN IS ONLY AVAILABLE FOR ESP32 MICROCONTROLLERS!
 #endif
@@ -53,6 +55,7 @@ struct Span{
   char *defaultSetupCode=DEFAULT_SETUP_CODE;    // Setup Code used for pairing
   uint8_t statusPin=DEFAULT_STATUS_PIN;         // pin for status LED    
   uint8_t controlPin=DEFAULT_CONTROL_PIN;       // pin for Control Pushbutton
+  uint8_t logLevel=DEFAULT_LOG_LEVEL;           // level for writing out log messages to serial monitor
 
   Blinker statusLED;                                // indicates HomeSpan status
   PushButton controlButton;                         // controls HomeSpan configuration and resets
@@ -91,6 +94,7 @@ struct Span{
   void setStatusPin(uint8_t pin){statusPin=pin;}                          // sets Status Pin
   void setApPassword(char *pwd){network.apPassword=pwd;}                  // sets Access Point Password
   void setApTimeout(uint16_t nSec){network.lifetime=nSec*1000;}           // sets Access Point Timeout (seconds)
+  void setLogLevel(uint8_t level){logLevel=level;}                        // sets Log Level for log messages (0=baseline, 1=intermediate, 2=all)
 };
 
 ///////////////////////////////

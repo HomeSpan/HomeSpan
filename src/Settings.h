@@ -24,6 +24,8 @@
 
 #define     DEFAULT_AP_TIMEOUT    120                 // change with homeSpan.setApTimeout(nSeconds)
 
+#define     DEFAULT_LOG_LEVEL     0                   // change with homeSpan.setLogLevel(level)
+
 //////////////////////////////////////////////////////
 //   Maximum number of simultaenous IP connections  //
 //   HAP requires at least 8                        //
@@ -37,24 +39,11 @@ const int MAX_SSID=32;
 const int MAX_PWD=64;
   
 /////////////////////////////////////////////////////
-//    Verbosity -- controls message output       //
+//      Message Log Level Control Macros           //
 //       0=Minimal, 1=Informative, 2=All           //
 
-#define VERBOSITY   2
-
-//-------------------------------------------------//
-
-#if VERBOSITY>1
-  #define LOG2(x) Serial.print(x)
-#else
-  #define LOG2(x)
-#endif
-
-#if VERBOSITY>0
-  #define LOG1(x) Serial.print(x)
-#else
-  #define LOG1(x)
-#endif
+#define LOG1(x) if(homeSpan.logLevel>0)Serial.print(x)
+#define LOG2(x) if(homeSpan.logLevel>1)Serial.print(x)
    
 //////////////////////////////////////////////////////
 //   Types of Accessory Categories                  //

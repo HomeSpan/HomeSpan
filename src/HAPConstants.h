@@ -1,4 +1,6 @@
 
+#pragma once
+
 // HAP TLV Types (HAP Table 5-6)
 
 typedef enum {

@@ -1,4 +1,6 @@
 
+#pragma once
+
 #include <WiFi.h>
 #include <unordered_set>
 #include "Settings.h"

@@ -1,4 +1,6 @@
 
+#pragma once
+
 #include <Arduino.h>
 #include <driver/timer.h>
 

@@ -7,6 +7,8 @@
 void setup() {
  
   Serial.begin(115200);
+
+  homeSpan.setLogLevel(2);
  
   homeSpan.begin(Category::Lighting,"HomeSpan Benchmark");
 
