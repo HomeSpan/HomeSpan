@@ -11,11 +11,18 @@
 //////////////////////////////////////////////////////
 //                DEFAULT SETTINGS                    
 
-#define     DEFAULT_SETUP_CODE    "46637726"        // changed during network setup or with 'S' command
-#define     DEFAULT_CONTROL_PIN   21                // change with homeSpan.setControlPin(pin)
-#define     DEFAULT_STATUS_PIN    LED_BUILTIN       // change with homeSpan.setStatusPin(pin)
-#define     DEFAULT_AP_PASSWORD   "homespan"        // change with homeSpan.setApPassword(pwd)
-#define     DEFAULT_AP_TIMEOUT    120               // change with homeSpan.setApTimeout(nSeconds)
+#define     DEFAULT_DISPLAY_NAME  "HomeSpan Server"   // change with optional second argument in homeSpan.begin()
+#define     DEFAULT_HOST_NAME     "HomeSpan"          // change with optional third argument in homeSpan.begin()
+#define     DEFAULT_MODEL_NAME    "HomeSpan-ESP32"    // change with optional fourth argument in homeSpan.begin()
+
+#define     DEFAULT_SETUP_CODE    "46637726"          // changed during network setup or with 'S' command
+
+#define     DEFAULT_CONTROL_PIN   21                  // change with homeSpan.setControlPin(pin)
+#define     DEFAULT_STATUS_PIN    LED_BUILTIN         // change with homeSpan.setStatusPin(pin)
+
+#define     DEFAULT_AP_PASSWORD   "homespan"          // change with homeSpan.setApPassword(pwd)
+
+#define     DEFAULT_AP_TIMEOUT    120                 // change with homeSpan.setApTimeout(nSeconds)
 
 //////////////////////////////////////////////////////
 //   Maximum number of simultaenous IP connections  //

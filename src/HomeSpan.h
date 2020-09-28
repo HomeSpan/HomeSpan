@@ -50,9 +50,9 @@ struct Span{
   char category[3]="";                          // category ID of primary accessory - broadcast as Bonjour field "ci" (HAP Section 13)
   unsigned long snapTime;                       // current time (in millis) snapped before entering Service loops() or updates()
   
-  char *defaultSetupCode=DEFAULT_SETUP_CODE;    // default configuration parameters
-  uint8_t statusPin=DEFAULT_STATUS_PIN;             
-  uint8_t controlPin=DEFAULT_CONTROL_PIN;
+  char *defaultSetupCode=DEFAULT_SETUP_CODE;    // Setup Code used for pairing
+  uint8_t statusPin=DEFAULT_STATUS_PIN;         // pin for status LED    
+  uint8_t controlPin=DEFAULT_CONTROL_PIN;       // pin for Control Pushbutton
 
   Blinker statusLED;                                // indicates HomeSpan status
   PushButton controlButton;                         // controls HomeSpan configuration and resets
@@ -66,9 +66,9 @@ struct Span{
   unordered_map<uint64_t, uint32_t> TimedWrites;    // map of timed-write PIDs and Alarm Times (based on TTLs)
   
   void begin(Category catID,
-             char *displayName="HomeSpan Server",
-             char *hostNameBase="HomeSpan",
-             char *modelName="HS-ESP32");        
+             char *displayName=DEFAULT_DISPLAY_NAME,
+             char *hostNameBase=DEFAULT_HOST_NAME,
+             char *modelName=DEFAULT_MODEL_NAME);        
              
   void poll();                                  // poll HAP Clients and process any new HAP requests
   int getFreeSlot();                            // returns free HAPClient slot number. HAPClients slot keep track of each active HAPClient connection
