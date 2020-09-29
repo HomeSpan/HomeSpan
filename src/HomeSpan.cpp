@@ -191,8 +191,6 @@ int Span::getFreeSlot(){
 
 void Span::initWifi(){
 
-//  Network network;                          // initialization of WiFi credentials and Setup Code
-
   char id[18];                              // create string version of Accessory ID for MDNS broadcast
   memcpy(id,HAPClient::accessory.ID,17);    // copy ID bytes
   id[17]='\0';                              // add terminating null
@@ -424,7 +422,6 @@ void Span::processSerialCommand(char *c){
 
     case 'S': {
       
-//      Network network;                        
       char buf[128];
       char setupCode[10];
 
@@ -504,6 +501,24 @@ void Span::processSerialCommand(char *c){
     }
     break;
 
+    case 'L': {
+
+      int level=0;
+      sscanf(c+1,"%d",&level);
+      
+      if(level<0)
+        level=0;
+      if(level>2)
+        level=2;
+
+      Serial.print("\n*** Log Level set to ");
+      Serial.print(level);
+      Serial.print("\n\n");
+      delay(1000);
+      setLogLevel(level);     
+    }
+    break;
+
     case 'i':{
       
       Serial.print("\n*** HomeSpan Info ***\n\n");
@@ -534,7 +549,8 @@ void Span::processSerialCommand(char *c){
       Serial.print("  H - delete stored HomeKit Pairing data and restart\n");      
       Serial.print("  F - delete all stored data (Factory Reset) and restart\n");      
       Serial.print("  ? - print this list of commands\n");
-      Serial.print("  S <code> - change Setup Code to 8-digit <code>\n");
+      Serial.print("  L <level> - change Log Level to <level>\n");
+      Serial.print("  S <code>  - change Setup Code to 8-digit <code>\n");
       Serial.print("\n*** End Commands ***\n\n");
     }
     break;
