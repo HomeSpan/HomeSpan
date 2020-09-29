@@ -1,8 +1,6 @@
 
 #pragma once
 
-#include "HomeSpan.h"
-
 template <class tagType, int maxTags>
 class TLV {
 
@@ -168,9 +166,6 @@ uint8_t *TLV<tagType, maxTags>::buf(tagType tag, int len){
 template<class tagType, int maxTags>
 void TLV<tagType, maxTags>::print(){
 
-  if(homeSpan.logLevel<2)
-    return;
-    
   char buf[3];
 
   for(int i=0;i<numTags;i++){

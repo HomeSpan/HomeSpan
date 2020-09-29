@@ -4,11 +4,11 @@
 #include <WiFi.h>
 #include <nvs.h>
 
+#include "HomeSpan.h"
 #include "TLV.h"
 #include "HAPConstants.h"
 #include "HKDF.h"
 #include "SRP.h"
-#include "HomeSpan.h"
 
 /////////////////////////////////////////////////
 // NONCE Structure (HAP used last 64 of 96 bits)

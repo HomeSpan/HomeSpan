@@ -2,7 +2,9 @@
 #include <ESPmDNS.h>
 #include <nvs_flash.h>
 #include <sodium.h>
+#include <WiFi.h>
 
+#include "HomeSpan.h"
 #include "HAP.h"
 
 using namespace Utils;

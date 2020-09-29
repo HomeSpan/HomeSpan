@@ -4,6 +4,8 @@
 #include <mbedtls/sha512.h>
 #include <mbedtls/bignum.h>
 
+#include "HAPConstants.h"
+
 /////////////////////////////////////////////////
 // SRP-6A Structure from RFC 5054 (Nov 2007)
 // ** HAP uses N=3072-bit Group specified in RFC 5054

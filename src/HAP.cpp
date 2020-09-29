@@ -3,6 +3,7 @@
 #include <sodium.h>
 
 #include "HAP.h"
+#include "HomeSpan.h"
 
 //////////////////////////////////////
 
@@ -192,7 +193,7 @@ void HAPClient::processRequest(){
     if(!strncmp(body,"POST /pair-setup ",17) &&                              // POST PAIR-SETUP
        strstr(body,"Content-Type: application/pairing+tlv8") &&              // check that content is TLV8
        tlv8.unpack(content,cLen)){                                          // read TLV content
-       tlv8.print();                                                        // print TLV records in form "TAG(INT) LENGTH(INT) VALUES(HEX)"
+       if(homeSpan.logLevel>1) tlv8.print();                                                        // print TLV records in form "TAG(INT) LENGTH(INT) VALUES(HEX)"
       LOG2("------------ END TLVS! ------------\n");
                
       postPairSetupURL();                   // process URL
@@ -202,7 +203,7 @@ void HAPClient::processRequest(){
     if(!strncmp(body,"POST /pair-verify ",18) &&                             // POST PAIR-VERIFY
        strstr(body,"Content-Type: application/pairing+tlv8") &&              // check that content is TLV8
        tlv8.unpack(content,cLen)){                                          // read TLV content
-       tlv8.print();                                                        // print TLV records in form "TAG(INT) LENGTH(INT) VALUES(HEX)"
+       if(homeSpan.logLevel>1) tlv8.print();                                                        // print TLV records in form "TAG(INT) LENGTH(INT) VALUES(HEX)"
       LOG2("------------ END TLVS! ------------\n");
                
       postPairVerifyURL();                  // process URL    
@@ -212,7 +213,7 @@ void HAPClient::processRequest(){
     if(!strncmp(body,"POST /pairings ",15) &&                                // POST PAIRINGS
        strstr(body,"Content-Type: application/pairing+tlv8") &&              // check that content is TLV8
        tlv8.unpack(content,cLen)){                                          // read TLV content
-       tlv8.print();                                                        // print TLV records in form "TAG(INT) LENGTH(INT) VALUES(HEX)"
+       if(homeSpan.logLevel>1) tlv8.print();                                                        // print TLV records in form "TAG(INT) LENGTH(INT) VALUES(HEX)"
       LOG2("------------ END TLVS! ------------\n");
                
       postPairingsURL();                  // process URL    
@@ -222,7 +223,7 @@ void HAPClient::processRequest(){
     if(!strncmp(body,"POST /pairings ",15) &&                                // POST PAIRINGS
        strstr(body,"Content-Type: application/pairing+tlv8") &&              // check that content is TLV8
        tlv8.unpack(content,cLen)){                                          // read TLV content
-       tlv8.print();                                                        // print TLV records in form "TAG(INT) LENGTH(INT) VALUES(HEX)"
+       if(homeSpan.logLevel>1) tlv8.print();                                                        // print TLV records in form "TAG(INT) LENGTH(INT) VALUES(HEX)"
       LOG2("------------ END TLVS! ------------\n");
                
       postPairingsURL();                  // process URL    
@@ -496,7 +497,7 @@ int HAPClient::postPairSetupURL(){
         return(0);
       }
 
-      tlv8.print();             // print decrypted TLV data
+      if(homeSpan.logLevel>1) tlv8.print();             // print decrypted TLV data
       LOG2("------- END DECRYPTED TLVS! -------\n");
        
       if(!tlv8.buf(kTLVType_Identifier) || !tlv8.buf(kTLVType_PublicKey) || !tlv8.buf(kTLVType_Signature)){            
@@ -576,7 +577,7 @@ int HAPClient::postPairSetupURL(){
 
       LOG2("------- ENCRYPTING SUB-TLVS -------\n");
 
-      tlv8.print();
+      if(homeSpan.logLevel>1) tlv8.print();
 
       size_t subTLVLen=tlv8.pack(NULL);                 // get size of buffer needed to store sub-TLV 
       uint8_t subTLV[subTLVLen];
@@ -682,7 +683,7 @@ int HAPClient::postPairVerifyURL(){
 
         LOG2("------- ENCRYPTING SUB-TLVS -------\n");
 
-        tlv8.print();
+        if(homeSpan.logLevel>1) tlv8.print();
 
         size_t subTLVLen=tlv8.pack(NULL);                 // get size of buffer needed to store sub-TLV 
         uint8_t subTLV[subTLVLen];
@@ -746,7 +747,7 @@ int HAPClient::postPairVerifyURL(){
         return(0);
       }
 
-      tlv8.print();             // print decrypted TLV data
+      if(homeSpan.logLevel>1) tlv8.print();             // print decrypted TLV data
       LOG2("------- END DECRYPTED TLVS! -------\n");
 
       if(!tlv8.buf(kTLVType_Identifier) || !tlv8.buf(kTLVType_Signature)){            
@@ -1278,7 +1279,7 @@ void HAPClient::tlvRespond(){
   LOG2(client.remoteIP());
   LOG2(" >>>>>>>>>>\n");
   LOG2(body);
-  tlv8.print();
+  if(homeSpan.logLevel>1) tlv8.print();
 
   if(!cPair){                       // unverified, unencrypted session
     client.print(body);

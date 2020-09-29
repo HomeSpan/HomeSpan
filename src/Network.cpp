@@ -1,7 +1,9 @@
 
 #include <DNSServer.h>
 
+#include "Network.h"
 #include "HomeSpan.h"
+#include "Utils.h"
 
 using namespace Utils;
 
