@@ -32,12 +32,6 @@
 
 const int MAX_CONNECTIONS=8;  
 
-//////////////////////////////////////////////////////
-//   Maximum characters in WiFi SSID and Password   //
-
-const int MAX_SSID=32;
-const int MAX_PWD=64;
-  
 /////////////////////////////////////////////////////
 //      Message Log Level Control Macros           //
 //       0=Minimal, 1=Informative, 2=All           //
