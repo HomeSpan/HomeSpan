@@ -126,4 +126,4 @@ struct HAPClient {
 /////////////////////////////////////////////////
 // Extern Variables
 
-extern HAPClient hap[];
+extern HAPClient **hap;

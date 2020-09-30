@@ -11,7 +11,7 @@ using namespace Utils;
 
 WiFiServer hapServer(80);           // HTTP Server (i.e. this acccesory) running on usual port 80 (local-scoped variable to this file only)
 
-HAPClient hap[MAX_CONNECTIONS];     // HAP Client structure containing HTTP client connections, parsing routines, and state variables (global-scoped variable)
+HAPClient **hap;                    // HAP Client structure containing HTTP client connections, parsing routines, and state variables (global-scoped variable)
 Span homeSpan;                      // HAP Attributes database and all related control functions for this Accessory (global-scoped variable)
 
 ///////////////////////////////
@@ -27,6 +27,10 @@ void Span::begin(Category catID, char *displayName, char *hostNameBase, char *mo
 
   controlButton.init(controlPin);
   statusLED.init(statusPin);
+
+  hap=(HAPClient **)calloc(maxConnections,sizeof(HAPClient *));
+  for(int i=0;i<maxConnections;i++)
+    hap[i]=new HAPClient;
   
   delay(2000);
  
@@ -104,19 +108,19 @@ void Span::poll() {
     int freeSlot=getFreeSlot();                 // get next free slot
 
     if(freeSlot==-1){                           // no available free slots
-      freeSlot=randombytes_uniform(MAX_CONNECTIONS);
+      freeSlot=randombytes_uniform(maxConnections);
       LOG2("=======================================\n");
       LOG1("** Freeing Client #");
       LOG1(freeSlot);
       LOG1(" (");
       LOG1(millis()/1000);
       LOG1(" sec) ");
-      LOG1(hap[freeSlot].client.remoteIP());
+      LOG1(hap[freeSlot]->client.remoteIP());
       LOG1("\n");
-      hap[freeSlot].client.stop();                     // disconnect client from first slot and re-use
+      hap[freeSlot]->client.stop();                     // disconnect client from first slot and re-use
     }
 
-    hap[freeSlot].client=newClient;             // copy new client handle into free slot
+    hap[freeSlot]->client=newClient;             // copy new client handle into free slot
 
     LOG2("=======================================\n");
     LOG1("** Client #");
@@ -124,23 +128,23 @@ void Span::poll() {
     LOG1(" Connected: (");
     LOG1(millis()/1000);
     LOG1(" sec) ");
-    LOG1(hap[freeSlot].client.remoteIP());
+    LOG1(hap[freeSlot]->client.remoteIP());
     LOG1("\n");
     LOG2("\n");
 
-    hap[freeSlot].cPair=NULL;                   // reset pointer to verified ID
+    hap[freeSlot]->cPair=NULL;                   // reset pointer to verified ID
     homeSpan.clearNotify(freeSlot);             // clear all notification requests for this connection
     HAPClient::pairStatus=pairState_M1;         // reset starting PAIR STATE (which may be needed if Accessory failed in middle of pair-setup)
   }
 
-  for(int i=0;i<MAX_CONNECTIONS;i++){                     // loop over all HAP Connection slots
+  for(int i=0;i<maxConnections;i++){                     // loop over all HAP Connection slots
     
-    if(hap[i].client && hap[i].client.available()){       // if connection exists and data is available
+    if(hap[i]->client && hap[i]->client.available()){       // if connection exists and data is available
 
       HAPClient::conNum=i;                                // set connection number
-      hap[i].processRequest();                            // process HAP request
+      hap[i]->processRequest();                           // process HAP request
       
-      if(!hap[i].client){                                 // client disconnected by server
+      if(!hap[i]->client){                                 // client disconnected by server
         LOG1("** Disconnecting Client #");
         LOG1(i);
         LOG1("  (");
@@ -181,8 +185,8 @@ void Span::poll() {
 
 int Span::getFreeSlot(){
   
-  for(int i=0;i<MAX_CONNECTIONS;i++){
-    if(!hap[i].client)
+  for(int i=0;i<maxConnections;i++){
+    if(!hap[i]->client)
       return(i);
   }
 
@@ -349,7 +353,7 @@ void Span::initWifi(){
     mdns_service_txt_item_set("_hap","_tcp","sf","0");           // set Status Flag = 0
 
   Serial.print("\nStarting Web (HTTP) Server supporting up to ");
-  Serial.print(MAX_CONNECTIONS);
+  Serial.print(maxConnections);
   Serial.print(" simultaneous connections...\n\n");
   hapServer.begin();
 
@@ -379,19 +383,19 @@ void Span::processSerialCommand(char *c){
       HAPClient::printControllers();
       Serial.print("\n");
 
-      for(int i=0;i<MAX_CONNECTIONS;i++){
+      for(int i=0;i<maxConnections;i++){
         Serial.print("Connection #");
         Serial.print(i);
         Serial.print(" ");
-        if(hap[i].client){
+        if(hap[i]->client){
       
-          Serial.print(hap[i].client.remoteIP());
+          Serial.print(hap[i]->client.remoteIP());
           Serial.print(" ");
       
-          if(hap[i].cPair){
+          if(hap[i]->cPair){
             Serial.print("ID=");
-            HAPClient::charPrintRow(hap[i].cPair->ID,36);
-            Serial.print(hap[i].cPair->admin?"   (admin)":" (regular)");
+            HAPClient::charPrintRow(hap[i]->cPair->ID,36);
+            Serial.print(hap[i]->cPair->admin?"   (admin)":" (regular)");
           } else {
             Serial.print("(unverified)");
           }
@@ -459,12 +463,12 @@ void Span::processSerialCommand(char *c){
       nvs_commit(HAPClient::hapNVS);                                                                            // commit to NVS
       Serial.print("\n** HomeSpan Pairing Data DELETED **\n\n");
       
-      for(int i=0;i<MAX_CONNECTIONS;i++){     // loop over all connection slots
-        if(hap[i].client){                    // if slot is connected
+      for(int i=0;i<maxConnections;i++){     // loop over all connection slots
+        if(hap[i]->client){                    // if slot is connected
           LOG1("*** Terminating Client #");
           LOG1(i);
           LOG1("\n");
-          hap[i].client.stop();
+          hap[i]->client.stop();
         }
       }
       
@@ -1004,6 +1008,9 @@ SpanCharacteristic::SpanCharacteristic(char *type, uint8_t perms){
   iid=++(homeSpan.Accessories.back()->iidCount);
   service=homeSpan.Accessories.back()->Services.back();
   aid=homeSpan.Accessories.back()->aid;
+
+  ev=(boolean *)calloc(homeSpan.maxConnections,sizeof(boolean));
+
 }
 
 ///////////////////////////////

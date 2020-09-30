@@ -963,14 +963,14 @@ int HAPClient::postPairingsURL(){
   // re-check connections and close any (or all) clients as a result of controllers that were removed above
   // must be performed AFTER sending the TLV response, since that connection itself may be terminated below
 
-  for(int i=0;i<MAX_CONNECTIONS;i++){     // loop over all connection slots
-    if(hap[i].client){                    // if slot is connected
+  for(int i=0;i<homeSpan.maxConnections;i++){     // loop over all connection slots
+    if(hap[i]->client){                    // if slot is connected
       
-      if(!nAdminControllers() || (hap[i].cPair && !hap[i].cPair->allocated)){    // accessory unpaired, OR client connection is verified but points to a newly *unallocated* controller
+      if(!nAdminControllers() || (hap[i]->cPair && !hap[i]->cPair->allocated)){    // accessory unpaired, OR client connection is verified but points to a newly *unallocated* controller
         LOG1("*** Terminating Client #");
         LOG1(i);
         LOG1("\n");
-        hap[i].client.stop();
+        hap[i]->client.stop();
       }
       
     } // if client connected
@@ -1234,8 +1234,8 @@ void  HAPClient::checkTimedWrites(){
 
 void HAPClient::eventNotify(SpanBuf *pObj, int nObj, int ignoreClient){
   
-  for(int cNum=0;cNum<MAX_CONNECTIONS;cNum++){        // loop over all connection slots
-    if(hap[cNum].client && cNum!=ignoreClient){       // if there is a client connected to this slot and it is NOT flagged to be ignored (in cases where it is the client making a PUT request
+  for(int cNum=0;cNum<homeSpan.maxConnections;cNum++){        // loop over all connection slots
+    if(hap[cNum]->client && cNum!=ignoreClient){       // if there is a client connected to this slot and it is NOT flagged to be ignored (in cases where it is the client making a PUT request
 
       int nBytes=homeSpan.sprintfNotify(pObj,nObj,NULL,cNum);          // get JSON response for notifications to client cNum - includes terminating null (will be recast to uint8_t* below)
 
@@ -1248,13 +1248,13 @@ void HAPClient::eventNotify(SpanBuf *pObj, int nObj, int ignoreClient){
         sprintf(body,"EVENT/1.0 200 OK\r\nContent-Type: application/hap+json\r\nContent-Length: %d\r\n\r\n",nBytes);
 
         LOG2("\n>>>>>>>>>> ");
-        LOG2(hap[cNum].client.remoteIP());
+        LOG2(hap[cNum]->client.remoteIP());
         LOG2(" >>>>>>>>>>\n");    
         LOG2(body);
         LOG2(jsonBuf);
         LOG2("\n");
   
-        hap[cNum].sendEncrypted(body,(uint8_t *)jsonBuf,nBytes);        // note recasting of jsonBuf into uint8_t*
+        hap[cNum]->sendEncrypted(body,(uint8_t *)jsonBuf,nBytes);        // note recasting of jsonBuf into uint8_t*
 
       } // if there are characteristic updates to notify client cNum
     } // if client exists

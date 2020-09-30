@@ -26,11 +26,7 @@
 
 #define     DEFAULT_LOG_LEVEL     0                   // change with homeSpan.setLogLevel(level)
 
-//////////////////////////////////////////////////////
-//   Maximum number of simultaenous IP connections  //
-//   HAP requires at least 8                        //
-
-const int MAX_CONNECTIONS=8;  
+#define     DEFAULT_MAX_CONNECTIONS 8                 // change with homeSpan.setMaxConnections(num);
 
 /////////////////////////////////////////////////////
 //      Message Log Level Control Macros           //
