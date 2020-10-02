@@ -759,7 +759,7 @@ int Span::updateCharacteristics(char *buf, SpanBuf *pObj){
   for(int i=0;i<nObj;i++){                                     // PASS 2: loop again over all objects       
     if(pObj[i].status==StatusCode::TBD){                       // if object status still TBD
 
-      StatusCode status=pObj[i].characteristic->service->update();                  // update service and save returned statusCode
+      StatusCode status=pObj[i].characteristic->service->update()?StatusCode::OK:StatusCode::Unable;                  // update service and save statusCode as OK or Unable depending on whether return is true or false
 
       for(int j=i;j<nObj;j++){                                                      // loop over this object plus any remaining objects to update values and save status for any other characteristics in this service
         

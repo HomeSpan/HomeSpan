@@ -66,22 +66,3 @@ enum class Category {
   Faucets=29,
   ShowerSystems=30
 };
-
-//////////////////////////////////////////////////////
-//   Types of Status Codes for use with update()    //
-//   Reference: HAP Table 6-11                      //
-
-enum class StatusCode {
-  
-  OK=0,                        // Can be returned by user in update() 
-  Unable=-70402,               // Can be returned by user in update()
-  Busy=-70403,                 // Can be returned by user in update()
-  
-  ReadOnly=-70404,             // HomeSpan takes care of this internally
-  WriteOnly=-70405,            // HomeSpan takes care of this internally
-  NotifyNotAllowed=-70406,     // HomeSpan takes care of this internally
-  UnknownResource=-70409,      // HomeSpan takes care of this internally
-  InvalidValue=-70410,         // HomeSpan takes care of this internally
-  
-  TBD=-1                       // status To-Be-Determined (TBD) once service.update() called - internal use only
-};

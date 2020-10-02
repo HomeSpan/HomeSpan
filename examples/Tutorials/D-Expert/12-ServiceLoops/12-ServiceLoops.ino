@@ -117,5 +117,5 @@ void loop(){
 // (or an iPhone and Mac) with any of the previous examples and open the HomeKit app on both.  Any changes you make to the device using one of the Controllers,
 // such as turning on an LED, is immediately reflected in the other Controller.  Not quite magic, but close.
 
-// As described above, and fully explored in this example, HomeSpan automatically generates Event Notification messages and transmis them to all registered
+// As described above, and fully explored in this example, HomeSpan automatically generates Event Notification messages and transmits them to all registered
 // Controllers every time you change the value of a Characteristic using the setVal() function from within a derived Service's loop() method.

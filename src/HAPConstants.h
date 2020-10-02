@@ -47,3 +47,16 @@ typedef enum {
   pairState_M5=5,
   pairState_M6=6
 } pairState;
+
+// HAP Status Codes (HAP Table 6-11)
+
+enum class StatusCode {  
+  OK=0,
+  Unable=-70402,
+  ReadOnly=-70404,
+  WriteOnly=-70405,
+  NotifyNotAllowed=-70406,
+  UnknownResource=-70409,
+  InvalidValue=-70410,  
+  TBD=-1                       // status To-Be-Determined (TBD) once service.update() called - internal use only
+};

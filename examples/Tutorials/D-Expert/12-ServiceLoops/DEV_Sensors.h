@@ -42,7 +42,7 @@ struct DEV_TempSensor : Service::TemperatureSensor {     // A standalone Tempera
       if(temperature>35.0)                                  // ...but cap the maximum at 35C before starting over at 10C
         temperature=10.0;
       
-      temp->setVal(temperature);                            // set the new temperature; this generates an Event Notification andalso resets the elapsed time
+      temp->setVal(temperature);                            // set the new temperature; this generates an Event Notification and also resets the elapsed time
       
       LOG1("Temperature Update: ");
       LOG1(temperature*9/5+32);

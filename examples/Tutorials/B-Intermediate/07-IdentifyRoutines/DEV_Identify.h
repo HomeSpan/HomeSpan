@@ -47,7 +47,7 @@ struct DEV_Identify : Service::AccessoryInformation {
   // the specified number of times.  This is because when HomeSpan starts up if confirms to user that it has connected
   // to the WiFi network by turning on the built-in LED.  Thus we want to leave it on when blinking is completed.
 
-  StatusCode update(){
+  boolean update(){
        
     for(int i=0;i<nBlinks;i++){
       digitalWrite(LED_BUILTIN,LOW);
@@ -56,7 +56,7 @@ struct DEV_Identify : Service::AccessoryInformation {
       delay(250);
     }
 
-    return(StatusCode::OK);
+    return(true);                               // return true
     
   } // update
   

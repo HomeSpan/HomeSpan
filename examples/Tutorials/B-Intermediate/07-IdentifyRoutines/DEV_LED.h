@@ -18,11 +18,11 @@ struct DEV_LED : Service::LightBulb {               // ON/OFF LED
     
   } // end constructor
 
-  StatusCode update(){                              // update() method
+  boolean update(){                              // update() method
 
     digitalWrite(ledPin,power->getNewVal());      
    
-    return(StatusCode::OK);                         // return OK status code
+    return(true);                               // return true
   
   } // update
 };
@@ -48,11 +48,11 @@ struct DEV_DimmableLED : Service::LightBulb {       // Dimmable LED
     
   } // end constructor
 
-  StatusCode update(){                              // update() method
+  boolean update(){                              // update() method
     
     pwmPin->set(channel,power->getNewVal()*level->getNewVal());    
    
-    return(StatusCode::OK);                         // return OK status code
+    return(true);                               // return true
   
   } // update
 };

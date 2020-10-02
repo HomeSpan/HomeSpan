@@ -24,7 +24,7 @@ struct DEV_LED : Service::LightBulb {               // ON/OFF LED
 
   } // end constructor
 
-  StatusCode update(){                              // update() method
+  boolean update(){                              // update() method
 
     LOG1("Updating On/Off LED on pin=");
     LOG1(ledPin);
@@ -36,7 +36,7 @@ struct DEV_LED : Service::LightBulb {               // ON/OFF LED
 
     digitalWrite(ledPin,power->getNewVal());      
    
-    return(StatusCode::OK);                         // return OK status code
+    return(true);                               // return true
   
   } // update
 };
@@ -70,7 +70,7 @@ struct DEV_DimmableLED : Service::LightBulb {       // Dimmable LED
     
   } // end constructor
 
-  StatusCode update(){                              // update() method
+  boolean update(){                              // update() method
 
     LOG1("Updating Dimmable LED on pin=");
     LOG1(ledPin);
@@ -93,7 +93,7 @@ struct DEV_DimmableLED : Service::LightBulb {       // Dimmable LED
     
     pwmPin->set(channel,power->getNewVal()*level->getNewVal());    
    
-    return(StatusCode::OK);                         // return OK status code
+    return(true);                               // return true
   
   } // update
 };
@@ -132,7 +132,7 @@ struct DEV_RgbLED : Service::LightBulb {       // RGB LED (Command Cathode)
     
   } // end constructor
 
-  StatusCode update(){                         // update() method
+  boolean update(){                         // update() method
 
     boolean p;
     float v, h, s, r, g, b;
@@ -197,7 +197,7 @@ struct DEV_RgbLED : Service::LightBulb {       // RGB LED (Command Cathode)
     greenPin->set(greenChannel,G);    
     bluePin->set(blueChannel,B);    
       
-    return(StatusCode::OK);                         // return OK status code
+    return(true);                               // return true
   
   } // update
 };

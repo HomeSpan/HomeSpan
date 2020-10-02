@@ -20,7 +20,7 @@ struct DEV_GarageDoor : Service::GarageDoorOpener {     // A Garage Door Opener
 
   } // end constructor
 
-  StatusCode update(){                              // update() method
+  boolean update(){                              // update() method
 
     // see HAP Documentation for details on what each value represents
 
@@ -34,7 +34,7 @@ struct DEV_GarageDoor : Service::GarageDoorOpener {     // A Garage Door Opener
       obstruction->setVal(false);                   // clear any prior obstruction detection
     }
     
-    return(StatusCode::OK);                         // return OK status code
+    return(true);                               // return true
   
   } // update
 
@@ -82,7 +82,7 @@ struct DEV_WindowShade : Service::WindowCovering {     // A motorized Window Sha
 
   } // end constructor
 
-  StatusCode update(){                              // update() method
+  boolean update(){                              // update() method
 
     // The logic below is based on how HomeKit appears to operate in practice, which is NOT consistent with
     // HAP documentation.  In that document HomeKit seems to support fully opening or fully closing a window shade, with
@@ -100,7 +100,7 @@ struct DEV_WindowShade : Service::WindowCovering {     // A motorized Window Sha
       LOG1("Lowering Shade\n");                     // ** there is nothing more to do - HomeKit keeps track of the current-position so knows lowering is required
     }
         
-    return(StatusCode::OK);                         // return OK status code
+    return(true);                               // return true
   
   } // update
 

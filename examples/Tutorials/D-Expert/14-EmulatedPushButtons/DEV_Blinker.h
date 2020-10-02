@@ -39,7 +39,7 @@ struct DEV_Blinker : Service::LightBulb {           // LED Blinker
 
   } // end constructor
 
-  StatusCode update(){                              // update() method
+  boolean update(){                              // update() method
 
     // NEW! Instead of turning on or off the LED according to newValue, we blink it for
     // the number of times specified, and leave it in the off position when finished.
@@ -68,7 +68,7 @@ struct DEV_Blinker : Service::LightBulb {           // LED Blinker
     // (and so you can see the LED blink). In practice, if you were controlling an IR LED
     // or an RF transmitter, the whole signal would likely transmit in 10ms total.
     
-    return(StatusCode::OK);                         // return OK status code
+    return(true);                               // return true
   
   } // update
 

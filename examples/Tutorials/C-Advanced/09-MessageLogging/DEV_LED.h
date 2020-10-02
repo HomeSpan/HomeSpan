@@ -26,7 +26,7 @@ struct DEV_LED : Service::LightBulb {               // ON/OFF LED
 
   } // end constructor
 
-  StatusCode update(){                              // update() method
+  boolean update(){                              // update() method
 
     // Here we output log messages whenever update() is called,
     // which is helpful for debugging purposes if your physical device
@@ -44,7 +44,7 @@ struct DEV_LED : Service::LightBulb {               // ON/OFF LED
 
     digitalWrite(ledPin,power->getNewVal());      
    
-    return(StatusCode::OK);                         // return OK status code
+    return(true);                               // return true
   
   } // update
 };
@@ -82,7 +82,7 @@ struct DEV_DimmableLED : Service::LightBulb {       // Dimmable LED
     
   } // end constructor
 
-  StatusCode update(){                              // update() method
+  boolean update(){                              // update() method
 
     // Here we output log messages whenever update() is called,
     // which is helpful for debugging purposes if your physical device
@@ -123,7 +123,7 @@ struct DEV_DimmableLED : Service::LightBulb {       // Dimmable LED
     
     pwmPin->set(channel,power->getNewVal()*level->getNewVal());      
    
-    return(StatusCode::OK);                         // return OK status code
+    return(true);                               // return true
   
   } // update
 };

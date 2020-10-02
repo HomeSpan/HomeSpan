@@ -22,25 +22,24 @@ void setup() {
   // these control did not actually operate anything on the ESP32.  To operate actual devices HomeSpan needs to be programmed to
   // respond to "update" requests from HomeKit by performing some form of operation.
   
-  // Though HomeKit sends "updat" requests to individual Characteristics, this is not intuitive and leads to complex coding requirements
+  // Though HomeKit itself sends "update" requests to individual Characteristics, this is not intuitive and leads to complex coding requirements
   // when a Service has more than one Characteristic, such as both "On" and "Brightness."  To make this MUCH easier for the user, HomeSpan
   // uses a framework in which Services are updated instead of individual Characteristics.  It does so by calling the update() method of
   // each Service with flags indicating all the Characteristics in that Service that HomeKit requested to update.  The user simply
-  // implements code to perform the actual operation, and returns a status flag (okay or not okay).  HomeSpan takes care of all the underlying
-  // nuts and bolts.
+  // implements code to perform the actual operation, and returns either true or false if the update was successful.  HomeSpan takes care of all
+  // the underlying nuts and bolts.
 
   // Every Service defined in HomeKit, such as Service:LightBulb and Service:Fan (and even Service::AccessoryInformation) implements an update()
-  // method that, as a default, does nothing but return a status of okay.  To actually operate real devices you need to over-ride this default update()
+  // method that, as a default, does nothing but returns a value of true.  To actually operate real devices you need to over-ride this default update()
   // method with your own code.  The easiest way to do this is by creating a DERIVED class based on one of the built-in HomeSpan Services.
   // Within this derived class you can perform initial set-up routines (if needed), over-ride the update() method with your own code, and even create
   // any other methods or class-specific variables you need to fully operate complex devices.  Most importantly, the derived class can take arguments
-  // so that you can make them more generic, re-use them multiple times (as will be seen below), and convert them to standalone modules (see below).
+  // so that you can make them more generic, re-use them multiple times (as will be seen below), and convert them to standalone modules (also shown below).
 
   // All of the HomeKit Services implemented by HomeSpan can be found in the Services.h file.  Any can be used as the parent for a derived Service.
 
   // We begin by repeating nearly the same code from Example 2, but with a few key changes. For ease of reading, all prior comments have been removed
   // from lines that simply repeat Example 2, and new comments have been added to explictly show the new code.
-
 
   Serial.begin(115200);
 
@@ -59,18 +58,18 @@ void setup() {
     new Service::HAPProtocolInformation();      
       new Characteristic::Version("1.1.0");     
 
-  //  In Example 2 we instantiated a LightBulb Service and its "On" Characteristic here.  We are going to replace these two lines (by commenting them out)...
+  //  In Example 2 we instantiated a LightBulb Service and its "On" Characteristic here.  We are now going to replace these two lines (by commenting them out)...
 
   //  new Service::LightBulb();                   
   //    new Characteristic::On();                 
 
   // ...with a single new line instantiating a new class we will call DEV_LED():
 
-    new DEV_LED(16);        // this instantiates a new LED Service.  Where is this defined? What happpened to Characteristic::On?  Keep reading...
+    new DEV_LED(16);        // this instantiates a new LED Service.  Where is this defined?  What happpened to Characteristic::On?  Keep reading...
 
   // The full definition and code for DEV_LED is implemented in a separate file called "DEV_LED.h" that is specified using the #include at the top of this program.
-  // The prefix DEV_ is not required but it's a helpful convention to name all your device-specific Services. Note that DEV_LED wil include all the required
-  // Characterictics of the Service, so you DO NOT have to separately instantiate Characteristic::On --- everything HomeSpan needs for DEV_LED will be implemented
+  // The prefix DEV_ is not required but it's a helpful convention when naming all your device-specific Services. Note that DEV_LED will include all the required
+  // Characterictics of the Service, so you DO NOT have to separately instantiate Characteristic::On --- everything HomeSpan needs for DEV_LED should be implemented
   // in DEV_LED itself (though it's not all that much).  Finally, note that we created DEV_LED to take a single integer argument.  If you guessed this is
   // the number of the Pin to which you have attached an LED, you'd be right.  See DEV_LED.h for a complete explanation of how it works.
 

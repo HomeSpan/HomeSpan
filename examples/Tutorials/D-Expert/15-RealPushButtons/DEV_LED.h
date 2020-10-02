@@ -62,7 +62,7 @@ struct DEV_DimmableLED : Service::LightBulb {       // Dimmable LED
     
   } // end constructor
 
-  StatusCode update(){                              // update() method
+  boolean update(){                              // update() method
 
     LOG1("Updating Dimmable LED on pin=");
     LOG1(ledPin);
@@ -85,7 +85,7 @@ struct DEV_DimmableLED : Service::LightBulb {       // Dimmable LED
     
     pwmPin->set(channel,power->getNewVal()*level->getNewVal());    
    
-    return(StatusCode::OK);                         // return OK status code
+    return(true);                               // return true
   
   } // update
 

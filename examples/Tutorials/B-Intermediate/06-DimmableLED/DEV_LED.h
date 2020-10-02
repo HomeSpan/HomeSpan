@@ -18,11 +18,11 @@ struct DEV_LED : Service::LightBulb {               // ON/OFF LED
     
   } // end constructor
 
-  StatusCode update(){                              // update() method
+  boolean update(){                              // update() method
 
     digitalWrite(ledPin,power->getNewVal());      
    
-    return(StatusCode::OK);                         // return OK status code
+    return(true);                               // return true
   
   } // update
 };
@@ -50,7 +50,7 @@ struct DEV_DimmableLED : Service::LightBulb {       // Dimmable LED
     
   } // end constructor
 
-  StatusCode update(){                              // update() method
+  boolean update(){                              // update() method
 
     // Here we set the duty cycle (brightness) of the LED by callng pwmPin with the appropriate channel.
     // The second argument should be a number from 0-100 (representing %brightness).  HomeKit sets the on/off 
@@ -62,7 +62,7 @@ struct DEV_DimmableLED : Service::LightBulb {       // Dimmable LED
     
     pwmPin->set(channel,power->getNewVal()*level->getNewVal());    
    
-    return(StatusCode::OK);                         // return OK status code
+    return(true);                               // return true
   
   } // update
 };

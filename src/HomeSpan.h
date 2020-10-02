@@ -11,6 +11,7 @@
 #include "Settings.h"
 #include "Utils.h"
 #include "Network.h"
+#include "HAPConstants.h"
 
 using std::vector;
 using std::unordered_map;
@@ -128,9 +129,8 @@ struct SpanService{
   SpanService *setHidden();                               // sets the Service Type to be hidden and returns pointer to self
 
   int sprintfAttributes(char *cBuf);                      // prints Service JSON records into buf; return number of characters printed, excluding null terminator
-  virtual StatusCode update() {return(StatusCode::OK);}   // update Service and return final statusCode based on updated Characteristics - should be overridden by DEVICE-SPECIFIC Services
-  virtual void event(){}                                  // event generation for Services that create their own events and need to notify HomeKit of a new Characteristic value(s)
-  virtual void loop(){}                                   // loops for each Service
+  virtual boolean update() {return(true);}                // placeholder for code that is called when a Service is updated via a Controller.  Must return true/false depending on success of update
+  virtual void loop(){}                                   // loops for each Service - called every cycle and can be over-ridden with user-defined code
   virtual void button(int pin, boolean isLong){}          // method called for a Service when a button attached to "pin" has a Short-Press or Long-Press, according to "isLong"
 };
 

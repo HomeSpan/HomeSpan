@@ -21,13 +21,13 @@ struct DEV_LED : Service::LightBulb {               // First we create a derived
     
   } // end constructor
 
-  // Finally, we over-ride the default update() method with instructions that actually turn on/off the LED.  Note update() returns type "StatusCode"
+  // Finally, we over-ride the default update() method with instructions that actually turn on/off the LED.  Note update() returns type boolean
 
-  StatusCode update(){            
+  boolean update(){            
 
     digitalWrite(ledPin,power->getNewVal());        // use a standard Arduino function to turn on/off ledPin based on the return of a call to power->getNewVal() (see below for more info)
    
-    return(StatusCode::OK);                         // return OK status code.  There are other possibilties we will explore in later examples.
+    return(true);                                   // return true to indicate the update was successful (otherwise create code to return false if some reason you could not turn on the LED)
   
   } // update
 };
@@ -40,10 +40,10 @@ struct DEV_LED : Service::LightBulb {               // First we create a derived
 // Whenever a HomeKit controller requests HomeSpan to update a Characteristic, HomeSpan calls the update() method for the SERVICE that contains the
 // Characteristic.  It calls this only one time, even if multiple Characteristics updates are requested for that Service.  For example, if you
 // direct HomeKit to turn on a light and set it to 50% brightness, it will send HomeSpan two requests: one to update the "On" Characteristic of the
-// LightBulb Service from "false" to "true" nd another to update the "Brightness" Characteristic of that same Service to 50.  This is VERY inefficient
+// LightBulb Service from "false" to "true" and another to update the "Brightness" Characteristic of that same Service to 50.  This is VERY inefficient
 // and would require the user to process multiple updates to the same Service.
 //
-// Instead, HomeSpan combines both requests into a single call to update() for the Service itself, where you can process all of thre Characteristics
+// Instead, HomeSpan combines both requests into a single call to update() for the Service itself, where you can process all of the Characteristics
 // that change at the same time.  In the example above, we only have a single Characteristic to deal with, so this does not mean much.  But in later
 // examples we'll see how this works with multiple Characteristics.
 
@@ -80,29 +80,21 @@ struct DEV_LED : Service::LightBulb {               // First we create a derived
 // But for Services with two or more Characteristics, update() can be called with a request to update only a subset of the Characteristics.  We will
 // find good use for the updated() method in later, multi-Characteristic examples.
 
-// WHAT THE RETURN CODE FOR update() MEANS
-// ---------------------------------------
+// UNDER THE HOOD: WHAT THE RETURN CODE FOR UPDATE() DOES
+// ------------------------------------------------------
 //
-// HomeKit requires each Characteristic to return a status code when an attempt to update it's value is made.  HomeSpan automatically takes care of
-// some of errors, such as a Characteristic not being found, or a request to update a Characteristic that is read only.  In these cases update() is never
-// even called.  But if it is, HomeSpan will apply the return code you specify to each of the Characteristics that were to be updated in that Service.
-// By returning StatusCode:OK you tell HomeSpan that the newValues requested are okay and you've made the required updates to the physical device.  Upon 
-// receiving an OK status, HomeSpan updates the Characteristics themselves by copying the "newValue" data elements into the current "value" data elements.
-// HomeSpan then sends a message back to HomeKit letting it know that the new values it requested have been sucessfully processed.  At no point does
-// HomeKit as for, or allow, a value to be sent back from HomeSpan indicating the data in a Characteristic.  When requesting an update, HomeKit simply
-// expects an okay or not okay.
-//
-// If for some reason the update() code cannot process an update request, it must return a HAP error code.  These are listing in Settings.h.  As noted above,
-// some are created automatically by HomeSpan and update() is never called.  Others can only be determined from within an update() call and should be 
-// used as the return value.  The StatusCodes that can be used in this fashion are: OK, Unable, Busy.  Any of the other StatusCode listed in Settings.h
-// are automatically handled by HomeSpan and should not be used as a return code, though nothing bad happens if you do.  This is because the
-// HomeKit application itself only seems to distinguish an "OK" status code from a an not-"OK" code.  HomeKit does not seem to process any error code
-// differently from any other error code.  All error codes lead HomeKit to simply say "Device Not Reponding" in the Controller.  This suggests that the
-// differences between "Unable" and "Busy" don't mean anything to HomeKit.  They are all interpreted as an error, so pick anyone you'd like in the event
-// you can't update a characteristic to the requested value.  Note that when you do return an error code, HomeSpan will NOT copy the newValue data elements
-// requested into the the current value data elements, thus keeping all Characteristics in the Service unchanged.
-//
-// Final note:  There are very few reasons you should need to return an error code since so much checking is done in advance by either HomeSpan or HomeKit
+// HomeKit requires each Characteristic to return a special HAP status code when an attempt to update its value is made.  HomeSpan automatically takes care of
+// most of the errors, such as a Characteristic not being found, or a request to update a Characteristic that is read only.  In these cases update() is never
+// even called.  But if it is, HomeSpan needs to return a HAP status code for each of the Characteristics that were to be updated in that Service.
+// By returning "true" you tell HomeSpan that the newValues requested are okay and you've made the required updates to the physical device.  Upon 
+// receiving a true return value, HomeSpan updates the Characteristics themselves by copying the "newValue" data elements into the current "value" data elements.
+// HomeSpan then sends a message back to HomeKit with a HAP code representing "OK," which lets the Controller know that the new values it requested have been
+// sucessfully processed.  At no point does HomeKit ask for, or allow, a data value to be sent back from HomeSpan indicating the data in a Characteristic.
+// When requesting an update, HomeKit simply expects a HAP status code of OK, or some other status code representing an error.  To tell HomeSpan to send the Controller
+// an error code, indicating that you were not able to successfully process the update, simply have update() return a value of "false."  HomeSpan converts a
+// return of "false" to the HAP status code representing "UNABLE," which will cause the Controller to show that the device is not responding.
+
+// There are very few reasons you should need to return "false" since so much checking is done in advance by either HomeSpan or HomeKit
 // itself.  For instance, HomeKit does not allow you to use the Controller, or even Siri, to change the brightness of LightBulb to a value outside the
-// range of allowable values you specified.  This means that any update() requests you receive should only contain newValue data element that are in-range.
+// range of allowable values you specified.  This means that any update() requests you receive should only contain newValue data elements that are in-range.
 //

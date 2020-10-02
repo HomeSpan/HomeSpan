@@ -22,7 +22,7 @@ struct DEV_Identify : Service::AccessoryInformation {
     pinMode(LED_BUILTIN,OUTPUT);                      // make sure built-in LED is set for output
   }
 
-  StatusCode update(){
+  boolean update(){
        
     for(int i=0;i<nBlinks;i++){
       digitalWrite(LED_BUILTIN,LOW);
@@ -31,7 +31,7 @@ struct DEV_Identify : Service::AccessoryInformation {
       delay(250);
     }
 
-    return(StatusCode::OK);
+    return(true);                               // return true
     
   } // update
   
