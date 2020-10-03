@@ -56,7 +56,7 @@ boolean Network::serialConfigure(){
     Serial.print("\n");
   }
 
-  homeSpan.statusLED.start(1000);   // slowly blink Status LED
+  homeSpan.statusLED.start(LED_WIFI_CONNECTING);
 
   while(WiFi.status()!=WL_CONNECTED){
     Serial.print("\nConnecting to: ");
@@ -83,7 +83,7 @@ boolean Network::serialConfigure(){
   Serial.print(WiFi.localIP());
   Serial.print("\n\n");
 
-  homeSpan.statusLED.start(250);   // rapidly blink Status LED
+  homeSpan.statusLED.start(LED_INPUT_NEEDED);
   
   boolean okay=false;
   Serial.print("Specify new 8-digit Setup Code or leave blank to retain existing code...\n\n");
@@ -147,7 +147,7 @@ void Network::apConfigure(char *apName){
   Serial.print(apPassword);
   Serial.print("\n");
 
-  homeSpan.statusLED.start(100,0.5,2,500);     // fast double blink
+  homeSpan.statusLED.start(LED_AP_STARTED);
 
   WiFiServer apServer(80);
 
@@ -281,7 +281,7 @@ void Network::processRequest(char *body, char *formData){
     getFormValue(formData,"pwd",wifiData.pwd,MAX_PWD);
     
     timer=millis();
-    homeSpan.statusLED.start(1000);
+    homeSpan.statusLED.start(LED_WIFI_CONNECTING);
 
     responseBody+="<meta http-equiv = \"refresh\" content = \"2; url = /wifi-status\" />"
                   "<p>Initiating WiFi connection to:</p><p><b>" + String(wifiData.ssid) + "</p>";
@@ -321,7 +321,7 @@ void Network::processRequest(char *body, char *formData){
       responseBody+="<center><button onclick=\"document.location='/landing-page'\">Cancel</button></center>";
     } else {
       
-      homeSpan.statusLED.start(500,0.3,2,1000);   // slow double-blink
+      homeSpan.statusLED.start(LED_AP_CONNECTED);   // slow double-blink
       
       responseBody+="<p>SUCCESS! Connected to:</p><p><b>" + String(wifiData.ssid) + "</b></p>";
       responseBody+="<p>You may enter new 8-digit Setup Code below, or leave blank to retain existing code.</p>";
@@ -343,7 +343,7 @@ void Network::processRequest(char *body, char *formData){
 
     landingPage=true;
 
-    homeSpan.statusLED.start(500,0.3,2,1000);   // slow double-blink
+    homeSpan.statusLED.start(LED_AP_CONNECTED);
 
     responseBody+="<p>Welcome to HomeSpan! This page allows you to configure the above HomeSpan device to connect to your WiFi network.</p>"
                   "<p>The LED on this device should be <em>double-blinking</em> during this configuration.</p>"

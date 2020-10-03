@@ -57,9 +57,9 @@ void Span::begin(Category catID, char *displayName, char *hostNameBase, char *mo
   Serial.print("\n\n");
 
   if(!digitalRead(controlPin)){                     // factory reset pin is low upon start-up
+    Serial.print("** CONTROL BUTTON PRESSED DURING STARTUP!  PERFORMING FACTORY RESET **\n\n");
+    statusLED.start(LED_ALERT);
     nvs_flash_erase();                              // erase NVS storage
-    Serial.print("** CONTROL BUTTON PRESSED DURING STARTUP!  ALL STORED DATA ERASED **\n\n");
-    statusLED.start(100);
     delay(5000);
     Serial.print("Re-starting...\n\n");
     statusLED.off();
@@ -84,7 +84,7 @@ void Span::poll() {
 
     if(!HAPClient::nAdminControllers()){
       Serial.print("DEVICE NOT YET PAIRED -- PLEASE PAIR WITH HOMEKIT APP\n\n");
-      statusLED.start(500,0.5,2,1000);
+      statusLED.start(LED_PAIRING_NEEDED);
     } else {
       statusLED.on();
     }
@@ -163,17 +163,15 @@ void Span::poll() {
   HAPClient::checkTimedWrites();
 
   if(controlButton.primed()){
-    statusLED.start(500);
+    statusLED.start(LED_ALERT);
   }
   
   if(controlButton.triggered(5000,10000)){
+    statusLED.off();
     if(controlButton.longPress()){
-      statusLED.start(200);
       delay(2000);
-      statusLED.off();
       processSerialCommand("W");        // DELETE WiFi Data and Restart      
     } else {
-      statusLED.off();
       controlButton.reset();
       processSerialCommand("U");        // UNPAIR Device
     }
@@ -228,7 +226,7 @@ void Span::initWifi(){
           WiFi.disconnect();
           
         Serial.print("Network configuration required!  Found the following SSIDs:\n\n");
-        statusLED.start(250);   // rapidly blink Status LED
+        statusLED.start(LED_INPUT_NEEDED);   // rapidly blink Status LED
       
         for(int i=0;i<network.numSSID;i++){
           Serial.print("  ");
@@ -286,7 +284,7 @@ void Span::initWifi(){
   
   int nTries=0;
   
-  statusLED.start(1000);
+  statusLED.start(LED_WIFI_CONNECTING);
   controlButton.reset();
   
   while(WiFi.status()!=WL_CONNECTED){
@@ -305,7 +303,7 @@ void Span::initWifi(){
       
       while(millis()-sTime<delayTime){        
         if(controlButton.triggered(9999,3000) || (Serial.available() && readSerial(buf,1) && (buf[0]=='W'))){
-          statusLED.start(100);
+          statusLED.start(LED_ALERT);
           Serial.print("\n** Deleting WIFI Network Data **\n** Restarting...\n\n");
           nvs_erase_all(HAPClient::wifiNVS);
           nvs_commit(HAPClient::wifiNVS);      
@@ -474,7 +472,7 @@ void Span::processSerialCommand(char *c){
       
       Serial.print("\nDEVICE NOT YET PAIRED -- PLEASE PAIR WITH HOMEKIT APP\n\n");
       mdns_service_txt_item_set("_hap","_tcp","sf","1");                                                        // set Status Flag = 1 (Table 6-8)
-      statusLED.start(500,0.5,2,1000);
+      statusLED.start(LED_PAIRING_NEEDED);
     }
     break;
 

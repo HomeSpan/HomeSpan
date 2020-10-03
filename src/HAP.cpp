@@ -1514,7 +1514,7 @@ void HAPClient::removeController(uint8_t *id){
       removeControllers();
       LOG1("That was last Admin Controller!  Removing any remaining Regular Controllers and unpairing Accessory\n");  
       mdns_service_txt_item_set("_hap","_tcp","sf","1");           // set Status Flag = 1 (Table 6-8)
-      homeSpan.statusLED.start(500,0.5,2,1000);
+      homeSpan.statusLED.start(LED_PAIRING_NEEDED);
     }
 
     LOG2("\n");
