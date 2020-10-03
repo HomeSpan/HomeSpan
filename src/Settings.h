@@ -8,6 +8,7 @@
 
 #define     HOMESPAN_VERSION      "1.0.0"
 
+
 //////////////////////////////////////////////////////
 //                DEFAULT SETTINGS                  //  
 
@@ -28,6 +29,7 @@
 
 #define     DEFAULT_MAX_CONNECTIONS 8                 // change with homeSpan.setMaxConnections(num);
 
+
 /////////////////////////////////////////////////////
 //              STATUS LED SETTINGS                //
 
@@ -46,6 +48,7 @@
 #define LOG1(x) if(homeSpan.logLevel>0)Serial.print(x)
 #define LOG2(x) if(homeSpan.logLevel>1)Serial.print(x)
    
+
 //////////////////////////////////////////////////////
 //   Types of Accessory Categories                  //
 //   Reference: HAP Section 13                      //
