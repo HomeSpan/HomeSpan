@@ -1352,32 +1352,10 @@ SpanButton::SpanButton(int pin, unsigned long longTime, unsigned long shortTime)
   if((void(*)(int,boolean))(service->*(&SpanService::button))==(void(*)(int,boolean))(&SpanService::button))
     Serial.print("*** WARNING:  No button() method defined for this PushButton!\n\n");
 
+  pushButton=new PushButton(pin);         // create underlying PushButton
+  
   homeSpan.PushButtons.push_back(this);
 
-  pinMode(pin,INPUT_PULLUP);  
 }
-
-///////////////////////////////
-
-void SpanButton::check(){
-
- if(!isTriggered && !digitalRead(pin)){
-  isTriggered=true;
-  unsigned long cTime=millis();
-  shortAlarm=cTime+shortTime;
-  longAlarm=cTime+longTime;
- } else
- 
- if(isTriggered && digitalRead(pin)){
-  unsigned long cTime=millis();
-  if(cTime>longAlarm)
-    service->button(pin, true);
-  else if(cTime>shortAlarm)
-    service->button(pin, false);
-  isTriggered=false;
- }
-  
-}
-
 
 ///////////////////////////////

@@ -82,6 +82,8 @@ void setup() {
   
   Serial.begin(115200);
 
+  homeSpan.setLogLevel(1);
+
   homeSpan.begin(Category::Bridges,"HomeSpan Bridge");
 
   new SpanAccessory();  
@@ -92,7 +94,7 @@ void setup() {
   new SpanAccessory();                                                          
     new DEV_Identify("PushButton LED","HomeSpan","123-ABC","20mA LED","0.9",0);
     
-    new DEV_DimmableLED(0,17,19,5,18);          // NEW! added three extra arguments to specific the pin numbers for three SpanButtons() - see DEV_LED.h
+    new DEV_DimmableLED(0,17,23,5,18);          // NEW! added three extra arguments to specific the pin numbers for three SpanButtons() - see DEV_LED.h
  
 } // end of setup()
 

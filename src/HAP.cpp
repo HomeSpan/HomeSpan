@@ -1197,8 +1197,12 @@ void HAPClient::callServiceLoops(){
 
 void HAPClient::checkPushButtons(){
 
-  for(int i=0;i<homeSpan.PushButtons.size();i++)    // loop over all defined pushbuttons
-    homeSpan.PushButtons[i]->check();                  // check if long- or short-pressed, which calls button() method in attached Service if needed
+  for(int i=0;i<homeSpan.PushButtons.size();i++){                   // loop over all defined pushbuttons
+    SpanButton *sb=homeSpan.PushButtons[i];                         // temporary pointer to SpanButton
+    if(sb->pushButton->triggered(sb->shortTime,sb->longTime)){      // if the underlying PushButton is triggered
+      sb->service->button(sb->pin,sb->pushButton->longPress());     // call the Service's button() routine with pin and longPress() as parameters
+    }
+  }
     
 }
 
