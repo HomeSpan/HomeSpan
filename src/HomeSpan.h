@@ -52,6 +52,7 @@ struct Span{
   char *modelName;                              // model name of this device - broadcast as Bonjour field "md" 
   char category[3]="";                          // category ID of primary accessory - broadcast as Bonjour field "ci" (HAP Section 13)
   unsigned long snapTime;                       // current time (in millis) snapped before entering Service loops() or updates()
+  boolean isInitialized=false;                  // flag indicating HomeSpan has been initialized
   
   char *defaultSetupCode=DEFAULT_SETUP_CODE;          // Setup Code used for pairing
   uint8_t statusPin=DEFAULT_STATUS_PIN;               // pin for status LED    

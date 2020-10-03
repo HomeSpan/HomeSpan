@@ -74,10 +74,13 @@ void Span::poll() {
 
   if(!strlen(category)){
     Serial.print("\n** FATAL ERROR: Cannot run homeSpan.poll() without an initial call to homeSpan.begin()!\n** PROGRAM HALTED **\n\n");
-    while(1);
-    
-  } else if(WiFi.status()!=WL_CONNECTED){
-    
+    while(1);    
+  }
+
+  if(!isInitialized){
+
+    Serial.print("\n");
+        
     nvs_flash_init();         // initialize non-volatile-storage partition in flash 
     HAPClient::init();        // read NVS and load HAP settings  
     initWifi();               // initialize WiFi
@@ -93,6 +96,12 @@ void Span::poll() {
 
     Serial.print(displayName);
     Serial.print(" is READY!\n\n");
+    isInitialized=true;
+  }
+
+  if(WiFi.status()!=WL_CONNECTED){
+      Serial.print("*** LOST WIFI CONNECTION! ***\n\n");    
+      initWifi();
   }
 
   char cBuf[17]="?";
