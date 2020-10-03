@@ -99,6 +99,7 @@ boolean PushButton::triggered(uint16_t shortTime, uint16_t longTime){
       } else
       
       if(millis()>longAlarm){       // button is long-pressed
+        longAlarm=millis()+longTime;
         status=3;
         isLongPress=true;
         return(true);
@@ -108,6 +109,11 @@ boolean PushButton::triggered(uint16_t shortTime, uint16_t longTime){
     case 3:
       if(digitalRead(pin))          // button has been released after a long press
         status=0;
+      else if(millis()>longAlarm){
+        longAlarm=millis()+longTime;
+        isLongPress=true;
+        return(true);        
+      }
     break;
 
   }
