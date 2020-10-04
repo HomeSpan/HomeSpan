@@ -19,8 +19,4 @@ class RFControl {
     void start(int _numCycles, int tickTime=1);             // starts transmission of pulses, repeated for numCycles, where each tick in pulse is tickTime microseconds long
 };
 
-// Two transmitters are defined
-
-//extern RFControl RF433;                                   
-//extern RFControl RF315;
-    
+   
