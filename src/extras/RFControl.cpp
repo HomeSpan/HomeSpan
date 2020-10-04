@@ -78,6 +78,3 @@ boolean RFControl::configured=false;
 volatile int RFControl::numCycles;
 uint32_t *RFControl::pRMT=(uint32_t *)RMT_CHANNEL_MEM(0);
 int RFControl::pCount=0;
-
-RFControl RF433(RF433_PIN);
-RFControl RF315(RF315_PIN);

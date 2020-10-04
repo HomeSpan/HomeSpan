@@ -3,9 +3,6 @@
 //       RF Control Module        //
 ////////////////////////////////////
 
-#define RF433_PIN   22            // pin used for 433MHz transmitter
-#define RF315_PIN   23            // pin used for 315MHz transmitter
-
 class RFControl {
   private:
     int pin;
@@ -24,6 +21,6 @@ class RFControl {
 
 // Two transmitters are defined
 
-extern RFControl RF433;                                   
-extern RFControl RF315;
+//extern RFControl RF433;                                   
+//extern RFControl RF315;
     
