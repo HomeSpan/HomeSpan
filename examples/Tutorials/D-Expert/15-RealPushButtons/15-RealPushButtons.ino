@@ -29,26 +29,29 @@ void setup() {
   // SpanButton() is a Service-level object, meaning it attaches itself to the last Service you define.  Typically you would instantiate
   // one of more SpanButton() objects directly inside the constructor for your derived Service.
   
-  // SpanButton() supports two types of a triggers: a SHORT (momentary) button press, and a LONG (extended) button press.  SpanButton()
-  // takes 3 arguments, in the following order:
+  // SpanButton() supports two types of a triggers: a SHORT (momentary) button press, and a LONG (extended) button press.
+  
+  // The length of the press needed to trigger either a SHORT or LONG action can be specified by optional arguments to SpanButton().
+  // Since most buttons create spurious noise when pressed (and then again when released), the default time to trigger a SHORT press is 5ms.
+  // It's fine to change this to a longer value, but a shorter value is not recommended as this may allow spurious triggers unless
+  // you debounce your switch with hardware.
+  
+  // The SpanButton() constructor takes 3 arguments, in the following order:
   //
-  //  * the pin number to which the PushButton is attached (required)
-  //  * the length of time (in milliseconds) the button needs to be pushed to be considered a LONG press (optional; default=2000 ms)
-  //  * the length of time (in milliseconds) the button needs to be pushed to be considered a SHORT press (optional; default=5 ms)
+  //  pin         - the pin number to which the PushButton is attached (required)
+  //  longTime    - the length of time (in milliseconds) the button needs to be pushed to be considered a LONG press (optional; default=2000 ms)
+  //  shortTime   - the length of time (in milliseconds) the button needs to be pushed to be considered a SHORT press (optional; default=5 ms)
 
-  // When SpanButton() is instantiated, it sets the specified pin on the ESP32 to be an INPUT with PULL-UP, meaning that the pin will
+  // When a SpanButton() is instantiated, it sets the specified pin on the ESP32 to be an INPUT with PULL-UP, meaning that the pin will
   // normally return a value of HIGH when read.  Your actual PushButton should be connected so that this pin is GROUNDED when the button
   // is pressed.
 
-  // HomeSpan automatically polls all pins with associated SpanButton() objects and checks for LOW values, indicating the button was
-  // pressed, but not yet released.  It then starts a timer and waits for the button to be released.
-  
-  // NOTE! TRIGGERS DO NOT OCCUR UNTIL THE BUTTON IS RELEASED - IF YOU HOLD DOWN A BUTTON INDEFINITELY, NOTHING HAPPENS.
-  
-  // The length of the press needed to trigger either a SHORT or LONG action is specified by the optional arguments.  Since most buttons
-  // create spurious noise when pressed (and then again when released), the default time to trigger a SHORT press is 5ms.  It's fine to change
-  // this to a longer value, but a shorter value is not recommended as this may allow spurious triggers unless you debounce your switch
-  // with hardware.
+  // HomeSpan automatically polls all pins with associated SpanButton() objects and checks for LOW values, which indicates the button was
+  // pressed, but not yet released.  It then starts a timer.  If the button is released after being pressed for less than shortTime milliseconds,
+  // nothing happens.  If the button is released after being pressed for more than shortTime milliseconds, but for less than longTime milliseconds,
+  // a SHORT press is triggered.  And if the button is held for more than longTime milliseconds without being released, a LONG press is triggered.
+  // Once a LONG press is triggered the timer resets so that if you keep holding the button, another LONG press will be triggered in another
+  // longTime milliseconds.  This continues until you finally release the button.    
 
   // To use SpanButton() within a derived Service you need to implement a button() method.  Similar to the loop() method, your button()
   // method will typically contain some combination of getVal() functions and setVal() functions, along with code that performs some set
@@ -81,8 +84,6 @@ void setup() {
   // version of our derived Dimmable LED Service to include the pin numbers for each of our buttons.  See DEV_LED.h for details.
   
   Serial.begin(115200);
-
-  homeSpan.setLogLevel(1);
 
   homeSpan.begin(Category::Bridges,"HomeSpan Bridge");
 

@@ -39,8 +39,8 @@ struct DEV_DimmableLED : Service::LightBulb {       // Dimmable LED
     // means we only have to hold the raise button for 1 second to trigger a LONG press that increases the brightness by 10%.  In the the third,
     // we change both the LONG press time to 3000 ms (which means holding the button for 3 full seconds before releasing to decrease the brightness
     // by 10%), and the SHORT press time to 500 ms, which means holding down the button for at least half a second (but not longer than 3 seconds)
-    // to derease the brightness by 1%.  The logic for increasing/decreasing brightness, as well as turning on/off power, is found in the button()
-    // method below.  Note that in practice you likely would not use different combinations of parameters for buttons that perform similar types of
+    // to decrease the brightness by 1%.  The logic for increasing/decreasing brightness, as well as turning on/off power, is found in the button()
+    // method below.  Note that in practice you likely would NOT use different combinations of parameters for buttons that perform similar types of
     // functions.  We've only done so here to illustrate how the parameters work.
 
     new SpanButton(powerPin);                       // NEW! create new SpanButton to control power using PushButton on pin number "powerPin"
