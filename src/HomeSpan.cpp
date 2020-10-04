@@ -54,6 +54,9 @@ void Span::begin(Category catID, char *displayName, char *hostNameBase, char *mo
   Serial.print(__DATE__);
   Serial.print(" ");
   Serial.print(__TIME__);
+
+  Serial.print("\n\nDevice Name:      ");
+  Serial.print(homeSpan.displayName);  
   Serial.print("\n\n");
 
   if(!digitalRead(controlPin)){                     // factory reset pin is low upon start-up
