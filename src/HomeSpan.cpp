@@ -79,13 +79,18 @@ void Span::poll() {
 
   if(!isInitialized){
 
-    if(logLevel>1 || isFatalError){
+    if(logLevel>0 || nFatalErrors>0){
       Serial.print(configLog);
       Serial.print("\n*** End Config Log ***\n");
     }
   
-    if(isFatalError){
-      Serial.print("\n*** PROGRAM HALTED DUE TO FATAL ERRORS IN CONFIGURATION! ***\n\n");
+    if(nFatalErrors>0){
+      Serial.print("\n*** PROGRAM HALTED DUE TO ");
+      Serial.print(nFatalErrors);
+      Serial.print(" FATAL ERROR");
+      if(nFatalErrors>1)
+        Serial.print("S");
+      Serial.print(" IN CONFIGURATION! ***\n\n");
       while(1);
     }    
 
@@ -963,8 +968,8 @@ SpanService::SpanService(const char *type, const char *hapName){
   homeSpan.configLog+="-->Service " + String(hapName);
   
   if(homeSpan.Accessories.empty()){
-    homeSpan.configLog+=" *** ERROR!  Missing Accessory! ***\n";
-    homeSpan.isFatalError=true;
+    homeSpan.configLog+=" *** ERROR!  Can't create new Service without a defined Accessory! ***\n";
+    homeSpan.nFatalErrors++;
     return;
   }
 
@@ -1025,8 +1030,8 @@ SpanCharacteristic::SpanCharacteristic(char *type, uint8_t perms, char *hapName)
   homeSpan.configLog+="---->Characteristic " + String(hapName);
 
   if(homeSpan.Accessories.empty() || homeSpan.Accessories.back()->Services.empty()){
-    homeSpan.configLog+=" *** ERROR!  Missing Service! ***\n";
-    homeSpan.isFatalError=true;
+    homeSpan.configLog+=" *** ERROR!  Can't create new Characteristic without a defined Service! ***\n";
+    homeSpan.nFatalErrors++;
     return;
   }
 
@@ -1349,11 +1354,15 @@ SpanRange::SpanRange(int min, int max, int step){
   this->max=max;
   this->step=step;
 
+  homeSpan.configLog+="------>SpanRange: " + String(min) + "/" + String(max) + "/" + String(step);
+
   if(homeSpan.Accessories.empty() || homeSpan.Accessories.back()->Services.empty() || homeSpan.Accessories.back()->Services.back()->Characteristics.empty() ){
-    Serial.print("*** FATAL ERROR:  Can't create new Range without a defined Characteristic.  Program halted!\n\n");
-    while(1);    
+    homeSpan.configLog+=" *** ERROR!  Can't create new Range without a defined Characteristic! ***\n";
+    homeSpan.nFatalErrors++;
+    return;
   }
-  
+
+  homeSpan.configLog+="\n";    
   homeSpan.Accessories.back()->Services.back()->Characteristics.back()->range=this;  
 }
 
@@ -1363,9 +1372,12 @@ SpanRange::SpanRange(int min, int max, int step){
 
 SpanButton::SpanButton(int pin, unsigned long longTime, unsigned long shortTime){
 
+  homeSpan.configLog+="---->SpanButton: Pin " + String(pin);
+
   if(homeSpan.Accessories.empty() || homeSpan.Accessories.back()->Services.empty()){
-    Serial.print("*** FATAL ERROR:  Can't create new PushButton without a defined Service.  Program halted!\n\n");
-    while(1);    
+    homeSpan.configLog+=" *** ERROR!  Can't create new PushButton without a defined Service! ***\n";
+    homeSpan.nFatalErrors++;
+    return;
   }
 
   Serial.print("Configuring PushButton: Pin=");     // initialization message
@@ -1378,12 +1390,12 @@ SpanButton::SpanButton(int pin, unsigned long longTime, unsigned long shortTime)
   service=homeSpan.Accessories.back()->Services.back();
 
   if((void(*)(int,boolean))(service->*(&SpanService::button))==(void(*)(int,boolean))(&SpanService::button))
-    Serial.print("*** WARNING:  No button() method defined for this PushButton!\n\n");
+    homeSpan.configLog+=" *** WARNING:  No button() method defined for this PushButton! ***";
 
   pushButton=new PushButton(pin);         // create underlying PushButton
   
+  homeSpan.configLog+="\n";  
   homeSpan.PushButtons.push_back(this);
-
 }
 
 ///////////////////////////////
