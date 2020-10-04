@@ -178,8 +178,7 @@ void Span::poll() {
   if(controlButton.triggered(5000,10000)){
     statusLED.off();
     if(controlButton.longPress()){
-      delay(2000);
-      processSerialCommand("W");        // DELETE WiFi Data and Restart      
+      processSerialCommand("W");        // DELETE WiFi Data      
     } else {
       controlButton.reset();
       processSerialCommand("U");        // UNPAIR Device
@@ -312,12 +311,8 @@ void Span::initWifi(){
       
       while(millis()-sTime<delayTime){        
         if(controlButton.triggered(9999,3000) || (Serial.available() && readSerial(buf,1) && (buf[0]=='W'))){
-          statusLED.start(LED_ALERT);
-          Serial.print("\n** Deleting WIFI Network Data **\n** Restarting...\n\n");
-          nvs_erase_all(HAPClient::wifiNVS);
-          nvs_commit(HAPClient::wifiNVS);      
-          delay(2000);
-          ESP.restart();
+          processSerialCommand("W");        // DELETE WiFi Data      
+          return;
         }
       }
     }
@@ -489,9 +484,8 @@ void Span::processSerialCommand(char *c){
 
       nvs_erase_all(HAPClient::wifiNVS);
       nvs_commit(HAPClient::wifiNVS);      
-      Serial.print("\n** WIFI Network Data DELETED **\n** Restarting...\n\n");
-      delay(1000);
-      ESP.restart();
+      WiFi.disconnect();
+      Serial.print("\n** WIFI Network Data DELETED **\n\n");
     }
     break;
 
@@ -558,7 +552,7 @@ void Span::processSerialCommand(char *c){
       Serial.print("  d - print attributes database\n");
       Serial.print("  i - print detailed info about configuration\n");
       Serial.print("  U - unpair device by deleting all Controller data\n");
-      Serial.print("  W - delete stored WiFi data and restart\n");      
+      Serial.print("  W - delete stored WiFi data\n");      
       Serial.print("  H - delete stored HomeKit Pairing data and restart\n");      
       Serial.print("  F - delete all stored data (Factory Reset) and restart\n");      
       Serial.print("  ? - print this list of commands\n");
