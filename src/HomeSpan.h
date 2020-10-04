@@ -120,11 +120,12 @@ struct SpanService{
 
   int iid=0;                                              // Instance ID (HAP Table 6-2)
   const char *type;                                       // Service Type
+  const char *hapName;                                    // HAP Name
   boolean hidden=false;                                   // optional property indicating service is hidden
   boolean primary=false;                                  // optional property indicating service is primary
   vector<SpanCharacteristic *> Characteristics;           // vector of pointers to all Characteristics in this Service  
   
-  SpanService(const char *type);
+  SpanService(const char *type, const char *hapName);
 
   SpanService *setPrimary();                              // sets the Service Type to be primary and returns pointer to self
   SpanService *setHidden();                               // sets the Service Type to be hidden and returns pointer to self
@@ -173,6 +174,7 @@ struct SpanCharacteristic{
      
   int iid=0;                               // Instance ID (HAP Table 6-3)
   char *type;                              // Characteristic Type
+  const char *hapName;                     // HAP Name
   UVal value;                              // Characteristic Value
   uint8_t perms;                           // Characteristic Permissions
   FORMAT format;                           // Characteristic Format        
@@ -186,15 +188,15 @@ struct SpanCharacteristic{
   UVal newValue;                           // the updated value requested by PUT /characteristic
   SpanService *service=NULL;               // pointer to Service containing this Characteristic
       
-  SpanCharacteristic(char *type, uint8_t perms);
-  SpanCharacteristic(char *type, uint8_t perms, boolean value);
-  SpanCharacteristic(char *type, uint8_t perms, uint8_t value);
-  SpanCharacteristic(char *type, uint8_t perms, uint16_t value);
-  SpanCharacteristic(char *type, uint8_t perms, uint32_t value);
-  SpanCharacteristic(char *type, uint8_t perms, uint64_t value);
-  SpanCharacteristic(char *type, uint8_t perms, int32_t value);
-  SpanCharacteristic(char *type, uint8_t perms, double value);
-  SpanCharacteristic(char *type, uint8_t perms, const char* value);
+  SpanCharacteristic(char *type, uint8_t perms, char *hapName);
+  SpanCharacteristic(char *type, uint8_t perms, boolean value, char *hapName);
+  SpanCharacteristic(char *type, uint8_t perms, uint8_t value, char *hapName);
+  SpanCharacteristic(char *type, uint8_t perms, uint16_t value, char *hapName);
+  SpanCharacteristic(char *type, uint8_t perms, uint32_t value, char *hapName);
+  SpanCharacteristic(char *type, uint8_t perms, uint64_t value, char *hapName);
+  SpanCharacteristic(char *type, uint8_t perms, int32_t value, char *hapName);
+  SpanCharacteristic(char *type, uint8_t perms, double value, char *hapName);
+  SpanCharacteristic(char *type, uint8_t perms, const char* value, char *hapName);
 
   int sprintfAttributes(char *cBuf, int flags);   // prints Characteristic JSON records into buf, according to flags mask; return number of characters printed, excluding null terminator  
   StatusCode loadUpdate(char *val, char *ev);     // load updated val/ev from PUT /characteristic JSON request.  Return intiial HAP status code (checks to see if characteristic is found, is writable, etc.)

@@ -527,13 +527,18 @@ void Span::processSerialCommand(char *c){
     break;
 
     case 'i':{
-      
+
+      char d[]="------------------------------";
       Serial.print("\n*** HomeSpan Info ***\n\n");
-      char cBuf[128];
+      char cBuf[256];
+      sprintf(cBuf,"%-30s  %s  %s  %s  %s  %s  %s\n","Service","Type","AID","IID","Update","Loop","Button");
+      Serial.print(cBuf);
+      sprintf(cBuf,"%.30s  %.4s  %.3s  %.3s  %.6s  %.4s  %.6s\n",d,d,d,d,d,d,d);
+      Serial.print(cBuf);
       for(int i=0;i<Accessories.size();i++){                             // identify all services with over-ridden loop() methods
         for(int j=0;j<Accessories[i]->Services.size();j++){
-          SpanService *s=Accessories[i]->Services[j];        
-          sprintf(cBuf,"Service aid=%2d iid=%2d  Update: %3s  Loop: %3s  Button: %3s\n",Accessories[i]->aid,s->iid, 
+          SpanService *s=Accessories[i]->Services[j];
+          sprintf(cBuf,"%-30s  %4s  %3d  %3d  %6s  %4s  %6s\n",s->hapName,s->type,Accessories[i]->aid,s->iid, 
                  (void(*)())(s->*(&SpanService::update))!=(void(*)())(&SpanService::update)?"YES":"NO",
                  (void(*)())(s->*(&SpanService::loop))!=(void(*)())(&SpanService::loop)?"YES":"NO",
                  (void(*)(int,boolean))(s->*(&SpanService::button))!=(void(*)(int,boolean))(&SpanService::button)?"YES":"NO"
@@ -541,7 +546,7 @@ void Span::processSerialCommand(char *c){
           Serial.print(cBuf);
         }
       }
-      Serial.print("\n*** End Status ***\n");
+      Serial.print("\n*** End Info ***\n");
     }
     break;
 
@@ -938,12 +943,15 @@ int SpanAccessory::sprintfAttributes(char *cBuf){
 //       SpanService         //
 ///////////////////////////////
 
-SpanService::SpanService(const char *type){
+SpanService::SpanService(const char *type, const char *hapName){
 
   this->type=type;
+  this->hapName=hapName;
 
   if(homeSpan.Accessories.empty()){
-    Serial.print("*** FATAL ERROR:  Can't create new Service without a defined Accessory.  Program halted!\n\n");
+    Serial.print("*** FATAL ERROR:  Can't create new Service '");
+    Serial.print(hapName);
+    Serial.print("' without a defined Accessory.  Program halted!\n\n");
     while(1);
   }
   
@@ -996,12 +1004,15 @@ int SpanService::sprintfAttributes(char *cBuf){
 //    SpanCharacteristic     //
 ///////////////////////////////
 
-SpanCharacteristic::SpanCharacteristic(char *type, uint8_t perms){
+SpanCharacteristic::SpanCharacteristic(char *type, uint8_t perms, char *hapName){
   this->type=type;
-  this->perms=perms;  
+  this->perms=perms;
+  this->hapName=hapName;
 
   if(homeSpan.Accessories.empty() || homeSpan.Accessories.back()->Services.empty()){
-    Serial.print("*** FATAL ERROR:  Can't create new Characteristic without a defined Service.  Program halted!\n\n");
+    Serial.print("*** FATAL ERROR:  Can't create new Characteristic '");
+    Serial.print(hapName);
+    Serial.print("' without a defined Service.  Program halted!\n\n");
     while(1);    
   }
   
@@ -1016,56 +1027,56 @@ SpanCharacteristic::SpanCharacteristic(char *type, uint8_t perms){
 
 ///////////////////////////////
 
-SpanCharacteristic::SpanCharacteristic(char *type, uint8_t perms, boolean value) : SpanCharacteristic(type, perms) {
+SpanCharacteristic::SpanCharacteristic(char *type, uint8_t perms, boolean value, char *hapName) : SpanCharacteristic(type, perms, hapName) {
   this->format=BOOL;
   this->value.BOOL=value;
 }
 
 ///////////////////////////////
 
-SpanCharacteristic::SpanCharacteristic(char *type, uint8_t perms, int32_t value) : SpanCharacteristic(type, perms) {
+SpanCharacteristic::SpanCharacteristic(char *type, uint8_t perms, int32_t value, char *hapName) : SpanCharacteristic(type, perms, hapName) {
   this->format=INT;
   this->value.INT=value;
 }
 
 ///////////////////////////////
 
-SpanCharacteristic::SpanCharacteristic(char *type, uint8_t perms, uint8_t value) : SpanCharacteristic(type, perms) {
+SpanCharacteristic::SpanCharacteristic(char *type, uint8_t perms, uint8_t value, char *hapName) : SpanCharacteristic(type, perms, hapName) {
   this->format=UINT8;
   this->value.UINT8=value;
 }
 
 ///////////////////////////////
 
-SpanCharacteristic::SpanCharacteristic(char *type, uint8_t perms, uint16_t value) : SpanCharacteristic(type, perms) {
+SpanCharacteristic::SpanCharacteristic(char *type, uint8_t perms, uint16_t value, char *hapName) : SpanCharacteristic(type, perms, hapName) {
   this->format=UINT16;
   this->value.UINT16=value;
 }
 
 ///////////////////////////////
 
-SpanCharacteristic::SpanCharacteristic(char *type, uint8_t perms, uint32_t value) : SpanCharacteristic(type, perms) {
+SpanCharacteristic::SpanCharacteristic(char *type, uint8_t perms, uint32_t value, char *hapName) : SpanCharacteristic(type, perms, hapName) {
   this->format=UINT32;
   this->value.UINT32=value;
 }
 
 ///////////////////////////////
 
-SpanCharacteristic::SpanCharacteristic(char *type, uint8_t perms, uint64_t value) : SpanCharacteristic(type, perms) {
+SpanCharacteristic::SpanCharacteristic(char *type, uint8_t perms, uint64_t value, char *hapName) : SpanCharacteristic(type, perms, hapName) {
   this->format=UINT64;
   this->value.UINT64=value;
 }
 
 ///////////////////////////////
 
-SpanCharacteristic::SpanCharacteristic(char *type, uint8_t perms, double value) : SpanCharacteristic(type, perms) {
+SpanCharacteristic::SpanCharacteristic(char *type, uint8_t perms, double value, char *hapName) : SpanCharacteristic(type, perms, hapName) {
   this->format=FLOAT;
   this->value.FLOAT=value;
 }
 
 ///////////////////////////////
 
-SpanCharacteristic::SpanCharacteristic(char *type, uint8_t perms, const char* value) : SpanCharacteristic(type, perms) {
+SpanCharacteristic::SpanCharacteristic(char *type, uint8_t perms, const char* value, char *hapName) : SpanCharacteristic(type, perms, hapName) {
   this->format=STRING;
   this->value.STRING=value;
 }
