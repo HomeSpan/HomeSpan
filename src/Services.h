@@ -5,11 +5,11 @@
 
 namespace Service {
 
-  struct AccessoryInformation : SpanService { AccessoryInformation() : SpanService{"3E","AccessoryInformation"}{} };
+  struct AccessoryInformation : SpanService { AccessoryInformation() : SpanService{"3E","AccessoryInformation","52,14,20,21,23,30","53"}{} };
 
-  struct AirPurifier : SpanService { AirPurifier() : SpanService{"BB","AirPurifier"}{} };
+  struct AirPurifier : SpanService { AirPurifier() : SpanService{"BB","AirPurifier","B0,A9,A8","23,29,B6,A7"}{} };
 
-  struct AirQualitySensor : SpanService { AirQualitySensor() : SpanService{"8D","AirQualitySensor"}{} };
+  struct AirQualitySensor : SpanService { AirQualitySensor() : SpanService{"8D","AirQualitySensor","95","23,C3,C4,C5,C6,C7,C8,75,77,7A,79"}{} };
 
   struct BatteryService : SpanService { BatteryService() : SpanService{"96","BatteryService"}{} };
 
