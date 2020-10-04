@@ -79,6 +79,16 @@ void Span::poll() {
 
   if(!isInitialized){
 
+    if(logLevel>1 || isFatalError){
+      Serial.print(configLog);
+      Serial.print("\n*** End Config Log ***\n");
+    }
+  
+    if(isFatalError){
+      Serial.print("\n*** PROGRAM HALTED DUE TO FATAL ERRORS IN CONFIGURATION! ***\n\n");
+      while(1);
+    }    
+
     Serial.print("\n");
         
     nvs_flash_init();         // initialize non-volatile-storage partition in flash 
@@ -919,6 +929,8 @@ SpanAccessory::SpanAccessory(){
   
   homeSpan.Accessories.push_back(this);
   aid=homeSpan.Accessories.size();
+
+  homeSpan.configLog+="+Accessory " + String(aid) + "\n";
 }
 
 ///////////////////////////////
@@ -948,16 +960,17 @@ SpanService::SpanService(const char *type, const char *hapName){
   this->type=type;
   this->hapName=hapName;
 
+  homeSpan.configLog+="-->Service " + String(hapName);
+  
   if(homeSpan.Accessories.empty()){
-    Serial.print("*** FATAL ERROR:  Can't create new Service '");
-    Serial.print(hapName);
-    Serial.print("' without a defined Accessory.  Program halted!\n\n");
-    while(1);
+    homeSpan.configLog+=" *** ERROR!  Missing Accessory! ***\n";
+    homeSpan.isFatalError=true;
+    return;
   }
-  
+
+  homeSpan.configLog+="\n";
   homeSpan.Accessories.back()->Services.push_back(this);  
-  iid=++(homeSpan.Accessories.back()->iidCount);
-  
+  iid=++(homeSpan.Accessories.back()->iidCount);  
 }
 
 ///////////////////////////////
@@ -1009,20 +1022,21 @@ SpanCharacteristic::SpanCharacteristic(char *type, uint8_t perms, char *hapName)
   this->perms=perms;
   this->hapName=hapName;
 
+  homeSpan.configLog+="---->Characteristic " + String(hapName);
+
   if(homeSpan.Accessories.empty() || homeSpan.Accessories.back()->Services.empty()){
-    Serial.print("*** FATAL ERROR:  Can't create new Characteristic '");
-    Serial.print(hapName);
-    Serial.print("' without a defined Service.  Program halted!\n\n");
-    while(1);    
+    homeSpan.configLog+=" *** ERROR!  Missing Service! ***\n";
+    homeSpan.isFatalError=true;
+    return;
   }
-  
+
+  homeSpan.configLog+="\n";
   homeSpan.Accessories.back()->Services.back()->Characteristics.push_back(this);  
   iid=++(homeSpan.Accessories.back()->iidCount);
   service=homeSpan.Accessories.back()->Services.back();
   aid=homeSpan.Accessories.back()->aid;
 
   ev=(boolean *)calloc(homeSpan.maxConnections,sizeof(boolean));
-
 }
 
 ///////////////////////////////

@@ -8,11 +8,11 @@ void setup() {
  
   Serial.begin(115200);
  
+  homeSpan.setLogLevel(2);
+
   homeSpan.begin(Category::Lighting,"HomeSpan Benchmark");
 
   new SpanAccessory();                                  // Begin by creating a new Accessory using SpanAccessory(), which takes no arguments
-
-        new Characteristic::Model("HSL Test");                    // Model of the Accessory (arbitrary text string, and can be the same for every Accessory)
 
     new Service::AccessoryInformation();                    // HAP requires every Accessory to implement an AccessoryInformation Service, which has 6 required Characteristics
       new Characteristic::Name("HomeSpan Test");                // Name of the Accessory, which shows up on the HomeKit "tiles", and should be unique across Accessories                                                            
