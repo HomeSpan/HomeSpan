@@ -21,7 +21,7 @@ void HAPClient::init(){
   } verifyData;
   
   if(!nvs_get_blob(srpNVS,"VERIFYDATA",NULL,&len)){                   // if found verification code data in NVS
-    nvs_get_blob(srpNVS,"VERIFYDATA",&verifyData,&len);               // retrieve data
+    nvs_get_blob(srpNVS,"VERIFYDATA",&verifyData,&len);                  // retrieve data
     srp.loadVerifyCode(verifyData.verifyCode,verifyData.salt);           // load verification code and salt into SRP structure
   } else {
     
