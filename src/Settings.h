@@ -33,13 +33,13 @@
 /////////////////////////////////////////////////////
 //              STATUS LED SETTINGS                //
 
+#define     LED_WIFI_NEEDED       500,0.3,1,3000      // slow single-blink
 #define     LED_PAIRING_NEEDED    1000,0.9            // drop-out
 #define     LED_ALERT             100                 // rapid flashing
 #define     LED_WIFI_CONNECTING   2000                // slow flashing
 #define     LED_INPUT_NEEDED      500                 // medium flashing
 #define     LED_AP_STARTED        100,0.5,2,500       // rapid double-blink
 #define     LED_AP_CONNECTED      500,0.3,2,1000      // slow double-blink     
-
 
 /////////////////////////////////////////////////////
 //      Message Log Level Control Macros           //

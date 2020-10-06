@@ -103,6 +103,10 @@ void Span::poll() {
     HAPClient::init();        // read NVS and load HAP settings  
     initWifi();               // initialize WiFi
 
+    if(!foundWifiCredentials){
+      Serial.print("WIFI CREDENTIALS DATA NOT FOUND -- PLEASE CONFIGURE BY TYPING 'W <RETURN>' OR PRESS CONTROL BUTTON FOR 3 SECONDS TO START ACCESS POINT.\n\n");
+      statusLED.start(LED_WIFI_NEEDED);
+    } else
     if(!HAPClient::nAdminControllers()){
       Serial.print("DEVICE NOT YET PAIRED -- PLEASE PAIR WITH HOMEKIT APP\n\n");
       statusLED.start(LED_PAIRING_NEEDED);
@@ -117,7 +121,7 @@ void Span::poll() {
     isInitialized=true;
   }
 
-  if(WiFi.status()!=WL_CONNECTED){
+  if(foundWifiCredentials && WiFi.status()!=WL_CONNECTED){
       Serial.print("*** LOST WIFI CONNECTION! ***\n\n");    
       initWifi();
   }
@@ -221,6 +225,12 @@ int Span::getFreeSlot(){
 
 void Span::initWifi(){
 
+  size_t len;             // not used but required to read blobs from NVS
+
+  if(nvs_get_blob(HAPClient::wifiNVS,"WIFIDATA",NULL,&len)){                   // WiFi data not stored
+    return;
+  }
+  
   char id[18];                              // create string version of Accessory ID for MDNS broadcast
   memcpy(id,HAPClient::accessory.ID,17);    // copy ID bytes
   id[17]='\0';                              // add terminating null
@@ -231,7 +241,6 @@ void Span::initWifi(){
   char hostName[nChars+1];
   sprintf(hostName,"%s-%.2s%.2s%.2s%.2s%.2s%.2s",hostNameBase,id,id+3,id+6,id+9,id+12,id+15);
 
-  size_t len;             // not used but required to read blobs from NVS
   
   if(!nvs_get_blob(HAPClient::wifiNVS,"WIFIDATA",NULL,&len)){                   // if found WiFi data in NVS
     nvs_get_blob(HAPClient::wifiNVS,"WIFIDATA",&network.wifiData,&len);         // retrieve data
