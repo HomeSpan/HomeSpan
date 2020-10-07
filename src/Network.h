@@ -29,14 +29,14 @@ struct Network {
   int apStatus;                           // tracks access point status (0=timed-out, -1=cancel, 1=save)
 
   struct {
-    char ssid[MAX_SSID+1];
-    char pwd[MAX_PWD+1];
+    char ssid[MAX_SSID+1]="";
+    char pwd[MAX_PWD+1]="";
   } wifiData;
   
   char setupCode[8+1];  
 
   void scan();                                                              // scan for WiFi networks and save only those with unique SSIDs
-  boolean serialConfigure();                                                // configure homeSpan WiFi and Setup Code from Serial Monitor; return 1=save settings, 0=cancel settings
+  void serialConfigure();                                                   // configure homeSpan WiFi from serial monitor
   boolean allowedCode(char *s);                                             // checks if Setup Code is allowed (HAP defines a list of disallowed codes)
   void apConfigure(char *hostName);                                         // configure homeSpan WiFi and Setup Code using temporary Captive Access Point 'hostName'; only returns if sucessful, else ESP restarts
   void processRequest(char *body, char *formData);                          // process the HTTP request

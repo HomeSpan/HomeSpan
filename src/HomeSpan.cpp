@@ -99,21 +99,15 @@ void Span::poll() {
 
     Serial.print("\n");
         
-    nvs_flash_init();         // initialize non-volatile-storage partition in flash 
     HAPClient::init();        // read NVS and load HAP settings  
-    initWifi();               // initialize WiFi
 
-    if(!foundWifiCredentials){
-      Serial.print("WIFI CREDENTIALS DATA NOT FOUND -- PLEASE CONFIGURE BY TYPING 'W <RETURN>' OR PRESS CONTROL BUTTON FOR 3 SECONDS TO START ACCESS POINT.\n\n");
-      statusLED.start(LED_WIFI_NEEDED);
-    } else
-    if(!HAPClient::nAdminControllers()){
-      Serial.print("DEVICE NOT YET PAIRED -- PLEASE PAIR WITH HOMEKIT APP\n\n");
-      statusLED.start(LED_PAIRING_NEEDED);
+    if(strlen(network.wifiData.ssid)>0){
+      initWifi();
     } else {
-      statusLED.on();
+      Serial.print("*** WIFI CREDENTIALS DATA NOT FOUND -- PLEASE CONFIGURE BY TYPING 'W <RETURN>' OR PRESS CONTROL BUTTON FOR 3 SECONDS TO START ACCESS POINT.\n\n");
+      statusLED.start(LED_WIFI_NEEDED);
     }
-
+          
     controlButton.reset();        
 
     Serial.print(displayName);
@@ -121,8 +115,7 @@ void Span::poll() {
     isInitialized=true;
   }
 
-  if(foundWifiCredentials && WiFi.status()!=WL_CONNECTED){
-      Serial.print("*** LOST WIFI CONNECTION! ***\n\n");    
+  if(strlen(network.wifiData.ssid)>0 && WiFi.status()!=WL_CONNECTED){
       initWifi();
   }
 
@@ -225,12 +218,6 @@ int Span::getFreeSlot(){
 
 void Span::initWifi(){
 
-  size_t len;             // not used but required to read blobs from NVS
-
-  if(nvs_get_blob(HAPClient::wifiNVS,"WIFIDATA",NULL,&len)){                   // WiFi data not stored
-    return;
-  }
-  
   char id[18];                              // create string version of Accessory ID for MDNS broadcast
   memcpy(id,HAPClient::accessory.ID,17);    // copy ID bytes
   id[17]='\0';                              // add terminating null
@@ -240,6 +227,93 @@ void Span::initWifi(){
   int nChars=snprintf(NULL,0,"%s-%.2s%.2s%.2s%.2s%.2s%.2s",hostNameBase,id,id+3,id+6,id+9,id+12,id+15);       
   char hostName[nChars+1];
   sprintf(hostName,"%s-%.2s%.2s%.2s%.2s%.2s%.2s",hostNameBase,id,id+3,id+6,id+9,id+12,id+15);
+
+  int nTries=0;
+  
+  statusLED.start(LED_WIFI_CONNECTING);
+  controlButton.reset();
+  
+  while(WiFi.status()!=WL_CONNECTED){
+    Serial.print("Connecting to: ");
+    Serial.print(network.wifiData.ssid);
+    Serial.print("... ");
+    nTries++;
+    
+    if(WiFi.begin(network.wifiData.ssid,network.wifiData.pwd)!=WL_CONNECTED){
+      int delayTime=nTries%6?5000:60000;
+      char buf[8]="";
+      Serial.print("Can't connect. Re-trying in ");
+      Serial.print(delayTime/1000);
+      Serial.print(" seconds. Type 'X <return>' or press Control Button for 3 seconds to terminate search and delete WiFi credentials...");
+      long sTime=millis();
+      
+      while(millis()-sTime<delayTime){        
+        if(controlButton.triggered(9999,3000) || (Serial.available() && readSerial(buf,1) && (buf[0]=='X'))){
+          Serial.print(" TERMINATED!\n");
+          processSerialCommand("X");        // DELETE WiFi Data      
+          return;
+        }
+      }
+    }
+    Serial.print("\n");
+  } // WiFi not yet connected
+
+  Serial.print("Success!  IP:  ");
+  Serial.print(WiFi.localIP());
+  Serial.print("\n");
+
+  Serial.print("\nStarting MDNS...\n");
+  Serial.print("Broadcasting as: ");
+  Serial.print(hostName);
+  Serial.print(".local (");
+  Serial.print(displayName);
+  Serial.print(" / ");
+  Serial.print(modelName);
+  Serial.print(")\n");
+
+  MDNS.begin(hostName);                     // set server host name (.local implied)
+  MDNS.setInstanceName(displayName);        // set server display name
+  MDNS.addService("_hap","_tcp",80);        // advertise HAP service on HTTP port (80)
+
+  // add MDNS (Bonjour) TXT records for configurable as well as fixed values (HAP Table 6-7)
+
+  char cNum[16];
+  sprintf(cNum,"%d",hapConfig.configNumber);
+  
+  mdns_service_txt_item_set("_hap","_tcp","c#",cNum);            // Accessory Current Configuration Number (updated whenever config of HAP Accessory Attribute Database is updated)
+  mdns_service_txt_item_set("_hap","_tcp","md",modelName);       // Accessory Model Name
+  mdns_service_txt_item_set("_hap","_tcp","ci",category);        // Accessory Category (HAP Section 13.1)
+  mdns_service_txt_item_set("_hap","_tcp","id",id);              // string version of Accessory ID in form XX:XX:XX:XX:XX:XX (HAP Section 5.4)
+
+  mdns_service_txt_item_set("_hap","_tcp","ff","0");             // HAP Pairing Feature flags.  MUST be "0" to specify Pair Setup method (HAP Table 5-3) without MiFi Authentification
+  mdns_service_txt_item_set("_hap","_tcp","pv","1.1");           // HAP version - MUST be set to "1.1" (HAP Section 6.6.3)
+  mdns_service_txt_item_set("_hap","_tcp","s#","1");             // HAP current state - MUST be set to "1"
+
+  if(!HAPClient::nAdminControllers())                            // Accessory is not yet paired
+    mdns_service_txt_item_set("_hap","_tcp","sf","1");           // set Status Flag = 1 (Table 6-8)
+  else
+    mdns_service_txt_item_set("_hap","_tcp","sf","0");           // set Status Flag = 0
+
+  Serial.print("\nStarting Web (HTTP) Server supporting up to ");
+  Serial.print(maxConnections);
+  Serial.print(" simultaneous connections...\n\n");
+  hapServer.begin();
+
+  if(!HAPClient::nAdminControllers()){
+    Serial.print("DEVICE NOT YET PAIRED -- PLEASE PAIR WITH HOMEKIT APP\n\n");
+    statusLED.start(LED_PAIRING_NEEDED);
+  } else {
+    statusLED.on();
+  }
+
+/*
+
+  size_t len;             // not used but required to read blobs from NVS
+
+  if(nvs_get_blob(HAPClient::wifiNVS,"WIFIDATA",NULL,&len)){                   // WiFi data not stored
+    return;
+  }
+  
 
   
   if(!nvs_get_blob(HAPClient::wifiNVS,"WIFIDATA",NULL,&len)){                   // if found WiFi data in NVS
@@ -316,77 +390,7 @@ void Span::initWifi(){
     ESP.restart();                                  // re-start device   
 
   } // configure network
-  
-  int nTries=0;
-  
-  statusLED.start(LED_WIFI_CONNECTING);
-  controlButton.reset();
-  
-  while(WiFi.status()!=WL_CONNECTED){
-    Serial.print("Connecting to: ");
-    Serial.print(network.wifiData.ssid);
-    Serial.print("... ");
-    nTries++;
-    
-    if(WiFi.begin(network.wifiData.ssid,network.wifiData.pwd)!=WL_CONNECTED){
-      int delayTime=nTries%6?5000:60000;
-      char buf[8]="";
-      Serial.print("Can't connect. Re-trying in ");
-      Serial.print(delayTime/1000);
-      Serial.print(" seconds. Type 'W <return>' or press Control Button for 3 seconds to reset WiFi data...\n");
-      long sTime=millis();
-      
-      while(millis()-sTime<delayTime){        
-        if(controlButton.triggered(9999,3000) || (Serial.available() && readSerial(buf,1) && (buf[0]=='W'))){
-          processSerialCommand("W");        // DELETE WiFi Data      
-          return;
-        }
-      }
-    }
-  } // WiFi not yet connected
-
-  Serial.print("Success!  IP:  ");
-  Serial.print(WiFi.localIP());
-  Serial.print("\n");
-
-  Serial.print("\nStarting MDNS...\n");
-  Serial.print("Broadcasting as: ");
-  Serial.print(hostName);
-  Serial.print(".local (");
-  Serial.print(displayName);
-  Serial.print(" / ");
-  Serial.print(modelName);
-  Serial.print(")\n");
-
-  MDNS.begin(hostName);                     // set server host name (.local implied)
-  MDNS.setInstanceName(displayName);        // set server display name
-  MDNS.addService("_hap","_tcp",80);        // advertise HAP service on HTTP port (80)
-
-  // add MDNS (Bonjour) TXT records for configurable as well as fixed values (HAP Table 6-7)
-
-  char cNum[16];
-  sprintf(cNum,"%d",hapConfig.configNumber);
-  
-  mdns_service_txt_item_set("_hap","_tcp","c#",cNum);            // Accessory Current Configuration Number (updated whenever config of HAP Accessory Attribute Database is updated)
-  mdns_service_txt_item_set("_hap","_tcp","md",modelName);       // Accessory Model Name
-  mdns_service_txt_item_set("_hap","_tcp","ci",category);        // Accessory Category (HAP Section 13.1)
-  mdns_service_txt_item_set("_hap","_tcp","id",id);              // string version of Accessory ID in form XX:XX:XX:XX:XX:XX (HAP Section 5.4)
-
-  mdns_service_txt_item_set("_hap","_tcp","ff","0");             // HAP Pairing Feature flags.  MUST be "0" to specify Pair Setup method (HAP Table 5-3) without MiFi Authentification
-  mdns_service_txt_item_set("_hap","_tcp","pv","1.1");           // HAP version - MUST be set to "1.1" (HAP Section 6.6.3)
-  mdns_service_txt_item_set("_hap","_tcp","s#","1");             // HAP current state - MUST be set to "1"
-
-  if(!HAPClient::nAdminControllers())                            // Accessory is not yet paired
-    mdns_service_txt_item_set("_hap","_tcp","sf","1");           // set Status Flag = 1 (Table 6-8)
-  else
-    mdns_service_txt_item_set("_hap","_tcp","sf","0");           // set Status Flag = 0
-
-  Serial.print("\nStarting Web (HTTP) Server supporting up to ");
-  Serial.print(maxConnections);
-  Serial.print(" simultaneous connections...\n\n");
-  hapServer.begin();
-
-  statusLED.stop();
+*/  
   
 } // initWiFi
 
@@ -509,10 +513,21 @@ void Span::processSerialCommand(char *c){
 
     case 'W': {
 
+      network.serialConfigure();
+      nvs_set_blob(HAPClient::wifiNVS,"WIFIDATA",&network.wifiData,sizeof(network.wifiData));    // update data
+      nvs_commit(HAPClient::wifiNVS);                                                            // commit to NVS
+      Serial.print("\n*** Credentials saved!\n\n");     
+    }
+    break;
+
+    case 'X': {
+
       nvs_erase_all(HAPClient::wifiNVS);
       nvs_commit(HAPClient::wifiNVS);      
+      sprintf(network.wifiData.ssid,"");
       WiFi.disconnect();
-      Serial.print("\n** WIFI Network Data DELETED **\n\n");
+      Serial.print("\n*** WIFI CREDENTIALS DATA NOT FOUND -- PLEASE CONFIGURE BY TYPING 'W <RETURN>' OR PRESS CONTROL BUTTON FOR 3 SECONDS TO START ACCESS POINT.\n\n");
+      statusLED.start(LED_WIFI_NEEDED);
     }
     break;
 
@@ -584,7 +599,7 @@ void Span::processSerialCommand(char *c){
       Serial.print("  d - print attributes database\n");
       Serial.print("  i - print detailed info about configuration\n");
       Serial.print("  U - unpair device by deleting all Controller data\n");
-      Serial.print("  W - delete stored WiFi data\n");      
+      Serial.print("  X - disconnect from WiFi and delete WiFi credentials\n");      
       Serial.print("  H - delete stored HomeKit Pairing data and restart\n");      
       Serial.print("  F - delete all stored data (Factory Reset) and restart\n");      
       Serial.print("  ? - print this list of commands\n");

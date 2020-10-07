@@ -34,13 +34,25 @@ void Network::scan(){
 
 ///////////////////////////////
 
-boolean Network::serialConfigure(){
+void Network::serialConfigure(){
 
   sprintf(wifiData.ssid,"");
   sprintf(wifiData.pwd,"");
- 
+
+  Serial.print("*** WiFi Setup - Scanning for Networks...\n\n");
+  
+  scan();         // scan for networks    
+
+  for(int i=0;i<numSSID;i++){
+    Serial.print("  ");
+    Serial.print(i+1);
+    Serial.print(") ");
+    Serial.print(ssidList[i]);
+    Serial.print("\n");
+  }
+         
   while(!strlen(wifiData.ssid)){
-    Serial.print(">>> WiFi SSID: ");
+    Serial.print("\n>>> WiFi SSID: ");
     readSerial(wifiData.ssid,MAX_SSID);
     if(atoi(wifiData.ssid)>0 && atoi(wifiData.ssid)<=numSSID){
       strcpy(wifiData.ssid,ssidList[atoi(wifiData.ssid)-1]);
@@ -56,76 +68,7 @@ boolean Network::serialConfigure(){
     Serial.print("\n");
   }
 
-  homeSpan.statusLED.start(LED_WIFI_CONNECTING);
-
-  while(WiFi.status()!=WL_CONNECTED){
-    Serial.print("\nConnecting to: ");
-    Serial.print(wifiData.ssid);
-    Serial.print("... ");
-
-    if(WiFi.begin(wifiData.ssid,wifiData.pwd)!=WL_CONNECTED){
-      char buf[8]="";
-      Serial.print("Can't connect. Re-trying in 5 seconds. Type 'X <return>' to cancel...");
-      long sTime=millis();
-      while(millis()-sTime<5000){
-        if(Serial.available()){
-          readSerial(buf,1);
-          if(buf[0]=='X'){
-            Serial.print("Canceled!\n\n");
-            return(0);
-          }
-        }
-      }
-    }
-  } // WiFi not yet connected
-
-  Serial.print("Success!  IP:  ");
-  Serial.print(WiFi.localIP());
-  Serial.print("\n\n");
-
-  homeSpan.statusLED.start(LED_INPUT_NEEDED);
-  
-  boolean okay=false;
-  Serial.print("Specify new 8-digit Setup Code or leave blank to retain existing code...\n\n");
-  
-  while(!okay){
-    Serial.print("Setup Code: ");
-    sprintf(setupCode,"");
-    readSerial(setupCode,8);
-        
-    if(strlen(setupCode)==0){
-      okay=true;
-      Serial.print("(skipping)\n\n");
-    } else { 
-      Serial.print(setupCode);
-
-      int n=0;
-      while(setupCode[n]!='\0' && setupCode[n]>='0' && setupCode[n]<='9')
-        n++;
-
-      if(n<8)
-        Serial.print("\n** Invalid format!\n\n");
-      else if(!allowedCode(setupCode))
-        Serial.print("\n** Disallowed code!\n\n");
-      else {
-        Serial.print("  Accepted!\n\n");
-        okay=true; 
-      }
-             
-    } // if Setup Code not blank
-  } // while !okay
-
-  char k[2]="";
-  while(k[0]!='y' && k[0]!='n'){
-    Serial.print("Confirm settings (y/n)? ");
-    readSerial(k,1);
-    Serial.print(k);
-    Serial.print("\n");
-  }
-
-  Serial.print("\n");
-    
-  return(k[0]=='y');
+  return;
 }
 
 ///////////////////////////////

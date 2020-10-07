@@ -53,7 +53,6 @@ struct Span{
   char category[3]="";                          // category ID of primary accessory - broadcast as Bonjour field "ci" (HAP Section 13)
   unsigned long snapTime;                       // current time (in millis) snapped before entering Service loops() or updates()
   boolean isInitialized=false;                  // flag indicating HomeSpan has been initialized
-  boolean foundWifiCredentials=false;           // flag indicating whether or not WiFi credentials data is found in NVS
   int nFatalErrors=0;                           // number of fatal errors in user-defined configuration
   String configLog="\n*** Config Log ***\n\n";  // log of configuration process, including any errors
   

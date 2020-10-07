@@ -1,5 +1,6 @@
 
 #include <ESPmDNS.h>
+#include <nvs_flash.h>
 #include <sodium.h>
 
 #include "HAP.h"
@@ -11,9 +12,14 @@ void HAPClient::init(){
 
   size_t len;             // not used but required to read blobs from NVS
 
-  nvs_open("HAP",NVS_READWRITE,&hapNVS);        // open HAP data namespace in NVS
-  nvs_open("SRP",NVS_READWRITE,&srpNVS);        // open SRP data namespace in NVS 
+  nvs_flash_init();         // initialize non-volatile-storage partition in flash  
+
   nvs_open("WIFI",NVS_READWRITE,&wifiNVS);      // open WIFI data namespace in NVS
+  nvs_open("SRP",NVS_READWRITE,&srpNVS);        // open SRP data namespace in NVS 
+  nvs_open("HAP",NVS_READWRITE,&hapNVS);        // open HAP data namespace in NVS
+
+  if(!nvs_get_blob(wifiNVS,"WIFIDATA",NULL,&len))                        // if found WiFi data in NVS
+    nvs_get_blob(wifiNVS,"WIFIDATA",&homeSpan.network.wifiData,&len);      // retrieve data  
   
   struct {                                      // temporary structure to hold SRP verification code and salt stored in NVS
     uint8_t salt[16];

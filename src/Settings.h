@@ -33,8 +33,8 @@
 /////////////////////////////////////////////////////
 //              STATUS LED SETTINGS                //
 
-#define     LED_WIFI_NEEDED       500,0.3,1,3000      // slow single-blink
-#define     LED_PAIRING_NEEDED    1000,0.9            // drop-out
+#define     LED_WIFI_NEEDED       3000,0.05           // slow single-blink
+#define     LED_PAIRING_NEEDED    300,0.5,2,2550      // slow double-blink
 #define     LED_ALERT             100                 // rapid flashing
 #define     LED_WIFI_CONNECTING   2000                // slow flashing
 #define     LED_INPUT_NEEDED      500                 // medium flashing
