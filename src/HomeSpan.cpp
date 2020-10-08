@@ -59,6 +59,7 @@ void Span::begin(Category catID, char *displayName, char *hostNameBase, char *mo
   Serial.print(homeSpan.displayName);  
   Serial.print("\n\n");
 
+/*
   if(!digitalRead(controlPin)){                     // factory reset pin is low upon start-up
     Serial.print("** CONTROL BUTTON PRESSED DURING STARTUP!  PERFORMING FACTORY RESET **\n\n");
     statusLED.start(LED_ALERT);
@@ -68,6 +69,7 @@ void Span::begin(Category catID, char *displayName, char *hostNameBase, char *mo
     statusLED.off();
     ESP.restart();
   }
+*/
       
 }  // begin
 
@@ -190,13 +192,12 @@ void Span::poll() {
     statusLED.start(LED_ALERT);
   }
   
-  if(controlButton.triggered(5000,10000)){
+  if(controlButton.triggered(3000,10000)){
     statusLED.off();
     if(controlButton.longPress()){
-      processSerialCommand("W");        // DELETE WiFi Data      
+      processSerialCommand("F");        // FACTORY RESET
     } else {
-      controlButton.reset();
-      processSerialCommand("U");        // UNPAIR Device
+      commandMode();                    // COMMAND MODE
     }
   }
     
@@ -212,6 +213,57 @@ int Span::getFreeSlot(){
   }
 
   return(-1);          
+}
+
+//////////////////////////////////////
+
+void Span::commandMode(){
+  
+  Serial.print("*** ENTERING COMMAND MODE ***\n\n");
+  int mode=1;
+  boolean done=false;
+  statusLED.start(500,0.3,mode,1000);
+
+  while(!done){
+    if(controlButton.triggered(10,3000)){
+      if(!controlButton.longPress()){
+        mode++;
+        if(mode==4)
+          mode=1;
+        statusLED.start(500,0.3,mode,1000);        
+      } else {
+        done=true;
+      }
+    } // button press
+  } // while
+
+  statusLED.start(LED_ALERT);
+  delay(2000);
+  
+  switch(mode){
+
+    case 1:
+      Serial.print("*** NO ACTION\n\n");
+      if(strlen(network.wifiData.ssid)==0)
+        statusLED.start(LED_WIFI_NEEDED);
+      else
+      if(!HAPClient::nAdminControllers())
+        statusLED.start(LED_PAIRING_NEEDED);
+      else
+        statusLED.on();
+    break;
+
+    case 2:
+      processSerialCommand("X");
+    break;
+      
+    case 3:
+      processSerialCommand("U");
+    break;    
+    
+  } // switch
+  
+  Serial.print("*** EXITING COMMAND MODE ***\n\n");
 }
 
 //////////////////////////////////////
@@ -543,8 +595,20 @@ void Span::processSerialCommand(char *c){
 
     case 'F': {
       
-      nvs_flash_erase();
+      nvs_erase_all(HAPClient::hapNVS);
+      nvs_commit(HAPClient::hapNVS);      
+      nvs_erase_all(HAPClient::wifiNVS);
+      nvs_commit(HAPClient::wifiNVS);      
       Serial.print("\n** FACTORY RESET **\n** Restarting...\n\n");
+      delay(1000);
+      ESP.restart();
+    }
+    break;
+
+    case 'E': {
+      
+      nvs_flash_erase();
+      Serial.print("\n** ALL DATA ERASED **\n** Restarting...\n\n");
       delay(1000);
       ESP.restart();
     }
@@ -600,8 +664,10 @@ void Span::processSerialCommand(char *c){
       Serial.print("  i - print detailed info about configuration\n");
       Serial.print("  U - unpair device by deleting all Controller data\n");
       Serial.print("  X - disconnect from WiFi and delete WiFi credentials\n");      
+      Serial.print("  W - configure WiFi credentials and connect\n");      
       Serial.print("  H - delete stored HomeKit Pairing data and restart\n");      
-      Serial.print("  F - delete all stored data (Factory Reset) and restart\n");      
+      Serial.print("  F - factory reset\n");      
+      Serial.print("  E - delete all stored data and restart\n");      
       Serial.print("  ? - print this list of commands\n");
       Serial.print("  L <level> - change Log Level to <level>\n");
       Serial.print("  S <code>  - change Setup Code to 8-digit <code>\n");

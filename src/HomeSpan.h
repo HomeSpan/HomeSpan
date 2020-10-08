@@ -81,6 +81,7 @@ struct Span{
   void poll();                                  // poll HAP Clients and process any new HAP requests
   int getFreeSlot();                            // returns free HAPClient slot number. HAPClients slot keep track of each active HAPClient connection
   void initWifi();                              // initialize and connect to WiFi network
+  void commandMode();                           // allows user to control and reset HomeSpan settings with the control button
   void processSerialCommand(char *c);           // process command 'c' (typically from readSerial, though can be called with any 'c')
 
   int sprintfAttributes(char *cBuf);            // prints Attributes JSON database into buf, unless buf=NULL; return number of characters printed, excluding null terminator, even if buf=NULL
