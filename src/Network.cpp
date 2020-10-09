@@ -84,13 +84,25 @@ boolean Network::allowedCode(char *s){
 
 void Network::apConfigure(char *apName){
 
-  Serial.print("Starting Access Point: ");
+  Serial.print("*** Starting Access Point: ");
   Serial.print(apName);
   Serial.print(" / ");
   Serial.print(apPassword);
   Serial.print("\n");
 
   homeSpan.statusLED.start(LED_AP_STARTED);
+
+  Serial.print("\nScanning for Networks...\n\n");
+  
+  scan();                   // scan for networks    
+
+  for(int i=0;i<numSSID;i++){
+    Serial.print("  ");
+    Serial.print(i+1);
+    Serial.print(") ");
+    Serial.print(ssidList[i]);
+    Serial.print("\n");
+  }  
 
   WiFiServer apServer(80);
 

@@ -76,6 +76,12 @@ void HAPClient::init(){
 
   printControllers();                                                         
 
+  // create broadcaset name from server base name plus accessory ID (without ':')
+  
+  int nChars=snprintf(NULL,0,"%s-%2.2s%2.2s%2.2s%2.2s%2.2s%2.2s",homeSpan.hostNameBase,accessory.ID,accessory.ID+3,accessory.ID+6,accessory.ID+9,accessory.ID+12,accessory.ID+15);       
+  homeSpan.hostName=(char *)malloc(nChars+1);
+  sprintf(homeSpan.hostName,"%s-%2.2s%2.2s%2.2s%2.2s%2.2s%2.2s",homeSpan.hostNameBase,accessory.ID,accessory.ID+3,accessory.ID+6,accessory.ID+9,accessory.ID+12,accessory.ID+15);
+
   tlv8.create(kTLVType_State,1,"STATE");                 // define the actual TLV records needed for the implementation of HAP; one for each kTLVType needed (HAP Table 5-6)
   tlv8.create(kTLVType_PublicKey,384,"PUBKEY");
   tlv8.create(kTLVType_Method,1,"METHOD");

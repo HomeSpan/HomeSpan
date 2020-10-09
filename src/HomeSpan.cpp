@@ -254,7 +254,7 @@ void Span::commandMode(){
     break;
 
     case 2:
-      processSerialCommand("X");
+      processSerialCommand("A");
     break;
       
     case 3:
@@ -357,92 +357,6 @@ void Span::initWifi(){
   } else {
     statusLED.on();
   }
-
-/*
-
-  size_t len;             // not used but required to read blobs from NVS
-
-  if(nvs_get_blob(HAPClient::wifiNVS,"WIFIDATA",NULL,&len)){                   // WiFi data not stored
-    return;
-  }
-  
-
-  
-  if(!nvs_get_blob(HAPClient::wifiNVS,"WIFIDATA",NULL,&len)){                   // if found WiFi data in NVS
-    nvs_get_blob(HAPClient::wifiNVS,"WIFIDATA",&network.wifiData,&len);         // retrieve data
-    
-  } else {                                                              // configure network and setup code
-    
-    network.scan();         // scan for networks    
-    
-    int status=-1;
-    char key[2];
-
-    controlButton.reset();
-    
-    while(status<1){                   // loop until a configuration method is chosen and completed
-
-      if(status==-1){
-        if(WiFi.status()==WL_CONNECTED)
-          WiFi.disconnect();
-          
-        Serial.print("Network configuration required!  Found the following SSIDs:\n\n");
-        statusLED.start(LED_INPUT_NEEDED);   // rapidly blink Status LED
-      
-        for(int i=0;i<network.numSSID;i++){
-          Serial.print("  ");
-          Serial.print(i+1);
-          Serial.print(") ");
-          Serial.print(network.ssidList[i]);
-          Serial.print("\n");
-        }
-
-        Serial.print("\nType 'W <return>' to set WiFi credentials or press Control Button for 3 seconds to start Access Point...\n\n");
-        status=0;
-        sprintf(key,"");
-      }
-
-      if(controlButton.triggered(9999,3000)){    
-        network.apConfigure(hostName);       
-        status=1;
-      }
-
-      if(Serial.available() && *readSerial(key,1)=='W'){
-        status=network.serialConfigure()?1:-1;         
-      }
-      
-    } // while loop  
-
-    Serial.print("Saving WiFi credentials for: ");
-    Serial.print(network.wifiData.ssid);
-    Serial.print("...\n");
-
-    nvs_set_blob(HAPClient::wifiNVS,"WIFIDATA",&network.wifiData,sizeof(network.wifiData));    // update data
-    nvs_commit(HAPClient::wifiNVS);                                                            // commit to NVS
-
-    if(strlen(network.setupCode)){
-
-      char buf[128];
-
-      struct {                                      // temporary structure to hold SRP verification code and salt stored in NVS
-        uint8_t salt[16];
-        uint8_t verifyCode[384];
-      } verifyData;      
-
-      sprintf(buf,"\nGenerating SRP verification data for new Setup Code: %.3s-%.2s-%.3s ... ",network.setupCode,network.setupCode+3,network.setupCode+5);
-      Serial.print(buf);
-      HAPClient::srp.createVerifyCode(network.setupCode,verifyData.verifyCode,verifyData.salt);                 // create verification code from default Setup Code and random salt
-      nvs_set_blob(HAPClient::srpNVS,"VERIFYDATA",&verifyData,sizeof(verifyData));                              // update data
-      nvs_commit(HAPClient::srpNVS);                                                                            // commit to NVS
-      Serial.print("New Code Saved!\n");
-    }
-
-    Serial.print("\n*** Re-starting ***\n\n");
-    delay(500);
-    ESP.restart();                                  // re-start device   
-
-  } // configure network
-*/  
   
 } // initWiFi
 
@@ -568,18 +482,44 @@ void Span::processSerialCommand(char *c){
       network.serialConfigure();
       nvs_set_blob(HAPClient::wifiNVS,"WIFIDATA",&network.wifiData,sizeof(network.wifiData));    // update data
       nvs_commit(HAPClient::wifiNVS);                                                            // commit to NVS
-      Serial.print("\n*** Credentials saved!\n\n");     
+      Serial.print("\n*** WiFi Credentials saved!\n\n");     
     }
     break;
 
+    case 'A': {
+
+      if(strlen(network.wifiData.ssid)>0){
+        processSerialCommand("X");
+        ESP.restart();
+      }
+      network.apConfigure(hostName);
+      nvs_set_blob(HAPClient::wifiNVS,"WIFIDATA",&network.wifiData,sizeof(network.wifiData));    // update data
+      nvs_commit(HAPClient::wifiNVS);                                                            // commit to NVS
+      Serial.print("\n*** Credentials saved!\n\n");
+      if(strlen(network.setupCode)){
+        char s[10];
+        sprintf(s,"S%s",network.setupCode);
+        processSerialCommand(s);
+      } else {
+        Serial.print("*** Setup Code Unchanged\n");
+      }
+      
+      Serial.print("\n*** Re-starting ***\n\n");
+      delay(500);
+      statusLED.off();
+      ESP.restart();                                                                             // re-start device   
+    }
+    break;
+
+    
     case 'X': {
 
       nvs_erase_all(HAPClient::wifiNVS);
       nvs_commit(HAPClient::wifiNVS);      
-      sprintf(network.wifiData.ssid,"");
-      WiFi.disconnect();
-      Serial.print("\n*** WIFI CREDENTIALS DATA NOT FOUND -- PLEASE CONFIGURE BY TYPING 'W <RETURN>' OR PRESS CONTROL BUTTON FOR 3 SECONDS TO START ACCESS POINT.\n\n");
-      statusLED.start(LED_WIFI_NEEDED);
+      Serial.print("\n*** WiFi Credentials erased!  Re-starting ***\n\n");
+      delay(500);
+      statusLED.off();
+      ESP.restart();                                                                             // re-start device   
     }
     break;
 
@@ -589,6 +529,7 @@ void Span::processSerialCommand(char *c){
       nvs_commit(HAPClient::hapNVS);      
       Serial.print("\n** HomeSpan Device ID and Pairing Data DELETED **\n** Restarting...\n\n");
       delay(1000);
+      statusLED.off();
       ESP.restart();
     }
     break;
@@ -601,6 +542,7 @@ void Span::processSerialCommand(char *c){
       nvs_commit(HAPClient::wifiNVS);      
       Serial.print("\n** FACTORY RESET **\n** Restarting...\n\n");
       delay(1000);
+      statusLED.off();
       ESP.restart();
     }
     break;
@@ -610,6 +552,7 @@ void Span::processSerialCommand(char *c){
       nvs_flash_erase();
       Serial.print("\n** ALL DATA ERASED **\n** Restarting...\n\n");
       delay(1000);
+      statusLED.off();
       ESP.restart();
     }
     break;
