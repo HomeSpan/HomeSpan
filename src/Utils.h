@@ -97,6 +97,10 @@ class PushButton{
 
 //  Returns true if last trigger event was a Long Press, or false if last trigger was a Short Press  
 
+  void wait();
+
+//  Waits for button to be released.  Use after Long Press if button release confirmation is desired
+
 };
 
 ////////////////////////////////

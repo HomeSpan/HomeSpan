@@ -141,6 +141,12 @@ boolean PushButton::longPress(){
 
 //////////////////////////////////////
 
+void PushButton::wait(){
+  while(!digitalRead(pin));
+}
+
+//////////////////////////////////////
+
 void PushButton::reset(){
   status=0;
 }

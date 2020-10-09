@@ -58,18 +58,6 @@ void Span::begin(Category catID, char *displayName, char *hostNameBase, char *mo
   Serial.print("\n\nDevice Name:      ");
   Serial.print(homeSpan.displayName);  
   Serial.print("\n\n");
-
-/*
-  if(!digitalRead(controlPin)){                     // factory reset pin is low upon start-up
-    Serial.print("** CONTROL BUTTON PRESSED DURING STARTUP!  PERFORMING FACTORY RESET **\n\n");
-    statusLED.start(LED_ALERT);
-    nvs_flash_erase();                              // erase NVS storage
-    delay(5000);
-    Serial.print("Re-starting...\n\n");
-    statusLED.off();
-    ESP.restart();
-  }
-*/
       
 }  // begin
 
@@ -195,6 +183,7 @@ void Span::poll() {
   if(controlButton.triggered(3000,10000)){
     statusLED.off();
     if(controlButton.longPress()){
+      controlButton.wait();
       processSerialCommand("F");        // FACTORY RESET
     } else {
       commandMode();                    // COMMAND MODE
@@ -238,7 +227,7 @@ void Span::commandMode(){
   } // while
 
   statusLED.start(LED_ALERT);
-  delay(2000);
+  controlButton.wait();
   
   switch(mode){
 
@@ -473,7 +462,11 @@ void Span::processSerialCommand(char *c){
       
       Serial.print("\nDEVICE NOT YET PAIRED -- PLEASE PAIR WITH HOMEKIT APP\n\n");
       mdns_service_txt_item_set("_hap","_tcp","sf","1");                                                        // set Status Flag = 1 (Table 6-8)
-      statusLED.start(LED_PAIRING_NEEDED);
+      
+      if(strlen(network.wifiData.ssid)==0)
+        statusLED.start(LED_WIFI_NEEDED);
+      else
+        statusLED.start(LED_PAIRING_NEEDED);
     }
     break;
 
@@ -489,9 +482,12 @@ void Span::processSerialCommand(char *c){
     case 'A': {
 
       if(strlen(network.wifiData.ssid)>0){
-        processSerialCommand("X");
-        ESP.restart();
+        Serial.print("*** Stopping all current WiFi services...\n\n");
+        hapServer.end();
+        MDNS.end();
+        WiFi.disconnect();
       }
+      
       network.apConfigure(hostName);
       nvs_set_blob(HAPClient::wifiNVS,"WIFIDATA",&network.wifiData,sizeof(network.wifiData));    // update data
       nvs_commit(HAPClient::wifiNVS);                                                            // commit to NVS
@@ -606,10 +602,11 @@ void Span::processSerialCommand(char *c){
       Serial.print("  d - print attributes database\n");
       Serial.print("  i - print detailed info about configuration\n");
       Serial.print("  U - unpair device by deleting all Controller data\n");
-      Serial.print("  X - disconnect from WiFi and delete WiFi credentials\n");      
+      Serial.print("  X - delete WiFi credentials and restart\n");      
       Serial.print("  W - configure WiFi credentials and connect\n");      
+      Serial.print("  A - start Access Point\n");      
       Serial.print("  H - delete stored HomeKit Pairing data and restart\n");      
-      Serial.print("  F - factory reset\n");      
+      Serial.print("  F - factory reset and restart\n");      
       Serial.print("  E - delete all stored data and restart\n");      
       Serial.print("  ? - print this list of commands\n");
       Serial.print("  L <level> - change Log Level to <level>\n");
