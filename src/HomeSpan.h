@@ -57,11 +57,12 @@ struct Span{
   int nFatalErrors=0;                           // number of fatal errors in user-defined configuration
   String configLog="\n*** Config Log ***\n\n";  // log of configuration process, including any errors
   
-  char *defaultSetupCode=DEFAULT_SETUP_CODE;          // Setup Code used for pairing
-  uint8_t statusPin=DEFAULT_STATUS_PIN;               // pin for status LED    
-  uint8_t controlPin=DEFAULT_CONTROL_PIN;             // pin for Control Pushbutton
-  uint8_t logLevel=DEFAULT_LOG_LEVEL;                 // level for writing out log messages to serial monitor
-  uint8_t maxConnections=DEFAULT_MAX_CONNECTIONS;     // number of simultaneous HAP connections
+  char *defaultSetupCode=DEFAULT_SETUP_CODE;                  // Setup Code used for pairing
+  uint8_t statusPin=DEFAULT_STATUS_PIN;                       // pin for status LED    
+  uint8_t controlPin=DEFAULT_CONTROL_PIN;                     // pin for Control Pushbutton
+  uint8_t logLevel=DEFAULT_LOG_LEVEL;                         // level for writing out log messages to serial monitor
+  uint8_t maxConnections=DEFAULT_MAX_CONNECTIONS;             // number of simultaneous HAP connections
+  unsigned long comModeLife=DEFAULT_COMMAND_TIMEOUT*1000;     // length of time (in milliseconds) to keep Command Mode alive before resuming normal operations
 
   Blinker statusLED;                                // indicates HomeSpan status
   PushButton controlButton;                         // controls HomeSpan configuration and resets
@@ -101,6 +102,7 @@ struct Span{
   void setStatusPin(uint8_t pin){statusPin=pin;}                          // sets Status Pin
   void setApPassword(char *pwd){network.apPassword=pwd;}                  // sets Access Point Password
   void setApTimeout(uint16_t nSec){network.lifetime=nSec*1000;}           // sets Access Point Timeout (seconds)
+  void setCommandTimeout(uint16_t nSec){comModeLife=nSec*1000;}           // sets Command Mode Timeout (seconds)
   void setLogLevel(uint8_t level){logLevel=level;}                        // sets Log Level for log messages (0=baseline, 1=intermediate, 2=all)
   void setMaxConnections(uint8_t nCon){maxConnections=nCon;}              // sets maximum number of simultaneous HAP connections (HAP requires devices support at least 8)
 };

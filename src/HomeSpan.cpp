@@ -213,11 +213,22 @@ void Span::commandMode(){
   boolean done=false;
   statusLED.start(500,0.3,mode,1000);
 
+  unsigned long alarmTime=millis()+comModeLife;
+
   while(!done){
+    if(millis()>alarmTime){
+      Serial.print("*** Command Mode: Timed Out (");
+      Serial.print(comModeLife/1000);
+      Serial.print(" seconds).\n\n");
+      mode=1;
+      done=true;
+      statusLED.start(LED_ALERT);
+      delay(1000);
+    } else
     if(controlButton.triggered(10,3000)){
       if(!controlButton.longPress()){
         mode++;
-        if(mode==4)
+        if(mode==5)
           mode=1;
         statusLED.start(500,0.3,mode,1000);        
       } else {
@@ -250,6 +261,10 @@ void Span::commandMode(){
       processSerialCommand("U");
     break;    
     
+    case 4:
+      processSerialCommand("X");
+    break;    
+
   } // switch
   
   Serial.print("*** EXITING COMMAND MODE ***\n\n");
@@ -291,6 +306,8 @@ void Span::initWifi(){
       while(millis()-sTime<delayTime){        
         if(controlButton.triggered(9999,3000) || (Serial.available() && readSerial(buf,1) && (buf[0]=='X'))){
           Serial.print(" TERMINATED!\n");
+          statusLED.start(LED_ALERT);
+          delay(1000);
           processSerialCommand("X");        // DELETE WiFi Data      
           return;
         }
@@ -475,8 +492,11 @@ void Span::processSerialCommand(char *c){
       network.serialConfigure();
       nvs_set_blob(HAPClient::wifiNVS,"WIFIDATA",&network.wifiData,sizeof(network.wifiData));    // update data
       nvs_commit(HAPClient::wifiNVS);                                                            // commit to NVS
-      Serial.print("\n*** WiFi Credentials saved!\n\n");     
-    }
+      Serial.print("\n*** WiFi Credentials erased!  Re-starting ***\n\n");
+      delay(500);
+      statusLED.off();
+      ESP.restart();  
+      }
     break;
 
     case 'A': {
@@ -601,14 +621,19 @@ void Span::processSerialCommand(char *c){
       Serial.print("  s - print connection status\n");
       Serial.print("  d - print attributes database\n");
       Serial.print("  i - print detailed info about configuration\n");
-      Serial.print("  U - unpair device by deleting all Controller data\n");
-      Serial.print("  X - delete WiFi credentials and restart\n");      
-      Serial.print("  W - configure WiFi credentials and connect\n");      
+      Serial.print("\n");      
+      Serial.print("  W - configure WiFi credentials and restart\n");      
       Serial.print("  A - start Access Point\n");      
-      Serial.print("  H - delete stored HomeKit Pairing data and restart\n");      
+      Serial.print("  X - delete WiFi credentials and restart\n");      
+      Serial.print("\n");      
+      Serial.print("  U - unpair device by deleting all Controller data\n");
+      Serial.print("  H - delete HomeKit Device ID & Pairing data and restart\n");      
+      Serial.print("\n");      
       Serial.print("  F - factory reset and restart\n");      
       Serial.print("  E - delete all stored data and restart\n");      
+      Serial.print("\n");          
       Serial.print("  ? - print this list of commands\n");
+      Serial.print("\n");      
       Serial.print("  L <level> - change Log Level to <level>\n");
       Serial.print("  S <code>  - change Setup Code to 8-digit <code>\n");
       Serial.print("\n*** End Commands ***\n\n");

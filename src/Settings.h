@@ -12,22 +12,23 @@
 //////////////////////////////////////////////////////
 //                DEFAULT SETTINGS                  //  
 
-#define     DEFAULT_DISPLAY_NAME  "HomeSpan Server"   // change with optional second argument in homeSpan.begin()
-#define     DEFAULT_HOST_NAME     "HomeSpan"          // change with optional third argument in homeSpan.begin()
-#define     DEFAULT_MODEL_NAME    "HomeSpan-ESP32"    // change with optional fourth argument in homeSpan.begin()
+#define     DEFAULT_DISPLAY_NAME      "HomeSpan Server"   // change with optional second argument in homeSpan.begin()
+#define     DEFAULT_HOST_NAME         "HomeSpan"          // change with optional third argument in homeSpan.begin()
+#define     DEFAULT_MODEL_NAME        "HomeSpan-ESP32"    // change with optional fourth argument in homeSpan.begin()
 
-#define     DEFAULT_SETUP_CODE    "46637726"          // changed during network setup or with 'S' command
+#define     DEFAULT_SETUP_CODE        "46637726"          // changed during network setup or with 'S' command
 
-#define     DEFAULT_CONTROL_PIN   21                  // change with homeSpan.setControlPin(pin)
-#define     DEFAULT_STATUS_PIN    LED_BUILTIN         // change with homeSpan.setStatusPin(pin)
+#define     DEFAULT_CONTROL_PIN       21                  // change with homeSpan.setControlPin(pin)
+#define     DEFAULT_STATUS_PIN        LED_BUILTIN         // change with homeSpan.setStatusPin(pin)
 
-#define     DEFAULT_AP_PASSWORD   "homespan"          // change with homeSpan.setApPassword(pwd)
+#define     DEFAULT_AP_PASSWORD       "homespan"          // change with homeSpan.setApPassword(pwd)
 
-#define     DEFAULT_AP_TIMEOUT    120                 // change with homeSpan.setApTimeout(nSeconds)
+#define     DEFAULT_AP_TIMEOUT        120                 // change with homeSpan.setApTimeout(nSeconds)
+#define     DEFAULT_COMMAND_TIMEOUT   30                 // change with homeSpan.setCommandTimeout(nSeconds)
 
-#define     DEFAULT_LOG_LEVEL     0                   // change with homeSpan.setLogLevel(level)
+#define     DEFAULT_LOG_LEVEL         0                   // change with homeSpan.setLogLevel(level)
 
-#define     DEFAULT_MAX_CONNECTIONS 8                 // change with homeSpan.setMaxConnections(num);
+#define     DEFAULT_MAX_CONNECTIONS   8                   // change with homeSpan.setMaxConnections(num);
 
 
 /////////////////////////////////////////////////////
@@ -37,7 +38,6 @@
 #define     LED_PAIRING_NEEDED    300,0.5,2,2550      // slow double-blink
 #define     LED_ALERT             100                 // rapid flashing
 #define     LED_WIFI_CONNECTING   2000                // slow flashing
-#define     LED_INPUT_NEEDED      500                 // medium flashing
 #define     LED_AP_STARTED        100,0.5,2,500       // rapid double-blink
 #define     LED_AP_CONNECTED      500,0.3,2,1000      // slow double-blink     
 

@@ -123,6 +123,15 @@ void Network::apConfigure(char *apName){
 
   while(1){                                  // loop until we get timed out (which will be accelerated if save/cancel selected)
 
+    if(homeSpan.controlButton.triggered(9999,3000)){
+      Serial.print("\n*** Access Point Terminated.");
+      homeSpan.statusLED.start(LED_ALERT);
+      homeSpan.controlButton.wait();
+      Serial.print("  Restarting... \n\n");
+      homeSpan.statusLED.off();        
+      ESP.restart();      
+    }
+
     if(millis()>alarmTimeOut){
       WiFi.softAPdisconnect(true);           // terminate connections and shut down captive access point
       delay(100);
@@ -134,9 +143,13 @@ void Network::apConfigure(char *apName){
           Serial.print("\n*** Access Point: Timed Out (");
           Serial.print(lifetime/1000);
           Serial.print(" seconds).");
-        } else
+        } else {
           Serial.print("\n*** Access Point: Configuration Canceled.");
+        }
         Serial.print("  Restarting...\n\n");
+        homeSpan.statusLED.start(LED_ALERT);
+        delay(1000);
+        homeSpan.statusLED.off();        
         ESP.restart();
       }
     }
@@ -317,6 +330,9 @@ void Network::processRequest(char *body, char *formData){
                   
     responseBody+="<center><input style=\"font-size:300%\" type=\"submit\" value=\"SUBMIT\"></center>"
                   "</form>";
+
+    responseBody+="<center><button style=\"font-size:300%\" onclick=\"document.location='/cancel'\">CANCEL Configuration</button></center>";                  
+                  
   } else
 
   if(!landingPage)
