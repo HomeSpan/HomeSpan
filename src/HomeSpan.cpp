@@ -466,7 +466,7 @@ void Span::processSerialCommand(char *c){
       HAPClient::removeControllers();                                                                           // clear all Controller data  
       nvs_set_blob(HAPClient::hapNVS,"CONTROLLERS",HAPClient::controllers,sizeof(HAPClient::controllers));      // update data
       nvs_commit(HAPClient::hapNVS);                                                                            // commit to NVS
-      Serial.print("\n** HomeSpan Pairing Data DELETED **\n\n");
+      Serial.print("\n*** HomeSpan Pairing Data DELETED ***\n\n");
       
       for(int i=0;i<maxConnections;i++){     // loop over all connection slots
         if(hap[i]->client){                    // if slot is connected
@@ -492,7 +492,7 @@ void Span::processSerialCommand(char *c){
       network.serialConfigure();
       nvs_set_blob(HAPClient::wifiNVS,"WIFIDATA",&network.wifiData,sizeof(network.wifiData));    // update data
       nvs_commit(HAPClient::wifiNVS);                                                            // commit to NVS
-      Serial.print("\n*** WiFi Credentials erased!  Re-starting ***\n\n");
+      Serial.print("\n*** WiFi Credentials ERASED!  Re-starting ***\n\n");
       delay(500);
       statusLED.off();
       ESP.restart();  
@@ -532,7 +532,7 @@ void Span::processSerialCommand(char *c){
 
       nvs_erase_all(HAPClient::wifiNVS);
       nvs_commit(HAPClient::wifiNVS);      
-      Serial.print("\n*** WiFi Credentials erased!  Re-starting ***\n\n");
+      Serial.print("\n*** WiFi Credentials ERASED!  Re-starting...\n\n");
       delay(500);
       statusLED.off();
       ESP.restart();                                                                             // re-start device   
@@ -543,7 +543,7 @@ void Span::processSerialCommand(char *c){
       
       nvs_erase_all(HAPClient::hapNVS);
       nvs_commit(HAPClient::hapNVS);      
-      Serial.print("\n** HomeSpan Device ID and Pairing Data DELETED **\n** Restarting...\n\n");
+      Serial.print("\n*** HomeSpan Device ID and Pairing Data DELETED!  Restarting...\n\n");
       delay(1000);
       statusLED.off();
       ESP.restart();
@@ -556,7 +556,7 @@ void Span::processSerialCommand(char *c){
       nvs_commit(HAPClient::hapNVS);      
       nvs_erase_all(HAPClient::wifiNVS);
       nvs_commit(HAPClient::wifiNVS);      
-      Serial.print("\n** FACTORY RESET **\n** Restarting...\n\n");
+      Serial.print("\n*** FACTORY RESET!  Restarting...\n\n");
       delay(1000);
       statusLED.off();
       ESP.restart();
@@ -566,7 +566,7 @@ void Span::processSerialCommand(char *c){
     case 'E': {
       
       nvs_flash_erase();
-      Serial.print("\n** ALL DATA ERASED **\n** Restarting...\n\n");
+      Serial.print("\n*** ALL DATA ERASED!  Restarting...\n\n");
       delay(1000);
       statusLED.off();
       ESP.restart();
