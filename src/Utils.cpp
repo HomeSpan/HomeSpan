@@ -227,7 +227,7 @@ void Blinker::isrTimer(void *arg){
 
 void Blinker::start(int period, float dutyCycle){
 
-  start(period, dutyCycle, 1, period-dutyCycle*period);
+  start(period, dutyCycle, 1, 0);
 }
 
 //////////////////////////////////////
@@ -237,7 +237,7 @@ void Blinker::start(int period, float dutyCycle, int nBlinks, int delayTime){
   period*=10;
   onTime=dutyCycle*period;
   offTime=period-onTime;
-  this->delayTime=delayTime*10;
+  this->delayTime=delayTime*10+offTime;
   this->nBlinks=nBlinks;
   count=nBlinks;
   timer_set_counter_value(group,idx,0);

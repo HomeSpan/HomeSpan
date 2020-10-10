@@ -228,7 +228,7 @@ void Span::commandMode(){
     if(controlButton.triggered(10,3000)){
       if(!controlButton.longPress()){
         mode++;
-        if(mode==5)
+        if(mode==6)
           mode=1;
         statusLED.start(500,0.3,mode,1000);        
       } else {
@@ -254,17 +254,21 @@ void Span::commandMode(){
     break;
 
     case 2:
+      processSerialCommand("R");
+    break;    
+
+    case 3:
       processSerialCommand("A");
     break;
       
-    case 3:
+    case 4:
       processSerialCommand("U");
     break;    
     
-    case 4:
+    case 5:
       processSerialCommand("X");
     break;    
-
+    
   } // switch
   
   Serial.print("*** EXITING COMMAND MODE ***\n\n");
@@ -526,7 +530,6 @@ void Span::processSerialCommand(char *c){
       ESP.restart();                                                                             // re-start device   
     }
     break;
-
     
     case 'X': {
 
@@ -544,6 +547,15 @@ void Span::processSerialCommand(char *c){
       nvs_erase_all(HAPClient::hapNVS);
       nvs_commit(HAPClient::hapNVS);      
       Serial.print("\n*** HomeSpan Device ID and Pairing Data DELETED!  Restarting...\n\n");
+      delay(1000);
+      statusLED.off();
+      ESP.restart();
+    }
+    break;
+
+    case 'R': {
+      
+      Serial.print("\n*** Restarting...\n\n");
       delay(1000);
       statusLED.off();
       ESP.restart();
@@ -629,6 +641,7 @@ void Span::processSerialCommand(char *c){
       Serial.print("  U - unpair device by deleting all Controller data\n");
       Serial.print("  H - delete HomeKit Device ID & Pairing data and restart\n");      
       Serial.print("\n");      
+      Serial.print("  R - restart device\n");      
       Serial.print("  F - factory reset and restart\n");      
       Serial.print("  E - delete all stored data and restart\n");      
       Serial.print("\n");          
