@@ -515,7 +515,7 @@ void Span::processSerialCommand(char *c){
         WiFi.disconnect();
       }
       
-      network.apConfigure(hostName);
+      network.apConfigure();
       nvs_set_blob(HAPClient::wifiNVS,"WIFIDATA",&network.wifiData,sizeof(network.wifiData));    // update data
       nvs_commit(HAPClient::wifiNVS);                                                            // commit to NVS
       Serial.print("\n*** Credentials saved!\n\n");

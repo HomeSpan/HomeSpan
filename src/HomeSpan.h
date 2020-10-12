@@ -100,6 +100,7 @@ struct Span{
 
   void setControlPin(uint8_t pin){controlPin=pin;}                        // sets Control Pin
   void setStatusPin(uint8_t pin){statusPin=pin;}                          // sets Status Pin
+  void setApSSID(char *ssid){network.apSSID=ssid;}                        // sets Access Point SSID
   void setApPassword(char *pwd){network.apPassword=pwd;}                  // sets Access Point Password
   void setApTimeout(uint16_t nSec){network.lifetime=nSec*1000;}           // sets Access Point Timeout (seconds)
   void setCommandTimeout(uint16_t nSec){comModeLife=nSec*1000;}           // sets Command Mode Timeout (seconds)

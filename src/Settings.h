@@ -21,7 +21,8 @@
 #define     DEFAULT_CONTROL_PIN       21                  // change with homeSpan.setControlPin(pin)
 #define     DEFAULT_STATUS_PIN        LED_BUILTIN         // change with homeSpan.setStatusPin(pin)
 
-#define     DEFAULT_AP_PASSWORD       "homespan"          // change with homeSpan.setApPassword(pwd)
+#define     DEFAULT_AP_SSID           "HomeSpan-Configuration"   // change with homeSpan.setApSSID(pwd)
+#define     DEFAULT_AP_PASSWORD       "homespan"                 // change with homeSpan.setApPassword(pwd)
 
 #define     DEFAULT_AP_TIMEOUT        300                 // change with homeSpan.setApTimeout(nSeconds)
 #define     DEFAULT_COMMAND_TIMEOUT   120                 // change with homeSpan.setCommandTimeout(nSeconds)

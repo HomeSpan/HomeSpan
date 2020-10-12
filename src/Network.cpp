@@ -82,10 +82,10 @@ boolean Network::allowedCode(char *s){
 
 ///////////////////////////////
 
-void Network::apConfigure(char *apName){
+void Network::apConfigure(){
 
   Serial.print("*** Starting Access Point: ");
-  Serial.print(apName);
+  Serial.print(apSSID);
   Serial.print(" / ");
   Serial.print(apPassword);
   Serial.print("\n");
@@ -114,7 +114,7 @@ void Network::apConfigure(char *apName){
   IPAddress apIP(192, 168, 4, 1);
 
   WiFi.mode(WIFI_AP);
-  WiFi.softAP(apName,apPassword);             // start access point
+  WiFi.softAP(apSSID,apPassword);             // start access point
   dnsServer.start(DNS_PORT, "*", apIP);       // start DNS server that resolves every request to the address of this device
   apServer.begin();
 
