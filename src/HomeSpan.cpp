@@ -223,7 +223,7 @@ void Span::commandMode(){
       mode=1;
       done=true;
       statusLED.start(LED_ALERT);
-      delay(1000);
+      delay(2000);
     } else
     if(controlButton.triggered(10,3000)){
       if(!controlButton.longPress()){
@@ -307,13 +307,16 @@ void Span::initWifi(){
       Serial.print(" seconds. Type 'X <return>' or press Control Button for 3 seconds to terminate search and delete WiFi credentials...");
       long sTime=millis();
       
-      while(millis()-sTime<delayTime){        
-        if(controlButton.triggered(9999,3000) || (Serial.available() && readSerial(buf,1) && (buf[0]=='X'))){
+      while(millis()-sTime<delayTime){    
+        if(controlButton.triggered(9999,3000)){
           Serial.print(" TERMINATED!\n");
           statusLED.start(LED_ALERT);
-          delay(1000);
-          processSerialCommand("X");        // DELETE WiFi Data      
-          return;
+          controlButton.wait();
+          processSerialCommand("X");        // DELETE WiFi Data and Restart
+        }
+        if (Serial.available() && readSerial(buf,1) && (buf[0]=='X')){
+          Serial.print(" TERMINATED!\n");
+          processSerialCommand("X");        // DELETE WiFi Data and Restart
         }
       }
     }
@@ -496,9 +499,9 @@ void Span::processSerialCommand(char *c){
       network.serialConfigure();
       nvs_set_blob(HAPClient::wifiNVS,"WIFIDATA",&network.wifiData,sizeof(network.wifiData));    // update data
       nvs_commit(HAPClient::wifiNVS);                                                            // commit to NVS
-      Serial.print("\n*** WiFi Credentials ERASED!  Re-starting ***\n\n");
-      delay(500);
+      Serial.print("\n*** WiFi Credentials SAVED!  Re-starting ***\n\n");
       statusLED.off();
+      delay(1000);
       ESP.restart();  
       }
     break;
@@ -525,62 +528,62 @@ void Span::processSerialCommand(char *c){
       }
       
       Serial.print("\n*** Re-starting ***\n\n");
-      delay(500);
       statusLED.off();
+      delay(1000);
       ESP.restart();                                                                             // re-start device   
     }
     break;
     
     case 'X': {
 
+      statusLED.off();
       nvs_erase_all(HAPClient::wifiNVS);
       nvs_commit(HAPClient::wifiNVS);      
       Serial.print("\n*** WiFi Credentials ERASED!  Re-starting...\n\n");
-      delay(500);
-      statusLED.off();
+      delay(1000);
       ESP.restart();                                                                             // re-start device   
     }
     break;
 
     case 'H': {
       
+      statusLED.off();
       nvs_erase_all(HAPClient::hapNVS);
       nvs_commit(HAPClient::hapNVS);      
       Serial.print("\n*** HomeSpan Device ID and Pairing Data DELETED!  Restarting...\n\n");
       delay(1000);
-      statusLED.off();
       ESP.restart();
     }
     break;
 
     case 'R': {
       
+      statusLED.off();
       Serial.print("\n*** Restarting...\n\n");
       delay(1000);
-      statusLED.off();
       ESP.restart();
     }
     break;
 
     case 'F': {
       
+      statusLED.off();
       nvs_erase_all(HAPClient::hapNVS);
       nvs_commit(HAPClient::hapNVS);      
       nvs_erase_all(HAPClient::wifiNVS);
       nvs_commit(HAPClient::wifiNVS);      
       Serial.print("\n*** FACTORY RESET!  Restarting...\n\n");
       delay(1000);
-      statusLED.off();
       ESP.restart();
     }
     break;
 
     case 'E': {
       
+      statusLED.off();
       nvs_flash_erase();
       Serial.print("\n*** ALL DATA ERASED!  Restarting...\n\n");
       delay(1000);
-      statusLED.off();
       ESP.restart();
     }
     break;

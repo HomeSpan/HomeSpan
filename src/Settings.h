@@ -23,8 +23,8 @@
 
 #define     DEFAULT_AP_PASSWORD       "homespan"          // change with homeSpan.setApPassword(pwd)
 
-#define     DEFAULT_AP_TIMEOUT        120                 // change with homeSpan.setApTimeout(nSeconds)
-#define     DEFAULT_COMMAND_TIMEOUT   30                 // change with homeSpan.setCommandTimeout(nSeconds)
+#define     DEFAULT_AP_TIMEOUT        300                 // change with homeSpan.setApTimeout(nSeconds)
+#define     DEFAULT_COMMAND_TIMEOUT   120                 // change with homeSpan.setCommandTimeout(nSeconds)
 
 #define     DEFAULT_LOG_LEVEL         0                   // change with homeSpan.setLogLevel(level)
 
