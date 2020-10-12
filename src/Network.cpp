@@ -311,8 +311,6 @@ void Network::processRequest(char *body, char *formData){
 
     landingPage=true;
 
-    homeSpan.statusLED.start(LED_AP_CONNECTED);
-
     responseBody+="<p>Welcome to HomeSpan! This page allows you to configure the above HomeSpan device to connect to your WiFi network.</p>"
                   "<p>The LED on this device should be <em>double-blinking</em> during this configuration.</p>"
                   "<form action=\"/configure\" method=\"post\">"
@@ -335,8 +333,10 @@ void Network::processRequest(char *body, char *formData){
                   
   } else
 
-  if(!landingPage)
+  if(!landingPage){
     responseHead="HTTP/1.1 307 Temporary Redirect\r\nLocation: /landing-page\r\n";
+    homeSpan.statusLED.start(LED_AP_CONNECTED);
+  }
 
   responseHead+="\r\n";               // add blank line between reponse header and body
   responseBody+="</body></html>";     // close out body and html tags
