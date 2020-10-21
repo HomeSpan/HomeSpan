@@ -23,10 +23,9 @@ struct Network {
   char **ssidList=NULL;
   int numSSID;
 
-  WiFiClient client=NULL;                 // client used for HTTP calls
+  WiFiClient client;                      // client used for HTTP calls
   unsigned long timer;                    // length of time of trying to connect to WiFi
   unsigned long alarmTimeOut;             // alarm time after which access point is shut down and HomeSpan is re-started
-  boolean landingPage=false;              // check to see if captive access point landing page is accessed
   int apStatus;                           // tracks access point status (0=timed-out, -1=cancel, 1=save)
 
   struct {

@@ -105,7 +105,8 @@ void Network::apConfigure(){
   }  
 
   WiFiServer apServer(80);
-
+  client=NULL;
+  
   TempBuffer <uint8_t> tempBuffer(MAX_HTTP+1);
   uint8_t *httpBuf=tempBuffer.buf;
   
@@ -164,6 +165,7 @@ void Network::apConfigure(){
       LOG1(client.remoteIP());
       LOG1("\n");
       LOG2("\n");
+      delay(50);                                        // pause to allow data buffer to begin to populate
     }
     
     if(client && client.available()){                   // if connection exists and data is available
@@ -212,11 +214,6 @@ void Network::apConfigure(){
       LOG2("\n");
 
     } // process Client
-
-    if(client){
-      Serial.print("*** Stopping Client ***\n");
-      client.stop();
-    }
 
   } // while 1
 
@@ -286,7 +283,7 @@ void Network::processRequest(char *body, char *formData){
       
       responseBody+="<p>Re-trying connection to:</p><p><b>" + String(wifiData.ssid) + "</p>";
       responseBody+="<p>Timeout in " + String((alarmTimeOut-millis())/1000) + " seconds.</p>";
-      responseBody+="<center><button onclick=\"document.location='/landing-page'\">Cancel</button></center>";
+      responseBody+="<center><button onclick=\"document.location='/hotspot-detect.html'\">Cancel</button></center>";
     } else {
       
       homeSpan.statusLED.start(LED_AP_CONNECTED);   // slow double-blink
@@ -305,11 +302,11 @@ void Network::processRequest(char *body, char *formData){
   
   } else                                                                
 
-  if(!strncmp(body,"GET /landing-page ",18)){                             // GET LANDING-PAGE
+  if(!strstr(body,"wispr") && !strncmp(body,"GET /hotspot-detect.html ",25)){                             // GET LANDING-PAGE, but only if request does NOT contain "wispr" user agent
 
     LOG1("In Landing Page...\n");
 
-    landingPage=true;
+    homeSpan.statusLED.start(LED_AP_CONNECTED);
 
     responseBody+="<p>Welcome to HomeSpan! This page allows you to configure the above HomeSpan device to connect to your WiFi network.</p>"
                   "<p>The LED on this device should be <em>double-blinking</em> during this configuration.</p>"
@@ -331,11 +328,6 @@ void Network::processRequest(char *body, char *formData){
 
     responseBody+="<center><button style=\"font-size:300%\" onclick=\"document.location='/cancel'\">CANCEL Configuration</button></center>";                  
                   
-  } else
-
-  if(!landingPage){
-    responseHead="HTTP/1.1 307 Temporary Redirect\r\nLocation: /landing-page\r\n";
-    homeSpan.statusLED.start(LED_AP_CONNECTED);
   }
 
   responseHead+="\r\n";               // add blank line between reponse header and body
