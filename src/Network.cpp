@@ -122,6 +122,8 @@ void Network::apConfigure(){
   alarmTimeOut=millis()+lifetime;            // Access Point will shut down when alarmTimeOut is reached
   apStatus=0;                                // status will be "timed out" unless changed
 
+  Serial.print("\nReady.\n");
+
   while(1){                                  // loop until we get timed out (which will be accelerated if save/cancel selected)
 
     if(homeSpan.controlButton.triggered(9999,3000)){
