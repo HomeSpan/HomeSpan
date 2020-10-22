@@ -11,27 +11,27 @@ namespace Service {
 
   struct AirQualitySensor : SpanService { AirQualitySensor() : SpanService{"8D","AirQualitySensor","95","23,C3,C4,C5,C6,C7,C8,75,77,7A,79"}{} };
 
-  struct BatteryService : SpanService { BatteryService() : SpanService{"96","BatteryService"}{} };
+  struct BatteryService : SpanService { BatteryService() : SpanService{"96","BatteryService","68,8F,79","23"}{} };
 
-  struct CarbonDioxideSensor : SpanService { CarbonDioxideSensor() : SpanService{"97","CarbonDioxideSensor"}{} };
+  struct CarbonDioxideSensor : SpanService { CarbonDioxideSensor() : SpanService{"97","CarbonDioxideSensor","92","23,75,77,7A,79,93,94"}{} };
 
-  struct CarbonMonoxideSensor : SpanService { CarbonMonoxideSensor() : SpanService{"7F","CarbonMonoxideSensor"}{} };
+  struct CarbonMonoxideSensor : SpanService { CarbonMonoxideSensor() : SpanService{"7F","CarbonMonoxideSensor","69","23,75,77,7A,79,90,91"}{} };
 
-  struct ContactSensor : SpanService { ContactSensor() : SpanService{"80","ContactSensor"}{} };
+  struct ContactSensor : SpanService { ContactSensor() : SpanService{"80","ContactSensor","6A","23,75,77,7A,79"}{} };
 
-  struct Door : SpanService { Door() : SpanService{"81","Door"}{} };
+  struct Door : SpanService { Door() : SpanService{"81","Door","6D,7C,72","23,6F,24"}{} };
 
-  struct Doorbell : SpanService { Doorbell() : SpanService{"121","Doorbell"}{} };
+  struct Doorbell : SpanService { Doorbell() : SpanService{"121","Doorbell","73","23,119,8"}{} };
 
-  struct Fan : SpanService { Fan() : SpanService{"B7","Fan"}{} };
+  struct Fan : SpanService { Fan() : SpanService{"B7","Fan","B0","23,AF,BF,28,29,B6,A7"}{} };
 
-  struct Faucet : SpanService { Faucet() : SpanService{"D7","Faucet"}{} };
+  struct Faucet : SpanService { Faucet() : SpanService{"D7","Faucet","B0","23,77"}{} };
 
-  struct FilterMaintenance : SpanService { FilterMaintenance() : SpanService{"BA","FilterMaintenance"}{} };
+  struct FilterMaintenance : SpanService { FilterMaintenance() : SpanService{"BA","FilterMaintenance","AC","23,AB,AD"}{} };
 
-  struct GarageDoorOpener : SpanService { GarageDoorOpener() : SpanService{"41","GarageDoorOpener"}{} };
+  struct GarageDoorOpener : SpanService { GarageDoorOpener() : SpanService{"41","GarageDoorOpener","E,32,24","23,1D,1E"}{} };
 
-  struct HAPProtocolInformation : SpanService { HAPProtocolInformation() : SpanService{"A2","HAPProtocolInformation"}{} };
+  struct HAPProtocolInformation : SpanService { HAPProtocolInformation() : SpanService{"A2","HAPProtocolInformation","37"}{} };
 
   struct HeaterCooler : SpanService { HeaterCooler() : SpanService{"BC","HeaterCooler"}{} };
 
