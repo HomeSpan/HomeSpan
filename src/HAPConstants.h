@@ -60,3 +60,66 @@ enum class StatusCode {
   InvalidValue=-70410,  
   TBD=-1                       // status To-Be-Determined (TBD) once service.update() called - internal use only
 };
+
+///////////////////////////////
+
+struct HapCharType {
+  char *id;
+  char *name;
+};
+
+///////////////////////////////
+
+#define HAPCHAR(name,id)  HapCharType name {#id,#name}
+
+struct HapCharList {
+  
+  HAPCHAR( Active, B0 );
+  HAPCHAR( CarbonDioxideDetected, XX );
+  HAPCHAR( ChargingState, XX );
+  HAPCHAR( CurrentAirPurifierState, XX );
+  HAPCHAR( AirQuality, 95 );
+  HAPCHAR( BatteryLevel, XX );
+  HAPCHAR( Brightness, 8 );
+  HAPCHAR( ColorTemperature, CE );
+  HAPCHAR( CurrentDoorState, E );
+  HAPCHAR( CurrentPosition, 6D );
+  HAPCHAR( CurrentTemperature, 11 );
+  HAPCHAR( FirmwareRevision, 52 );
+  HAPCHAR( HardwareRevision, 53 );
+  HAPCHAR( HoldPosition, 6F );
+  HAPCHAR( Hue, 13 );
+  HAPCHAR( Identify, 14 );
+  HAPCHAR( LockPhysicalControls,  );
+  HAPCHAR( Manufacturer, 20 );
+  HAPCHAR( Model, 21 );
+  HAPCHAR( Name, 23 );
+  HAPCHAR( NitrogenDioxideDensity, C4 );
+  HAPCHAR( ObstructionDetected, 24 );
+  HAPCHAR( On, 25 );
+  HAPCHAR( OutletInUse, 26 );
+  HAPCHAR( OzoneDensity, C3 );
+  HAPCHAR( PM10Density, C7 );
+  HAPCHAR( PM25Density, C6 );
+  HAPCHAR( PositionState, 72 );
+  HAPCHAR( RotationDirection, 28 );
+  HAPCHAR( RotationSpeed, 29 );
+  HAPCHAR( Saturation , 2F );
+  HAPCHAR( SerialNumber, 30 );
+  HAPCHAR( SlatType, C0 );
+  HAPCHAR( SmokeDetected, 76 );
+  HAPCHAR( StatusActive, 75 );
+  HAPCHAR( StatusFault, 77 );
+  HAPCHAR( StatusJammed, 78 );
+  HAPCHAR( StatusLowBattery, 79 );
+  HAPCHAR( StatusTampered, 7A );
+  HAPCHAR( SulphurDioxideDensity, C5 );
+  HAPCHAR( SwingMode, B6 );
+  HAPCHAR( TargetAirPurifierState, XX  );
+  HAPCHAR( TargetDoorState, 32 );
+  HAPCHAR( TargetPosition, 7C );
+  HAPCHAR( TemperatureDisplayUnits, 36 );
+  HAPCHAR( Version, 37 );
+  HAPCHAR( VOCDensity, C8 );   
+  
+};

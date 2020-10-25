@@ -74,7 +74,9 @@ struct Span{
   vector<SpanBuf> Notifications;                    // vector of SpanBuf objects that store info for Characteristics that are updated with setVal() and require a Notification Event
   vector<SpanButton *> PushButtons;                 // vector of pointer to all PushButtons
   unordered_map<uint64_t, uint32_t> TimedWrites;    // map of timed-write PIDs and Alarm Times (based on TTLs)
-  
+
+  HapCharList chr;                                  // list of all HAP Characteristics
+
   void begin(Category catID,
              char *displayName=DEFAULT_DISPLAY_NAME,
              char *hostNameBase=DEFAULT_HOST_NAME,
@@ -131,6 +133,8 @@ struct SpanService{
   boolean hidden=false;                                   // optional property indicating service is hidden
   boolean primary=false;                                  // optional property indicating service is primary
   vector<SpanCharacteristic *> Characteristics;           // vector of pointers to all Characteristics in this Service  
+  vector<HapCharType *> req;                              // vector of pointers to all required HAP Characteristic Types for this Service
+  vector<HapCharType *> opt;                              // vector of pointers to all optional HAP Characteristic Types for this Service
   
   SpanService(const char *type, const char *hapName,
     char *requiredChars="", char *optionalChars="");
