@@ -1,7 +1,152 @@
 
+/////////////////////////////////////////
+// HAP CHARACTERISTICS (HAP Chapter 9) //
+/////////////////////////////////////////
+
+#define CHAR_Active "B0"
+#define CHAR_CarbonDioxideDetected ""
+#define CHAR_ChargingState ""
+#define CHAR_CurrentAirPurifierState ""
+#define CHAR_AirQuality "95"
+#define CHAR_BatteryLevel ""
+#define CHAR_Brightness "8"
+#define CHAR_ColorTemperature "CE"
+#define CHAR_CurrentDoorState "E"
+#define CHAR_CurrentPosition "6D"
+#define CHAR_CurrentTemperature "11"
+#define CHAR_FirmwareRevision "52"
+#define CHAR_HardwareRevision "53"
+#define CHAR_HoldPosition "6F"
+#define CHAR_Hue "13"
+#define CHAR_Identify "14"
+#define CHAR_LockPhysicalControls ""
+#define CHAR_Manufacturer "20"
+#define CHAR_Model "21"
+#define CHAR_Name "23"
+#define CHAR_NitrogenDioxideDensity "C4"
+#define CHAR_ObstructionDetected "24"
+#define CHAR_On "25"
+#define CHAR_OutletInUse "26"
+#define CHAR_OzoneDensity "C3"
+#define CHAR_PM10Density "C7"
+#define CHAR_PM25Density "C6"
+#define CHAR_PositionState "72"
+#define CHAR_RotationDirection "28"
+#define CHAR_RotationSpeed "29"
+#define CHAR_Saturation  "2F"
+#define CHAR_SerialNumber "30"
+#define CHAR_SlatType "C0"
+#define CHAR_SmokeDetected "76"
+#define CHAR_StatusActive "75"
+#define CHAR_StatusFault "77"
+#define CHAR_StatusJammed "78"
+#define CHAR_StatusLowBattery "79"
+#define CHAR_StatusTampered "7A"
+#define CHAR_SulphurDioxideDensity "C5"
+#define CHAR_SwingMode "B6"
+#define CHAR_TargetAirPurifierState ""
+#define CHAR_TargetDoorState "32"
+#define CHAR_TargetPosition "7C"
+#define CHAR_TemperatureDisplayUnits "36"
+#define CHAR_Version "37"
+#define CHAR_VOCDensity "C8"
+
+#define IDNAME(id) id,#id
+
 //////////////////////////////////
 // HAP SERVICES (HAP Chapter 8) //
 //////////////////////////////////
+
+#define SVC_AccessoryInformation "3E"
+#define SVC_AccessoryInformation_Required CHAR_FirmwareRevision " " CHAR_Identify " " CHAR_Manufacturer " " CHAR_Model " " CHAR_Name " " CHAR_SerialNumber
+#define SVC_AccessoryInformation_Optional CHAR_HardwareRevision
+
+#define SVC_AirPurifier "BB"
+#define SVC_AirPurifier_Required CHAR_Active " " CHAR_CurrentAirPurifierState " " CHAR_TargetAirPurifierState
+#define SVC_AirPurifier_Optional CHAR_Name " " CHAR_RotationalSpeed " " CHAR_SwingMode " " CHAR_LockPhysicalControls
+
+#define SVC_AirQualitySensor "8D"
+#define SVC_AirQualitySensor_Required CHAR_AirQuality
+#define SVC_AirQualitySensor_Optional CHAR_Name " " CHAR_OzoneDensity " " CHAR_NitrogenDioxideDensity " " CHAR_SulphurDioxideDensity " " CHAR_PM25Density " " \
+  CHAR_PM10Density " " CHAR_VOCDensity " " CHAR_StatusActive " " CHAR_StatusFault " " CHAR_StatusTampered " " CHAR_StatusLowBattery
+
+#define SVC_BatteryService "96"
+#define SVC_BatteryService_Required CHAR_BatteryLevel " " CHAR_ChargingState " " CHAR_StatusLowBattery
+#define SVC_BatteryService_Optional CHAR_NAME
+
+#define SVC_CarbonDioxideSensor "92"
+#define SVC_CarbonDioxideSensor_Required CHAR_CarbonDioxideDetected
+#define SVC_CarbonDioxideSensor_Optional CHAR_Name " " CHAR_StatusActive " " CHAR_StatusFault " " CHAR_StatusTampered " " CHAR_StatusLowBattery " " \
+  CHAR_CarbonDioxideLevel " " CHAR_CarbonDioxidePeakLevel
+
+#define SVC_CarbonMonoxideSensor "7F"
+#define SVC_CarbonMonoxideSensor_Required CHAR_CarbonMonoxideDetected
+#define SVC_CarbonMonoxideSensor_Optional CHAR_Name " " CHAR_StatusActive " " CHAR_StatusFault " " CHAR_StatusTampered " " CHAR_StatusLowBattery " " \
+  CHAR_CarbonMonoxideLevel " " CHAR_CarbonMonoxidePeakLevel
+
+#define SVC_ContactSensor "80"
+#define SVC_ContactSensor_Required CHAR_ContactSensorState
+#define SVC_ContactSensor_Optional CHAR_Name " " CHAR_StatusActive " " CHAR_StatusFault " " CHAR_StatusTampered " " CHAR_StatusLowBattery
+
+#define SVC_Door "81"
+#define SVC_Door_Required CHAR_CurrentPosition " " CHAR_TargetPosition " " CHAR_PositionState
+#define SVC_Door_Optional CHAR_Name " " CHAR_HoldPosition " " CHAR_ObstructionDetected
+
+#define SVC_Doorbell "121"
+#define SVC_Doorbell_Required CHAR_ProgrammableSwitchEvent
+#define SVC_Doorbell_Optional CHAR_Name " " CHAR_Volume " " CHAR_Brightness
+
+#define SVC_Fan "B7"
+#define SVC_Fan_Required CHAR_Active
+#define SVC_Fan_Optional CHAR_Name " " CHAR_CurrentFanState " " CHAR_TargetFanState " " CHAR_RotationDirection  " " CHAR_RotationSpeed " " \
+  CHAR_SwingMode " " CHAR_LockPhysicalControls
+
+#define SVC_Faucet "D7"
+#define SVC_Faucet_Required CHAR_Active
+#define SVC_Faucet_Optional CHAR_StatusFault " " CHAR_Name
+
+#define SVC_FilterMaintenance "BA"
+#define SVC_FilterMaintenance_Required CHAR_FilterChangeIndication
+#define SVC_FilterMaintenance_Optional CHAR_Name " " CHAR_FilterLifeLevel " " CHAR_ResetFilterIndication
+
+#define SVC_GarageDoorOpener "41"
+#define SVC_GarageDoorOpener_Required CHAR_CurrentDoorState " " CHAR_TargetDoorState " " CHAR_ObstructionDetected
+#define SVC_GarageDoorOpener_Optional CHAR_LockCurrentState " " CHAR_LockTargetState " " CHAR_Name
+
+#define SVC_HAPProtocolInformation "A2"
+#define SVC_HAPProtocolInformation_Required CHAR_Version
+#define SVC_HAPProtocolInformation_Optional ""
+
+#define SVC_HeaterCooler "BC"
+#define SVC_HeaterCooler_Required CHAR_Active " " CHAR_CurrentTemperature " " CHAR_CurrentHeaterCoolerState " " CHAR_TargetHeaterCoolerState " " \  
+#define SVC_HeaterCooler_Optional CHAR_Name " " CHAR_RotationSpeed " " CHAR_TemperatureDisplayUnits " " CHAR_SwingMode " " CHAR_CoolingThesholdTemperature  " " \
+  CHAR_HeatingThresholdTemperature " " CHAR_LockPhysicalControls
+
+
+#define SVC_HumidifierDehumidifier "BD"
+#define SVC_HumiditySensor "82"
+#define SVC_IrrigationSystem "CF"
+#define SVC_LeakSensor "83"
+#define SVC_LightBulb "43"
+#define SVC_LightSensor "84"
+#define SVC_MotionSensor "85"
+#define SVC_OccupancySensor "86"
+#define SVC_Outlet "47"
+#define SVC_ServiceLabel "47"
+#define SVC_Slat "B9"
+#define SVC_SmokeSensor "87"
+#define SVC_StatelessProgrammableSwitch "89"
+#define SVC_Switch "49"
+#define SVC_TemperatureSensor "8A"
+#define SVC_Thermostat "4A"
+#define SVC_Valve "D0"
+#define SVC_Window "8B"
+#define SVC_WindowCovering "8C"
+
+
+
+
+
 
 namespace Service {
 
