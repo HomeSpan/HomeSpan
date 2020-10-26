@@ -143,9 +143,9 @@ namespace Service {
     OPT(RotationSpeed);
     OPT(TemperatureDisplayUnits);
     OPT(SwingMode);
-    OPT(CoolingThesholdTemperature)
+    OPT(CoolingThresholdTemperature);
     OPT(HeatingThresholdTemperature);
-    OPT(CHAR_LockPhysicalControls);
+    OPT(LockPhysicalControls);
   }};
 
   struct HumidifierDehumidifier : SpanService { HumidifierDehumidifier() : SpanService{"BD","HumidifierDehumidifier"}{
@@ -155,7 +155,7 @@ namespace Service {
     REQ(TargetHumidifierDehumidifierState);
     OPT(Name);
     OPT(RelativeHumidityDehumidifierThreshold);
-    OPT(RelativeHumidityHumnidifierThreshold);
+    OPT(RelativeHumidityHumidifierThreshold);
     OPT(RotationSpeed);
     OPT(SwingMode);
     OPT(WaterLevel);
@@ -275,7 +275,7 @@ namespace Service {
 
   struct Thermostat : SpanService { Thermostat() : SpanService{"4A","Thermostat"}{
     REQ(CurrentHeatingCoolingState);
-    REQ(TargetHeatingColingState);
+    REQ(TargetHeatingCoolingState);
     REQ(CurrentTemperature);
     REQ(TargetTemperature);
     REQ(TemperatureDisplayUnits);
@@ -319,7 +319,7 @@ namespace Service {
     OPT(TargetVerticalTiltAngle);
     OPT(ObstructionDetected);
   }};
-  
+
 }
 
 /////////////////////////////////////////

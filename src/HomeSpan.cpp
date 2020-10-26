@@ -1034,7 +1034,7 @@ int SpanAccessory::sprintfAttributes(char *cBuf){
 //       SpanService         //
 ///////////////////////////////
 
-SpanService::SpanService(const char *type, const char *hapName, char *requiredChars, char *optionalChars){
+SpanService::SpanService(const char *type, const char *hapName){
 
   this->type=type;
   this->hapName=hapName;

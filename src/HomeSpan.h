@@ -136,8 +136,7 @@ struct SpanService{
   vector<HapCharType *> req;                              // vector of pointers to all required HAP Characteristic Types for this Service
   vector<HapCharType *> opt;                              // vector of pointers to all optional HAP Characteristic Types for this Service
   
-  SpanService(const char *type, const char *hapName,
-    char *requiredChars="", char *optionalChars="");
+  SpanService(const char *type, const char *hapName);
 
   SpanService *setPrimary();                              // sets the Service Type to be primary and returns pointer to self
   SpanService *setHidden();                               // sets the Service Type to be hidden and returns pointer to self
