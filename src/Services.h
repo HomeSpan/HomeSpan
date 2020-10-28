@@ -1,7 +1,9 @@
 
-//////////////////////////////////
-// HAP SERVICES (HAP Chapter 8) //
-//////////////////////////////////
+///////////////////////////////////
+// SPAN SERVICES (HAP Chapter 8) //
+///////////////////////////////////
+
+// Macros to define vectors of required and optional characteristics for each Span Service structure
 
 #define REQ(name) req.push_back(&homeSpan.chr.name)
 #define OPT(name) opt.push_back(&homeSpan.chr.name)
@@ -322,90 +324,55 @@ namespace Service {
 
 }
 
-/////////////////////////////////////////
-// HAP CHARACTERISTICS (HAP Chapter 9) //
-/////////////////////////////////////////
+//////////////////////////////////////////
+// SPAN CHARACTERISTICS (HAP Chapter 9) //
+//////////////////////////////////////////
+
+// Macro to define Span Characteristic structures based on name of HAP Characteristic (see HAPConstants.h), its type (e.g. int, double) and its default value
+
+#define CREATE_CHAR(CHR,TYPE,DEFVAL) struct CHR : SpanCharacteristic { CHR(TYPE value=DEFVAL) : SpanCharacteristic{homeSpan.chr.CHR.id, homeSpan.chr.CHR.perms,(TYPE)value, homeSpan.chr.CHR.name}{} }
 
 namespace Characteristic {
   
-  struct Active : SpanCharacteristic { Active(uint8_t value=0) : SpanCharacteristic{"B0",PR+PW+EV,(uint8_t)value,"Active"}{} };
-
-  struct AirQuality : SpanCharacteristic { AirQuality(uint8_t value=0) : SpanCharacteristic{"95",PR+EV,(uint8_t)value,"AirQuality"}{} };
-
-  struct Brightness : SpanCharacteristic { Brightness(int value=0) : SpanCharacteristic{"8",PR+PW+EV,(int)value,"Brightness"}{} };
-
-  struct ColorTemperature : SpanCharacteristic { ColorTemperature(uint32_t value=50) : SpanCharacteristic{"CE",PR+PW+EV,(uint32_t)value,"ColorTemperature"}{} };
-
-  struct CurrentDoorState : SpanCharacteristic { CurrentDoorState(uint8_t value=1) : SpanCharacteristic{"E",PR+EV,(uint8_t)value,"CurrentDoorState"}{} };
-
-  struct CurrentPosition : SpanCharacteristic { CurrentPosition(uint8_t value=0) : SpanCharacteristic{"6D",PR+EV,(uint8_t)value,"CurrentPosition"}{} };
-
-  struct CurrentTemperature : SpanCharacteristic { CurrentTemperature(double value=0) : SpanCharacteristic{"11",PR+EV,(double)value,"CurrentTemperature"}{} };
-
-  struct FirmwareRevision : SpanCharacteristic { FirmwareRevision(char *value) : SpanCharacteristic{"52",PR,(char *)value,"FirmwareRevision"}{} };
-  
-  struct HoldPosition : SpanCharacteristic { HoldPosition(boolean value=false) : SpanCharacteristic{"6F",PW,(boolean)value,"HoldPosition"}{} };
-
-  struct Hue : SpanCharacteristic { Hue(double value=0) : SpanCharacteristic{"13",PR+PW+EV,(double)value,"Hue"}{} };
-  
-  struct Identify : SpanCharacteristic { Identify() : SpanCharacteristic{"14",PW,(boolean)false,"Identify"}{} };
-  
-  struct Manufacturer : SpanCharacteristic { Manufacturer(char *value) : SpanCharacteristic{"20",PR,(char *)value,"Manufacturer"}{} };
-
-  struct Model : SpanCharacteristic { Model(char *value) : SpanCharacteristic{"21",PR,(char *)value,"Model"}{} };
-
-  struct Name : SpanCharacteristic { Name(char *value) : SpanCharacteristic{"23",PR,(char *)value,"Name"}{} };
-
-  struct NitrogenDioxideDensity : SpanCharacteristic { NitrogenDioxideDensity(double value=0) : SpanCharacteristic{"C4",PR+EV,(double)value,"NitrogenDioxideDensity"}{} };
-
-  struct ObstructionDetected : SpanCharacteristic { ObstructionDetected(boolean value=false) : SpanCharacteristic{"24",PR+EV,(boolean)value,"ObstructionDetected"}{} };
-
-  struct On : SpanCharacteristic { On(boolean value=false) : SpanCharacteristic{"25",PR+PW+EV,(boolean)value,"On"}{} };
-  
-  struct OutletInUse : SpanCharacteristic { OutletInUse(boolean value=false) : SpanCharacteristic{"26",PR+EV,(boolean)value,"OutletInUse"}{} };
-
-  struct OzoneDensity : SpanCharacteristic { OzoneDensity(double value=0) : SpanCharacteristic{"C3",PR+EV,(double)value,"OzoneDensity"}{} };
-
-  struct PM10Density : SpanCharacteristic { PM10Density(double value=0) : SpanCharacteristic{"C7",PR+EV,(double)value,"PM10Density"}{} };
-
-  struct PM25Density : SpanCharacteristic { PM25Density(double value=0) : SpanCharacteristic{"C6",PR+EV,(double)value,"PM25Density"}{} };
-
-  struct PositionState : SpanCharacteristic { PositionState(uint8_t value=2) : SpanCharacteristic{"72",PR+EV,(uint8_t)value,"PositionState"}{} };
-
-  struct RotationDirection : SpanCharacteristic { RotationDirection(int value=0) : SpanCharacteristic{"28",PR+PW+EV,(int)value,"RotationDirection"}{} };
-
-  struct RotationSpeed : SpanCharacteristic { RotationSpeed(double value=0) : SpanCharacteristic{"29",PR+PW+EV,(double)value,"RotationSpeed"}{} };
-
-  struct Saturation : SpanCharacteristic { Saturation(double value=0) : SpanCharacteristic{"2F",PR+PW+EV,(double)value,"Saturation"}{} };
-
-  struct SerialNumber : SpanCharacteristic { SerialNumber(char *value) : SpanCharacteristic{"30",PR,(char *)value,"SerialNumber"}{} };
-
-  struct SlatType : SpanCharacteristic { SlatType(uint8_t value=0) : SpanCharacteristic{"C0",PR,(uint8_t)value,"SlatType"}{} };
-
-  struct SmokeDetected : SpanCharacteristic { SmokeDetected(uint8_t value=0) : SpanCharacteristic{"76",PR+EV,(uint8_t)value,"SmokeDetected"}{} };
-
-  struct StatusActive : SpanCharacteristic { StatusActive(boolean value=true) : SpanCharacteristic{"75",PR+EV,(boolean)value,"StatusActive"}{} };
-
-  struct StatusFault : SpanCharacteristic { StatusFault(uint8_t value=0) : SpanCharacteristic{"77",PR+EV,(uint8_t)value,"StatusFault"}{} };
-
-  struct StatusJammed : SpanCharacteristic { StatusJammed(uint8_t value=0) : SpanCharacteristic{"78",PR+EV,(uint8_t)value,"StatusJammed"}{} };
-
-  struct StatusLowBattery : SpanCharacteristic { StatusLowBattery(uint8_t value=0) : SpanCharacteristic{"79",PR+EV,(uint8_t)value,"StatusLowBattery"}{} };
-
-  struct StatusTampered : SpanCharacteristic { StatusTampered(uint8_t value=0) : SpanCharacteristic{"7A",PR+EV,(uint8_t)value,"StatusTampered"}{} };
-
-  struct SulphurDioxideDensity : SpanCharacteristic { SulphurDioxideDensity(double value=0) : SpanCharacteristic{"C5",PR+EV,(double)value,"SulphurDioxideDensity"}{} };
-
-  struct SwingMode : SpanCharacteristic { SwingMode(uint8_t value=0) : SpanCharacteristic{"B6",PR+PW+EV,(uint8_t)value,"SwingMode"}{} };
-
-  struct TargetDoorState : SpanCharacteristic { TargetDoorState(uint8_t value=1) : SpanCharacteristic{"32",PR+PW+EV,(uint8_t)value,"TargetDoorState"}{} };
-
-  struct TargetPosition : SpanCharacteristic { TargetPosition(uint8_t value=0) : SpanCharacteristic{"7C",PR+PW+EV,(uint8_t)value,"TargetPosition"}{} };
-
-  struct TemperatureDisplayUnits : SpanCharacteristic { TemperatureDisplayUnits(uint8_t value=0) : SpanCharacteristic{"36",PR+PW+EV,(uint8_t)value,"TemperatureDisplayUnits"}{} };
-
-  struct Version : SpanCharacteristic { Version(char *value) : SpanCharacteristic{"37",PR,(char *)value,"Version"}{} };
-
-  struct VOCDensity : SpanCharacteristic { VOCDensity(double value=0) : SpanCharacteristic{"C8",PR+EV,(double)value,"VOCDensity"}{} };
+  CREATE_CHAR(Active,uint8_t,0);
+  CREATE_CHAR(AirQuality,uint8_t,0);
+  CREATE_CHAR(Brightness,int,0);
+  CREATE_CHAR(ColorTemperature,uint32_t,50);
+  CREATE_CHAR(CurrentDoorState,uint8_t,1);
+  CREATE_CHAR(CurrentPosition,uint8_t,0);
+  CREATE_CHAR(CurrentTemperature,double,0);
+  CREATE_CHAR(FirmwareRevision,char *,"");
+  CREATE_CHAR(HoldPosition,boolean,false);
+  CREATE_CHAR(Hue,double,0);
+  CREATE_CHAR(Identify,boolean,false);
+  CREATE_CHAR(Manufacturer,char *,"");
+  CREATE_CHAR(Model,char *,"");
+  CREATE_CHAR(Name,char *,"");
+  CREATE_CHAR(NitrogenDioxideDensity,double,0);
+  CREATE_CHAR(ObstructionDetected,boolean,false);
+  CREATE_CHAR(On,boolean,false);
+  CREATE_CHAR(OutletInUse,boolean,false);
+  CREATE_CHAR(OzoneDensity,double,0);
+  CREATE_CHAR(PM10Density,double,0);
+  CREATE_CHAR(PM25Density,double,0);
+  CREATE_CHAR(PositionState,uint8_t,2);
+  CREATE_CHAR(RotationDirection,int,0);
+  CREATE_CHAR(RotationSpeed,double,0);
+  CREATE_CHAR(Saturation,double,0);
+  CREATE_CHAR(SerialNumber,char *,"");
+  CREATE_CHAR(SlatType,uint8_t,0);
+  CREATE_CHAR(SmokeDetected,uint8_t,0);
+  CREATE_CHAR(StatusActive,boolean,true);
+  CREATE_CHAR(StatusFault,uint8_t,0);
+  CREATE_CHAR(StatusJammed,uint8_t,0);
+  CREATE_CHAR(StatusLowBattery,uint8_t,0);
+  CREATE_CHAR(StatusTampered,uint8_t,0);
+  CREATE_CHAR(SulphurDioxideDensity,double,0);
+  CREATE_CHAR(SwingMode,uint8_t,0);
+  CREATE_CHAR(TargetDoorState,uint8_t,1);
+  CREATE_CHAR(TargetPosition,uint8_t,0);
+  CREATE_CHAR(TemperatureDisplayUnits,uint8_t,0);
+  CREATE_CHAR(Version,char *,"");
+  CREATE_CHAR(VOCDensity,double,0);
 
 }
