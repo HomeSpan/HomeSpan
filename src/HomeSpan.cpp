@@ -103,7 +103,8 @@ void Span::poll() {
     Serial.print(displayName);
     Serial.print(" is READY!\n\n");
     isInitialized=true;
-  }
+    
+  } // isInitialized
 
   if(strlen(network.wifiData.ssid)>0 && WiFi.status()!=WL_CONNECTED){
       initWifi();
@@ -1107,6 +1108,29 @@ SpanCharacteristic::SpanCharacteristic(char *type, uint8_t perms, char *hapName)
     homeSpan.configLog+=" *** ERROR!  Can't create new Characteristic without a defined Service! ***\n";
     homeSpan.nFatalErrors++;
     return;
+  }
+
+  char valid=false;
+
+  for(int i=0; !valid && i<homeSpan.Accessories.back()->Services.back()->req.size(); i++)
+    valid=!strcmp(type,homeSpan.Accessories.back()->Services.back()->req[i]->id);
+
+  for(int i=0; !valid && i<homeSpan.Accessories.back()->Services.back()->opt.size(); i++)
+    valid=!strcmp(type,homeSpan.Accessories.back()->Services.back()->opt[i]->id);
+
+  if(!valid){
+    homeSpan.configLog+=" *** ERROR!  Service does not support this Characteristic. ***";
+    homeSpan.nFatalErrors++;
+  }
+
+  valid=true;
+  
+  for(int i=0; valid && i<homeSpan.Accessories.back()->Services.back()->Characteristics.size(); i++)
+    valid=strcmp(type,homeSpan.Accessories.back()->Services.back()->Characteristics[i]->type);
+  
+  if(!valid){
+    homeSpan.configLog+=" *** ERROR!  Characteristic already defined for this Service. ***";
+    homeSpan.nFatalErrors++;
   }
 
   homeSpan.configLog+="\n";
