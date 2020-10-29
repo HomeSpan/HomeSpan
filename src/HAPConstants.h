@@ -142,7 +142,7 @@ struct HapCharList {
   HAPCHAR( PM10Density, C7, PR+EV );
   HAPCHAR( PositionState, 72, PR+EV  );
   HAPCHAR( ProgramMode, D1, PR+EV );
-  HAPCHAR( ProgrammableSwitchEvent, 73, PR+EV );
+  HAPCHAR( ProgrammableSwitchEvent, 73, PR+EV );                      // this characteristic requires specical handling
   HAPCHAR( RelativeHumidityDehumidifierThreshold, C9, PR+PW+EV );
   HAPCHAR( RelativeHumidityHumidifierThreshold, CA, PR+PW+EV );
   HAPCHAR( RemainingDuration, D4, PR+EV );
