@@ -357,10 +357,28 @@ namespace Characteristic {
   
   CREATE_CHAR(Active,uint8_t,0);
   CREATE_CHAR(AirQuality,uint8_t,0);
+  CREATE_CHAR(BatteryLevel,uint8_t,0);
   CREATE_CHAR(Brightness,int,0);
+  CREATE_CHAR(CarbonMonoxideLevel,double,0);
+  CREATE_CHAR(CarbonMonoxidePeakLevel,double,0);
+  CREATE_CHAR(CarbonMonoxideDetected,uint8_t,0);
+  CREATE_CHAR(CarbonDioxideLevel,double,0);
+  CREATE_CHAR(CarbonDioxidePeakLevel,double,0);
+  CREATE_CHAR(CarbonDioxideDetected,uint8_t,0);
+  CREATE_CHAR(ChargingState,uint8_t,0);
+  CREATE_CHAR(CoolingThresholdTemperature,double,10); 
   CREATE_CHAR(ColorTemperature,uint32_t,50);
-  CREATE_CHAR(CurrentDoorState,uint8_t,1);
+  CREATE_CHAR(ContactSensorState,uint8_t,1);
+  CREATE_CHAR(CurrentAmbientLightLevel,double,1);
+  CREATE_CHAR(CurrentHorizontalTiltAngle,int,0);
+  CREATE_CHAR(CurrentAirPurifierState,uint8_t,1);
+  CREATE_CHAR(CurrentSlatState,uint8_t,0);
   CREATE_CHAR(CurrentPosition,uint8_t,0);
+  CREATE_CHAR(CurrentVerticalTiltAngle,int,0);
+  CREATE_CHAR(CurrentHumidifierDehumidifierState,uint8_t,1);
+  CREATE_CHAR(CurrentDoorState,uint8_t,1);
+
+  
   CREATE_CHAR(CurrentTemperature,double,0);
   CREATE_CHAR(FirmwareRevision,char *,"");
   CREATE_CHAR(HoldPosition,boolean,false);
