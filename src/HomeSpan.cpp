@@ -71,11 +71,19 @@ void Span::poll() {
   }
 
   if(!isInitialized){
-
-    if(logLevel>0 || nFatalErrors>0){
-      Serial.print(configLog);
-      Serial.print("\n*** End Config Log ***\n");
+  
+    if(!homeSpan.Accessories.empty()){
+      
+      if(!homeSpan.Accessories.back()->Services.empty())
+        homeSpan.Accessories.back()->Services.back()->validate();    
+        
+      homeSpan.Accessories.back()->validate();    
     }
+   
+    Serial.print(configLog);
+    Serial.print("\nConfigured as Bridge: ");
+    Serial.print(homeSpan.isBridge?"YES":"NO");
+    Serial.print("\n\n*** End Config Log ***\n");
   
     if(nFatalErrors>0){
       Serial.print("\n*** PROGRAM HALTED DUE TO ");
@@ -1006,11 +1014,48 @@ int Span::sprintfAttributes(char **ids, int numIDs, int flags, char *cBuf){
 ///////////////////////////////
 
 SpanAccessory::SpanAccessory(){
+
+  if(!homeSpan.Accessories.empty()){
+    
+    if(!homeSpan.Accessories.back()->Services.empty())
+      homeSpan.Accessories.back()->Services.back()->validate();    
+      
+    homeSpan.Accessories.back()->validate();    
+  }
   
   homeSpan.Accessories.push_back(this);
   aid=homeSpan.Accessories.size();
 
   homeSpan.configLog+="+Accessory " + String(aid) + "\n";
+}
+
+///////////////////////////////
+
+void SpanAccessory::validate(){
+
+  boolean foundInfo=false;
+  boolean foundProtocol=false;
+  
+  for(int i=0;i<Services.size();i++){
+    if(!strcmp(Services[i]->type,"3E"))
+      foundInfo=true;
+    else if(!strcmp(Services[i]->type,"A2"))
+      foundProtocol=true;
+    else if(aid==1)                             // this is the first Accessory and it has more than just AccessoryInfo and HAPProtocolInformation
+      homeSpan.isBridge=false;                  // this is not a bridge device
+  }
+
+  if(!foundInfo){
+    homeSpan.configLog+="  !Service AccessoryInformation";
+    homeSpan.configLog+=" *** ERROR!  Required Service for this Accessory not found. ***\n";
+    homeSpan.nFatalErrors++;
+  }    
+
+  if(!foundProtocol && (aid==1 || !homeSpan.isBridge)){           // HAPProtocolInformation must always be present in first Accessory, and any other Accessory is the device is not a bridge)
+    homeSpan.configLog+="  !Service HAPProtocolInformation";
+    homeSpan.configLog+=" *** ERROR!  Required Service for this Accessory not found. ***\n";
+    homeSpan.nFatalErrors++;
+  }    
 }
 
 ///////////////////////////////
@@ -1036,6 +1081,9 @@ int SpanAccessory::sprintfAttributes(char *cBuf){
 ///////////////////////////////
 
 SpanService::SpanService(const char *type, const char *hapName){
+
+  if(!homeSpan.Accessories.back()->Services.empty())      // this is not the first Service to be defined for this Accessory
+    homeSpan.Accessories.back()->Services.back()->validate();    
 
   this->type=type;
   this->hapName=hapName;
@@ -1094,6 +1142,23 @@ int SpanService::sprintfAttributes(char *cBuf){
 }
 
 ///////////////////////////////
+
+void SpanService::validate(){
+
+  for(int i=0;i<req.size();i++){
+    boolean valid=false;
+    for(int j=0;!valid && j<Characteristics.size();j++)
+      valid=!strcmp(req[i]->id,Characteristics[j]->type);
+      
+    if(!valid){
+      homeSpan.configLog+="    !Characteristic " + String(req[i]->name);
+      homeSpan.configLog+=" *** ERROR!  Required Characteristic for this Service not found. ***\n";
+      homeSpan.nFatalErrors++;
+    }
+  }
+}
+
+///////////////////////////////
 //    SpanCharacteristic     //
 ///////////////////////////////
 
@@ -1110,7 +1175,7 @@ SpanCharacteristic::SpanCharacteristic(char *type, uint8_t perms, char *hapName)
     return;
   }
 
-  char valid=false;
+  boolean valid=false;
 
   for(int i=0; !valid && i<homeSpan.Accessories.back()->Services.back()->req.size(); i++)
     valid=!strcmp(type,homeSpan.Accessories.back()->Services.back()->req[i]->id);

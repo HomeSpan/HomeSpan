@@ -56,6 +56,7 @@ struct Span{
   boolean isInitialized=false;                  // flag indicating HomeSpan has been initialized
   int nFatalErrors=0;                           // number of fatal errors in user-defined configuration
   String configLog="\n*** Config Log ***\n\n";  // log of configuration process, including any errors
+  boolean isBridge=true;                        // flag indicating whether device is configured as a bridge (i.e. first Accessory contains nothing but AccessoryInformation and HAPProtocolInformation)
   
   char *defaultSetupCode=DEFAULT_SETUP_CODE;                  // Setup Code used for pairing
   uint8_t statusPin=DEFAULT_STATUS_PIN;                       // pin for status LED    
@@ -121,6 +122,7 @@ struct SpanAccessory{
   SpanAccessory();
 
   int sprintfAttributes(char *cBuf);        // prints Accessory JSON database into buf, unless buf=NULL; return number of characters printed, excluding null terminator, even if buf=NULL  
+  void validate();                          // error-checks Accessory
 };
 
 ///////////////////////////////
@@ -142,6 +144,8 @@ struct SpanService{
   SpanService *setHidden();                               // sets the Service Type to be hidden and returns pointer to self
 
   int sprintfAttributes(char *cBuf);                      // prints Service JSON records into buf; return number of characters printed, excluding null terminator
+  void validate();                                        // error-checks Service
+  
   virtual boolean update() {return(true);}                // placeholder for code that is called when a Service is updated via a Controller.  Must return true/false depending on success of update
   virtual void loop(){}                                   // loops for each Service - called every cycle and can be over-ridden with user-defined code
   virtual void button(int pin, boolean isLong){}          // method called for a Service when a button attached to "pin" has a Short-Press or Long-Press, according to "isLong"
