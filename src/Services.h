@@ -209,6 +209,18 @@ namespace Service {
     OPT(StatusLowBattery);          
   }};
 
+  struct LockMechanism : SpanService { LockMechanism() : SpanService{"45","LockMechanism"}{
+    REQ(LockCurrentState);
+    REQ(LockTargetState);
+    OPT(Name);
+  }};
+
+  struct Microphone : SpanService { Microphone() : SpanService{"112","Microphone"}{
+    REQ(Mute);
+    OPT(Name);
+    OPT(Volume);
+  }};
+
   struct MotionSensor : SpanService { MotionSensor() : SpanService{"85","MotionSensor"}{
     REQ(MotionDetected);
     OPT(Name);
@@ -233,7 +245,16 @@ namespace Service {
     OPT(Name);
   }};
 
-  struct ServiceLabel : SpanService { ServiceLabel() : SpanService{"47","ServiceLabel"}{
+  struct SecuritySystem : SpanService { SecuritySystem() : SpanService{"7E","SecuritySystem"}{
+    REQ(SecuritySystemCurrentState);
+    REQ(SecuritySystemTargetState);
+    OPT(Name);
+    OPT(SecuritySystemAlarmType);
+    OPT(StatusFault);
+    OPT(StatusTampered);
+  }};  
+
+  struct ServiceLabel : SpanService { ServiceLabel() : SpanService{"CC","ServiceLabel"}{
     REQ(ServiceLabelNamespace);
   }};  
 

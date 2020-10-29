@@ -130,6 +130,7 @@ struct HapCharList {
   HAPCHAR( Manufacturer, 20, PR );
   HAPCHAR( Model, 21, PR );
   HAPCHAR( MotionDetected, 22, PR+EV );
+  HAPCHAR( Mute, 11A, PW+PR+EV );
   HAPCHAR( Name, 23, PR );
   HAPCHAR( NitrogenDioxideDensity, C4, PR+EV );
   HAPCHAR( ObstructionDetected, 24, PR+EV );
@@ -149,6 +150,9 @@ struct HapCharList {
   HAPCHAR( RotationDirection, 28, PR+PW+EV );
   HAPCHAR( RotationSpeed, 29, PR+PW+EV );
   HAPCHAR( Saturation , 2F, PR+PW+EV );  
+  HAPCHAR( SecuritySystemAlarmType , 8E, PR+EV );  
+  HAPCHAR( SecuritySystemCurrentState , 66, PR+EV );  
+  HAPCHAR( SecuritySystemTargetState , 67, PW+PR+EV );  
   HAPCHAR( SerialNumber, 30, PR );
   HAPCHAR( ServiceLabelIndex, CB, PR );
   HAPCHAR( ServiceLabelNamespace, CD, PR );
