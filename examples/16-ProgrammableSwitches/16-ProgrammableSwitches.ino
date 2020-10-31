@@ -15,7 +15,6 @@
 #include "DEV_Identify.h"       
 
 void setup() {
-
   
   Serial.begin(115200);
 
@@ -27,9 +26,10 @@ void setup() {
       new Characteristic::Version("1.1.0");
 
   new SpanAccessory();                                                          
-    new DEV_Identify("PushButton Switch","HomeSpan","123-ABC","20mA LED","0.9",0);
+    new DEV_Identify("PushButton Switches","HomeSpan","123-ABC","Prog Switches","0.9",0);
 
-    new DEV_ProgButton(23);
+    new DEV_ProgButton(23,2);
+    new DEV_ProgButton(5,7);
  
 } // end of setup()
 

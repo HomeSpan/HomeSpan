@@ -79,12 +79,9 @@ void Span::poll() {
         
       homeSpan.Accessories.back()->validate();    
     }
+
+    processSerialCommand("i");        // print homeSpan configuration info
    
-    Serial.print(configLog);
-    Serial.print("\nConfigured as Bridge: ");
-    Serial.print(homeSpan.isBridge?"YES":"NO");
-    Serial.print("\n\n*** End Config Log ***\n");
-  
     if(nFatalErrors>0){
       Serial.print("\n*** PROGRAM HALTED DUE TO ");
       Serial.print(nFatalErrors);
@@ -617,8 +614,14 @@ void Span::processSerialCommand(char *c){
 
     case 'i':{
 
-      char d[]="------------------------------";
       Serial.print("\n*** HomeSpan Info ***\n\n");
+
+      Serial.print(configLog);
+      Serial.print("\nConfigured as Bridge: ");
+      Serial.print(homeSpan.isBridge?"YES":"NO");
+      Serial.print("\n\n");
+
+      char d[]="------------------------------";
       char cBuf[256];
       sprintf(cBuf,"%-30s  %s  %s  %s  %s  %s  %s\n","Service","Type","AID","IID","Update","Loop","Button");
       Serial.print(cBuf);
@@ -655,7 +658,7 @@ void Span::processSerialCommand(char *c){
       Serial.print("\n");      
       Serial.print("  R - restart device\n");      
       Serial.print("  F - factory reset and restart\n");      
-      Serial.print("  E - delete all stored data and restart\n");      
+      Serial.print("  E - erase ALL stored data and restart\n");      
       Serial.print("\n");          
       Serial.print("  ? - print this list of commands\n");
       Serial.print("\n");      
@@ -1026,7 +1029,7 @@ SpanAccessory::SpanAccessory(){
   homeSpan.Accessories.push_back(this);
   aid=homeSpan.Accessories.size();
 
-  homeSpan.configLog+="+Accessory " + String(aid) + "\n";
+  homeSpan.configLog+="+Accessory-" + String(aid) + "\n";
 }
 
 ///////////////////////////////
@@ -1082,7 +1085,7 @@ int SpanAccessory::sprintfAttributes(char *cBuf){
 
 SpanService::SpanService(const char *type, const char *hapName){
 
-  if(!homeSpan.Accessories.back()->Services.empty())      // this is not the first Service to be defined for this Accessory
+  if(!homeSpan.Accessories.empty() && !homeSpan.Accessories.back()->Services.empty())      // this is not the first Service to be defined for this Accessory
     homeSpan.Accessories.back()->Services.back()->validate();    
 
   this->type=type;
@@ -1096,9 +1099,10 @@ SpanService::SpanService(const char *type, const char *hapName){
     return;
   }
 
-  homeSpan.configLog+="\n";
   homeSpan.Accessories.back()->Services.push_back(this);  
   iid=++(homeSpan.Accessories.back()->iidCount);  
+
+  homeSpan.configLog+=+"-" + String(iid) + String(" (") + String(type) + String(")\n");
 }
 
 ///////////////////////////////
@@ -1175,6 +1179,14 @@ SpanCharacteristic::SpanCharacteristic(char *type, uint8_t perms, char *hapName)
     return;
   }
 
+  iid=++(homeSpan.Accessories.back()->iidCount);
+  service=homeSpan.Accessories.back()->Services.back();
+  aid=homeSpan.Accessories.back()->aid;
+
+  ev=(boolean *)calloc(homeSpan.maxConnections,sizeof(boolean));
+
+  homeSpan.configLog+="-" + String(iid) + String(" (") + String(type) + String(") ");
+
   boolean valid=false;
 
   for(int i=0; !valid && i<homeSpan.Accessories.back()->Services.back()->req.size(); i++)
@@ -1188,23 +1200,20 @@ SpanCharacteristic::SpanCharacteristic(char *type, uint8_t perms, char *hapName)
     homeSpan.nFatalErrors++;
   }
 
-  valid=true;
+  boolean repeated=false;
   
-  for(int i=0; valid && i<homeSpan.Accessories.back()->Services.back()->Characteristics.size(); i++)
-    valid=strcmp(type,homeSpan.Accessories.back()->Services.back()->Characteristics[i]->type);
+  for(int i=0; !repeated && i<homeSpan.Accessories.back()->Services.back()->Characteristics.size(); i++)
+    repeated=!strcmp(type,homeSpan.Accessories.back()->Services.back()->Characteristics[i]->type);
   
-  if(!valid){
+  if(valid && repeated){
     homeSpan.configLog+=" *** ERROR!  Characteristic already defined for this Service. ***";
     homeSpan.nFatalErrors++;
   }
 
-  homeSpan.configLog+="\n";
   homeSpan.Accessories.back()->Services.back()->Characteristics.push_back(this);  
-  iid=++(homeSpan.Accessories.back()->iidCount);
-  service=homeSpan.Accessories.back()->Services.back();
-  aid=homeSpan.Accessories.back()->aid;
 
-  ev=(boolean *)calloc(homeSpan.maxConnections,sizeof(boolean));
+  homeSpan.configLog+="\n";
+
 }
 
 ///////////////////////////////
@@ -1327,101 +1336,6 @@ int SpanCharacteristic::sprintfAttributes(char *cBuf, int flags){
       nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?128:0,",\"minValue\":%d,\"maxValue\":%d,\"minStep\":%d",range->min,range->max,range->step);    
   }
     
-/*
-  
-  switch(format){
-
-    case BOOL:
-      if(perms&PR){
-        if(!(perms&NV))
-          nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"value\":%s",value.BOOL?"true":"false");
-        else
-          nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"value\":null");
-      }
-      if(flags&GET_META)  
-        nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"format\":\"bool\"");
-      break;
-
-    case INT:
-      if(perms&PR){
-        if(!(perms&NV))
-          nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"value\":%d",value.INT);
-        else
-          nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"value\":null");
-      }
-      if(flags&GET_META)  
-        nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"format\":\"int\"");
-      break;
-
-    case UINT8:
-      if(perms&PR){
-        if(!(perms&NV))
-          nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"value\":%u",value.UINT8);
-        else
-          nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"value\":null");
-      }
-      if(flags&GET_META)  
-        nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"format\":\"uint8\"");
-      break;
-      
-    case UINT16:
-      if(perms&PR){
-        if(!(perms&NV))
-          nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"value\":%u",value.UINT16);
-      else
-          nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"value\":null");
-      }
-      if(flags&GET_META)  
-        nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"format\":\"uint16\"");
-      break;
-      
-    case UINT32:
-      if(perms&PR){
-        if(!(perms&NV))
-          nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"value\":%lu",value.UINT32);
-        else
-          nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"value\":null");
-      }
-      if(flags&GET_META)  
-        nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"format\":\"uint32\"");
-      break;
-      
-    case UINT64:
-      if(perms&PR){
-        if(!(perms&NV))
-          nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"value\":%llu",value.UINT64);
-        else
-          nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"value\":null");
-      }
-      if(flags&GET_META)  
-        nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"format\":\"uint64\"");
-      break;
-      
-    case FLOAT:
-      if(perms&PR){
-        if(!(perms&NV))
-          nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"value\":%lg",value.FLOAT);
-        else
-          nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"value\":null");
-      }
-      if(flags&GET_META)  
-        nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"format\":\"float\"");
-      break;
-      
-    case STRING:
-      if(perms&PR){
-        if(!(perms&NV))
-          nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"value\":\"%s\"",value.STRING);
-        else
-          nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"value\":null");
-      }
-      if(flags&GET_META)  
-        nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"format\":\"string\"");
-      break;
-      
-  } // switch
-*/
- 
   if(desc && (flags&GET_DESC)){
     nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?128:0,",\"description\":\"%s\"",desc);    
   }

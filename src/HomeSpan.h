@@ -56,7 +56,7 @@ struct Span{
   unsigned long snapTime;                       // current time (in millis) snapped before entering Service loops() or updates()
   boolean isInitialized=false;                  // flag indicating HomeSpan has been initialized
   int nFatalErrors=0;                           // number of fatal errors in user-defined configuration
-  String configLog="\n*** Config Log ***\n\n";  // log of configuration process, including any errors
+  String configLog;                             // log of configuration process, including any errors
   boolean isBridge=true;                        // flag indicating whether device is configured as a bridge (i.e. first Accessory contains nothing but AccessoryInformation and HAPProtocolInformation)
   
   char *defaultSetupCode=DEFAULT_SETUP_CODE;                  // Setup Code used for pairing

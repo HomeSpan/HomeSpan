@@ -8,15 +8,18 @@ struct DEV_ProgButton : Service::StatelessProgrammableSwitch {       // Stateles
   int buttonPin;                                    // pin with programmable pushbutton
   SpanCharacteristic *switchEvent;                  // reference to the ProgrammableSwitchEvent Characteristic
   
-  DEV_ProgButton(int buttonPin) : Service::StatelessProgrammableSwitch(){
+  DEV_ProgButton(int buttonPin, int index) : Service::StatelessProgrammableSwitch(){
 
-    switchEvent=new Characteristic::ProgrammableSwitchEvent(); // ProgrammableSwitchEvent Characteristic
+    switchEvent=new Characteristic::ProgrammableSwitchEvent();  // ProgrammableSwitchEvent Characteristic
+    new Characteristic::ServiceLabelIndex(index);               // set service label index
                 
     new SpanButton(buttonPin);                      // create new SpanButton
     this->buttonPin=buttonPin;                      // save button pin number
 
-    Serial.print("Configuring Programmable Pushbuton: Pin="); // initialization message
+    Serial.print("Configuring Programmable Pushbutton: Pin="); // initialization message
     Serial.print(buttonPin);
+    Serial.print("  Index=");
+    Serial.print(index);
     Serial.print("\n");
     
   } // end constructor
