@@ -923,7 +923,7 @@ int Span::sprintfNotify(SpanBuf *pObj, int nObj, char *cBuf, int conNum){
         if(notifyFlag)                                                           // already printed at least one other characteristic
           nChars+=snprintf(cBuf?(cBuf+nChars):NULL,cBuf?64:0,",");               // add preceeding comma before printing next characteristic
         
-        nChars+=pObj[i].characteristic->sprintfAttributes(cBuf?(cBuf+nChars):NULL,GET_AID);    // get JSON attributes for characteristic
+        nChars+=pObj[i].characteristic->sprintfAttributes(cBuf?(cBuf+nChars):NULL,GET_AID+GET_NV);    // get JSON attributes for characteristic
         notifyFlag=true;
         
       } // notification requested
@@ -1270,75 +1270,158 @@ int SpanCharacteristic::sprintfAttributes(char *cBuf, int flags){
 
   const char permCodes[][7]={"pr","pw","ev","aa","tw","hd","wr"};
 
+  const char formatCodes[][8]={"bool","uint8","uint16","uint32","uint64","int","float","string"};
+
   nBytes+=snprintf(cBuf,cBuf?64:0,"{\"iid\":%d",iid);
 
   if(flags&GET_TYPE)  
     nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"type\":\"%s\"",type);
 
+  if(perms&PR){
+    
+    if(perms&NV && !(flags&GET_NV)){   
+      nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"value\":null");
+    } else {
+      
+      switch(format){
+        case BOOL:
+          nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"value\":%s",value.BOOL?"true":"false");
+        break;
+    
+        case INT:
+          nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"value\":%d",value.INT);
+        break;
+    
+        case UINT8:
+          nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"value\":%u",value.UINT8);
+        break;
+          
+        case UINT16:
+          nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"value\":%u",value.UINT16);
+        break;
+          
+        case UINT32:
+          nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"value\":%lu",value.UINT32);
+        break;
+          
+        case UINT64:
+          nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"value\":%llu",value.UINT64);
+        break;
+          
+        case FLOAT:
+          nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"value\":%lg",value.FLOAT);
+        break;
+          
+        case STRING:
+          nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"value\":\"%s\"",value.STRING);
+        break;
+        
+      } // switch
+    } // print Characteristic value
+  } // permissions=PR
+
+  if(flags&GET_META){
+    nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"format\":\"%s\"",formatCodes[format]);
+    
+    if(range && (flags&GET_META))
+      nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?128:0,",\"minValue\":%d,\"maxValue\":%d,\"minStep\":%d",range->min,range->max,range->step);    
+  }
+    
+/*
+  
   switch(format){
 
     case BOOL:
-      if(perms&PR)
-        nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"value\":%s",value.BOOL?"true":"false");
+      if(perms&PR){
+        if(!(perms&NV))
+          nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"value\":%s",value.BOOL?"true":"false");
+        else
+          nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"value\":null");
+      }
       if(flags&GET_META)  
         nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"format\":\"bool\"");
       break;
 
     case INT:
-      if(perms&PR)
-        nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"value\":%d",value.INT);
+      if(perms&PR){
+        if(!(perms&NV))
+          nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"value\":%d",value.INT);
+        else
+          nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"value\":null");
+      }
       if(flags&GET_META)  
         nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"format\":\"int\"");
       break;
 
     case UINT8:
-      if(perms&PR)
-        nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"value\":%u",value.UINT8);
+      if(perms&PR){
+        if(!(perms&NV))
+          nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"value\":%u",value.UINT8);
+        else
+          nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"value\":null");
+      }
       if(flags&GET_META)  
         nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"format\":\"uint8\"");
       break;
       
     case UINT16:
-      if(perms&PR)
-        nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"value\":%u",value.UINT16);
+      if(perms&PR){
+        if(!(perms&NV))
+          nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"value\":%u",value.UINT16);
+      else
+          nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"value\":null");
+      }
       if(flags&GET_META)  
         nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"format\":\"uint16\"");
       break;
       
     case UINT32:
-      if(perms&PR)
-        nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"value\":%lu",value.UINT32);
+      if(perms&PR){
+        if(!(perms&NV))
+          nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"value\":%lu",value.UINT32);
+        else
+          nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"value\":null");
+      }
       if(flags&GET_META)  
         nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"format\":\"uint32\"");
       break;
       
     case UINT64:
-      if(perms&PR)
-        nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"value\":%llu",value.UINT64);
+      if(perms&PR){
+        if(!(perms&NV))
+          nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"value\":%llu",value.UINT64);
+        else
+          nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"value\":null");
+      }
       if(flags&GET_META)  
         nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"format\":\"uint64\"");
       break;
       
     case FLOAT:
-      if(perms&PR)
-        nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"value\":%lg",value.FLOAT);
+      if(perms&PR){
+        if(!(perms&NV))
+          nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"value\":%lg",value.FLOAT);
+        else
+          nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"value\":null");
+      }
       if(flags&GET_META)  
         nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"format\":\"float\"");
       break;
       
     case STRING:
-      if(perms&PR)
-        nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"value\":\"%s\"",value.STRING);
+      if(perms&PR){
+        if(!(perms&NV))
+          nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"value\":\"%s\"",value.STRING);
+        else
+          nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"value\":null");
+      }
       if(flags&GET_META)  
         nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"format\":\"string\"");
       break;
       
   } // switch
-
-  if(range && (flags&GET_META)){
-    nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?128:0,",\"minValue\":%d,\"maxValue\":%d,\"minStep\":%d",range->min,range->max,range->step);    
-  }
-  
+*/
+ 
   if(desc && (flags&GET_DESC)){
     nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?128:0,",\"description\":\"%s\"",desc);    
   }

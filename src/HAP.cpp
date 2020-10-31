@@ -1251,7 +1251,7 @@ void  HAPClient::checkTimedWrites(){
 void HAPClient::eventNotify(SpanBuf *pObj, int nObj, int ignoreClient){
   
   for(int cNum=0;cNum<homeSpan.maxConnections;cNum++){        // loop over all connection slots
-    if(hap[cNum]->client && cNum!=ignoreClient){       // if there is a client connected to this slot and it is NOT flagged to be ignored (in cases where it is the client making a PUT request
+    if(hap[cNum]->client && cNum!=ignoreClient){       // if there is a client connected to this slot and it is NOT flagged to be ignored (in cases where it is the client making a PUT request)
 
       int nBytes=homeSpan.sprintfNotify(pObj,nObj,NULL,cNum);          // get JSON response for notifications to client cNum - includes terminating null (will be recast to uint8_t* below)
 

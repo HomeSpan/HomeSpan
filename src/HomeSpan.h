@@ -23,6 +23,7 @@ enum {
   GET_TYPE=8,
   GET_EV=16,
   GET_DESC=32,
+  GET_NV=64,
   GET_ALL=255
 };
 
@@ -162,19 +163,20 @@ struct SpanCharacteristic{
     AA=8,
     TW=16,
     HD=32,
-    WR=64
+    WR=64,
+    NV=128
   };
 
-  enum FORMAT {                           // HAP Table 6-5
-    BOOL,
-    UINT8,
-    UINT16,
-    UINT32,
-    UINT64,
-    INT,
-    FLOAT,
-    STRING
-    };
+  enum FORMAT {   // HAP Table 6-5
+    BOOL=0,
+    UINT8=1,
+    UINT16=2,
+    UINT32=3,
+    UINT64=4,
+    INT=5,
+    FLOAT=6,
+    STRING=7
+  };
     
   union UVal {                                  
     boolean BOOL;
