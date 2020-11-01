@@ -27,8 +27,6 @@ struct DEV_ProgButton : Service::StatelessProgrammableSwitch {       // Stateles
     LOG1("Found button press on pin: ");            // always a good idea to log messages
     LOG1(pin);
     LOG1("  type: ");
-    LOG1(pressType);
-    LOG1(" ");
     LOG1(pressType==SpanButton::LONG?"LONG":(pressType==SpanButton::SINGLE)?"SINGLE":"DOUBLE");
     LOG1("\n");
 
