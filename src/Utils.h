@@ -43,8 +43,11 @@ class PushButton{
   
   int status;
   uint8_t pin;
+  boolean doubleCheck;
   uint32_t shortAlarm;
+  uint32_t doubleAlarm;
   uint32_t longAlarm;
+  int pressType;
   boolean isLongPress;
 
   public:
@@ -75,6 +78,7 @@ class PushButton{
 //  Resets state of PushButton.  Should be called once before any loops that will
 //  repeatedly check the button for a trigger event.
 
+  boolean triggered(uint16_t shortTime, uint16_t longTime, uint16_t doubleTime);
   boolean triggered(uint16_t shortTime, uint16_t longTime);
 
 //  Returns true if button has been triggered by either a Long Press or Short Press, where a
@@ -94,6 +98,7 @@ class PushButton{
 //  After returning true, subsequent calls will always return false until the button has been released and reset.
 
   boolean longPress();
+  int type();
 
 //  Returns true if last trigger event was a Long Press, or false if last trigger was a Short Press  
 

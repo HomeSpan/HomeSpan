@@ -70,6 +70,7 @@ PushButton::PushButton(uint8_t pin){
 
 void PushButton::init(uint8_t pin){
   status=0;
+  doubleCheck=false;
   this->pin=pin;
   pinMode(pin, INPUT_PULLUP);
 }
@@ -123,6 +124,83 @@ boolean PushButton::triggered(uint16_t shortTime, uint16_t longTime){
 
 //////////////////////////////////////
 
+boolean PushButton::triggered(uint16_t shortTime, uint16_t longTime, uint16_t doubleTime){
+
+  unsigned long cTime=millis();
+
+  switch(status){
+    
+    case 0:
+      if(doubleCheck && cTime>doubleAlarm){
+        doubleCheck=false;
+        pressType=0;
+        return(true);
+      }
+      
+      if(!digitalRead(pin)){         // button is pressed
+        shortAlarm=cTime+shortTime;
+        if(!doubleCheck){
+          status=1;
+          doubleAlarm=shortAlarm+doubleTime;
+          longAlarm=cTime+longTime;
+        } else {
+          status=4;
+        }
+      }
+    break;  
+  
+    case 1:
+    case 2:
+      if(digitalRead(pin)){         // button is released          
+        status=0;
+        if(cTime>shortAlarm){
+          doubleCheck=true;
+        }
+      } else
+      
+      if(cTime>longAlarm){          // button is long-pressed
+        longAlarm=cTime+longTime;
+        status=3;
+        pressType=1;
+        return(true);
+      }
+    break;
+
+    case 3:
+      if(digitalRead(pin))          // button has been released after a long press
+        status=0;
+      else if(cTime>longAlarm){
+        longAlarm=cTime+longTime;
+        pressType=1;
+        return(true);        
+      }
+    break;
+
+    case 4:    
+      if(digitalRead(pin)){         // button is released          
+        status=0;
+      } else
+      
+      if(cTime>shortAlarm){         // button is still pressed
+        status=5;
+        pressType=2;
+        doubleCheck=false;
+        return(true);
+      }
+    break;
+
+    case 5:
+      if(digitalRead(pin))          // button has been released after double-click
+        status=0;
+     break;
+
+  }
+
+  return(false);
+}
+
+//////////////////////////////////////
+
 boolean PushButton::primed(){
   
   if(millis()>shortAlarm && status==1){
@@ -137,6 +215,12 @@ boolean PushButton::primed(){
 
 boolean PushButton::longPress(){
   return(isLongPress);
+}
+
+//////////////////////////////////////
+
+int PushButton::type(){
+  return(pressType);
 }
 
 //////////////////////////////////////
