@@ -44,13 +44,18 @@ class PushButton{
   int status;
   uint8_t pin;
   boolean doubleCheck;
-  uint32_t shortAlarm;
+  uint32_t singleAlarm;
   uint32_t doubleAlarm;
   uint32_t longAlarm;
   int pressType;
-  boolean isLongPress;
 
   public:
+
+  enum {
+    SINGLE=0,
+    DOUBLE=1,
+    LONG=2
+  };
   
   PushButton();
   PushButton(uint8_t pin);
@@ -78,29 +83,34 @@ class PushButton{
 //  Resets state of PushButton.  Should be called once before any loops that will
 //  repeatedly check the button for a trigger event.
 
-  boolean triggered(uint16_t shortTime, uint16_t longTime, uint16_t doubleTime);
-  boolean triggered(uint16_t shortTime, uint16_t longTime);
+  boolean triggered(uint16_t singleTime, uint16_t longTime, uint16_t doubleTime=0);
 
-//  Returns true if button has been triggered by either a Long Press or Short Press, where a
-//  Long Press is a press and hold for at least longTime milliseconds, and a Short Press is 
-//  a press and release of at least shortTime milliseconds but less than longTime milliseconds.
-//
-//  shortTime:   the minimum time required for the button to be pressed before releasing to trigger a Short Press
-//  longtime:    the minimum time required for the button to be pressed and held to trigger a Long Press
-//
-//  If shortTime>longTime, only Long Press triggers will occur.  Once triggered() returns true, if will subsequently
-//  return false until there is a new trigger.  After a Long Press, the button must be released to permit a subsequent
-//  trigger.
+//  Returns true if button has been triggered by an press event based on the following parameters:
+
+//  singleTime:   the minimum time required for the button to be pressed to trigger a Single Press
+//  doubleTime:   the maximum time allowed between button presses to qualify as a Double Press
+//  longTime:     the minimum time required for the button to be pressed and held to trigger a Long Press
+
+//  All times are in milliseconds (ms). Trigger Rules:
+
+//  * If button is pressed and continuously held, a Long Press will be triggered every longTime ms until the
+//    button is released.
+//  * If button is pressed for more than singleTime ms but less than longTime ms and then released, a Single Press
+//    will be triggered, UNLESS
+//  * The button is pressed a second time within doubleTime ms AND held again for at least singleTime ms, in which case
+//    a DoublePress will be triggered.  No further events will occur until the button is released.
+//  * If singleTime>longTime, only Long Press triggers can occur.
+//  * If doubleTime=0, Double Presses cannot occur.
+//  * Once triggered() returns true, if will subsequently return false until there is a new trigger event.
 
   boolean primed();
 
-//  Returns true if button has been pressed and held for greater than shortTime, but has not yet been released.
+//  Returns true if button has been pressed and held for greater than singleTime, but has not yet been released.
 //  After returning true, subsequent calls will always return false until the button has been released and reset.
 
-  boolean longPress();
   int type();
 
-//  Returns true if last trigger event was a Long Press, or false if last trigger was a Short Press  
+//  Returns 0=Single Press, 1=Double Press, or 2=Long Press 
 
   void wait();
 

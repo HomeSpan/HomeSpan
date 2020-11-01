@@ -149,7 +149,7 @@ struct SpanService{
   
   virtual boolean update() {return(true);}                // placeholder for code that is called when a Service is updated via a Controller.  Must return true/false depending on success of update
   virtual void loop(){}                                   // loops for each Service - called every cycle and can be over-ridden with user-defined code
-  virtual void button(int pin, boolean isLong){}          // method called for a Service when a button attached to "pin" has a Short-Press or Long-Press, according to "isLong"
+  virtual void button(int pin, int pressType){}           // method called for a Service when a button attached to "pin" has a Single, Double, or Long Press, according to pressType
 };
 
 ///////////////////////////////
@@ -281,14 +281,21 @@ struct SpanBuf{                               // temporary storage buffer for us
 
 struct SpanButton{
 
+  enum {
+    SINGLE=0,
+    DOUBLE=1,
+    LONG=2
+  };
+  
   int pin;                       // pin number  
-  unsigned long shortTime;       // time (in millis) required to register a short press
-  unsigned long longTime;        // time (in millis) required to register a long press
+  uint16_t singleTime;           // minimum time (in millis) required to register a single press
+  uint16_t longTime;             // minimum time (in millis) required to register a long press
+  uint16_t doubleTime;           // maximum time (in millis) between single presses to register a double press instead
   SpanService *service;          // Service to which this PushButton is attached
 
   PushButton *pushButton;        // PushButton associated with this SpanButton
 
-  SpanButton(int pin, unsigned long longTime=2000, unsigned long shortTime=5);
+  SpanButton(int pin, uint16_t longTime=2000, uint16_t singleTime=5, uint16_t doubleTime=200);
 };
 
 /////////////////////////////////////////////////

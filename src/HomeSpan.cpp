@@ -188,7 +188,7 @@ void Span::poll() {
   
   if(controlButton.triggered(3000,10000)){
     statusLED.off();
-    if(controlButton.longPress()){
+    if(controlButton.type()==PushButton::LONG){
       controlButton.wait();
       processSerialCommand("F");        // FACTORY RESET
     } else {
@@ -232,7 +232,7 @@ void Span::commandMode(){
       delay(2000);
     } else
     if(controlButton.triggered(10,3000)){
-      if(!controlButton.longPress()){
+      if(controlButton.type()==PushButton::SINGLE){
         mode++;
         if(mode==6)
           mode=1;
@@ -1530,9 +1530,9 @@ SpanRange::SpanRange(int min, int max, int step){
 //        SpanButton         //
 ///////////////////////////////
 
-SpanButton::SpanButton(int pin, unsigned long longTime, unsigned long shortTime){
+SpanButton::SpanButton(int pin, uint16_t longTime, uint16_t singleTime, uint16_t doubleTime){
 
-  homeSpan.configLog+="---->SpanButton: Pin " + String(pin);
+  homeSpan.configLog+="---->SpanButton: Pin=" + String(pin) + " Long/Single/Double=" + String(longTime) + "/" + String(singleTime) + "/" + String(doubleTime) + " ms";
 
   if(homeSpan.Accessories.empty() || homeSpan.Accessories.back()->Services.empty()){
     homeSpan.configLog+=" *** ERROR!  Can't create new PushButton without a defined Service! ***\n";
@@ -1545,11 +1545,12 @@ SpanButton::SpanButton(int pin, unsigned long longTime, unsigned long shortTime)
   Serial.print("\n");
 
   this->pin=pin;
-  this->shortTime=shortTime;
   this->longTime=longTime;
+  this->singleTime=singleTime;
+  this->doubleTime=doubleTime;
   service=homeSpan.Accessories.back()->Services.back();
 
-  if((void(*)(int,boolean))(service->*(&SpanService::button))==(void(*)(int,boolean))(&SpanService::button))
+  if((void(*)(int,int))(service->*(&SpanService::button))==(void(*)(int,int))(&SpanService::button))
     homeSpan.configLog+=" *** WARNING:  No button() method defined for this PushButton! ***";
 
   pushButton=new PushButton(pin);         // create underlying PushButton

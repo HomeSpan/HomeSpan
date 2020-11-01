@@ -8,7 +8,7 @@
 //  Utils::readSerial       - reads all characters from Serial port and saves only up to max specified
 //  Utils::mask             - masks a string with asterisks (good for displaying passwords)
 //
-//  class PushButton        - tracks Long and Short presses of a pushbutton that connects a specified pin to ground
+//  class PushButton        - tracks Single, Double, and Long Presses of a pushbutton that connects a specified pin to ground
 //  class Blinker           - creates customized blinking patterns on an LED connected to a specified pin
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -77,54 +77,7 @@ void PushButton::init(uint8_t pin){
 
 //////////////////////////////////////
 
-boolean PushButton::triggered(uint16_t shortTime, uint16_t longTime){
-
-  switch(status){
-    
-    case 0:
-      if(!digitalRead(pin)){         // button is pressed
-        status=1;
-        shortAlarm=millis()+shortTime;
-        longAlarm=millis()+longTime;
-      }
-    break;
-
-    case 1:
-    case 2:
-      if(digitalRead(pin)){         // button is released          
-        status=0;
-        if(millis()>shortAlarm){
-          isLongPress=false;
-          return(true);
-        }
-      } else
-      
-      if(millis()>longAlarm){       // button is long-pressed
-        longAlarm=millis()+longTime;
-        status=3;
-        isLongPress=true;
-        return(true);
-      }
-    break;
-
-    case 3:
-      if(digitalRead(pin))          // button has been released after a long press
-        status=0;
-      else if(millis()>longAlarm){
-        longAlarm=millis()+longTime;
-        isLongPress=true;
-        return(true);        
-      }
-    break;
-
-  }
-
-  return(false);
-}
-
-//////////////////////////////////////
-
-boolean PushButton::triggered(uint16_t shortTime, uint16_t longTime, uint16_t doubleTime){
+boolean PushButton::triggered(uint16_t singleTime, uint16_t longTime, uint16_t doubleTime){
 
   unsigned long cTime=millis();
 
@@ -133,15 +86,15 @@ boolean PushButton::triggered(uint16_t shortTime, uint16_t longTime, uint16_t do
     case 0:
       if(doubleCheck && cTime>doubleAlarm){
         doubleCheck=false;
-        pressType=0;
+        pressType=SINGLE;
         return(true);
       }
       
       if(!digitalRead(pin)){         // button is pressed
-        shortAlarm=cTime+shortTime;
+        singleAlarm=cTime+singleTime;
         if(!doubleCheck){
           status=1;
-          doubleAlarm=shortAlarm+doubleTime;
+          doubleAlarm=singleAlarm+doubleTime;
           longAlarm=cTime+longTime;
         } else {
           status=4;
@@ -153,7 +106,7 @@ boolean PushButton::triggered(uint16_t shortTime, uint16_t longTime, uint16_t do
     case 2:
       if(digitalRead(pin)){         // button is released          
         status=0;
-        if(cTime>shortAlarm){
+        if(cTime>singleAlarm){
           doubleCheck=true;
         }
       } else
@@ -161,7 +114,7 @@ boolean PushButton::triggered(uint16_t shortTime, uint16_t longTime, uint16_t do
       if(cTime>longAlarm){          // button is long-pressed
         longAlarm=cTime+longTime;
         status=3;
-        pressType=1;
+        pressType=LONG;
         return(true);
       }
     break;
@@ -171,7 +124,7 @@ boolean PushButton::triggered(uint16_t shortTime, uint16_t longTime, uint16_t do
         status=0;
       else if(cTime>longAlarm){
         longAlarm=cTime+longTime;
-        pressType=1;
+        pressType=LONG;
         return(true);        
       }
     break;
@@ -181,9 +134,9 @@ boolean PushButton::triggered(uint16_t shortTime, uint16_t longTime, uint16_t do
         status=0;
       } else
       
-      if(cTime>shortAlarm){         // button is still pressed
+      if(cTime>singleAlarm){         // button is still pressed
         status=5;
-        pressType=2;
+        pressType=DOUBLE;
         doubleCheck=false;
         return(true);
       }
@@ -203,18 +156,12 @@ boolean PushButton::triggered(uint16_t shortTime, uint16_t longTime, uint16_t do
 
 boolean PushButton::primed(){
   
-  if(millis()>shortAlarm && status==1){
+  if(millis()>singleAlarm && status==1){
     status=2;
     return(true);
   }
   
   return(false);
-}
-
-//////////////////////////////////////
-
-boolean PushButton::longPress(){
-  return(isLongPress);
 }
 
 //////////////////////////////////////
