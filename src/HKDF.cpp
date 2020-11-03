@@ -1,4 +1,30 @@
-
+/*********************************************************************************
+ *  MIT License
+ *  
+ *  Copyright (c) 2020 Gregg E. Berman
+ *  
+ *  https://github.com/HomeSpan/HomeSpan
+ *  
+ *  Permission is hereby granted, free of charge, to any person obtaining a copy
+ *  of this software and associated documentation files (the "Software"), to deal
+ *  in the Software without restriction, including without limitation the rights
+ *  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *  copies of the Software, and to permit persons to whom the Software is
+ *  furnished to do so, subject to the following conditions:
+ *  
+ *  The above copyright notice and this permission notice shall be included in all
+ *  copies or substantial portions of the Software.
+ *  
+ *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ *  SOFTWARE.
+ *  
+ ********************************************************************************/
+ 
 #include <mbedtls/hkdf.h>
 #include <mbedtls/platform_util.h>
 
@@ -21,8 +47,13 @@ int HKDF::create(uint8_t *outputKey, uint8_t *inputKey, int inputLen, char *salt
 
 /////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////
-// CODE FOR HKDF COPIED FROM MBEDTLS GITHUB SINCE IT IS NOT INCLUDED 
-// IN STANDARD ARDUIO-ESP32 LIBRARY.
+// CODE FOR HKDF IS MISSING FROM THE MBEDTLS LIBRARY INCLUDED WITH THE
+// ARDUINO-ESP32 LIBRARY.  THE CODE BELOW IS SOURCE DIRECTLY FROM THE MBEDTLS
+// GITHUB.  SEE THE MBEDTLS GITHUB SITE FOR LICENSING TERMS:
+//
+//  https://github.com/ARMmbed/mbedtls/blob/development/LICENSE 
+//
+//
 
 int mbedtls_hkdf( const mbedtls_md_info_t *md, const unsigned char *salt,
                   size_t salt_len, const unsigned char *ikm, size_t ikm_len,
