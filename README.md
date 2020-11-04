@@ -9,3 +9,5 @@ HomeSpan provides a microcontroller-focused implementation of Apple's HomeKit Ac
 
 _Complete documentation coming soon._
 
+[User Guide](docs/UserGuide.md)
+
