@@ -7,7 +7,7 @@ HomeSpan provides a microcontroller-focused implementation of Apple's HomeKit Ac
 
 **First fully-functional public release v1.0.0 now available (11/3/2020).  Please see Examples 1-16 for a complete tutorial on how to use HomeSpan.**
 
-_Complete documentation coming soon._
+_Complete documentation coming soon..._
 
 [User Guide](docs/UserGuide.md)
 
