@@ -41,7 +41,7 @@ Before you can configure HomeSpan, you need to determine the state of the device
 
 #### NO‑WIFI
 
-If the Status LED blinks once every 3 seconds, the device is lacking any stored WiFi Credentials and therefore cannot connect to a WiFi network.  This is the normal state of a new device as well as any device that has had its WiFi Credentials erased.  See **Setting HomeSpan’s WiFi Credentials and Setup Code** to learn how to input and store your home network’s WiFi name and WiFi password on the device.
+If the Status LED blinks once every 3 seconds, the device is lacking any stored WiFi Credentials and therefore cannot connect to a WiFi network.  This is the normal state of a new device as well as any device that has had its WiFi Credentials erased.  See [Setting HomeSpan’s WiFi Credentials and Setup Code](#setting-homespans-wifi-credentials-and-setup-code) to learn how to input and store your home network’s WiFi name and WiFi password on the device.
 
 #### READY‑TO‑PAIR
 
@@ -82,7 +82,7 @@ To execute the selected Action press and hold the Control Button for 3 seconds, 
 
 If no Action has been executed within 120 seconds (2 minutes) of starting the Device Configuration Mode, Action 1 is automatically executed and the Device Configuration Mode is exited.
 
-##	(3) Setting HomeSpan’s WiFi Credentials and Setup Code
+##	Setting HomeSpan’s WiFi Credentials and Setup Code
 
 To configure a HomeSpace device to connect to your home WiFi network you must first connect your iPhone directly to the device so you can input your WiFi Credentials.   This connection is made via a temporary WiFi network HomeSpan launches just for this purpose.
 
