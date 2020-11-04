@@ -150,7 +150,7 @@ Next, double-click the file Scancardium_2.0.tff to open the file in Font Book, a
 
 To create the scannable tag, construct a simple text box with a border in either Pages or Keynote using the following dimensions:
 
-![Format Setup Code](images/FormatSetupCode.png)
+![Format Setup Code](images/formatSetupCode.png)
 
 The box can be bigger or smaller as long as you keep the same proportions.  For example, a 10pt font can be used with a box that is 75pt wide and 25pt high with a 1pt border.  Don’t forget to center-align your text and include the required hyphens as shown.  The result is a tag that can be scanned by HomeKit during the pairing process.
 
