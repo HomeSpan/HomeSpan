@@ -112,7 +112,7 @@ To reduce the possibility that a bad actor can remotely pair with a HomeKit devi
 
 The first time HomeSpan is run on a new device, it defaults to using 466-37-726 for its Setup Code.   A scannable tag containing HomeSpan’s default Setup Code is provided below for convenience during the pairing process:
 
-![Default Setup Code](images/DefaultSetupCode.png)
+![Default Setup Code](images/defaultSetupCode.png)
 
 This code is retained even if the device is Factory Reset.  However, as described above, you can (and should) modify it to something unique when you first set up the device, or at any point if you lose the Setup Code, or if someone else set up the device and you don’t know the code they used.  See **Setting HomeSpan’s WiFi Credentials and Setup Code** for details on how to modify the Setup Code.  Also, see **Creating a Scannable Tag** for steps on how to create a scannable tag based on the code you’ve chosen.  Note this is purely optional.  HomeKit does not require a scannable version of a device’s Setup Code.
 
@@ -144,7 +144,7 @@ Scannable tags, such as the one shown above in section (4) for HomeSpan’s defa
 
 To install, open Finder on your Mac and go to the following folder:
 
-/System/Library/PrivateFrameworks/CoreRecognition.framework/Resources/Fonts
+`/System/Library/PrivateFrameworks/CoreRecognition.framework/Resources/Fonts`
 
 Next, double-click the file Scancardium_2.0.tff to open the file in Font Book, and then click Install Font.  Scancardium is now ready to use.
 
