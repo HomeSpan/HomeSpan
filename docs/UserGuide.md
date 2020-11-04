@@ -110,7 +110,9 @@ HomeSpan devices can be paired to Apple HomeKit anytime the device is in the **R
 
 To reduce the possibility that a bad actor can remotely pair with a HomeKit device and take over control, HomeKit requires the use of a device-specific Setup Code to authorize the pairing process.  This unique 8-digit code is not stored on the device itself (to prevent a hacker from extracting the code), but is usually found written on a tag attached to the device.  Only someone who has physical access to the tag will know the Setup Code and therefore be able to pair the device to HomeKit. 
 
-The first time HomeSpan is run on a new device, it defaults to using 466-37-726 for its Setup Code.   A scannable tag containing HomeSpan’s default Setup Code is provided below for convenience during the pairing process: 
+The first time HomeSpan is run on a new device, it defaults to using 466-37-726 for its Setup Code.   A scannable tag containing HomeSpan’s default Setup Code is provided below for convenience during the pairing process:
+
+![Default Setup Code](images/DefaultSetupCode.png)
 
 This code is retained even if the device is Factory Reset.  However, as described above, you can (and should) modify it to something unique when you first set up the device, or at any point if you lose the Setup Code, or if someone else set up the device and you don’t know the code they used.  See **Setting HomeSpan’s WiFi Credentials and Setup Code** for details on how to modify the Setup Code.  Also, see **Creating a Scannable Tag** for steps on how to create a scannable tag based on the code you’ve chosen.  Note this is purely optional.  HomeKit does not require a scannable version of a device’s Setup Code.
 
@@ -147,6 +149,8 @@ To install, open Finder on your Mac and go to the following folder:
 Next, double-click the file Scancardium_2.0.tff to open the file in Font Book, and then click Install Font.  Scancardium is now ready to use.
 
 To create the scannable tag, construct a simple text box with a border in either Pages or Keynote using the following dimensions:
+
+![Format Setup Code](images/FormatSetupCode.png)
 
 The box can be bigger or smaller as long as you keep the same proportions.  For example, a 10pt font can be used with a box that is 75pt wide and 25pt high with a 1pt border.  Don’t forget to center-align your text and include the required hyphens as shown.  The result is a tag that can be scanned by HomeKit during the pairing process.
 
