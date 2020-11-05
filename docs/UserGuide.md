@@ -27,9 +27,9 @@ To use a HomeSpan device with HomeKit, the device must be:
 
 Since HomeSpan devices usually don’t have displays, HomeSpan tells you what it’s doing by blinking and flashing its Status LED in different patterns.  Likewise, since Homespan devices usually don’t have keyboards, you tell HomeSpan what you want it to do by pressing and holding its Control Button at different times and in different ways.
 
-If you are new to HomeSpan and are configuring a new device for the first time, begin by reading through the sections (1) and (2) below.  Then, follow the instructions in sections (3) and (4) to connect the device to your home WiFi network and pair the device to your HomeKit Account using your iPhone.
+If you are new to HomeSpan and are configuring a new device for the first time, begin by reading through the first two sections below.  Then, follow the instructions in the second two sections to connect the device to your home WiFi network and pair the device to your HomeKit Account using your iPhone.
 
-If you are configuring an existing device and want to start from scratch, begin with the section (5) to factory-reset the device, and then start fresh with section (1).
+If you are setting up an existing device that has been previously configured in some unknown fashion, you may want to first perform a [Factory Reset](#factory-reset) to start with a fresh setup.
 
 And if you run into any troubles, see section (7) for troubleshooting tips.
 
