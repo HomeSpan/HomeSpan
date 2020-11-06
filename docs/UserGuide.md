@@ -45,7 +45,7 @@ If the Status LED blinks once every 3 seconds, the device is lacking any stored 
 
 #### READY‑TO‑PAIR
 
-If the Status LED blinks twice every 3 seconds, the device is connected to a WiFi network but is not yet paired to Apple HomeKit.  See [Pairing to Apple HomeKit](#pairing-to-apple-homekit) for instructions on how to pair your device to Apple HomeKit.
+If the Status LED blinks twice every 3 seconds, the device is connected to a WiFi network but is not yet paired to Apple HomeKit.  See [Pairing to HomeKit](#pairing-to-homekit) for instructions on how to pair your device to Apple HomeKit.
 
 #### PAIRED
 
