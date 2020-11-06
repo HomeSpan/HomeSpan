@@ -12,7 +12,7 @@ This guide explains how to set up and configure a HomeSpan device that has alrea
 * Unpair the device from Apple HomeKit
 * Perform a Factory Reset
 
-This guide does not cover the specific operation of any appliances being controlled by a HomeSpan device, such a light, fan, window shade, etc.  This document is also available as a [PDF file](./HomeSpan User Guide.pdf) formatted to be printed as a double-sided booklet.
+This guide does not cover the specific operation of any appliances being controlled by a HomeSpan device, such a light, fan, window shade, etc.  This document is also available as a [PDF file](./HomeSpan-User-Guide.pdf) formatted to be printed as a double-sided booklet.
 
 ## Getting Started
 
@@ -88,7 +88,7 @@ To configure a HomeSpace device to connect to your home WiFi network you must fi
 
 To launch HomeSpan’s temporary WiFi network, enter [Device Configuration Mode](#device-configuration-mode) and execute Action 3.   After Action 3 is executed, the Status LED pattern will change to a rapid double-blink (twice per second), confirming the temporary WiFi network has started.
 
-Next, navigate to Settings → Wi-Fi on your iPhone and select the ***Homespan-Setup*** network.  Enter ***homespan*** as the password and click Join.  The Status LED will confirm when you’ve successfully connected to the device by noticeably slowing its double-blinking pattern to repeat every two seconds, instead of twice per second.
+Next, navigate to Settings → Wi-Fi on your iPhone and select the ***Homespan-Setup*** network.  Then, enter ***homespan*** as the password and click Join.  The Status LED will confirm when you’ve successfully connected to the device by noticeably slowing its double-blinking pattern to repeat every two seconds, instead of twice per second.
 
 A short time after the connection is confirmed, your iPhone should automatically load the HomeSpan Setup web page.  Select your WiFi network from the drop-down box, input your WiFi password, and click `SUBMIT` to proceed.  Alternatively, you can click `CANCEL` to terminate the setup process, in which case HomeSpan closes down its temporary WiFi network and reboots the device without making any changes.
 
