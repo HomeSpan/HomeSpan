@@ -12,7 +12,7 @@ This guide explains how to set up and configure a HomeSpan device that has alrea
 * Unpair the device from Apple HomeKit
 * Perform a Factory Reset
 
-This guide does not cover the specific operation of any appliances being controlled by a HomeSpan device, such a light, fan, window shade, etc.  This document is also available as a [PDF file](./HomeSpan-User-Guide.pdf) formatted to be printed as a double-sided booklet.
+This guide does not cover the specific operation of any appliances being controlled by a HomeSpan device, such a light, fan, window shade, etc.  This document is also available as a [PDF file](./HomeSpanUserGuide.pdf) formatted to be printed as a double-sided booklet.
 
 ## Getting Started
 
