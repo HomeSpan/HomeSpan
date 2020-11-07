@@ -7,6 +7,7 @@ HomeSpan provides a microcontroller-focused implementation of [Apple's HomeKit A
 
 #### HomeSpan features:
 
+* A natural, intuitive, and **very** easy-to-use API
 * 100% HAP R2 Compliance
 * 38 fully-implemented [HomeKit Services](docs/ServiceList.md)
 * Operates in Accessory or Bridge mode
