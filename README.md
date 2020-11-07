@@ -5,22 +5,26 @@ Welcome to HomeSpan - a robust and extremely easy-to-use Arduino library for cre
 
 HomeSpan provides a microcontroller-focused implementation of [Apple's HomeKit Accessory Protocol Specification (HAP) Release R2](https://developer.apple.com/support/homekit-accessory-protocol/) designed specifically for the Espressif ESP32 microcontroller running within the Arduino IDE.  HomeSpan pairs directly to HomeKit via your home WiFi network without the need for any external bridges or components.  With HomeSpan you can use the full power of the ESP32's I/O functionality to create custom control software and/or hardware to automatically operate external devices from the Home App on your iPhone, iPad, or Mac, or with Siri.
 
-#### HomeSpan features:
+#### HomeSpan Highlights
 
-* A natural, intuitive, and **very** easy-to-use API
-* 100% HAP R2 Compliance
-* 38 fully-implemented [HomeKit Services](docs/ServiceList.md)
-* Operates in Accessory or Bridge mode
+* Provides a natural, intuitive, and **very** easy-to-use framework
+* Utilizes a unique *Service-Centric* approach to creating HomeKit devices
+* Takes full advantage of the widely-popular Arduino IDE
+* 100% HAP R2 compliance
+* Full Implementation of 38 [HomeKit Services](docs/ServiceList.md)
+* Operates in either Accessory or Bridge mode
 
 #### For the HomeSpan Developer:
 
-* Extensive log outputs to the Arduino Serial Monitor
-* Debugging and configuration control commands via the Arduino Serial Monitor
-* Extensive error checking and HomeKit developer diagnostics
-* Integrated PWM functionality
-* Integrated Push Button functionailty supporting single, double, and long presses 
-* Integrated access to ESP-32's Remote Control functionality used to generate IR and RF signals
-* 16 detailed tutorial-examples wirth extensive comments, instructions, and HomeKit tips and tricks
+* Extensive use of the Arduino Serial Monitor
+  * Real-time, easy-to-understand diagnostics
+  * Complete transparency to every underlying HomeKit action, data request, and data response
+  * Command-line interface with a variety of info, debugging, and configuration commands
+* Built-in database validation to ensure your configuration meets all HAP requirements
+* Integrated PWM functionality supporting pulse-wave-modulation on any ESP-32 pin
+* Integrated Push Button functionality supporting single, double, and long presses 
+* Integrated access to the ESP-32's on-chip Remote Control peripheral for easy generation IR and RF signals
+* 16 detailed tutorial-examples with extensive comments, instructions, and HomeKit tips and tricks
 
 #### For the HomeSpan End-User:
 
@@ -31,7 +35,7 @@ HomeSpan provides a microcontroller-focused implementation of [Apple's HomeKit A
   * Unpair the device from HomeKit
   * Perform a Factory Reset
   * Launch the WiFi Access Point
-* A 10-page User Guide
+* A 10-page [End-User Guide](docs/UserGuide.md)
 
 ## Latest Updates ##
 
