@@ -302,6 +302,12 @@ namespace Service {
     OPT(StatusLowBattery);             
   }};
 
+  struct Speaker : SpanService { Speaker() : SpanService{"113","Speaker"}{
+    REQ(Mute);
+    OPT(Name);
+    OPT(Volume);
+  }};
+
   struct StatelessProgrammableSwitch : SpanService { StatelessProgrammableSwitch() : SpanService{"89","StatelessProgrammableSwitch"}{
     REQ(ProgrammableSwitchEvent);
     OPT(Name);
