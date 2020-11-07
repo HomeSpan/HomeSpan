@@ -40,7 +40,15 @@ HomeSpan provides a microcontroller-focused implementation of [Apple's HomeKit A
 
 ## Getting Started ##
 
-_Complete documentation coming soon..._
+*in progress*
 
-[User Guide](docs/UserGuide.md)
+## HomeSpan Tutorials ##
+
+*in progress*
+
+## Resources and Documentation ##
+
+*in progress*
+
+[End-User Guide](docs/UserGuide.md)
 
