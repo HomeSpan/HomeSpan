@@ -6,3 +6,5 @@ docs export-ignore
 .gitattributes export-ignore
 .gitignore export-ignore
 README.md export-ignore
+src/src.ino export-ignore
+src/extras/extras.ino export-ignore
