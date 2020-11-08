@@ -21,9 +21,9 @@ HomeSpan provides a microcontroller-focused implementation of [Apple's HomeKit A
   * Complete transparency to every underlying HomeKit action, data request, and data response
   * Command-line interface with a variety of info, debugging, and configuration commands
 * Built-in database validation to ensure your configuration meets all HAP requirements
-* Integrated PWM functionality supporting pulse-wave-modulation on any ESP-32 pin
+* Integrated PWM functionality supporting pulse-wave-modulation on any ESP32 pin
 * Integrated Push Button functionality supporting single, double, and long presses 
-* Integrated access to the ESP-32's on-chip Remote Control peripheral for easy generation IR and RF signals
+* Integrated access to the ESP32's on-chip Remote Control peripheral for easy generation of IR and RF signals
 * 16 detailed tutorial-examples with extensive comments, instructions, and HomeKit tips and tricks
 
 ### For the HomeSpan End-User
@@ -45,7 +45,7 @@ HomeSpan provides a microcontroller-focused implementation of [Apple's HomeKit A
 
 ## Getting Started ##
 
-*in progress*
+Since HomeSpan is a library designed for Arduino's Integrated Development Environment, the first step is to download and install the latest version of this IDE from the [Arduino Software page](https://www.arduino.cc/en/software).  If you have experience with programming Arduino sketches, you'll find Homespan's use of the standard Arduino setup() and loop() functions, as well as the ever-present *\*.ino* file, very familiar.  If you've never programmed an Arduino, you may want to begin by reviewing [Arduino's Guide to the IDE](https://www.arduino.cc/en/Guide/Environment), and maybe try out a few Arduino examples to become familar with the environment and how to use Arduino libraries, before proceeding to program with HomeSpan.
 
 ## HomeSpan Tutorials ##
 
