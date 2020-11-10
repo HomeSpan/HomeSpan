@@ -37,7 +37,7 @@ HomeSpan provides a microcontroller-focused implementation of [Apple's HomeKit A
   * Launch the WiFi Access Point
 * A 10-page [End-User Guide](docs/UserGuide.md)
 
-## Latest Updates
+# Latest Updates
 
 #### 11/3/2020
 
@@ -60,6 +60,11 @@ HomeSpan is packaged as a standard Arduino IDE.  To install, first download the 
 #### Step 4: Explore the HomeSpan Tutorials
 
 The HomeSpan library includes 16 detailed and heavily annotated tutorial examples you can explore even if you don't yet have an ESP32 board.  From the top menu bar of the Arduino IDE, select *File → Examples → HomeSpan* and choose the first tutorial to get started. The examples start simple and grow in complexity, taking you through all the functions and features of HomeSpan.  Along the way you'll also learn a lot about HomeKit itself.  See [HomeSpan Tutorials](docs/Tutorials.md) for a summary of all the included examples.  Note that you can also compile the examples without having an ESP32 provided you select one of the ESP32 boards listed under *Tools → Board → ESP32 Arduino* (the compiler will throw an error message if you try to compile under a non-ESP32 board).
+
+#### Step 5: Get an ESP32 Board
+
+ESP32 development boards are widely available in different configurations from most electronics hobby sites, such as [Adafruit](https://www.adafruit.com) and [Sparkfun](https://www.sparkfun.com).  HomeSpan was developed using a dual-core ES32-WROOM-32 (the [Huzzah32 from Adafruit](https://www.adafruit.com/product/3619)) but should work equally well on a dual-core ESP32-WROVER chips.  HomeSpan has *not* been tested on any single-core ESP32 chips, such as the ESP32-S2.
+
 
 # Resources and Documentation
 
