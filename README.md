@@ -75,13 +75,17 @@ If you've completed all the steps above, you are ready to start programming your
 
 * Plug your ESP32 board into your computer
 * Launch the Arduino IDE
-* Load one of the HomeSpan example tutorial sketches (under *File → Examples → HomeSpan*)
-* Set the Board to match your ESP32 board (under *Tools → Board → ESP32 Arduino*)
-* Compile and upload the HomeSpan sketch.
+* Load one of the HomeSpan example tutorial sketches (for example, *File → Examples → HomeSpan → 01-SimpleLightBulb*)
+* Set the Board to match your ESP32 board (for example, *Tools → Board → ESP32 Arduino → Adafruit ESP32 Feather*)
+* Compile and upload the HomeSpan sketch (*Sketch → Upload*)
 
-If everything works as expected, your device is now ready to be configured with your home WiFi credentials so you can pair your device to HomeKit!
+Congratulations!  You've just created your first HomeSpan device.
 
-# Configuring and Operating a HomeSpan Device
+# The HomeSpan Command-Line Interface (CLI)
+
+HomeSpan devices are of course meant to run on a standalone basis, connected to some real-world appliance like a fan or window shade.  HomeSpan devices are meant to only be connected to a computer for initial programming using the Arduino IDE.  However, HomeSpan also implements a light-weight Command-Line Interface over its serial port that can be accessed via the Arduino Serial Monitor whenever the 
+
+
 
 
 # Resources and Documentation
