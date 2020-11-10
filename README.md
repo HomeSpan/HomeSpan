@@ -41,7 +41,7 @@ HomeSpan provides a microcontroller-focused implementation of [Apple's HomeKit A
 
 #### 11/3/2020
 
-> HomeSpan 1.0.0 is the initial public release. It is 100% feature-complete and includes 16 very detailed example-tutorials providing step-by-step instructions on how to use HomeSpan to create your own HomeKit devices. A 10-page User Guide provides addtional details on how to configure your finished HomeKit device for use on your WiFi network, and how to pair it to HomeKit.
+> HomeSpan 1.0.0 is the initial public release. It is 100% feature-complete and includes 16 very detailed [tutorial examples](docs/Tutorials.md) providing step-by-step instructions on how to use HomeSpan to create your own HomeKit devices. A 10-page [User Guide](docs/UserGuide.md) provides addtional details on how to configure your finished HomeKit device for use on your WiFi network, and how to pair it to HomeKit.
 
 # Getting Started
 
@@ -61,9 +61,27 @@ HomeSpan is packaged as a standard Arduino IDE.  To install, first download the 
 
 The HomeSpan library includes 16 detailed and heavily annotated tutorial examples you can explore even if you don't yet have an ESP32 board.  From the top menu bar of the Arduino IDE, select *File → Examples → HomeSpan* and choose the first tutorial to get started. The examples start simple and grow in complexity, taking you through all the functions and features of HomeSpan.  Along the way you'll also learn a lot about HomeKit itself.  See [HomeSpan Tutorials](docs/Tutorials.md) for a summary of all the included examples.  Note that you can also compile the examples without having an ESP32 provided you select one of the ESP32 boards listed under *Tools → Board → ESP32 Arduino* (the compiler will throw an error message if you try to compile under a non-ESP32 board).
 
-#### Step 5: Get an ESP32 Board
+#### Step 5: Acquire an ESP32 Board
 
 ESP32 development boards are widely available in different configurations from most electronics hobby sites, such as [Adafruit](https://www.adafruit.com) and [Sparkfun](https://www.sparkfun.com).  HomeSpan was developed using a dual-core ESP32-WROOM-32 (the [Huzzah32 from Adafruit](https://www.adafruit.com/product/3619)) but should work equally well on dual-core ESP32-WROVER chips.  HomeSpan has *not* been tested on any single-core ESP32 chips, such as the ESP32-S2.
+
+#### Step 6: Install any required USB Drivers
+
+Programming an ESP32 board is generally done serially via USB.  Most ESP32 development boards contain a specialized chip that converts the serial UART signals used by the ESP32 to USB signals that can be transmitted to and and from your computer, usually over a standard USB cable.  Depending on the specific USB-UART chip, your operating system may or may not need you to install a separate driver.  The manufacturer of your ESP32 board typically provides instructions on how to download and install whatever drivers may be required for the USB-UART chip they used on the board.
+
+#### Step 7: Create your first Homespan Device
+
+If you've completed all the steps above, you are ready to start programming your ESP32 with the HomeSpan library.
+
+* Plug your ESP32 board into your computer
+* Launch the Arduino IDE
+* Load one of the HomeSpan example tutorial sketches (under *File → Examples → HomeSpan*)
+* Set the Board to match your ESP32 board (under *Tools → Board → ESP32 Arduino*)
+* Compile and upload the HomeSpan sketch.
+
+If everything works as expected, your device is now ready to be configured with your home WiFi networks credentials and then paired to HomeKit!
+
+# Configuring and Operating a HomeSpan Device
 
 
 # Resources and Documentation
