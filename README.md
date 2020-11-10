@@ -79,7 +79,7 @@ If you've completed all the steps above, you are ready to start programming your
 * Set the Board to match your ESP32 board (under *Tools → Board → ESP32 Arduino*)
 * Compile and upload the HomeSpan sketch.
 
-If everything works as expected, your device is now ready to be configured with your home WiFi networks credentials and then paired to HomeKit!
+If everything works as expected, your device is now ready to be configured with your home WiFi credentials so you can pair your device to HomeKit!
 
 # Configuring and Operating a HomeSpan Device
 
