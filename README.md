@@ -83,7 +83,15 @@ Congratulations!  You've just created your first HomeSpan device.
 
 # The HomeSpan Command-Line Interface (CLI)
 
-HomeSpan devices are of course meant to run on a standalone basis, connected to some real-world appliance like a fan or window shade.  HomeSpan devices are meant to only be connected to a computer for initial programming using the Arduino IDE.  However, HomeSpan also implements a light-weight Command-Line Interface over its serial port that can be accessed via the Arduino Serial Monitor whenever the 
+HomeSpan includes a light-weight Command-Line Interface (CLI) for developers that can be accessed via the Arduino Serial Monitor whenever your Homespan device is connected to a computer by selecting *Tools → Serial Monitor* from the top menu bar of the Arduino IDE.  The HomeSpan CLI allows you view all real-time HomeSpan diagnostics, query the device's operating status, inspect its HAP database, and perform some basic functions, such as initiating a Factory Reset.
+
+#### WiFi Credentials and HomeKit Setup Codes
+
+Most importantly, the CLI can be used to configure HomeSpan's network connectivity.  Though HomeSpan devices can be used on a standalone basis, to control the a HomeSpan device through Apple HomeKit (which is the whole point of HomeSpan), the device needs to be connected to a home WiFi network.  This means HomeSpan needs to know your WiFi network name and WiFi password (i.e. your WiFi Credentials).  Rather than require you to hard-code your WiFi Credentials as part of every HomeSpan sketch (which is both insecure and inflexible), HomeSpan stores your WiFi Credentials in a non-volatile storage (NVS) partition reserved as part of the flash memory on the device (similar to how an EEPROM would operate).  You can set, change, and even erase, the WiFi Credentials stored on any HomeSpan device directly from the HomeSpan CLI without ever modifying the code, or even having access to the code.
+
+Every HomeSpan device also requires an 8-digit Setup Code to be able to pair to Apple HomeKit.  This code is also stored in an NVS partition rather than hardcoded into a HomeSpan sketch.  When HomeSpan is run for the first time on a new device, it configures itself with a default code of 466-37-72.  This can be changed any time from the HomeSpan CLI.
+
+Please see the HomeSpan Command-Line Interface page for complete details on all the CLI commands and features.
 
 
 
