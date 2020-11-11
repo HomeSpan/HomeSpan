@@ -67,7 +67,7 @@ ESP32 development boards are widely available in different configurations from m
 
 #### Step 6: Install any required USB Drivers
 
-Programming an ESP32 board is generally done serially via USB.  Most ESP32 development boards contain a specialized chip that converts the serial UART signals used by the ESP32 to USB signals that can be transmitted to and from your computer, usually over a standard USB cable.  Depending on the specific USB-UART chip used on your ESP32 board, you may need you to install a separate driver.  The manufacturer of your board typically provides instructions on how to download and install whatever drivers may be required.
+Programming an ESP32 board is generally done serially via USB.  Most ESP32 development boards contain a specialized chip that converts the serial UART signals used by the ESP32 to USB signals that can be transmitted to and from your computer, usually over a standard USB cable.  Depending on the specific USB-UART chip used on your ESP32 board, you may need to install a separate driver.  The manufacturer of your board should provides instructions on how to download and install whatever drivers are required for your operating system.
 
 #### Step 7: Create your first Homespan Device
 
@@ -83,18 +83,21 @@ Congratulations!  You've just created your first HomeSpan device.
 
 # The HomeSpan Command-Line Interface (CLI)
 
-HomeSpan includes a light-weight Command-Line Interface (CLI) for developers that can be accessed via the Arduino Serial Monitor whenever your Homespan device is connected to a computer by selecting *Tools → Serial Monitor* from the top menu bar of the Arduino IDE.  The HomeSpan CLI allows you view all real-time HomeSpan diagnostics, query the device's operating status, inspect its HAP database, and perform some basic functions, such as initiating a Factory Reset.
+HomeSpan includes a light-weight Command-Line Interface (CLI) for developers that can be accessed via the Arduino Serial Monitor whenever your Homespan device is connected to a computer by selecting *Tools → Serial Monitor* from the top menu bar of the Arduino IDE.  The HomeSpan CLI allows you view real-time HomeSpan diagnostics, query the device's operating status, inspect its HAP database, and perform some basic functions, such as initiating a Factory Reset.  Most importantly, the CLI can be used to configure HomeSpan's network connectivity and its HomeKit Setup Code.
 
 #### WiFi Credentials and HomeKit Setup Codes
 
-Most importantly, the CLI can be used to configure HomeSpan's network connectivity.  Though HomeSpan devices can be used on a standalone basis, to control the a HomeSpan device through Apple HomeKit (which is the whole point of HomeSpan), the device needs to be connected to a home WiFi network.  This means HomeSpan needs to know your WiFi network name and WiFi password (i.e. your WiFi Credentials).  Rather than require you to hard-code your WiFi Credentials as part of every HomeSpan sketch (which is both insecure and inflexible), HomeSpan stores your WiFi Credentials in a non-volatile storage (NVS) partition reserved as part of the flash memory on the device (similar to how an EEPROM would operate).  You can set, change, and even erase, the WiFi Credentials stored on any HomeSpan device directly from the HomeSpan CLI without ever modifying the code, or even having access to the code.
+Though HomeSpan devices can be used on a standalone basis, to control the a HomeSpan device through Apple HomeKit (which is the whole point of HomeSpan), the device needs to be connected to a WiFi network.  This means HomeSpan needs to know your home WiFi network name and WiFi password. HomeSpan refers to these are your *WiFi Credentials*.  Rather then requiring you to hardcode your WiFi Credentials as part of every HomeSpan sketch (which is both insecure and inflexible), HomeSpan stores your WiFi Credentials in a non-volatile storage (NVS) partition in the ESP32 that is reserved as part of the flash memory on the device, similar to how an EEPROM would operate.  You can set, change, and even erase, the WiFi Credentials stored on any HomeSpan device directly from the HomeSpan CLI without ever modifying the code, or even having access to the code.
 
-Every HomeSpan device also requires an 8-digit Setup Code to be able to pair to Apple HomeKit.  This code is also stored in an NVS partition rather than hardcoded into a HomeSpan sketch.  When HomeSpan is run for the first time on a new device, it configures itself with a default code of **466-37-72**.  This can be changed any time from the HomeSpan CLI.
+Every HomeSpan device requires an 8-digit Setup Code to be able to pair to Apple HomeKit.  This code is also stored in an NVS partition rather than hardcoded into a HomeSpan sketch.  When HomeSpan is run for the first time on a new device, it configures itself with a default code of **466-37-72**.  This can be changed any time from the HomeSpan CLI.
 
-Please see the HomeSpan Command-Line Interface page for complete details on all the CLI commands and features.
+Please see the [HomeSpan Command-Line Interface](docs/CLI.md) page for complete details on all the CLI.
 
+# HomeSpan End-User Controls
 
+Once a HomeSpan device has been programmed and configured from within the Arduino IDE, it is typically operated on a standalone basis without any connection to a computer.  Provided that the device is paired to HomeKit, you'll be able to operate any applicances connected to the device, such as a light or fan, directly through the Home App on your iPhone, iPad, or Mac, or through Siri.  However, without the device being connected to a computer, you won't have access to the HomeSpan CLI and therefore can't use the CLI to perform configuration operations, such initiating a Factory Reset, updating your WiFi Credentials, or changing the Setup Code.
 
+To solve for this, HomeSpan provides end-users with an alternate method for making configuration changes directly from the device itself.  A single pushbutton on the device, coupled with single LED that blinks in different patterns to inform you of the device's status, is all that is needed for you to switch the device into configuration mode, perform some basic housekeeping functions, and launch HomeSpan's 
 
 # Resources and Documentation
 
