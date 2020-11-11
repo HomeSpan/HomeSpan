@@ -67,7 +67,7 @@ ESP32 development boards are widely available in different configurations from m
 
 #### Step 6: Install any required USB Drivers
 
-Programming an ESP32 board is generally done serially via USB.  Most ESP32 development boards contain a specialized chip that converts the serial UART signals used by the ESP32 to USB signals that can be transmitted to and and from your computer, usually over a standard USB cable.  Depending on the specific USB-UART chip, your operating system may or may not need you to install a separate driver.  The manufacturer of your ESP32 board typically provides instructions on how to download and install whatever drivers may be required for the USB-UART chip they used on the board.
+Programming an ESP32 board is generally done serially via USB.  Most ESP32 development boards contain a specialized chip that converts the serial UART signals used by the ESP32 to USB signals that can be transmitted to and from your computer, usually over a standard USB cable.  Depending on the specific USB-UART chip used on your ESP32 board, you may need you to install a separate driver.  The manufacturer of your board typically provides instructions on how to download and install whatever drivers may be required.
 
 #### Step 7: Create your first Homespan Device
 
@@ -89,7 +89,7 @@ HomeSpan includes a light-weight Command-Line Interface (CLI) for developers tha
 
 Most importantly, the CLI can be used to configure HomeSpan's network connectivity.  Though HomeSpan devices can be used on a standalone basis, to control the a HomeSpan device through Apple HomeKit (which is the whole point of HomeSpan), the device needs to be connected to a home WiFi network.  This means HomeSpan needs to know your WiFi network name and WiFi password (i.e. your WiFi Credentials).  Rather than require you to hard-code your WiFi Credentials as part of every HomeSpan sketch (which is both insecure and inflexible), HomeSpan stores your WiFi Credentials in a non-volatile storage (NVS) partition reserved as part of the flash memory on the device (similar to how an EEPROM would operate).  You can set, change, and even erase, the WiFi Credentials stored on any HomeSpan device directly from the HomeSpan CLI without ever modifying the code, or even having access to the code.
 
-Every HomeSpan device also requires an 8-digit Setup Code to be able to pair to Apple HomeKit.  This code is also stored in an NVS partition rather than hardcoded into a HomeSpan sketch.  When HomeSpan is run for the first time on a new device, it configures itself with a default code of 466-37-72.  This can be changed any time from the HomeSpan CLI.
+Every HomeSpan device also requires an 8-digit Setup Code to be able to pair to Apple HomeKit.  This code is also stored in an NVS partition rather than hardcoded into a HomeSpan sketch.  When HomeSpan is run for the first time on a new device, it configures itself with a default code of **466-37-72**.  This can be changed any time from the HomeSpan CLI.
 
 Please see the HomeSpan Command-Line Interface page for complete details on all the CLI commands and features.
 
