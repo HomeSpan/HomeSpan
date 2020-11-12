@@ -97,12 +97,42 @@ Please see the [HomeSpan Command-Line Interface](docs/CLI.md) page for complete 
 
 Once a HomeSpan device has been programmed and configured using the Arduino IDE, it is typically operated on a standalone basis without any connection to a computer.  Provided that the device is paired to HomeKit, you'll be able to operate any applicances connected to the device, such as a light or fan, directly through the Home App on your iPhone, iPad, or Mac, or through Siri.  However, without the device being connected to a computer, you won't have access to the HomeSpan CLI and therefore can't use the CLI to perform configuration operations, such initiating a Factory Reset, updating your WiFi Credentials, or changing the Setup Code.
 
-To solve for this, HomeSpan provides end-users (who may not be developers and have no idea what an Arduino IDE is) with an alternative method for making configuration changes to a standalone device.  To implement this method, HomeSpan requires the addition of a dedicated *Control Button* and dedicated *Status LED* on the device itself.  The Control Button can be any simple normally-open pushbutton that you connect between an ESP32 pin of your choice and ground.  The Status LED can be an external component connected to an ESP32 pin of your choice, or it can be any built-in LED already included on your ESP32 board.  Using just these two components, end-users can switch the device into configuration mode, perform some basic housekeeping functions, and even launch HomeSpan's temporary WiFi network.  This network provides end-users with a simple web interface they can access with an iPhone to set or update the WiFi Credentials and Setup Code stored on the device.
+To solve for this, HomeSpan provides end-users (who may not be developers and have no idea what an Arduino IDE is) with an alternative method for making configuration changes to a standalone device.  To implement this method, HomeSpan requires adding a dedicated *Control Button* and a dedicated *Status LED* to your device.  The Control Button can be any simple normally-open pushbutton that you connect between an ESP32 pin of your choice and ground.  The Status LED can be an external LED connected to an ESP32 pin of your choice, or it can be a built-in LED if already included on your ESP32 board.
 
-Please see the [HomeSpan User Guide](docs/UserGuide.md) page for complete details on all end-user functions and features.
+Using just these two components, end-users can switch the device into configuration mode, perform some basic housekeeping functions, and even launch HomeSpan's temporary WiFi network.  This network provides end-users with a simple web interface they can access with an iPhone to set or update the WiFi Credentials and Setup Code stored on the device.
 
-# Resources and Documentation
+Please see the [HomeSpan User Guide](docs/UserGuide.md) page for complete details on all end-user controls and operations, including how to set a device's WiFi Credentials, how to change the device Setup Code (as well as create your own scannable Setup Code tags), and how to pair the device to HomeKit.
 
-*in progress*
+# Where to go next
+
+*(content for some of the links below is still under development)*
+
+The above information should provide you with everything you need to get started with HomeSpan, such as setting up a HomeSpan development environment using the Arduino IDE and the HomeSpan library, exploring the HomeSpan tutorials, configuring a HomeSpan device, and pairing that device to HomeKit to see a few of the examples in action.
+
+The next step of course is to dive into all the details so you can create your own custom devices.  To begin, you'll want to download Apple's [HomeKit Accessory Protocol Specification (HAP) Release R2](https://developer.apple.com/support/homekit-accessory-protocol/).  The download is free, but Apple requires you to register your Apple ID for access to the document.  
+
+You ***do not*** need to read the entire document.  The whole point of HomeSpan is that it implements all the required HAP operations under the hood so you can focus on just programming whatever logic is needed to control your real-world appliances (lights, fans, RF remote controls, etc.) with the device.  However, you will find Chapters 8 and 9 of the HAP guide to be an invaluable reference as it lists and describes all of the Services and Characteristics implemented in HomeSpan, many of which you will routinely utilize in your own HomeSpan sketches.
+
+If you are new to developing for HomeKit, you may want to next visit the [HomeKit Primer](docs/Primer.md) page, which provides a HomeSpan-centric overview of HAP Accessories, Services, Characteristics, and other HAP constructs.  Understanding Apple's (often confusing and sometimes ambiguous) HAP terminology makes programming HomeSpan sketches a lot easier.
+
+Your next stop should be the [HomeSpan Developer's Overview](docs/DevOverview.md) page, which provides an overview of the overall HomeSpan framework, including a variety of unique features that make programming HomeSpan devices a snap.
+
+Once you've read through the overview, you may want to return to HomeSpan's tutorials and walk through a few of the examples in detail.  You may find that you already have enough knowledge to start developing your own HomeSpan devices by simply modifying and recombining the existing examples.  Note that the tutorials can be accessed from within the Arduino IDE by selecting *File → Examples → HomeSpan*, or by visiting the [HomeSpan Tutorials](docs/Tutorials.md) page.
+
+If you need more details about any aspect of HomeSpan, a complete refererence for the library can be found on the [HomeSpan Library Reference](docs/Reference.md) page.
+
+Finally, you may want to check out the [Author's Notes](docs/Notes.md) page for some background and perspectives on the project.
+
+Feedback or questions?  Please send to homespan@icloud.com
+
+Enjoy!
+
+
+
+
+
+
+
+
 
 
