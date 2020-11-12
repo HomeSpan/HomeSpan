@@ -103,7 +103,7 @@ Using just these two components, end-users can switch the device into configurat
 
 Please see the [HomeSpan User Guide](docs/UserGuide.md) page for complete details on all end-user controls and operations, including how to set a device's WiFi Credentials, how to change the device Setup Code (as well as create your own scannable Setup Code tags), and how to pair the device to HomeKit.
 
-# Where to go next
+# HomeSpan Developer Resources
 
 *(content for some of the links below is still under development)*
 
