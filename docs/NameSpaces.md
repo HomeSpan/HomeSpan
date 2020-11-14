@@ -1,11 +1,6 @@
-Service | Req. Characteristics | Opt Characteristics
-------- | -------------------- | -------------------
-AccessoryInformation | FirmwareRevision | HardwareRevision
- | Identify |
- | Manufacturer |
- | Model |
- | Name |
- | SerialNumber |
+| Service | Required Characteristics | Optional Characteristics |
+| ------- | -------------------- | ------------------- |
+| AccessoryInformation| FirmwareRevision<br>Identity<br>Manufacturer<br>Model<br>Name<br>SerialNumber | HardwareRevision |
 
    AirPurifier
     REQ(Active);
