@@ -42,9 +42,9 @@ void setup() {
 
   // Example 2 expands on Example 1 by implementing two LightBulbs, each as their own Accessory
  
-  Serial.begin(115200);      // Start a serial connection - this is needed for you to type in your WiFi credentials
+  Serial.begin(115200);
 
-  homeSpan.begin(Category::Lighting,"HomeSpan LightBulbs");  // Begin a HomeSpan Session - note the name is now "HomeSpan LightBulbs"
+  homeSpan.begin(Category::Lighting,"HomeSpan LightBulbs");  // initialize HomeSpan - note the name is now "HomeSpan LightBulbs"
 
   // Here we create the first LightBulb Accessory just as in Example 1
 
