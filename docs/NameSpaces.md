@@ -2,8 +2,7 @@
 | ------- | -------------------- | ------------------- |
 | AccessoryInformation| FirmwareRevision<br>Identity<br>Manufacturer<br>Model<br>Name<br>SerialNumber | HardwareRevision |
 | AirPurifier | Active<br>CurrentAirPurifierState<br>TargetAirPurifierState | Name<br>RotationSpeed<br>SwingMode<br>LockPhysicalControls |
-
-   AirQualitySensor
+| AirQualitySensor
     REQ(AirQuality);
     OPT(Name);
     OPT(OzoneDensity);
@@ -16,16 +15,13 @@
     OPT(StatusFault);
     OPT(StatusTampered);
     OPT(StatusLowBattery);
-  }};
 
-   BatteryService
+| BatteryService
     REQ(BatteryLevel);
     REQ(ChargingState);
     REQ(StatusLowBattery);
     OPT(Name);
-  }};
-
-   CarbonDioxideSensor
+| CarbonDioxideSensor
     REQ(CarbonDioxideDetected);
     OPT(Name);
     OPT(StatusActive);
@@ -34,9 +30,7 @@
     OPT(StatusLowBattery);
     OPT(CarbonDioxideLevel);
     OPT(CarbonDioxidePeakLevel);
-  }};
-
-   CarbonMonoxideSensor
+| CarbonMonoxideSensor
     REQ(CarbonMonoxideDetected);
     OPT(Name);
     OPT(StatusActive);
@@ -45,34 +39,26 @@
     OPT(StatusLowBattery);
     OPT(CarbonMonoxideLevel);
     OPT(CarbonMonoxidePeakLevel);
-    }};
-
-   ContactSensor
+| ContactSensor
     REQ(ContactSensorState);
     OPT(Name);
     OPT(StatusActive);
     OPT(StatusFault);
     OPT(StatusTampered);
     OPT(StatusLowBattery);
-  }};
-
-   Door
+| Door
     REQ(CurrentPosition);
     REQ(TargetPosition);
     REQ(PositionState);
     OPT(Name);
     OPT(HoldPosition);
     OPT(ObstructionDetected);
-  }};
-
-   Doorbell
+| Doorbell
     REQ(ProgrammableSwitchEvent);
     OPT(Name);
     OPT(Volume);
     OPT(Brightness);
-  }};
-
-   Fan
+| Fan
     REQ(Active);
     OPT(Name);
     OPT(CurrentFanState);
@@ -81,35 +67,25 @@
     OPT(RotationSpeed);
     OPT(SwingMode);
     OPT(LockPhysicalControls);
-  }};
-
-   Faucet
+| Faucet
     REQ(Active);
     OPT(StatusFault);
     OPT(Name);
-  }};
-
-   FilterMaintenance
+| FilterMaintenance
     REQ(FilterChangeIndication);
     OPT(Name);
     OPT(FilterLifeLevel);
     OPT(ResetFilterIndication);
-  }};
-
-   GarageDoorOpener
+| GarageDoorOpener
     REQ(CurrentDoorState);
     REQ(TargetDoorState);
     REQ(ObstructionDetected);
     OPT(LockCurrentState);
     OPT(LockTargetState);
     OPT(Name);
-  }};
-
-   HAPProtocolInformation
+| HAPProtocolInformation
     REQ(Version);
-  }};
-
-   HeaterCooler
+| HeaterCooler
     REQ(Active);
     REQ(CurrentTemperature);
     REQ(CurrentHeaterCoolerState);
@@ -121,9 +97,7 @@
     OPT(CoolingThresholdTemperature);
     OPT(HeatingThresholdTemperature);
     OPT(LockPhysicalControls);
-  }};
-
-   HumidifierDehumidifier
+| HumidifierDehumidifier
     REQ(Active);
     REQ(CurrentRelativeHumidity);
     REQ(CurrentHumidifierDehumidifierState);
@@ -135,147 +109,109 @@
     OPT(SwingMode);
     OPT(WaterLevel);
     OPT(LockPhysicalControls);
-  }};
-
-   HumiditySensor
+| HumiditySensor
     REQ(CurrentRelativeHumidity);
     OPT(Name);
     OPT(StatusActive);
     OPT(StatusFault);
     OPT(StatusTampered);
     OPT(StatusLowBattery);   
-  }};
-
-   IrrigationSystem
+| IrrigationSystem
     REQ(Active);
     REQ(ProgramMode);
     REQ(InUse);
     OPT(RemainingDuration);
     OPT(Name);
     OPT(StatusFault);
-  }};
-
-   LeakSensor
+| LeakSensor
     REQ(LeakDetected);
     OPT(Name);
     OPT(StatusActive);
     OPT(StatusFault);
     OPT(StatusTampered);
     OPT(StatusLowBattery);       
-  }};
-
-   LightBulb
+| LightBulb
     REQ(On);
     OPT(Brightness);
     OPT(Hue);
     OPT(Name);
     OPT(Saturation);
     OPT(ColorTemperature);
-  }};
-
-   LightSensor
+| LightSensor
     REQ(CurrentAmbientLightLevel);
     OPT(Name);
     OPT(StatusActive);
     OPT(StatusFault);
     OPT(StatusTampered);
     OPT(StatusLowBattery);          
-  }};
-
-   LockMechanism
+| LockMechanism
     REQ(LockCurrentState);
     REQ(LockTargetState);
     OPT(Name);
-  }};
-
-   Microphone
+| Microphone
     REQ(Mute);
     OPT(Name);
     OPT(Volume);
-  }};
-
-   MotionSensor
+| MotionSensor
     REQ(MotionDetected);
     OPT(Name);
     OPT(StatusActive);
     OPT(StatusFault);
     OPT(StatusTampered);
     OPT(StatusLowBattery);       
-  }};
-
-   OccupancySensor
+| OccupancySensor
     REQ(OccupancyDetected);
     OPT(Name);
     OPT(StatusActive);
     OPT(StatusFault);
     OPT(StatusTampered);
     OPT(StatusLowBattery);         
-  }};
-
-   Outlet
+| Outlet
     REQ(On);
     REQ(OutletInUse);
     OPT(Name);
-  }};
-
-   SecuritySystem
+| SecuritySystem
     REQ(SecuritySystemCurrentState);
     REQ(SecuritySystemTargetState);
     OPT(Name);
     OPT(SecuritySystemAlarmType);
     OPT(StatusFault);
     OPT(StatusTampered);
-  }};  
-
-   ServiceLabel
+| ServiceLabel
     REQ(ServiceLabelNamespace);
-  }};  
-
-   Slat
+| Slat
     REQ(CurrentSlatState);
     REQ(SlatType);
     OPT(Name);
     OPT(SwingMode);
     OPT(CurrentTiltAngle);
     OPT(TargetTiltAngle);
-  }};
-
-   SmokeSensor
+| SmokeSensor
     REQ(SmokeDetected);
     OPT(Name);
     OPT(StatusActive);
     OPT(StatusFault);
     OPT(StatusTampered);
     OPT(StatusLowBattery);             
-  }};
-
-   Speaker
+| Speaker
     REQ(Mute);
     OPT(Name);
     OPT(Volume);
-  }};
-
-   StatelessProgrammableSwitch
+| StatelessProgrammableSwitch
     REQ(ProgrammableSwitchEvent);
     OPT(Name);
     OPT(ServiceLabelIndex);
-  }};
-
-   Switch
+| Switch
     REQ(On);
     OPT(Name);
-  }};
-
-   TemperatureSensor
+| TemperatureSensor
     REQ(CurrentTemperature);
     OPT(Name);
     OPT(StatusActive);
     OPT(StatusFault);
     OPT(StatusTampered);
     OPT(StatusLowBattery);
-  }};
-
-   Thermostat
+| Thermostat
     REQ(CurrentHeatingCoolingState);
     REQ(TargetHeatingCoolingState);
     REQ(CurrentTemperature);
@@ -286,9 +222,7 @@
     OPT(HeatingThresholdTemperature);
     OPT(Name);
     OPT(TargetRelativeHumidity);
-  }};
-
-   Valve
+| Valve
     REQ(Active);
     REQ(InUse);
     REQ(ValveType);
@@ -298,18 +232,14 @@
     OPT(ServiceLabelIndex);
     OPT(StatusFault);
     OPT(Name);
-  }};
-
-   Window
+| Window
     REQ(CurrentPosition);
     REQ(TargetPosition);
     REQ(PositionState);
     OPT(Name);
     OPT(HoldPosition);
     OPT(ObstructionDetected);
-  }};
-
-   WindowCovering
+| WindowCovering
     REQ(CurrentPosition);
     REQ(TargetPosition);
     REQ(PositionState);
@@ -320,4 +250,3 @@
     OPT(CurrentVerticalTiltAngle);
     OPT(TargetVerticalTiltAngle);
     OPT(ObstructionDetected);
-  }};
