@@ -1,16 +1,7 @@
 | Service | Required Characteristics | Optional Characteristics |
 | ------- | -------------------- | ------------------- |
 | AccessoryInformation| FirmwareRevision<br>Identity<br>Manufacturer<br>Model<br>Name<br>SerialNumber | HardwareRevision |
-
-   AirPurifier
-    REQ(Active);
-    REQ(CurrentAirPurifierState);
-    REQ(TargetAirPurifierState);
-    OPT(Name);
-    OPT(RotationSpeed);
-    OPT(SwingMode);
-    OPT(LockPhysicalControls);
-  }};
+| AirPurifier | Active<br>CurrentAirPurifierState<br>TargetAirPurifierState | Name<br>RotationSpeed<br>SwingMode<br>LockPhysicalControls |
 
    AirQualitySensor
     REQ(AirQuality);
