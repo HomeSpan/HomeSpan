@@ -8,7 +8,7 @@ HomeSpan provides a microcontroller-focused implementation of [Apple's HomeKit A
 * Utilizes a unique *Service-Centric* approach to creating HomeKit devices
 * Takes full advantage of the widely-popular Arduino IDE
 * 100% HAP R2 compliance
-* 38 integrated [HomeKit Services](https://github.com/HomeSpan/HomeSpan/tree/master/docs/ServiceList.md)
+* 38 integrated [HomeKit Services](https://github.com/HomeSpan/HomeSpan/tree/master/docs/NameSpace.md)
 * Operates in either Accessory or Bridge mode
 
 ### For the HomeSpan Developer
