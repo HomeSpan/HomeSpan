@@ -15,7 +15,7 @@ new Service::LightBulb();                         // instantiate a Light Bulb Se
   new Characteristic::Name("Living Room Lamp");     // instantiate an optional Name Characteristic for this Service, and set to "Living Room Lamp"
 ```
 
-Please see Section 8 and 9 of [HAP-R2](https://developer.apple.com/support/homekit-accessory-protocol/) for a complete description of all HAP Services and Characteristics.  Note that HomeSpan's Service and Characteristic Classes already contain all the required HAP fields, such as the UUID, Format, and Permissions, so you don't need to specify any of these parameters.
+Please see Sections 8 and 9 of [HAP-R2](https://developer.apple.com/support/homekit-accessory-protocol/) for a complete description of all HAP Services and Characteristics.  Note that HomeSpan's Service and Characteristic Classes already contain all the required HAP fields, such as the UUID, Format, and Permissions, so you don't need to specify any of these parameters.
 
 Additionally, when first starting up, HomeSpan begins by validating the device's configuration to ensure each Service you instantiate includes all required Characteristics, but does not include any Characteristics that are neither required nor optional.  If any errors are found, HomeSpan reports them to the Arduino Serial Monitor and halts the program.
 
