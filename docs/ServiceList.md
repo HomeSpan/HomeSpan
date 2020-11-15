@@ -1,6 +1,10 @@
-# HomeSpan Services
+# HomeSpan Services and Characteristics
 
-The following tables list the HomeKit Services and Characteristics supported by HomeSpan. In general, HomeSpan implements all HomeKit Services described in [Apple's HomeKit Accessory Protocol Specification (HAP) Release R2](https://developer.apple.com/support/homekit-accessory-protocol/), except for those that involve video or audio streaming, Apple TV, or advanced lock management (i.e. all HAP Services except those that require Characteristics with a TLV8 data type).
+HomeSpan implements all [HAP-R2](https://developer.apple.com/support/homekit-accessory-protocol/) Services and Characteristics except for those that involve video or audio streaming, Apple TV, or advanced lock management (i.e. all HAP Services except those that require Characteristics with a TLV8 data type).
+
+HomeSpan Services and Characteristics are implemented as C++ Classes with names that exactly match the spelling and capitalization specified by Apple in Sections 8 and Section of HAP-R2, but without any spaces.  All HomeSpan Services are defined in HomeSpan's `Service` namespace and all HomeSpan Characteristics are defined in HomeSpan's `Characteristic` namespace.  For example, HAP Service 8.7, *Carbon Dioxide Sensor*, and HAP Characteristic 9.16, *Carbon Dioxide Detected*, are respectively defined in HomeSpan as `Service::CarbonDioxideSensor` and `Characteristic::CarbonDioxideDetected`.
+
+HomeSpan Service and Characteristics are instantiated with a C++ `new` command.  Services do not take any arguments, whereas Characteristics take a single, optional argument that is used to initialize the value of the Characteristic at startup.  If this argument is not specified, HomeSpan will apply a reasonable default value based on the Characteristic's type and allowed range.
 
 ### Service List
 
