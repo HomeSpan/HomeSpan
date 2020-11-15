@@ -3,6 +3,7 @@
 
 # Files to exclude from archives/releases
 docs export-ignore
+documents export-ignore
 .gitattributes export-ignore
 .gitignore export-ignore
 README.md export-ignore
