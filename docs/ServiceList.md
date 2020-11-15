@@ -2,11 +2,11 @@
 
 HomeSpan implements all [HAP-R2](https://developer.apple.com/support/homekit-accessory-protocol/) Services and Characteristics except for those that involve video or audio streaming, Apple TV, or advanced lock management (i.e. all HAP Services except those that require Characteristics with a TLV8 data type).
 
-HomeSpan Services and Characteristics are implemented as C++ Classes with names that exactly match the spelling and capitalization specified by Apple in Sections 8  and 9 of HAP-R2, but without any spaces.  HomeSpan Services are defined in HomeSpan's `Service` namespace.  HomeSpan Characteristics are defined in HomeSpan's `Characteristic` namespace.  For example, *Carbon Dioxide Sensor* (HAP Service 8.7) and *Carbon Dioxide Detected* (HAP Characteristic 9.16) are respectively defined in HomeSpan as `Service::CarbonDioxideSensor` and `Characteristic::CarbonDioxideDetected`.
+HomeSpan Services and Characteristics are implemented as C++ Classes with names that exactly match the spelling and capitalization specified by Apple in Sections 8  and 9 of [HAP-R2](https://developer.apple.com/support/homekit-accessory-protocol/), but without any spaces.  HomeSpan Services are defined in HomeSpan's `Service` namespace.  HomeSpan Characteristics are defined in HomeSpan's `Characteristic` namespace.  For example, HomeSpan defines the *Carbon Dioxide Sensor* Service (HAP Service 8.7) as `Service::CarbonDioxideSensor`, and the *Carbon Dioxide Detected* Characteristic (HAP Characteristic 9.16) as `Characteristic::CarbonDioxideDetected`.
 
 HomeSpan Services and Characteristics are instantiated with a C++ `new` command.  Services do not take any arguments, whereas Characteristics take a single, optional argument that is used to initialize the value of the Characteristic at startup.  If this argument is not specified, HomeSpan will apply a reasonable default value based on the Characteristic's type and allowed range.
 
-A list of all HomeSpan Services is provided in the table below.  For each Service the table also indicates which Characteristics are required and which are optional.  For example, a dimmable light bulb could be configured as such:
+A list of all HomeSpan Services is provided in the table below.  For each Service the table also indicates which Characteristics are required and which are optional.  For example, a dimmable light bulb could be configured in HomeSpan as such:
 
 ```C++
 new Service::LightBulb();                         // instantiate a Light Bulb Service
