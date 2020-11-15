@@ -3,7 +3,7 @@
 
 Welcome to HomeSpan - a robust and extremely easy-to-use Arduino library for creating your own [ESP32-based](https://www.espressif.com/en/products/modules/esp32) HomeKit devices entirely within the [Arduino IDE](http://www.arduino.cc).
 
-HomeSpan provides a microcontroller-focused implementation of [Apple's HomeKit Accessory Protocol Specification (HAP) Release R2](https://developer.apple.com/support/homekit-accessory-protocol/) designed specifically for the Espressif ESP32 microcontroller running within the Arduino IDE.  HomeSpan pairs directly to HomeKit via your home WiFi network without the need for any external bridges or components.  With HomeSpan you can use the full power of the ESP32's I/O functionality to create custom control software and/or hardware to automatically operate external devices from the Home App on your iPhone, iPad, or Mac, or with Siri.
+HomeSpan provides a microcontroller-focused implementation of [Apple's HomeKit Accessory Protocol Specification Release R2 (HAP-R2)](https://developer.apple.com/support/homekit-accessory-protocol/) designed specifically for the Espressif ESP32 microcontroller running within the Arduino IDE.  HomeSpan pairs directly to HomeKit via your home WiFi network without the need for any external bridges or components.  With HomeSpan you can use the full power of the ESP32's I/O functionality to create custom control software and/or hardware to automatically operate external devices from the Home App on your iPhone, iPad, or Mac, or with Siri.
 
 ### HomeSpan Highlights
 
@@ -50,11 +50,11 @@ HomeSpan includes the following documentation:
 * [Getting Started with HomeSpan](docs/GettingStarted.md) - setting up the software and required the hardware
 * [HomeKit Primer](docs/HomeKitPrimer.md) - a gentle introduction to Apple HomeKit and HAP terminology.
 * [HomeSpan Overview](docs/Overview.md) - an overview of the HomeSpan framework
-* [HomeSpan Tutorials](docs/Tutorials) - a guide to HomeSpan's tutorial-sketches
+* [HomeSpan Tutorials](docs/Tutorials.md) - a guide to HomeSpan's tutorial-sketches
 * [HomeSpan Services and Characteristics](docs/ServiceList.md) - a list of all HAP Services and Characterstics supported by HomeSpan
 * [HomeSpan Accessory Categories](docs/Categories.md) - a list of all HAP Accessory Categories defined by HomeSpan
 * [HomeSpan Command-Line Interface (CLI)](docs/CLI.md) - use HomeSpan's CLI to configure and monitor your HomeSpan device via the Arduino Serial Monitor
-* [HomeSpan End-User Guide](docs/UserGuide.md) - end-user tools for configuring HomeSpan's WiFi Credentials and pairing a HomeSpan device to HomeKit
+* [HomeSpan End-User Guide](docs/UserGuide.md) - end-user instructions for configuring an already-programmed HomeSpace's WiFi Credentials, creating a device Setup Code, and pairing the device to HomeKit.  No computer needed!
 * [HomeSpan Library Reference](docs/Reference.md) - a complete guide to the HomeSpan Library API
 
 In addition to the above resources, developers who are new to HomeKit programming should download Apple's [HomeKit Accessory Protocol Specification, Release R2 (HAP-R2)](https://developer.apple.com/support/homekit-accessory-protocol/). The download is free, but Apple requires you to register your Apple ID for access to the document.
