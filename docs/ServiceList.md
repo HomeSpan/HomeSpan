@@ -30,7 +30,7 @@ Additionally, when first starting up, HomeSpan begins by validating the device's
 | CarbonDioxideSensor | CarbonDioxideDetected | Name<br>StatusActive<br>StatusFault<br>StatusTampered<br>StatusLowBattery<br>CarbonDioxideLevel<br>CarbonDioxidePeakLevel |
 | CarbonMonoxideSensor | CarbonMonoxideDetected | Name<br>StatusActive<br>StatusFault<br>StatusTampered<br>StatusLowBattery<br>CarbonMonoxideLevel<br>CarbonMonoxidePeakLevel |
 | ContactSensor | ContactSensorState | Name<br>StatusActive<br>StatusFault<br>StatusTampered<br>StatusLowBattery |
-| Door | CurrentPosition | <br>TargetPosition<br>PositionState<br>Name<br>HoldPosition<br>ObstructionDetected |
+| Door | CurrentPosition | TargetPosition<br>PositionState<br>Name<br>HoldPosition<br>ObstructionDetected |
 | Doorbell | ProgrammableSwitchEvent | Name<br>Volume<br>Brightness |
 | Fan | Active | Name<br>CurrentFanState<br>TargetFanState<br>RotationDirection<br>RotationSpeed<br>SwingMode<br>LockPhysicalControls |
 | Faucet | Active | StatusFault<br>Name |
