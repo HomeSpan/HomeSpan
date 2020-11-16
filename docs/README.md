@@ -47,14 +47,14 @@ HomeSpan provides a microcontroller-focused implementation of [Apple's HomeKit A
 
 HomeSpan includes the following documentation:
 
-* [Getting Started with HomeSpan](GettingStarted.md) - setting up the software and acquiring the hardware
-* [HomeKit Primer](HomeKitPrimer.md) - a gentle introduction to Apple HomeKit and HAP terminology.
+* [Getting Started with HomeSpan](GettingStarted.md) - setting up the software and the hardware needed to develop HomeSpan devices
+* [HomeKit Primer](HomeKitPrimer.md) - a gentle introduction to Apple HomeKit and HAP terminology
 * [HomeSpan Overview](Overview.md) - an overview of the HomeSpan framework
 * [HomeSpan Tutorials](Tutorials.md) - a guide to HomeSpan's tutorial-sketches
 * [HomeSpan Services and Characteristics](ServiceList.md) - a list of all HAP Services and Characterstics supported by HomeSpan
 * [HomeSpan Accessory Categories](Categories.md) - a list of all HAP Accessory Categories defined by HomeSpan
-* [HomeSpan Command-Line Interface (CLI)](CLI.md) - use HomeSpan's CLI to configure and monitor your HomeSpan device via the Arduino Serial Monitor
-* [HomeSpan End-User Guide](UserGuide.md) - end-user instructions for configuring an already-programmed HomeSpace's WiFi Credentials, creating a device Setup Code, and pairing the device to HomeKit.  No computer needed!
+* [HomeSpan Command-Line Interface (CLI)](CLI.md) - *for the developer*: configure  HomeSpan device's WiFi Credentials, create/change the Setup Code, monitor/change the status of the device, and access detailed, real-time diagnostics from the device via the Arduino IDE Serial Monitor
+* [HomeSpan User Guide](UserGuide.md) - *for the end-user*: turnkey instructions on how to configure an already-programmed HomeSpan device's WiFi Credentials, create/change the Setup Code, and pair the device to HomeKit.  No computer needed!
 * [HomeSpan Library Reference](Reference.md) - a complete guide to the HomeSpan Library API
 
 # External Resources
