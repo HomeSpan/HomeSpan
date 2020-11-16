@@ -1,5 +1,7 @@
 # Getting Started with HomeSpan
 
+This page provides step-by-step instructions for acquiring and setting up all the software and hardware needed to develop HomeSpan devices.  Those with Arduino and/or ESP32 experience may find they can skip some of the steps.
+
 #### Step 1: Install the Arduino IDE
 
 Since HomeSpan is a library designed for Arduino's Integrated Development Environment, the first step is to download and install the latest version of this IDE from the [Arduino Software page](https://www.arduino.cc/en/software).  If you have experience with programming Arduino sketches, you'll find Homespan's use of the standard Arduino setup() and loop() functions, as well as the ever-present *\*.ino* file, very familiar.  If you've never programmed an Arduino, you may want to begin by first reviewing [Arduino's Guide to the IDE](https://www.arduino.cc/en/Guide/Environment) (and maybe try out a few Arduino examples) before proceeding to program with HomeSpan.
