@@ -10,33 +10,31 @@ The table below provides a list of all HomeSpan Categories.
 
 > Note that the HomeKit primarily uses the Accessory Category of a device for determining the icon to show in the Home App when a device is being paired.  Apart from this purely cosmetic function, the Category assigned to a device does not in any way limit which Services or Characteristics can be implemented on that device.
 
-### Category List
+### HomeSpan Categories
 
-| Category |
-|---|
-| AirConditioners |
-| AirPurifiers |
-| Bridges |
-| Dehumidifiers |
-| Doors |
-| Fans |
-| Faucets |
-| Lighting |
-| Locks |
-| GarageDoorOpeners |
-| Heaters |
-| Humidifiers |
-| IPCameras |
-| Other |
-| Outlets |
-| ProgrammableSwitches |
-| SecuritySystems |
-| Sensors |
-| ShowerSystems |
-| Sprinklers |
-| Switches |
-| Thermostats |
-| VideoDoorbells |
-| Windows |
-| WindowCoverings |
+* AirConditioners *
+* AirPurifiers *
+* Bridges *
+* Dehumidifiers *
+* Doors *
+* Fans *
+* Faucets *
+* Lighting *
+* Locks *
+* GarageDoorOpeners *
+* Heaters *
+* Humidifiers *
+* IPCameras *
+* Other *
+* Outlets *
+* ProgrammableSwitches *
+* SecuritySystems *
+* Sensors *
+* ShowerSystems *
+* Sprinklers *
+* Switches *
+* Thermostats *
+* VideoDoorbells *
+* Windows *
+* WindowCoverings *
 
