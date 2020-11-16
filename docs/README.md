@@ -57,7 +57,7 @@ HomeSpan includes the following documentation:
 * [HomeSpan End-User Guide](UserGuide.md) - end-user instructions for configuring an already-programmed HomeSpace's WiFi Credentials, creating a device Setup Code, and pairing the device to HomeKit.  No computer needed!
 * [HomeSpan Library Reference](Reference.md) - a complete guide to the HomeSpan Library API
 
-# Apple HomeKit Resources
+# External Resources
 
 In addition to HomeSpan resources, developers who are new to HomeKit programming should download Apple's [HomeKit Accessory Protocol Specification, Release R2 (HAP-R2)](https://developer.apple.com/support/homekit-accessory-protocol/). The download is free, but Apple requires you to register your Apple ID for access to the document.
 
