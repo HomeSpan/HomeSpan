@@ -12,29 +12,29 @@ The table below provides a list of all HomeSpan Categories.
 
 ### HomeSpan Categories
 
-* AirConditioners *
-* AirPurifiers *
-* Bridges *
-* Dehumidifiers *
-* Doors *
-* Fans *
-* Faucets *
-* Lighting *
-* Locks *
-* GarageDoorOpeners *
-* Heaters *
-* Humidifiers *
-* IPCameras *
-* Other *
-* Outlets *
-* ProgrammableSwitches *
-* SecuritySystems *
-* Sensors *
-* ShowerSystems *
-* Sprinklers *
-* Switches *
-* Thermostats *
-* VideoDoorbells *
-* Windows *
-* WindowCoverings *
+* AirConditioners
+* AirPurifiers
+* Bridges
+* Dehumidifiers
+* Doors
+* Fans
+* Faucets
+* Lighting
+* Locks
+* GarageDoorOpeners
+* Heaters
+* Humidifiers
+* IPCameras
+* Other
+* Outlets
+* ProgrammableSwitches
+* SecuritySystems
+* Sensors
+* ShowerSystems
+* Sprinklers
+* Switches
+* Thermostats
+* VideoDoorbells
+* Windows
+* WindowCoverings
 
