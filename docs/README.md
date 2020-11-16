@@ -53,8 +53,8 @@ HomeSpan includes the following documentation:
 * [HomeSpan Tutorials](Tutorials.md) - a guide to HomeSpan's tutorial-sketches
 * [HomeSpan Services and Characteristics](ServiceList.md) - a list of all HAP Services and Characterstics supported by HomeSpan
 * [HomeSpan Accessory Categories](Categories.md) - a list of all HAP Accessory Categories defined by HomeSpan
-* [HomeSpan Command-Line Interface (CLI)](CLI.md) - *for the developer*: configure  HomeSpan device's WiFi Credentials, create/change the Setup Code, monitor/change the status of the device, and access detailed, real-time diagnostics from the device via the Arduino IDE Serial Monitor
-* [HomeSpan User Guide](UserGuide.md) - *for the end-user*: turnkey instructions on how to configure an already-programmed HomeSpan device's WiFi Credentials, create/change the Setup Code, and pair the device to HomeKit.  No computer needed!
+* [HomeSpan Command-Line Interface (CLI)](CLI.md) - (for developers) configure a HomeSpan device's WiFi Credentials, modify its HomeKit Setup Code, monitor and update its status, and access detailed, real-time device diagnostics from the Arduino IDE Serial Monitor
+* [HomeSpan User Guide](UserGuide.md) - (for end-users): turnkey instructions on how to configure an already-programmed HomeSpan device's WiFi Credentials, create/change the Setup Code, and pair the device to HomeKit.  No computer needed!
 * [HomeSpan Library Reference](Reference.md) - a complete guide to the HomeSpan Library API
 
 # External Resources
