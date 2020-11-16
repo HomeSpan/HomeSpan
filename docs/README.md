@@ -67,5 +67,5 @@ You ***do not*** need to read the entire document.  The whole point of HomeSpan 
 
 Feedback or Questions? Please send to [homespan@icloud.com](mailto:homespan@icloud.com).
 
-<p style="text-align:center">This site is also available under [GitHub Pages](https://homespan.github.io/HomeSpan/)</p>
+***This site is also available as a series of GitHub Pages at https://homespan.github.io/HomeSpan/***
 
