@@ -67,4 +67,4 @@ You ***do not*** need to read the entire document.  The whole point of HomeSpan 
 
 Feedback or Questions? Please send to [homespan@icloud.com](mailto:homespan@icloud.com).
 
-![logo](../documents/logo.png)
+![logo](images/HomeSpanLogo.png)
