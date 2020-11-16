@@ -63,11 +63,9 @@ In addition to the above resources, developers who are new to HomeKit programmin
 
 You ***do not*** need to read the entire document.  The whole point of HomeSpan is that it implements all the required HAP operations under the hood so you can focus on just programming whatever logic is needed to control your real-world appliances (lights, fans, RF remote controls, etc.) with the device.  However, you will find Chapters 8 and 9 of the HAP guide to be an invaluable reference as it lists and describes all of the Services and Characteristics implemented in HomeSpan, many of which you will routinely utilize in your own HomeSpan sketches.
 
-## Feedback or Questions?
-
-Please send to [homespan@icloud.com](mailto:homespan@icloud.com).
-
 ---
 
-***This site is also available under [GitHub Pages](https://homespan.github.io/HomeSpan/).***
+Feedback or Questions? Please send to [homespan@icloud.com](mailto:homespan@icloud.com).
+
+<p>***This site is also available under [GitHub Pages](https://homespan.github.io/HomeSpan/).***<\p>
 
