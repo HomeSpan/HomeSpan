@@ -161,5 +161,8 @@ Note that if you can’t find *Scancardium* listed as a font choice in either th
 This section contains potential solutions to common problems.
 (coming soon)
 
+---
+
+[↩️](README.md) Back to the Welcome page
 
  
