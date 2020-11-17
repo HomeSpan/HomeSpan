@@ -33,7 +33,7 @@ Before proceeding, you may want to first read through the [HomeSpan Overview](Ov
 * Open the Arduino Serial Monitor (*Tools → Serial Monitor*)
 * Compile and upload the HomeSpan sketch (*Sketch → Upload*)
 
-After compilation and uploading completes, HomeSpan device will report a variety of initial diagnostics messages to the Arduino Serial Monitor and report that it is ready.  Congratulations!  You've just programmed your first HomeSpan device.
+After compilation and uploading completes, HomeSpan will report a variety of initial diagnostics messages to the Arduino Serial Monitor and report that it is ready.  Congratulations!  You've just programmed your first HomeSpan device.
 
 #### Step 7: Configure and Pair your HomeSpan Device
 
@@ -51,4 +51,4 @@ Finally, disconnect your HomeSpan device from the computer and power it directly
 
 ---
 
-[↩️](README.md) Return to HomeSpan's Main Page
+[↩️]     (README.md) Return to HomeSpan's Main Page
