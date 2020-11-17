@@ -1,6 +1,10 @@
 # HomeSpan Overview
 
-*(coming soon)*
+*Note: This page references a lot of HomeKit HAP terminology.  If you are new to HomeKit development, you may want to start by first reviewing the [HomeKit Primer](HomeKitPrimer.md) page.*
+
+HomeSpan is an Arduino-style C++ library designed for ESP32 devices to take on the role of a *HAP Accessory Server*, which allows the device to be paired to, and communicate with, any *HAP Client*, such as Apple's Home App on an iPhone, iPad, or Mac.
+
+There are three primary functions of HomeSpan.  The first is to implement all the required HomeKit protocols needed for you to define and then expose one or more HAP Accessory Objects, each with their own HAP Services and HAP Characteristics
 
 Need to discuss development environment
 
