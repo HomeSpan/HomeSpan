@@ -38,3 +38,7 @@ The table below provides a list of all HomeSpan Categories.
 * Windows
 * WindowCoverings
 
+---
+
+[↩️](README.md) Back to the Welcome page
+
