@@ -24,30 +24,31 @@ Programming an ESP32 board is generally done serially via USB.  Most ESP32 devel
 
 #### Step 6: Program your First HomeSpan Device
 
-If you've completed all the steps above, you are ready to start programming your ESP32 with the HomeSpan library.
+Before proceeding, you may want to first read through the [HomeSpan Overview](Overview.md) page.  Alternatively, you can jump right in and program your device using one of HomeSpan's built-in tutorial sketches:
 
 * Plug your ESP32 board into a free USB port on your computer
 * Launch the Arduino IDE
-* Load the first HomeSpan tutorial sketch (*File → Examples → HomeSpan → 01-SimpleLightBulb*)
+* Load one of the HomeSpan tutorial sketches (for example, *File → Examples → HomeSpan → 01-SimpleLightBulb*)
 * Set the Board to match your ESP32 board (for example, *Tools → Board → ESP32 Arduino → Adafruit ESP32 Feather*)
 * Open the Arduino Serial Monitor (*Tools → Serial Monitor*)
 * Compile and upload the HomeSpan sketch (*Sketch → Upload*)
 
-After compilation and uploading completes, HomeSpan device will report a variety of initial diagnostics messages to the Serial Monitor and report that it is ready.  Congratulations!  You've just programmed your first HomeSpan device.
+After compilation and uploading completes, HomeSpan device will report a variety of initial diagnostics messages to the Arduino Serial Monitor and report that it is ready.  Congratulations!  You've just programmed your first HomeSpan device.
+
+#### Step 7: Configure and Pair your HomeSpan Device
+
+Though the device is now programmed and fully operational, it needs to be configured with WiFi Credentials and a HomeKit Setup Code before it can be paired to your HomeKit account.  See HomeSpan's [Command-Line Interface (CLI)](CLI.md) page for details on how to configure HomeSpan via the Arduino Serial Monitor.  Once the device is connected to your WiFi network, HomeSpan is now ready to be paired from the Home App on your iPhone!
 
 ## What Next?
 
-Though the device is now programmed, it still needs to be configured before it can be paired to HomeKit
+If you've not yet read through the [HomeSpan Overview](Overview.md) page, you should do so now so you'll have a good understanding of the framework for operating and programming HomeSpan devices.  If you are new to HomeKit development, you may want to also read through HomeSpan's [HomeKit Primer](HomeKitPrimer.md), which should provice you with some foundational knowledge about all HomeKit itself.
 
+Next, explore the tutorial sketches, upload a few, and see how they work. The examples start simple and grow in complexity, taking you through all the functions and features of HomeSpan.  Along the way you'll also learn a lot about HomeKit itself.  See [HomeSpan Tutorials](Tutorials.md) for a summary of all the included examples.
 
+Find a something in a sketch you don't understand?  Visit the [HomeSpan Library Reference](Reference.md) for details on all HomeSpan objects, functions, and methods.  Or check out the [HomeSpan Services and Characteristics] page for a full list of all the HomeKit Services and Characteristics supported by HomeSpan.  And don't forget to use Apple's [HomeKit Accessory Protocol Specification, Release R2 (HAP-R2)](https://developer.apple.com/support/homekit-accessory-protocol/) as your go-to reference for details and every Service and Characteristic.
 
+Finally, disconnect your HomeSpan device from the computer and power it directly from a wall adapter.  After all, HomeSpan devices are designed to run on a standalone basis once they are programmed.  See the [Home User Guide](UserGuide.md) for end-user instructions on how to operate and configure a standlone HomeSpan device's WiFi Credentials and HomeKit Setup Code *without the need to connect the device to a computer*.
 
+---
 
-
-
-
-
-#### Step 4: Explore the HomeSpan Tutorials
-
-The HomeSpan library includes 16 detailed and heavily annotated tutorial examples you can explore even if you don't yet have an ESP32 board.  From the top menu bar of the Arduino IDE, select *File → Examples → HomeSpan* and choose the first tutorial to get started. The examples start simple and grow in complexity, taking you through all the functions and features of HomeSpan.  Along the way you'll also learn a lot about HomeKit itself.  See [HomeSpan Tutorials](docs/Tutorials.md) for a summary of all the included examples.  Note that you can also compile the examples without having an ESP32 provided you select one of the ESP32 boards listed under *Tools → Board → ESP32 Arduino* (the compiler will throw an error message if you try to compile under a non-ESP32 board).
-
+[↩️](README.md) Return to HomeSpan's Main Page
