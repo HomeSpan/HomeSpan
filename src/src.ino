@@ -10,7 +10,7 @@ void setup() {
  
   homeSpan.setLogLevel(2);
 
-  homeSpan.begin(Category::Lighting,"HomeSpan Benchmark");
+  homeSpan.begin();
 
   new SpanAccessory();                                  // Begin by creating a new Accessory using SpanAccessory(), which takes no arguments
 

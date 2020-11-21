@@ -105,7 +105,7 @@ struct Span{
 
   HapCharList chr;                                  // list of all HAP Characteristics
 
-  void begin(Category catID,
+  void begin(Category catID=DEFAULT_CATEGORY,
              char *displayName=DEFAULT_DISPLAY_NAME,
              char *hostNameBase=DEFAULT_HOST_NAME,
              char *modelName=DEFAULT_MODEL_NAME);        

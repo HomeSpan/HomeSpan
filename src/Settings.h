@@ -38,6 +38,7 @@
 //////////////////////////////////////////////////////
 //                DEFAULT SETTINGS                  //  
 
+#define     DEFAULT_CATEGORY          Category::Lighting  // change with optional first argument in homeSpan.begin()
 #define     DEFAULT_DISPLAY_NAME      "HomeSpan Server"   // change with optional second argument in homeSpan.begin()
 #define     DEFAULT_HOST_NAME         "HomeSpan"          // change with optional third argument in homeSpan.begin()
 #define     DEFAULT_MODEL_NAME        "HomeSpan-ESP32"    // change with optional fourth argument in homeSpan.begin()
