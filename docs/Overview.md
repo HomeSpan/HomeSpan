@@ -126,6 +126,8 @@ As you can see, you do not need to name any objects, or specify any HAP paramete
 In fact, if you tried to run the above sketch you would find it failed to validate.  That's because each Accessory is missing two required Services - the HAP Accessory Information Service, and the HAP Protcol Information Service.  See the [Tutorials](Tutorials.md) for full completed and valid configurations that include these required HAP Services, such as this complete, working example for a simple table lamp:
 
 ```C++
+/* HomeSpan Table Lamp Example */
+
 #include "HomeSpan.h"         // include the HomeSpan library
 
 void setup() {     
@@ -159,9 +161,44 @@ void loop(){
 } // end of loop()
 ```
 
-## Connecting HomeSpan to the Real World Appliances
+## Connecting HomeSpan to Real World Appliances
 
-A HomeSpan device that has been configured properly
+The above Table Lamp example is a fully functioning HomeSpan sketch.  If you upload it to your ESP32 device and pair the device to HomeKit, your will find a new tile appears in your Home App labeled "My Table Lamp."  The tile is operational.  Press once and it shows the light turning on.  Press a second time and it shows the light turning off.  Of course nothing happens in the real world - HomeSpan has not yet been programmed to turn on an actual lamp.
+
+When you press a tile in the Home App, HomeKit sends a request to HomeSpan to *update* one or more Characteristics.  In the example above, pressing the tile causes HomeKit to specifically request that the On Characteristic of the LightBulb Service be updated to either true (on) or false (off).  When HomeSpan receives a request to update one or more Characteristics, rather than sequentially call code to separately update each Characteristic, HomeSpan instead groups the requests according to their Service, and calls the `update()` method for that Service.  This is because many Services support multiple Characteristic that are physcially related.  For example, turning on a light and setting its brightness to 50% requires the updating of two Characteristic (On and Brightness).  In systems where these are handled sequentially, the user is required to write complicated code to save intermediate states and determine what to do when it receives a request to turn on a light if does not yet know whether or not a request to set the brightness will shortly follow.
+
+The *Service-Centric* approach used by HomeSpan makes it much easier to implement the code to handle updates.  Instead of writing code to respond to updates of individual Characteristics, you write code to respond to an update of an entire Service, with methods that inform you of which Characteristics were requested to be updated, and their new corresponding values.
+
+Every HomeSpan Service implements a virtual `update()` method that by default does nothing.  To implement your own logic, you override the `update()` with your own code.  The easiest way to do this is by creating a new Service that is derived from the Service you want to customize with your own `update()` method.  For example, we can derive a new service called TableLamp from LightBulb as follows:
+
+```C++
+struct TableLamp : Service::LightBulb {};
+```
+
+Within this new structure we can create our own constructor, potentially with one or more arguments.  The constructor can store some device-specific parameters, such as the number of the ESP32 pin that will be used to drive the relay that turns on and off the table lamp.  The constructor should also define all the Characteristics required by the Service.  You will also want to save at least some of Characteristic objects as named variables so they can be referenced later in the `update()` method.  The base class for all HomeSpan Characteristics is `SpanCharacteristic`, so creating a variable to store a HomeSpan Characteristic requires you to define it as ``SpanCharacteristic *`` as shown below:
+
+```C++
+struct TableLamp : Service::LightBulb {};
+
+  int lampPin;                               // store the pin number connected to a hypothetical relay that turns the Table Lamp on/off
+  SpanCharacteristic *lampPower;             // store a reference to the On Characteristic
+  
+  TableLamp(int lampPin) : Service::LightBulb(){       // constructor() method for TableLamp defined with one parameter.  Note we also call the constructor() method for the LightBulb Service.
+
+    lampPower=new Characteristic::On();      // instantiate the On Characteristic and save it as lampPower
+    this->lampPin=lampPin;                   // save the pin number for the hypothetical relay
+    pinMode(lampPin,OUTPUT);                 // configure the pin as an output using the standard Arduino pinMode function                       
+    
+  } // end constructor
+};
+```
+
+
+
+
+
+
+
 
 
 
