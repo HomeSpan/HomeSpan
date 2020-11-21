@@ -103,12 +103,12 @@ void setup() {
     new Characteristic::RotationSpeed(100);   // initialize default speed to be 100%
     new Characteristic::RotationDirection();
    new Service::LightBulb();
-    new Characteristics::On();
+    new Characteristic::On();
     
   new SpanAccessory()        // Table Lamp with Dimmable Light
    new Service::LightBulb();
     new Characteristic::On();
-    new Characteristics::Brightness(50);     // initializes default brightness to be 50%
+    new Characteristic::Brightness(50);     // initializes default brightness to be 50%
   
 } // end of setup()
 
@@ -119,12 +119,49 @@ void loop(){
 } // end of loop()
 ```
 
-As you can see, you do not need to name any objects, or specify any HAP parameters, such a format types, UUID codes, etc.  However, the ORDER in which you instantiate objects is critical.  Characteristics are automatically associated with the last Service instantiated, and Services are automatically associated with the last Accessory instantiated.
+As you can see, you do not need to name any objects, or specify any HAP parameters, such a format types, UUID codes, etc.  However, the *order* in which you instantiate objects is critical.  Characteristics are automatically associated with the last Service instantiated, and Services are automatically associated with the last Accessory instantiated.
 
-> HomeSpan has extensive error checking.  At start-up, HomeSpan will validate the configuration of the HAP Accessory Attribute Database to ensure that every Accessory has all the required Services, and each Service has all the required Characteristics.  If HomeSpan finds an Accessory is missing a required Service, a Service is missing a required Characteristic, or a Characteristic that is neither required nor optional has been added to a Service that does not support that Characteristic, HomeSpan will report these errors and halt the program.
+> HomeSpan has extensive error checking.  At start-up, HomeSpan will validate the configuration of the HAP Accessory Attribute Database you instantiated to ensure that every Accessory has all the required Services, and that each Service has all its required Characteristics.  If HomeSpan finds an Accessory is missing a required Service, a Service is missing a required Characteristic, or a Characteristic that is neither required nor optional has been added to a Service that does not support that Characteristic, HomeSpan will report these errors and halt the program.
 
-In fact, if you tried to run the above sketch you would find it failed to validate.  That's because each Accessory is missing two required Services - the HAP Accessory Information Service, and the HAP Protcol Information Service.  See the [Tutorials](Tutorials.md) for full completed and valid configurations that include these required HAP Services.
+In fact, if you tried to run the above sketch you would find it failed to validate.  That's because each Accessory is missing two required Services - the HAP Accessory Information Service, and the HAP Protcol Information Service.  See the [Tutorials](Tutorials.md) for full completed and valid configurations that include these required HAP Services, such as this complete, working example for a simple table lamp:
 
+```C++
+#include "HomeSpan.h"         // include the HomeSpan library
+
+void setup() {     
+ 
+  Serial.begin(115200);       // start the Serial interface
+  
+  homeSpan.begin();           // initialize HomeSpan
+
+  new SpanAccessory();           // Table Lamp Accessory
+  
+    new Service::AccessoryInformation();            // HAP requires every Accessory to implement an AccessoryInformation Service, with 6 *required* Characteristics
+      new Characteristic::Name("My Table Lamp");      // Name of the Accessory, which shows up on the HomeKit "tiles", and should be unique across Accessories                                                    
+      new Characteristic::Manufacturer("HomeSpan");   // Manufacturer of the Accessory (arbitrary text string, and can be the same for every Accessory)
+      new Characteristic::SerialNumber("123-ABC");    // Serial Number of the Accessory (arbitrary text string, and can be the same for every Accessory)
+      new Characteristic::Model("120-Volt Lamp");     // Model of the Accessory (arbitrary text string, and can be the same for every Accessory)
+      new Characteristic::FirmwareRevision("0.9");    // Firmware of the Accessory (arbitrary text string, and can be the same for every Accessory)  
+      new Characteristic::Identify();                 // Provides a hook that allows a HomeKit Client to identify the device
+  
+    new Service::HAPProtocolInformation();          // HAP requires every Accessory (except those in a bridfge) to implement a Protcol Information Service  
+      new Characteristic::Version("1.1.0");           // Set the Version Characteristic to "1.1.0," which is required by HAP
+      
+    new Service::LightBulb();                       // Create the Light Bulb Service
+      new Characteristic::On();                       // Characteristic that stores that state of the light bulb: ON or OFF
+  
+} // end of setup()
+
+void loop(){
+
+ homeSpan.poll(); 
+
+} // end of loop()
+```
+
+## Connecting HomeSpan to the Real World Appliances
+
+A HomeSpan device that has been configured properly
 
 
 
