@@ -291,5 +291,7 @@ void loop(){
 
 This fully working example is ready to be uploaded to your ESP32 device where is can be used to operate a hypothetical table lamp connected by a relay to pin 17.  Alternatively, you can simply connect an LED to pin 17 and see how it works!  Congratulations, you've created your first HomeSpan Sketch.
 
+---
 
+[↩️](README.md) Back to the Welcome page
 
