@@ -6,7 +6,15 @@ HomeSpan includes a light-weight Command-Line Interface (CLI) for developers tha
 
 #### Startup Diagnostics
 
-At startup, HomeSpan displays a welcome message, reminds you to set the line ending to <newline>, performs various initialization routines, provides some general information about the device, and outputs information about the Accessories, Services, and Characteristics you've instantiated in the sketch to create your HAP Accessory Attribute Database.  If there are any errors with how you constructed your HAP Database, HomeSpan will report them and halt the program. 
+At startup, HomeSpan:
+
+* displays a Welcome Message,
+* reminds you to set the line ending to <newline>,
+* performs various initialization routines,
+* provides some general information about the device, and
+* outputs information about the Accessories, Services, and Characteristics you've instantiated in the sketch to create your HAP Accessory Attribute Database.
+  
+If there are any errors with how you constructed your HAP Database, HomeSpan will report them and **halt** the program. 
 
 Next, HomeSpan checks to see if the device has been configured with WiFi Credentials.  If none are found, HomeSpan will indicate this, and then complete its initialization routine by indicating is now READY.  If WiFi Credentials are found, HomeSpan will repeatedly try to connect to the specified network until it either succeeds (in which case it then completes its initialization routine by indicating it is now READY), or you cancel the process by typing `X <return>` (in which case HomeSpan erases its stored WiFi Credentials and restarts).
 
@@ -19,11 +27,14 @@ In the READY state, if HomeSpan is connected to a WiFi network it will begin to 
 In addition to listening for incoming HAP requests, HomeSpan also continuously polls the Serial Monitor for characters you may type.  Note that the Serial Monitor does not actually transmit the characters you type to the device until you hit <return>.  All HomeSpan commands are a single character, and HomeSpan will ignore all but the first charcacter when parsing command requests, with the exception of those commands that also include a value.  HomeSpan supports the following commands:
   
 * **s** - print connection status
-  * HomeSpan supports connections from more than one HomeKit Controller at the same time (the default is 8 simultaneous connection "slots").  This command provides information on all of the Controllers that have open connections to HomeSpan at any given time, and indictes which slots are currently unconnected.  If a Controller tries to connect to HomeSpan when all connection slots are already occupied, HomeSpan will terminate an existing connection and re-assign the slot the requesting Controller.
+  * HomeSpan supports connections from more than one HomeKit Controller (e.g. a HomePod, or the Home App on an iPhone) at the same time (the default is 8 simultaneous connection *slots*).  This command provides information on all of the Controllers that have open connections to HomeSpan at any given time, and indictes which slots are currently unconnected.  If a Controller tries to connect to HomeSpan when all connection slots are already occupied, HomeSpan will terminate an existing connection and re-assign the slot the requesting Controller.
   
-Here's a simple footnote,[^1] and here's a longer one.[^bignote]
+* **i** - print summary information about the HAP Database
+  * This provides an outline of the device's HAP Database showing all Accessories, Services, and Characteristics you instantiated in your HomeSpan sketch, followed by a table showing whether you have overridden any of the virtual methods for each Service.  Note this output is also provided at startup after the Welcome Message as HomeSpan check the database for errors.
+  
+  
+  
 
-[^1]: This is the first footnote.  
 
 
 1. If yocharacters have been received from the Serial Monitor, process the requested command (see below) into the Serial Monitor
