@@ -230,10 +230,10 @@ new Service::LightBulb();                       // Create the Light Bulb Service
 with the instantiation of the TableLamp Service as such:
 
 ```C++
-new TableLamp(13);
+new TableLamp(17);
 ```
 
-where 13 specifies the ESP32 pin number that is connected to the hypothetical relay used to turn the Table Lamp on and off.  Our completed HomeSpan sketch looks like this:
+where 17 specifies the ESP32 pin number that is connected to the hypothetical relay used to turn the Table Lamp on and off.  Our completed HomeSpan sketch looks like this:
 
 ```C++
 /* HomeSpan Table Lamp Example */
@@ -282,7 +282,7 @@ void setup() {
     new Service::HAPProtocolInformation();          // HAP requires every Accessory (except those in a bridge) to implement a Protcol Information Service  
       new Characteristic::Version("1.1.0");           // Set the Version Characteristic to "1.1.0," which is required by HAP
       
-   new TableLamp(13);                               // instantiate the TableLamp Service (defined below) with lampPin set to 17
+   new TableLamp(17);                               // instantiate the TableLamp Service (defined below) with lampPin set to 17
   
 } // end of setup()
 
