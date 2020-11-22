@@ -146,7 +146,7 @@ void setup() {
       new Characteristic::FirmwareRevision("0.9");    // Firmware of the Accessory (arbitrary text string, and can be the same for every Accessory)  
       new Characteristic::Identify();                 // Provides a hook that allows a HomeKit Client to identify the device
   
-    new Service::HAPProtocolInformation();          // HAP requires every Accessory (except those in a bridfge) to implement a Protcol Information Service  
+    new Service::HAPProtocolInformation();          // HAP requires every Accessory (except those in a bridge) to implement a Protcol Information Service  
       new Characteristic::Version("1.1.0");           // Set the Version Characteristic to "1.1.0," which is required by HAP
       
     new Service::LightBulb();                       // Create the Light Bulb Service
@@ -178,7 +178,7 @@ struct TableLamp : Service::LightBulb {};
 Within this new structure we can create our own constructor, potentially with one or more arguments.  The constructor can store some device-specific parameters, such as the number of the ESP32 pin that will be used to drive the relay that turns on and off the table lamp.  The constructor should also define all the Characteristics required by the Service.  You will also want to save at least some Characteristic objects as named variables so they can be referenced later in the `update()` method.  The base class for all HomeSpan Characteristics is `SpanCharacteristic`, so creating a variable to store a HomeSpan Characteristic requires you to define it as ``SpanCharacteristic *``.  Putting it all together, we have, so far:
 
 ```C++
-struct TableLamp : Service::LightBulb {};
+struct TableLamp : Service::LightBulb{
 
   int lampPin;                               // store the pin number connected to a hypothetical relay that turns the Table Lamp on/off
   SpanCharacteristic *lampPower;             // store a reference to the On Characteristic
@@ -196,7 +196,7 @@ struct TableLamp : Service::LightBulb {};
 Now we are ready to implement our `update()` method.  Though `update()` takes no arguments, it does have a boolean return value, which lets HomeKit know whether its request to update the Table Lamp was successful (true) or unsuccessful (false).  Within the `update()` method you'll have access to all the Characteristics in the Service, which is this case is just the On Characterisrtic we named lampPower.  HomeSpan Characteristics implement a variety of methods that provide information on the status of the Characteristics, whether there is a request that they be updated, and what the update value should be.  Since our TableLamp Service only defines a single Characteristic that means whenever `update()` is called there must have been a request by HomeKit to update the On Characteristic and we do not have to check to see if it is being updated.  However, we do need to know the value that HomeKit is requesting.  To retrieve this value we use the getNewVal() method as such: `lampPower->getNewVal()`.  This returns the new value for the On Characteristic requested by HomeKit.  This will either be true (1) or false (0) depending on whether HomeKit would like the light turned on or off.  We can thus use this value to update the lampPin accordingly.  Our complete TableLamp Service now looks like this:
 
 ```C++
-struct TableLamp : Service::LightBulb {};
+struct TableLamp : Service::LightBulb{
 
   int lampPin;                               // store the pin number connected to a hypothetical relay that turns the Table Lamp on/off
   SpanCharacteristic *lampPower;             // store a reference to the On Characteristic
@@ -220,7 +220,7 @@ struct TableLamp : Service::LightBulb {};
 };
 ```
 
-Finally, we append our derived TableLamp Service to the original sketch and replace the instantiation of our generic LightBulb Service and On Characteristic:
+Finally, we prepend our derived TableLamp Service to the original sketch and replace the instantiation of our generic LightBulb Service and On Characteristic:
 
 ```C++
 new Service::LightBulb();                       // Create the Light Bulb Service
@@ -240,36 +240,7 @@ where 13 specifies the ESP32 pin number that is connected to the hypothetical re
 
 #include "HomeSpan.h"         // include the HomeSpan library
 
-void setup() {     
- 
-  Serial.begin(115200);       // start the Serial interface
-  
-  homeSpan.begin();           // initialize HomeSpan
-
-  new SpanAccessory();           // Table Lamp Accessory
-  
-    new Service::AccessoryInformation();            // HAP requires every Accessory to implement an AccessoryInformation Service, with 6 *required* Characteristics
-      new Characteristic::Name("My Table Lamp");      // Name of the Accessory, which shows up on the HomeKit "tiles", and should be unique across Accessories                                                    
-      new Characteristic::Manufacturer("HomeSpan");   // Manufacturer of the Accessory (arbitrary text string, and can be the same for every Accessory)
-      new Characteristic::SerialNumber("123-ABC");    // Serial Number of the Accessory (arbitrary text string, and can be the same for every Accessory)
-      new Characteristic::Model("120-Volt Lamp");     // Model of the Accessory (arbitrary text string, and can be the same for every Accessory)
-      new Characteristic::FirmwareRevision("0.9");    // Firmware of the Accessory (arbitrary text string, and can be the same for every Accessory)  
-      new Characteristic::Identify();                 // Provides a hook that allows a HomeKit Client to identify the device
-  
-    new Service::HAPProtocolInformation();          // HAP requires every Accessory (except those in a bridfge) to implement a Protcol Information Service  
-      new Characteristic::Version("1.1.0");           // Set the Version Characteristic to "1.1.0," which is required by HAP
-      
-   new TableLamp(13);                               // instantiate the TableLamp Service (defined below) with lampPin set to 17
-  
-} // end of setup()
-
-void loop(){
-
- homeSpan.poll(); 
-
-} // end of loop()
-
-struct TableLamp : Service::LightBulb {};
+struct TableLamp : Service::LightBulb{
 
   int lampPin;                               // store the pin number connected to a hypothetical relay that turns the Table Lamp on/off
   SpanCharacteristic *lampPower;             // store a reference to the On Characteristic
@@ -291,6 +262,35 @@ struct TableLamp : Service::LightBulb {};
   } // end update()
   
 };
+
+void setup() {     
+ 
+  Serial.begin(115200);       // start the Serial interface
+  
+  homeSpan.begin();           // initialize HomeSpan
+
+  new SpanAccessory();           // Table Lamp Accessory
+  
+    new Service::AccessoryInformation();            // HAP requires every Accessory to implement an AccessoryInformation Service, with 6 *required* Characteristics
+      new Characteristic::Name("My Table Lamp");      // Name of the Accessory, which shows up on the HomeKit "tiles", and should be unique across Accessories                                                    
+      new Characteristic::Manufacturer("HomeSpan");   // Manufacturer of the Accessory (arbitrary text string, and can be the same for every Accessory)
+      new Characteristic::SerialNumber("123-ABC");    // Serial Number of the Accessory (arbitrary text string, and can be the same for every Accessory)
+      new Characteristic::Model("120-Volt Lamp");     // Model of the Accessory (arbitrary text string, and can be the same for every Accessory)
+      new Characteristic::FirmwareRevision("0.9");    // Firmware of the Accessory (arbitrary text string, and can be the same for every Accessory)  
+      new Characteristic::Identify();                 // Provides a hook that allows a HomeKit Client to identify the device
+  
+    new Service::HAPProtocolInformation();          // HAP requires every Accessory (except those in a bridge) to implement a Protcol Information Service  
+      new Characteristic::Version("1.1.0");           // Set the Version Characteristic to "1.1.0," which is required by HAP
+      
+   new TableLamp(13);                               // instantiate the TableLamp Service (defined below) with lampPin set to 17
+  
+} // end of setup()
+
+void loop(){
+
+ homeSpan.poll(); 
+
+} // end of loop()
 ```
 
 
