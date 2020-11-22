@@ -21,6 +21,9 @@ In addition to listening for incoming HAP requests, HomeSpan also continuously p
 * **s** - print connection status
   * HomeSpan supports connections from more than one HomeKit Controller at the same time (the default is 8 simultaneous connection "slots").  This command provides information on all of the Controllers that have open connections to HomeSpan at any given time, and indictes which slots are currently unconnected.  If a Controller tries to connect to HomeSpan when all connection slots are already occupied, HomeSpan will terminate an existing connection and re-assign the slot the requesting Controller.
   
+Here's a simple footnote,[^1] and here's a longer one.[^bignote]
+
+[^1]: This is the first footnote.  
 
 
 1. If yocharacters have been received from the Serial Monitor, process the requested command (see below) into the Serial Monitor
