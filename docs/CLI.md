@@ -2,6 +2,18 @@
 
 HomeSpan includes a light-weight Command-Line Interface (CLI) for developers that can be accessed via the Arduino Serial Monitor whenever your Homespan device is connected to a computer by selecting *Tools → Serial Monitor* from the top menu bar of the Arduino IDE.  The HomeSpan CLI allows you view real-time HomeSpan diagnostics, query the device's operating status, inspect its HAP database, and perform some basic functions, such as initiating a Factory Reset.  Most importantly, the CLI can be used to configure HomeSpan's network connectivity and its HomeKit Setup Code.
 
+#### Startup Diagnostics
+
+At startup, HomeSpan displays a welcome message, provides some general information about the device, and outputs information about the Accessories, Services, and Characteristics you've instantiated in the sketch to create your HAP Accessory Attribute Database.  If there are any errors with how you constructed the HAP Database, HomeSpan will report them and then halt the program.
+
+If there are no errors, HomeSpan will next provide information about the Accessory ID of your device (or create one if this is a new device), the IDs of any controllers that have been paired to your device (if any), and the long-term public keys (LTPK) associated with each device.  Under normal operations, you will not need any of this information.  Note that this data is stored in a special Non-Volatile Storage (NVS) partition in the ESP32's flash memory and is therefore retained even if the device is re-programmed.  See the HomeSpan NVS section below for details.
+
+Lastly, HomeSpan will report an Accessory configuration number.  This number is also stored in NVS and is incremented every time you make a change to construction of your HAP Database in the HomeSpan sketch.  For example, adding a new Service or changing the initial value of a Characteristic will result in a new configurartion number.  Changing any other portion of sketch does not cause the configuratin number to be incremented.  This value is broadcast by HomeSpan to all HomeKit controllers so that the controllers know when to ask for a full refresh of the the HAP Database from your device.
+
+#### WiFi Connectivity
+
+
+
 #### WiFi Credentials and HomeKit Setup Codes
 
 Though HomeSpan devices can be used on a standalone basis, to control the a HomeSpan device through Apple HomeKit (which is the whole point of HomeSpan), the device needs to be connected to a WiFi network.  This means HomeSpan needs to know your home WiFi network name and WiFi password. HomeSpan refers to these are your *WiFi Credentials*.  Rather then requiring you to hardcode your WiFi Credentials as part of every HomeSpan sketch (which is neither secure nor easy to update), HomeSpan stores your WiFi Credentials in a non-volatile storage (NVS) partition in the ESP32 that is reserved as part of the flash memory on the device, similar to how an EEPROM would operate.  You can set, change, and even erase, the WiFi Credentials stored on any HomeSpan device directly from the HomeSpan CLI without ever modifying the code, or even having access to the code.
