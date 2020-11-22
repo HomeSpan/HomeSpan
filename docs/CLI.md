@@ -36,8 +36,13 @@ In addition to listening for incoming HAP requests, HomeSpan also continuously p
   * This outputs the full HAP Database in JSON format, exactly as it is transmitted to any HomeKit device that requests it (with the exception of the newlines and spaces that make it easier to read on the screen).  Note that the value tag for each Characteristic will reflect the *current* value on the device for that Characteristic.
   
 * **W** - configure WiFi Credentials and restart
-  * HomeSpan sketches *do not* contain WiFi network names or WiFi passwords.  Rather, this information is separately stored in a dedicated Non-Volatile Storage (NVS) partition in the ESP32's flash memory, where it is permanently retained until updated (with this command) or erased (see below).  When HomeSpan receives this command it first scans for any local WiFi networks.  If your network is found, you can specify it by number when prompted for the WiFi SSID.  Otherwise, you can directly type your WiFi network name.  After you then type your WiFi Password, HomeSpan updates the NVS with these new WiFi Credentials, and [restarts the device](#startup-diagnostics).
+  * HomeSpan sketches *do not* contain WiFi network names or WiFi passwords.  Rather, this information is separately stored in a dedicated Non-Volatile Storage (NVS) partition in the ESP32's flash memory, where it is permanently retained until updated (with this command) or erased (see below).  When HomeSpan receives this command it first scans for any local WiFi networks.  If your network is found, you can specify it by number when prompted for the WiFi SSID.  Otherwise, you can directly type your WiFi network name.  After you then type your WiFi Password, HomeSpan updates the NVS with these new WiFi Credentials, and restarts the device.
   
+* **X** - delete WiFi Credentials and restart
+  * This command deletes whatever WiFi Credentials have been stored in the device NVS, and restarts.
+  
+* **A** - start HomeSpan Setup Access Point
+  * This command starts HomeSpan's temporary Access Point, which provides users with an alternate methods for configuring a device's WiFi Credentials and HomeKit Setup Code.  Starting the Access Point with this command is identical to starting it via the Control Button.  See the [HomeSpan User Guide](UserGuide.md) for complete details.
   
 
 
