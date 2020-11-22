@@ -41,14 +41,14 @@ Though the device is now programmed and fully operational, it needs to be config
 
 ## Adding a Control Button and Status LED (*optional*)
 
-In addition to being able to configure a HomeSpan device using the [HomeSpan CLI](CLI.md) from the Arduino Serial Monitor, HomeSpan provides an alternative method for end-users to configure standalone HomeSpan device that is not connected to a computer.  This method requires the installation of two external components:
+In addition to being able to configure a HomeSpan device using the [HomeSpan CLI](CLI.md) via the Arduino Serial Monitor, HomeSpan provides an alternative method for end-users to configure a standalone HomeSpan device that is not connected to a computer.  This method requires the installation of two external components:
 
 1. a normally-open single-pole pushbutton to function as the HomeSpan Control Button, and
 1. an LED to function as the HomeSpan Status LED.
 
-The Control Button should be installed between the HomeSpan Control Pin on the ESP32 and ground.  The HomeSpan Control Pin defaults to pin 21, but can be set to any other pin during HomeSpan initializaton (see the [HomeSpan API Reference](Reference.md) for details).  The LED can similarly be connected to any pin you specify, but defaults to the LED_BUILTIN pin defined for your ESP32 board, in which case you can use your boards built-in LED and avoid having to install a separate LED.
+The Control Button should be installed between the HomeSpan Control Pin on the ESP32 and ground.  The HomeSpan Control Pin defaults to pin 21, but can be set to any other pin during HomeSpan initializaton (see the [HomeSpan API Reference](Reference.md) for details).  The LED can similarly be connected to any pin you specify, but defaults to the LED_BUILTIN pin defined for your ESP32 board, in which case you can use your board's built-in LED and avoid having to install a separate LED.
 
-The use of these two components to configure a standalone HomeSpan device, including starting HomeSpan's temporary WiFi network to configure the device's WiFi Credentials and HomeKit Setup Code, are fully explained in the [Home User Guide](UserGuide.md).
+The use of these two components to configure a standalone HomeSpan device, including starting HomeSpan's temporary WiFi network to configure the device's WiFi Credentials and HomeKit Setup Code, are fully explained in the [HomeSpan User Guide](UserGuide.md).
 
 ## What Next?
 
@@ -60,7 +60,7 @@ Ready to start creating your own HomeSpan sketches?  Check out the [HomeSpan Ser
 
 While developing your sketch remember to utilize the Arduino Serial Monitor.  HomeSpan produces extensive diagnostics that will help you debug your sketches as well as monitor all aspects of the HomeSpan device.  You'll also be able to control various aspects of HomeSpan from the Serial Monitor using the [Command-Line Interface (CLI)](CLI.md), including configuring the device's WiFi Credentials and HomeKit Setup Code
 
-Finally, disconnect your HomeSpan device from the computer and power it directly from a wall adapter.  After all, HomeSpan devices are designed to run on a standalone basis connected to real-world applicances like lights, fans, door locks, and window shades.  See the [Home User Guide](UserGuide.md) for end-user instructions on how to operate and configure a standlone HomeSpan device's WiFi Credentials and HomeKit Setup Code *without the need to connect the device to a computer*.
+Finally, disconnect your HomeSpan device from the computer and power it directly from a wall adapter.  After all, HomeSpan devices are designed to run on a standalone basis connected to real-world applicances like lights, fans, door locks, and window shades.  See the [HomeSpan User Guide](UserGuide.md) for end-user instructions on how to operate and configure a standlone HomeSpan device's WiFi Credentials and HomeKit Setup Code *without the need to connect the device to a computer*.
 
 ---
 
