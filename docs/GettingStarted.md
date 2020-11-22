@@ -39,13 +39,24 @@ After compilation and uploading completes, HomeSpan will report a variety of ini
 
 Though the device is now programmed and fully operational, it needs to be configured with WiFi Credentials and a HomeKit Setup Code before it can be paired to your HomeKit account.  See HomeSpan's [Command-Line Interface (CLI)](CLI.md) page for details on how to configure HomeSpan via the Arduino Serial Monitor.  Once the device is connected to your WiFi network, HomeSpan is now ready to be paired from the Home App on your iPhone!
 
+## Adding a Control Button and Status LED (*optional*)
+
+In addition to being able to configure a HomeSpan device using the [HomeSpan CLI](CLI.md) from the Arduino Serial Monitor, HomeSpan provides an alternative method for end-users to configure standalone HomeSpan device that is not connected to a computer.  This method requires the installation of two external components:
+
+1. a normally-open single-pole pushbutton to function as the HomeSpan Control Button, and
+1. an LED to function as the HomeSpan Status LED.
+
+The Control Button should be installed between the HomeSpan Control Pin on the ESP32 and ground.  The HomeSpan Control Pin defaults to pin 21, but can be set to any other pin during HomeSpan initializaton (see the [HomeSpan API Reference](Reference.md) for details).  The LED can similarly be connected to any pin you specify, but defaults to the LED_BUILTIN pin defined for your ESP32 board, in which case you can use your boards built-in LED and avoid having to install a separate LED.
+
+The use of these two components to configure a standalone HomeSpan device, including starting HomeSpan's temporary WiFi network to configure the device's WiFi Credentials and HomeKit Setup Code, are fully explained in the [Home User Guide](UserGuide.md).
+
 ## What Next?
 
-If you've not yet read through the [HomeSpan Overview](Overview.md) page, you should do so now so you'll have a good understanding of the framework for operating and programming HomeSpan devices.  If you are new to HomeKit development, you may also want to read through HomeSpan's [HomeKit Primer](HomeKitPrimer.md), which should provide you with some important foundational knowledge about HomeKit itself.
+If you've not yet read through the [HomeSpan API Overview](Overview.md) page, you should do so now so you'll have a good understanding of the framework for developing HomeSpan sketches.  If you are new to HomeKit development, you may also want to read through HomeSpan's [HomeKit Primer](HomeKitPrimer.md), which should provide you with some important foundational knowledge about HomeKit itself.
 
-Next, explore the tutorial sketches, upload a few, and see how they work. The examples start simple and grow in complexity, taking you through all the functions and features of HomeSpan.  Along the way you'll also learn a lot of HomeKit tips and tricks.  See [HomeSpan Tutorials](Tutorials.md) for a summary of all the included examples.  Find something in a sketch you don't understand?  Visit the [HomeSpan Library Reference](Reference.md) for details on all HomeSpan objects, functions, and methods.
+Next, explore the tutorial sketches, upload a few, and see how they work. The examples start simple and grow in complexity, taking you through all the functions and features of HomeSpan.  Along the way you'll also learn a lot of HomeKit tips and tricks.  See [HomeSpan Tutorials](Tutorials.md) for a summary of all the included examples.  Find something in a sketch you don't understand?  Visit the [HomeSpan API Reference](Reference.md) for details on all HomeSpan objects, functions, and methods.
 
-Ready to start creating your own HomeSpan sketches?  Check out the [HomeSpan Services and Characteristics](ServiceList.md) page for a full list of all the HomeKit Services and Characteristics supported by HomeSpan, as well as the [HomeSpan Categories](Categories.md) page fpr a list of all supported HomeKit Categories.  And don't forget to use Apple's [HomeKit Accessory Protocol Specification, Release R2 (HAP-R2)](https://developer.apple.com/support/homekit-accessory-protocol/) as your go-to reference for details on every Service and Characteristic.
+Ready to start creating your own HomeSpan sketches?  Check out the [HomeSpan Services and Characteristics](ServiceList.md) page for a full list of all the HomeKit Services and Characteristics supported by HomeSpan, as well as the [HomeSpan Categories](Categories.md) page for a list of all supported HomeKit Categories.  And don't forget to use Apple's [HomeKit Accessory Protocol Specification, Release R2 (HAP-R2)](https://developer.apple.com/support/homekit-accessory-protocol/) as your go-to reference for details on every Service and Characteristic.
 
 While developing your sketch remember to utilize the Arduino Serial Monitor.  HomeSpan produces extensive diagnostics that will help you debug your sketches as well as monitor all aspects of the HomeSpan device.  You'll also be able to control various aspects of HomeSpan from the Serial Monitor using the [Command-Line Interface (CLI)](CLI.md), including configuring the device's WiFi Credentials and HomeKit Setup Code
 
