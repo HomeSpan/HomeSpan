@@ -175,7 +175,7 @@ Every HomeSpan Service implements a virtual `update()` method that by default do
 struct TableLamp : Service::LightBulb {};
 ```
 
-Within this new structure we can create our own constructor, potentially with one or more arguments.  The constructor can store some device-specific parameters, such as the number of the ESP32 pin that will be used to drive the relay that turns on and off the table lamp.  The constructor should also define all the Characteristics required by the Service.  You will also want to save at least some of Characteristic objects as named variables so they can be referenced later in the `update()` method.  The base class for all HomeSpan Characteristics is `SpanCharacteristic`, so creating a variable to store a HomeSpan Characteristic requires you to define it as ``SpanCharacteristic *`` as shown below:
+Within this new structure we can create our own constructor, potentially with one or more arguments.  The constructor can store some device-specific parameters, such as the number of the ESP32 pin that will be used to drive the relay that turns on and off the table lamp.  The constructor should also define all the Characteristics required by the Service.  You will also want to save at least some Characteristic objects as named variables so they can be referenced later in the `update()` method.  The base class for all HomeSpan Characteristics is `SpanCharacteristic`, so creating a variable to store a HomeSpan Characteristic requires you to define it as ``SpanCharacteristic *``.  Putting it all together, we have, so far:
 
 ```C++
 struct TableLamp : Service::LightBulb {};
@@ -192,6 +192,34 @@ struct TableLamp : Service::LightBulb {};
   } // end constructor
 };
 ```
+
+Now we are ready to implement our `update()` method.  Though `update()` takes no arguments, it does have a boolean return value, which lets HomeKit know whether its request to update the Table Lamp was successful (true) or unsuccessful (false).  Within the `update()` method you'll have access to all the Characteristics in the Service, which is this case is just the On Characterisrtic we named lampPower.  HomeSpan Characteristics implement a variety of methods that provide information on the status of the Characteristics, whether there is a request that they be updated, and what the update value should be.  Since our TableLamp Service only defines a single Characteristic that means whenever `update()` is called there must have been a request by HomeKit to update the On Characteristic and we do not have to check to see if it is being updated.  However, we do need to know the value that HomeKit is requesting.  To retrieve this value we use the getNewVal() method as such: `lampPower->getNewVal()`.  This returns the new value for the On Characteristic requested by HomeKit.  This will either be true (1) or false (0) depending on whether HomeKit would like the light turned on or off.  We can thus use this value to update the lampPin accordingly.  Our complete TableLamp Service now looks like this:
+
+```C++
+struct TableLamp : Service::LightBulb {};
+
+  int lampPin;                               // store the pin number connected to a hypothetical relay that turns the Table Lamp on/off
+  SpanCharacteristic *lampPower;             // store a reference to the On Characteristic
+  
+  TableLamp(int lampPin) : Service::LightBulb(){       // constructor() method for TableLamp defined with one parameter.  Note we also call the constructor() method for the LightBulb Service.
+
+    lampPower=new Characteristic::On();      // instantiate the On Characteristic and save it as lampPower
+    this->lampPin=lampPin;                   // save the pin number for the hypothetical relay
+    pinMode(lampPin,OUTPUT);                 // configure the pin as an output using the standard Arduino pinMode function                       
+    
+  } // end constructor()
+  
+  boolean update(){                              // update() method
+
+    digitalWrite(ledPin,power->getNewVal());     // use standard Arduino digitalWrite function to change the ledPin to either high or low based on the value requested by HomeKit
+   
+    return(true);                               // return true to let HomeKit (and the Home App Client) know the update was successful
+  
+  } // end update()
+  
+};
+```
+
 
 
 
