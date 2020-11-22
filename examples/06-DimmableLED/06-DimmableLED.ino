@@ -30,7 +30,7 @@
 //    HomeSpan: A HomeKit implementation for the ESP32    //
 //    ------------------------------------------------    //
 //                                                        //
-// Example 6: One working on/off LEDs and one working     //
+// Example 6: One working on/off LED and one working     //
 //            dimmable LED, both based on the LightBulb   //
 //            Service                                     //
 //                                                        //
