@@ -4,7 +4,7 @@ HomeSpan includes a light-weight Command-Line Interface (CLI) for developers tha
 
 > When using the Serial Monitor, please make sure you set the baud rate to match whatever you specified in the `Serial.begin()` function in your HomeSpan sketch.  In addition, you'll need to set the Serial Monitor to transmit <newlines> as the line ending.
 
-#### Startup Diagnostics
+### Startup Diagnostics
 
 At startup, HomeSpan:
 
@@ -18,11 +18,11 @@ If there are any errors with how you constructed your HAP Database, HomeSpan wil
 
 Next, HomeSpan checks to see if the device has been configured with WiFi Credentials.  If none are found, HomeSpan will indicate this, and then complete its initialization routine by indicating is now READY.  If WiFi Credentials are found, HomeSpan will repeatedly try to connect to the specified network until it either succeeds (in which case it then completes its initialization routine by indicating it is now READY), or you cancel the process by typing `X <return>` (in which case HomeSpan erases its stored WiFi Credentials and restarts).
 
-#### Log Levels
+### Log Levels
 
 In the READY state, if HomeSpan is connected to a WiFi network it will begin to listen for, and process, any incoming HomeKit HAP requests.  As each request is received and processed, HomeSpan provides diagnostic output depending on the Message Log Level, which ranges from 0 (minimal diagnostics) to 2 (hyper-detailed diganostics).  The default Message Log Level is 0, but this can be changed either in your HomeSpan sketch (see the [HomeSpan API Reference](Reference.md) for details), or during run time as described in the next section
 
-#### HomeSpan Commands
+### HomeSpan Commands
 
 In addition to listening for incoming HAP requests, HomeSpan also continuously polls the Serial Monitor for characters you may type.  Note that the Serial Monitor does not actually transmit the characters you type to the device until you hit <return>.  All HomeSpan commands are a single character, and HomeSpan will ignore all but the first charcacter when parsing command requests, with the exception of those commands that also include a value.  HomeSpan supports the following commands:
   
@@ -32,12 +32,14 @@ In addition to listening for incoming HAP requests, HomeSpan also continuously p
 * **i** - print summary information about the HAP Database
   * This provides an outline of the device's HAP Database showing all Accessories, Services, and Characteristics you instantiated in your HomeSpan sketch, followed by a table showing whether you have overridden any of the virtual methods for each Service.  Note this output is also provided at startup after the Welcome Message as HomeSpan check the database for errors.
   
+* **d** - print the full HAP Accessory Attributes Database in JSON format
+  * This outputs the full HAP Database in JSON format, exactly as it is transmitted to any HomeKit device that requests it (with the exception of the newlines and spaces that make it easier to read on the screen).  Note that the value tag for each Characteristic will reflect the *current* value on the device for that Characteristic.
+  
+
   
   
+  
 
-
-
-1. If yocharacters have been received from the Serial Monitor, process the requested command (see below) into the Serial Monitor
 
 #### WiFi Credentials and HomeKit Setup Codes
 
