@@ -1,18 +1,6 @@
-# HomeSpan Overview
+# HomeSpan API Overview
 
 *Note: This page references a lot of HomeKit HAP terminology.  If you are new to HomeKit development, you may want to start by first reviewing the [HomeKit Primer](HomeKitPrimer.md) page.*
-
-HomeSpan is an Arduino-style C++ library designed for ESP32 devices to take on the role of a *HAP Accessory Server* (i.e. a HomeKit Device), which allows the device to be paired to, and communicate with, any *HAP Client*, such as Apple's Home App on an iPhone, iPad, or Mac.
-
-There are three primary components of HomeSpan:
-
-1. **The HomeSpan API** - a collection of objects, methods, and functions you implement inside an Arduino-style sketch to create your HomeKit device.
-
-1. **The HomeSpan Command-Line Interface (CLI)** - a series of diagnostics that HomeSpan outputs to the Arduino Serial Monitor, and a series of commands you can enter into the Serial Monitor to request more diagnostic information, to perform some basic housekeeping functions (such as a Factory Reset), and to configure the device with WiFi Credentials and a HomeKit Setup Code.
-
-1. **An End-User Environment** - allows an end-user to configure a standalone HomeSpan device using only a simple Control Button and the device's Status LED
-
-# Overview of the HomeSpan API
 
 The basic structure of a HomeSpan sketch is as follows:
 
@@ -233,12 +221,16 @@ with the instantiation of the TableLamp Service as such:
 new TableLamp(17);
 ```
 
-where 17 specifies the ESP32 pin number that is connected to the hypothetical relay used to turn the Table Lamp on and off.  Our completed HomeSpan sketch looks like this:
+where 17 specifies the ESP32 pin number that is connected to the hypothetical relay used to turn the Table Lamp on and off.
+
+Our completed HomeSpan sketch to operate a Table Lamp looks like this:
 
 ```C++
 /* HomeSpan Table Lamp Example */
 
 #include "HomeSpan.h"         // include the HomeSpan library
+
+//// Define the TableLamp Service ////
 
 struct TableLamp : Service::LightBulb{
 
@@ -263,6 +255,8 @@ struct TableLamp : Service::LightBulb{
   
 };
 
+//// INITIALIZE HOMESPAN AND CREATE THE HAP ACCESSORY ATTRIBUTE DATABASE ////
+
 void setup() {     
  
   Serial.begin(115200);       // start the Serial interface
@@ -286,6 +280,8 @@ void setup() {
   
 } // end of setup()
 
+//// RUN HOMESPAN ////
+
 void loop(){
 
  homeSpan.poll(); 
@@ -293,28 +289,7 @@ void loop(){
 } // end of loop()
 ```
 
+This fully working example is ready to be uploaded to your ESP32 device where is can be used to operate a hypothetical table lamp connected by a relay to pin 17.  Alternatively, you can simply connect an LED to pin 17 and see how it works!  Congratulations, you've created your first HomeSpan Sketch.
 
 
-
-
-
-
-
-
-
-
- 
-
-
-Need to discuss micro-controller usage to connect to real-world devices (not to connect to other web servers)
-
-Need to discuss control button and status led
-
-Need to discuss configuring using the CLI and the WiFi Access Point
-
-Overview of programming paradigm
-
-Point to the tutorials
-
-Point to the HomeSpan Library Reference
 
