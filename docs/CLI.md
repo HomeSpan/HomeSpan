@@ -2,17 +2,28 @@
 
 HomeSpan includes a light-weight Command-Line Interface (CLI) for developers that can be accessed via the Arduino Serial Monitor whenever your Homespan device is connected to a computer by selecting *Tools → Serial Monitor* from the top menu bar of the Arduino IDE.  The HomeSpan CLI allows you view real-time HomeSpan diagnostics, query the device's operating status, inspect its HAP database, and perform some basic functions, such as initiating a Factory Reset.  Most importantly, the CLI can be used to configure HomeSpan's network connectivity and its HomeKit Setup Code.
 
+> When using the Serial Monitor, please make sure you set the baud rate to match whatever you specified in the `Serial.begin()` function in your HomeSpan sketch.  In addition, you'll need to set the Serial Monitor to transmit <newlines> as the line ending.
+
 #### Startup Diagnostics
 
-At startup, HomeSpan displays a welcome message, provides some general information about the device, and outputs information about the Accessories, Services, and Characteristics you've instantiated in the sketch to create your HAP Accessory Attribute Database.  If there are any errors with how you constructed the HAP Database, HomeSpan will report them and then halt the program.
+At startup, HomeSpan displays a welcome message, reminds you to set the line ending to <newline>, performs various initialization routines, provides some general information about the device, and outputs information about the Accessories, Services, and Characteristics you've instantiated in the sketch to create your HAP Accessory Attribute Database.  If there are any errors with how you constructed your HAP Database, HomeSpan will report them and halt the program. 
 
-If there are no errors, HomeSpan will next provide information about the Accessory ID of your device (or create one if this is a new device), the IDs of any controllers that have been paired to your device (if any), and the long-term public keys (LTPK) associated with each device.  Under normal operations, you will not need any of this information.  Note that this data is stored in a special Non-Volatile Storage (NVS) partition in the ESP32's flash memory and is therefore retained even if the device is re-programmed.  See the HomeSpan NVS section below for details.
+Next, HomeSpan checks to see if the device has been configured with WiFi Credentials.  If none are found, HomeSpan will indicate this, and then complete its initialization routine by indicating is now READY.  If WiFi Credentials are found, HomeSpan will repeatedly try to connect to the specified network until it either succeeds (in which case it then completes its initialization routine by indicating it is now READY), or you cancel the process by typing `X <return>` (in which case HomeSpan erases its stored WiFi Credentials and restarts).
 
-Lastly, HomeSpan will report an Accessory configuration number.  This number is also stored in NVS and is incremented every time you make a change to the construction of your HAP Database in the HomeSpan sketch.  For example, adding a new Service or changing the initial value of a Characteristic will result in a new configuration number.  Changing any other portion of your sketch does not cause the configuration number to be incremented.  This value is broadcast by HomeSpan to all HomeKit controllers so that the controllers supposedly know when to ask for a full refresh of the HAP Database from your device.  HomeKit controllers unfortunately do not always poll for this information, which can lead to a mismatch between the tiles that appear in your Home App, and what your HomeSpan device actually contains.  See the [Tutorials](Tutorials.md) page for how to resolve this problem if it arises.
+#### Log Levels
 
-#### WiFi Connectivity
+In the READY state, if HomeSpan is connected to a WiFi network it will begin to listen for, and process, any incoming HomeKit HAP requests.  As each request is received and processed, HomeSpan provides diagnostic output depending on the Message Log Level, which ranges from 0 (minimal diagnostics) to 2 (hyper-detailed diganostics).  The default Message Log Level is 0, but this can be changed either in your HomeSpan sketch (see the [HomeSpan API Reference](Reference.md) for details), or during run time as described in the next section
+
+#### HomeSpan Commands
+
+In addition to listening for incoming HAP requests, HomeSpan also continuously polls the Serial Monitor for characters you may type.  Note that the Serial Monitor does not actually transmit the characters you type to the device until you hit <return>.  All HomeSpan commands are a single character, and HomeSpan will ignore all but the first charcacter when parsing command requests, with the exception of those commands that also include a value.  HomeSpan supports the following commands:
+  
+* **s** - print connection status
+  * HomeSpan supports connections from more than one HomeKit Controller at the same time (the default is 8 simultaneous connection "slots").  This command provides information on all of the Controllers that have open connections to HomeSpan at any given time, and indictes which slots are currently unconnected.  If a Controller tries to connect to HomeSpan when all connection slots are already occupied, HomeSpan will terminate an existing connection and re-assign the slot the requesting Controller.
+  
 
 
+1. If yocharacters have been received from the Serial Monitor, process the requested command (see below) into the Serial Monitor
 
 #### WiFi Credentials and HomeKit Setup Codes
 
