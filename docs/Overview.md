@@ -291,11 +291,13 @@ void loop(){
 
 This fully working example is ready to be uploaded to your ESP32 device where is can be used to operate a hypothetical table lamp connected by a relay to pin 17.  Alternatively, you can simply connect an LED to pin 17 and see how it works!  Congratulations, you've created your first HomeSpan Sketch.
 
-# Exporing More
+# Exploring More
 
 Though the example above is a good illustration of a basic HomeSpan sketch, it only scratches the surface of HomeSpan features.  The best way to learn about the full suite of HomeSpan functions is by exploring the [HomeSpan Tutorials](Tutorials.md), either online in GitHub, or by opening each tutorial-sketch from within the Arduino IDE.  The later method is preferred since you can also compile and upload the tutorial sketches to your device to see them in action.
 
 In addition, you should read through the [HomeSpan API Reference](Reference.md) pages for complete details on every HomeSpan object, structure, method, and function, including some less-used functions that are not covered in any of the tutorials.
+
+Finally, don't forget to visit the [HomeSpan Command-Line Interface (CLI)](CLI.md) page.  The HomeSpan CLI is where you'll find real-time diagnostics and be able to monitor the status of your device.  Most importantly, the HomeSpan CLI is used to configure your device with your home network's WiFi Credentials and a HomeKit Setup Code so you can pair your device to your Home.
 
 
 ---
