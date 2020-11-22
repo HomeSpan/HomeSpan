@@ -41,13 +41,13 @@ In addition to listening for incoming HAP requests, HomeSpan also continuously p
 * **X** - delete WiFi Credentials and restart
   * This command deletes whatever WiFi Credentials have been stored in the device NVS, and restarts.
   
-* **A** - start HomeSpan Setup Access Point
+* **A** - start the HomeSpan Setup Access Point
   * This command starts HomeSpan's temporary Access Point, which provides users with an alternate methods for configuring a device's WiFi Credentials and HomeKit Setup Code.  Starting the Access Point with this command is identical to starting it via the Control Button.  See the [HomeSpan User Guide](UserGuide.md) for complete details.
   
+* **U** - unpair device by deleting all Controller data
+  * This deletes all data stored about Controllers that have been paired with the device, which forces HomeSpan to reset its internal state to unpaired.  Normally, unpairing is done by HomeKit at the direction of an end-user via the Home App on an iPhone.  However, HomeKit requests to unpair a device are not subject to any confirmation from that device.  HomeKit simply assumes that once it requests a device to unpair, the device has received the message and has reset its pairing state accordingly.  In the event that HomeKit unpairs a HomeSpan device, but the device does not receive or properly process the request, its pairing status will be out of sync with HomeKit.  Forcing HomeKit to reset its internal state to unpaired using this command resolves the issue and allows HomeSpan to be re-paired with HomeKit.
+  * Note that if you run this command when HomeKit thinks it is still paired to the device, pairing status will be out of sync in the opposite direction.  HomeKit Controllers will continue to send HAP requests to the device, thinking it is paired, but HomeSpan ignore all these requests since it no longer recognizes any of the Controllers as being paired.  To resolve this issue, you much instruct HomeKit to unpair the device via the Home App, after which you can re-pair the device if needed.
+  
 
-
-#### WiFi Credentials and HomeKit Setup Codes
-
-Though HomeSpan devices can be used on a standalone basis, to control the a HomeSpan device through Apple HomeKit (which is the whole point of HomeSpan), the device needs to be connected to a WiFi network.  This means HomeSpan needs to know your home WiFi network name and WiFi password. HomeSpan refers to these are your *WiFi Credentials*.  Rather then requiring you to hardcode your WiFi Credentials as part of every HomeSpan sketch (which is neither secure nor easy to update), HomeSpan stores your WiFi Credentials in a non-volatile storage (NVS) partition in the ESP32 that is reserved as part of the flash memory on the device, similar to how an EEPROM would operate.  You can set, change, and even erase, the WiFi Credentials stored on any HomeSpan device directly from the HomeSpan CLI without ever modifying the code, or even having access to the code.
 
 Every HomeSpan device also requires an 8-digit Setup Code to be able to pair to Apple HomeKit.  This code is similarly stored in an NVS partition rather than hardcoded into a HomeSpan sketch.  When HomeSpan is run for the first time on a new device, it configures itself with a default code of **466-37-72**.  This can be changed any time from the HomeSpan CLI.
