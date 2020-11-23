@@ -57,6 +57,11 @@ Example 10 illustrates how to control an RGB LED to set any color and brightness
 * converting HomeKit Hue/Saturation/Brightness levels to Red/Green/Blue levels using `PwmPin::HSVtoRGB()`
 * using the optional template functionality of `getVal()`, such as `getVal<float>()`
 
+### [Example 11 - ServiceOptions](../examples/11-ServiceOptions/11-ServiceOptions.ino)
+This example explores how the Name Characteristic can be used to create different naming schemes for multi-Service Accessories, and how these appear in the Home App depending on how you display the Accessory tile.  New HomeSpan API topics covered in this example include:
+
+* setting the primary Service for an Accessory with the `setPrimary()` method
+
 
 ---
 
