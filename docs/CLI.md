@@ -65,11 +65,12 @@ In addition to listening for incoming HAP requests, HomeSpan also continuously p
   
 * **L** \<level\> - change the Log Level setting to \<level\>
   * This command is used to set the Log Level, which controls the level of diagnostic messages output by HomeSpan.  Valid values are:
-    * 0, for minimal diagnostics
-    * 1, for all diagnostics
-    * 2, for all diagnostics plus a real-time output of all HAP data received from, and transmitted to, HomeKit Controllers
   
----
+    * 0 (minimal diagnostics),
+    * 1 (all diagnostics), and 
+    * 2 (all diagnostics plus a real-time output of all HAP communication between HomeSpan and any connected HomeKit Controllers).
+  
+  ---
 
 [↩️](README.md) Back to the Welcome page  
   
