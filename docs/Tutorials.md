@@ -82,8 +82,8 @@ This example introduces HomeSpan functionality that lets you easily connect real
 * implementing the virtual `button()` method in a derived Service
 * parsing SINGLE, DOUBLE, and LONG button presses
 
-### [Example 15 - RealPushButtons](../examples/15-RealPushButtons/15-RealPushButtons.ino)
-
+### [Example 16 - ProgrammableSwitches](../examples/16-ProgrammableSwitches/16-ProgrammableSwitches.ino)
+Example 16 does not introduce any new HomeSpan functionality, but instead showcases a unique feature of HomeKit that you can readily access with HomeSpan.  In all prior examples we used the ESP32 to control a local appliance - something connected directly to the ESP32 device.  We've then seen how you can control the device via HomeKit's iOS or MacOS Home App, or by the addition of local pushbuttons connected directly to the ESP32 device. In this example we do the opposite, and use pushbuttons connected to the ESP32 to control OTHER HomeKit devices of any type.  To do so, we use HomeKit's Stateless Programmable Switch Service.
 
 ---
 
