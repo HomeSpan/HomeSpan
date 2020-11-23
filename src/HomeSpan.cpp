@@ -672,24 +672,25 @@ void Span::processSerialCommand(char *c){
       
       Serial.print("\n*** HomeSpan Commands ***\n\n");
       Serial.print("  s - print connection status\n");
-      Serial.print("  d - print attributes database\n");
-      Serial.print("  i - print detailed info about configuration\n");
+      Serial.print("  i - print summary information about the HAP Database\n");
+      Serial.print("  d - print the full HAP Accessory Attributes Database in JSON format\n");
       Serial.print("\n");      
-      Serial.print("  W - configure WiFi credentials and restart\n");      
-      Serial.print("  A - start Access Point\n");      
-      Serial.print("  X - delete WiFi credentials and restart\n");      
+      Serial.print("  W - configure WiFi Credentials and restart\n");      
+      Serial.print("  X - delete WiFi Credentials and restart\n");      
+      Serial.print("  S <code> - change the HomeKit Pairing Setup Code to <code>\n");
+      Serial.print("  A - start the HomeSpan Setup Access Point\n");      
       Serial.print("\n");      
       Serial.print("  U - unpair device by deleting all Controller data\n");
-      Serial.print("  H - delete HomeKit Device ID & Pairing data and restart\n");      
+      Serial.print("  H - delete HomeKit Device ID as well as all Controller data and restart\n");      
       Serial.print("\n");      
       Serial.print("  R - restart device\n");      
       Serial.print("  F - factory reset and restart\n");      
       Serial.print("  E - erase ALL stored data and restart\n");      
       Serial.print("\n");          
+      Serial.print("  L <level> - change the Log Level setting to <level>\n");
+      Serial.print("\n");      
       Serial.print("  ? - print this list of commands\n");
       Serial.print("\n");      
-      Serial.print("  L <level> - change Log Level to <level>\n");
-      Serial.print("  S <code>  - change Setup Code to 8-digit <code>\n");
       Serial.print("\n*** End Commands ***\n\n");
     }
     break;
