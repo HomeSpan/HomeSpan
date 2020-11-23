@@ -41,8 +41,8 @@ In addition to listening for incoming HAP requests, HomeSpan also continuously p
 * **X** - delete WiFi Credentials and restart
   * This command deletes whatever WiFi Credentials have been stored in the device NVS, and restarts.
  
-* **S** *<code>* - change the HomeKit Pairing Setup Code to *<code>*
-  * Every HomeKit device requires a unique 8-digit Setup code used for pairing.  When HomeSpan is run for the first time on a new device it sets the HomeKit Setup Code to a default value of **466-37-72**, and stores it in a dedicated NVS partition.  This command allows you to update the stored Setup Code to any other 8-digit code.  Note that in accordance with HAP specifications, HomeSpan actually stored a hashed version of the Setup Code, rather than the Setup Code itself.  This means the actual value is not recoverable, so if you forget your Setup Code you'll need to run this command and create a new one.
+* **S** \<code\> - change the HomeKit Pairing Setup Code to \<code\>
+  * Every HomeKit device requires a unique 8-digit Setup code used for pairing.  When HomeSpan is run for the first time on a new device it sets the HomeKit Setup Code to a default value of **466-37-72**, and stores it in a dedicated NVS partition.  This command allows you to update the stored Setup Code to any other 8-digit code.  Note that in accordance with HAP specifications, HomeSpan actually stores a hashed version of the Setup Code, rather than the Setup Code itself.  This means the actual value is not recoverable, so if you forget your Setup Code you'll need to run this command and create a new one.
   
 * **A** - start the HomeSpan Setup Access Point
   * This command starts HomeSpan's temporary Access Point, which provides users with an alternate methods for configuring a device's WiFi Credentials and HomeKit Setup Code.  Starting the Access Point with this command is identical to starting it via the Control Button.  See the [HomeSpan User Guide](UserGuide.md) for complete details.
@@ -57,4 +57,4 @@ In addition to listening for incoming HAP requests, HomeSpan also continuously p
   
   
 
-Every HomeSpan device also requires an 8-digit Setup Code to be able to pair to Apple HomeKit.  This code is similarly stored in an NVS partition rather than hardcoded into a HomeSpan sketch.  When HomeSpan is run for the first time on a new device, it configures itself with a default code of **466-37-72**.  This can be changed any time from the HomeSpan CLI.
+
