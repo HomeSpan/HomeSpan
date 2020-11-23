@@ -62,6 +62,12 @@ This example explores how the Name Characteristic can be used to create differen
 
 * setting the primary Service for an Accessory with the `setPrimary()` method
 
+### [Example 12 - ServiceLoops](../examples/12-ServiceLoops/12-ServiceLoops.ino)
+Example 12 introduces HomeKit *Event Notifications* to implement two new accessories - a Temperature Sensor and an Air Quality Sensor.  Of course we won't actually have these physical devices attached to the ESP32 for the purpose of this example, but we will simulate "reading" their properties on a periodic basis, and notify HomeKit of any changed values.  New HomeSpan API topics covered in this example include:
+
+* implementing the virtual `loop()` method for your derived Services
+* keeping track of elapsed time since the last update of a Characteristic with the `timeVal()` method
+* setting the value of a Characteristic and triggering an Event Notification with the `setVal()` method
 
 ---
 
