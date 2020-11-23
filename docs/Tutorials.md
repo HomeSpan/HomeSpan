@@ -8,7 +8,7 @@ This first example introduces the HomeSpan library and demonstrates how to imple
 * the `homeSpan` global object, and it's `begin()` and `poll()` methods
 * referencing HomeSpan categories defined in the `Categories::` namespace
 * instantiating a new `SpanAccessory`
-* instantiating HomeSpan Services and Characteristics defined in the `Service::` and 'Characteristic::` namespaces
+* instantiating HomeSpan Services and Characteristics defined in the `Service::` and `Characteristic::` namespaces
 
 ### [Example 2 - TwoSimpleLightBulbs](../examples/02-TwoSimpleLightBulbs/02-TwoSimpleLightBulbs.ino)
 Example 2 expands on Example 1 by implementing two LightBulbs, each as their own Accessory.
@@ -19,9 +19,20 @@ Example 3 shows how adding multiple Services to a single Accessory allows us to 
 ### [Example 4 - AdvancedCeilingFan](../examples/04-AdvancedCeilingFan/04-AdvancedCeilingFan.ino)
 Example 4 expands on Example 3 by adding Characteristics to set fan speed, fan rotation direction, and light brightness.  New HomeSpan API topics covered in this example include:
 
-* Using `SpanRange()` to set the allowable range and increment values for a Characteristic
+* using `SpanRange()` to set the allowable range and increment values for a Characteristic
 
-### [Example 5 - AdvancedCeilingFan](../examples/04-AdvancedCeilingFan/04-AdvancedCeilingFan.ino)
+### [Example 5 - WorkingLED](../examples/05-WorkingLED/05-WorkingLED.ino)
+Example 5 expands on Example 2 by adding in the code needed to actually control LEDs connected to the ESP32 from HomeKit. In Example 2 we built out all the functionality to create a "Tile" Acessories inside HomeKit that displayed an on/off light, but these control did not actually operate anything on the ESP32.  To operate actual devices HomeSpan needs to be programmed to respond to "update" requests from HomeKit by performing some form of operation.  New HomeSpan API topics covered in this example include:
+
+* creating derived device-specific Service structures (classes) from a base HomeSpan Service class
+* implementing the virtual `update()` method for your derived Services
+* saving references to Characteristic objects with a `SpanCharacteristic *` pointer
+* retrieving new and updated Characterisrtic values with the `getVal()` and `getNewVal` methods
+
+
+
+
+
 
 ---
 
