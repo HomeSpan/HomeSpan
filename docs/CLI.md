@@ -20,11 +20,11 @@ Next, HomeSpan checks to see if the device has been configured with WiFi Credent
 
 ### Log Levels
 
-In the READY state, if HomeSpan is connected to a WiFi network it will begin to listen for, and process, any incoming HomeKit HAP requests.  As each request is received and processed, HomeSpan provides diagnostic output depending on the Message Log Level, which ranges from 0 (minimal diagnostics) to 2 (hyper-detailed diganostics).  The default Message Log Level is 0, but this can be changed either in your HomeSpan sketch (see the [HomeSpan API Reference](Reference.md) for details), or during run time as described in the next section
+In the READY state, if HomeSpan is connected to a WiFi network it will begin to listen for, and process, any incoming HomeKit HAP requests.  As each request is received and processed, HomeSpan provides diagnostic output messages with different levels of detail depending on the Log Level setting.  This setting ranges from  0 (minimal diagnostics) to 2 (hyper-detailed diganostics).  The default Log Level is 0, but this can be changed either in your HomeSpan sketch (see the [HomeSpan API Reference](Reference.md) for details), or during run time as described in the next section.
 
 ### HomeSpan Commands
 
-In addition to listening for incoming HAP requests, HomeSpan also continuously polls the Serial Monitor for characters you may type.  Note that the Serial Monitor does not actually transmit the characters you type to the device until you hit <return>.  All HomeSpan commands are a single character, and HomeSpan will ignore all but the first charcacter when parsing command requests, with the exception of those commands that also include a value.  HomeSpan supports the following commands:
+In addition to listening for incoming HAP requests, HomeSpan also continuously polls the Serial Monitor for characters you may type.  Note that the Serial Monitor does not actually transmit the characters you type to the device until you hit <return>.  All HomeSpan commands are a single character, and HomeSpan will ignore all but the first character when parsing command requests, with the exception of those commands that also include a value.  HomeSpan supports the following commands:
   
 * **s** - print connection status
   * HomeSpan supports connections from more than one HomeKit Controller (e.g. a HomePod, or the Home App on an iPhone) at the same time (the default is 8 simultaneous connection *slots*).  This command provides information on all of the Controllers that have open connections to HomeSpan at any given time, and indictes which slots are currently unconnected.  If a Controller tries to connect to HomeSpan when all connection slots are already occupied, HomeSpan will terminate an existing connection and re-assign the slot the requesting Controller.
@@ -54,7 +54,24 @@ In addition to listening for incoming HAP requests, HomeSpan also continuously p
 * **H** - delete HomeKit Device ID as well as all Controller data and restart
   * In addition to deleting all Controller data (as if the 'U' command was run), this command also deletes the device's HomeKit ID.  This unique ID is broadcast to all HomeKit Controllers so the device can be uniquely recognized.  When HomeSpan first runs on a new device, it creates this unique ID and stores it permanently in an NVS partition.  Normally, this ID should not changed once set.  However, if you are actively developing and testing a HomeSpan sketch, you may find that HomeKit is cacheing information about your device and the changes you have made to your HAP Accessory Database are not always reflected in the Home App.  Sometimes simply unpairing and re-pairing the device solves this HomeKit issue.  If not, deleting your device's HomeKit ID with this command forces HomeSpan to generate a new one after restarting, which means HomeKit will think this is a completely different device, thereby ignoring any prior data it had cached.
   
+* **R** - restart the device
+  * This command simply reboots HomeSpan.
   
+* **F** - factory reset and restart
+  * This deletes all data stored in the NVS, *except* for the HomeKit Pairing Setup Code, and restarts the device.  This is effectively the same as executing the 'X' command followed by the 'H' command.
+  
+* **E** - erase ALL stored data and restart
+  * This completely erases the NVS, deleting all stored data, *including* the HomeKit Pairing Setup code.  The device is then restarted and initialized as if it were new.
+  
+* **L** \<level\> - change the Log Level setting to \<level\>
+  * This command is used to set the Log Level, which controls the level of diagnostic messages output by HomeSpan.  Valid values are:
+    * 0, for minimal diagnostics
+    * 1, for all diagnostics
+    * 2, for all diagnostics plus a real-time output of all HAP data received from, and transmitted to, HomeKit Controllers
+  
+---
+
+[↩️](README.md) Back to the Welcome page  
   
 
 
