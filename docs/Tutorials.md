@@ -76,12 +76,13 @@ Example 13 we demonstrate the simultaneous use of both the `update()` and `loop(
 Example 14 demonstrates how you can use the `setVal()` and `timeVal()` methods inside a Service's `loop()` method to create a tile in the Home App that emulates a pushbutton switch.  In this example pressing the tile in the Home App will cause it to turn on, blink an LED 3 times, and then turn off (just like a real pushbutton might do).
 
 ### [Example 15 - RealPushButtons](../examples/15-RealPushButtons/15-RealPushButtons.ino)
-This example introduces HomeSpan functionality that lets you easily connect real pushbuttons to any pin on your ESP32 device.  These pushbuttons can then be used to  manually control any appliance connected to the device, such as a lamp or fan.  In this example we implement 3 pushbuttons to control the power, brightness, and a "favorites" setting of an LED, using a combination of single, double, and long button presses.  Event Notifications are sent back to HomeKit using the `setVal()` method after each pushbutton press so that the Home App tiles immediately reflect your manually changes to the power and brightness of the LED.  New HomeSpan API topics covered in this example include:
+This example introduces HomeSpan functionality that lets you easily connect real pushbuttons to any pin on your ESP32 device.  These pushbuttons can then be used to  manually control any appliance connected to the device, such as a lamp or fan.  In this example we implement 3 pushbuttons to control the power, brightness, and a "favorites" setting of an LED, using a combination of single, double, and long button presses.  Event Notifications are sent back to HomeKit using the `setVal()` method after each pushbutton press so that the Home App tiles immediately reflect your manual changes to the power and brightness of the LED.  New HomeSpan API topics covered in this example include:
 
 * creating pushbutton objects on any ESP32 pin with `SpanButton()`
-* implementing the virtual `button()` method in a derived Services
+* implementing the virtual `button()` method in a derived Service
 * parsing SINGLE, DOUBLE, and LONG button presses
 
+### [Example 15 - RealPushButtons](../examples/15-RealPushButtons/15-RealPushButtons.ino)
 
 
 ---
