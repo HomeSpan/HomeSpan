@@ -69,6 +69,9 @@ Example 12 introduces HomeKit *Event Notifications* to implement two new accesso
 * keeping track of elapsed time since the last update of a Characteristic with the `timeVal()` method
 * setting the value of a Characteristic and triggering an Event Notification with the `setVal()` method
 
+### [Example 13 - TargetStates](../examples/13-TargetStates/13-TargetStates.ino)
+Example 13 we demonstrate the simultaneous use of both the `update()` and `loop()` methods by implementing two new Services: a Garage Door Opener and a motorized Window Shade.  Both examples showcase HomeKit's Target-State/Current-State framework.
+
 ---
 
 [↩️](README.md) Back to the Welcome page
