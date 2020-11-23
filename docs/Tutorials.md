@@ -38,7 +38,9 @@ Example 6 changes Example 5 so that LED #2 is now dimmable, instead of just on/o
 * storing similar derived Service classes in the same \*.h file for ease of use
 
 ### [Example 7 - IdentifyRoutines](../examples/07-IdentifyRoutines/07-IdentifyRoutines.ino)
+Example 7 uses the encapsulation techniques illustrated in Examples 5 and 6 to derive an easier-to-use Identify Service from HomeSpan's AccessoryInformation Service.  New HomeSpan API topics covered in this example include:
 
+* storing dissimilar derived Service classes in the different \*.h files for better portability
 
 
 
