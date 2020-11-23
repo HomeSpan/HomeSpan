@@ -45,6 +45,14 @@ Example 7 uses the encapsulation techniques illustrated in Examples 5 and 6 to d
 ### [Example 8 - Bridges](../examples/08-Bridges/08-Bridges.ino)
 Example 8 is functionally identical to Example 7, except that instead of defining two Accessories (one for the on/off LED and one for the dimmable LED), we define three Accessories, where the first acts as a HomeKit Bridge.
 
+### [Example 9 - MessageLogging](../examples/09-MessageLogging/09-MessageLogging.ino)
+Example 9 illustrates how to add log messages to your HomeSpan sketch.  The code is identical to Example 8 except for the inclusion of new log messages.  New HomeSpan API topics covered in this example include:
+
+* using the `LOG1()` and `LOG2()` macros to create log messages for different log levels
+* setting the initial log level for a sketch with the `homeSpan.setLogLevel()` method
+
+
+
 ---
 
 [↩️](README.md) Back to the Welcome page
