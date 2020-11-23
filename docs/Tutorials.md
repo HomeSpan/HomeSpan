@@ -27,8 +27,13 @@ Example 5 expands on Example 2 by adding in the code needed to actually control 
 * creating derived device-specific Service structures (classes) from a base HomeSpan Service class
 * implementing the virtual `update()` method for your derived Services
 * saving references to Characteristic objects with a `SpanCharacteristic *` pointer
-* retrieving new and updated Characterisrtic values with the `getVal()` and `getNewVal` methods
+* retrieving new and updated Characteristic values with the `getVal()` and `getNewVal()` methods
 
+### [Example 6 - DimmableLED](../examples/06-DimmableLED/06-DimmableLED.ino)
+Example 6 changes Example 5 so that LED #2 is now dimmable, instead of just on/off.  New HomeSpan API topics covered in this example include:
+
+* implementing pulse-width-modulation on any ESP32 pin by instantiating a `PwmPin()` object
+* setting the PWM level to control the brightness of an using the PwmPin `set()` method
 
 
 
