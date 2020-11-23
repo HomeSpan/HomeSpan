@@ -33,7 +33,7 @@ Example 5 expands on Example 2 by adding in the code needed to actually control 
 Example 6 changes Example 5 so that LED #2 is now dimmable, instead of just on/off.  New HomeSpan API topics covered in this example include:
 
 * implementing pulse-width-modulation on any ESP32 pin by instantiating a `PwmPin()` object
-* setting the PWM level to control the brightness of an using the PwmPin `set()` method
+* setting the PWM level to control the brightness of an LED using the PwmPin `set()` method
 
 
 
