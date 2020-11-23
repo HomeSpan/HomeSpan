@@ -68,7 +68,7 @@ In addition to listening for incoming HAP requests, HomeSpan also continuously p
   
     * 0 (minimal diagnostics),
     * 1 (all diagnostics), and 
-    * 2 (all diagnostics plus a real-time output of all HAP communication between HomeSpan and any connected HomeKit Controllers).
+    * 2 (all diagnostics plus a real-time stream of all HAP communication between HomeSpan and any connected HomeKit Controllers).
   
   ---
 
