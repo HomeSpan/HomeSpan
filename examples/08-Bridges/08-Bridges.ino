@@ -56,7 +56,7 @@ void setup() {
   // One added bonus is that the HAPProtcolInformation Service only needs to be defined for the Bridge Accessory, and
   // does not need to be repeated for other Accessories.
   //
-  // Example 8 is functionally identical to Example 7, except that instead of defined two Accessories (one for the on/off
+  // Example 8 is functionally identical to Example 7, except that instead of defining two Accessories (one for the on/off
   // LED and one for the dimmable LED), we define three Accessories, where the first acts as the Bridge.
   
   // As usual, all previous comments have been deleted and only new changes from the previous example are shown.

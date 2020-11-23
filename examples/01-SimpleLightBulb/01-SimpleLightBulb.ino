@@ -38,7 +38,7 @@
 
   // WELCOME TO HOMESPAN!
   
-  // This first example introduces the HomeSpan library and demonstrates how to implement a simple HomeKit on/off light control
+  // This first example introduces the HomeSpan library and demonstrates how to implement a simple on/off light control
   // using a combination of HomeSpan Accessory, Service, and Characteristic objects.  Once this sketch has been uploaded
   // to your HomeSpan device and the device is paired to your home, a new "lightbulb" tile will appear in the Home App of your iPhone,
   // iPad, or Mac.
@@ -46,12 +46,14 @@
   // Though the tile will be fully operational (i.e. you can change the status of the lightbulb from "on" or "off"), we won't yet connect
   // an actual light or LED to the HomeSpan device, so nothing real will light up.  Instead, in this and the next few examples, we'll focus
   // on learning about the different ways HomeKit controls can be configured.  Starting in Example 5, we'll connect an LED to the device
-  // and introduce the methods you'll need to implement to actually turn the LED on and off from your Home App.
+  // and introduce the methods that actually turn the LED on and off from your Home App.
 
-  // These examples are best understood when reviewed in conjunction with the documentation provided on the HomeSpan GitHub page.
-  // See  https://github.com/HomeSpan/HomeSpan for details and references.  The examples also make frequent reference to
-  // Apple's HomeKit Accessory Protocol Specification, known as HAP.  You can download this directly from Apple
-  // at https://developer.apple.com/support/homekit-accessory-protocol.
+  // NOTE: All HomeSpan examples are best understood when reviewed in conjunction with the documentation provided on the HomeSpan GitHub page.
+  // See https://github.com/HomeSpan/HomeSpan for details and references.  In particular, you may want to review the HomeSpan API Overview
+  // page before proceeding.
+  
+  // These examples also make frequent reference to  Apple's HomeKit Accessory Protocol Specification, known as HAP.  You can download this
+  // directly from Apple at https://developer.apple.com/support/homekit-accessory-protocol.
 
   // LET'S GET STARTED...
 
@@ -64,44 +66,14 @@ void setup() {                // Your HomeSpan code should be placed within the 
   // The HomeSpan library creates a global object named "homeSpan" that encapsulates all HomeSpan functionality.
   // The begin() method is used to initialize HomeSpan and start all HomeSpan processes.
   
-  // Required parameters are Category and Name, which are used by HomeKit to configure the icon and name of the device shown in your Home App
-  // when initially pairing your device.  A list of all defined categories can be found at https://github.com/HomeSpan/HomeSpan/docs/Categories.md
-  // and match those specified by Apple in Section 13 of the HAP guide (which of course you have downloaded as recommended above!).
-
-  // HomeSpan's category names are defined in a C++ namespace appropriately called Category, so you'll need to use the prefix Category:: when
-  // specifying categories.
+  // The first two parameters are Category and Name, which are used by HomeKit to configure the icon and name of the device shown in your Home App
+  // when initially pairing your device.
 
   homeSpan.begin(Category::Lighting,"HomeSpan LightBulb");   // initializes a HomeSpan device named "HomeSpan Lightbulb" with Category set to Lighting
 
-  // Next, some general information about Apple HomeKit before we proceed...
+  // Next, we construct a simple HAP Accessory Database with a single Accessory containing 3 Services,
+  // each with their own required Characteristics.
   
-  // Every HomeKit device consists of one or more Accessories.  Each Accessory contains one or more Services, and
-  // every Service contains one or more Characteristics.  HAP defines all allowable Services and specifies which Characteristics
-  // are required or optional for each Service.
-  
-  // An Accessory is typically a complete appliance, such as a table lamp or ceiling fan.  Services are the main components of the
-  // appliance - a ceiling fan Accessory will typically have a fan Service and a light bulb Service.  Characteristics define
-  // how each Service operates.
-  
-  // Some Characteristics are read-only and describe the name or properties of a Service.  Other Characteristics
-  // can be both written and read by HomeKit - these are the interesting ones since they enable actions to occur,
-  // such as turning on or off a light, or setting its brightness.
-  
-  // HAP also requires various informational Services that describe the overall Accessory. 
-  
-  // HAP calls the entirety of all Accessories, Services, and Characteristics used in a device the "Accessory Attributes Database" of
-  // that device.  A complete list of HomeKit Services can be found in Section 8 of the HAP guide.  The subset of those Services that
-  // have been implemented in HomeSpan can be found at https://github.com/HomeSpan/HomeSpan/docs/ServiceList.md. and are defined in the
-  // Services namespace.  A complete list of all HomeKit Characteristics used by these Services can be found in Section 9 of the HAP guide,
-  // and are defined by HomeSpan in the Characteristics namespace.
-  
-  // Users construct a HomeKit device's Accessory Attribute Database by instantiating one or more Accessories, each with their own
-  // HAP Services and HAP Characteristics.  To make this as easy as possible, HomeSpan self-registers each object and assembles the database
-  // in the order in which you instantiate the objects.  You do not need to create variables for any of the objects nor know anything about
-  // their underlying HAP codes.  HomeSpan takes care of all of this for you.
-
-  // For this example, our Database will comprise a single Accessory containing 3 Services, each with their own required Characteristics
-
   new SpanAccessory();                              // Begin by creating a new Accessory using SpanAccessory(), which takes no arguments
   
     new Service::AccessoryInformation();            // HAP requires every Accessory to implement an AccessoryInformation Service, which has 6 required Characteristics:
@@ -120,7 +92,7 @@ void setup() {                // Your HomeSpan code should be placed within the 
       new Characteristic::Identify();                 // Create the required Identify
 
   // HAP also requires every Accessory (with the exception of those in Bridges, as we will see later) to implement the HAP Protocol Information Service.
-  // This Serrvice supports a single required Characteristic that defines the version number of HAP used by the device.
+  // This Service supports a single required Characteristic that defines the version number of HAP used by the device.
   // HAP Release R2 requires this version to be set to "1.1.0" 
   
     new Service::HAPProtocolInformation();          // Create the HAP Protcol Information Service  
@@ -143,7 +115,7 @@ void setup() {                // Your HomeSpan code should be placed within the 
 void loop(){
 
   // The code in setup above implements the Accessory Attribute Database, but performs no operations.  HomeSpan itself must be
-  // continuously polled to look for requests from Controllers, such as an iOS or MacOS device.  The poll() method below is all that
+  // continuously polled to look for requests from Controllers, such as the Home App on your iPhone.  The poll() method below is all that
   // is needed to perform this continuously in each iteration of loop()
   
   homeSpan.poll();         // run HomeSpan!
