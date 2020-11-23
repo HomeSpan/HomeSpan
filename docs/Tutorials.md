@@ -51,6 +51,11 @@ Example 9 illustrates how to add log messages to your HomeSpan sketch.  The code
 * using the `LOG1()` and `LOG2()` macros to create log messages for different log levels
 * setting the initial log level for a sketch with the `homeSpan.setLogLevel()` method
 
+### [Example 10 - RGB_LED](../examples/10-RGB_LED/10-RGB_LED.ino)
+Example 10 illustrates how to control an RGB LED to set any color and brightness.  New HomeSpan API topics covered in this example include:
+
+* converting HomeKit Hue/Saturation/Brightness levels to Red/Green/Blue levels using `PwmPin::HSVtoRGB()`
+* using the optional template functionality of `getVal()`, such as `getVal<float>()`
 
 
 ---
