@@ -65,7 +65,7 @@ This example explores how the Name Characteristic can be used to create differen
 ### [Example 12 - ServiceLoops](../examples/12-ServiceLoops/12-ServiceLoops.ino)
 Example 12 introduces HomeKit *Event Notifications* to implement two new accessories - a Temperature Sensor and an Air Quality Sensor.  Of course we won't actually have these physical devices attached to the ESP32 for the purpose of this example, but we will simulate "reading" their properties on a periodic basis, and notify HomeKit of any changed values.  New HomeSpan API topics covered in this example include:
 
-* implementing the virtual `loop()` method for your derived Services
+* implementing the virtual `loop()` method in a derived Service
 * keeping track of elapsed time since the last update of a Characteristic with the `timeVal()` method
 * setting the value of a Characteristic and triggering an Event Notification with the `setVal()` method
 
@@ -73,8 +73,14 @@ Example 12 introduces HomeKit *Event Notifications* to implement two new accesso
 Example 13 we demonstrate the simultaneous use of both the `update()` and `loop()` methods by implementing two new Services: a Garage Door Opener and a motorized Window Shade.  Both examples showcase HomeKit's Target-State/Current-State framework.
 
 ### [Example 14 - EmulatedPushButtons](../examples/14-EmulatedPushButtons/14-EmulatedPushButtons.ino)
-Example 14 demonstrates how you can use the `setVal()` and `timeVal()` methods inside a Service's `loop()` method to create a tile in the Home App that emulates a pushbutton switch.  In this example pressing the tile in the Home App will cause it to turn on, blink an LED 3 times, and then turn off.  Just like a real pushbutton might do.
+Example 14 demonstrates how you can use the `setVal()` and `timeVal()` methods inside a Service's `loop()` method to create a tile in the Home App that emulates a pushbutton switch.  In this example pressing the tile in the Home App will cause it to turn on, blink an LED 3 times, and then turn off (just like a real pushbutton might do).
 
+### [Example 15 - RealPushButtons](../examples/15-RealPushButtons/15-RealPushButtons.ino)
+This example introduces HomeSpan functionality that lets you easily connect real pushbuttons to any pin on your ESP32 device.  These pushbuttons can then be used to  manually control any appliance connected to the device, such as a lamp or fan.  In this example we implement 3 pushbuttons to control the power, brightness, and a "favorites" setting of an LED, using a combination of single, double, and long button presses.  Event Notifications are sent back to HomeKit using the `setVal()` method after each pushbutton press so that the Home App tiles immediately reflect your manually changes to the power and brightness of the LED.  New HomeSpan API topics covered in this example include:
+
+* creating pushbutton objects on any ESP32 pin with `SpanButton()`
+* implementing the virtual `button()` method in a derived Services
+* parsing SINGLE, DOUBLE, and LONG button presses
 
 
 
