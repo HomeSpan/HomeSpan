@@ -8,3 +8,12 @@ This first example introduces the HomeSpan library and demonstrates how to imple
 ### [Example 2 - TwoSimpleLightBulbs](../examples/02-TwoSimpleLightBulbs/02-TwoSimpleLightBulbs.ino)
 Example 2 expands on Example 1 by implementing two LightBulbs, each as their own Accessory.
 
+### [Example 3 - CeilingFanWithLight](../examples/03-CeilingFanWithLight/03-CeilingFanWithLight.ino)
+Example 3 shows how adding multiple Services to a single Accessory allows us to create a multi-featured Accessory, such as a ceiling fan wih a ceiling light.
+
+### [Example 4 - AdvancedCeilingFan](../examples/04-AdvancedCeilingFan/04-AdvancedCeilingFan.ino)
+Example 4 expands on Example 3 by adding Characteristics to set fan speed, fan rotation direction, and light brightness.  This example also introduces the HomeSpan methods needed to create custom ranges for the values of Characteristics such as speed and brightness.
+
+---
+
+[↩️](README.md) Back to the Welcome page
