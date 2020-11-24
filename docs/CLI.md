@@ -9,7 +9,7 @@ HomeSpan includes a light-weight Command-Line Interface (CLI) for developers tha
 At startup, HomeSpan:
 
 * displays a Welcome Message,
-* reminds you to set the line ending to <newline>,
+* reminds you to set the line ending to \<newline\>,
 * performs various initialization routines,
 * provides some general information about the device, and
 * outputs information about the Accessories, Services, and Characteristics you've instantiated in the sketch to create your HAP Accessory Attribute Database.
