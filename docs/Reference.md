@@ -10,7 +10,7 @@ At runtime this HomeSpan will create a global object named `homeSpan` that suppo
 
 * `void begin(Category catID, char *displayName, char *hostNameBase, char *modelName);` 
   * Initializes HomeSpan
-  * **Must** be called at the beginning of each sketch (typically in `setup()`) before any other HomeSpan functions
+  * **Must** be called at the beginning of each sketch before any other HomeSpan functions and is typically placed near the top of the Arduino `setup()` method, but **after** `Serial.begin()` so that initialization diagnostics can be output to the Serial Monitor.
   * All arguments are **optional**
     * *catID* - the HAP Category HomeSpan broadcasts for pairing to HomeKit.  Default is [Category::Lighting](Categories.md)
     * *displayName* - the MDNS display name broadcast by HomeSpan.  Default is "HomeSpan Server"
@@ -19,4 +19,4 @@ At runtime this HomeSpan will create a global object named `homeSpan` that suppo
  
  * `void poll()`
    * Checks for HAP requests, local commands, and device activity
-   * **Must** be called repeatedly in each sketch (typically placed at the top of `loop()`)
+   * **Must** be called repeatedly in each sketch and typically placed at the top of the Arduino `loop()` method
