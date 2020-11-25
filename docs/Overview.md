@@ -291,6 +291,12 @@ void loop(){
 
 This fully working example is ready to be uploaded to your ESP32 device where is can be used to operate a hypothetical table lamp connected by a relay to pin 17.  Alternatively, you can simply connect an LED to pin 17 and see how it works!  Congratulations, you've created your first HomeSpan Sketch.
 
+## Multi-File Sketches
+
+The encapsulation of all TableLamp functions into a single structure suggests that the TableLamp code could instead be stored in a separate file.  Since TableLamp represents a *device-specific* implementation of HomeKit's generic LightBulb Service, the recommended convention is to add DEV_ as a prefix to all such structures and place them in a file with a similar DEV_ prefix.  Using this convention, we would rename TableLamp as DEV_TableLamp, place the code in a separate file DEV_TableLamp.h, and include it in the main \*.ino file using `#include "DEV_TableLamp.h"`.
+
+In this fashion, we can create a "library" of device-specific structures for real-world lamps, ceiling fans, window shades, garage door openers, or even just a series of switches that control a unique appliance.  By storing each structure (or a set or related structures) in its own DEV_\*.h file with a well-documented constructor, we increase readability, portability and re-useability.  This technique is used extensively in HomeSpan's tutorial sketches. 
+
 # Exploring More
 
 Though the example above is a good illustration of a basic HomeSpan sketch, it only scratches the surface of HomeSpan features.  The best way to learn about the full suite of HomeSpan functions is by exploring the [HomeSpan Tutorials](Tutorials.md), either online in GitHub, or by opening each tutorial-sketch from within the Arduino IDE.  The later method is preferred since you can also compile and upload the tutorial sketches to your device to see them in action.
