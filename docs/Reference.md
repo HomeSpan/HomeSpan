@@ -25,14 +25,19 @@ The following **optional** `homeSpan` methods override various HomeSpan initiali
 
 * `void setControlPin(uint8_t pin)`
   * Sets the ESP32 pin to use for the HomeSpan Control Button (default=21).
+  
 * `void setStatusPin(uint8_t pin)`
   * Sets the ESP32 pin to use for the HomeSpan Status LED (default=LED_BUILTIN).
+  
 * `void setApSSID(char *ssid)`
   * Sets the SSID (network name) of the HomeSpan Setup Access Point (default="HomeSpan-Setup").
-* `void setApPassword(char *pwd)
+  
+* `void setApPassword(char *pwd)`
   * Sets the password of the HomeSpan Setup Access Point (default="homespan").
+  
 * `void setApTimeout(uint16_t nSec)`
   * Sets the duration (in seconds) that the HomeSpan Setup Access Point, once activated, stays alive before timing out (default=300 seconds).
+  
 * `void setCommandTimeout(uint16_t nSec)`
   * Sets the duration (in seconds) that the HomeSpan End-User Command Mode, once activated, stays alive before timing out (default=120 seconds).
   
@@ -42,5 +47,6 @@ The following **optional** `homeSpan` methods override various HomeSpan initiali
     * 1 = all status messages, and
     * 2 = all status messages plus all HAP communication packets to and from the HomeSpan device.
   * This parameter can also be changed at runtime via the [HomeSpan CLI](CLI.md).
+  
 * `void setMaxConnections(uint8_t nCon)`
   * Sets the maximum number of HAP Controllers that be simultaneously connected to HomeSpan (default=8).
