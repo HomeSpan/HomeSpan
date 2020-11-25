@@ -12,7 +12,7 @@ At runtime this HomeSpan will create a global object named `homeSpan` that suppo
   * Initializes HomeSpan.
   * **Must** be called at the beginning of each sketch before any other HomeSpan functions and is typically placed near the top of the Arduino `setup()` method, but **after** `Serial.begin()` so that initialization diagnostics can be output to the Serial Monitor.
   * All arguments are **optional**.
-    * *catID* - the HAP Category HomeSpan broadcasts for pairing to HomeKit.  Default is [Category::Lighting](Categories.md).
+    * *catID* - the HAP Category HomeSpan broadcasts for pairing to HomeKit.  Default is Category::Lighting.  See [HomeSpan Categories](Categories.md) for a complete list.
     * *displayName* - the MDNS display name broadcast by HomeSpan.  Default is "HomeSpan Server".
     * *hostNameBase* - the full MDNS host name is broadcast by HomeSpan as *hostNameBase-DeviceID*.local, where DeviceID is a unique 6-byte code generated automatically by HomeSpan.  Default is "HomeSpan".
     * *modelName* - the HAP model name HomeSpan broadcasts for pairing to HomeKit.  Default is "HomeSpan-ESP32".
