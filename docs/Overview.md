@@ -293,9 +293,9 @@ This fully working example is ready to be uploaded to your ESP32 device where is
 
 ## Multi-File Sketches
 
-The encapsulation of all TableLamp functions into a single structure suggests that the TableLamp code could instead be stored in a separate file.  Since TableLamp represents a *device-specific* implementation of HomeKit's generic LightBulb Service, the recommended convention is to add DEV_ as a prefix to all such structures and place them in a file with a similar DEV_ prefix.  Using this convention, we would rename TableLamp as DEV_TableLamp, place the code in a separate file DEV_TableLamp.h, and include it in the main \*.ino file using `#include "DEV_TableLamp.h"`.
+The encapsulation of all TableLamp functions into a single structure suggests that the TableLamp code could instead be stored in a separate file.  Since TableLamp represents a *device-specific* implementation of HAP's generic LightBulb Service, the recommended convention is to add DEV_ as a prefix to all such structures and place them in a file with a similar DEV_ prefix.  For example, we would change `struct TableLamp` to `struct DEV_TableLamp` and place its code in a separate file DEV_TableLamp.h. To use we then simply add `#include "DEV_TableLamp.h"` to the \*.ino sketch file, typically right after `#include "HomeSpan"`.
 
-In this fashion, we can create a "library" of device-specific structures for real-world lamps, ceiling fans, window shades, garage door openers, or even just a series of switches that control a unique appliance.  By storing each structure (or a set or related structures) in its own DEV_\*.h file with a well-documented constructor, we increase readability, portability and re-useability.  This technique is used extensively in HomeSpan's tutorial sketches. 
+In this fashion, we can create a "library" of device-specific structures for real-world lamps, ceiling fans, window shades, garage door openers, or even just a series of switches that control a unique appliance.  By storing each structure (or a set or related structures) in its own DEV_\*.h file with a well-documented constructor, and including only those we need for a HomeSpan sketch, we increase readability, portability and re-useability.  You'll see this convention is used throughout HomeSpan's tutorial sketches. 
 
 # Exploring More
 
