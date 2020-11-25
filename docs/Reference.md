@@ -46,7 +46,7 @@ The following **optional** `homeSpan` methods override various HomeSpan initiali
     * 0 = top-level status messages only (default),
     * 1 = all status messages, and
     * 2 = all status messages plus all HAP communication packets to and from the HomeSpan device.
-  * This parameter can also be changed at runtime via the [HomeSpan CLI](CLI.md).
+  * This parameter can also be changed at runtime via the [HomeSpan CLI](CLI.md#log-levels).
   
 * `void setMaxConnections(uint8_t nCon)`
   * Sets the maximum number of HAP Controllers that be simultaneously connected to HomeSpan (default=8).
