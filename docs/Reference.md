@@ -65,7 +65,7 @@ Creating an instance of this **class** add a new HAP Accessory to the HomeSpan H
 
 ## *SpanService()*
 
-This is a **base class** from which all HomeSpan Services are derived, and should not be directly instantiated.  Rather, to create a new Service, instantiate one of HomeSpan Services defined in the [Service](ServiceList.md) namespace.
+This is a **base class** from which all HomeSpan Services are derived, and should not be directly instantiated.  Rather, to create a new Service instantiate one of the HomeSpan Services defined in the [Service](ServiceList.md) namespace.
 
   
 * `SpanService()`
