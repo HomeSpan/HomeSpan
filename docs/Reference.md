@@ -56,7 +56,7 @@ The following **optional** `homeSpan` methods override various HomeSpan initiali
   
 ## *SpanAccessory()*
 
-Creating an instance of this **class** add a new HAP Accessory to the HomeSpan HAP Database.
+Creating an instance of this **class** adds a new HAP Accessory to the HomeSpan HAP Database.
 
   * every HomeSpan sketch requires at least one Accessory
   * there are no arguments or associated methods
@@ -65,8 +65,24 @@ Creating an instance of this **class** add a new HAP Accessory to the HomeSpan H
 
 ## *SpanService()*
 
-This is a **base class** from which all HomeSpan Services are derived, and should not be directly instantiated.  Rather, to create a new Service instantiate one of the HomeSpan Services defined in the [Service](ServiceList.md) namespace.
+This is a **base class** from which all HomeSpan Services are derived, and should **not** be directly instantiated.  Rather, to create a new Service instantiate one of the HomeSpan Services defined in the [Service](ServiceList.md) namespace.  No arguments are needed.
 
+* instantiated Services are added to the HomeSpan HAP Database and associated with the last Accessory instantiated
+* instantiating a Service without first instantiating an Accessory throws an error during initialization
+* example: `new Service::MotionSensor();`
+
+The following methods are supported:
+
+* `SpanService *setPrimary()`
+  * specifies that this is the primary Service for the Accessory.  Returns a pointer to the Service itself so that the method can be chained during instantiation.  Example: `new Service::Fan->setPrimary();`
+* `SpanService *setHidden()`
+  * specifies that this is hidden Service for the Accessory.  Returns a pointer to the Service itself so that the method can be chained during instantiation.
+* `virtual boolean update()`
+  * HomeSpan calls this method upon receiving a request from a HomeKit Controller to update one or more Characteristics associated with the Service.  Users should override this method with code that implements that requested updates and returns *true* of *false* if the update succeeds or fails
+* `virtual void loop()`
+  * HomeSpan calls this method every time `homeSpan.poll()` is executed.  Users should override this method with code that monitors for state changes in Characteristics that require HomeKit Controllers to be notified.
+* `virtual void button(int pin, int pressType)`
+  * HomeSpan calls this method whenever a SpanButton() object associated with the Service is triggered.  Users should override this method with code that implements any actions that should be taken in response to the SpanButton() trigger
+    * *pin* - the ESP32 pin associated with the SpanButton() object
+    * *pressType* - 0=single press, 1=double press, 2=long press
   
-* `SpanService()`
- * This is the base class for creating new HAP Services.  It should 
