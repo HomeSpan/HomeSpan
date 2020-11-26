@@ -136,18 +136,15 @@ Creating an instance of this **class** attaches a pushbutton handler to the ESP3
   * *longTime* - the minimum time (in millis) required for the button to be pressed and held to trigger a Long Press (default=2000 ms)
   * *singleTime* - the minimum time (in millis) required for the button to be pressed to trigger a Single Press (default=5 ms)
   * *doubleTime* -  the maximum time (in millis) allowed between consecutive Single Presses to qualify as a Double Press (default=200 ms)
-
 * Trigger Rules:
   * If button is pressed and continuously held, a Long Press will be triggered every longTime ms until the button is released
-  * If button is pressed for more than singleTime ms but less than longTime ms and then released, a Single Press will be triggered, UNLESS the button is pressed a second time within doubleTime ms AND held again for at least singleTime ms, in which case a DoublePress will be triggered;  No further events will occur until the button is released
+  * If button is pressed for more than singleTime ms but less than longTime ms and then released, a Single Press will be triggered, UNLESS the button is pressed a second time within doubleTime ms AND held again for at least singleTime ms, in which case a DoublePress will be triggered;  no further events will occur until the button is released
   * If singleTime>longTime, only Long Press triggers can occur
   * If doubleTime=0, Double Presses cannot occur
-
 * HomeSpan automatically calls the `button(int pin, int pressType)` method of a Service upon a trigger event in any Button associated with that Service, where *pin* is the ESP32 pin to which the pushbutton is connected, and *pressType* is an integer that can also be represented by the enum constants indicated:
   * 0=single press (SpanButton::SINGLE)
   * 1=double press (SpanButton::DOUBLE)
-  * 2=long press (SpanButton::LONG)
-  
-* HomeSpan will report a warning, but not an error, during initialization if the user had not overridden the virtual button() method for Service into which they added one or more Buttons.  Triggers of those Buttons will simply ignored.
+  * 2=long press (SpanButton::LONG)  
+* HomeSpan will report a warning, but not an error, during initialization if the user had not overridden the virtual button() method for a Service contaning one or more Buttons; triggers of those Buttons will simply ignored.
 
 
