@@ -6,9 +6,9 @@ The HomeSpan Library is invoked by including *HomeSpan.h* in your Arduino sketch
 #include "HomeSpan.h"
 ```
 
-## *homeSpan* (object)
+## *homeSpan*
 
-At runtime this HomeSpan will create a global object named `homeSpan` that supports the following methods:
+At runtime this HomeSpan will create a global **object** named `homeSpan` that supports the following methods:
 
 * `void begin(Category catID, char *displayName, char *hostNameBase, char *modelName)` 
   * initializes HomeSpan
@@ -54,18 +54,18 @@ The following **optional** `homeSpan` methods override various HomeSpan initiali
 * `void setMaxConnections(uint8_t nCon)`
   * sets the maximum number of HAP Controllers that be simultaneously connected to HomeSpan (default=8)
   
-## *SpanAccessory()* (class)
+## *SpanAccessory()*
 
-Creating an instance of this class add a new HAP Accessory to the HomeSpan HAP Database.
+Creating an instance of this **class** add a new HAP Accessory to the HomeSpan HAP Database.
 
   * every HomeSpan sketch requires at least one Accessory
   * there are no arguments or associated methods
   * you must call `homeSpan.begin()` before instantiating any Accessories
   * example: `new SpanAccessory();`
 
-## *SpanService()* (base class)
+## *SpanService()*
 
-This is a **base class** from which all HomeSpan Services are derived.  To create a new Service, instantiate one of HomeSpan Services defined in the Service namespace
+This is a **base class** from which all HomeSpan Services are derived, and should not be directly instantiated.  Rather, to create a new Service, instantiate one of HomeSpan Services defined in the [Service](ServiceList.md) namespace.
 
   
 * `SpanService()`
