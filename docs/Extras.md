@@ -19,7 +19,7 @@ The following methods are supported:
 
 * `void set(uint8_t channel, uint8_t level)`
 
-  * sets that PWM %duty-cycle of timer-channel *channel* to *level*, where *level* ranges from 0 (off) to 100 (steady on)
+  * sets the PWM %duty-cycle of timer-channel *channel* to *level*, where *level* ranges from 0 (off) to 100 (steady on)
 
 ---
 
