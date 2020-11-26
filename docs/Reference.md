@@ -95,6 +95,12 @@ This is a **base class** from which all HomeSpan Characteristics are derived, an
 
 * instantiated Characteristics are added to the HomeSpan HAP Database and associated with the last Service instantiated
 * instantiating a Characteristic without first instantiating a Service throws an error during initialization
-* a single, optional argument is used to set the initial value of the Characteristic at startup.
+* a single, optional argument is used to set the initial value of the Characteristic at startup
 * example: `new Characteristic::Brightness(50);`
 
+The following methods are supported:
+
+* `type T getVal<T>()`
+  * a template method that returns the current value of the Characteristic, after casting into the type *T* specified (e.g. *int*, *double*, etc.).  If template parameter is excluded, value will be cast to *int*.
+  * Example with template specified: `double temp = Characteristic::CurrentTemperature->getVal<double>();`
+  * Example with template excluded : `int tilt = Characteristic::CurrentTiltAngle->getVal();`
