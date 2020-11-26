@@ -111,8 +111,7 @@ The following methods are supported:
 * `boolean updated()`
   * returns *true* if a HomeKit Controller has requested an update to the value of the Characteristic, otherwise *false*.  The requested value itself can retrieved with `getNewVal<>()`
   
-* `void setVal(int value)`
-* `void setVal(double value)`
+* `void setVal(value)`
   * sets the value of the Characteristic to *value*, and notifies all HomeKit Controllers of the change.  Works with any integer, boolean, or floating-based numerical value.
   
 * `int timeVal()`
@@ -131,7 +130,6 @@ Creating an instance of this **class** attaches a pushbutton handler to the ESP3
 
 * instantiated Buttons are associated with the last Service instantiated
 * instantiating a Button without first instantiating a Service throws an error during initialization
-
 * the first argument is required; the rest are optional:
   * *pin* - the ESP32 pin to which a one pole of a normally-open pushbutton will be connected; the other pole is connected to ground
   * *longTime* - the minimum time (in millis) required for the button to be pressed and held to trigger a Long Press (default=2000 ms)
