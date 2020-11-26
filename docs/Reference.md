@@ -75,12 +75,16 @@ The following methods are supported:
 
 * `SpanService *setPrimary()`
   * specifies that this is the primary Service for the Accessory.  Returns a pointer to the Service itself so that the method can be chained during instantiation.  Example: `new Service::Fan->setPrimary();`
+  
 * `SpanService *setHidden()`
   * specifies that this is hidden Service for the Accessory.  Returns a pointer to the Service itself so that the method can be chained during instantiation.
+  
 * `virtual boolean update()`
   * HomeSpan calls this method upon receiving a request from a HomeKit Controller to update one or more Characteristics associated with the Service.  Users should override this method with code that implements that requested updates using one or more of the SpanCharacteristic methods below.  Method **must** return *true* if update succeeds, or *false* if not.
+  
 * `virtual void loop()`
   * HomeSpan calls this method every time `homeSpan.poll()` is executed.  Users should override this method with code that monitors for state changes in Characteristics that require HomeKit Controllers to be notified using one or more of the SpanCharacteristic methods below.
+  
 * `virtual void button(int pin, int pressType)`
   * HomeSpan calls this method whenever a SpanButton() object associated with the Service is triggered.  Users should override this method with code that implements any actions to be taken in response to the SpanButton() trigger using one or more of the SpanCharacteristic methods below.
     * *pin* - the ESP32 pin associated with the SpanButton() object
