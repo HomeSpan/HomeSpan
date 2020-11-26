@@ -82,9 +82,12 @@ The following methods are supported:
 * `virtual void loop()`
   * HomeSpan calls this method every time `homeSpan.poll()` is executed.  Users should override this method with code that monitors for state changes in Characteristics that require HomeKit Controllers to be notified.
 * `virtual void button(int pin, int pressType)`
-  * HomeSpan calls this method whenever a SpanButton() object associated with the Service is triggered.  Users should override this method with code that implements any actions that should be taken in response to the SpanButton() trigger
+  * HomeSpan calls this method whenever a SpanButton() object associated with the Service is triggered.  Users should override this method with code that implements any actions to be taken in response to the SpanButton() trigger
     * *pin* - the ESP32 pin associated with the SpanButton() object
-    * *pressType* - 0=single press, 1=double press, 2=long press
+    * *pressType* - 
+      * 0=single press (SpanButton::SINGLE)
+      * 1=double press (SpanButton::DOUBLE)
+      * 2=long press (SpanButton::LONG)
     
 ## *SpanCharacteristic()*
   
