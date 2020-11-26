@@ -78,11 +78,20 @@ The following methods are supported:
 * `SpanService *setHidden()`
   * specifies that this is hidden Service for the Accessory.  Returns a pointer to the Service itself so that the method can be chained during instantiation.
 * `virtual boolean update()`
-  * HomeSpan calls this method upon receiving a request from a HomeKit Controller to update one or more Characteristics associated with the Service.  Users should override this method with code that implements that requested updates and returns *true* of *false* if the update succeeds or fails
+  * HomeSpan calls this method upon receiving a request from a HomeKit Controller to update one or more Characteristics associated with the Service.  Users should override this method with code that implements that requested updates and returns *true* or *false* if the update succeeds or fails
 * `virtual void loop()`
   * HomeSpan calls this method every time `homeSpan.poll()` is executed.  Users should override this method with code that monitors for state changes in Characteristics that require HomeKit Controllers to be notified.
 * `virtual void button(int pin, int pressType)`
   * HomeSpan calls this method whenever a SpanButton() object associated with the Service is triggered.  Users should override this method with code that implements any actions that should be taken in response to the SpanButton() trigger
     * *pin* - the ESP32 pin associated with the SpanButton() object
     * *pressType* - 0=single press, 1=double press, 2=long press
+    
+## *SpanCharacteristic()*
   
+This is a **base class** from which all HomeSpan Characteristics are derived, and should **not** be directly instantiated.  Rather, to create a new Characteristic instantiate one of the HomeSpan Characteristics defined in the [Characteristic](ServiceList.md) namespace.
+
+* instantiated Characteristics are added to the HomeSpan HAP Database and associated with the last Service instantiated
+* instantiating a Characteristic without first instantiating a Service throws an error during initialization
+* a single, optional argument is used to set the initial value of the Characteristic at startup.
+* example: `new Characteristic::Brightness(50);`
+
