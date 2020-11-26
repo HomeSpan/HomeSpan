@@ -18,6 +18,7 @@ Creating an instance of this class links one of 16 timer-channels to an ESP32 pi
 The following methods are supported:
 
 * `void set(uint8_t channel, uint8_t level)`
+
   * sets that PWM %duty-cycle of timer-channel *channel* to *level*, where *level* ranges from 0 (off) to 100 (steady on)
 
 ---
