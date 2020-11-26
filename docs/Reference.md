@@ -120,7 +120,7 @@ The following methods are supported:
   
 ## *SpanRange(int min, int max, int step)*
 
-Creating an instance of this **class** changes the allowable range of values for a Characteristic from its HAP default to instead be between *min* and *max* in increments of *step*.
+Creating an instance of this **class** overrides the default HAP range for a Characteristic with the *min*, *max*, and *step* values specified.
 
 * instantiated Ranges are added to the HomeSpan HAP Database and associated with the last Characteristic instantiated
 * instantiating a Range without first instantiating a Characteristic throws an error during initialization
