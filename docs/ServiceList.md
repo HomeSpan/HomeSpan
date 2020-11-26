@@ -66,6 +66,7 @@ Additionally, when first starting up, HomeSpan begins by validating the device's
 ### Characteristic Types and Defaults
 
 |Characteristic|Type|Default
+|---|---|---|
 |Active|uint8_t|0|
 |AirQuality|uint8_t|0|
 |BatteryLevel|uint8_t|0|
