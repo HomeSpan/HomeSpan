@@ -4,7 +4,7 @@ HomeSpan implements all [HAP-R2](https://developer.apple.com/support/homekit-acc
 
 HomeSpan Services and Characteristics are implemented as C++ Classes with names that exactly match the spelling and capitalization specified by Apple in Sections 8  and 9 of [HAP-R2](https://developer.apple.com/support/homekit-accessory-protocol/), but without any spaces.  HomeSpan Services are defined in HomeSpan's `Service` namespace.  HomeSpan Characteristics are defined in HomeSpan's `Characteristic` namespace.  For example, HomeSpan defines the *Carbon Dioxide Sensor* Service (HAP Service 8.7) as `Service::CarbonDioxideSensor`, and the *Carbon Dioxide Detected* Characteristic (HAP Characteristic 9.16) as `Characteristic::CarbonDioxideDetected`.
 
-HomeSpan Services and Characteristics are instantiated with a C++ `new` command.  Services do not take any arguments, whereas Characteristics take a single, optional argument that is used to initialize the value of the Characteristic at startup.  If this argument is not specified, HomeSpan will apply a reasonable default value based on the Characteristic's type and allowed range.
+HomeSpan Services and Characteristics are instantiated with a C++ `new` command.  Services do not take any arguments, whereas Characteristics take a single, optional argument that is used to initialize the value of the Characteristic at startup.  If this argument is not specified, HomeSpan will apply a reasonable [default value](#characteristic-types-and-defaults) based on the Characteristic's type and allowed range.
 
 A list of all HomeSpan Services is provided in the table below.  For each Service the table also indicates which Characteristics are required and which are optional.  For example, a dimmable light bulb could be configured in HomeSpan as such:
 
@@ -61,6 +61,110 @@ Additionally, when first starting up, HomeSpan begins by validating the device's
 | Valve | Active<br>InUse<br>ValveType | SetDuration<br>RemainingDuration<br>IsConfigured<br>ServiceLabelIndex<br>StatusFault<br>Name |
 | Window | CurrentPosition<br>TargetPosition<br>PositionState | Name<br>HoldPosition<br>ObstructionDetected |
 | WindowCovering | CurrentPosition<br>TargetPosition<br>PositionState | Name<br>HoldPosition<br>CurrentHorizontalTiltAngle<br>TargetHorizontalTiltAngle<br>CurrentVerticalTiltAngle<br>TargetVerticalTiltAngle<br>ObstructionDetected |
+
+
+### Characteristic Types and Defaults
+
+|Characteristic|Type|Default
+|---|---|---|
+|Active|uint8_t|0|
+|AirQuality|uint8_t|0|
+|BatteryLevel|uint8_t|0|
+|Brightness|int|0|
+|CarbonMonoxideLevel|double|0|
+|CarbonMonoxidePeakLevel|double|0|
+|CarbonMonoxideDetected|uint8_t|0|
+|CarbonDioxideLevel|double|0|
+|CarbonDioxidePeakLevel|double|0|
+|CarbonDioxideDetected|uint8_t|0|
+|ChargingState|uint8_t|0|
+|CoolingThresholdTemperature|double|10| 
+|ColorTemperature|uint32_t|50|
+|ContactSensorState|uint8_t|1|
+|CurrentAmbientLightLevel|double|1|
+|CurrentHorizontalTiltAngle|int|0|
+|CurrentAirPurifierState|uint8_t|1|
+|CurrentSlatState|uint8_t|0|
+|CurrentPosition|uint8_t|0|
+|CurrentVerticalTiltAngle|int|0|
+|CurrentHumidifierDehumidifierState|uint8_t|1|
+|CurrentDoorState|uint8_t|1|
+|CurrentFanState|uint8_t|1|
+|CurrentHeatingCoolingState|uint8_t|0|
+|CurrentHeaterCoolerState|uint8_t|1|
+|CurrentRelativeHumidity|double|0|
+|CurrentTemperature|double|0|
+|CurrentTiltAngle|int|0|
+|FilterLifeLevel|double|0|
+|FilterChangeIndication|uint8_t|0|
+|FirmwareRevision|char \*|"1.0.0"|
+|HardwareRevision|char \*|"1.0.0"|
+|HeatingThresholdTemperature|double|16|
+|HoldPosition|boolean|false|
+|Hue|double|0|
+|Identify|boolean|false|
+|InUse|uint8_t|0|
+|IsConfigured|uint8_t|0|
+|LeakDetected|uint8_t|0|
+|LockCurrentState|uint8_t|0|
+|LockPhysicalControls|uint8_t|0|
+|LockTargetState|uint8_t|0|
+|Manufacturer|char \*|"HomeSpan"|
+|Model|char \*|"HomeSpan-ESP32"|
+|MotionDetected|boolean|false|
+|Mute|boolean|false|
+|Name|char \*|"unnamed"|
+|NitrogenDioxideDensity|double|0|
+|ObstructionDetected|boolean|false|
+|PM25Density|double|0|
+|OccupancyDetected|uint8_t|0|
+|OutletInUse|boolean|false|
+|On|boolean|false|
+|OzoneDensity|double|0|
+|PM10Density|double|0|
+|PositionState|uint8_t|2|
+|ProgramMode|uint8_t|0|
+|ProgrammableSwitchEvent|uint8_t|0|
+|RelativeHumidityDehumidifierThreshold|double|50|
+|RelativeHumidityHumidifierThreshold|double|50|
+|RemainingDuration|uint32_t|60|
+|ResetFilterIndication|uint8_t|0|
+|RotationDirection|int|0|
+|RotationSpeed|double|0|
+|Saturation|double|0|
+|SecuritySystemAlarmType|uint8_t|0|
+|SecuritySystemCurrentState|uint8_t|3|
+|SecuritySystemTargetState|uint8_t|3| 
+|SerialNumber|char \*|"HS-12345"|
+|ServiceLabelIndex|uint8_t|1|
+|ServiceLabelNamespace|uint8_t|1|
+|SlatType|uint8_t|0|
+|SmokeDetected|uint8_t|0|
+|StatusActive|boolean|true|
+|StatusFault|uint8_t|0|
+|StatusJammed|uint8_t|0|
+|StatusLowBattery|uint8_t|0|
+|StatusTampered|uint8_t|0|
+|SulphurDioxideDensity|double|0|
+|SwingMode|uint8_t|0|
+|TargetAirPurifierState|uint8_t|1|
+|TargetFanState|uint8_t|1|
+|TargetTiltAngle|int|0|
+|SetDuration|uint32_t|60|
+|TargetHorizontalTiltAngle|int|0|
+|TargetHumidifierDehumidifierState|uint8_t|0|
+|TargetPosition|uint8_t|0|
+|TargetDoorState|uint8_t|1|
+|TargetHeatingCoolingState|uint8_t|0|
+|TargetRelativeHumidity|double|0|
+|TargetTemperature|double|16|
+|TemperatureDisplayUnits|uint8_t|0|
+|TargetVerticalTiltAngle|int|0|
+|ValveType|uint8_t|0|
+|Version|char \*|"1.0.0"|
+|VOCDensity|double|0|
+|Volume|uint8_t|0|
+|WaterLevel|double|0|
 
 ---
 
