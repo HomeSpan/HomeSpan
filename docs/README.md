@@ -55,7 +55,7 @@ HomeSpan includes the following documentation:
 * [HomeSpan Command-Line Interface (CLI)](CLI.md) - configure a HomeSpan device's WiFi Credentials, modify its HomeKit Setup Code, monitor and update its status, and access detailed, real-time device diagnostics from the Arduino IDE Serial Monitor
 * [HomeSpan User Guide](UserGuide.md) - turnkey instructions on how to configure an already-programmed HomeSpan device's WiFi Credentials, modify its HomeKit Setup Code, and pair the device to HomeKit.  No computer needed!
 * [HomeSpan API Reference](Reference.md) - a complete guide to the HomeSpan Library API
-* [HomeSpan Extras](Extras.md) - integrated access to the ESP32's on-chip PWM and Remote Control peripherals
+* [HomeSpan Extras](Extras.md) - integrated access to the ESP32's on-chip PWM and Remote Control peripherals :construction:
 
 # External Resources
 
