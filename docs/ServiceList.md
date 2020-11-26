@@ -97,8 +97,8 @@ Additionally, when first starting up, HomeSpan begins by validating the device's
 |CurrentTiltAngle|int|0|
 |FilterLifeLevel|double|0|
 |FilterChangeIndication|uint8_t|0|
-|FirmwareRevision|char \*|""|
-|HardwareRevision|char \*|""|
+|FirmwareRevision|char \*|"1.0.0"|
+|HardwareRevision|char \*|"1.0.0"|
 |HeatingThresholdTemperature|double|16|
 |HoldPosition|boolean|false|
 |Hue|double|0|
@@ -109,11 +109,11 @@ Additionally, when first starting up, HomeSpan begins by validating the device's
 |LockCurrentState|uint8_t|0|
 |LockPhysicalControls|uint8_t|0|
 |LockTargetState|uint8_t|0|
-|Manufacturer|char \*|""|
-|Model|char \*|""|
+|Manufacturer|char \*|"HomeSpan"|
+|Model|char \*|"HomeSpan-ESP32"|
 |MotionDetected|boolean|false|
 |Mute|boolean|false|
-|Name|char \*|""|
+|Name|char \*|"unnamed"|
 |NitrogenDioxideDensity|double|0|
 |ObstructionDetected|boolean|false|
 |PM25Density|double|0|
@@ -135,7 +135,7 @@ Additionally, when first starting up, HomeSpan begins by validating the device's
 |SecuritySystemAlarmType|uint8_t|0|
 |SecuritySystemCurrentState|uint8_t|3|
 |SecuritySystemTargetState|uint8_t|3| 
-|SerialNumber|char \*|""|
+|SerialNumber|char \*|"HS-12345"|
 |ServiceLabelIndex|uint8_t|1|
 |ServiceLabelNamespace|uint8_t|1|
 |SlatType|uint8_t|0|
@@ -161,7 +161,7 @@ Additionally, when first starting up, HomeSpan begins by validating the device's
 |TemperatureDisplayUnits|uint8_t|0|
 |TargetVerticalTiltAngle|int|0|
 |ValveType|uint8_t|0|
-|Version|char \*|""|
+|Version|char \*|"1.0.0"|
 |VOCDensity|double|0|
 |Volume|uint8_t|0|
 |WaterLevel|double|0|
