@@ -127,6 +127,7 @@ Creating an instance of this **class** overrides the default HAP range for a Cha
 
 * instantiated Ranges are added to the HomeSpan HAP Database and associated with the last Characteristic instantiated
 * instantiating a Range without first instantiating a Characteristic throws an error during initialization
+* example: `new Characteristic::Brightness(50); new SpanRange(10,100,5);`
 
 ## *SpanButton(int pin, uint16_t longTime, uint16_t singleTime, uint16_t doubleTime)*
 
