@@ -89,7 +89,7 @@ The following methods are supported:
       * 1=double press (SpanButton::DOUBLE)
       * 2=long press (SpanButton::LONG)
     
-## *SpanCharacteristic()*
+## *SpanCharacteristic(value)*
   
 This is a **base class** from which all HomeSpan Characteristics are derived, and should **not** be directly instantiated.  Rather, to create a new Characteristic instantiate one of the HomeSpan Characteristics defined in the [Characteristic](ServiceList.md) namespace.
 
@@ -117,3 +117,10 @@ The following methods are supported:
   
 * `int timeVal()`
   * returns time elapsed (in millis) since value of the Characteristic was last updated (whether by `setVal()` or as the result of a successful update request from a HomeKit Controller)
+  
+## *SpanRange(int min, int max, int step)*
+
+Creating an instance of this **class** changes the allowable range of values for a Characteristic from its HAP default to instead be between *min* and *max* in increments of *step*.
+
+* instantiated Ranges are added to the HomeSpan HAP Database and associated with the last Characteristic instantiated
+* instantiating a Range without first instantiating a Characteristic throws an error during initialization
