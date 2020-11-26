@@ -7,7 +7,7 @@ HomeSpan provides a microcontroller-focused implementation of [Apple's HomeKit A
 ### HomeSpan Highlights
 
 * Provides a natural, intuitive, and **very** easy-to-use framework
-* Utilizes a unique *Service-Centric* approach to creating HomeKit devices
+* Utilizes a unique [Service-Centric](Overview.md#connecting-homespan-to-real-world-appliances) approach to creating HomeKit devices
 * Takes full advantage of the widely-popular Arduino IDE
 * 100% HAP-R2 compliance
 * 38 integrated [HomeKit Services](ServiceList.md)
@@ -18,10 +18,10 @@ HomeSpan provides a microcontroller-focused implementation of [Apple's HomeKit A
 * Extensive use of the Arduino Serial Monitor
   * Real-time, easy-to-understand diagnostics
   * Complete transparency to every underlying HomeKit action, data request, and data response
-  * Command-line interface with a variety of info, debugging, and configuration commands
+  * [Command-line interface](CLI.md) with a variety of info, debugging, and configuration commands
 * Built-in database validation to ensure your configuration meets all HAP requirements
 * Integrated PWM functionality supporting pulse-wave-modulation on any ESP32 pin
-* Integrated Push Button functionality supporting single, double, and long presses 
+* Integrated [Push Button](Reference.md#spanbuttonint-pin-uint16_t-longtime-uint16_t-singletime-uint16_t-doubletime) functionality supporting single, double, and long presses 
 * Integrated access to the ESP32's on-chip Remote Control peripheral for easy generation of IR and RF signals
 * 16 detailed [tutorial-sketches](Tutorials.md) with extensive comments, HomeSpan documentation and tips and tricks
 
