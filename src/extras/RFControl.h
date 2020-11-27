@@ -16,7 +16,7 @@ class RFControl {
     RFControl(int pin);                                     // creates transmitter on pin
     static void clear();                                    // clears transmitter memory
     static void add(uint16_t onTime, uint16_t offTime);     // adds pulse of onTime ticks HIGH followed by offTime ticks LOW
-    void start(int _numCycles, int tickTime=1);             // starts transmission of pulses, repeated for numCycles, where each tick in pulse is tickTime microseconds long
+    void start(uint8_t _numCycles, uint8_t tickTime=1);     // starts transmission of pulses, repeated for numCycles, where each tick in pulse is tickTime microseconds long
 };
 
    

@@ -31,11 +31,11 @@ RFControl::RFControl(int pin){
  
 ///////////////////
 
-void RFControl::start(int _numCycles, int tickTime){
+void RFControl::start(uint8_t _numCycles, uint8_t tickTime){
   pRMT[pCount]=0;                                             // load end-marker (zero bytes) into RMT memory
   REG_WRITE(GPIO_ENABLE_W1TS_REG,1<<pin);                     // enable output on pin
   numCycles=_numCycles;                                       // set number of cycles to repeat transmission
-  REG_SET_FIELD(RMT_CH0CONF0_REG,RMT_DIV_CNT_CH0,tickTime);    // set one tick = 1 microsecond * tickTime (RMT will be set to use 1 MHz REF_TICK, not 80 MHz APB_CLK)    
+  REG_SET_FIELD(RMT_CH0CONF0_REG,RMT_DIV_CNT_CH0,tickTime);   // set one tick = 1 microsecond * tickTime (RMT will be set to use 1 MHz REF_TICK, not 80 MHz APB_CLK)    
   REG_WRITE(RMT_CH0CONF1_REG,0x0000000D);                     // use REF_TICK clock; reset xmit and receive memory address to start of channel; START TRANSMITTING!
   while(numCycles);                                           // wait while transmission in progress
   REG_WRITE(GPIO_ENABLE_W1TC_REG,1<<pin);                     // disable output on pin
@@ -52,11 +52,11 @@ void RFControl::clear(){
 void RFControl::add(uint16_t onTime, uint16_t offTime){
   
   if(pCount==511){                                            // maximum number of pulses reached (saving one space for end-marker)
-    Serial.println("\n*** ERROR: Can't add more than 511 pulses to RF Control Module\n\n");
+    Serial.print("\n*** ERROR: Can't add more than 511 pulses to RF Control Module\n\n");
   } else
   
   if(offTime>32767 || onTime>32767){
-    Serial.println("\n*** ERROR: Request to add RF Control pulse with ON or OFF time exceeds 32767 maximum allowed number of ticks\n\n");
+    Serial.print("\n*** ERROR: Request to add RF Control pulse with ON or OFF time exceeds 32767 maximum allowed number of ticks\n\n");
   } else {
     
     pRMT[pCount++]=(offTime<<16)+onTime+(1<<15);              // load pulse information into RMT memory and increment pointer      
