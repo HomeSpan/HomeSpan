@@ -10,7 +10,7 @@ HomeSpan provides a microcontroller-focused implementation of [Apple's HomeKit A
 * Utilizes a unique *Service-Centric* approach to creating HomeKit devices
 * Takes full advantage of the widely-popular Arduino IDE
 * 100% HAP-R2 compliance
-* 38 integrated [HomeKit Services](ServiceList.md)
+* 38 integrated HomeKit Services
 * Operates in either Accessory or Bridge mode
 
 ### For the HomeSpan Developer
@@ -23,7 +23,7 @@ HomeSpan provides a microcontroller-focused implementation of [Apple's HomeKit A
 * Integrated PWM functionality supporting pulse-wave-modulation on any ESP32 pin
 * Integrated Push Button functionality supporting single, double, and long presses 
 * Integrated access to the ESP32's on-chip Remote Control peripheral for easy generation of IR and RF signals
-* 16 detailed [tutorial-sketches](Tutorials.md) with extensive comments, HomeSpan documentation and tips and tricks
+* 16 detailed tutorial-sketches with extensive comments, HomeSpan documentation and tips and tricks
 
 ### For the HomeSpan End-User
 
@@ -34,7 +34,7 @@ HomeSpan provides a microcontroller-focused implementation of [Apple's HomeKit A
   * Force-unpair the device from HomeKit
   * Perform a Factory Reset
   * Launch the WiFi Access Point
-* A standalone, detailed [End-User Guide](UserGuide.md)
+* A standalone, detailed End-User Guide
 
 # Latest Updates
 
@@ -54,7 +54,8 @@ HomeSpan includes the following documentation:
 * [HomeSpan Accessory Categories](Categories.md) - a list of all HAP Accessory Categories defined by HomeSpan
 * [HomeSpan Command-Line Interface (CLI)](CLI.md) - configure a HomeSpan device's WiFi Credentials, modify its HomeKit Setup Code, monitor and update its status, and access detailed, real-time device diagnostics from the Arduino IDE Serial Monitor
 * [HomeSpan User Guide](UserGuide.md) - turnkey instructions on how to configure an already-programmed HomeSpan device's WiFi Credentials, modify its HomeKit Setup Code, and pair the device to HomeKit.  No computer needed!
-* [HomeSpan API Reference](Reference.md) - a complete guide to the HomeSpan Library API :construction:
+* [HomeSpan API Reference](Reference.md) - a complete guide to the HomeSpan Library API
+* [HomeSpan Extras](Extras.md) - integrated access to the ESP32's on-chip PWM and Remote Control peripherals! :construction:
 
 # External Resources
 
