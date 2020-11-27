@@ -48,11 +48,11 @@ The ESP32 has an on-chip signal-generator peripheral designed to drive an RF or 
 
 Creating an instance of this **class** initializes the RF/IR signal generator and specifies the ESP32 *pin* to output the signal.  You may create more than one instance of this class if driving more than one RF/IR transmitter (each connected to different *pin*).
 
-##
+###
 
 ![Pulse Train](images/pulseTrain.png)
 
-##
+###
 
 The following methods are supported:
 
