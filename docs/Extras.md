@@ -10,17 +10,37 @@ PWM on the ESP32 is more flexible, but slighly more complicated, than PWM on mos
 
 ### *PwmPin(uint8_t channel, uint8_t pin)*
 
-Creating an instance of this class links one of 16 timer-channels to an ESP32 pin.
+Creating an instance of this **class** links one of 16 timer-channels to an ESP32 pin.
 
-* *channel* - an ESP32 timer-channel number (0-15) which will generate the PWM signal
+* *channel* - the ESP32 timer-channel number (0-15) to generate the PWM signal
 * *pin* - the ESP32 pin that will output the PWM signal produced by the channel
 
 The following methods are supported:
 
 * `void set(uint8_t channel, uint8_t level)`
 
-  * sets the PWM %duty-cycle of timer-channel *channel* to *level*, where *level* ranges from 0 (off) to 100 (steady on)
+  * sets the PWM %duty-cycle of timer-channel *channel* (0-15) to *level*, where *level* ranges from 0 (off) to 100 (steady on)
+  
+* `int getPin()`
 
+  * returns the pin number
+  
+PwmPin also includes a static class function that converts Hue/Saturation/Brightness values (typically used by HomeKit) to Red/Green/Blue values (ypically used to control multi-color LEDS).
+
+* `static void HSVtoRGB(float h, float s, float v, float *r, float *g, float *b)`
+
+  * *h* - input Hue value, range 0-360
+  * *s* - input Saturation value, range 0-1
+  * *v* - input Brightness value, range 0-1
+  * *r* - output Red value, range 0-1
+  * *g* - output Green value, range 0-1
+  * *b* - output Blue value, range 0-1
+
+See tutorial sketch [10 (RGB_LED)](../examples/10-RGB_LED) for an example of using PwmPin to control an RGB LED.
+
+
+
+ 
 ---
 
 [↩️](README.md) Back to the Welcome page
