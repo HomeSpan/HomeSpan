@@ -4,7 +4,7 @@ HomeSpan includes integrated access to a number of ESP32 features you'll likely 
 
 ## Pulse Width Modulation (PWM)
 
-PWM on the ESP32 is more flexible, but slighly more complicated, than PWM on most Arduino devices (like the Uno or Mega).  On the ESP32, you use one of 16 built-in timer-channels to create a PWM signal, and then link that channel to any ESP32 pin.  HomeSpan includes a library that makes this very easy, and is accessed as follows:
+PWM on the ESP32 is more flexible, but slighly more complicated, than PWM on most Arduino devices (like the Uno or Mega).  On the ESP32, you use one of 16 built-in timer-channels to create a PWM signal, and then link that channel to any ESP32 pin.  HomeSpan includes a library that makes this very easy, and is accessed as by placing the following near the top of your sketch:
 
 `#include "extras/PwmPin.h"`
 
@@ -40,13 +40,15 @@ See tutorial sketch [#10 (RGB_LED)](../examples/10-RGB_LED) for an example of us
 
 ## Radio Frequency / Infrared Signal Generation
 
-The ESP32 has an on-chip signal-generator peripheral designed to drive an RF or IR transmitter.  HomeSpan includes an easy-to-use library that interfaces with this peripheral so that with a few additional electronic components you can create a HomeSpan device that controls an RF or IR appliance directly from the Home App on your iPhone, or via Siri.  The library is accessed as follows:
+The ESP32 has an on-chip signal-generator peripheral designed to drive an RF or IR transmitter.  HomeSpan includes an easy-to-use library that interfaces with this peripheral so that with a few additional electronic components you can create a HomeSpan device that controls an RF or IR appliance directly from the Home App on your iPhone, or via Siri.  The library is accessed the following near the top of your sketch:
 
 `#include "extras/RFControl.h"`
 
 ### *RFControl(int pin)*
 
 Creating an instance of this **class** initializes the RF/IR signal generator and specifies the ESP32 *pin* to output the signal.  You may create more than one instance of this class if driving more than one RF/IR transmitter (each connected to different *pin*).
+
+#
 
 ![Pulse Train](images/pulseTrain.png)
 
