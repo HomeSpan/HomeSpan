@@ -25,7 +25,7 @@ The following methods are supported:
 
   * returns the pin number
   
-PwmPin also includes a static class function that converts Hue/Saturation/Brightness values (typically used by HomeKit) to Red/Green/Blue values (ypically used to control multi-color LEDS).
+PwmPin also includes a static class function that converts Hue/Saturation/Brightness values (typically used by HomeKit) to Red/Green/Blue values (typically used to control multi-color LEDS).
 
 * `static void HSVtoRGB(float h, float s, float v, float *r, float *g, float *b)`
 
@@ -36,8 +36,9 @@ PwmPin also includes a static class function that converts Hue/Saturation/Bright
   * *g* - output Green value, range 0-1
   * *b* - output Blue value, range 0-1
 
-See tutorial sketch [10 (RGB_LED)](../examples/10-RGB_LED) for an example of using PwmPin to control an RGB LED.
+See tutorial sketch [#10 (RGB_LED)](../examples/10-RGB_LED) for an example of using PwmPin to control an RGB LED.
 
+## Radio Frequency / Infrared Signal Generation
 
 
  
