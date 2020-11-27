@@ -46,7 +46,7 @@ The ESP32 has an on-chip signal-generator peripheral designed to drive an RF or 
 
 ### *RFControl(int pin)*
 
-Creating an instance of this **class** initializes the RF/IR signal generator and specifies the ESP32 output *pin*.  You may create more than once instance of this class if driving more than one RF/IR transmitter (each connected to different *pin*).
+Creating an instance of this **class** initializes the RF/IR signal generator and specifies the ESP32 *pin* to output the signal.  You may create more than one instance of this class if driving more than one RF/IR transmitter (each connected to different *pin*).
 
 The following methods are supported:
 
