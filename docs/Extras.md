@@ -40,6 +40,24 @@ See tutorial sketch [#10 (RGB_LED)](../examples/10-RGB_LED) for an example of us
 
 ## Radio Frequency / Infrared Signal Generation
 
+The ESP32 has an on-chip signal-generator peripheral designed to drive an RF or IR transmitter.  HomeSpan includes an easy-to-use library that interfaces with this peripheral so that with a few additional electronic components you can create a HomeSpan device that controls an RF or IR appliance directly from the Home App on your iPhone, or via Siri.  The library is accessed as follows:
+
+`#include "extras/RFControl.h"`
+
+### *RFControl(int pin)*
+
+Creating an instance of this **class** initializes the RF/IR signal generator and specifies the ESP32 output *pin*.  You may create more than once instance of this class if driving more than one RF/IR transmitter (each connected to different *pin*).
+
+The following methods are supported:
+
+(to be continued)
+
+
+
+
+
+
+
 
  
 ---
