@@ -70,7 +70,7 @@ Since most RF/IR signals repeat the same train of pulses more than once, the dur
 
 * `void start(uint8_t _numCycles, uint8_t tickTime)`
 
- * starts the transmission of the pulse train stored in the pulse train memory buffer.  The signal will be output on the *pin* specified when RFControl was instantiated.  Note this is a blocking call—the method waits until transmission is completed before returning.  This should not provide a noticeable delay in program operations since most RF/IR pulse trains are only a few tens-of-milliseconds long
+ * starts the transmission of the pulse train stored in the pulse train memory buffer.  The signal will be output on the *pin* specified when RFControl was instantiated.  Note this is a blocking call—the method waits until transmission is completed before returning.  This should not produce a noticeable delay in program operations since most RF/IR pulse trains are only a few tens-of-milliseconds long
  
    * *numCycles* - the total number of times to transmit the pulse train (i.e. a value of 3 means the pulse train will be transmitted once, followed by 2 additional  re-transmissions)
    
