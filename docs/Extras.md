@@ -56,25 +56,25 @@ Since most RF/IR signals repeat the same train of pulses more than once, the dur
 
 * `static void add(uint16_t onTime, uint16_t offTime)`
 
-  * appends a new pulse to the pulse train memory buffer, which has room to store a maximum of 511 high/low pulses.  Requests to add more than 511 pulses are ignores but raise a non-fatal warning message.  Note that this is a class-level method - there is only one pulse train memory buffer that is **shared** across all instances of an RFControl object
+  * appends a new pulse to the pulse train memory buffer, which has room to store a maximum of 511 high/low pulses.  Requests to add more than 511 pulses are ignores but raise a non-fatal warning message.  Note that this is a class-level method— there is only one pulse train memory buffer that is **shared** across all instances of an RFControl object
   
     * *onTime* - the duration, in *ticks* of the high portion of the pulse.  Allowable range is 0-32767 ticks.  Requests to add a pulse with an *onTime* of greater than 32767 ticks are ignored but raise non-fatal warning message
 
     * *offTime* - the duration, in *ticks* of the low portion of the pulse.  Allowable range is 0-32767 ticks.  Requests to add a pulse with an *offTime* of greater than 32767 ticks are ignored but raise non-fatal warning message
     
-  * Note that a pulse with either a zero onTime *or* zero *offTime* is permitted, but both cannot be zero as this is used to indicate the end of the pulse train.
+  * Note that a pulse with either *onTime=0* or *offTime=0* is permitted, but both **cannot** be zero as this is used by the ESP32 to indicate the end of the pulse train.
   
 * `static void clear()`
 
-  * clears the pulse train buffer
+  * clears the pulse train memory buffer
 
 * `void start(uint8_t _numCycles, uint8_t tickTime)`
 
- * starts the transmission of the pulse train stored in the pulse train memory buffer.  Output will on the pin specified when RFControl was instantiated.  This is a blocking call, and the methods waits until transmission is completed before returning.  This should not provide a noticeable delay in program operations since most RF/IR pulse trains are only a few tens of milliseconds long
+ * starts the transmission of the pulse train stored in the pulse train memory buffer.  The signal will be output on the *pin* specified when RFControl was instantiated.  Note this is a blocking call– the method waits until transmission is completed before returning.  This should not provide a noticeable delay in program operations since most RF/IR pulse trains are only a few tens-of-milliseconds long
  
-   * *numCycles* - the total number of times to transmit the pulse train (i.e. a value of 3 means pulse train will be transmitted once and then re-transmitted 2 more times)
+   * *numCycles* - the total number of times to transmit the pulse train (i.e. a value of 3 means the pulse train will be transmitted once, followed by 2 additional  re-transmissions)
    
-   * *tickTime* - the duration, in **microseconds**, of a *tick*.  This is an optional arugment with a default of 1 microsecond if not specified.
+   * *tickTime* - the duration, in **microseconds**, of a *tick*.  This is an optional arugment with a default of 1 microseconds if not specified.
  
 ---
 
