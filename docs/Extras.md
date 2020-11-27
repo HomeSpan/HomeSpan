@@ -48,14 +48,33 @@ The ESP32 has an on-chip signal-generator peripheral designed to drive an RF or 
 
 Creating an instance of this **class** initializes the RF/IR signal generator and specifies the ESP32 *pin* to output the signal.  You may create more than one instance of this class if driving more than one RF/IR transmitter (each connected to different *pin*).
 
-Signals are defined as a sequence of pulses, where you specify the duration, in *ticks*, of each individual HIGH and LOW period, shown respectively as H1-H4, and L1-L4, in the diagram below.
+Signals are defined as a sequence of pulses, where you specify the duration, in *ticks*, of paired high/low periods of a each pulse in a pulse train, shown respectively as H1-H4 and L1-L4 in the diagram below.
 
 ![Pulse Train](images/pulseTrain.png)
 
-Since most RF/IR signals repeat the same train of pulses more than once, the duration of the last LOW period should be extended to account for the delay between repeats of the pulse train.  The following methods are used to define the pulse train, set the number of repeats, set the duration of a *tick*, and start the transmission:
+Since most RF/IR signals repeat the same train of pulses more than once, the duration of the last LOW period should be extended to account for the delay between repeats of the pulse train.  The following methods are used to construct the pulse train, set the number of repeats, set the duration of a *tick*, and start the transmission:
 
+* `static void add(uint16_t onTime, uint16_t offTime)`
 
+  * appends a new pulse to the pulse train memory buffer, which has room to store a maximum of 511 high/low pulses.  Requests to add more than 511 pulses are ignores but raise a non-fatal warning message.  Note that this is a class-level method - there is only one pulse train memory buffer that is **shared** across all instances of an RFControl object
+  
+    * *onTime* - the duration, in *ticks* of the high portion of the pulse.  Allowable range is 0-32767 ticks.  Requests to add a pulse with an *onTime* of greater than 32767 ticks are ignored but raise non-fatal warning message
 
+    * *offTime* - the duration, in *ticks* of the low portion of the pulse.  Allowable range is 0-32767 ticks.  Requests to add a pulse with an *offTime* of greater than 32767 ticks are ignored but raise non-fatal warning message
+    
+  * Note that a pulse with either a zero onTime *or* zero *offTime* is permitted, but both cannot be zero as this is used to indicate the end of the pulse train.
+  
+* `static void clear()`
+
+  * clears the pulse train buffer
+
+* `void start(uint8_t _numCycles, uint8_t tickTime)`
+
+ * starts the transmission of the pulse train stored in the pulse train memory buffer.  Output will on the pin specified when RFControl was instantiated.  This is a blocking call, and the methods waits until transmission is completed before returning.  This should not provide a noticeable delay in program operations since most RF/IR pulse trains are only a few tens of milliseconds long
+ 
+   * *numCycles* - the total number of times to transmit the pulse train (i.e. a value of 3 means pulse train will be transmitted once and then re-transmitted 2 more times)
+   
+   * *tickTime* - the duration, in **microseconds**, of a *tick*.  This is an optional arugment with a default of 1 microsecond if not specified.
  
 ---
 
