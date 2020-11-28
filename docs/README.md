@@ -38,9 +38,9 @@ HomeSpan provides a microcontroller-focused implementation of [Apple's HomeKit A
 
 # Latest Updates
 
-#### 11/3/2020
+#### 11/27/2020
 
-> HomeSpan 1.0.0 is the initial public release. It is 100% feature-complete and includes 16 very detailed [tutorial-sketches](Tutorials.md) providing step-by-step instructions on how to use HomeSpan to create your own HomeKit devices. A 10-page [User Guide](UserGuide.md) provides addtional details on how to configure your finished HomeKit device for use on your WiFi network, and how to pair it to HomeKit.
+> HomeSpan 1.0.1 is the initial public release. It is 100% feature-complete and includes 16 very detailed [tutorial-sketches](Tutorials.md) providing step-by-step instructions on how to use HomeSpan to create your own HomeKit devices. A 10-page [User Guide](UserGuide.md) provides addtional details on how to configure your finished HomeKit device for use on your WiFi network, and how to pair it to HomeKit.
 
 # HomeSpan Resources
 
