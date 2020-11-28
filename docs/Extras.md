@@ -38,7 +38,7 @@ PwmPin also includes a static class function that converts Hue/Saturation/Bright
 
 See tutorial sketch [#10 (RGB_LED)](../examples/10-RGB_LED) for an example of using PwmPin to control an RGB LED.
 
-## Radio Frequency / Infrared Signal Generation
+## Remote Control Radio Frequency / Infrared Signal Generation
 
 The ESP32 has an on-chip signal-generator peripheral designed to drive an RF or IR transmitter.  HomeSpan includes an easy-to-use library that interfaces with this peripheral so that with a few additional electronic components you can create a HomeSpan device that controls an RF or IR appliance directly from the Home App on your iPhone, or via Siri.  The library is accessed the following near the top of your sketch:
 
