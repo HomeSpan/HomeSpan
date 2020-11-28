@@ -58,12 +58,10 @@ Since most RF/IR signals repeat the same train of pulses more than once, the dur
 
   * appends a new pulse to the pulse train memory buffer, which has room to store a maximum of 511 high/low pulses.  Requests to add more than 511 pulses are ignores but raise a non-fatal warning message.  Note that this is a class-level method—there is only one pulse train memory buffer that is **shared** across all instances of an RFControl object
   
-    * *onTime* - the duration, in *ticks* of the high portion of the pulse.  Allowable range is 0-32767 ticks.  Requests to add a pulse with an *onTime* of greater than 32767 ticks are ignored but raise non-fatal warning message
+    * *onTime* - the duration, in *ticks* of the high portion of the pulse.  Allowable range is 1-32767 ticks.  Requests to add a pulse with an *onTime* outside this range are ignored but raise non-fatal warning message
 
-    * *offTime* - the duration, in *ticks* of the low portion of the pulse.  Allowable range is 0-32767 ticks.  Requests to add a pulse with an *offTime* of greater than 32767 ticks are ignored but raise non-fatal warning message
-    
-  * note that a pulse with either *onTime=0* or *offTime=0* is permitted, but both **cannot** be zero as this is used by the ESP32 to indicate the end of the pulse train
-  
+    * *offTime* - the duration, in *ticks* of the low portion of the pulse.  Allowable range is 1-32767 ticks.  Requests to add a pulse with an *offTime* outside this range are ignored but raise non-fatal warning message
+      
 * `static void clear()`
 
   * clears the pulse train memory buffer
@@ -74,7 +72,7 @@ Since most RF/IR signals repeat the same train of pulses more than once, the dur
  
    * *numCycles* - the total number of times to transmit the pulse train (i.e. a value of 3 means the pulse train will be transmitted once, followed by 2 additional  re-transmissions)
    
-   * *tickTime* - the duration, in **microseconds**, of a *tick*.  This is an optional arugment with a default of 1 microseconds if not specified.
+   * *tickTime* - the duration, in **microseconds**, of a *tick*.  This is an optional argument with a default of 1 microseconds if not specified.  Valid range is 0-255, where 0 implies 256 microsends
  
 ---
 
