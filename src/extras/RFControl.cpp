@@ -55,8 +55,12 @@ void RFControl::add(uint16_t onTime, uint16_t offTime){
     Serial.print("\n*** ERROR: Can't add more than 511 pulses to RF Control Module\n\n");
   } else
   
-  if(offTime>32767 || onTime>32767){
-    Serial.print("\n*** ERROR: Request to add RF Control pulse with ON or OFF time exceeds 32767 maximum allowed number of ticks\n\n");
+  if(offTime>32767 || offTime<1 || onTime>32767 || onTime<1){
+    Serial.print("\n*** ERROR: Request to add RF Control pulse with onTime=");
+    Serial.print(onTime);
+    Serial.print(" and offTime=");
+    Serial.print(offTime);
+    Serial.print(" is out of allowable range: 1-32767\n\n");
   } else {
     
     pRMT[pCount++]=(offTime<<16)+onTime+(1<<15);              // load pulse information into RMT memory and increment pointer      
