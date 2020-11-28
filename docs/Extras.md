@@ -58,12 +58,10 @@ Since most RF/IR signals repeat the same train of pulses more than once, the dur
 
   * appends a new pulse to the pulse train memory buffer, which has room to store a maximum of 511 high/low pulses.  Requests to add more than 511 pulses are ignores but raise a non-fatal warning message.  Note that this is a class-level method—there is only one pulse train memory buffer that is **shared** across all instances of an RFControl object
   
-    * *onTime* - the duration, in *ticks* of the high portion of the pulse.  Allowable range is 0-32767 ticks.  Requests to add a pulse with an *onTime* of greater than 32767 ticks are ignored but raise non-fatal warning message
+    * *onTime* - the duration, in *ticks* of the high portion of the pulse.  Allowable range is 1-32767 ticks.  Requests to add a pulse with an *onTime* outside this range are ignored but raise non-fatal warning message
 
-    * *offTime* - the duration, in *ticks* of the low portion of the pulse.  Allowable range is 0-32767 ticks.  Requests to add a pulse with an *offTime* of greater than 32767 ticks are ignored but raise non-fatal warning message
-    
-  * note that a pulse with either *onTime=0* or *offTime=0* is permitted, but both **cannot** be zero as this is used by the ESP32 to indicate the end of the pulse train
-  
+    * *offTime* - the duration, in *ticks* of the low portion of the pulse.  Allowable range is 1-32767 ticks.  Requests to add a pulse with an *offTime* outside this range are ignored but raise non-fatal warning message
+      
 * `static void clear()`
 
   * clears the pulse train memory buffer
@@ -74,8 +72,61 @@ Since most RF/IR signals repeat the same train of pulses more than once, the dur
  
    * *numCycles* - the total number of times to transmit the pulse train (i.e. a value of 3 means the pulse train will be transmitted once, followed by 2 additional  re-transmissions)
    
-   * *tickTime* - the duration, in **microseconds**, of a *tick*.  This is an optional arugment with a default of 1 microseconds if not specified.
+   * *tickTime* - the duration, in **microseconds**, of a *tick*.  This is an optional argument with a default of 1𝛍s if not specified.  Valid range is 1-255𝛍s, or set to 0 for 256𝛍s
+   
+Below is a complete example that produces two different pulse trains with the signal output linked to the ESP32 device's built-in LED.  For illustrative purposes the tick duration has been set to a very long 100𝛍s, and pulse times range from of 1000-10,000 ticks, so that the individual pulses are easily discernable on the LED.
+
+```C++
+/* HomeSpan RF Transmitter Example */
+
+#include "HomeSpan.h"             // include the HomeSpan library
+#include "extras/RFControl.h"     // include RF Control Library
+
+void setup() {     
  
+  Serial.begin(115200);           // start the Serial interface
+  Serial.flush();
+  delay(1000);                    // wait for interface to flush
+
+  Serial.print("\n\nHomeSpan RF Transmitter Example\n\n");
+
+  RFControl rf(LED_BUILTIN);      // create an instance of RFControl with signal output to the ESP32's Built-In LED
+
+  rf.clear();                     // clear the pulse train memory buffer
+
+  rf.add(5000,5000);              // create a pulse train with three 5000-tick high/low pulses
+  rf.add(5000,5000);
+  rf.add(5000,10000);             // double duration of final low period
+
+  Serial.print("Starting 4 cycles of three 500 ms on pulses...");
+  
+  rf.start(4,100);                // start transmission of 4 cycles of the pulse train with 1 tick=100 microseconds
+
+  Serial.print("Done!\n");
+
+  delay(2000);
+
+  rf.clear();
+
+  for(int i=1000;i<10000;i+=1000)
+    rf.add(i,10000-i);
+  rf.add(10000,10000);
+  
+  Serial.print("Starting 3 cycles of 100-1000 ms pulses...");
+  
+  rf.start(3,100);                // start transmission of 3 cycles of the pulse train with 1 tick=100 microseconds
+
+  Serial.print("Done!\n");
+  
+  Serial.print("\nEnd Example");
+  
+} // end of setup()
+
+void loop(){
+
+} // end of loop()
+```
+
 ---
 
 [↩️](README.md) Back to the Welcome page
