@@ -223,7 +223,7 @@ new TableLamp(17);
 
 where 17 specifies the ESP32 pin number that is connected to the hypothetical relay used to turn the Table Lamp on and off.
 
-Our completed HomeSpan sketch to operate a Table Lamp is presented in full below.  Note it is also available in the Arudino IDE under *File → Examples → HomeSpan → Other Examples → TableLamp*
+Our completed HomeSpan sketch to operate a Table Lamp is presented in full below.  Note it is also available in the Arduino IDE under *File → Examples → HomeSpan → Other Examples → TableLamp*.
 
 ```C++
 /* HomeSpan Table Lamp Example */
