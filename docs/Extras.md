@@ -72,9 +72,9 @@ Since most RF/IR signals repeat the same train of pulses more than once, the dur
  
    * *numCycles* - the total number of times to transmit the pulse train (i.e. a value of 3 means the pulse train will be transmitted once, followed by 2 additional  re-transmissions)
    
-   * *tickTime* - the duration, in **microseconds**, of a *tick*.  This is an optional argument with a default of 1 microseconds if not specified.  Valid range is 1-255 microseconds, or 0 for 256 microseconds
+   * *tickTime* - the duration, in **microseconds**, of a *tick*.  This is an optional argument with a default of 1𝛍s if not specified.  Valid range is 1-255𝛍s, or 0 for 256𝛍s
    
-Below is a complete example that produces two different pulse trains with the signal output linked to the ESP32 device's built-in LED.  For illustrative purposes tick duration is set to a very long 100𝛍s and pulse times range from of 1000-10,000 ticks so that the individual pulses are easily discernable on the LED.
+Below is a complete example that produces two different pulse trains with the signal output linked to the ESP32 device's built-in LED.  For illustrative purposes the tick duration has been set to a very long 100𝛍s, and pulse times range from of 1000-10,000 ticks, so that the individual pulses are easily discernable on the LED.
 
 ```C++
 /* HomeSpan RF Transmitter Example */
