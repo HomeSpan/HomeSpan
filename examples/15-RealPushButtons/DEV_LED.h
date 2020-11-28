@@ -12,9 +12,9 @@ struct DEV_DimmableLED : Service::LightBulb {       // Dimmable LED
   // This version of the Dimmable LED Service is similar to the one last used in Example 11, but now includes support for 3 physical PushButtons
   // performing the following actions:
   //
-  // power button:  SHORT press toggles power on/off; LONG press sets brightness to 100% if power is on, or sets brightness to 5% if power is off
-  // raise button:  SHORT press increases brightness by 1%.  LONG press increases brightness by 10%
-  // lower button:  SHORT press decreases brightness by 1%.  LONG press decreases brightness by 10%
+  // power button:  SHORT press toggles power on/off; LONG press saves current brightness as favorite level; DOUBLE press sets brightness to favorite level
+  // raise button:  SHORT press increases brightness by 1%; LONG press increases brightness by 10%; DOUBLE press increases brightness to maximum
+  // lower button:  SHORT press decreases brightness by 1%; LONG press decreases brightness by 10%; DOUBLE press decreases brightness to minimum
   
   PwmPin *pwmPin;                                   // reference to PWM Pin
   int ledPin;                                       // pin number defined for this LED
