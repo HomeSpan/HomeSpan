@@ -118,7 +118,7 @@ struct Span{
 
   int sprintfAttributes(char *cBuf);            // prints Attributes JSON database into buf, unless buf=NULL; return number of characters printed, excluding null terminator, even if buf=NULL
   void prettyPrint(char *buf, int nsp=2);       // print arbitrary JSON from buf to serial monitor, formatted with indentions of 'nsp' spaces
-  SpanCharacteristic *find(int aid, int iid);   // return Characteristic with matching aid and iid (else NULL if not found)
+  SpanCharacteristic *find(uint32_t aid, int iid);   // return Characteristic with matching aid and iid (else NULL if not found)
   
   int countCharacteristics(char *buf);                                    // return number of characteristic objects referenced in PUT /characteristics JSON request
   int updateCharacteristics(char *buf, SpanBuf *pObj);                    // parses PUT /characteristics JSON request 'buf into 'pObj' and updates referenced characteristics; returns 1 on success, 0 on fail
@@ -142,11 +142,11 @@ struct Span{
 
 struct SpanAccessory{
     
-  int aid=0;                                // Accessory Instance ID (HAP Table 6-1)
+  uint32_t aid=0;                           // Accessory Instance ID (HAP Table 6-1)
   int iidCount=0;                           // running count of iid to use for Services and Characteristics associated with this Accessory                                 
   vector<SpanService *> Services;           // vector of pointers to all Services in this Accessory  
 
-  SpanAccessory();
+  SpanAccessory(uint32_t aid=0);
 
   int sprintfAttributes(char *cBuf);        // prints Accessory JSON database into buf, unless buf=NULL; return number of characters printed, excluding null terminator, even if buf=NULL  
   void validate();                          // error-checks Accessory
@@ -225,7 +225,7 @@ struct SpanCharacteristic{
   SpanRange *range=NULL;                   // Characteristic min/max/step; NULL = default values (optional)
   boolean *ev;                             // Characteristic Event Notify Enable (per-connection)
   
-  int aid=0;                               // Accessory ID - passed through from Service containing this Characteristic
+  uint32_t aid=0;                               // Accessory ID - passed through from Service containing this Characteristic
   boolean isUpdated=false;                 // set to true when new value has been requested by PUT /characteristic
   unsigned long updateTime;                // last time value was updated (in millis) either by PUT /characteristic OR by setVal()
   UVal newValue;                           // the updated value requested by PUT /characteristic
@@ -295,7 +295,7 @@ struct SpanRange{
 ///////////////////////////////
 
 struct SpanBuf{                               // temporary storage buffer for use with putCharacteristicsURL() and checkTimedResets() 
-  int aid=0;                                  // updated aid 
+  uint32_t aid=0;                             // updated aid 
   int iid=0;                                  // updated iid
   char *val=NULL;                             // updated value (optional, though either at least 'val' or 'ev' must be specified)
   char *ev=NULL;                              // updated event notification flag (optional, though either at least 'val' or 'ev' must be specified)

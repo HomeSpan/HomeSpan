@@ -649,14 +649,14 @@ void Span::processSerialCommand(char *c){
 
       char d[]="------------------------------";
       char cBuf[256];
-      sprintf(cBuf,"%-30s  %s  %s  %s  %s  %s  %s\n","Service","Type","AID","IID","Update","Loop","Button");
+      sprintf(cBuf,"%-30s  %s  %10s  %s  %s  %s  %s\n","Service","Type","AID","IID","Update","Loop","Button");
       Serial.print(cBuf);
-      sprintf(cBuf,"%.30s  %.4s  %.3s  %.3s  %.6s  %.4s  %.6s\n",d,d,d,d,d,d,d);
+      sprintf(cBuf,"%.30s  %.4s  %.10s  %.3s  %.6s  %.4s  %.6s\n",d,d,d,d,d,d,d);
       Serial.print(cBuf);
       for(int i=0;i<Accessories.size();i++){                             // identify all services with over-ridden loop() methods
         for(int j=0;j<Accessories[i]->Services.size();j++){
           SpanService *s=Accessories[i]->Services[j];
-          sprintf(cBuf,"%-30s  %4s  %3d  %3d  %6s  %4s  %6s\n",s->hapName,s->type,Accessories[i]->aid,s->iid, 
+          sprintf(cBuf,"%-30s  %4s  %10u  %3d  %6s  %4s  %6s\n",s->hapName,s->type,Accessories[i]->aid,s->iid, 
                  (void(*)())(s->*(&SpanService::update))!=(void(*)())(&SpanService::update)?"YES":"NO",
                  (void(*)())(s->*(&SpanService::loop))!=(void(*)())(&SpanService::loop)?"YES":"NO",
                  (void(*)(int,boolean))(s->*(&SpanService::button))!=(void(*)(int,boolean))(&SpanService::button)?"YES":"NO"
@@ -767,22 +767,28 @@ void Span::prettyPrint(char *buf, int nsp){
 
 ///////////////////////////////
 
-SpanCharacteristic *Span::find(int aid, int iid){
+SpanCharacteristic *Span::find(uint32_t aid, int iid){
 
-  if(aid<1 || aid>Accessories.size())     // aid out of range
-    return(NULL);
-
-  aid--;                    // convert from aid to array index number
-  
-  for(int i=0;i<Accessories[aid]->Services.size();i++){                   // loop over all Services in this Accessory
-    for(int j=0;j<Accessories[aid]->Services[i]->Characteristics.size();j++){     // loop over all Characteristics in this Service
-      
-      if(iid == Accessories[aid]->Services[i]->Characteristics[j]->iid)     // if matching iid
-        return(Accessories[aid]->Services[i]->Characteristics[j]);          // return pointer to Characteristic
+  int index=-1;
+  for(int i=0;i<Accessories.size();i++){   // loop over all Accessories to find aid
+    if(Accessories[i]->aid==aid){          // if match, save index into Accessories array
+      index=i;
+      break;
     }
   }
 
-  return(NULL);
+  if(index<0)                  // fail if no match on aid
+    return(NULL);
+    
+  for(int i=0;i<Accessories[index]->Services.size();i++){                           // loop over all Services in this Accessory
+    for(int j=0;j<Accessories[index]->Services[i]->Characteristics.size();j++){     // loop over all Characteristics in this Service
+      
+      if(iid == Accessories[index]->Services[i]->Characteristics[j]->iid)           // if matching iid
+        return(Accessories[index]->Services[i]->Characteristics[j]);                // return pointer to Characteristic
+    }
+  }
+
+  return(NULL);                // fail if no match on iid
 }
 
 ///////////////////////////////
@@ -828,7 +834,7 @@ int Span::updateCharacteristics(char *buf, SpanBuf *pObj){
       t1=NULL;
       char *t3;
       if(!strcmp(t2,"aid") && (t3=strtok_r(t1,"}[]:, \"\t\n\r",&p2))){
-        pObj[nObj].aid=atoi(t3);
+        sscanf(t3,"%u",&pObj[nObj].aid);
         okay|=1;
       } else 
       if(!strcmp(t2,"iid") && (t3=strtok_r(t1,"}[]:, \"\t\n\r",&p2))){
@@ -974,7 +980,7 @@ int Span::sprintfAttributes(SpanBuf *pObj, int nObj, char *cBuf){
   nChars+=snprintf(cBuf,cBuf?64:0,"{\"characteristics\":[");
 
   for(int i=0;i<nObj;i++){
-      nChars+=snprintf(cBuf?(cBuf+nChars):NULL,cBuf?128:0,"{\"aid\":%d,\"iid\":%d,\"status\":%d}",pObj[i].aid,pObj[i].iid,pObj[i].status);
+      nChars+=snprintf(cBuf?(cBuf+nChars):NULL,cBuf?128:0,"{\"aid\":%u,\"iid\":%d,\"status\":%d}",pObj[i].aid,pObj[i].iid,pObj[i].status);
       if(i+1<nObj)
         nChars+=snprintf(cBuf?(cBuf+nChars):NULL,cBuf?64:0,",");
   }
@@ -989,14 +995,15 @@ int Span::sprintfAttributes(SpanBuf *pObj, int nObj, char *cBuf){
 int Span::sprintfAttributes(char **ids, int numIDs, int flags, char *cBuf){
 
   int nChars=0;
-  int aid, iid;
+  uint32_t aid;
+  int iid;
   
   SpanCharacteristic *Characteristics[numIDs];
   StatusCode status[numIDs];
   boolean sFlag=false;
 
   for(int i=0;i<numIDs;i++){              // PASS 1: loop over all ids requested to check status codes - only errors are if characteristic not found, or not readable
-    sscanf(ids[i],"%d.%d",&aid,&iid);     // parse aid and iid
+    sscanf(ids[i],"%u.%d",&aid,&iid);     // parse aid and iid
     Characteristics[i]=find(aid,iid);      // find matching chararacteristic
     
     if(Characteristics[i]){                                          // if found
@@ -1020,8 +1027,8 @@ int Span::sprintfAttributes(char **ids, int numIDs, int flags, char *cBuf){
     if(Characteristics[i])                                                                         // if found
       nChars+=Characteristics[i]->sprintfAttributes(cBuf?(cBuf+nChars):NULL,flags);                // get JSON attributes for characteristic
     else{
-      sscanf(ids[i],"%d.%d",&aid,&iid);     // parse aid and iid                        
-      nChars+=snprintf(cBuf?(cBuf+nChars):NULL,cBuf?64:0,"{\"iid\":%d,\"aid\":%d}",iid,aid);      // else create JSON attributes based on requested aid/iid
+      sscanf(ids[i],"%u.%d",&aid,&iid);     // parse aid and iid                        
+      nChars+=snprintf(cBuf?(cBuf+nChars):NULL,cBuf?64:0,"{\"iid\":%d,\"aid\":%u}",iid,aid);      // else create JSON attributes based on requested aid/iid
     }
     
     if(sFlag){                                                                                    // status flag is needed - overlay at end
@@ -1043,7 +1050,7 @@ int Span::sprintfAttributes(char **ids, int numIDs, int flags, char *cBuf){
 //      SpanAccessory        //
 ///////////////////////////////
 
-SpanAccessory::SpanAccessory(){
+SpanAccessory::SpanAccessory(uint32_t aid){
 
   if(!homeSpan.Accessories.empty()){
     
@@ -1054,9 +1061,13 @@ SpanAccessory::SpanAccessory(){
   }
   
   homeSpan.Accessories.push_back(this);
-  aid=homeSpan.Accessories.size();
+  
+  if(aid==0)
+    this->aid=homeSpan.Accessories.size();
+  else
+    this->aid=aid;
 
-  homeSpan.configLog+="+Accessory-" + String(aid) + "\n";
+  homeSpan.configLog+="+Accessory-" + String(this->aid) + "\n";
 }
 
 ///////////////////////////////
@@ -1093,7 +1104,7 @@ void SpanAccessory::validate(){
 int SpanAccessory::sprintfAttributes(char *cBuf){
   int nBytes=0;
 
-  nBytes+=snprintf(cBuf,cBuf?64:0,"{\"aid\":%d,\"services\":[",aid);
+  nBytes+=snprintf(cBuf,cBuf?64:0,"{\"aid\":%u,\"services\":[",aid);
 
   for(int i=0;i<Services.size();i++){
     nBytes+=Services[i]->sprintfAttributes(cBuf?(cBuf+nBytes):NULL);    
@@ -1380,7 +1391,7 @@ int SpanCharacteristic::sprintfAttributes(char *cBuf, int flags){
   }
 
   if(flags&GET_AID)
-    nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"aid\":%d",aid);
+    nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"aid\":%u",aid);
   
   if(flags&GET_EV)
     nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"ev\":%s",ev[HAPClient::conNum]?"true":"false");
