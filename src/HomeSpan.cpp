@@ -1053,21 +1053,39 @@ int Span::sprintfAttributes(char **ids, int numIDs, int flags, char *cBuf){
 SpanAccessory::SpanAccessory(uint32_t aid){
 
   if(!homeSpan.Accessories.empty()){
+    this->aid=homeSpan.Accessories.back()->aid+1;
     
     if(!homeSpan.Accessories.back()->Services.empty())
       homeSpan.Accessories.back()->Services.back()->validate();    
       
     homeSpan.Accessories.back()->validate();    
+  } else {
+    this->aid=1;
   }
   
   homeSpan.Accessories.push_back(this);
-  
-  if(aid==0)
-    this->aid=homeSpan.Accessories.size();
-  else
-    this->aid=aid;
 
-  homeSpan.configLog+="+Accessory-" + String(this->aid) + "\n";
+  if(aid>0){                 // override with user-specified aid
+    this->aid=aid;
+  }
+
+  homeSpan.configLog+="+Accessory-" + String(this->aid);
+
+  for(int i=0;i<homeSpan.Accessories.size()-1;i++){
+    if(this->aid==homeSpan.Accessories[i]->aid){
+      homeSpan.configLog+=" *** ERROR!  ID already in use for another Accessory. ***";
+      homeSpan.nFatalErrors++;
+      break;
+    }
+  }
+
+  if(homeSpan.Accessories.size()==1 && this->aid!=1){
+    homeSpan.configLog+=" *** ERROR!  ID of first Accessory must always be 1. ***";
+    homeSpan.nFatalErrors++;    
+  }
+
+  homeSpan.configLog+="\n";
+
 }
 
 ///////////////////////////////
@@ -1082,8 +1100,8 @@ void SpanAccessory::validate(){
       foundInfo=true;
     else if(!strcmp(Services[i]->type,"A2"))
       foundProtocol=true;
-    else if(aid==1)                             // this is the first Accessory and it has more than just AccessoryInfo and HAPProtocolInformation
-      homeSpan.isBridge=false;                  // this is not a bridge device
+    else if(aid==1)                             // this is an Accessory with aid=1, but it has more than just AccessoryInfo and HAPProtocolInformation.  So...
+      homeSpan.isBridge=false;                  // ...this is not a bridge device
   }
 
   if(!foundInfo){
@@ -1092,7 +1110,7 @@ void SpanAccessory::validate(){
     homeSpan.nFatalErrors++;
   }    
 
-  if(!foundProtocol && (aid==1 || !homeSpan.isBridge)){           // HAPProtocolInformation must always be present in first Accessory, and any other Accessory is the device is not a bridge)
+  if(!foundProtocol && (aid==1 || !homeSpan.isBridge)){           // HAPProtocolInformation must always be present in Accessory if aid=1, and any other Accessory if the device is not a bridge)
     homeSpan.configLog+="  !Service HAPProtocolInformation";
     homeSpan.configLog+=" *** ERROR!  Required Service for this Accessory not found. ***\n";
     homeSpan.nFatalErrors++;
