@@ -54,14 +54,22 @@ The following **optional** `homeSpan` methods override various HomeSpan initiali
 * `void setMaxConnections(uint8_t nCon)`
   * sets the maximum number of HAP Controllers that be simultaneously connected to HomeSpan (default=8)
   
-## *SpanAccessory()*
+## *SpanAccessory(uint32_t aid)*
 
 Creating an instance of this **class** adds a new HAP Accessory to the HomeSpan HAP Database.
 
   * every HomeSpan sketch requires at least one Accessory
-  * there are no arguments or associated methods
+  * there are no associated methods
+  * The argument *aid* is optional.
+    * If specified and *not* zero, the Accessory ID is set to *aid*.
+    * If unspecified, or equal to zero, the Accessory ID will be set to one more than the ID of the previously-instantiated Accessory, or to 1 if this is the first Accessory.
+    * The first Accessory instantiated must always have an ID=1 (which is the default if *aid* is unspecified).
+    * Setting the *aid* of the first Accessory to anything but 1 throws an error during initialization.
   * you must call `homeSpan.begin()` before instantiating any Accessories
   * example: `new SpanAccessory();`
+  
+The first argument is required; the rest are optional:
+* *pin* - the ESP32 pin to which a one pole of a normally-  
 
 ## *SpanService()*
 
