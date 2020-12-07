@@ -60,11 +60,11 @@ Creating an instance of this **class** adds a new HAP Accessory to the HomeSpan 
 
   * every HomeSpan sketch requires at least one Accessory
   * there are no associated methods
-  * The argument *aid* is optional.
-    * If specified and *not* zero, the Accessory ID is set to *aid*.
-    * If unspecified, or equal to zero, the Accessory ID will be set to one more than the ID of the previously-instantiated Accessory, or to 1 if this is the first Accessory.
-    * The first Accessory instantiated must always have an ID=1 (which is the default if *aid* is unspecified).
-    * Setting the *aid* of the first Accessory to anything but 1 throws an error during initialization.
+  * the argument *aid* is optional.
+    * if specified and *not* zero, the Accessory ID is set to *aid*.
+    * if unspecified, or equal to zero, the Accessory ID will be set to one more than the ID of the previously-instantiated Accessory, or to 1 if this is the first Accessory.
+    * the first Accessory instantiated must always have an ID=1 (which is the default if *aid* is unspecified).
+    * setting the *aid* of the first Accessory to anything but 1 throws an error during initialization.
   * you must call `homeSpan.begin()` before instantiating any Accessories
   * example: `new SpanAccessory();`
   
