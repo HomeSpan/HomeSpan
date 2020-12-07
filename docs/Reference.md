@@ -61,16 +61,15 @@ Creating an instance of this **class** adds a new HAP Accessory to the HomeSpan 
   * every HomeSpan sketch requires at least one Accessory
   * there are no associated methods
   * the argument *aid* is optional.
+  
     * if specified and *not* zero, the Accessory ID is set to *aid*.
     * if unspecified, or equal to zero, the Accessory ID will be set to one more than the ID of the previously-instantiated Accessory, or to 1 if this is the first Accessory.
     * the first Accessory instantiated must always have an ID=1 (which is the default if *aid* is unspecified).
     * setting the *aid* of the first Accessory to anything but 1 throws an error during initialization.
+    
   * you must call `homeSpan.begin()` before instantiating any Accessories
   * example: `new SpanAccessory();`
   
-The first argument is required; the rest are optional:
-* *pin* - the ESP32 pin to which a one pole of a normally-  
-
 ## *SpanService()*
 
 This is a **base class** from which all HomeSpan Services are derived, and should **not** be directly instantiated.  Rather, to create a new Service instantiate one of the HomeSpan Services defined in the [Service](ServiceList.md) namespace.  No arguments are needed.
