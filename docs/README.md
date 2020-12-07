@@ -40,7 +40,7 @@ HomeSpan provides a microcontroller-focused implementation of [Apple's HomeKit A
 
 #### 12/7/2020
 
-> HomeSPan 1.1.0 - first update.  Adds ability to specify Accessory IDs, which helps when developing Homespan devices that can automatically add and delete Accessories.
+> HomeSpan 1.1.0 - first update.  Adds ability to specify Accessory IDs, which helps when developing Homespan devices that can automatically add and delete Accessories.
 
 #### 11/27/2020
 
