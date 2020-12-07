@@ -195,7 +195,7 @@ struct HapCharList {
   HAPCHAR( TargetAirPurifierState, A8, PW+PR+EV  );
   HAPCHAR( TargetFanState, BF, PW+PR+EV  );
   HAPCHAR( TargetTiltAngle, C2, PW+PR+EV  );
-  HAPCHAR( TargetHeaterCoolerState, ??, PW+PR+EV  );      // HAP documentation error - no code provided - must look up elsewhere
+  HAPCHAR( TargetHeaterCoolerState, B2, PW+PR+EV  );
   HAPCHAR( SetDuration, D3, PW+PR+EV  );
   HAPCHAR( TargetHorizontalTiltAngle, 7B, PW+PR+EV  );
   HAPCHAR( TargetHumidifierDehumidifierState, B4, PW+PR+EV  );
