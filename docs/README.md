@@ -38,6 +38,10 @@ HomeSpan provides a microcontroller-focused implementation of [Apple's HomeKit A
 
 # Latest Updates
 
+#### 12/10/2020
+
+> HomeSpan 1.1.1 - fixed a bug in timeVal() method that was inadvertently introduced in the last update (1.1.0)
+
 #### 12/7/2020
 
 > HomeSpan 1.1.0 - first update.  Adds ability to specify Accessory IDs, which helps when developing Homespan devices that can automatically add and delete Accessories.
