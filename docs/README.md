@@ -40,7 +40,7 @@ HomeSpan provides a microcontroller-focused implementation of [Apple's HomeKit A
 
 #### 12/10/2020
 
-> HomeSpan 1.1.1 - fixed a bug in timeVal() method that was inadvertently introduced in the last update (1.1.0)
+> HomeSpan 1.1.1 - fixed a bug in `timeVal()` method that was inadvertently introduced in the last update (1.1.0)
 
 #### 12/7/2020
 
