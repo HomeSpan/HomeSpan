@@ -1556,7 +1556,7 @@ void SpanCharacteristic::setVal(double val){
 
 ///////////////////////////////
 
-int SpanCharacteristic::timeVal(){
+unsigned long SpanCharacteristic::timeVal(){
   
   return(homeSpan.snapTime-updateTime);
 }

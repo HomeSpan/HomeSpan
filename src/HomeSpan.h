@@ -225,9 +225,9 @@ struct SpanCharacteristic{
   SpanRange *range=NULL;                   // Characteristic min/max/step; NULL = default values (optional)
   boolean *ev;                             // Characteristic Event Notify Enable (per-connection)
   
-  uint32_t aid=0;                               // Accessory ID - passed through from Service containing this Characteristic
+  uint32_t aid=0;                          // Accessory ID - passed through from Service containing this Characteristic
   boolean isUpdated=false;                 // set to true when new value has been requested by PUT /characteristic
-  unsigned long updateTime;                // last time value was updated (in millis) either by PUT /characteristic OR by setVal()
+  unsigned long updateTime=0;              // last time value was updated (in millis) either by PUT /characteristic OR by setVal()
   UVal newValue;                           // the updated value requested by PUT /characteristic
   SpanService *service=NULL;               // pointer to Service containing this Characteristic
       
@@ -252,7 +252,7 @@ struct SpanCharacteristic{
   void setVal(double value);                                                        // sets value of UVal value for FLOAT Characteristic type
 
   boolean updated(){return(isUpdated);}                                             // returns isUpdated
-  int timeVal();                                                                    // returns time elapsed (in millis) since value was last updated
+  unsigned long  timeVal();                                                         // returns time elapsed (in millis) since value was last updated
   
 };
 
