@@ -73,6 +73,6 @@ You ***do not*** need to read the entire document.  The whole point of HomeSpan 
 
 ---
 
-# Feedback or Questions?
+### Feedback or Questions?
 
 Please consider adding to the [HomeSpan Discussion Board](https://github.com/HomeSpan/HomeSpan/discussions), or email me directly at [homespan@icloud.com](mailto:homespan@icloud.com).
