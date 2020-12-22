@@ -56,13 +56,13 @@ void RFControl::clear(){
 
 void RFControl::add(uint16_t onTime, uint16_t offTime){
 
-  phase(onTime,RF_HIGH);
-  phase(offTime,RF_LOW);  
+  phase(onTime,HIGH);
+  phase(offTime,LOW);  
 }
 
 ///////////////////
 
-void RFControl::phase(uint16_t numTicks, PHASE phase){
+void RFControl::phase(uint16_t numTicks, uint8_t phase){
 
   if(pCount==1023){                                            // maximum number of entries reached (saving one space for end-marker)
     Serial.print("\n*** ERROR: Can't add more than 1023 entries to RF Control Module\n\n");
@@ -77,9 +77,9 @@ void RFControl::phase(uint16_t numTicks, PHASE phase){
     int index=pCount/2;
     
     if(pCount%2==0)                                             
-      pRMT[index]=numTicks | (int)phase;                                      // load entry into lower 16 bits of 32-bit memory           
+      pRMT[index]=numTicks | (phase?(1<<15):0);                                // load entry into lower 16 bits of 32-bit memory           
     else
-      pRMT[index]=pRMT[index] & 0xFFFF | (numTicks<<16) | ((int)phase<<16);   // load entry into upper 16 bits of 32-bit memory, preserving lower 16 bits
+      pRMT[index]=pRMT[index] & 0xFFFF | (numTicks<<16) | (phase?(1<<31):0);   // load entry into upper 16 bits of 32-bit memory, preserving lower 16 bits
 
     pCount++;
   }
@@ -101,5 +101,3 @@ boolean RFControl::configured=false;
 volatile int RFControl::numCycles;
 uint32_t *RFControl::pRMT=(uint32_t *)RMT_CHANNEL_MEM(0);
 int RFControl::pCount=0;
-RFControl::PHASE RF_LOW=RFControl::PHASE::Low;
-RFControl::PHASE RF_HIGH=RFControl::PHASE::High;

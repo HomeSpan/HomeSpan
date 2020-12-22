@@ -18,7 +18,7 @@ void setup(){
   rf.clear();
   for(int i=0;i<3;i++)
     rf.add(2000,2000);
-  rf.phase(10000,RF_LOW); 
+  rf.phase(10000,0); 
   rf.start(5,100);
   
   Serial.println("Done!");
