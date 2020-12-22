@@ -32,7 +32,12 @@ RFControl::RFControl(int pin){
 ///////////////////
 
 void RFControl::start(uint8_t _numCycles, uint8_t tickTime){
-  pRMT[pCount]=0;                                             // load end-marker (zero bytes) into RMT memory
+
+  if(pCount%2==0)                                             // if next entry is lower 16 bits of 32-bit memory
+    pRMT[pCount/2]=0;                                         // set memory to zero (end-marker)
+  else
+    pRMT[pCount/2]&=0xFFFF;                                   // else preserve lower 16 bits and zero our upper 16 bits
+  
   REG_WRITE(GPIO_ENABLE_W1TS_REG,1<<pin);                     // enable output on pin
   numCycles=_numCycles;                                       // set number of cycles to repeat transmission
   REG_SET_FIELD(RMT_CH0CONF0_REG,RMT_DIV_CNT_CH0,tickTime);   // set one tick = 1 microsecond * tickTime (RMT will be set to use 1 MHz REF_TICK, not 80 MHz APB_CLK)    
@@ -50,21 +55,35 @@ void RFControl::clear(){
 ///////////////////
 
 void RFControl::add(uint16_t onTime, uint16_t offTime){
-  
-  if(pCount==511){                                            // maximum number of pulses reached (saving one space for end-marker)
-    Serial.print("\n*** ERROR: Can't add more than 511 pulses to RF Control Module\n\n");
+
+  phase(onTime,RF_HIGH);
+  phase(offTime,RF_LOW);  
+}
+
+///////////////////
+
+void RFControl::phase(uint16_t numTicks, PHASE phase){
+
+  if(pCount==1023){                                            // maximum number of entries reached (saving one space for end-marker)
+    Serial.print("\n*** ERROR: Can't add more than 1023 entries to RF Control Module\n\n");
   } else
   
-  if(offTime>32767 || offTime<1 || onTime>32767 || onTime<1){
-    Serial.print("\n*** ERROR: Request to add RF Control pulse with onTime=");
-    Serial.print(onTime);
-    Serial.print(" and offTime=");
-    Serial.print(offTime);
+  if(numTicks>32767 || numTicks<1){
+    Serial.print("\n*** ERROR: Request to add RF Control entry with numTicks=");
+    Serial.print(numTicks);
     Serial.print(" is out of allowable range: 1-32767\n\n");
   } else {
+
+    int index=pCount/2;
     
-    pRMT[pCount++]=(offTime<<16)+onTime+(1<<15);              // load pulse information into RMT memory and increment pointer      
+    if(pCount%2==0)                                             
+      pRMT[index]=numTicks | (int)phase;                                      // load entry into lower 16 bits of 32-bit memory           
+    else
+      pRMT[index]=pRMT[index] & 0xFFFF | (numTicks<<16) | ((int)phase<<16);   // load entry into upper 16 bits of 32-bit memory, preserving lower 16 bits
+
+    pCount++;
   }
+
 }
 
 ///////////////////
@@ -82,3 +101,5 @@ boolean RFControl::configured=false;
 volatile int RFControl::numCycles;
 uint32_t *RFControl::pRMT=(uint32_t *)RMT_CHANNEL_MEM(0);
 int RFControl::pCount=0;
+RFControl::PHASE RF_LOW=RFControl::PHASE::Low;
+RFControl::PHASE RF_HIGH=RFControl::PHASE::High;
