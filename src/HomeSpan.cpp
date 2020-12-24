@@ -1508,26 +1508,32 @@ void SpanCharacteristic::setVal(int val){
       
       case BOOL:
         value.BOOL=(boolean)val;
+        newValue.BOOL=(boolean)val;        
       break;
 
       case INT:
         value.INT=(int)val;
+        newValue.INT=(int)val;
       break;
 
       case UINT8:
         value.UINT8=(uint8_t)val;
+        newValue.INT=(int)val;
       break;
 
       case UINT16:
         value.UINT16=(uint16_t)val;
+        newValue.UINT16=(uint16_t)val;
       break;
 
       case UINT32:
         value.UINT32=(uint32_t)val;
+        newValue.UINT32=(uint32_t)val;
       break;
 
       case UINT64:
         value.UINT64=(uint64_t)val;
+        newValue.UINT64=(uint64_t)val;
       break;
     }
 
@@ -1545,6 +1551,7 @@ void SpanCharacteristic::setVal(int val){
 void SpanCharacteristic::setVal(double val){
   
     value.FLOAT=(double)val;  
+    newValue.FLOAT=(double)val;  
     updateTime=homeSpan.snapTime;
 
     SpanBuf sb;                             // create SpanBuf object
