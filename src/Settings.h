@@ -32,8 +32,24 @@
 //////////////////////////////////////////////////////
 //              HomeSpan Version                    //
 
-#define     HOMESPAN_VERSION      "1.1.1"
+#define     HS_MAJOR  1
+#define     HS_MINOR  1
+#define     HS_PATCH  1
 
+#define     STRINGIFY(x) _STR(x)
+#define     _STR(x) #x
+
+#define     HOMESPAN_VERSION    STRINGIFY(HS_MAJOR) "." STRINGIFY(HS_MINOR) "." STRINGIFY(HS_PATCH)
+
+#define     VERSION(major,minor,patch) major*10000+minor*100+patch
+
+#ifndef REQUIRED
+  #define REQUIRED 0
+#endif
+
+#if (REQUIRED>VERSION(HS_MAJOR,HS_MINOR,HS_PATCH))
+  #error THIS SKETCH REQUIRES A LATER VERISON OF THE HOMESPAN LIBRARY
+#endif            
 
 //////////////////////////////////////////////////////
 //                DEFAULT SETTINGS                  //  
