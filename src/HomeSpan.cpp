@@ -1167,7 +1167,15 @@ SpanService::SpanService(const char *type, const char *hapName){
   homeSpan.Accessories.back()->Services.push_back(this);  
   iid=++(homeSpan.Accessories.back()->iidCount);  
 
-  homeSpan.configLog+=+"-" + String(iid) + String(" (") + String(type) + String(")\n");
+  homeSpan.configLog+="-" + String(iid) + String(" (") + String(type) + String(") ");
+
+  if(!strcmp(this->type,"3E") && iid!=1){
+    homeSpan.configLog+=" *** ERROR!  The AccessoryInformation Service must be defined before any other Services in an Accessory. ***";
+    homeSpan.nFatalErrors++;
+  }
+
+  homeSpan.configLog+="\n";
+
 }
 
 ///////////////////////////////
