@@ -417,8 +417,8 @@ namespace Characteristic {
   CREATE_CHAR(CurrentTiltAngle,int,0);
   CREATE_CHAR(FilterLifeLevel,double,0);
   CREATE_CHAR(FilterChangeIndication,uint8_t,0);
-  CREATE_CHAR(FirmwareRevision,char *,"1.0.0");
-  CREATE_CHAR(HardwareRevision,char *,"1.0.0");
+  CREATE_CHAR(FirmwareRevision,const char *,"1.0.0");
+  CREATE_CHAR(HardwareRevision,const char *,"1.0.0");
   CREATE_CHAR(HeatingThresholdTemperature,double,16);
   CREATE_CHAR(HoldPosition,boolean,false);
   CREATE_CHAR(Hue,double,0);
@@ -429,11 +429,11 @@ namespace Characteristic {
   CREATE_CHAR(LockCurrentState,uint8_t,0);
   CREATE_CHAR(LockPhysicalControls,uint8_t,0);
   CREATE_CHAR(LockTargetState,uint8_t,0);
-  CREATE_CHAR(Manufacturer,char *,"HomeSpan");
-  CREATE_CHAR(Model,char *,"HomeSpan-ESP32");
+  CREATE_CHAR(Manufacturer,const char *,"HomeSpan");
+  CREATE_CHAR(Model,const char *,"HomeSpan-ESP32");
   CREATE_CHAR(MotionDetected,boolean,false);
   CREATE_CHAR(Mute,boolean,false);
-  CREATE_CHAR(Name,char *,"unnamed");
+  CREATE_CHAR(Name,const char *,"unnamed");
   CREATE_CHAR(NitrogenDioxideDensity,double,0);
   CREATE_CHAR(ObstructionDetected,boolean,false);
   CREATE_CHAR(PM25Density,double,0);
@@ -455,7 +455,7 @@ namespace Characteristic {
   CREATE_CHAR(SecuritySystemAlarmType,uint8_t,0);
   CREATE_CHAR(SecuritySystemCurrentState,uint8_t,3);
   CREATE_CHAR(SecuritySystemTargetState,uint8_t,3); 
-  CREATE_CHAR(SerialNumber,char *,"HS-12345");
+  CREATE_CHAR(SerialNumber,const char *,"HS-12345");
   CREATE_CHAR(ServiceLabelIndex,uint8_t,1);
   CREATE_CHAR(ServiceLabelNamespace,uint8_t,1);
   CREATE_CHAR(SlatType,uint8_t,0);
@@ -481,7 +481,7 @@ namespace Characteristic {
   CREATE_CHAR(TemperatureDisplayUnits,uint8_t,0);
   CREATE_CHAR(TargetVerticalTiltAngle,int,0);
   CREATE_CHAR(ValveType,uint8_t,0);
-  CREATE_CHAR(Version,char *,"1.0.0");
+  CREATE_CHAR(Version,const char *,"1.0.0");
   CREATE_CHAR(VOCDensity,double,0);
   CREATE_CHAR(Volume,uint8_t,0);
   CREATE_CHAR(WaterLevel,double,0);

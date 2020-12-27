@@ -701,7 +701,7 @@ int HAPClient::postPairVerifyURL(){
 
         memcpy(iosCurveKey,tlv8.buf(kTLVType_PublicKey),32);       // save iosCurveKey (will persist until end of verification process)
 
-        crypto_scalarmult_curve25519(sharedCurveKey,secretCurveKey,iosCurveKey);      // generate (and persist) Pair Verify SharedSecret CurveKey from Accessory's Curve25519 secret key and Controller's Curve25519 public key (32 bytes)
+        int rVal=crypto_scalarmult_curve25519(sharedCurveKey,secretCurveKey,iosCurveKey);      // generate (and persist) Pair Verify SharedSecret CurveKey from Accessory's Curve25519 secret key and Controller's Curve25519 public key (32 bytes)
 
         uint8_t *accessoryPairingID = accessory.ID;                    // set accessoryPairingID
         size_t accessoryPairingIDLen = 17;

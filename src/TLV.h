@@ -38,7 +38,7 @@ class TLV {
     int len;             // LENGTH
     uint8_t *val;        // VALUE buffer
     int maxLen;          // maximum length of VALUE buffer
-    char *name;          // abbreviated name of this TAG
+    const char *name;          // abbreviated name of this TAG
   };
 
   tlv_t tlv[maxTags];           // pointer to array of TLV record structures
@@ -48,7 +48,7 @@ public:
 
   TLV();
   
-  int create(tagType tag, int maxLen, char *name);   // creates a new TLV record of type 'tag' with 'maxLen' bytes and display 'name'
+  int create(tagType tag, int maxLen, const char *name);   // creates a new TLV record of type 'tag' with 'maxLen' bytes and display 'name'
   
   void clear();                             // clear all TLV structures
   int val(tagType tag);                     // returns VAL for TLV with matching TAG (or -1 if no match)
@@ -75,7 +75,7 @@ TLV<tagType, maxTags>::TLV(){
 // TLV create(tag, maxLen, name)
 
 template<class tagType, int maxTags>
-int TLV<tagType, maxTags>::create(tagType tag, int maxLen, char *name){
+int TLV<tagType, maxTags>::create(tagType tag, int maxLen, const char *name){
   
   if(numTags==maxTags){
     Serial.print("\n*** ERROR: Can't create new TLC tag type with name='");

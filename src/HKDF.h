@@ -39,5 +39,5 @@
 // use SHA-512 with 32 bytes of output as required by HAP.
 
 struct HKDF {
-  int create(uint8_t *outputKey, uint8_t *inputKey, int inputLen, char *salt, char *info);    // output of HKDF is always a 32-byte key derived from an input key, a salt string, and an info string
+  int create(uint8_t *outputKey, uint8_t *inputKey, int inputLen, const char *salt, const char *info);    // output of HKDF is always a 32-byte key derived from an input key, a salt string, and an info string
 };

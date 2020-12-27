@@ -90,8 +90,8 @@ enum class StatusCode {
 ///////////////////////////////
 
 struct HapCharType {
-  char *id;
-  char *name;
+  const char *id;
+  const char *name;
   uint8_t perms;
 };
 

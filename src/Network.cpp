@@ -131,7 +131,7 @@ void Network::apConfigure(){
   }  
 
   WiFiServer apServer(80);
-  client=NULL;
+  client=0;
   
   TempBuffer <uint8_t> tempBuffer(MAX_HTTP+1);
   uint8_t *httpBuf=tempBuffer.buf;
@@ -375,7 +375,7 @@ void Network::processRequest(char *body, char *formData){
 
 //////////////////////////////////////
 
-int Network::getFormValue(char *formData, char *tag, char *value, int maxSize){
+int Network::getFormValue(char *formData, const char *tag, char *value, int maxSize){
 
   char *s=strstr(formData,tag);     // find start of tag
   

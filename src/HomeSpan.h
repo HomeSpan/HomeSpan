@@ -74,10 +74,10 @@ struct SpanConfig {
 
 struct Span{
 
-  char *displayName;                            // display name for this device - broadcast as part of Bonjour MDNS
-  char *hostNameBase;                           // base of host name of this device - full host name broadcast by Bonjour MDNS will have 6-byte accessoryID as well as '.local' automatically appended
+  const char *displayName;                      // display name for this device - broadcast as part of Bonjour MDNS
+  const char *hostNameBase;                     // base of host name of this device - full host name broadcast by Bonjour MDNS will have 6-byte accessoryID as well as '.local' automatically appended
   char *hostName;                               // full host name of this device - constructed from hostNameBase and 6-byte AccessoryID
-  char *modelName;                              // model name of this device - broadcast as Bonjour field "md" 
+  const char *modelName;                        // model name of this device - broadcast as Bonjour field "md" 
   char category[3]="";                          // category ID of primary accessory - broadcast as Bonjour field "ci" (HAP Section 13)
   unsigned long snapTime;                       // current time (in millis) snapped before entering Service loops() or updates()
   boolean isInitialized=false;                  // flag indicating HomeSpan has been initialized
@@ -85,7 +85,7 @@ struct Span{
   String configLog;                             // log of configuration process, including any errors
   boolean isBridge=true;                        // flag indicating whether device is configured as a bridge (i.e. first Accessory contains nothing but AccessoryInformation and HAPProtocolInformation)
   
-  char *defaultSetupCode=DEFAULT_SETUP_CODE;                  // Setup Code used for pairing
+  const char *defaultSetupCode=DEFAULT_SETUP_CODE;            // Setup Code used for pairing
   uint8_t statusPin=DEFAULT_STATUS_PIN;                       // pin for status LED    
   uint8_t controlPin=DEFAULT_CONTROL_PIN;                     // pin for Control Pushbutton
   uint8_t logLevel=DEFAULT_LOG_LEVEL;                         // level for writing out log messages to serial monitor
@@ -106,15 +106,15 @@ struct Span{
   HapCharList chr;                                  // list of all HAP Characteristics
 
   void begin(Category catID=DEFAULT_CATEGORY,
-             char *displayName=DEFAULT_DISPLAY_NAME,
-             char *hostNameBase=DEFAULT_HOST_NAME,
-             char *modelName=DEFAULT_MODEL_NAME);        
+             const char *displayName=DEFAULT_DISPLAY_NAME,
+             const char *hostNameBase=DEFAULT_HOST_NAME,
+             const char *modelName=DEFAULT_MODEL_NAME);        
              
   void poll();                                  // poll HAP Clients and process any new HAP requests
   int getFreeSlot();                            // returns free HAPClient slot number. HAPClients slot keep track of each active HAPClient connection
   void initWifi();                              // initialize and connect to WiFi network
   void commandMode();                           // allows user to control and reset HomeSpan settings with the control button
-  void processSerialCommand(char *c);           // process command 'c' (typically from readSerial, though can be called with any 'c')
+  void processSerialCommand(const char *c);     // process command 'c' (typically from readSerial, though can be called with any 'c')
 
   int sprintfAttributes(char *cBuf);            // prints Attributes JSON database into buf, unless buf=NULL; return number of characters printed, excluding null terminator, even if buf=NULL
   void prettyPrint(char *buf, int nsp=2);       // print arbitrary JSON from buf to serial monitor, formatted with indentions of 'nsp' spaces
@@ -216,7 +216,7 @@ struct SpanCharacteristic{
   };
      
   int iid=0;                               // Instance ID (HAP Table 6-3)
-  char *type;                              // Characteristic Type
+  const char *type;                        // Characteristic Type
   const char *hapName;                     // HAP Name
   UVal value;                              // Characteristic Value
   uint8_t perms;                           // Characteristic Permissions
@@ -231,15 +231,15 @@ struct SpanCharacteristic{
   UVal newValue;                           // the updated value requested by PUT /characteristic
   SpanService *service=NULL;               // pointer to Service containing this Characteristic
       
-  SpanCharacteristic(char *type, uint8_t perms, char *hapName);
-  SpanCharacteristic(char *type, uint8_t perms, boolean value, char *hapName);
-  SpanCharacteristic(char *type, uint8_t perms, uint8_t value, char *hapName);
-  SpanCharacteristic(char *type, uint8_t perms, uint16_t value, char *hapName);
-  SpanCharacteristic(char *type, uint8_t perms, uint32_t value, char *hapName);
-  SpanCharacteristic(char *type, uint8_t perms, uint64_t value, char *hapName);
-  SpanCharacteristic(char *type, uint8_t perms, int32_t value, char *hapName);
-  SpanCharacteristic(char *type, uint8_t perms, double value, char *hapName);
-  SpanCharacteristic(char *type, uint8_t perms, const char* value, char *hapName);
+  SpanCharacteristic(const char *type, uint8_t perms, const char *hapName);
+  SpanCharacteristic(const char *type, uint8_t perms, boolean value, const char *hapName);
+  SpanCharacteristic(const char *type, uint8_t perms, uint8_t value, const char *hapName);
+  SpanCharacteristic(const char *type, uint8_t perms, uint16_t value, const char *hapName);
+  SpanCharacteristic(const char *type, uint8_t perms, uint32_t value, const char *hapName);
+  SpanCharacteristic(const char *type, uint8_t perms, uint64_t value, const char *hapName);
+  SpanCharacteristic(const char *type, uint8_t perms, int32_t value, const char *hapName);
+  SpanCharacteristic(const char *type, uint8_t perms, double value, const char *hapName);
+  SpanCharacteristic(const char *type, uint8_t perms, const char* value, const char *hapName);
 
   int sprintfAttributes(char *cBuf, int flags);   // prints Characteristic JSON records into buf, according to flags mask; return number of characters printed, excluding null terminator  
   StatusCode loadUpdate(char *val, char *ev);     // load updated val/ev from PUT /characteristic JSON request.  Return intiial HAP status code (checks to see if characteristic is found, is writable, etc.)

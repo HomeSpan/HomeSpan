@@ -44,7 +44,7 @@ Span homeSpan;                      // HAP Attributes database and all related c
 //         Span              //
 ///////////////////////////////
 
-void Span::begin(Category catID, char *displayName, char *hostNameBase, char *modelName){
+void Span::begin(Category catID, const char *displayName, const char *hostNameBase, const char *modelName){
   
   this->displayName=displayName;
   this->hostNameBase=hostNameBase;
@@ -319,24 +319,34 @@ void Span::initWifi(){
   int nChars=snprintf(NULL,0,"%s-%.2s%.2s%.2s%.2s%.2s%.2s",hostNameBase,id,id+3,id+6,id+9,id+12,id+15);       
   char hostName[nChars+1];
   sprintf(hostName,"%s-%.2s%.2s%.2s%.2s%.2s%.2s",hostNameBase,id,id+3,id+6,id+9,id+12,id+15);
-
-  int nTries=0;
   
   statusLED.start(LED_WIFI_CONNECTING);
   controlButton.reset();
+ 
+ int nTries=0;
+ 
+  Serial.print("Attempting connection to: ");
+  Serial.print(network.wifiData.ssid);
+  Serial.print(". Type 'X <return>' or press Control Button for 3 seconds at any time to terminate search and delete WiFi credentials.");
   
   while(WiFi.status()!=WL_CONNECTED){
-    Serial.print("Connecting to: ");
-    Serial.print(network.wifiData.ssid);
-    Serial.print("... ");
-    nTries++;
-    
+
+    if(nTries++ == 0)
+      Serial.print("\nConnecting..");
+      
     if(WiFi.begin(network.wifiData.ssid,network.wifiData.pwd)!=WL_CONNECTED){
-      int delayTime=nTries%6?5000:60000;
+      int delayTime;
       char buf[8]="";
-      Serial.print("Can't connect. Re-trying in ");
-      Serial.print(delayTime/1000);
-      Serial.print(" seconds. Type 'X <return>' or press Control Button for 3 seconds to terminate search and delete WiFi credentials...");
+      if(nTries<=10){
+        delayTime=2000;
+        Serial.print(".");
+      } else {
+        nTries=0;
+        delayTime=60000;
+        Serial.print(" Can't connect! Will re-try in ");
+        Serial.print(delayTime/1000);
+        Serial.print(" seconds...");
+      }
       long sTime=millis();
       
       while(millis()-sTime<delayTime){    
@@ -352,10 +362,9 @@ void Span::initWifi(){
         }
       }
     }
-    Serial.print("\n");
   } // WiFi not yet connected
 
-  Serial.print("Success!  IP:  ");
+  Serial.print(" Success!\nIP: ");
   Serial.print(WiFi.localIP());
   Serial.print("\n");
 
@@ -407,7 +416,7 @@ void Span::initWifi(){
 
 ///////////////////////////////
 
-void Span::processSerialCommand(char *c){
+void Span::processSerialCommand(const char *c){
 
   switch(c[0]){
 
@@ -1222,7 +1231,7 @@ void SpanService::validate(){
 //    SpanCharacteristic     //
 ///////////////////////////////
 
-SpanCharacteristic::SpanCharacteristic(char *type, uint8_t perms, char *hapName){
+SpanCharacteristic::SpanCharacteristic(const char *type, uint8_t perms, const char *hapName){
   this->type=type;
   this->perms=perms;
   this->hapName=hapName;
@@ -1274,56 +1283,56 @@ SpanCharacteristic::SpanCharacteristic(char *type, uint8_t perms, char *hapName)
 
 ///////////////////////////////
 
-SpanCharacteristic::SpanCharacteristic(char *type, uint8_t perms, boolean value, char *hapName) : SpanCharacteristic(type, perms, hapName) {
+SpanCharacteristic::SpanCharacteristic(const  char *type, uint8_t perms, boolean value, const char *hapName) : SpanCharacteristic(type, perms, hapName) {
   this->format=BOOL;
   this->value.BOOL=value;
 }
 
 ///////////////////////////////
 
-SpanCharacteristic::SpanCharacteristic(char *type, uint8_t perms, int32_t value, char *hapName) : SpanCharacteristic(type, perms, hapName) {
+SpanCharacteristic::SpanCharacteristic(const char *type, uint8_t perms, int32_t value, const char *hapName) : SpanCharacteristic(type, perms, hapName) {
   this->format=INT;
   this->value.INT=value;
 }
 
 ///////////////////////////////
 
-SpanCharacteristic::SpanCharacteristic(char *type, uint8_t perms, uint8_t value, char *hapName) : SpanCharacteristic(type, perms, hapName) {
+SpanCharacteristic::SpanCharacteristic(const char *type, uint8_t perms, uint8_t value, const char *hapName) : SpanCharacteristic(type, perms, hapName) {
   this->format=UINT8;
   this->value.UINT8=value;
 }
 
 ///////////////////////////////
 
-SpanCharacteristic::SpanCharacteristic(char *type, uint8_t perms, uint16_t value, char *hapName) : SpanCharacteristic(type, perms, hapName) {
+SpanCharacteristic::SpanCharacteristic(const char *type, uint8_t perms, uint16_t value, const char *hapName) : SpanCharacteristic(type, perms, hapName) {
   this->format=UINT16;
   this->value.UINT16=value;
 }
 
 ///////////////////////////////
 
-SpanCharacteristic::SpanCharacteristic(char *type, uint8_t perms, uint32_t value, char *hapName) : SpanCharacteristic(type, perms, hapName) {
+SpanCharacteristic::SpanCharacteristic(const char *type, uint8_t perms, uint32_t value, const char *hapName) : SpanCharacteristic(type, perms, hapName) {
   this->format=UINT32;
   this->value.UINT32=value;
 }
 
 ///////////////////////////////
 
-SpanCharacteristic::SpanCharacteristic(char *type, uint8_t perms, uint64_t value, char *hapName) : SpanCharacteristic(type, perms, hapName) {
+SpanCharacteristic::SpanCharacteristic(const char *type, uint8_t perms, uint64_t value, const char *hapName) : SpanCharacteristic(type, perms, hapName) {
   this->format=UINT64;
   this->value.UINT64=value;
 }
 
 ///////////////////////////////
 
-SpanCharacteristic::SpanCharacteristic(char *type, uint8_t perms, double value, char *hapName) : SpanCharacteristic(type, perms, hapName) {
+SpanCharacteristic::SpanCharacteristic(const char *type, uint8_t perms, double value, const char *hapName) : SpanCharacteristic(type, perms, hapName) {
   this->format=FLOAT;
   this->value.FLOAT=value;
 }
 
 ///////////////////////////////
 
-SpanCharacteristic::SpanCharacteristic(char *type, uint8_t perms, const char* value, char *hapName) : SpanCharacteristic(type, perms, hapName) {
+SpanCharacteristic::SpanCharacteristic(const char *type, uint8_t perms, const char* value, const char *hapName) : SpanCharacteristic(type, perms, hapName) {
   this->format=STRING;
   this->value.STRING=value;
 }
@@ -1542,7 +1551,8 @@ void SpanCharacteristic::setVal(int val){
     SpanBuf sb;                             // create SpanBuf object
     sb.characteristic=this;                 // set characteristic          
     sb.status=StatusCode::OK;               // set status
-    sb.val="";                              // set dummy "val" so that sprintfNotify knows to consider this "update"
+    char dummy[]="";
+    sb.val=dummy;                           // set dummy "val" so that sprintfNotify knows to consider this "update"
     homeSpan.Notifications.push_back(sb);   // store SpanBuf in Notifications vector
 }
 
@@ -1557,7 +1567,8 @@ void SpanCharacteristic::setVal(double val){
     SpanBuf sb;                             // create SpanBuf object
     sb.characteristic=this;                 // set characteristic          
     sb.status=StatusCode::OK;               // set status
-    sb.val="";                              // set dummy "val" so that sprintfNotify knows to consider this "update"
+    char dummy[]="";
+    sb.val=dummy;                           // set dummy "val" so that sprintfNotify knows to consider this "update"
     homeSpan.Notifications.push_back(sb);   // store SpanBuf in Notifications vector
 }
 

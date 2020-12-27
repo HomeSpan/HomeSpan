@@ -35,7 +35,7 @@
 // Wrapper function to call mbedtls_hkdf, below, with
 // HAP-specific parameters and assumptions
 
-int HKDF::create(uint8_t *outputKey, uint8_t *inputKey, int inputLen, char *salt, char *info){
+int HKDF::create(uint8_t *outputKey, uint8_t *inputKey, int inputLen, const char *salt, const char *info){
   
   return(mbedtls_hkdf( mbedtls_md_info_from_type(MBEDTLS_MD_SHA512),
                 (uint8_t *) salt, (size_t) strlen(salt),
