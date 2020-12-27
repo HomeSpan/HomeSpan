@@ -14,7 +14,7 @@ struct DEV_Identify : Service::AccessoryInformation {
   // of AccessoryInformation, plus one extra argument at the end called "nBlinks" we will use to specify how many
   // times HomeSpan should blink the built-in LED when HomeKit calls this device's Identify routine during pairing.
   
-  DEV_Identify(char *name, char *manu, char *sn, char *model, char *version, int nBlinks) : Service::AccessoryInformation(){
+  DEV_Identify(const char *name, const char *manu, const char *sn, const char *model, const char *version, int nBlinks) : Service::AccessoryInformation(){
     
     new Characteristic::Name(name);                   // create all the required Characteristics with values set based on above arguments
     new Characteristic::Manufacturer(manu);

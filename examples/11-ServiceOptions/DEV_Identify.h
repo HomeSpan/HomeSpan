@@ -8,7 +8,7 @@ struct DEV_Identify : Service::AccessoryInformation {
   int nBlinks;                    // number of times to blink built-in LED in identify routine
   SpanCharacteristic *identify;   // reference to the Identify Characteristic
   
-  DEV_Identify(char *name, char *manu, char *sn, char *model, char *version, int nBlinks) : Service::AccessoryInformation(){
+  DEV_Identify(const char *name, const char *manu, const char *sn, const char *model, const char *version, int nBlinks) : Service::AccessoryInformation(){
     
     new Characteristic::Name(name);                   // create all the required Characteristics with values set based on above arguments
     new Characteristic::Manufacturer(manu);
