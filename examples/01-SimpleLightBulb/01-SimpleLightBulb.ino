@@ -91,6 +91,8 @@ void setup() {                // Your HomeSpan code should be placed within the 
   
       new Characteristic::Identify();                 // Create the required Identify
 
+  // *NOTE* HAP requires that the AccessoryInformation Service always be instantiated BEFORE any other Services, which is why we created it first.
+
   // HAP also requires every Accessory (with the exception of those in Bridges, as we will see later) to implement the HAP Protocol Information Service.
   // This Service supports a single required Characteristic that defines the version number of HAP used by the device.
   // HAP Release R2 requires this version to be set to "1.1.0" 
@@ -99,7 +101,6 @@ void setup() {                // Your HomeSpan code should be placed within the 
       new Characteristic::Version("1.1.0");           // Set the Version Characteristicto "1.1.0" as required by HAP
 
   // Now that the required "informational" Services have been defined, we can finally create our Light Bulb Service
-  // NOTE: The order of the Services is not important - we could have created the LightBulb first.
 
     new Service::LightBulb();                       // Create the Light Bulb Service
       new Characteristic::On();                       // This Service requires the "On" Characterstic to turn the light on and off
