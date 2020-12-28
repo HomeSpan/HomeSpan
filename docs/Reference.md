@@ -162,6 +162,14 @@ HomeSpan automatically calls the `button(int pin, int pressType)` method of a Se
   
 HomeSpan will report a warning, but not an error, during initialization if the user had not overridden the virtual button() method for a Service contaning one or more Buttons; triggers of those Buttons will simply ignored.
 
+## *#define REQUIRED VERSION(major,minor,patch)*
+
+If REQUIRED is defined in the main sketch prior to including the HomeSpan library with `#include "HomeSpan.h"`, HomeSpan will throw a compile-time error unless the version of the library included is equal to, or later than, the version specified using the VERSION macro.  Example:
+
+```C++
+#define REQUIRED VERISON(2,1,3)   // throws a compile-time error unless HomeSpan library used is version 2.1.3 or later
+```
+
 ---
 
 [↩️](README.md) Back to the Welcome page
