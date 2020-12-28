@@ -42,7 +42,7 @@ HomeSpan provides a microcontroller-focused implementation of [Apple's HomeKit A
 
   * [Somfy Window Shade Controller](https://github.com/HomeSpan/SomfyRTS) - a universal, multi-channel controller for window shades and rolling patio screens that use Somfy RTS motors.  Includes additional functionality via HomeKit that is not otherwise available in standard Somfy controllers
 
-  * [Zephyr Vent Hood](https://github.com/HomeSpan/ZephyrVentHood) - a HomeKit-enabled controller for a kitchen vent hood installed in the ceiling and that can otherwise only be controlled via the manufacturer's (very finicky) RF remote.  Allows you to tell Siri to turn on the hood when your hands are busy cooking.
+  * [Zephyr Vent Hood](https://github.com/HomeSpan/ZephyrVentHood) - a HomeKit-enabled controller for a kitchen vent hood installed in the ceiling and that can otherwise only be controlled via the manufacturer's (very finicky) RF remote.  Allows you to tell Siri to turn on the hood fan (or lights) when your hands are busy cooking.
 
 # HomeSpan Resources
 
