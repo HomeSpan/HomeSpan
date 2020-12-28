@@ -58,6 +58,7 @@ HomeSpan includes the following documentation:
 * [HomeSpan User Guide](UserGuide.md) - turnkey instructions on how to configure an already-programmed HomeSpan device's WiFi Credentials, modify its HomeKit Setup Code, and pair the device to HomeKit.  No computer needed!
 * [HomeSpan API Reference](Reference.md) - a complete guide to the HomeSpan Library API
 * [HomeSpan Extras](Extras.md) - integrated access to the ESP32's on-chip PWM and Remote Control peripherals!
+* [HomeSpan Projects](https://github.com/topics/homespan) - real-world applications of the HomeSpan Library
 
 # External Resources
 
