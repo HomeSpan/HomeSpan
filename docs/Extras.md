@@ -61,6 +61,8 @@ Since most RF/IR signals repeat the same train of pulses more than once, the dur
     * *numTicks* - the duration, in *ticks* of the pulse phase.  Allowable range is 1-32767 ticks.  Requests to add a pulse with *numTicks* outside this range are ignored, but raise non-fatal warning message
     
     * *phase* - set to 0 to create a LOW phase; set to 1 (or any non-zero number) to create a HIGH phase
+    
+  * repeated phases of the same type (e.g. HIGH followed by another HIGH) is permitted and result in a single HIGH phase with a duration equal to the sum of the *numTicks* specified for each repeated phase (this is helpful when generating Manchester-encoded signals)
 
 * `static void add(uint16_t onTime, uint16_t offTime)`
 
