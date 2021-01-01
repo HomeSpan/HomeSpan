@@ -48,16 +48,16 @@ HomeSpan provides a microcontroller-focused implementation of [Apple's HomeKit A
 
 HomeSpan includes the following documentation:
 
-* [Getting Started with HomeSpan](GettingStarted.md) - setting up the software and the hardware needed to develop HomeSpan devices
-* [HomeKit Primer](HomeKitPrimer.md) - a gentle introduction to Apple HomeKit and HAP terminology :construction:
-* [HomeSpan API Overview](Overview.md) - an overview of the HomeSpan API, including a step-by-step guide to developing your first HomeSpan Sketch
-* [HomeSpan Tutorials](Tutorials.md) - a guide to HomeSpan's tutorial-sketches
-* [HomeSpan Services and Characteristics](ServiceList.md) - a list of all HAP Services and Characterstics supported by HomeSpan
-* [HomeSpan Accessory Categories](Categories.md) - a list of all HAP Accessory Categories defined by HomeSpan
-* [HomeSpan Command-Line Interface (CLI)](CLI.md) - configure a HomeSpan device's WiFi Credentials, modify its HomeKit Setup Code, monitor and update its status, and access detailed, real-time device diagnostics from the Arduino IDE Serial Monitor
-* [HomeSpan User Guide](UserGuide.md) - turnkey instructions on how to configure an already-programmed HomeSpan device's WiFi Credentials, modify its HomeKit Setup Code, and pair the device to HomeKit.  No computer needed!
-* [HomeSpan API Reference](Reference.md) - a complete guide to the HomeSpan Library API
-* [HomeSpan Extras](Extras.md) - integrated access to the ESP32's on-chip PWM and Remote Control peripherals!
+* [Getting Started with HomeSpan](https://github.com/HomeSpan/HomeSpan/blob/master/docs/GettingStarted.md) - setting up the software and the hardware needed to develop HomeSpan devices
+* [HomeKit Primer](https://github.com/HomeSpan/HomeSpan/blob/master/docs/HomeKitPrimer.md) - a gentle introduction to Apple HomeKit and HAP terminology :construction:
+* [HomeSpan API Overview](https://github.com/HomeSpan/HomeSpan/blob/master/docs/Overview.md) - an overview of the HomeSpan API, including a step-by-step guide to developing your first HomeSpan Sketch
+* [HomeSpan Tutorials](https://github.com/HomeSpan/HomeSpan/blob/master/docs/Tutorials.md) - a guide to HomeSpan's tutorial-sketches
+* [HomeSpan Services and Characteristics](https://github.com/HomeSpan/HomeSpan/blob/master/docs/ServiceList.md) - a list of all HAP Services and Characterstics supported by HomeSpan
+* [HomeSpan Accessory Categories](https://github.com/HomeSpan/HomeSpan/blob/master/docs/Categories.md) - a list of all HAP Accessory Categories defined by HomeSpan
+* [HomeSpan Command-Line Interface (CLI)](https://github.com/HomeSpan/HomeSpan/blob/master/docs/CLI.md) - configure a HomeSpan device's WiFi Credentials, modify its HomeKit Setup Code, monitor and update its status, and access detailed, real-time device diagnostics from the Arduino IDE Serial Monitor
+* [HomeSpan User Guide](https://github.com/HomeSpan/HomeSpan/blob/master/docs/UserGuide.md) - turnkey instructions on how to configure an already-programmed HomeSpan device's WiFi Credentials, modify its HomeKit Setup Code, and pair the device to HomeKit.  No computer needed!
+* [HomeSpan API Reference](https://github.com/HomeSpan/HomeSpan/blob/master/docs/Reference.md) - a complete guide to the HomeSpan Library API
+* [HomeSpan Extras](https://github.com/HomeSpan/HomeSpan/blob/master/docs/Extras.md) - integrated access to the ESP32's on-chip PWM and Remote Control peripherals!
 * [HomeSpan Projects](https://github.com/topics/homespan) - real-world applications of the HomeSpan Library
 
 # External Resources
