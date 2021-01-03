@@ -1381,10 +1381,18 @@ void HAPClient::sendEncrypted(char *body, uint8_t *dataBuf, int dataLen){
   int count=0;
   unsigned long long nBytes;
 
-  httpBuf[count]=bodyLen%256;         // store number of bytes in first frame that encrypts the Body (AAD bytes)
-  httpBuf[count+1]=bodyLen/256;
+  int totalBytes=2+bodyLen+16;                            // 2-byte AAD + bodyLen + 16-byte authentication tag
+  totalBytes+=(dataLen/FRAME_SIZE)*(2+FRAME_SIZE+16);     // number of full frames * size of full frame with 2-byte AAD + 16-byte authentication tag
+
+  if(dataLen%FRAME_SIZE)                                  // if there is a residual last partial frame
+    totalBytes+=2+dataLen%FRAME_SIZE+16;                  // 2-byte AAD + residual of last partial frame + 16-byte authentication tag
+
+  TempBuffer <uint8_t> tBuf(totalBytes);
   
-  crypto_aead_chacha20poly1305_ietf_encrypt(httpBuf+count+2,&nBytes,(uint8_t *)body,bodyLen,httpBuf+count,2,NULL,a2cNonce.get(),a2cKey);   // encrypt the Body with authentication tag appended
+  tBuf.buf[count]=bodyLen%256;         // store number of bytes in first frame that encrypts the Body (AAD bytes)
+  tBuf.buf[count+1]=bodyLen/256;
+  
+  crypto_aead_chacha20poly1305_ietf_encrypt(tBuf.buf+count+2,&nBytes,(uint8_t *)body,bodyLen,tBuf.buf+count,2,NULL,a2cNonce.get(),a2cKey);   // encrypt the Body with authentication tag appended
 
   a2cNonce.inc();                 // increment nonce
   
@@ -1397,17 +1405,17 @@ void HAPClient::sendEncrypted(char *body, uint8_t *dataBuf, int dataLen){
     if(n>FRAME_SIZE)           // maximum number of bytes to encrypt=FRAME_SIZE
       n=FRAME_SIZE;                                     
     
-    httpBuf[count]=n%256;    // store number of bytes that encrypts this frame (AAD bytes)
-    httpBuf[count+1]=n/256;
+    tBuf.buf[count]=n%256;    // store number of bytes that encrypts this frame (AAD bytes)
+    tBuf.buf[count+1]=n/256;
 
-    crypto_aead_chacha20poly1305_ietf_encrypt(httpBuf+count+2,&nBytes,dataBuf+i,n,httpBuf+count,2,NULL,a2cNonce.get(),a2cKey);   // encrypt the next portion of dataBuf with authentication tag appended
+    crypto_aead_chacha20poly1305_ietf_encrypt(tBuf.buf+count+2,&nBytes,dataBuf+i,n,tBuf.buf+count,2,NULL,a2cNonce.get(),a2cKey);   // encrypt the next portion of dataBuf with authentication tag appended
 
     a2cNonce.inc();            // increment nonce
 
     count+=2+n+16;             // increment count by 2-byte AAD record + length of JSON + 16-byte authentication tag
   }
-    
-  client.write(httpBuf,count);   // transmit all encrypted frames to Client
+ 
+  client.write(tBuf.buf,count);   // transmit all encrypted frames to Client
 
   LOG2("-------- SENT ENCRYPTED! --------\n");
       
