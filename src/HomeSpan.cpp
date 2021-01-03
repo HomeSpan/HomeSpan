@@ -1062,6 +1062,14 @@ int Span::sprintfAttributes(char **ids, int numIDs, int flags, char *cBuf){
 SpanAccessory::SpanAccessory(uint32_t aid){
 
   if(!homeSpan.Accessories.empty()){
+
+    if(homeSpan.Accessories.size()==HAPClient::MAX_ACCESSORIES){
+      Serial.print("\n\n*** FATAL ERROR: Can't create more than ");
+      Serial.print(HAPClient::MAX_ACCESSORIES);
+      Serial.print(" Accessories.  Program Halting.\n\n");
+      while(1);      
+    }
+    
     this->aid=homeSpan.Accessories.back()->aid+1;
     
     if(!homeSpan.Accessories.back()->Services.empty())
