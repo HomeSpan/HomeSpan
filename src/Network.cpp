@@ -273,7 +273,6 @@ void Network::processRequest(char *body, char *formData){
     getFormValue(formData,"network",wifiData.ssid,MAX_SSID);
     getFormValue(formData,"pwd",wifiData.pwd,MAX_PWD);
     
-    timer=millis();
     homeSpan.statusLED.start(LED_WIFI_CONNECTING);
 
     responseBody+="<meta http-equiv = \"refresh\" content = \"2; url = /wifi-status\" />"

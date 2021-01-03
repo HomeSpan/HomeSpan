@@ -50,7 +50,6 @@ struct Network {
   int numSSID;
 
   WiFiClient client;                      // client used for HTTP calls
-  unsigned long timer;                    // length of time of trying to connect to WiFi
   unsigned long alarmTimeOut;             // alarm time after which access point is shut down and HomeSpan is re-started
   int apStatus;                           // tracks access point status (0=timed-out, -1=cancel, 1=save)
 

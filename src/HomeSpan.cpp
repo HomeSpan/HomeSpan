@@ -122,11 +122,11 @@ void Span::poll() {
         
     HAPClient::init();        // read NVS and load HAP settings  
 
-    if(strlen(network.wifiData.ssid)>0){
-      initWifi();
-    } else {
-      Serial.print("*** WIFI CREDENTIALS DATA NOT FOUND -- PLEASE CONFIGURE BY TYPING 'W <RETURN>' OR PRESS CONTROL BUTTON FOR 3 SECONDS TO START ACCESS POINT.\n\n");
+    if(!strlen(network.wifiData.ssid)){
+      Serial.print("*** WIFI CREDENTIALS DATA NOT FOUND.  YOU MAY CONFIGURE BY TYPING 'W <RETURN>'.\n\n");
       statusLED.start(LED_WIFI_NEEDED);
+    } else {
+      homeSpan.statusLED.start(LED_WIFI_CONNECTING);
     }
           
     controlButton.reset();        
@@ -137,8 +137,8 @@ void Span::poll() {
     
   } // isInitialized
 
-  if(strlen(network.wifiData.ssid)>0 && WiFi.status()!=WL_CONNECTED){
-      initWifi();
+  if(strlen(network.wifiData.ssid)>0){
+      checkConnect();
   }
 
   char cBuf[17]="?";
@@ -308,7 +308,54 @@ void Span::commandMode(){
 
 //////////////////////////////////////
 
-void Span::initWifi(){
+void Span::checkConnect(){
+
+  if(connected){
+    if(WiFi.status()==WL_CONNECTED)
+      return;
+      
+    Serial.print("\n\n*** WiFi Connection Lost!\n");      // losing and re-establishing connection has not been tested
+    connected=false;
+    waitTime=60000;
+    alarmConnect=0;
+    homeSpan.statusLED.start(LED_WIFI_CONNECTING);
+  }
+
+  if(WiFi.status()!=WL_CONNECTED){
+    if(millis()<alarmConnect)         // not yet time to try to try connecting
+      return;
+
+    if(waitTime==60000)
+      waitTime=1000;
+    else
+      waitTime*=2;
+      
+    if(waitTime==32000){
+      Serial.print("\n*** Can't connect to ");
+      Serial.print(network.wifiData.ssid);
+      Serial.print(".  You may type 'W <return>' to re-configure WiFi, or 'X <return>' to erase WiFi credentials.  Will try connecting again in 60 seconds.\n\n");
+      waitTime=60000;
+    } else {    
+      Serial.print("Trying to connect to ");
+      Serial.print(network.wifiData.ssid);
+      Serial.print(".  Waiting ");
+      Serial.print(waitTime/1000);
+      Serial.print(" second(s) for response...\n");
+      WiFi.begin(network.wifiData.ssid,network.wifiData.pwd);
+    }
+
+    alarmConnect=millis()+waitTime;
+
+    return;
+  }
+
+  connected=true;
+
+  Serial.print("Successfully connected to ");
+  Serial.print(network.wifiData.ssid);
+  Serial.print("! IP Address: ");
+  Serial.print(WiFi.localIP());
+  Serial.print("\n");
 
   char id[18];                              // create string version of Accessory ID for MDNS broadcast
   memcpy(id,HAPClient::accessory.ID,17);    // copy ID bytes
@@ -319,54 +366,6 @@ void Span::initWifi(){
   int nChars=snprintf(NULL,0,"%s-%.2s%.2s%.2s%.2s%.2s%.2s",hostNameBase,id,id+3,id+6,id+9,id+12,id+15);       
   char hostName[nChars+1];
   sprintf(hostName,"%s-%.2s%.2s%.2s%.2s%.2s%.2s",hostNameBase,id,id+3,id+6,id+9,id+12,id+15);
-  
-  statusLED.start(LED_WIFI_CONNECTING);
-  controlButton.reset();
- 
- int nTries=0;
- 
-  Serial.print("Attempting connection to: ");
-  Serial.print(network.wifiData.ssid);
-  Serial.print(". Type 'X <return>' or press Control Button for 3 seconds at any time to terminate search and delete WiFi credentials.");
-  
-  while(WiFi.status()!=WL_CONNECTED){
-
-    if(nTries++ == 0)
-      Serial.print("\nConnecting..");
-      
-    if(WiFi.begin(network.wifiData.ssid,network.wifiData.pwd)!=WL_CONNECTED){
-      int delayTime;
-      char buf[8]="";
-      if(nTries<=10){
-        delayTime=2000;
-        Serial.print(".");
-      } else {
-        nTries=0;
-        delayTime=60000;
-        Serial.print(" Can't connect! Will re-try in ");
-        Serial.print(delayTime/1000);
-        Serial.print(" seconds...");
-      }
-      long sTime=millis();
-      
-      while(millis()-sTime<delayTime){    
-        if(controlButton.triggered(9999,3000)){
-          Serial.print(" TERMINATED!\n");
-          statusLED.start(LED_ALERT);
-          controlButton.wait();
-          processSerialCommand("X");        // DELETE WiFi Data and Restart
-        }
-        if (Serial.available() && readSerial(buf,1) && (buf[0]=='X')){
-          Serial.print(" TERMINATED!\n");
-          processSerialCommand("X");        // DELETE WiFi Data and Restart
-        }
-      }
-    }
-  } // WiFi not yet connected
-
-  Serial.print(" Success!\nIP: ");
-  Serial.print(WiFi.localIP());
-  Serial.print("\n");
 
   Serial.print("\nStarting MDNS...\n");
   Serial.print("Broadcasting as: ");
