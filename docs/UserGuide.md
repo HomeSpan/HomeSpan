@@ -31,8 +31,6 @@ If you are new to HomeSpan and are configuring a new device for the first time, 
 
 If you are setting up an existing device that has been previously configured in some unknown fashion, you may want to first perform a [Factory Reset](#factory-reset) to start with a fresh setup.
 
-And if you run into any troubles, see [Troubleshooting](#troubleshooting) for tips and tricks.
-
 Enjoy!
 
 ## HomeSpan Device States
@@ -53,9 +51,12 @@ If the Status LED is steady ON, the device is connected to a local WiFi network 
 
 #### CONNECTING
 
-If the Status LED is repeatedly flashing ON for 1 second and then OFF for 1 second, the device is actively seeking to connect to a WiFi network using the WiFi Credentials stored on the device.   The device will remain in this state until HomeSpan either successfully connects to a WiFi network, or you cancel the connection process.
+If the Status LED is repeatedly flashing ON for 1 second and then OFF for 1 second, the device is actively seeking to connect to a WiFi network using the WiFi Credentials stored on the device.   The device will remain in this state until HomeSpan either
 
-To cancel the connection process, press and hold the HomeSpan Control Button for 3 seconds, at which point the Status LED should begin to flash rapidly (10 times per second).  Upon releasing the Control Button, HomeSpan will erase the WiFi Credentials stored and reboot the device in the **NO‑WIFI** state.
+* successfully connects to a WiFi network
+* you modify or erase the device's WiFi Credentials and restart HomeSpan via the Device Configuration Mode below
+* you perform a [Factory Reset](#factory-reset)
+
 Note that the Status LED is always active, so if the LED is completely off (not even blinking), the device is not powered!
 
 ## Device Configuration Mode
@@ -155,11 +156,6 @@ To create the scannable tag, construct a simple text box with a border in either
 The box can be bigger or smaller as long as you keep the same proportions.  For example, a 10pt font can be used with a box that is 75pt wide and 25pt high with a 1pt border.  Don’t forget to center-align your text and include the required hyphens as shown.  The result is a tag that can be scanned by HomeKit during the pairing process.
 
 Note that if you can’t find *Scancardium* listed as a font choice in either the *Pages* or *Keynote* font dropdown boxes, select Format → Font → Show Fonts from the menu bar of the *Pages* or *Keynote* application to bring up a list of all installed fonts where you can search for, and select, *Scancardium*.
-
-## Troubleshooting
-
-This section contains potential solutions to common problems.
-(coming soon)
 
 ---
 
