@@ -54,7 +54,7 @@ You create a new HAP Accessory by instantiating a new `SpanAccessory` object as 
 new SpanAccessory();
 ```
 
-SpanAccessory takes no paramaters, and you do not need to save the object in a variable since HomeSpan automatically registers the Accessory inside the homespan object.
+SpanAccessory can be instantiated without any parameters, and you do not need to save the object in a variable since HomeSpan automatically registers the Accessory inside the `homespan` object.
 
 Once a HAP Accessory is created, you can then start adding HAP Services and HAP Characteristics by instantiating HomeSpan Service and Characteristic objects.  Every HAP Service supported by HomeSpan is defined in the `Service` namespace.  Every HAP Characteristic supported by HomeSpan is defined in the `Characteristic` namespace.  See [HomeSpan Services and Characteristics](ServiceList.md) for a complete list.  
 
