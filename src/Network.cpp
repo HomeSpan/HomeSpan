@@ -275,8 +275,10 @@ void Network::processRequest(char *body, char *formData){
     
     homeSpan.statusLED.start(LED_WIFI_CONNECTING);
 
-    responseBody+="<meta http-equiv = \"refresh\" content = \"2; url = /wifi-status\" />"
+    responseBody+="<meta http-equiv = \"refresh\" content = \"5; url = /wifi-status\" />"
                   "<p>Initiating WiFi connection to:</p><p><b>" + String(wifiData.ssid) + "</p>";
+
+    WiFi.begin(wifiData.ssid,wifiData.pwd);              
   
   } else
 
@@ -305,12 +307,14 @@ void Network::processRequest(char *body, char *formData){
 
     LOG1("In Get WiFi Status...\n");
 
-    if(WiFi.status()!=WL_CONNECTED && WiFi.begin(wifiData.ssid,wifiData.pwd)!=WL_CONNECTED){
+    if(WiFi.status()!=WL_CONNECTED){
       responseHead+="Refresh: 5\r\n";     
       
       responseBody+="<p>Re-trying connection to:</p><p><b>" + String(wifiData.ssid) + "</p>";
       responseBody+="<p>Timeout in " + String((alarmTimeOut-millis())/1000) + " seconds.</p>";
       responseBody+="<center><button onclick=\"document.location='/hotspot-detect.html'\">Cancel</button></center>";
+      WiFi.begin(wifiData.ssid,wifiData.pwd);
+      
     } else {
       
       homeSpan.statusLED.start(LED_AP_CONNECTED);   // slow double-blink
