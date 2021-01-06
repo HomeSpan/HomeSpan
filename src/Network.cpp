@@ -275,7 +275,7 @@ void Network::processRequest(char *body, char *formData){
     
     homeSpan.statusLED.start(LED_WIFI_CONNECTING);
 
-    responseBody+="<meta http-equiv = \"refresh\" content = \"5; url = /wifi-status\" />"
+    responseBody+="<meta http-equiv = \"refresh\" content = \"" + String(waitTime) + "; url = /wifi-status\" />"
                   "<p>Initiating WiFi connection to:</p><p><b>" + String(wifiData.ssid) + "</p>";
 
     WiFi.begin(wifiData.ssid,wifiData.pwd);              
@@ -308,10 +308,13 @@ void Network::processRequest(char *body, char *formData){
     LOG1("In Get WiFi Status...\n");
 
     if(WiFi.status()!=WL_CONNECTED){
-      responseHead+="Refresh: 5\r\n";     
-      
-      responseBody+="<p>Re-trying connection to:</p><p><b>" + String(wifiData.ssid) + "</p>";
-      responseBody+="<p>Timeout in " + String((alarmTimeOut-millis())/1000) + " seconds.</p>";
+      waitTime+=2;
+      if(waitTime==12)
+        waitTime=2;
+      responseHead+="Refresh: " + String(waitTime) + "\r\n";     
+      responseBody+="<p>Re-initiating connection to:</p><p><b>" + String(wifiData.ssid) + "</b></p>";
+      responseBody+="<p>(waiting " + String(waitTime) + " seconds to check for response)</p>";
+      responseBody+="<p>Access Point termination in " + String((alarmTimeOut-millis())/1000) + " seconds.</p>";
       responseBody+="<center><button onclick=\"document.location='/hotspot-detect.html'\">Cancel</button></center>";
       WiFi.begin(wifiData.ssid,wifiData.pwd);
       
@@ -338,6 +341,7 @@ void Network::processRequest(char *body, char *formData){
     LOG1("In Landing Page...\n");
 
     homeSpan.statusLED.start(LED_AP_CONNECTED);
+    waitTime=2;
 
     responseBody+="<p>Welcome to HomeSpan! This page allows you to configure the above HomeSpan device to connect to your WiFi network.</p>"
                   "<p>The LED on this device should be <em>double-blinking</em> during this configuration.</p>"
