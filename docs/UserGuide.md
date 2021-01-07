@@ -54,7 +54,7 @@ If the Status LED is steady ON, the device is connected to a local WiFi network 
 If the Status LED is repeatedly flashing ON for 1 second and then OFF for 1 second, the device is actively seeking to connect to a WiFi network using the WiFi Credentials stored on the device.   The device will remain in this state until:
 
 * HomeSpan successfully connects to a WiFi network;
-* you modify or erase the device's WiFi Credentials and restart HomeSpan via the Device Configuration Mode below;
+* you modify or erase the device's WiFi Credentials and restart HomeSpan via the [Device Configuration Mode](#device-configuration-mode) below;
 * you perform a [Factory Reset](#factory-reset).
 
 Note that the Status LED is always active, so if the LED is completely off (not even blinking), the device is not powered!
