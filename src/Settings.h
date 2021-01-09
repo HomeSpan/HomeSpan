@@ -34,7 +34,7 @@
 
 #define     HS_MAJOR  1
 #define     HS_MINOR  1
-#define     HS_PATCH  2
+#define     HS_PATCH  3
 
 #define     STRINGIFY(x) _STR(x)
 #define     _STR(x) #x
