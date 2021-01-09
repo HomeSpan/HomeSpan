@@ -30,8 +30,8 @@ The following **optional** `homeSpan` methods override various HomeSpan initiali
   * sets the ESP32 pin to use for the HomeSpan Control Button (default=21)
   
 * `void setStatusPin(uint8_t pin)`
-  * sets the ESP32 pin to use for the HomeSpan Status LED (default=LED_BUILTIN)
-  
+  * sets the ESP32 pin to use for the HomeSpan Status LED (default=13).  There is also a corresponding `getStatusPin()` method that returns this pin number
+
 * `void setApSSID(char *ssid)`
   * sets the SSID (network name) of the HomeSpan Setup Access Point (default="HomeSpan-Setup")
   
