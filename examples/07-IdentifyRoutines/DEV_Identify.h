@@ -23,9 +23,9 @@ struct DEV_Identify : Service::AccessoryInformation {
     new Characteristic::FirmwareRevision(version);
     identify=new Characteristic::Identify();          // store a reference to the Identify Characteristic for use below
 
-    this->nBlinks=nBlinks;                            // store the number of times to blink the built-in LED
+    this->nBlinks=nBlinks;                            // store the number of times to blink the LED
 
-    pinMode(LED_BUILTIN,OUTPUT);                      // make sure built-in LED is set for output
+    pinMode(homeSpan.getStatusPin(),OUTPUT);          // make sure LED is set for output
   }
 
   // How HomeKit Identifies Devices:
@@ -39,20 +39,22 @@ struct DEV_Identify : Service::AccessoryInformation {
   // There are many ways to implement some form of identification.  For an LED, you could blink it one or more times.
   // For a LightBulb, you can flash it on and off.  For window shade, you could raise and lower it.
   // Most commerical devices don't do anything.  Because HomeSpan can be used to control many different types of
-  // device, below we implement a very generic routine that simply blinks the internal LED of the ESP32 the
-  // number of times specified above.  In principle, this code could call a user-defined routine that is different
-  // for each physcially-attached device (light, shade, fan, etc), but in practice this is overkill.
+  // device, below we implement a very generic routine that simply blinks the Status LED the number of times specified above.
+  // In principle, this code could call a user-defined routine that is different for each physcially-attached device (light, shade, fan, etc),
+  // but in practice this is overkill.
 
-  // Note that the blink routine below starts by turning off the built-in LED and then leaves it on once it has blinked
+  // Note that the blink routine below starts by turning off the Status LED and then leaves it on once it has blinked
   // the specified number of times.  This is because when HomeSpan starts up if confirms to user that it has connected
-  // to the WiFi network by turning on the built-in LED.  Thus we want to leave it on when blinking is completed.
+  // to the WiFi network by turning on the Status LED.  Thus we want to leave it on when blinking is completed.
+
+  // Also note we use the homeSpan.getStatusPin() method to find the pin number associated with the Status LED
 
   boolean update(){
        
     for(int i=0;i<nBlinks;i++){
-      digitalWrite(LED_BUILTIN,LOW);
+      digitalWrite(homeSpan.getStatusPin(),LOW);
       delay(250);
-      digitalWrite(LED_BUILTIN,HIGH);
+      digitalWrite(homeSpan.getStatusPin(),HIGH);
       delay(250);
     }
 

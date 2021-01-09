@@ -67,7 +67,7 @@ void Span::begin(Category catID, const char *displayName, const char *hostNameBa
                  "** Please ensure serial monitor is set to transmit <newlines>\n\n");
 
   Serial.print("Message Logs:     Level ");
-  Serial.print(homeSpan.logLevel);  
+  Serial.print(logLevel);  
   Serial.print("\nStatus LED:       Pin ");
   Serial.print(statusPin);  
   Serial.print("\nDevice Control:   Pin ");
@@ -82,7 +82,7 @@ void Span::begin(Category catID, const char *displayName, const char *hostNameBa
   Serial.print(__TIME__);
 
   Serial.print("\n\nDevice Name:      ");
-  Serial.print(homeSpan.displayName);  
+  Serial.print(displayName);  
   Serial.print("\n\n");
       
 }  // begin

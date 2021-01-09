@@ -17,17 +17,17 @@ struct DEV_Identify : Service::AccessoryInformation {
     new Characteristic::FirmwareRevision(version);
     identify=new Characteristic::Identify();          // store a reference to the Identify Characteristic for use below
 
-    this->nBlinks=nBlinks;                            // store the number of times to blink the built-in LED
+    this->nBlinks=nBlinks;                            // store the number of times to blink the LED
 
-    pinMode(LED_BUILTIN,OUTPUT);                      // make sure built-in LED is set for output
+    pinMode(homeSpan.getStatusPin(),OUTPUT);          // make sure LED is set for output
   }
 
   boolean update(){
        
     for(int i=0;i<nBlinks;i++){
-      digitalWrite(LED_BUILTIN,LOW);
+      digitalWrite(homeSpan.getStatusPin(),LOW);
       delay(250);
-      digitalWrite(LED_BUILTIN,HIGH);
+      digitalWrite(homeSpan.getStatusPin(),HIGH);
       delay(250);
     }
 
