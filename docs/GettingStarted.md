@@ -50,7 +50,7 @@ In addition to being able to configure a HomeSpan device using the [HomeSpan CLI
 1. a normally-open single-pole pushbutton to function as the HomeSpan Control Button, and
 1. an LED to function as the HomeSpan Status LED.
 
-The Control Button should be installed between the HomeSpan Control Pin on the ESP32 and ground.  The HomeSpan Control Pin defaults to pin 21, but can be set to any other pin during HomeSpan initializaton (see the [HomeSpan API Reference](Reference.md) for details).  The LED can similarly be connected to any pin you specify, but defaults to the LED_BUILTIN pin defined for your ESP32 board, in which case you can use your board's built-in LED and avoid having to install a separate LED.
+The Control Button should be installed between the HomeSpan Control Pin on the ESP32 and ground.  The HomeSpan Control Pin defaults to pin 21, but can be set to any other pin during HomeSpan initializaton (see the [HomeSpan API Reference](Reference.md) for details).  The LED can similarly be connected to any pin you specify, but defaults to pin 13, which for some boards is connected to a built-in LED, thereby saving you the need to install a separate LED.
 
 The use of these two components to configure a standalone HomeSpan device, including starting HomeSpan's temporary WiFi network to configure the device's WiFi Credentials and HomeKit Setup Code, are fully explained in the [HomeSpan User Guide](UserGuide.md).
 
