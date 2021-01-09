@@ -96,7 +96,7 @@ void setup() {
 
   Serial.print("\n\nHomeSpan RF Transmitter Example\n\n");
 
-  RFControl rf(LED_BUILTIN);      // create an instance of RFControl with signal output to the ESP32's Built-In LED
+  RFControl rf(13);               // create an instance of RFControl with signal output to pin 13 on the ESP32
 
   rf.clear();                     // clear the pulse train memory buffer
 
