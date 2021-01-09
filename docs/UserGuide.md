@@ -31,8 +31,6 @@ If you are new to HomeSpan and are configuring a new device for the first time, 
 
 If you are setting up an existing device that has been previously configured in some unknown fashion, you may want to first perform a [Factory Reset](#factory-reset) to start with a fresh setup.
 
-And if you run into any troubles, see [Troubleshooting](#troubleshooting) for tips and tricks.
-
 Enjoy!
 
 ## HomeSpan Device States
@@ -49,13 +47,16 @@ If the Status LED blinks twice every 3 seconds, the device is connected to a WiF
 
 #### PAIRED
 
-If the Status LED is steady ON, the device is connected to a local WiFi network and is paired to Apple HomeKit.  A device in this state should be fully operational.  If not, see [Troubleshooting](#troubleshooting) for potential resolutions to common problems.
+If the Status LED is steady ON, the device is connected to a local WiFi network and is paired to Apple HomeKit.  A device in this state should be fully operational.
 
 #### CONNECTING
 
-If the Status LED is repeatedly flashing ON for 1 second and then OFF for 1 second, the device is actively seeking to connect to a WiFi network using the WiFi Credentials stored on the device.   The device will remain in this state until HomeSpan either successfully connects to a WiFi network, or you cancel the connection process.
+If the Status LED is repeatedly flashing ON for 1 second and then OFF for 1 second, the device is actively seeking to connect to a WiFi network using the WiFi Credentials stored on the device.   The device will remain in this state until:
 
-To cancel the connection process, press and hold the HomeSpan Control Button for 3 seconds, at which point the Status LED should begin to flash rapidly (10 times per second).  Upon releasing the Control Button, HomeSpan will erase the WiFi Credentials stored and reboot the device in the **NO‑WIFI** state.
+* HomeSpan successfully connects to a WiFi network;
+* you modify or erase the device's WiFi Credentials and restart HomeSpan via the [Device Configuration Mode](#device-configuration-mode) below;
+* you perform a [Factory Reset](#factory-reset).
+
 Note that the Status LED is always active, so if the LED is completely off (not even blinking), the device is not powered!
 
 ## Device Configuration Mode
@@ -72,7 +73,7 @@ Within Device Configuration Mode you can choose one of five possible Actions:
 
 1. *Launch HomeSpan’s temporary WiFi network*.  HomeSpan’s temporary WiFi network provides a simple web interface for you to input your home network’s WiFi credentials and (optionally) create your own HomeKit Setup Code.  See [Setting HomeSpan’s WiFi Credentials and Setup Code](#setting-homespans-wifi-credentials-and-setup-code) for step-by-step instructions.
 
-1. Unpair the device from Apple HomeKit.  Under normal operation, you control the pairing and unpairing of all HomeKit devices from the Home App on your iPhone or Mac. However, there are some circumstances in which a device may need to be manually unpaired.  This is typically done by performing a full [Factory Reset](#factory-reset) of the device, but that also deletes your WiFi Credentials.  This action allows you to unpair the device while preserving all other device settings.  See [Troubleshooting](#troubleshooting) for details.
+1. Unpair the device from Apple HomeKit.  Under normal operation, you control the pairing and unpairing of all HomeKit devices from the Home App on your iPhone or Mac. However, there are some circumstances in which a device may need to be manually unpaired.  This is typically done by performing a full [Factory Reset](#factory-reset) of the device, but that also deletes your WiFi Credentials.  This action allows you to unpair the device while preserving all other device settings.
 
 1. *Erase stored WiFi Credentials*.  This allows you delete your WiFi Credentials from the device without losing any HomeKit pairing data, after which the device can be set up with new WiFi Credentials.
 
@@ -106,7 +107,7 @@ You can also force a termination of the setup process at any time by pressing an
 
 ##	Pairing to HomeKit
 
-HomeSpan devices can be paired to Apple HomeKit anytime the device is in the **READY‑TO‑PAIR** state.  If the device is in the **NO‑WIFI state**, it must first be connected to your home WiFi network before it can be paired to HomeKit (see [Setting HomeSpan’s WiFi Credentials and Setup Code](#setting-homespans-wifi-credentials-and-setup-code)).  If the device is already in the **PAIRED** state but it is not appearing in HomeKit, you may need to manually unpair the device so it can be re-paired (see [Troubleshooting](#troubleshooting)).
+HomeSpan devices can be paired to Apple HomeKit anytime the device is in the **READY‑TO‑PAIR** state.  If the device is in the **NO‑WIFI state**, it must first be connected to your home WiFi network before it can be paired to HomeKit (see [Setting HomeSpan’s WiFi Credentials and Setup Code](#setting-homespans-wifi-credentials-and-setup-code)).  If the device is already in the **PAIRED** state but it is not appearing in HomeKit, you may need to manually unpair the device so it can be re-paired.
 
 To reduce the possibility that a bad actor can remotely pair with a HomeKit device and take over control, HomeKit requires the use of a device-specific Setup Code to authorize the pairing process.  This unique 8-digit code is not stored on the device itself (to prevent a hacker from extracting the code), but is usually found written on a tag attached to the device.  Only someone who has physical access to the tag will know the Setup Code and therefore be able to pair the device to HomeKit. 
 
@@ -122,7 +123,7 @@ To start the pairing process, open the Home App on your iPhone, select Add Acces
 * If you have modified the Setup Code, and have also created a scannable tag with that code, scan it now.
 * If you have modified the Setup Code but have not created a scannable tag, select the option that indicates you can’t scan your code, in which case you will be able to type it manually later in the process.
 
-The Home App should next display a list of available HomeKit accessories.  Select your HomeSpan device (if does not appear, exit the process and try again.  See Troubleshooting for other potential solutions).
+The Home App should next display a list of available HomeKit accessories.  Select your HomeSpan device (if does not appear, exit the process and try again).
 
 If you’ve already scanned the Setup Code for this device from a scannable tag, the Home App will begin the pairing process.  If not, it will now ask you to enter it manually.
 
@@ -155,11 +156,6 @@ To create the scannable tag, construct a simple text box with a border in either
 The box can be bigger or smaller as long as you keep the same proportions.  For example, a 10pt font can be used with a box that is 75pt wide and 25pt high with a 1pt border.  Don’t forget to center-align your text and include the required hyphens as shown.  The result is a tag that can be scanned by HomeKit during the pairing process.
 
 Note that if you can’t find *Scancardium* listed as a font choice in either the *Pages* or *Keynote* font dropdown boxes, select Format → Font → Show Fonts from the menu bar of the *Pages* or *Keynote* application to bring up a list of all installed fonts where you can search for, and select, *Scancardium*.
-
-## Troubleshooting
-
-This section contains potential solutions to common problems.
-(coming soon)
 
 ---
 

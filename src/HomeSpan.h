@@ -84,6 +84,10 @@ struct Span{
   int nFatalErrors=0;                           // number of fatal errors in user-defined configuration
   String configLog;                             // log of configuration process, including any errors
   boolean isBridge=true;                        // flag indicating whether device is configured as a bridge (i.e. first Accessory contains nothing but AccessoryInformation and HAPProtocolInformation)
+
+  boolean connected=false;                      // WiFi connection status
+  unsigned long waitTime=60000;                 // time to wait (in milliseconds) between WiFi connection attempts
+  unsigned long alarmConnect=0;                 // time after which WiFi connection attempt should be tried again
   
   const char *defaultSetupCode=DEFAULT_SETUP_CODE;            // Setup Code used for pairing
   uint8_t statusPin=DEFAULT_STATUS_PIN;                       // pin for status LED    
@@ -112,7 +116,7 @@ struct Span{
              
   void poll();                                  // poll HAP Clients and process any new HAP requests
   int getFreeSlot();                            // returns free HAPClient slot number. HAPClients slot keep track of each active HAPClient connection
-  void initWifi();                              // initialize and connect to WiFi network
+  void checkConnect();                          // check WiFi connection; connect if needed
   void commandMode();                           // allows user to control and reset HomeSpan settings with the control button
   void processSerialCommand(const char *c);     // process command 'c' (typically from readSerial, though can be called with any 'c')
 
@@ -130,6 +134,7 @@ struct Span{
 
   void setControlPin(uint8_t pin){controlPin=pin;}                        // sets Control Pin
   void setStatusPin(uint8_t pin){statusPin=pin;}                          // sets Status Pin
+  int getStatusPin(){return(statusPin);}                                  // gets Status Pin
   void setApSSID(char *ssid){network.apSSID=ssid;}                        // sets Access Point SSID
   void setApPassword(char *pwd){network.apPassword=pwd;}                  // sets Access Point Password
   void setApTimeout(uint16_t nSec){network.lifetime=nSec*1000;}           // sets Access Point Timeout (seconds)

@@ -16,7 +16,7 @@ At startup, HomeSpan:
   
 If there are any errors with how you constructed your HAP Database, HomeSpan will report them and **halt** the program. 
 
-Next, HomeSpan checks to see if the device has been configured with WiFi Credentials.  If none are found, HomeSpan will indicate this, and then complete its initialization routine by indicating is now READY.  If WiFi Credentials are found, HomeSpan will repeatedly try to connect to the specified network until it either succeeds (in which case it then completes its initialization routine by indicating it is now READY), or you cancel the process by typing `X <return>` (in which case HomeSpan erases its stored WiFi Credentials and restarts).
+Next, HomeSpan checks to see if the device has been configured with WiFi Credentials.  If none are found, HomeSpan will indicate this, and then complete its initialization routine by indicating is now READY.  If WiFi Credentials are found, HomeSpan repeatedly tries to connect to the specified network in the background and informs you of its progress.  During this time, any of the commands below will work, including those related to re-configuring or erasing the device's WiFi Credentials.
 
 ### Log Levels
 

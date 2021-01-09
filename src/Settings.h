@@ -34,7 +34,7 @@
 
 #define     HS_MAJOR  1
 #define     HS_MINOR  1
-#define     HS_PATCH  2
+#define     HS_PATCH  3
 
 #define     STRINGIFY(x) _STR(x)
 #define     _STR(x) #x
@@ -62,7 +62,7 @@
 #define     DEFAULT_SETUP_CODE        "46637726"          // changed during network setup or with 'S' command
 
 #define     DEFAULT_CONTROL_PIN       21                  // change with homeSpan.setControlPin(pin)
-#define     DEFAULT_STATUS_PIN        LED_BUILTIN         // change with homeSpan.setStatusPin(pin)
+#define     DEFAULT_STATUS_PIN        13                  // change with homeSpan.setStatusPin(pin)
 
 #define     DEFAULT_AP_SSID           "HomeSpan-Setup"   // change with homeSpan.setApSSID(pwd)
 #define     DEFAULT_AP_PASSWORD       "homespan"         // change with homeSpan.setApPassword(pwd)
