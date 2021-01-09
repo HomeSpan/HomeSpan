@@ -36,13 +36,9 @@ HomeSpan provides a microcontroller-focused implementation of [Apple's HomeKit A
   * Launch the WiFi Access Point
 * A standalone, detailed End-User Guide
 
-# Latest Update (12/27/2020)
+# Latest Update (1/9/2021)
 
-* HomeSpan 1.1.2 - some minor patches (see [Release](https://github.com/HomeSpan/HomeSpan/releases) for details) *plus* the release of two real-world applications of the HomeSpan Library:
-
-  * [Somfy Window Shade Controller](https://github.com/HomeSpan/SomfyRTS) - a universal, multi-channel controller for window shades and rolling patio screens that use Somfy RTS motors.  Includes additional functionality via HomeKit that is not otherwise available in standard Somfy controllers
-
-  * [Zephyr Vent Hood](https://github.com/HomeSpan/ZephyrVentHood) - a HomeKit-enabled controller for a kitchen vent hood installed in the ceiling and that can otherwise only be controlled via the manufacturer's (very finicky) RF remote.  Allows you to tell Siri to turn on the hood fan (or lights) when your hands are busy cooking.
+* HomeSpan 1.1.3 - some minor patches and improved WiFi initialization logic (see [Release](https://github.com/HomeSpan/HomeSpan/releases) for details).
 
 # HomeSpan Resources
 
