@@ -10,6 +10,8 @@ void setup() {
  
   homeSpan.setLogLevel(2);
 
+  homeSpan.setHostNameSuffix("");
+
   homeSpan.begin(Category::Lighting,"HomeSpanTest");
 
   new SpanAccessory();                                  // Begin by creating a new Accessory using SpanAccessory(), which takes no arguments

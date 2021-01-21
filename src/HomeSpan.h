@@ -75,7 +75,8 @@ struct SpanConfig {
 struct Span{
 
   const char *displayName;                      // display name for this device - broadcast as part of Bonjour MDNS
-  const char *hostNameBase;                     // base of host name of this device - full host name broadcast by Bonjour MDNS will have 6-byte accessoryID as well as '.local' automatically appended
+  const char *hostNameBase;                     // base of hostName of this device - full host name broadcast by Bonjour MDNS will have 6-byte accessoryID as well as '.local' automatically appended
+  const char *hostNameSuffix=NULL;              // optional "suffix" of hostName of this device.  If specified, will be used as the hostName suffix instead of the 6-byte accessoryID
   char *hostName;                               // full host name of this device - constructed from hostNameBase and 6-byte AccessoryID
   const char *modelName;                        // model name of this device - broadcast as Bonjour field "md" 
   char category[3]="";                          // category ID of primary accessory - broadcast as Bonjour field "ci" (HAP Section 13)
@@ -141,6 +142,7 @@ struct Span{
   void setCommandTimeout(uint16_t nSec){comModeLife=nSec*1000;}           // sets Command Mode Timeout (seconds)
   void setLogLevel(uint8_t level){logLevel=level;}                        // sets Log Level for log messages (0=baseline, 1=intermediate, 2=all)
   void setMaxConnections(uint8_t nCon){maxConnections=nCon;}              // sets maximum number of simultaneous HAP connections (HAP requires devices support at least 8)
+  void setHostNameSuffix(const char *suffix){hostNameSuffix=suffix;}      // sets the hostName suffix to be used instead of the 6-byte AccessoryID 
 };
 
 ///////////////////////////////

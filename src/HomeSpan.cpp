@@ -362,10 +362,20 @@ void Span::checkConnect(){
   id[17]='\0';                              // add terminating null
 
   // create broadcaset name from server base name plus accessory ID (without ':')
-  
-  int nChars=snprintf(NULL,0,"%s-%.2s%.2s%.2s%.2s%.2s%.2s",hostNameBase,id,id+3,id+6,id+9,id+12,id+15);       
+
+  int nChars;
+
+  if(!hostNameSuffix)
+    nChars=snprintf(NULL,0,"%s-%.2s%.2s%.2s%.2s%.2s%.2s",hostNameBase,id,id+3,id+6,id+9,id+12,id+15);
+  else
+    nChars=snprintf(NULL,0,"%s%s",hostNameBase,hostNameSuffix);
+    
   char hostName[nChars+1];
-  sprintf(hostName,"%s-%.2s%.2s%.2s%.2s%.2s%.2s",hostNameBase,id,id+3,id+6,id+9,id+12,id+15);
+  
+  if(!hostNameSuffix)
+    sprintf(hostName,"%s-%.2s%.2s%.2s%.2s%.2s%.2s",hostNameBase,id,id+3,id+6,id+9,id+12,id+15);
+  else
+    sprintf(hostName,"%s%s",hostNameBase,hostNameSuffix);
 
   Serial.print("\nStarting MDNS...\n");
   Serial.print("Broadcasting as: ");
