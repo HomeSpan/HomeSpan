@@ -35,8 +35,6 @@
 
 using namespace Utils;
 
-WiFiServer hapServer(80);           // HTTP Server (i.e. this acccesory) running on usual port 80 (local-scoped variable to this file only)
-
 HAPClient **hap;                    // HAP Client structure containing HTTP client connections, parsing routines, and state variables (global-scoped variable)
 Span homeSpan;                      // HAP Attributes database and all related control functions for this Accessory (global-scoped variable)
 
@@ -127,6 +125,7 @@ void Span::poll() {
       statusLED.start(LED_WIFI_NEEDED);
     } else {
       homeSpan.statusLED.start(LED_WIFI_CONNECTING);
+      hapServer=new WiFiServer(tcpPortNum,maxConnections);
     }
           
     controlButton.reset();        
@@ -150,7 +149,7 @@ void Span::poll() {
 
   WiFiClient newClient;
 
-  if(newClient=hapServer.available()){         // found a new HTTP client
+  if(newClient=hapServer->available()){         // found a new HTTP client
     int freeSlot=getFreeSlot();                 // get next free slot
 
     if(freeSlot==-1){                           // no available free slots
@@ -377,18 +376,20 @@ void Span::checkConnect(){
   else
     sprintf(hostName,"%s%s",hostNameBase,hostNameSuffix);
 
-  Serial.print("\nStarting MDNS...\n");
-  Serial.print("Broadcasting as: ");
+  Serial.print("\nStarting MDNS...\n\n");
+  Serial.print("HostName:      ");
   Serial.print(hostName);
-  Serial.print(".local (");
+  Serial.print(".local:");
+  Serial.print(tcpPortNum);
+  Serial.print("\nDisplay Name:  ");
   Serial.print(displayName);
-  Serial.print(" / ");
+  Serial.print("\nModel Name:    ");
   Serial.print(modelName);
-  Serial.print(")\n");
+  Serial.print("\n");
 
-  MDNS.begin(hostName);                     // set server host name (.local implied)
-  MDNS.setInstanceName(displayName);        // set server display name
-  MDNS.addService("_hap","_tcp",80);        // advertise HAP service on HTTP port (80)
+  MDNS.begin(hostName);                         // set server host name (.local implied)
+  MDNS.setInstanceName(displayName);            // set server display name
+  MDNS.addService("_hap","_tcp",tcpPortNum);    // advertise HAP service on specified port
 
   // add MDNS (Bonjour) TXT records for configurable as well as fixed values (HAP Table 6-7)
 
@@ -412,7 +413,7 @@ void Span::checkConnect(){
   Serial.print("\nStarting Web (HTTP) Server supporting up to ");
   Serial.print(maxConnections);
   Serial.print(" simultaneous connections...\n\n");
-  hapServer.begin();
+  hapServer->begin();
 
   if(!HAPClient::nAdminControllers()){
     Serial.print("DEVICE NOT YET PAIRED -- PLEASE PAIR WITH HOMEKIT APP\n\n");
@@ -560,7 +561,7 @@ void Span::processSerialCommand(const char *c){
 
       if(strlen(network.wifiData.ssid)>0){
         Serial.print("*** Stopping all current WiFi services...\n\n");
-        hapServer.end();
+        hapServer->end();
         MDNS.end();
         WiFi.disconnect();
       }

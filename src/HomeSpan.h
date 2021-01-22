@@ -96,7 +96,9 @@ struct Span{
   uint8_t logLevel=DEFAULT_LOG_LEVEL;                         // level for writing out log messages to serial monitor
   uint8_t maxConnections=DEFAULT_MAX_CONNECTIONS;             // number of simultaneous HAP connections
   unsigned long comModeLife=DEFAULT_COMMAND_TIMEOUT*1000;     // length of time (in milliseconds) to keep Command Mode alive before resuming normal operations
+  uint16_t tcpPortNum=DEFAULT_TCP_PORT;                       // port for TCP communications between HomeKit and HomeSpan
 
+  WiFiServer *hapServer;                            // pointer to the HAP Server connection
   Blinker statusLED;                                // indicates HomeSpan status
   PushButton controlButton;                         // controls HomeSpan configuration and resets
   Network network;                                  // configures WiFi and Setup Code via either serial monitor or temporary Access Point
@@ -142,7 +144,8 @@ struct Span{
   void setCommandTimeout(uint16_t nSec){comModeLife=nSec*1000;}           // sets Command Mode Timeout (seconds)
   void setLogLevel(uint8_t level){logLevel=level;}                        // sets Log Level for log messages (0=baseline, 1=intermediate, 2=all)
   void setMaxConnections(uint8_t nCon){maxConnections=nCon;}              // sets maximum number of simultaneous HAP connections (HAP requires devices support at least 8)
-  void setHostNameSuffix(const char *suffix){hostNameSuffix=suffix;}      // sets the hostName suffix to be used instead of the 6-byte AccessoryID 
+  void setHostNameSuffix(const char *suffix){hostNameSuffix=suffix;}      // sets the hostName suffix to be used instead of the 6-byte AccessoryID
+  void setPortNum(uint16_t port){tcpPortNum=port;}                        // sets the TCP port number to use for communications between HomeKit and HomeSpan
 };
 
 ///////////////////////////////

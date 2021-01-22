@@ -73,6 +73,7 @@
 #define     DEFAULT_LOG_LEVEL         0                   // change with homeSpan.setLogLevel(level)
 
 #define     DEFAULT_MAX_CONNECTIONS   8                   // change with homeSpan.setMaxConnections(num);
+#define     DEFAULT_TCP_PORT          80                  // change with homeSpan.setPort(port);
 
 
 /////////////////////////////////////////////////////

@@ -11,6 +11,7 @@ void setup() {
   homeSpan.setLogLevel(2);
 
   homeSpan.setHostNameSuffix("");
+  homeSpan.setPortNum(1200);
 
   homeSpan.begin(Category::Lighting,"HomeSpanTest");
 
