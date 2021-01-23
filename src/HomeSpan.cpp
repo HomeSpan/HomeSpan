@@ -47,7 +47,7 @@ void Span::begin(Category catID, const char *displayName, const char *hostNameBa
   this->displayName=displayName;
   this->hostNameBase=hostNameBase;
   this->modelName=modelName;
-  sprintf(this->category,"%d",catID);
+  sprintf(this->category,"%d",(int)catID);
 
   controlButton.init(controlPin);
   statusLED.init(statusPin);
@@ -149,10 +149,10 @@ void Span::poll() {
 
   WiFiClient newClient;
 
-  if(newClient=hapServer->available()){         // found a new HTTP client
-    int freeSlot=getFreeSlot();                 // get next free slot
+  if(hapServer && (newClient=hapServer->available())){         // found a new HTTP client
+    int freeSlot=getFreeSlot();                                // get next free slot
 
-    if(freeSlot==-1){                           // no available free slots
+    if(freeSlot==-1){                                          // no available free slots
       freeSlot=randombytes_uniform(maxConnections);
       LOG2("=======================================\n");
       LOG1("** Freeing Client #");
@@ -817,7 +817,7 @@ int Span::countCharacteristics(char *buf){
   int nObj=0;
   
   const char tag[]="\"aid\"";
-  while(buf=strstr(buf,tag)){         // count number of characteristic objects in PUT JSON request
+  while((buf=strstr(buf,tag))){         // count number of characteristic objects in PUT JSON request
     nObj++;
     buf+=strlen(tag);
   }
@@ -999,7 +999,7 @@ int Span::sprintfAttributes(SpanBuf *pObj, int nObj, char *cBuf){
   nChars+=snprintf(cBuf,cBuf?64:0,"{\"characteristics\":[");
 
   for(int i=0;i<nObj;i++){
-      nChars+=snprintf(cBuf?(cBuf+nChars):NULL,cBuf?128:0,"{\"aid\":%u,\"iid\":%d,\"status\":%d}",pObj[i].aid,pObj[i].iid,pObj[i].status);
+      nChars+=snprintf(cBuf?(cBuf+nChars):NULL,cBuf?128:0,"{\"aid\":%u,\"iid\":%d,\"status\":%d}",pObj[i].aid,pObj[i].iid,(int)pObj[i].status);
       if(i+1<nObj)
         nChars+=snprintf(cBuf?(cBuf+nChars):NULL,cBuf?64:0,",");
   }
@@ -1052,7 +1052,7 @@ int Span::sprintfAttributes(char **ids, int numIDs, int flags, char *cBuf){
     
     if(sFlag){                                                                                    // status flag is needed - overlay at end
       nChars--;
-      nChars+=snprintf(cBuf?(cBuf+nChars):NULL,cBuf?64:0,",\"status\":%d}",status[i]);
+      nChars+=snprintf(cBuf?(cBuf+nChars):NULL,cBuf?64:0,",\"status\":%d}",(int)status[i]);
     }
   
     if(i+1<numIDs)
@@ -1401,7 +1401,7 @@ int SpanCharacteristic::sprintfAttributes(char *cBuf, int flags){
         break;
           
         case UINT32:
-          nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"value\":%lu",value.UINT32);
+          nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"value\":%u",value.UINT32);
         break;
           
         case UINT64:
@@ -1504,17 +1504,17 @@ StatusCode SpanCharacteristic::loadUpdate(char *val, char *ev){
       break;
 
     case UINT8:
-      if(!sscanf(val,"%u",&newValue.UINT8))
+      if(!sscanf(val,"%hhu",&newValue.UINT8))
         return(StatusCode::InvalidValue);
       break;
             
     case UINT16:
-      if(!sscanf(val,"%u",&newValue.UINT16))
+      if(!sscanf(val,"%hu",&newValue.UINT16))
         return(StatusCode::InvalidValue);
       break;
       
     case UINT32:
-      if(!sscanf(val,"%llu",&newValue.UINT32))
+      if(!sscanf(val,"%u",&newValue.UINT32))
         return(StatusCode::InvalidValue);
       break;
       
@@ -1527,6 +1527,9 @@ StatusCode SpanCharacteristic::loadUpdate(char *val, char *ev){
       if(!sscanf(val,"%lg",&newValue.FLOAT))
         return(StatusCode::InvalidValue);
       break;
+
+    default:
+    break;
 
   } // switch
 
@@ -1569,6 +1572,9 @@ void SpanCharacteristic::setVal(int val){
       case UINT64:
         value.UINT64=(uint64_t)val;
         newValue.UINT64=(uint64_t)val;
+      break;
+
+      default:
       break;
     }
 

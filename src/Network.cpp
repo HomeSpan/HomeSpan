@@ -62,8 +62,8 @@ void Network::scan(){
 
 void Network::serialConfigure(){
 
-  sprintf(wifiData.ssid,"");
-  sprintf(wifiData.pwd,"");
+  wifiData.ssid[0]='\0';
+  wifiData.pwd[0]='\0';
 
   Serial.print("*** WiFi Setup - Scanning for Networks...\n\n");
   
@@ -400,7 +400,7 @@ int Network::getFormValue(char *formData, const char *tag, char *value, int maxS
   while(*v!='\0' && *v!='&' && len<maxSize){      // copy the value until null, '&', or maxSize is reached
     if(*v=='%'){                                  // this is an escaped character of form %XX
       v++;
-      sscanf(v,"%2x",value++);
+      sscanf(v,"%2x",(unsigned int *)value++);
       v+=2;
     } else {
       *value++=*v++;
