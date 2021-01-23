@@ -32,10 +32,10 @@ The following **optional** `homeSpan` methods override various HomeSpan initiali
 * `void setStatusPin(uint8_t pin)`
   * sets the ESP32 pin to use for the HomeSpan Status LED (default=13).  There is also a corresponding `getStatusPin()` method that returns this pin number
 
-* `void setApSSID(char *ssid)`
+* `void setApSSID(const char *ssid)`
   * sets the SSID (network name) of the HomeSpan Setup Access Point (default="HomeSpan-Setup")
   
-* `void setApPassword(char *pwd)`
+* `void setApPassword(const char *pwd)`
   * sets the password of the HomeSpan Setup Access Point (default="homespan")
   
 * `void setApTimeout(uint16_t nSec)`
