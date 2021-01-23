@@ -10,7 +10,7 @@ The HomeSpan Library is invoked by including *HomeSpan.h* in your Arduino sketch
 
 At runtime this HomeSpan will create a global **object** named `homeSpan` that supports the following methods:
 
-* `void begin(Category catID, char *displayName, char *hostNameBase, char *modelName)` 
+* `void begin(Category catID, const char *displayName, const char *hostNameBase, const char *modelName)` 
   * initializes HomeSpan
   * **must** be called at the beginning of each sketch before any other HomeSpan functions and is typically placed near the top of the Arduino `setup()` method, but **after** `Serial.begin()` so that initialization diagnostics can be output to the Serial Monitor
   * all arguments are **optional**
@@ -53,6 +53,15 @@ The following **optional** `homeSpan` methods override various HomeSpan initiali
   
 * `void setMaxConnections(uint8_t nCon)`
   * sets the maximum number of HAP Controllers that be simultaneously connected to HomeSpan (default=8)
+  
+* `void setPortNum(uint16_t port)`
+  * sets the TCP port number used for communication between HomeKit and HomeSpan (default=80)
+  
+* `void setHostNameSuffix(const char *suffix)`
+  * sets the suffix HomeSpan appends to *hostNameBase* to create the full hostName
+  * if not specified, the default is for HomeSpan to append a dash "-" followed the 6-byte Accessory ID of the HomeSpan device
+  * setting *suffix* to a null string "" is permitted.
+  * example: `homeSpan.begin(Category::Fans, "Living Room Ceiling Fan", "LivingRoomFan");` will yield a default *hostName* of the form *LivingRoomFan-A1B2C3D4E5F6.local*.  Calling `homeSpan.setHostNameSuffix("v2")` prior to `homeSpan.begin()` will instead yield a *hostName* of *LivingRoomFanv2.local*
   
 ## *SpanAccessory(uint32_t aid)*
 
