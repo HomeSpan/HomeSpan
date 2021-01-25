@@ -9,6 +9,10 @@ void setup() {
   Serial.begin(115200);
  
   homeSpan.setLogLevel(1);
+  
+  homeSpan.setHostNameSuffix("");
+  homeSpan.setPortNum(1200);
+  homeSpan.setQRID("One1");
 
   homeSpan.begin(Category::Lighting,"HomeSpanTest");
 
