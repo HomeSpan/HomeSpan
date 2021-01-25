@@ -410,6 +410,17 @@ void Span::checkConnect(){
   else
     mdns_service_txt_item_set("_hap","_tcp","sf","0");           // set Status Flag = 0
 
+  uint8_t hashInput[22];
+  uint8_t hashOutput[64];
+  char setupHash[9];
+  size_t len;
+  
+  memcpy(hashInput,qrID,4);                                           // Create the Seup ID for use with optional QR Codes.  This is an undocumented feature of HAP R2!
+  memcpy(hashInput+4,id,17);                                          // Step 1: Concatenate 4-character Setup ID and 17-character Accessory ID into hashInput
+  mbedtls_sha512_ret(hashInput,21,hashOutput,0);                      // Step 2: Perform SHA-512 hash on combined 21-byte hashInput to create 64-byte hashOutput
+  mbedtls_base64_encode((uint8_t *)setupHash,9,&len,hashOutput,4);    // Step 3: Encode the first 4 bytes of hashOutput in base64, which results in an 8-character, null-terminated, setupHash
+  mdns_service_txt_item_set("_hap","_tcp","sh",setupHash);            // Step 4: broadcast the resulting Setup Hash
+
   Serial.print("\nStarting Web (HTTP) Server supporting up to ");
   Serial.print(maxConnections);
   Serial.print(" simultaneous connections...\n\n");
@@ -423,6 +434,19 @@ void Span::checkConnect(){
   }
   
 } // initWiFi
+
+///////////////////////////////
+
+void Span::setQRID(const char *id){
+  
+  char tBuf[5];
+  sscanf(id,"%4[0-9A-Za-z]",tBuf);
+  
+  if(strlen(id)==4 && strlen(tBuf)==4){
+    qrID=id;
+  }
+    
+} // setQRID
 
 ///////////////////////////////
 
@@ -515,6 +539,10 @@ void Span::processSerialCommand(const char *c){
         nvs_set_blob(HAPClient::srpNVS,"VERIFYDATA",&verifyData,sizeof(verifyData));                              // update data
         nvs_commit(HAPClient::srpNVS);                                                                            // commit to NVS
         Serial.print("New Code Saved!\n");
+
+        Serial.print("Optional QR Code: ");
+        Serial.print(getQRCode(setupCode));
+        Serial.print("\n\n");        
       }            
     }
     break;
@@ -721,6 +749,32 @@ void Span::processSerialCommand(const char *c){
     break;
     
   } // switch
+}
+
+///////////////////////////////
+
+const char *Span::getQRCode(const char *setupCode){
+  
+  uint64_t n;
+  uint64_t iSetupCode;
+  uint64_t iCategory;
+  
+  sscanf(category,"%llu",&iCategory);
+  sscanf(setupCode,"%llu",&iSetupCode);
+  
+  n=(iCategory << 31) | (0xA << 27) | iSetupCode;
+  
+  qrCode="";
+  
+  while(n>0){
+    char c=n%36+48;
+    if(c>57)
+      c+=7;
+    qrCode=c+qrCode;
+    n/=36;
+  }
+  qrCode="X-HM://00" + qrCode + qrID;  
+  return(qrCode.c_str());
 }
 
 ///////////////////////////////

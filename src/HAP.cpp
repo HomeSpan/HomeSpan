@@ -58,11 +58,14 @@ void HAPClient::init(){
   } else {
     
     char c[128];
-    sprintf(c,"Generating SRP verification data for default Setup Code: %.3s-%.2s-%.3s\n\n",homeSpan.defaultSetupCode,homeSpan.defaultSetupCode+3,homeSpan.defaultSetupCode+5);
+    sprintf(c,"Generating SRP verification data for default Setup Code: %.3s-%.2s-%.3s\n",homeSpan.defaultSetupCode,homeSpan.defaultSetupCode+3,homeSpan.defaultSetupCode+5);
     Serial.print(c);
     srp.createVerifyCode(homeSpan.defaultSetupCode,verifyData.verifyCode,verifyData.salt);         // create verification code from default Setup Code and random salt
     nvs_set_blob(srpNVS,"VERIFYDATA",&verifyData,sizeof(verifyData));                           // update data
-    nvs_commit(srpNVS);                                                                         // commit to NVS    
+    nvs_commit(srpNVS);                                                                         // commit to NVS
+    Serial.print("Optional QR Code: ");
+    Serial.print(homeSpan.getQRCode(homeSpan.defaultSetupCode));
+    Serial.print("\n\n");          
   }
   
   if(!nvs_get_blob(hapNVS,"ACCESSORY",NULL,&len)){                    // if found long-term Accessory data in NVS

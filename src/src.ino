@@ -8,10 +8,7 @@ void setup() {
  
   Serial.begin(115200);
  
-  homeSpan.setLogLevel(2);
-
-  homeSpan.setHostNameSuffix("");
-  homeSpan.setPortNum(1200);
+  homeSpan.setLogLevel(1);
 
   homeSpan.begin(Category::Lighting,"HomeSpanTest");
 

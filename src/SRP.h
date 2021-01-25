@@ -29,6 +29,7 @@
 
 #include <mbedtls/sha512.h>
 #include <mbedtls/bignum.h>
+#include <mbedtls/base64.h>
 
 #include "HAPConstants.h"
 

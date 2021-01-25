@@ -61,6 +61,8 @@
 
 #define     DEFAULT_SETUP_CODE        "46637726"          // changed during network setup or with 'S' command
 
+#define     DEFAULT_QR_ID             "HSPN"              // change with homeSpan.setQRID(qrID);
+
 #define     DEFAULT_CONTROL_PIN       21                  // change with homeSpan.setControlPin(pin)
 #define     DEFAULT_STATUS_PIN        13                  // change with homeSpan.setStatusPin(pin)
 
