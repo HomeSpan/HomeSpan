@@ -12,6 +12,7 @@ HomeSpan provides a microcontroller-focused implementation of [Apple's HomeKit A
 * 100% HAP-R2 compliance
 * 38 integrated HomeKit Services
 * Operates in either Accessory or Bridge mode
+* Supports pairing with Setup Codes or QR Codes
 
 ### For the HomeSpan Developer
 
@@ -36,9 +37,9 @@ HomeSpan provides a microcontroller-focused implementation of [Apple's HomeKit A
   * Launch the WiFi Access Point
 * A standalone, detailed End-User Guide
 
-## Latest Update (1/9/2021)
+## Latest Update (1/24/2021)
 
-* HomeSpan 1.1.3 - some minor patches and improved WiFi initialization logic (see [Release](https://github.com/HomeSpan/HomeSpan/releases) for details).
+* HomeSpan 1.1.4 - HomeSpan now recognizes QR Codes for pairing!  This release also includes a new method allowing you to change the TCP port used for communication to-and-from HomeKit, as well as a new method to modify the hostname suffix (or eliminate it all together). Improved parsing of text input through the Serial Monitor addresses (hopefully!) an issue using HomeSpan with Platform IO. See [Release](https://github.com/HomeSpan/HomeSpan/releases) for details.
 
 # HomeSpan Resources
 
