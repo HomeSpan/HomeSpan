@@ -1,7 +1,7 @@
 /*********************************************************************************
  *  MIT License
  *  
- *  Copyright (c) 2020 Gregg E. Berman
+ *  Copyright (c) 2020-2021 Gregg E. Berman
  *  
  *  https://github.com/HomeSpan/HomeSpan
  *  
@@ -225,7 +225,6 @@ int SRP6A::verifyProof(){
 void SRP6A::createProof(){
 
   uint8_t tBuf[512];    // temporary buffer for staging
-  uint8_t tHash[64];    // temporary buffer for storing SHA-512 results
 
   // compute M2 = H( A | M1 | K )
   

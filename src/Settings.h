@@ -1,7 +1,7 @@
 /*********************************************************************************
  *  MIT License
  *  
- *  Copyright (c) 2020 Gregg E. Berman
+ *  Copyright (c) 2020-2021 Gregg E. Berman
  *  
  *  https://github.com/HomeSpan/HomeSpan
  *  
@@ -34,7 +34,7 @@
 
 #define     HS_MAJOR  1
 #define     HS_MINOR  1
-#define     HS_PATCH  3
+#define     HS_PATCH  4
 
 #define     STRINGIFY(x) _STR(x)
 #define     _STR(x) #x
@@ -61,6 +61,8 @@
 
 #define     DEFAULT_SETUP_CODE        "46637726"          // changed during network setup or with 'S' command
 
+#define     DEFAULT_QR_ID             "HSPN"              // change with homeSpan.setQRID(qrID);
+
 #define     DEFAULT_CONTROL_PIN       21                  // change with homeSpan.setControlPin(pin)
 #define     DEFAULT_STATUS_PIN        13                  // change with homeSpan.setStatusPin(pin)
 
@@ -73,6 +75,7 @@
 #define     DEFAULT_LOG_LEVEL         0                   // change with homeSpan.setLogLevel(level)
 
 #define     DEFAULT_MAX_CONNECTIONS   8                   // change with homeSpan.setMaxConnections(num);
+#define     DEFAULT_TCP_PORT          80                  // change with homeSpan.setPort(port);
 
 
 /////////////////////////////////////////////////////

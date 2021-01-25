@@ -1,7 +1,7 @@
 /*********************************************************************************
  *  MIT License
  *  
- *  Copyright (c) 2020 Gregg E. Berman
+ *  Copyright (c) 2020-2021 Gregg E. Berman
  *  
  *  https://github.com/HomeSpan/HomeSpan
  *  
@@ -75,7 +75,8 @@ struct SpanConfig {
 struct Span{
 
   const char *displayName;                      // display name for this device - broadcast as part of Bonjour MDNS
-  const char *hostNameBase;                     // base of host name of this device - full host name broadcast by Bonjour MDNS will have 6-byte accessoryID as well as '.local' automatically appended
+  const char *hostNameBase;                     // base of hostName of this device - full host name broadcast by Bonjour MDNS will have 6-byte accessoryID as well as '.local' automatically appended
+  const char *hostNameSuffix=NULL;              // optional "suffix" of hostName of this device.  If specified, will be used as the hostName suffix instead of the 6-byte accessoryID
   char *hostName;                               // full host name of this device - constructed from hostNameBase and 6-byte AccessoryID
   const char *modelName;                        // model name of this device - broadcast as Bonjour field "md" 
   char category[3]="";                          // category ID of primary accessory - broadcast as Bonjour field "ci" (HAP Section 13)
@@ -84,6 +85,7 @@ struct Span{
   int nFatalErrors=0;                           // number of fatal errors in user-defined configuration
   String configLog;                             // log of configuration process, including any errors
   boolean isBridge=true;                        // flag indicating whether device is configured as a bridge (i.e. first Accessory contains nothing but AccessoryInformation and HAPProtocolInformation)
+  String qrCode;                                // optional QR Code to use for pairing
 
   boolean connected=false;                      // WiFi connection status
   unsigned long waitTime=60000;                 // time to wait (in milliseconds) between WiFi connection attempts
@@ -95,7 +97,10 @@ struct Span{
   uint8_t logLevel=DEFAULT_LOG_LEVEL;                         // level for writing out log messages to serial monitor
   uint8_t maxConnections=DEFAULT_MAX_CONNECTIONS;             // number of simultaneous HAP connections
   unsigned long comModeLife=DEFAULT_COMMAND_TIMEOUT*1000;     // length of time (in milliseconds) to keep Command Mode alive before resuming normal operations
+  uint16_t tcpPortNum=DEFAULT_TCP_PORT;                       // port for TCP communications between HomeKit and HomeSpan
+  const char *qrID=DEFAULT_QR_ID;                             // optional Setup ID used to pair with QR Code
 
+  WiFiServer *hapServer;                            // pointer to the HAP Server connection
   Blinker statusLED;                                // indicates HomeSpan status
   PushButton controlButton;                         // controls HomeSpan configuration and resets
   Network network;                                  // configures WiFi and Setup Code via either serial monitor or temporary Access Point
@@ -135,12 +140,16 @@ struct Span{
   void setControlPin(uint8_t pin){controlPin=pin;}                        // sets Control Pin
   void setStatusPin(uint8_t pin){statusPin=pin;}                          // sets Status Pin
   int getStatusPin(){return(statusPin);}                                  // gets Status Pin
-  void setApSSID(char *ssid){network.apSSID=ssid;}                        // sets Access Point SSID
-  void setApPassword(char *pwd){network.apPassword=pwd;}                  // sets Access Point Password
+  void setApSSID(const char *ssid){network.apSSID=ssid;}                  // sets Access Point SSID
+  void setApPassword(const char *pwd){network.apPassword=pwd;}            // sets Access Point Password
   void setApTimeout(uint16_t nSec){network.lifetime=nSec*1000;}           // sets Access Point Timeout (seconds)
   void setCommandTimeout(uint16_t nSec){comModeLife=nSec*1000;}           // sets Command Mode Timeout (seconds)
   void setLogLevel(uint8_t level){logLevel=level;}                        // sets Log Level for log messages (0=baseline, 1=intermediate, 2=all)
   void setMaxConnections(uint8_t nCon){maxConnections=nCon;}              // sets maximum number of simultaneous HAP connections (HAP requires devices support at least 8)
+  void setHostNameSuffix(const char *suffix){hostNameSuffix=suffix;}      // sets the hostName suffix to be used instead of the 6-byte AccessoryID
+  void setPortNum(uint16_t port){tcpPortNum=port;}                        // sets the TCP port number to use for communications between HomeKit and HomeSpan
+  void setQRID(const char *id);                                           // sets the Setup ID for optional pairing with a QR Code
+  const char *getQRCode(const char *setupCode);                           // gets an optional QR code from setupCode
 };
 
 ///////////////////////////////

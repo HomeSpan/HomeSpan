@@ -1,7 +1,7 @@
 /*********************************************************************************
  *  MIT License
  *  
- *  Copyright (c) 2020 Gregg E. Berman
+ *  Copyright (c) 2020-2021 Gregg E. Berman
  *  
  *  https://github.com/HomeSpan/HomeSpan
  *  
@@ -58,11 +58,14 @@ void HAPClient::init(){
   } else {
     
     char c[128];
-    sprintf(c,"Generating SRP verification data for default Setup Code: %.3s-%.2s-%.3s\n\n",homeSpan.defaultSetupCode,homeSpan.defaultSetupCode+3,homeSpan.defaultSetupCode+5);
+    sprintf(c,"Generating SRP verification data for default Setup Code: %.3s-%.2s-%.3s\n",homeSpan.defaultSetupCode,homeSpan.defaultSetupCode+3,homeSpan.defaultSetupCode+5);
     Serial.print(c);
     srp.createVerifyCode(homeSpan.defaultSetupCode,verifyData.verifyCode,verifyData.salt);         // create verification code from default Setup Code and random salt
     nvs_set_blob(srpNVS,"VERIFYDATA",&verifyData,sizeof(verifyData));                           // update data
-    nvs_commit(srpNVS);                                                                         // commit to NVS    
+    nvs_commit(srpNVS);                                                                         // commit to NVS
+    Serial.print("Optional QR Code: ");
+    Serial.print(homeSpan.getQRCode(homeSpan.defaultSetupCode));
+    Serial.print("\n\n");          
   }
   
   if(!nvs_get_blob(hapNVS,"ACCESSORY",NULL,&len)){                    // if found long-term Accessory data in NVS
@@ -647,6 +650,8 @@ int HAPClient::postPairSetupURL(){
 
   } // switch
 
+  return(1);
+
 } // postPairSetup
 
 //////////////////////////////////////
@@ -701,7 +706,7 @@ int HAPClient::postPairVerifyURL(){
 
         memcpy(iosCurveKey,tlv8.buf(kTLVType_PublicKey),32);       // save iosCurveKey (will persist until end of verification process)
 
-        int rVal=crypto_scalarmult_curve25519(sharedCurveKey,secretCurveKey,iosCurveKey);      // generate (and persist) Pair Verify SharedSecret CurveKey from Accessory's Curve25519 secret key and Controller's Curve25519 public key (32 bytes)
+        crypto_scalarmult_curve25519(sharedCurveKey,secretCurveKey,iosCurveKey);      // generate (and persist) Pair Verify SharedSecret CurveKey from Accessory's Curve25519 secret key and Controller's Curve25519 public key (32 bytes)
 
         uint8_t *accessoryPairingID = accessory.ID;                    // set accessoryPairingID
         size_t accessoryPairingIDLen = 17;
@@ -842,6 +847,8 @@ int HAPClient::postPairVerifyURL(){
     break;
   
   } // switch
+
+  return(1);
   
 } // postPairVerify
 
@@ -925,7 +932,7 @@ int HAPClient::postPairingsURL(){
         break;        
       }
 
-      if(newCont=findController(tlv8.buf(kTLVType_Identifier))){
+      if((newCont=findController(tlv8.buf(kTLVType_Identifier)))){
         tlv8.clear();                                         // clear TLV records
         tlv8.val(kTLVType_State,pairState_M2);                // set State=<M2>
         if(!memcmp(cPair->LTPK,newCont->LTPK,32)){                       // requested Controller already exists and LTPK matches
@@ -1187,10 +1194,10 @@ int HAPClient::putPrepareURL(char *json){
   uint32_t ttl;
   uint64_t pid;
    
-  if(cBuf=strstr(json,ttlToken))
-    sscanf(cBuf+strlen(ttlToken),"%lu",&ttl);
+  if((cBuf=strstr(json,ttlToken)))
+    sscanf(cBuf+strlen(ttlToken),"%u",&ttl);
 
-  if(cBuf=strstr(json,pidToken))
+  if((cBuf=strstr(json,pidToken)))
     sscanf(cBuf+strlen(ttlToken),"%llu",&pid);
 
   char jsonBuf[32];
@@ -1202,7 +1209,7 @@ int HAPClient::putPrepareURL(char *json){
     status=StatusCode::InvalidValue;
   }
 
-  sprintf(jsonBuf,"{\"status\":%d}",status);
+  sprintf(jsonBuf,"{\"status\":%d}",(int)status);
   int nBytes=strlen(jsonBuf);
   int nChars=snprintf(NULL,0,"HTTP/1.1 200 OK\r\nContent-Type: application/hap+json\r\nContent-Length: %d\r\n\r\n",nBytes);      // create Body with Content Length = size of JSON Buf
   char body[nChars+1];
@@ -1264,7 +1271,7 @@ void  HAPClient::checkTimedWrites(){
   
   for(auto tw=homeSpan.TimedWrites.begin(); tw!=homeSpan.TimedWrites.end(); tw++){      // loop over all Timed Writes using an iterator
     if(cTime>tw->second){                                                               // timer has expired
-       sprintf(c,"Removing PID=%llu  ALARM=%lu\n",tw->first,tw->second);
+       sprintf(c,"Removing PID=%llu  ALARM=%u\n",tw->first,tw->second);
        LOG2(c);
        homeSpan.TimedWrites.erase(tw);
       }
@@ -1338,7 +1345,6 @@ void HAPClient::tlvRespond(){
 int HAPClient::receiveEncrypted(){
 
   uint8_t buf[1042];               // maximum size of encoded message = 2+1024+16 bytes (HAP Section 6.5.2)
-  int nFrames=0;
   int nBytes=0;
 
   while(client.read(buf,2)==2){    // read initial 2-byte AAD record
@@ -1498,7 +1504,7 @@ Controller *HAPClient::addController(uint8_t *id, uint8_t *ltpk, boolean admin){
 
   Controller *slot;
 
-  if(slot=findController(id)){
+  if((slot=findController(id))){
     memcpy(slot->LTPK,ltpk,32);
     slot->admin=admin;
     LOG2("\n*** Updated Controller: ");
@@ -1508,7 +1514,7 @@ Controller *HAPClient::addController(uint8_t *id, uint8_t *ltpk, boolean admin){
     return(slot);    
   }
 
-  if(slot=getFreeController()){
+  if((slot=getFreeController())){
     slot->allocated=true;
     memcpy(slot->ID,id,36);
     memcpy(slot->LTPK,ltpk,32);
@@ -1553,7 +1559,7 @@ void HAPClient::removeController(uint8_t *id){
 
   Controller *slot;
 
-  if(slot=findController(id)){      // remove controller if found
+  if((slot=findController(id))){      // remove controller if found
     LOG2("\n***Removed Controller: ");
     if(homeSpan.logLevel>1)
       charPrintRow(id,36);

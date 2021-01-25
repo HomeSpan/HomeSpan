@@ -1,7 +1,7 @@
 /*********************************************************************************
  *  MIT License
  *  
- *  Copyright (c) 2020 Gregg E. Berman
+ *  Copyright (c) 2020-2021 Gregg E. Berman
  *  
  *  https://github.com/HomeSpan/HomeSpan
  *  
@@ -35,8 +35,6 @@
 
 using namespace Utils;
 
-WiFiServer hapServer(80);           // HTTP Server (i.e. this acccesory) running on usual port 80 (local-scoped variable to this file only)
-
 HAPClient **hap;                    // HAP Client structure containing HTTP client connections, parsing routines, and state variables (global-scoped variable)
 Span homeSpan;                      // HAP Attributes database and all related control functions for this Accessory (global-scoped variable)
 
@@ -49,7 +47,7 @@ void Span::begin(Category catID, const char *displayName, const char *hostNameBa
   this->displayName=displayName;
   this->hostNameBase=hostNameBase;
   this->modelName=modelName;
-  sprintf(this->category,"%d",catID);
+  sprintf(this->category,"%d",(int)catID);
 
   controlButton.init(controlPin);
   statusLED.init(statusPin);
@@ -127,6 +125,7 @@ void Span::poll() {
       statusLED.start(LED_WIFI_NEEDED);
     } else {
       homeSpan.statusLED.start(LED_WIFI_CONNECTING);
+      hapServer=new WiFiServer(tcpPortNum,maxConnections);
     }
           
     controlButton.reset();        
@@ -150,10 +149,10 @@ void Span::poll() {
 
   WiFiClient newClient;
 
-  if(newClient=hapServer.available()){         // found a new HTTP client
-    int freeSlot=getFreeSlot();                 // get next free slot
+  if(hapServer && (newClient=hapServer->available())){         // found a new HTTP client
+    int freeSlot=getFreeSlot();                                // get next free slot
 
-    if(freeSlot==-1){                           // no available free slots
+    if(freeSlot==-1){                                          // no available free slots
       freeSlot=randombytes_uniform(maxConnections);
       LOG2("=======================================\n");
       LOG1("** Freeing Client #");
@@ -362,23 +361,35 @@ void Span::checkConnect(){
   id[17]='\0';                              // add terminating null
 
   // create broadcaset name from server base name plus accessory ID (without ':')
-  
-  int nChars=snprintf(NULL,0,"%s-%.2s%.2s%.2s%.2s%.2s%.2s",hostNameBase,id,id+3,id+6,id+9,id+12,id+15);       
+
+  int nChars;
+
+  if(!hostNameSuffix)
+    nChars=snprintf(NULL,0,"%s-%.2s%.2s%.2s%.2s%.2s%.2s",hostNameBase,id,id+3,id+6,id+9,id+12,id+15);
+  else
+    nChars=snprintf(NULL,0,"%s%s",hostNameBase,hostNameSuffix);
+    
   char hostName[nChars+1];
-  sprintf(hostName,"%s-%.2s%.2s%.2s%.2s%.2s%.2s",hostNameBase,id,id+3,id+6,id+9,id+12,id+15);
+  
+  if(!hostNameSuffix)
+    sprintf(hostName,"%s-%.2s%.2s%.2s%.2s%.2s%.2s",hostNameBase,id,id+3,id+6,id+9,id+12,id+15);
+  else
+    sprintf(hostName,"%s%s",hostNameBase,hostNameSuffix);
 
-  Serial.print("\nStarting MDNS...\n");
-  Serial.print("Broadcasting as: ");
+  Serial.print("\nStarting MDNS...\n\n");
+  Serial.print("HostName:      ");
   Serial.print(hostName);
-  Serial.print(".local (");
+  Serial.print(".local:");
+  Serial.print(tcpPortNum);
+  Serial.print("\nDisplay Name:  ");
   Serial.print(displayName);
-  Serial.print(" / ");
+  Serial.print("\nModel Name:    ");
   Serial.print(modelName);
-  Serial.print(")\n");
+  Serial.print("\n");
 
-  MDNS.begin(hostName);                     // set server host name (.local implied)
-  MDNS.setInstanceName(displayName);        // set server display name
-  MDNS.addService("_hap","_tcp",80);        // advertise HAP service on HTTP port (80)
+  MDNS.begin(hostName);                         // set server host name (.local implied)
+  MDNS.setInstanceName(displayName);            // set server display name
+  MDNS.addService("_hap","_tcp",tcpPortNum);    // advertise HAP service on specified port
 
   // add MDNS (Bonjour) TXT records for configurable as well as fixed values (HAP Table 6-7)
 
@@ -399,10 +410,21 @@ void Span::checkConnect(){
   else
     mdns_service_txt_item_set("_hap","_tcp","sf","0");           // set Status Flag = 0
 
+  uint8_t hashInput[22];
+  uint8_t hashOutput[64];
+  char setupHash[9];
+  size_t len;
+  
+  memcpy(hashInput,qrID,4);                                           // Create the Seup ID for use with optional QR Codes.  This is an undocumented feature of HAP R2!
+  memcpy(hashInput+4,id,17);                                          // Step 1: Concatenate 4-character Setup ID and 17-character Accessory ID into hashInput
+  mbedtls_sha512_ret(hashInput,21,hashOutput,0);                      // Step 2: Perform SHA-512 hash on combined 21-byte hashInput to create 64-byte hashOutput
+  mbedtls_base64_encode((uint8_t *)setupHash,9,&len,hashOutput,4);    // Step 3: Encode the first 4 bytes of hashOutput in base64, which results in an 8-character, null-terminated, setupHash
+  mdns_service_txt_item_set("_hap","_tcp","sh",setupHash);            // Step 4: broadcast the resulting Setup Hash
+
   Serial.print("\nStarting Web (HTTP) Server supporting up to ");
   Serial.print(maxConnections);
   Serial.print(" simultaneous connections...\n\n");
-  hapServer.begin();
+  hapServer->begin();
 
   if(!HAPClient::nAdminControllers()){
     Serial.print("DEVICE NOT YET PAIRED -- PLEASE PAIR WITH HOMEKIT APP\n\n");
@@ -412,6 +434,19 @@ void Span::checkConnect(){
   }
   
 } // initWiFi
+
+///////////////////////////////
+
+void Span::setQRID(const char *id){
+  
+  char tBuf[5];
+  sscanf(id,"%4[0-9A-Za-z]",tBuf);
+  
+  if(strlen(id)==4 && strlen(tBuf)==4){
+    qrID=id;
+  }
+    
+} // setQRID
 
 ///////////////////////////////
 
@@ -504,6 +539,10 @@ void Span::processSerialCommand(const char *c){
         nvs_set_blob(HAPClient::srpNVS,"VERIFYDATA",&verifyData,sizeof(verifyData));                              // update data
         nvs_commit(HAPClient::srpNVS);                                                                            // commit to NVS
         Serial.print("New Code Saved!\n");
+
+        Serial.print("Optional QR Code: ");
+        Serial.print(getQRCode(setupCode));
+        Serial.print("\n\n");        
       }            
     }
     break;
@@ -550,7 +589,7 @@ void Span::processSerialCommand(const char *c){
 
       if(strlen(network.wifiData.ssid)>0){
         Serial.print("*** Stopping all current WiFi services...\n\n");
-        hapServer.end();
+        hapServer->end();
         MDNS.end();
         WiFi.disconnect();
       }
@@ -714,6 +753,32 @@ void Span::processSerialCommand(const char *c){
 
 ///////////////////////////////
 
+const char *Span::getQRCode(const char *setupCode){
+  
+  uint64_t n;
+  uint64_t iSetupCode;
+  uint64_t iCategory;
+  
+  sscanf(category,"%llu",&iCategory);
+  sscanf(setupCode,"%llu",&iSetupCode);
+  
+  n=(iCategory << 31) | (0xA << 27) | iSetupCode;
+  
+  qrCode="";
+  
+  while(n>0){
+    char c=n%36+48;
+    if(c>57)
+      c+=7;
+    qrCode=c+qrCode;
+    n/=36;
+  }
+  qrCode="X-HM://00" + qrCode + qrID;  
+  return(qrCode.c_str());
+}
+
+///////////////////////////////
+
 int Span::sprintfAttributes(char *cBuf){
 
   int nBytes=0;
@@ -806,7 +871,7 @@ int Span::countCharacteristics(char *buf){
   int nObj=0;
   
   const char tag[]="\"aid\"";
-  while(buf=strstr(buf,tag)){         // count number of characteristic objects in PUT JSON request
+  while((buf=strstr(buf,tag))){         // count number of characteristic objects in PUT JSON request
     nObj++;
     buf+=strlen(tag);
   }
@@ -988,7 +1053,7 @@ int Span::sprintfAttributes(SpanBuf *pObj, int nObj, char *cBuf){
   nChars+=snprintf(cBuf,cBuf?64:0,"{\"characteristics\":[");
 
   for(int i=0;i<nObj;i++){
-      nChars+=snprintf(cBuf?(cBuf+nChars):NULL,cBuf?128:0,"{\"aid\":%u,\"iid\":%d,\"status\":%d}",pObj[i].aid,pObj[i].iid,pObj[i].status);
+      nChars+=snprintf(cBuf?(cBuf+nChars):NULL,cBuf?128:0,"{\"aid\":%u,\"iid\":%d,\"status\":%d}",pObj[i].aid,pObj[i].iid,(int)pObj[i].status);
       if(i+1<nObj)
         nChars+=snprintf(cBuf?(cBuf+nChars):NULL,cBuf?64:0,",");
   }
@@ -1041,7 +1106,7 @@ int Span::sprintfAttributes(char **ids, int numIDs, int flags, char *cBuf){
     
     if(sFlag){                                                                                    // status flag is needed - overlay at end
       nChars--;
-      nChars+=snprintf(cBuf?(cBuf+nChars):NULL,cBuf?64:0,",\"status\":%d}",status[i]);
+      nChars+=snprintf(cBuf?(cBuf+nChars):NULL,cBuf?64:0,",\"status\":%d}",(int)status[i]);
     }
   
     if(i+1<numIDs)
@@ -1390,7 +1455,7 @@ int SpanCharacteristic::sprintfAttributes(char *cBuf, int flags){
         break;
           
         case UINT32:
-          nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"value\":%lu",value.UINT32);
+          nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"value\":%u",value.UINT32);
         break;
           
         case UINT64:
@@ -1493,17 +1558,17 @@ StatusCode SpanCharacteristic::loadUpdate(char *val, char *ev){
       break;
 
     case UINT8:
-      if(!sscanf(val,"%u",&newValue.UINT8))
+      if(!sscanf(val,"%hhu",&newValue.UINT8))
         return(StatusCode::InvalidValue);
       break;
             
     case UINT16:
-      if(!sscanf(val,"%u",&newValue.UINT16))
+      if(!sscanf(val,"%hu",&newValue.UINT16))
         return(StatusCode::InvalidValue);
       break;
       
     case UINT32:
-      if(!sscanf(val,"%llu",&newValue.UINT32))
+      if(!sscanf(val,"%u",&newValue.UINT32))
         return(StatusCode::InvalidValue);
       break;
       
@@ -1516,6 +1581,9 @@ StatusCode SpanCharacteristic::loadUpdate(char *val, char *ev){
       if(!sscanf(val,"%lg",&newValue.FLOAT))
         return(StatusCode::InvalidValue);
       break;
+
+    default:
+    break;
 
   } // switch
 
@@ -1558,6 +1626,9 @@ void SpanCharacteristic::setVal(int val){
       case UINT64:
         value.UINT64=(uint64_t)val;
         newValue.UINT64=(uint64_t)val;
+      break;
+
+      default:
       break;
     }
 

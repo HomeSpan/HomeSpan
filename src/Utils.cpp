@@ -1,7 +1,7 @@
 /*********************************************************************************
  *  MIT License
  *  
- *  Copyright (c) 2020 Gregg E. Berman
+ *  Copyright (c) 2020-2021 Gregg E. Berman
  *  
  *  https://github.com/HomeSpan/HomeSpan
  *  
@@ -55,10 +55,11 @@ char *Utils::readSerial(char *c, int max){
       return(c);           // return updated string
     }
 
-    c[i]=buf;               // store new character
-    
-    if(i<max)               // do not store more than max characters (excluding string terminator)
-      i++;
+    if(buf!='\r'){         // save any character except carriage return
+      c[i]=buf;               // store new character    
+      if(i<max)               // do not store more than max characters (excluding string terminator)
+        i++;
+    }
   
   } // while(1)
   

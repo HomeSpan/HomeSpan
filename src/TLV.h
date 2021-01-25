@@ -1,7 +1,7 @@
 /*********************************************************************************
  *  MIT License
  *  
- *  Copyright (c) 2020 Gregg E. Berman
+ *  Copyright (c) 2020-2021 Gregg E. Berman
  *  
  *  https://github.com/HomeSpan/HomeSpan
  *  
@@ -89,7 +89,9 @@ int TLV<tagType, maxTags>::create(tagType tag, int maxLen, const char *name){
   tlv[numTags].name=name;
   tlv[numTags].len=-1;
   tlv[numTags].val=(uint8_t *)malloc(maxLen);
-  numTags++;  
+  numTags++;
+
+  return(1);
 }
 
 //////////////////////////////////////

@@ -1,7 +1,7 @@
 /*********************************************************************************
  *  MIT License
  *  
- *  Copyright (c) 2020 Gregg E. Berman
+ *  Copyright (c) 2020-2021 Gregg E. Berman
  *  
  *  https://github.com/HomeSpan/HomeSpan
  *  
@@ -29,6 +29,7 @@
 
 #include <mbedtls/sha512.h>
 #include <mbedtls/bignum.h>
+#include <mbedtls/base64.h>
 
 #include "HAPConstants.h"
 
