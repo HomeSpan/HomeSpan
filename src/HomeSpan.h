@@ -38,6 +38,7 @@
 #include "Utils.h"
 #include "Network.h"
 #include "HAPConstants.h"
+#include "HapQR.h"
 
 using std::vector;
 using std::unordered_map;
@@ -85,7 +86,7 @@ struct Span{
   int nFatalErrors=0;                           // number of fatal errors in user-defined configuration
   String configLog;                             // log of configuration process, including any errors
   boolean isBridge=true;                        // flag indicating whether device is configured as a bridge (i.e. first Accessory contains nothing but AccessoryInformation and HAPProtocolInformation)
-  String qrCode;                                // optional QR Code to use for pairing
+  HapQR qrCode;                                 // optional QR Code to use for pairing
 
   boolean connected=false;                      // WiFi connection status
   unsigned long waitTime=60000;                 // time to wait (in milliseconds) between WiFi connection attempts
@@ -149,7 +150,6 @@ struct Span{
   void setHostNameSuffix(const char *suffix){hostNameSuffix=suffix;}      // sets the hostName suffix to be used instead of the 6-byte AccessoryID
   void setPortNum(uint16_t port){tcpPortNum=port;}                        // sets the TCP port number to use for communications between HomeKit and HomeSpan
   void setQRID(const char *id);                                           // sets the Setup ID for optional pairing with a QR Code
-  const char *getQRCode(const char *setupCode);                           // gets an optional QR code from setupCode
 };
 
 ///////////////////////////////

@@ -64,7 +64,7 @@ void HAPClient::init(){
     nvs_set_blob(srpNVS,"VERIFYDATA",&verifyData,sizeof(verifyData));                           // update data
     nvs_commit(srpNVS);                                                                         // commit to NVS
     Serial.print("Optional QR Code: ");
-    Serial.print(homeSpan.getQRCode(homeSpan.defaultSetupCode));
+    Serial.print(homeSpan.qrCode.get(atoi(homeSpan.defaultSetupCode),homeSpan.qrID,atoi(homeSpan.category)));
     Serial.print("\n\n");          
   }
   
