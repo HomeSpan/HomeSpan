@@ -1,4 +1,4 @@
-# Pairing HomeSpan using QR Codes
+# Pairing with QR Codes versus Setup Codes
 
 Instructing the Home App on your iPhone to pair a HomeSpan device to HomeKit by manually typing its 9-digit *Setup Code* generally involves the following:
 
@@ -10,13 +10,16 @@ Instructing the Home App on your iPhone to pair a HomeSpan device to HomeKit by 
 
 If instead you use the Home App to scan the device's *Setup Code* from a printed tag, step #4 occurs first, followed by the Home App searching for unpaired devices and then asking you to select one for pairing.  In either case, your input is required twice:  once to select the device you want to pair, and once to type (or scan) the *Setup Code*.
 
-Pairing using a *QR Code* instead of a *Setup Code* combines all of these steps into a single user-action.  You scan the *QR Code*, confirm the action, and the Home App does the rest.  This works because the *QR Code* contains the *Setup Code*, the device category, **and** a separate *Setup ID* that tells the Home App the ID of the device to pair.  The specific steps are as follows:
+Pairing using a *QR Code* as an alternative to using a *Setup Code* combines all of these steps into a single user-action.  You scan the *QR Code*, confirm you'd like to proceed, and the Home App does the rest.  This works because the *QR Code* contains not only the *Setup Code*, as well as the device category, but also a new *Setup ID* that tells the Home App the "ID" of the device to pair.  The specific steps are as follows:
 
 1. *You* scan the *QR Code*
 2. The Home App displays an icon showing you the category of the device indicated by the *QR Code*;  the Home App does **not** show you the name of the device
 3. *You* confirm you'd like to continue the process
 4. The Home App searches your local network for an unpaired HomeKit accessory device that is broadcasting the same *Setup ID* as provided in the *QR Code*
 5. If it finds such device, it attempts to pair using the *Setup Code* as provided in the *QR Code*
+
+---
+
 
 Note that the reason the Home App can't display the name of the device in step #2, is that it does not search the network for available devices until step #4, which is after you've confirmed the process in step #2.  This seems a bit backwards to me.  Ideally, steps #4 and #3 would be reversed so that the Home App can display the full name of the device to you and you could confirm that it is indeed the device you want to pair.  In the above process, you are really only confirming that you would like the Home App to begin its search and pairing based on information in the *QR Code* you scanned.
 
