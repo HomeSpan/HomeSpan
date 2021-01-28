@@ -1,0 +1,1 @@
+-Pairing HomeSpan with QR Codes
