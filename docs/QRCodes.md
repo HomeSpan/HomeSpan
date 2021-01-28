@@ -3,20 +3,19 @@
 Instructing the Home App on your iPhone to pair a HomeSpan device to HomeKit by manually typing its 9-digit *Setup Code* generally involves the following:
 
 1. The Home App searches your local network for unpaired HomeKit accessory devices
-2. Available devices are displayed as small tiles along with their name and an icon reflecting its category (e.g. light, faucet, door)
+2. Each device available to be paired is displayed as a small tile along with its name and icon reflecting its category (e.g. light, faucet, door)
 3. **You** select the device you want to pair to HomeKit
 4. **You** provide the Home App with the device's *Setup Code*
 5. The Home App connects to the device you selected and tries to pair using that *Setup Code*
 
 If instead you use the Home App to scan the device's *Setup Code* from a printed tag, step #4 occurs first, followed by the Home App searching for unpaired devices and then asking you to select one for pairing.  In either case, your input is required twice:  once to select the device you want to pair, and once to type (or scan) the *Setup Code*.
 
-Pairing using a *QR Code* as an alternative to using a *Setup Code* combines all of these steps into a single user-action.  You scan the *QR Code*, confirm you'd like to proceed, and the Home App does the rest.  This works because the *QR Code* contains not only the *Setup Code*, as well as the device category, but also a new *Setup ID* that tells the Home App the "ID" of the device to pair.  The specific steps are as follows:
+Pairing using a *QR Code* as an alternative to using a *Setup Code* results in a simplified series of steps:
 
 1. *You* scan the *QR Code*
-2. The Home App displays an icon showing you the category of the device indicated by the *QR Code*;  the Home App does **not** show you the name of the device
+2. The Home App validates the code and displays an icon showing you the category of the device it intends to pair (but **not** the name of the device)
 3. *You* confirm you'd like to continue the process
-4. The Home App searches your local network for an unpaired HomeKit accessory device that is broadcasting the same *Setup ID* as provided in the *QR Code*
-5. If it finds such device, it attempts to pair using the *Setup Code* as provided in the *QR Code*
+4. The Home App searches your local network for a "matching" device, and if found pairs the device*
 
 ---
 
