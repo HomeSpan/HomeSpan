@@ -540,7 +540,7 @@ void Span::processSerialCommand(const char *c){
         nvs_commit(HAPClient::srpNVS);                                                                            // commit to NVS
         Serial.print("New Code Saved!\n");
 
-        Serial.print("Optional QR Code: ");
+        Serial.print("Setup Payload for Optional QR Code: ");
         Serial.print(qrCode.get(atoi(setupCode),qrID,atoi(category)));
         Serial.print("\n\n");        
       }            
