@@ -43,16 +43,16 @@ HomeSpan outputs its Setup Payload to the Arduino Serial Monitor whenever it gen
 
 The format of the Setup Payload is the URL "X-HM://" followed by 9 data characters, followed by the device's 4-character *Setup ID*.
 
-The data characters are a simple base-36 representation (using the characters 0-9 and A-Z) of a 45-bit word formed from the following fields—
+The data characters are a simple base-36 representation (using the characters 0-9 and A-Z) of a 45-bit word formed from the following fields:
 
-* Bits 0-26: The device's 8-digit *Setup Code* (from 0-99999999)
-* Bit 27: Set to 1 if the device supports NFC pairing, else set to 0
-* Bit 28: Set to 1 if the device supports IP pairing, else set to 0
-* Bit 29: Set to 1 if the device supports BLTE pairing, else set to 0
-* Bit 30: Always set to 0
-* Bits 31-38: The device's Accessory Category (0-255)
-* Bits 39-42: The "Reserved" field.  Always set to 0.
-* Bits 43-45; The "Version" field.  Always set to 0.
+* Bits 0-26 - The device's 8-digit *Setup Code* (from 0-99999999)
+* Bit 27 -  Set to 1 if the device supports NFC pairing, else set to 0
+* Bit 28 -  Set to 1 if the device supports IP pairing, else set to 0
+* Bit 29 -  Set to 1 if the device supports BLTE pairing, else set to 0
+* Bit 30 -  Always set to 0
+* Bits 31-38 -  The device's Accessory Category (0-255)
+* Bits 39-42 -  The "Reserved" field.  Always set to 0.
+* Bits 43-45 -  The "Version" field.  Always set to 0.
 
 
 
