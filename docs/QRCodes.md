@@ -11,13 +11,11 @@ On the other hand, pairing a HomeKit device with a **QR Code** requires you only
 
 This is possible because the QR Code contains within a 4-character *Setup ID* that is unique to the device associated with that QR Code.  The QR Code also contains other informattion about the device, such as its type (e.g. Light, Fan, Door) as well as its 8-digit *Setup Code*.
 
-HomeSpan supports pairing with QR codes and uses "HSPN" as its default *Setup ID*.  If you have more than one device that you intend on pairing with a QR Code, you'll need to change their default *Setup IDs* from "HSPN" to something unique using the method `homeSpan.setQRID(const char *ID)` (see the [HomeSpan API Reference](https://github.com/HomeSpan/HomeSpan/blob/master/docs/Reference.md) for details).  If you do not intend on pairing your devices with QR Codes, it is fine fore them to all have the same *Setup ID*, as this ID is only used to initiate the pairing process via a QR code and serves no other purpose.
+HomeSpan supports pairing with QR codes and uses "HSPN" as its default *Setup ID*.  If you have more than one device that you intend on pairing with a QR Code, you'll need to change their default *Setup IDs* from "HSPN" to something unique using the method `homeSpan.setQRID(const char *ID)` (see the [HomeSpan API Reference](https://github.com/HomeSpan/HomeSpan/blob/master/docs/Reference.md) for details).  If you do not intend on pairing your devices with QR Codes, it is fine for them to all have the same *Setup ID*, as this ID is only used to initiate the pairing process via a QR code and serves no other purpose.
 
 ### Creating Scannable QR Codes
 
-Just as you can create your own scannable tag based on a device's *Setup Code*, you can also create your own scannable QR Code for that device.
-
-One method is to use the QR Code generator provided by Apple in its [HomeKit Accessory Simulator Add-on for Xcode](https://developer.apple.com/documentation/homekit/testing_your_app_with_the_homekit_accessory_simulator)
+Just as you can create your own scannable tag based on a device's *Setup Code*, you can also create your own scannable QR Code for that device.  One method is to use the QR Code generator provided by Apple in its [HomeKit Accessory Simulator Add-on for Xcode](https://developer.apple.com/documentation/homekit/testing_your_app_with_the_homekit_accessory_simulator).
 
 ![QR Code Generator](images/QRCode.png)
 
@@ -37,13 +35,13 @@ The only portion of the graphic actually scanned by the Home App is the QR Code 
 
 The text input you'll need to provide to a generic QR Code generator is of course the Setup Payload.  There is a relatively straightfoward algorithm you can follow to determine the Setup Payload for your device based on all the inputs (see below), but its even easier to let HomeSpan do it for you.
 
-HomeSpan outputs its Setup Payload to the Arduino Serial Monitor whenever it generates a *Setup Code* or you set/change the *Setup Code*.  Simply copy the *Setup Payload* from the Serial Monitor into a generic QR Code generator, and viola, you have a scannable QR Code you can use to pair your HomeSpan device.
+HomeSpan outputs its Setup Payload to the Arduino Serial Monitor whenever it generates a *Setup Code* or you set/change the *Setup Code*.  **Simply copy the *Setup Payload* from the Serial Monitor into a generic QR Code generator, and viola, you have a scannable QR Code you can use to pair your HomeSpan device.**
 
 ### Setup Payload (optional reading)
 
 The format of the Setup Payload is the URL "X-HM://" followed by 9 data characters, followed by the device's 4-character *Setup ID*.
 
-The data characters are a simple base-36 representation (using the characters 0-9 and A-Z) of a 45-bit word formed from the following fields:
+The data characters are a base-36 representation (using the characters 0-9 and A-Z) of a 45-bit word formed from the following fields:
 
 * Bits 0-26 - The device's 8-digit *Setup Code* (from 0-99999999)
 * Bit 27 -  Set to 1 if the device supports NFC pairing, else set to 0
