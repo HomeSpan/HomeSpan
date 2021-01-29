@@ -540,8 +540,8 @@ void Span::processSerialCommand(const char *c){
         nvs_commit(HAPClient::srpNVS);                                                                            // commit to NVS
         Serial.print("New Code Saved!\n");
 
-        Serial.print("Optional QR Code: ");
-        Serial.print(getQRCode(setupCode));
+        Serial.print("Setup Payload for Optional QR Code: ");
+        Serial.print(qrCode.get(atoi(setupCode),qrID,atoi(category)));
         Serial.print("\n\n");        
       }            
     }
@@ -749,32 +749,6 @@ void Span::processSerialCommand(const char *c){
     break;
     
   } // switch
-}
-
-///////////////////////////////
-
-const char *Span::getQRCode(const char *setupCode){
-  
-  uint64_t n;
-  uint64_t iSetupCode;
-  uint64_t iCategory;
-  
-  sscanf(category,"%llu",&iCategory);
-  sscanf(setupCode,"%llu",&iSetupCode);
-  
-  n=(iCategory << 31) | (0xA << 27) | iSetupCode;
-  
-  qrCode="";
-  
-  while(n>0){
-    char c=n%36+48;
-    if(c>57)
-      c+=7;
-    qrCode=c+qrCode;
-    n/=36;
-  }
-  qrCode="X-HM://00" + qrCode + qrID;  
-  return(qrCode.c_str());
 }
 
 ///////////////////////////////
