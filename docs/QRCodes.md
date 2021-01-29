@@ -11,7 +11,7 @@ On the other hand, pairing a HomeKit device with a **QR Code** requires you only
 
 This is possible because the QR Code contains within a 4-character *Setup ID* that is unique to the device associated with that QR Code.  The QR Code also contains other informattion about the device, such as its type (e.g. Light, Fan, Door) as well as its 8-digit *Setup Code*.
 
-HomeSpan supports pairing with QR codes and uses "HSPN" as its default *Setup ID*.  If you have more than one device that you intend on pairing with a QR Code, you'll need to change their default *Setup IDs* from "HSPN" to something unique using the method `homeSpan.setQRID(const char *ID)` (see the [HomeSpan Projects](https://github.com/topics/homespan) for details).  If you do not intend on pairing your devices with QR Codes, it is fine fore them to all have the same *Setup ID*, as this ID is only used to initiate the pairing process via a QR code and serves no other purpose.
+HomeSpan supports pairing with QR codes and uses "HSPN" as its default *Setup ID*.  If you have more than one device that you intend on pairing with a QR Code, you'll need to change their default *Setup IDs* from "HSPN" to something unique using the method `homeSpan.setQRID(const char *ID)` (see the [HomeSpan API Reference](https://github.com/HomeSpan/HomeSpan/blob/master/docs/Reference.md) for details).  If you do not intend on pairing your devices with QR Codes, it is fine fore them to all have the same *Setup ID*, as this ID is only used to initiate the pairing process via a QR code and serves no other purpose.
 
 ### Creating Scannable QR Codes
 
