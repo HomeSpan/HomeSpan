@@ -39,6 +39,8 @@ This is because HomeSpan automatically displays the Setup Payload text needed fo
 
 The Setup Payload for a HomeKit device always begins with "X-HM://", followed by nine base-36 digits that encode all the device's pairing parameters, and ending with the *Setup ID* for the device in plain text.
 
+> Base-36 digits use the characters 0-9 and A-Z (capitals only!) to represent the numbers 0-35 in the same fashion that the hexidecimal digits 0-9 and A-F represent the numbers 0-15.  For example, the decimal number 91 would be represented as 2S in base-36 (91 = 2 * 36 + 19)
+
 The nine base-36 digits should encode a 45-bit word formed from the following data elements:
 
 * Bits 0-26 - The device's 8-digit *Setup Code* (from 0-99999999)
@@ -51,8 +53,6 @@ The nine base-36 digits should encode a 45-bit word formed from the following da
 * Bits 43-45 -  The "Version" field.  Always set to 0.
 
 The result must be 9 digits. If less, pad with leading zeros.
-
-> Base-36 digits use the characters 0-9 and A-Z (capitals only!) to represent the numbers 0-35 in the same fashion that the hexidecimal digits 0-9 and A-F represent the numbers 0-15.  For example, the decimal number 91 would be represented as 2S in base-36 (91 = 2 * 36 + 19)
 
 
 
