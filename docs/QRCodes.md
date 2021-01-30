@@ -24,25 +24,28 @@ As shown above, the Simulator's QR Code Generator requires the input of the foll
 * **Version**.  Always set this to zero, else the Home App will not recognize the QR Code.
 
 * **Reserved**.  Always set this to zero, else the Home App will not recognize the QR Code.
+
 * **Category**.  Set this to match the Category of your HomeSpan device (e.g. Lightbulb, Fan, Door Lock).  Note the Home App only uses this for display purposes when you first scan the QR Code.  The Home App does not actually check that the Category listed in the QR Code matches the Category of the device you are pairing.
+
 * **Setup Flags**.  These flags provide information on which methods of pairing are supported by a HomeKit device.  HomeSpan only supports IP Pairing, so you check that box and leave the other two blank.  However, it does not seem to matter which boxes (if any) you check since the Home App does not appear to use this information for anything.
-* **Setup Code**.  This is the 8-digit *Setup Code* you set for your device using either the [HomeSpan Command-Line Interface (CLI)](https://github.com/HomeSpan/HomeSpan/blob/master/docs/CLI.md) or [HomeSpan's Setup Access Point](https://github.com/HomeSpan/HomeSpan/blob/master/docs/UserGuide.md#setting-homespans-wifi-credentials-and-setup-code).  Note the code shown in the above screenshot is the default HomeSpan uses if you do not set your own.
+
+* **Setup Code**.  This is the 8-digit *Setup Code* you set for your device using either the [HomeSpan Command-Line Interface (CLI)](https://github.com/HomeSpan/HomeSpan/blob/master/docs/CLI.md) or [HomeSpan's WiFi Setup Web Page](https://github.com/HomeSpan/HomeSpan/blob/master/docs/UserGuide.md#setting-homespans-wifi-credentials-and-setup-code).  Note the code shown in the above screenshot is the default HomeSpan uses if you do not set your own.
+
 * **Setup ID**.  This is the 4-character *Setup ID* you set for your HomeSpan device from within your sketch using the method `homeSpan.setQRID(const char *id)`.  Note the ID shown in the above screenshot is the default HomeSpan uses if you do not set your own.  Also note case matters!  HSPN is not the same as "hspn".
-* **Setup Payload**.  This is the output that results from the above inputs, and is the text that is represented by the QR Code shown.  If you've not changed HomeSpan's default *Setup Code* or *Setup ID*, you can pair your device by scanning this graphic with the Home App.  Even easier is to scan it right from your camera - your iPhone will recognize that this is a HomeKit QR Code and open the Home App for you.
 
-You probably noticed that this QR Code contains Apple's HomeKit logo in the upper left.  This is purely cosmetic and not required by the Home App for pairing.  Similarly, the device's 8-digit *Setup Code* shown in big numerals in the upper right is also cosmetic and not needed for pairing, though it may be handy if you have problems scanning the QR Code and need to manually enter the *Setup Code* into the Home App.
+* **Setup Payload**.  This is the output that results from the above inputs, and is the text that is represented by the QR Code shown.  The **Setup Payload** for a HomeKit device always begins with "X-HM://", followed by 9 alphanumeric characters, and ending with the *Setup ID* in plain text.  If you've not changed HomeSpan's default *Setup Code* or *Setup ID*, you can pair your device by scanning this graphic with the Home App.  Even easier is to scan it right from your camera - your iPhone will recognize that this is a HomeKit QR Code and open the Home App for you.
 
-The only portion of the graphic actually scanned by the Home App is the QR Code itself, which means that you can use any generic QR Code generator instead of Apple's version, provided the generator allows you to create a QR Code from arbitrary text (most do).
+You probably noticed that the QR Code contains extra graphics, such as Apple's HomeKit logo in the upper left.  This is purely cosmetic and not required by the Home App for pairing.  Similarly, having the device's 8-digit *Setup Code* shown in big numerals in the upper right is also cosmetic and not needed for pairing, though it may be handy if you have problems scanning the QR Code and want to manually type the *Setup Code* into the Home App.
 
-The text input you'll need to provide to a generic QR Code generator is of course the Setup Payload.  There is a relatively straightfoward algorithm you can follow to determine the Setup Payload for your device based on all the inputs (see below), but its even easier to let HomeSpan do it for you.
+The only portion of the full graphic actually scanned by the Home App is the QR Code itself, which means you can create a HomeKit-compatible QR Code using any generic QR Code generator that allows you to input arbitrary text.  The text you'll need to input to such a QR Code generator is of course the **Setup Payload**.  There is a relatively straightfoward algorithm you can follow to produce the correct **Setup Payload** text for each of your HomeSpan devices, but its even easier to let HomeSpan do this for you.
 
-HomeSpan outputs its Setup Payload to the Arduino Serial Monitor whenever it generates a *Setup Code* or you set/change the *Setup Code*.  **Simply copy the *Setup Payload* from the Serial Monitor into a generic QR Code generator, and viola, you have a scannable QR Code you can use to pair your HomeSpan device.**
+This is because HomeSpan automatically displays the Setup Payload text needed for a HomeSpan device on the Arduino Serial Monitor whenever you set or change the *Setup Code*.  **Simply copy the *Setup Payload* text shown on the Serial Monitor into a generic QR Code generator, and viola — you've created a scannable QR Code ready to be used to pair your HomeSpan device.**
 
-### Setup Payload (optional reading)
+### Setup Payload Algorithm (*optional reading*)
 
-The format of the Setup Payload is the URL "X-HM://" followed by 9 data characters, followed by the device's 4-character *Setup ID*.
+The **Setup Payload** for a HomeKit device always begins with "X-HM://", followed by nine base-36 digits that encode all the device's pairing parameters, and ending with the *Setup ID* for the device in plain text.
 
-The data characters are a base-36 representation (using the characters 0-9 and A-Z) of a 45-bit word formed from the following fields:
+The nine base-36 digits should encode a 45-bit word formed from the following pairing data:
 
 * Bits 0-26 - The device's 8-digit *Setup Code* (from 0-99999999)
 * Bit 27 -  Set to 1 if the device supports NFC pairing, else set to 0
