@@ -65,7 +65,7 @@ The following **optional** `homeSpan` methods override various HomeSpan initiali
   
 * `void setQRID(const char *ID)`
   * changes the Setup ID from the HomeSpan default ("HSPN") to *ID*
-  * *ID* must be exactly 4 alphanumeric characters.  If not, the request to change the Setup ID is silently ignored and remains "HSPN"
+  * *ID* must be exactly 4 alphanumeric characters (0-9, A-Z, and a-z).  If not, the request to change the Setup ID is silently ignored and remains "HSPN"
   * The Setup ID is an optional parameter used when pairing the device to HomeKit with a QR Code (instead of the usual Setup Code)
   
   
