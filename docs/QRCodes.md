@@ -43,8 +43,8 @@ The Setup Payload for a HomeKit device always begins with "X-HM://", followed by
 
 The nine base-36 digits should encode a 45-bit word formed from the following data elements (listed from most- to least-significant bit):
 
-* Bits 45-43 -  The "Version" field.  Always set to 0
-* Bits 42-39 -  The "Reserved" field.  Always set to 0
+* Bits 45-43 -  The "Version" field (0-7).  Always set to 0
+* Bits 42-39 -  The "Reserved" field (0-15).  Always set to 0
 * Bits 38-31 -  The device's Accessory Category (0-255)
 * Bit 30 -  Always set to 0
 * Bit 29 -  Set to 1 if the device supports BLTE pairing, else set to 0
