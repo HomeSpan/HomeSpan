@@ -41,16 +41,16 @@ The Setup Payload for a HomeKit device always begins with "X-HM://", followed by
 
 > Base-36 digits use the characters 0-9 and A-Z (capitals only!) to represent the numbers 0-35 in the same fashion that the hexidecimal digits 0-9 and A-F represent the numbers 0-15.  For example, the decimal number 91 would be represented as 2S in base-36 (91 = 2 * 36 + 19)
 
-The nine base-36 digits should encode a 45-bit word formed from the following data elements:
+The nine base-36 digits should encode a 45-bit word formed from the following data elements (listed from most- to least-significant bit):
 
-* Bits 0-26 - The device's 8-digit *Setup Code* (from 0-99999999)
-* Bit 27 -  Set to 1 if the device supports NFC pairing, else set to 0
-* Bit 28 -  Set to 1 if the device supports IP pairing, else set to 0
-* Bit 29 -  Set to 1 if the device supports BLTE pairing, else set to 0
+* Bits 45-43 -  The "Version" field.  Always set to 0
+* Bits 42-39 -  The "Reserved" field.  Always set to 0
+* Bits 38-31 -  The device's Accessory Category (0-255)
 * Bit 30 -  Always set to 0
-* Bits 31-38 -  The device's Accessory Category (0-255)
-* Bits 39-42 -  The "Reserved" field.  Always set to 0.
-* Bits 43-45 -  The "Version" field.  Always set to 0.
+* Bit 29 -  Set to 1 if the device supports BLTE pairing, else set to 0
+* Bit 28 -  Set to 1 if the device supports IP pairing, else set to 0
+* Bit 27 -  Set to 1 if the device supports NFC pairing, else set to 0
+* Bits 26-0 - The device's 8-digit *Setup Code* (from 0-99999999)
 
 The result must be 9 digits. If less, pad with leading zeros.
 
