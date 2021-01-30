@@ -54,6 +54,8 @@ The nine base-36 digits should encode a 45-bit word formed from the following da
 
 The result must be 9 digits. If less, pad with leading zeros.
 
+---
 
+[↩️](README.md) Back to the Welcome page
 
 
