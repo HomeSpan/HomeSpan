@@ -7,7 +7,7 @@ Pairing a HomeKit device using its 8-digit *Setup Code* requires you to:
 
 The order of the steps above depends on whether you manually type the *Setup Code*, or scan it from a printed tag.
 
-In contrast, pairing a HomeKit device with a **QR Code** requires you to only scan the QR Code.  You do not need to identify the device you want to pair.  The Home App will instead search for it on your local network and, if found, pair to it automatically.
+In contrast, pairing a HomeKit device with a **QR Code** requires you to only scan the QR Code.  You do not need to identify the device you want to pair.  The Home App will instead search for it on your local network and, if found, pair with it automatically.
 
 This is possible because the QR Code includes a 4-character *Setup ID* that is unique to the device associated with the QR Code.  The QR Code also embeds other paring information about the device, such as its Category (e.g. Light, Fan, Door) and its 8-digit *Setup Code*.
 
