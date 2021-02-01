@@ -12,7 +12,7 @@ void setup() {
   
   homeSpan.setHostNameSuffix("");
   homeSpan.setPortNum(1200);
-  homeSpan.setQRID("One1");
+//  homeSpan.setQRID("One1");
 
   homeSpan.begin(Category::Lighting,"HomeSpanTest");
 

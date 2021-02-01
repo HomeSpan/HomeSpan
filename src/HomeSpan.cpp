@@ -385,6 +385,8 @@ void Span::checkConnect(){
   Serial.print(displayName);
   Serial.print("\nModel Name:    ");
   Serial.print(modelName);
+  Serial.print("\nSetup ID:      ");
+  Serial.print(qrID);
   Serial.print("\n");
 
   MDNS.begin(hostName);                         // set server host name (.local implied)
@@ -443,7 +445,7 @@ void Span::setQRID(const char *id){
   sscanf(id,"%4[0-9A-Za-z]",tBuf);
   
   if(strlen(id)==4 && strlen(tBuf)==4){
-    qrID=id;
+    sprintf(qrID,"%s",id);
   }
     
 } // setQRID
@@ -513,6 +515,26 @@ void Span::processSerialCommand(const char *c){
     }
     break;
 
+    case 'Q': {
+      char tBuf[5];
+      const char *s=c+1+strspn(c+1," ");
+      sscanf(s," %4[0-9A-Za-z]",tBuf);
+  
+      if(strlen(s)==4 && strlen(tBuf)==4){
+        sprintf(qrID,"%s",tBuf);
+        Serial.print("\n\nChanging default Setup ID for QR Code to : '");
+        Serial.print(qrID);
+        Serial.print("'.  Will take effect after next restart.\n\n");
+        nvs_set_str(HAPClient::hapNVS,"SETUPID",qrID);                           // update data
+        nvs_commit(HAPClient::hapNVS);          
+      } else {
+        Serial.print("\n*** Invalid request to change Setup ID for QR Code to: '");
+        Serial.print(s);
+        Serial.print("'.  Setup ID must be exactly 4 alphanumeric characters (0-9, A-Z, and a-z).\n\n");  
+      }        
+    }
+    break;
+    
     case 'S': {
       
       char buf[128];
@@ -725,6 +747,7 @@ void Span::processSerialCommand(const char *c){
       Serial.print("  W - configure WiFi Credentials and restart\n");      
       Serial.print("  X - delete WiFi Credentials and restart\n");      
       Serial.print("  S <code> - change the HomeKit Pairing Setup Code to <code>\n");
+      Serial.print("  Q <id> - change the HomeKit Setup ID for QR Codes to <id>\n");
       Serial.print("  A - start the HomeSpan Setup Access Point\n");      
       Serial.print("\n");      
       Serial.print("  U - unpair device by deleting all Controller data\n");

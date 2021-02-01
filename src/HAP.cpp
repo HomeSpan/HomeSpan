@@ -67,6 +67,14 @@ void HAPClient::init(){
     Serial.print(homeSpan.qrCode.get(atoi(homeSpan.defaultSetupCode),homeSpan.qrID,atoi(homeSpan.category)));
     Serial.print("\n\n");          
   }
+
+  if(!strlen(homeSpan.qrID)){                                      // Setup ID has not been specified in sketch
+    if(!nvs_get_str(hapNVS,"SETUPID",NULL,&len)){                    // check for saved value
+      nvs_get_str(hapNVS,"SETUPID",homeSpan.qrID,&len);                 // retrieve data
+    } else {
+      sprintf(homeSpan.qrID,"%s",DEFAULT_QR_ID);                     // use default
+   }
+  }
   
   if(!nvs_get_blob(hapNVS,"ACCESSORY",NULL,&len)){                    // if found long-term Accessory data in NVS
     nvs_get_blob(hapNVS,"ACCESSORY",&accessory,&len);                 // retrieve data

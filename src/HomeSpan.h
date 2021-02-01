@@ -99,7 +99,7 @@ struct Span{
   uint8_t maxConnections=DEFAULT_MAX_CONNECTIONS;             // number of simultaneous HAP connections
   unsigned long comModeLife=DEFAULT_COMMAND_TIMEOUT*1000;     // length of time (in milliseconds) to keep Command Mode alive before resuming normal operations
   uint16_t tcpPortNum=DEFAULT_TCP_PORT;                       // port for TCP communications between HomeKit and HomeSpan
-  const char *qrID=DEFAULT_QR_ID;                             // optional Setup ID used to pair with QR Code
+  char qrID[5]="";                                            // Setup ID used for pairing with QR Code
 
   WiFiServer *hapServer;                            // pointer to the HAP Server connection
   Blinker statusLED;                                // indicates HomeSpan status
