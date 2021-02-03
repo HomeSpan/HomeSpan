@@ -105,13 +105,15 @@ Note that the temporary WiFi network only remains active for 300 seconds (5 mi
 
 You can also force a termination of the setup process at any time by pressing and holding the Control Button for 3 seconds, at which time the Status LED will begin to flash rapidly (10 times per second).  Upon releasing the button HomeSpan will close down its temporary WiFi network and reboot the device without making any changes.
 
+It is not possible to programmatically define the WiFi access data or the setup code. This is a intentional decision to avoid that passwords are unintentionally sent with the code.
+
 ##	Pairing to HomeKit
 
 HomeSpan devices can be paired to Apple HomeKit anytime the device is in the **READY‑TO‑PAIR** state.  If the device is in the **NO‑WIFI state**, it must first be connected to your home WiFi network before it can be paired to HomeKit (see [Setting HomeSpan’s WiFi Credentials and Setup Code](#setting-homespans-wifi-credentials-and-setup-code)).  If the device is already in the **PAIRED** state but it is not appearing in HomeKit, you may need to manually unpair the device so it can be re-paired.
 
 To reduce the possibility that a bad actor can remotely pair with a HomeKit device and take over control, HomeKit requires the use of a device-specific Setup Code to authorize the pairing process.  This unique 8-digit code is not stored on the device itself (to prevent a hacker from extracting the code), but is usually found written on a tag attached to the device.  Only someone who has physical access to the tag will know the Setup Code and therefore be able to pair the device to HomeKit. 
 
-The first time HomeSpan is run on a new device, it defaults to using **466-37-726** for its Setup Code.   A scannable tag containing HomeSpan’s default Setup Code is provided below for convenience during the pairing process:
+The first time HomeSpan is run on a new device, it defaults to using **466-37-726** for its Setup Code. A scannable tag containing HomeSpan’s default Setup Code is provided below for convenience during the pairing process:
 
 ![Default Setup Code](images/defaultSetupCode.png)
 
