@@ -15,6 +15,7 @@ void setup() {
   homeSpan.setMaxConnections(16);
 //  homeSpan.setQRID("One1");
   homeSpan.enableOTA();
+  homeSpan.setSketchVersion("Test 1.2.3");
 
   homeSpan.begin(Category::Lighting,"HomeSpanTest");
 

@@ -87,6 +87,7 @@ struct Span{
   String configLog;                             // log of configuration process, including any errors
   boolean isBridge=true;                        // flag indicating whether device is configured as a bridge (i.e. first Accessory contains nothing but AccessoryInformation and HAPProtocolInformation)
   HapQR qrCode;                                 // optional QR Code to use for pairing
+  const char *sketchVersion="n/a";              // version of the sketch
 
   boolean connected=false;                      // WiFi connection status
   unsigned long waitTime=60000;                 // time to wait (in milliseconds) between WiFi connection attempts
@@ -153,6 +154,8 @@ struct Span{
   void setPortNum(uint16_t port){tcpPortNum=port;}                        // sets the TCP port number to use for communications between HomeKit and HomeSpan
   void setQRID(const char *id);                                           // sets the Setup ID for optional pairing with a QR Code
   void enableOTA(){otaEnabled=true;}                                      // enables Over-the-Air updates
+  void setSketchVersion(const char *sVer){sketchVersion=sVer;}            // set optional sketch version number
+  const char *getSketchVersion(){return sketchVersion;}                   // get sketch version number
 };
 
 ///////////////////////////////

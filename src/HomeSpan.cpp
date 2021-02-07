@@ -70,7 +70,9 @@ void Span::begin(Category catID, const char *displayName, const char *hostNameBa
   Serial.print("\nStatus LED:       Pin ");
   Serial.print(statusPin);  
   Serial.print("\nDevice Control:   Pin ");
-  Serial.print(controlPin);  
+  Serial.print(controlPin);
+  Serial.print("\nSketch Version:   ");
+  Serial.print(getSketchVersion());  
   Serial.print("\nHomeSpan Version: ");
   Serial.print(HOMESPAN_VERSION);
   Serial.print("\nESP-IDF Version:  ");
@@ -421,6 +423,10 @@ void Span::checkConnect(){
     mdns_service_txt_item_set("_hap","_tcp","sf","1");           // set Status Flag = 1 (Table 6-8)
   else
     mdns_service_txt_item_set("_hap","_tcp","sf","0");           // set Status Flag = 0
+
+  mdns_service_txt_item_set("_hap","_tcp","hspn",HOMESPAN_VERSION);           // HomeSpan Version Number (info only - NOT used by HAP)
+  mdns_service_txt_item_set("_hap","_tcp","sketch",sketchVersion);            // Sketch Version (info only - NOT used by HAP)
+  mdns_service_txt_item_set("_hap","_tcp","ota",otaEnabled?"yes":"no");       // OTA Enabled (info only - NOT used by HAP)
 
   uint8_t hashInput[22];
   uint8_t hashOutput[64];
