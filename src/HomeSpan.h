@@ -100,7 +100,8 @@ struct Span{
   unsigned long comModeLife=DEFAULT_COMMAND_TIMEOUT*1000;     // length of time (in milliseconds) to keep Command Mode alive before resuming normal operations
   uint16_t tcpPortNum=DEFAULT_TCP_PORT;                       // port for TCP communications between HomeKit and HomeSpan
   char qrID[5]="";                                            // Setup ID used for pairing with QR Code
-  boolean otaEnabled=false;                                   // enables Over-the-Air updates
+  boolean otaEnabled=false;                                   // enables Over-the-Air ("OTA") updates
+  char otaPwd[33];                                            // MD5 Hash of OTA password, represented as a string of hexidecimal characters
 
   WiFiServer *hapServer;                            // pointer to the HAP Server connection
   Blinker statusLED;                                // indicates HomeSpan status

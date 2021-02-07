@@ -434,7 +434,8 @@ void Span::checkConnect(){
 
   if(otaEnabled){
     ArduinoOTA.setHostname(hostName);
-
+    ArduinoOTA.setPasswordHash(otaPwd);
+    
     ArduinoOTA
       .onStart([]() {
         String type;
@@ -539,7 +540,7 @@ void Span::processSerialCommand(const char *c){
         Serial.print("\n");
       }
 
-      Serial.print("\n*** End Status ***\n");
+      Serial.print("\n*** End Status ***\n\n");
     } 
     break;
 
@@ -565,7 +566,7 @@ void Span::processSerialCommand(const char *c){
   
       if(strlen(s)==4 && strlen(tBuf)==4){
         sprintf(qrID,"%s",tBuf);
-        Serial.print("\n\nChanging default Setup ID for QR Code to : '");
+        Serial.print("\nChanging default Setup ID for QR Code to: '");
         Serial.print(qrID);
         Serial.print("'.  Will take effect after next restart.\n\n");
         nvs_set_str(HAPClient::hapNVS,"SETUPID",qrID);                           // update data
@@ -578,6 +579,32 @@ void Span::processSerialCommand(const char *c){
     }
     break;
     
+    case 'O': {
+
+      char textPwd[33]="\0";
+      
+      while(!strlen(textPwd)){
+        Serial.print("\n>>> OTA Password (32 characters max): ");
+        readSerial(textPwd,32);    
+        Serial.print(mask(textPwd,2));
+        Serial.print("\n");
+      }
+      
+      MD5Builder otaPwdHash;
+      otaPwdHash.begin();
+      otaPwdHash.add(textPwd);
+      otaPwdHash.calculate();
+      otaPwdHash.getChars(otaPwd);
+      nvs_set_str(HAPClient::otaNVS,"OTADATA",otaPwd);                 // update data
+      nvs_commit(HAPClient::otaNVS);          
+      
+      Serial.print("\nPassword change will take effect after next restart.\n");
+      if(!otaEnabled)
+        Serial.print("Note: OTA has not been enabled in this sketch.\n");
+      Serial.print("\n");
+    }
+    break;
+
     case 'S': {
       
       char buf[128];
@@ -791,6 +818,7 @@ void Span::processSerialCommand(const char *c){
       Serial.print("  X - delete WiFi Credentials and restart\n");      
       Serial.print("  S <code> - change the HomeKit Pairing Setup Code to <code>\n");
       Serial.print("  Q <id> - change the HomeKit Setup ID for QR Codes to <id>\n");
+      Serial.print("  O - change the OTA password\n");
       Serial.print("  A - start the HomeSpan Setup Access Point\n");      
       Serial.print("\n");      
       Serial.print("  U - unpair device by deleting all Controller data\n");

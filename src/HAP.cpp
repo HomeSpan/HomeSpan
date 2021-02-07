@@ -28,6 +28,7 @@
 #include <ESPmDNS.h>
 #include <nvs_flash.h>
 #include <sodium.h>
+#include <MD5Builder.h>
 
 #include "HAP.h"
 #include "HomeSpan.h"
@@ -43,10 +44,21 @@ void HAPClient::init(){
   nvs_open("WIFI",NVS_READWRITE,&wifiNVS);      // open WIFI data namespace in NVS
   nvs_open("SRP",NVS_READWRITE,&srpNVS);        // open SRP data namespace in NVS 
   nvs_open("HAP",NVS_READWRITE,&hapNVS);        // open HAP data namespace in NVS
+  nvs_open("OTA",NVS_READWRITE,&otaNVS);        // open OTA data namespace in NVS
 
   if(!nvs_get_blob(wifiNVS,"WIFIDATA",NULL,&len))                        // if found WiFi data in NVS
     nvs_get_blob(wifiNVS,"WIFIDATA",&homeSpan.network.wifiData,&len);      // retrieve data  
-  
+
+  if(!nvs_get_str(otaNVS,"OTADATA",NULL,&len)){                     // if found OTA data in NVS
+    nvs_get_str(otaNVS,"OTADATA",homeSpan.otaPwd,&len);              // retrieve data  
+  } else {
+    MD5Builder otaPwdHash;
+    otaPwdHash.begin();
+    otaPwdHash.add(DEFAULT_OTA_PASSWORD);
+    otaPwdHash.calculate();
+    otaPwdHash.getChars(homeSpan.otaPwd);
+  }
+
   struct {                                      // temporary structure to hold SRP verification code and salt stored in NVS
     uint8_t salt[16];
     uint8_t verifyCode[384];
@@ -1643,6 +1655,7 @@ TLV<kTLVType,10> HAPClient::tlv8;
 nvs_handle HAPClient::hapNVS;
 nvs_handle HAPClient::wifiNVS;
 nvs_handle HAPClient::srpNVS;
+nvs_handle HAPClient::otaNVS;
 uint8_t HAPClient::httpBuf[MAX_HTTP+1];                 
 HKDF HAPClient::hkdf;                                   
 pairState HAPClient::pairStatus;                        

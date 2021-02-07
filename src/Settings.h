@@ -66,8 +66,9 @@
 #define     DEFAULT_CONTROL_PIN       21                  // change with homeSpan.setControlPin(pin)
 #define     DEFAULT_STATUS_PIN        13                  // change with homeSpan.setStatusPin(pin)
 
-#define     DEFAULT_AP_SSID           "HomeSpan-Setup"   // change with homeSpan.setApSSID(pwd)
+#define     DEFAULT_AP_SSID           "HomeSpan-Setup"   // change with homeSpan.setApSSID(ssid)
 #define     DEFAULT_AP_PASSWORD       "homespan"         // change with homeSpan.setApPassword(pwd)
+#define     DEFAULT_OTA_PASSWORD      "homespan-ota"     // change with 'O' command
 
 #define     DEFAULT_AP_TIMEOUT        300                 // change with homeSpan.setApTimeout(nSeconds)
 #define     DEFAULT_COMMAND_TIMEOUT   120                 // change with homeSpan.setCommandTimeout(nSeconds)
@@ -87,7 +88,7 @@
 #define     LED_WIFI_CONNECTING   2000                // slow flashing
 #define     LED_AP_STARTED        100,0.5,2,300       // rapid double-blink
 #define     LED_AP_CONNECTED      300,0.5,2,400       // medium double-blink     
-#define     LED_OTA_STARTED       300,0.5,5,500       // rapid 5-blink
+#define     LED_OTA_STARTED       300,0.5,3,400       // medium triple-blink
 
 /////////////////////////////////////////////////////
 //      Message Log Level Control Macros           //
