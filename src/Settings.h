@@ -87,6 +87,7 @@
 #define     LED_WIFI_CONNECTING   2000                // slow flashing
 #define     LED_AP_STARTED        100,0.5,2,300       // rapid double-blink
 #define     LED_AP_CONNECTED      300,0.5,2,400       // medium double-blink     
+#define     LED_OTA_STARTED       300,0.5,5,500       // rapid 5-blink
 
 /////////////////////////////////////////////////////
 //      Message Log Level Control Macros           //

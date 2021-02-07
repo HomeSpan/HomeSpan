@@ -10,9 +10,11 @@ void setup() {
  
   homeSpan.setLogLevel(2);
   
-  homeSpan.setHostNameSuffix("");
+//  homeSpan.setHostNameSuffix("");
   homeSpan.setPortNum(1200);
+  homeSpan.setMaxConnections(16);
 //  homeSpan.setQRID("One1");
+  homeSpan.enableOTA();
 
   homeSpan.begin(Category::Lighting,"HomeSpanTest");
 

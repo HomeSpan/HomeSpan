@@ -29,6 +29,7 @@
 #include <nvs_flash.h>
 #include <sodium.h>
 #include <WiFi.h>
+#include <ArduinoOTA.h>
 
 #include "HomeSpan.h"
 #include "HAP.h"
@@ -206,6 +207,9 @@ void Span::poll() {
   HAPClient::checkPushButtons();
   HAPClient::checkNotifications();  
   HAPClient::checkTimedWrites();
+
+  if(otaEnabled)
+    ArduinoOTA.handle();
 
   if(controlButton.primed()){
     statusLED.start(LED_ALERT);
@@ -425,8 +429,47 @@ void Span::checkConnect(){
 
   Serial.print("\nStarting Web (HTTP) Server supporting up to ");
   Serial.print(maxConnections);
-  Serial.print(" simultaneous connections...\n\n");
+  Serial.print(" simultaneous connections...\n");
   hapServer->begin();
+
+  if(otaEnabled){
+    ArduinoOTA.setHostname(hostName);
+
+    ArduinoOTA
+      .onStart([]() {
+        String type;
+        if (ArduinoOTA.getCommand() == U_FLASH)
+          type = "sketch";
+        else // U_SPIFFS
+          type = "filesystem";
+        Serial.println("\n*** OTA Starting:" + type);
+        homeSpan.statusLED.start(LED_OTA_STARTED);
+      })
+      .onEnd([]() {
+        Serial.println("\n*** OTA Completed.  Rebooting...");
+        homeSpan.statusLED.off();
+      })
+      .onProgress([](unsigned int progress, unsigned int total) {
+        Serial.printf("*** Progress: %u%%\r", (progress / (total / 100)));
+      })
+      .onError([](ota_error_t error) {
+        Serial.printf("*** OTA Error[%u]: ", error);
+        if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed\n");
+        else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed\n");
+        else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed\n");
+        else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed\n");
+        else if (error == OTA_END_ERROR) Serial.println("End Failed\n");
+      });    
+    
+    ArduinoOTA.begin();
+    Serial.print("Starting OTA: ");
+    Serial.print(displayName);
+    Serial.print(" at ");
+    Serial.print(WiFi.localIP());
+    Serial.print("\n");
+  }
+
+  Serial.print("\n");
 
   if(!HAPClient::nAdminControllers()){
     Serial.print("DEVICE NOT YET PAIRED -- PLEASE PAIR WITH HOMEKIT APP\n\n");

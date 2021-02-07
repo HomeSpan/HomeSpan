@@ -100,6 +100,7 @@ struct Span{
   unsigned long comModeLife=DEFAULT_COMMAND_TIMEOUT*1000;     // length of time (in milliseconds) to keep Command Mode alive before resuming normal operations
   uint16_t tcpPortNum=DEFAULT_TCP_PORT;                       // port for TCP communications between HomeKit and HomeSpan
   char qrID[5]="";                                            // Setup ID used for pairing with QR Code
+  boolean otaEnabled=false;                                   // enables Over-the-Air updates
 
   WiFiServer *hapServer;                            // pointer to the HAP Server connection
   Blinker statusLED;                                // indicates HomeSpan status
@@ -150,6 +151,7 @@ struct Span{
   void setHostNameSuffix(const char *suffix){hostNameSuffix=suffix;}      // sets the hostName suffix to be used instead of the 6-byte AccessoryID
   void setPortNum(uint16_t port){tcpPortNum=port;}                        // sets the TCP port number to use for communications between HomeKit and HomeSpan
   void setQRID(const char *id);                                           // sets the Setup ID for optional pairing with a QR Code
+  void enableOTA(){otaEnabled=true;}                                      // enables Over-the-Air updates
 };
 
 ///////////////////////////////
