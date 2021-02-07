@@ -75,6 +75,12 @@ void Span::begin(Category catID, const char *displayName, const char *hostNameBa
   Serial.print(HOMESPAN_VERSION);
   Serial.print("\nESP-IDF Version:  ");
   Serial.print(esp_get_idf_version());
+  
+  #ifdef ARDUINO_VARIANT
+    Serial.print("\nESP32 Board:      ");
+    Serial.print(ARDUINO_VARIANT);
+  #endif
+  
   Serial.print("\nSketch Compiled:  ");
   Serial.print(__DATE__);
   Serial.print(" ");
