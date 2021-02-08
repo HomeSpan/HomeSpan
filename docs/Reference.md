@@ -67,7 +67,7 @@ The following **optional** `homeSpan` methods override various HomeSpan initiali
   * changes the QR Setup ID from the HomeSpan default to *ID*
   * the HomeSpan default is "HSPN" unless permanently changed for the device via the [HomeSpan CLI](CLI.md) using the 'Q' command
   * *ID* must be exactly 4 alphanumeric characters (0-9, A-Z, and a-z).  If not, the request to change the Setup ID is silently ignored and the default is used instead
-  * The Setup ID is an optional parameter used when pairing the device to HomeKit with a QR Code (instead of the usual Setup Code)
+  * The Setup ID is an optional parameter used only for pairing the device to HomeKit with a [QR Code](QRCodes.md) (instead of the usual Setup Code)
   
   
 ## *SpanAccessory(uint32_t aid)*
