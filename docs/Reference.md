@@ -60,12 +60,13 @@ The following **optional** `homeSpan` methods override various HomeSpan initiali
 * `void setHostNameSuffix(const char *suffix)`
   * sets the suffix HomeSpan appends to *hostNameBase* to create the full hostName
   * if not specified, the default is for HomeSpan to append a dash "-" followed the 6-byte Accessory ID of the HomeSpan device
-  * setting *suffix* to a null string "" is permitted.
+  * setting *suffix* to a null string "" is permitted
   * example: `homeSpan.begin(Category::Fans, "Living Room Ceiling Fan", "LivingRoomFan");` will yield a default *hostName* of the form *LivingRoomFan-A1B2C3D4E5F6.local*.  Calling `homeSpan.setHostNameSuffix("v2")` prior to `homeSpan.begin()` will instead yield a *hostName* of *LivingRoomFanv2.local*
   
 * `void setQRID(const char *ID)`
-  * changes the Setup ID from the HomeSpan default ("HSPN") to *ID*
-  * *ID* must be exactly 4 alphanumeric characters (0-9, A-Z, and a-z).  If not, the request to change the Setup ID is silently ignored and remains "HSPN"
+  * changes the QR Setup ID from the HomeSpan default to *ID*
+  * the HomeSpan default is "HSPN" unless permanently changed for the device via the [HomeSpan CLI](CLI.md) using the 'Q' command
+  * *ID* must be exactly 4 alphanumeric characters (0-9, A-Z, and a-z).  If not, the request to change the Setup ID is silently ignored and the default is used instead
   * The Setup ID is an optional parameter used when pairing the device to HomeKit with a QR Code (instead of the usual Setup Code)
   
   
