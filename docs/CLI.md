@@ -50,7 +50,7 @@ In addition to listening for incoming HAP requests, HomeSpan also continuously p
   * Deleting a device's HomeKit ID and Controller data with the 'H' command (see below) also restores the default Setup ID to "HSPN".
   
 * **O** - prompts you to set the password used for Over-the-Air (OTA) Updating
-  * HomeSpan supports [Over-the-Air (OTA) Updating](OTA.md) but requires the use of a (non-blank) password.  Similar to a device's Setup Code, HomeSpan saves a non-recoverable *hashed* version of the OTA password you set with this command in NVS.  If you forget the password you specified, you'll need to create it using this command.  Alternatively, you can restore the default OTA password by fully erasing the NVS with the 'E' command.
+  * HomeSpan supports [Over-the-Air (OTA) Updating](OTA.md) but requires the use of a (non-blank) password.  Similar to a device's Setup Code, HomeSpan saves a non-recoverable *hashed* version of the OTA password you set with this command in NVS.  If you forget the password you specified, you'll need to create a new one using this command.  Alternatively, you can restore the default OTA password by fully erasing the NVS with the 'E' command.
   * HomeSpan uses "homespan-ota" as its default OTA password for new devices.
   * Changes to the OTA password do not take effect until the device is restarted.
   * OTA is not active unless specifically enabled for a sketch using the method `homeSpan.enableOTA()`.  See the [HomeSpan API Reference](Reference.md) for details. 
