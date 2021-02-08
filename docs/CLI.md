@@ -42,14 +42,14 @@ In addition to listening for incoming HAP requests, HomeSpan also continuously p
   * This command deletes whatever WiFi Credentials have been stored in the device NVS, and restarts.
  
 * **S** \<code\> - change the HomeKit Pairing Setup Code to \<code\>
-  * Every HomeKit device requires a unique 8-digit Setup Code used for pairing.  When HomeSpan is run for the first time on a new device it sets the HomeKit Setup Code to a default value of **466-37-726**, and stores it in a dedicated NVS partition.  This command allows you to update the stored Setup Code to any other 8-digit code.  Note that in accordance with HAP specifications, HomeSpan actually stores a hashed version of the Setup Code, rather than the Setup Code itself.  This means the actual value is not recoverable, so if you forget your Setup Code you'll need to run this command and create a new one.
+  * Every HomeKit device requires a unique 8-digit Setup Code used for pairing.  When HomeSpan is run for the first time on a new device it sets the HomeKit Setup Code to a default value of **466-37-726**, and stores it in a dedicated NVS partition.  This command allows you to update the stored Setup Code to any other 8-digit code.  Note that in accordance with HAP specifications, HomeSpan actually stores a hashed version of the Setup Code, rather than the Setup Code itself.  This means the actual value is not recoverable, so if you forget your Setup Code you'll need to run this command and create a new one.  Alternatively, you can restore the default Setup Code by fully erasing the NVS with the 'E' command.
   
 * **Q** \<id\> - change HomeSpan's default Pairing Setup ID to \<id\>
   * This command changes HomeSpan's default Setup ID, which is used when pairing with a QR Code, from the new-device value of "HSPN" to \<id\>.  See [HomeSpan QR Codes](QRCodes.md) for details on how the Setup ID is used.  The Setup ID must be exactly 4 alphanumeric characters (0-9, A-Z, and a-z).
   * Note the new Setup ID is retained in HomeSpan's NVS and used as the default for all sketches, unless a specific Setup ID is set in the sketch using the method `homeSpan.setQRID(const char *id)`.  See the [HomeSpan API Reference](Reference.md) for details.
   
 * **O** - prompts you to set the password used for Over-the-Air (OTA) Updating
-  * HomeSpan supports [Over-the-Air (OTA) Updating](OTA.md) but requires the use of a (non-blank) password.  Similar to a device's Setup Code, HomeSpan saves a non-recoverable *hashed* version of the OTA password you set with this command in NVS.  If you forget the password you specified, you'll need to reset it using this command.
+  * HomeSpan supports [Over-the-Air (OTA) Updating](OTA.md) but requires the use of a (non-blank) password.  Similar to a device's Setup Code, HomeSpan saves a non-recoverable *hashed* version of the OTA password you set with this command in NVS.  If you forget the password you specified, you'll need to create it using this command.  Alternatively, you can restore the default OTA password by fully erasing the NVS with the 'E' command.
   * HomeSpan uses "homespan-ota" as its default OTA password for new devices.
   * Changes to the OTA password do not take effect until the device is restarted.
   * OTA is not active unless specifically enabled for a sketch using the method `homeSpan.enableOTA()`.  See the [HomeSpan API Reference](Reference.md) for details. 
@@ -68,7 +68,7 @@ In addition to listening for incoming HAP requests, HomeSpan also continuously p
   * This command simply reboots HomeSpan.
   
 * **F** - factory reset and restart
-  * This deletes all data stored in the NVS, *except* for the HomeKit Pairing Setup Code, and restarts the device.  This is effectively the same as executing the 'X' command followed by the 'H' command.
+  * This deletes all data stored in the NVS, *except* for the HomeKit Pairing Setup Code and OTA password, and restarts the device.  This is effectively the same as executing the 'X' command followed by the 'H' command.
   
 * **E** - erase ALL stored data and restart
   * This completely erases the NVS, deleting all stored data, *including* the HomeKit Pairing Setup code.  The device is then restarted and initialized as if it were new.
