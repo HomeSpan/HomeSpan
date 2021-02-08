@@ -46,11 +46,13 @@ In addition to listening for incoming HAP requests, HomeSpan also continuously p
   
 * **Q** \<id\> - change HomeSpan's default Pairing Setup ID to \<id\>
   * This command changes HomeSpan's default Setup ID, which is used when pairing with a QR Code, from the new-device value of "HSPN" to \<id\>.  See [HomeSpan QR Codes](QRCodes.md) for details on how the Setup ID is used.  The Setup ID must be exactly 4 alphanumeric characters (0-9, A-Z, and a-z).
-  * Note the new Setup ID is retained in HomeSpan's NVS and used as the default for all sketches, unless a specific Setup ID is set in the sketch using the method `homeSpan.setQRID(const char *id)`.  See [HomeSpan API Reference](Reference.md) for details.
+  * Note the new Setup ID is retained in HomeSpan's NVS and used as the default for all sketches, unless a specific Setup ID is set in the sketch using the method `homeSpan.setQRID(const char *id)`.  See the [HomeSpan API Reference](Reference.md) for details.
   
 * **O** - prompts you to set the password used for Over-the-Air (OTA) Updates
   * HomeSpan supports [OTA Updates](OTA.md) but requires a password to always be used.  For security, HomeSpan saves a *hashed* version of the password you specify in NVS, not the actual password.  If you forget the password you specified, you'll need to reset it using this command.
-  * If left unspecified, HomeSpan uses "homespan-ota" as its default OTA password.
+  * HomeSpan uses "homespan-ota" as its default OTA password for new devices.
+  * Changes to the OTA password do not take effect until the device is restarted.
+  * OTA is not active unless specifically enabled for a sketch using the method `homeSpan.enableOTA()`.  See the [HomeSpan API Reference](Reference.md) for details. 
   
 * **A** - start the HomeSpan Setup Access Point
   * This command starts HomeSpan's temporary Access Point, which provides users with an alternate methods for configuring a device's WiFi Credentials and HomeKit Setup Code.  Starting the Access Point with this command is identical to starting it via the Control Button.  See the [HomeSpan User Guide](UserGuide.md) for complete details.
