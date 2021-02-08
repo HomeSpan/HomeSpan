@@ -72,7 +72,16 @@ The following **optional** `homeSpan` methods override various HomeSpan initiali
   * enables [Over-the-Air (OTA) Updating](OTA.md) of a HomeSpan device, which is otherwise disabled
   * HomeSpan OTA always requires the use of an authorizing OTA password
   * the default OTA password for new HomeSpan devices is "homespan-ota"
-  * this can be changed via the [HomeSpan CLI](CLI.md) using the 'Q' command
+  * this can be changed via the [HomeSpan CLI](CLI.md) using the 'O' command
+  
+* `void setSketchVersion(const char *sVer)`
+  * sets the version of a HomeSpan sketch to *sVer*, which can be any arbitrary character string
+  * if unspecified, HomeSpan uses "n/a" as the default version text
+  * HomeSpan displays the version of the sketch in the Arduino IDE Serial Monitor upon start-up
+  * HomeSpan also includes both the version of the sketch, as well as the version of the HomeSpan library used to compile the sketch, as part of its HAP MDNS broadcast.  This data is *not* used by HAP.  Rather, it is for informational purposes and allows you to identify the version of a sketch for a device that is updated via [OTA](OTA.md), rather than connected to a computer
+  
+* `const char *getSketchVersion()`
+  * returns the version of a HomeSpan sketch, as set using `void setSketchVersion(const char *sVer)`, or "n/a" if not set
   
 ## *SpanAccessory(uint32_t aid)*
 
