@@ -63,12 +63,16 @@ The following **optional** `homeSpan` methods override various HomeSpan initiali
   * setting *suffix* to a null string "" is permitted
   * example: `homeSpan.begin(Category::Fans, "Living Room Ceiling Fan", "LivingRoomFan");` will yield a default *hostName* of the form *LivingRoomFan-A1B2C3D4E5F6.local*.  Calling `homeSpan.setHostNameSuffix("v2")` prior to `homeSpan.begin()` will instead yield a *hostName* of *LivingRoomFanv2.local*
   
-* `void setQRID(const char *ID)`
-  * changes the QR Setup ID from the HomeSpan default to *ID*
+* `void setQRID(const char *id)`
+  * changes the Setup ID, which is used for pairing a device with a [QR Code](QRCodes.md), from the HomeSpan default to *id*
   * the HomeSpan default is "HSPN" unless permanently changed for the device via the [HomeSpan CLI](CLI.md) using the 'Q' command
-  * *ID* must be exactly 4 alphanumeric characters (0-9, A-Z, and a-z).  If not, the request to change the Setup ID is silently ignored and the default is used instead
-  * The Setup ID is an optional parameter used only for pairing the device to HomeKit with a [QR Code](QRCodes.md) (instead of the usual Setup Code)
+  * *id* must be exactly 4 alphanumeric characters (0-9, A-Z, and a-z).  If not, the request to change the Setup ID is silently ignored and the default is used instead
   
+* `void enableOTA()`
+  * enables [Over-the-Air (OTA) Updating](OTA.md) of a HomeSpan device, which is otherwise disabled
+  * HomeSpan OTA always requires the use of an authorizing OTA password
+  * the default OTA password for new HomeSpan devices is "homespan-ota"
+  * this can be changed via the [HomeSpan CLI](CLI.md) using the 'Q' command
   
 ## *SpanAccessory(uint32_t aid)*
 
