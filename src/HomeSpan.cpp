@@ -593,14 +593,23 @@ void Span::processSerialCommand(const char *c){
     
     case 'O': {
 
-      char textPwd[33]="\0";
+      char textPwd[34]="\0";
       
-      while(!strlen(textPwd)){
-        Serial.print("\n>>> OTA Password (32 characters max): ");
-        readSerial(textPwd,32);    
-        Serial.print(mask(textPwd,2));
-        Serial.print("\n");
+      Serial.print("\n>>> New OTA Password, or <return> to cancel request: ");
+      readSerial(textPwd,33);
+      
+      if(strlen(textPwd)==0){
+        Serial.print("(cancelled)\n\n");
+        return;
       }
+
+      if(strlen(textPwd)==33){
+        Serial.print("\n*** Sorry, 32 character limit - request cancelled\n\n");
+        return;
+      }
+      
+      Serial.print(mask(textPwd,2));
+      Serial.print("\n");      
       
       MD5Builder otaPwdHash;
       otaPwdHash.begin();
@@ -610,9 +619,9 @@ void Span::processSerialCommand(const char *c){
       nvs_set_str(HAPClient::otaNVS,"OTADATA",otaPwd);                 // update data
       nvs_commit(HAPClient::otaNVS);          
       
-      Serial.print("\nPassword change will take effect after next restart.\n");
+      Serial.print("... Accepted! Password change will take effect after next restart.\n");
       if(!otaEnabled)
-        Serial.print("Note: OTA has not been enabled in this sketch.\n");
+        Serial.print("... Note: OTA has not been enabled in this sketch.\n");
       Serial.print("\n");
     }
     break;
