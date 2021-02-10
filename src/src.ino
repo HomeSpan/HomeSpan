@@ -8,13 +8,13 @@ void setup() {
  
   Serial.begin(115200);
  
-  homeSpan.setLogLevel(2);
+  homeSpan.setLogLevel(1);
   
 //  homeSpan.setHostNameSuffix("");
   homeSpan.setPortNum(1200);
   homeSpan.setMaxConnections(16);
 //  homeSpan.setQRID("One1");
-  homeSpan.enableOTA();
+//  homeSpan.enableOTA();
   homeSpan.setSketchVersion("Test 1.2.3");
 
   homeSpan.begin(Category::Lighting,"HomeSpanTest");
