@@ -495,6 +495,9 @@ void Span::checkConnect(){
   } else {
     statusLED.on();
   }
+
+  if(wifiCallback)
+    wifiCallback();
   
 } // initWiFi
 

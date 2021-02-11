@@ -14,8 +14,9 @@ void setup() {
   homeSpan.setPortNum(1200);
   homeSpan.setMaxConnections(16);
 //  homeSpan.setQRID("One1");
-//  homeSpan.enableOTA();
-  homeSpan.setSketchVersion("Test 1.2.3");
+  homeSpan.enableOTA();
+  homeSpan.setSketchVersion("Test 1.2.4");
+  homeSpan.setWifiCallback(wifiEstablished);
 
   homeSpan.begin(Category::Lighting,"HomeSpanTest");
 
@@ -44,3 +45,9 @@ void loop(){
   homeSpan.poll();
   
 } // end of loop()
+
+//////////////////////////////////////
+
+void wifiEstablished(){
+  Serial.println("\n\nIN CALLBACK FUNCTION\n\n");
+}

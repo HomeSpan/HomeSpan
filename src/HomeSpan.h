@@ -103,6 +103,7 @@ struct Span{
   char qrID[5]="";                                            // Setup ID used for pairing with QR Code
   boolean otaEnabled=false;                                   // enables Over-the-Air ("OTA") updates
   char otaPwd[33];                                            // MD5 Hash of OTA password, represented as a string of hexidecimal characters
+  void (*wifiCallback)()=NULL;                                // optional callback function to invoke once WiFi connectivity is established
 
   WiFiServer *hapServer;                            // pointer to the HAP Server connection
   Blinker statusLED;                                // indicates HomeSpan status
@@ -156,6 +157,7 @@ struct Span{
   void enableOTA(){otaEnabled=true;}                                      // enables Over-the-Air updates
   void setSketchVersion(const char *sVer){sketchVersion=sVer;}            // set optional sketch version number
   const char *getSketchVersion(){return sketchVersion;}                   // get sketch version number
+  void setWifiCallback(void (*f)()){wifiCallback=f;}                      // sets an optional user-defined function to call once WiFi connectivity is established
 };
 
 ///////////////////////////////
