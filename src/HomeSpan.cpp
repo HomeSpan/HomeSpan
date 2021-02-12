@@ -135,7 +135,7 @@ void Span::poll() {
       statusLED.start(LED_WIFI_NEEDED);
     } else {
       homeSpan.statusLED.start(LED_WIFI_CONNECTING);
-      hapServer=new WiFiServer(tcpPortNum,maxConnections);
+      hapServer=new WiFiServer(tcpPortNum,maxConnections+1);
     }
           
     controlButton.reset();        

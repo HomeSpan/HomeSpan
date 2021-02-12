@@ -12,7 +12,7 @@ void setup() {
   
 //  homeSpan.setHostNameSuffix("");
   homeSpan.setPortNum(1200);
-  homeSpan.setMaxConnections(16);
+  homeSpan.setMaxConnections(4);
 //  homeSpan.setQRID("One1");
   homeSpan.enableOTA();
   homeSpan.setSketchVersion("Test 1.2.4");
