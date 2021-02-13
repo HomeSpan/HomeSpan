@@ -12,13 +12,17 @@ void setup() {
   
 //  homeSpan.setHostNameSuffix("");
   homeSpan.setPortNum(1200);
-  homeSpan.setMaxConnections(4);
+  homeSpan.setMaxConnections(6);
 //  homeSpan.setQRID("One1");
   homeSpan.enableOTA();
-  homeSpan.setSketchVersion("Test 1.2.4");
+  homeSpan.setSketchVersion("Test 1.2.6");
   homeSpan.setWifiCallback(wifiEstablished);
 
   homeSpan.begin(Category::Lighting,"HomeSpanTest");
+
+  Serial.printf("\nFD_SETSIZE: %d\n",FD_SETSIZE);
+  Serial.printf("CONFIG_LWIP_MAX_SOCKETS: %d\n",CONFIG_LWIP_MAX_SOCKETS);
+  Serial.printf("LWIP_SOCKET_OFFSET: %d\n\n",LWIP_SOCKET_OFFSET);
 
   new SpanAccessory();                                  // Begin by creating a new Accessory using SpanAccessory(), which takes no arguments
 
@@ -43,11 +47,11 @@ void setup() {
 void loop(){
 
   homeSpan.poll();
-  
+
 } // end of loop()
 
 //////////////////////////////////////
 
 void wifiEstablished(){
-  Serial.println("\n\nIN CALLBACK FUNCTION\n\n");
+  Serial.print("IN CALLBACK FUNCTION\n\n");
 }

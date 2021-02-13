@@ -54,10 +54,16 @@ void Span::begin(Category catID, const char *displayName, const char *hostNameBa
   controlButton.init(controlPin);
   statusLED.init(statusPin);
 
+  int maxLimit=CONFIG_LWIP_MAX_SOCKETS-2-otaEnabled;
+  if(maxConnections>maxLimit)
+    maxConnections=maxLimit;
+
   hap=(HAPClient **)calloc(maxConnections,sizeof(HAPClient *));
   for(int i=0;i<maxConnections;i++)
     hap[i]=new HAPClient;
-  
+
+  hapServer=new WiFiServer(tcpPortNum);
+
   delay(2000);
  
   Serial.print("\n************************************************************\n"
@@ -135,7 +141,6 @@ void Span::poll() {
       statusLED.start(LED_WIFI_NEEDED);
     } else {
       homeSpan.statusLED.start(LED_WIFI_CONNECTING);
-      hapServer=new WiFiServer(tcpPortNum,maxConnections+1);
     }
           
     controlButton.reset();        
@@ -159,7 +164,7 @@ void Span::poll() {
 
   WiFiClient newClient;
 
-  if(hapServer && (newClient=hapServer->available())){         // found a new HTTP client
+  if(newClient=hapServer->available()){                        // found a new HTTP client
     int freeSlot=getFreeSlot();                                // get next free slot
 
     if(freeSlot==-1){                                          // no available free slots
@@ -184,6 +189,10 @@ void Span::poll() {
     LOG1(millis()/1000);
     LOG1(" sec) ");
     LOG1(hap[freeSlot]->client.remoteIP());
+    LOG1(" on Socket ");
+    LOG1(hap[freeSlot]->client.fd()-LWIP_SOCKET_OFFSET+1);
+    LOG1("/");
+    LOG1(CONFIG_LWIP_MAX_SOCKETS);
     LOG1("\n");
     LOG2("\n");
 
@@ -400,7 +409,7 @@ void Span::checkConnect(){
   Serial.print(modelName);
   Serial.print("\nSetup ID:      ");
   Serial.print(qrID);
-  Serial.print("\n");
+  Serial.print("\n\n");
 
   MDNS.begin(hostName);                         // set server host name (.local implied)
   MDNS.setInstanceName(displayName);            // set server display name
@@ -439,11 +448,6 @@ void Span::checkConnect(){
   mbedtls_sha512_ret(hashInput,21,hashOutput,0);                      // Step 2: Perform SHA-512 hash on combined 21-byte hashInput to create 64-byte hashOutput
   mbedtls_base64_encode((uint8_t *)setupHash,9,&len,hashOutput,4);    // Step 3: Encode the first 4 bytes of hashOutput in base64, which results in an 8-character, null-terminated, setupHash
   mdns_service_txt_item_set("_hap","_tcp","sh",setupHash);            // Step 4: broadcast the resulting Setup Hash
-
-  Serial.print("\nStarting Web (HTTP) Server supporting up to ");
-  Serial.print(maxConnections);
-  Serial.print(" simultaneous connections...\n");
-  hapServer->begin();
 
   if(otaEnabled){
     if(esp_ota_get_running_partition()!=esp_ota_get_next_update_partition(NULL)){
@@ -486,6 +490,11 @@ void Span::checkConnect(){
       Serial.print("\n*** Warning: Can't enable OTA - Partition table used to compile this sketch is not configured for OTA.\n\n");
     }
   }
+
+  Serial.print("Starting Web (HTTP) Server supporting up to ");
+  Serial.print(maxConnections);
+  Serial.print(" simultaneous connections...\n");
+  hapServer->begin();
 
   Serial.print("\n");
 
@@ -543,14 +552,17 @@ void Span::processSerialCommand(const char *c){
         if(hap[i]->client){
       
           Serial.print(hap[i]->client.remoteIP());
-          Serial.print(" ");
-      
+          Serial.print(" on Socket ");
+          Serial.print(hap[i]->client.fd()-LWIP_SOCKET_OFFSET+1);
+          Serial.print("/");
+          Serial.print(CONFIG_LWIP_MAX_SOCKETS);
+          
           if(hap[i]->cPair){
-            Serial.print("ID=");
+            Serial.print("  ID=");
             HAPClient::charPrintRow(hap[i]->cPair->ID,36);
             Serial.print(hap[i]->cPair->admin?"   (admin)":" (regular)");
           } else {
-            Serial.print("(unverified)");
+            Serial.print("  (unverified)");
           }
       
         } else {
