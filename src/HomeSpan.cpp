@@ -452,7 +452,9 @@ void Span::checkConnect(){
   if(otaEnabled){
     if(esp_ota_get_running_partition()!=esp_ota_get_next_update_partition(NULL)){
       ArduinoOTA.setHostname(hostName);
-      ArduinoOTA.setPasswordHash(otaPwd);
+
+      if(otaAuth)
+        ArduinoOTA.setPasswordHash(otaPwd);
     
       ArduinoOTA
         .onStart([]() {
@@ -485,7 +487,8 @@ void Span::checkConnect(){
       Serial.print(displayName);
       Serial.print(" at ");
       Serial.print(WiFi.localIP());
-      Serial.print("\n");
+      Serial.print("\nAuthorization Password: ");
+      Serial.print(otaAuth?"Enabled\n\n":"DISABLED!\n\n");
     } else {
       Serial.print("\n*** Warning: Can't enable OTA - Partition table used to compile this sketch is not configured for OTA.\n\n");
     }

@@ -14,7 +14,7 @@ void setup() {
   homeSpan.setPortNum(1200);
   homeSpan.setMaxConnections(6);
 //  homeSpan.setQRID("One1");
-  homeSpan.enableOTA();
+//  homeSpan.enableOTA(false);
   homeSpan.setSketchVersion("Test 1.2.6");
   homeSpan.setWifiCallback(wifiEstablished);
 
