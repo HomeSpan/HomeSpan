@@ -20,10 +20,6 @@ void setup() {
 
   homeSpan.begin(Category::Lighting,"HomeSpanTest");
 
-  Serial.printf("\nFD_SETSIZE: %d\n",FD_SETSIZE);
-  Serial.printf("CONFIG_LWIP_MAX_SOCKETS: %d\n",CONFIG_LWIP_MAX_SOCKETS);
-  Serial.printf("LWIP_SOCKET_OFFSET: %d\n\n",LWIP_SOCKET_OFFSET);
-
   new SpanAccessory();                                  // Begin by creating a new Accessory using SpanAccessory(), which takes no arguments
 
     new Service::AccessoryInformation();                    // HAP requires every Accessory to implement an AccessoryInformation Service, which has 6 required Characteristics
@@ -37,8 +33,16 @@ void setup() {
     new Service::HAPProtocolInformation();                  // Create the HAP Protcol Information Service  
       new Characteristic::Version("1.1.0");                     // Set the Version Characteristic to "1.1.0" as required by HAP
 
-    new Service::LightBulb();                               // Create the Light Bulb Service
-      new Characteristic::On();                                 // This Service requires the "On" Characteristic to turn the light on and off
+    SpanService *v1=new Service::Valve();
+      new Characteristic::Active();
+      new Characteristic::InUse();
+      new Characteristic::ValveType();
+    SpanService *v2=new Service::Valve();
+      new Characteristic::Active();
+      new Characteristic::InUse();
+      new Characteristic::ValveType();
+    (new Service::Faucet())->addLink(v1)->addLink(v2);
+      new Characteristic::Active();
 
 } // end of setup()
 

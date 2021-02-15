@@ -831,20 +831,24 @@ void Span::processSerialCommand(const char *c){
       Serial.print("\n\n");
 
       char d[]="------------------------------";
-      char cBuf[256];
-      sprintf(cBuf,"%-30s  %s  %10s  %s  %s  %s  %s\n","Service","Type","AID","IID","Update","Loop","Button");
-      Serial.print(cBuf);
-      sprintf(cBuf,"%.30s  %.4s  %.10s  %.3s  %.6s  %.4s  %.6s\n",d,d,d,d,d,d,d);
-      Serial.print(cBuf);
+      Serial.printf("%-30s  %s  %10s  %s  %s  %s  %s  %s\n","Service","Type","AID","IID","Update","Loop","Button","Linked Services");
+      Serial.printf("%.30s  %.4s  %.10s  %.3s  %.6s  %.4s  %.6s  %.15s\n",d,d,d,d,d,d,d,d);
       for(int i=0;i<Accessories.size();i++){                             // identify all services with over-ridden loop() methods
         for(int j=0;j<Accessories[i]->Services.size();j++){
           SpanService *s=Accessories[i]->Services[j];
-          sprintf(cBuf,"%-30s  %4s  %10u  %3d  %6s  %4s  %6s\n",s->hapName,s->type,Accessories[i]->aid,s->iid, 
+          Serial.printf("%-30s  %4s  %10u  %3d  %6s  %4s  %6s  ",s->hapName,s->type,Accessories[i]->aid,s->iid, 
                  (void(*)())(s->*(&SpanService::update))!=(void(*)())(&SpanService::update)?"YES":"NO",
                  (void(*)())(s->*(&SpanService::loop))!=(void(*)())(&SpanService::loop)?"YES":"NO",
                  (void(*)(int,boolean))(s->*(&SpanService::button))!=(void(*)(int,boolean))(&SpanService::button)?"YES":"NO"
                  );
-          Serial.print(cBuf);
+          if(s->linkedServices.empty())
+            Serial.print("-");
+          for(int k=0;k<s->linkedServices.size();k++){
+            Serial.print(s->linkedServices[k]->iid);
+            if(k<s->linkedServices.size()-1)
+              Serial.print(",");
+          }
+          Serial.print("\n");
         }
       }
       Serial.print("\n*** End Info ***\n");
@@ -1378,6 +1382,13 @@ SpanService *SpanService::setHidden(){
 
 ///////////////////////////////
 
+SpanService *SpanService::addLink(SpanService *svc){
+  linkedServices.push_back(svc);
+  return(this);
+}
+
+///////////////////////////////
+
 int SpanService::sprintfAttributes(char *cBuf){
   int nBytes=0;
 
@@ -1388,6 +1399,16 @@ int SpanService::sprintfAttributes(char *cBuf){
     
   if(primary)
     nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,"\"primary\":true,");
+
+  if(!linkedServices.empty()){
+    nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,"\"linked\":[");
+    for(int i=0;i<linkedServices.size();i++){
+      nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,"%d",linkedServices[i]->iid);
+      if(i+1<linkedServices.size())
+        nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",");
+    }
+     nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,"],");
+  }
     
   nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,"\"characteristics\":[");
   

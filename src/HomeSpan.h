@@ -187,11 +187,13 @@ struct SpanService{
   vector<SpanCharacteristic *> Characteristics;           // vector of pointers to all Characteristics in this Service  
   vector<HapCharType *> req;                              // vector of pointers to all required HAP Characteristic Types for this Service
   vector<HapCharType *> opt;                              // vector of pointers to all optional HAP Characteristic Types for this Service
+  vector<SpanService *> linkedServices;                   // vector of pointers to any optional linked Services
   
   SpanService(const char *type, const char *hapName);
 
   SpanService *setPrimary();                              // sets the Service Type to be primary and returns pointer to self
   SpanService *setHidden();                               // sets the Service Type to be hidden and returns pointer to self
+  SpanService *addLink(SpanService *svc);                 // adds svc as a Linked Service
 
   int sprintfAttributes(char *cBuf);                      // prints Service JSON records into buf; return number of characters printed, excluding null terminator
   void validate();                                        // error-checks Service
