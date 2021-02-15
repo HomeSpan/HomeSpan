@@ -50,10 +50,11 @@ In addition to listening for incoming HAP requests, HomeSpan also continuously p
   * Deleting a device's HomeKit ID and Controller data with the 'H' command (see below) also restores the default Setup ID to "HSPN".
   
 * **O** - prompts you to set the password used for Over-the-Air (OTA) Updating
-  * HomeSpan supports [Over-the-Air (OTA) Updating](OTA.md) but requires the use of a (non-blank) password.  Similar to a device's Setup Code, HomeSpan saves a non-recoverable *hashed* version of the OTA password you set with this command in NVS.  If you forget the password you specified, you'll need to create a new one using this command.  Alternatively, you can restore the default OTA password by fully erasing the NVS with the 'E' command.
+  * HomeSpan supports [Over-the-Air (OTA) Updating](OTA.md) but, by default, requires the use of a password.  Similar to a device's Setup Code, HomeSpan saves a non-recoverable *hashed* version of the OTA password you set with this command in NVS.  If you forget the password you specified, you'll need to create a new one using this command.  Alternatively, you can restore the default OTA password by fully erasing the NVS with the 'E' command.
   * HomeSpan uses "homespan-ota" as its default OTA password for new devices.
   * Changes to the OTA password do not take effect until the device is restarted.
-  * OTA is not active unless specifically enabled for a sketch using the method `homeSpan.enableOTA()`.  See the [HomeSpan API Reference](Reference.md) for details. 
+  * OTA is not active unless specifically enabled for a sketch using the method `homeSpan.enableOTA()`.  
+  * You can disable the use an authorizing password by invoking `homeSpan.enableOTA(false)` instead, though this creates a security risk and is therefore **not** recommended.  See the [HomeSpan API Reference](Reference.md) for details. 
   
 * **A** - start the HomeSpan Setup Access Point
   * This command starts HomeSpan's temporary Access Point, which provides users with an alternate methods for configuring a device's WiFi Credentials and HomeKit Setup Code.  Starting the Access Point with this command is identical to starting it via the Control Button.  See the [HomeSpan User Guide](UserGuide.md) for complete details.
