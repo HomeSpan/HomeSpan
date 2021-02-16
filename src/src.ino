@@ -33,16 +33,16 @@ void setup() {
     new Service::HAPProtocolInformation();                  // Create the HAP Protcol Information Service  
       new Characteristic::Version("1.1.0");                     // Set the Version Characteristic to "1.1.0" as required by HAP
 
-    SpanService *v1=new Service::Valve();
-      new Characteristic::Active();
-      new Characteristic::InUse();
-      new Characteristic::ValveType();
-    SpanService *v2=new Service::Valve();
-      new Characteristic::Active();
-      new Characteristic::InUse();
-      new Characteristic::ValveType();
-    (new Service::Faucet())->addLink(v1)->addLink(v2);
-      new Characteristic::Active();
+    new Service::LightBulb();
+      new Characteristic::On();
+      new Characteristic::Brightness();
+      new Characteristic::Name("Light 1");
+    new Service::LightBulb();
+      new Characteristic::On();
+      new Characteristic::Brightness();
+      new Characteristic::Name("Light 2");
+    new Service::Switch();
+      new Characteristic::On();
 
 } // end of setup()
 
