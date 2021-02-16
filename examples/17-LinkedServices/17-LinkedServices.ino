@@ -52,7 +52,6 @@
   // The addLink method returns a pointer to the object that called it, which provides you with the option of combining both methods above into a single line as follows:
   //
   //   spaShower->addLink(showerHead)->addLink(handSprayer);
-  //
 
   // Note that HAP does *not* provide any of the actual logic that's needed for the "controlling" Service to operate the "linked" Services.  This must still be programmed by the user.
   // More so, the logic needs to conform with the behavior HAP expects for the Service as outlined in the HAP documention for the controlling Service.  The only thing HAP really does with
@@ -76,6 +75,32 @@
   // and does not itself create the linkages.  We could have used a standalone structure for the WaterValve definitions and the results would be the same.
 
 //////////////////////////////////////
+
+  // The HAP Valve Service requires both an Active Characteristic and an InUse Characteristic.  The Active Characteristic controls whether a Valve is open (active) or closed (inactive).
+  // This Characteristic is normally controlled by the user through the Home App.  The InUse Characteristic specifies whether there is water (or gas, etc.) actually flowing
+  // through the Valve.  This is because opening a Valve does not necessarily mean water will be flowing.  There may be another real-world "master" Valve that also needs to be open
+  // before water can begin flowing. Or there may be another Service that must also be Active to enable water to flow through the Valve.  Hence, InUse can either be true or false
+  // if the Valve is open, but it can only be false if the Valve is closed. The Home App cannot change the InUse Characteristic.  It is only read by the Home App as a status.
+
+  // It is possible to create a multi-valve Accessory where each Valve is controlled independently from the Home App, and HomeSpan uses internal logic to determine, based
+  // on the combination of Valves that are open or closed, which Valves have water flowing (InUse=true) and which do not (InUse=false).
+
+  // The HAP Faucet Service is used to create a "central control switch" for all the Valves linked to it.  The Home App displays each Valve as a small icon on the control
+  // page of the Faucet.  Clicking a Valve icon toggles it open/close, and changes the icon accordingly.  However, water is not supposed to flow unless the Shower control switch
+  // itself is also turned on.  Thus, the logic you need to encode to implement a HAP Faucet is to set the InUse Characteristic of a Valve to true ONLY if the Valve is open
+  // AND the Shower is switched on.  If the Shower is then switched off, the Valve remains open, but the InUse Characteristic needs to be reset to false.  Similarly, if the Shower
+  // is switched back on, the InUse Characteristic of each Valve that is open needs to be set to true.  This mimics how an actual Shower with a central controlling switch
+  // would operate.
+
+  // In addition, the Home App displays one of 4 status messages as you operate the Shower and Valve controls:
+
+  // OFF:      The Shower switch is OFF, AND the InUse Characteristic for EVERY Valve is set to FALSE (no water flowing anywhere);
+  // STOPPING: The Shower switch is OFF, BUT at least one Valve still has its InUse Characteristic set to TRUE.  Presumably this means the Valve is in the process of turning off;
+  // STARTING: The Shower switch is ON, BUT the InUse Characteristic for EVERY Valve is set to FALSE.  This indicates the Shower is waiting for water to start flowing;
+  // RUNNING:  The Shower switch in ON, AND at least one of the Valves has its InUse Characteristic set to TRUE.  This indicates water is flowing.
+
+  // Note that the Shower Service only monitors the InUse Characteristics of its Linked Valves. It does not monitor the Active Characteristics of the Linked Valves.  Also, turning
+  // on and off the Shower Switch should NOT change the Active Characteristic of any Valve.  Below is the code that implements all of this HAP-required logic:
   
 struct Shower:Service::Faucet{                 // this is our Shower structure, which we define as a child class of the HomeSpan Faucet structure
 
@@ -83,30 +108,30 @@ struct Shower:Service::Faucet{                 // this is our Shower structure, 
 
   Shower(int nHeads){                  // this is the constructor for Shower.  It takes a single argument that specifies the number of spray heads (WaterValves)
     for(int i=0;i<nHeads;i++)             // for each spray head needed ---
-      addLink(new WaterValve(this));      // --- instantiate a new WaterValue AND link it to the Shower.  Also, pass the Shower object's pointer to WaterValve constructor.  We'll see why below.
+      addLink(new WaterValve(this));      // --- instantiate a new WaterValve AND link it to the Shower.  Also, pass the Shower object's pointer to WaterValve constructor.  We'll see why below.
   }
   
   struct WaterValve:Service::Valve{                               // here we define our WaterValve structure as a child class of the HomeSpan Valve Service
     SpanCharacteristic *active=new Characteristic::Active();;     // the Active Characteristic is used to specify whether the Valve is Active (open) or Inactive (closed)
     SpanCharacteristic *inUse=new Characteristic::InUse();        // the InUser Characteristic is used to specify whether water is actually flowing through value
-    Shower *shower;                                               // storage the pointer to the Shower Service
+    Shower *shower;                                               // storage for the pointer to the "controlling" Shower Service
     
-    WaterValve(Shower *s){                                        // this is constructor for WaterValve.  It takes a single argument that points to the Shower Service
-      shower=s;                                                   // store the pointer to the Shower
-      new Characteristic::ValveType(2);                           // specify the Value Type (2=Shower Head)
+    WaterValve(Shower *s){                                        // this is constructor for WaterValve.  It takes a single argument that points to the "controlling" Shower Service
+      shower=s;                                                   // store the pointer to the Shower Service
+      new Characteristic::ValveType(2);                           // specify the Value Type (2=Shower Head; see HAP R2 for other choices)
     }
     
-    boolean update() override {                                   // HomeSpan calls this whenever the Home App requests a change in Valve's Active Characteristic
-      if(shower->active->getVal())                                // Here's where we use the pointer to Shower.  ONLY if the Shower object itself is active---
+    boolean update() override {                                   // HomeSpan calls this whenever the Home App requests a change in a Valve's Active Characteristic
+      if(shower->active->getVal())                                // here's where we use the pointer to Shower: ONLY if the Shower object itself is active---
         inUse->setVal(active->getNewVal());                       // --- do we update the InUse Characteristic to reflect a change in the status of flowing water.
       return(true);                                               // Note that the Valve itself will still change from Active to Inactive (or vice versa) regardless of the status of the Shower
     }
     
     void loop() override {                                                    // Here we check if the Shower is turned on or off, and determine if that means we need to update the Valve
-      if(shower->active->getVal() && active->getVal() && !inUse->getVal())    // If the Shower is Active, and the Valve is Active, but InUse is NOT Active
-        inUse->setVal(1);                                                     // set the InUse Characteristic to Active
-      else if(!shower->active->getVal() && inUse->getVal())
-        inUse->setVal(0);
+      if(shower->active->getVal() && active->getVal() && !inUse->getVal())    // If the Shower is Active, and the Valve is Active, but InUse is NOT Active...
+        inUse->setVal(1);                                                     // ...set the InUse Characteristic to Active
+      else if(!shower->active->getVal() && inUse->getVal())                   // Otherwise, if the Shower is NOT Active but InUse is Active...
+        inUse->setVal(0);                                                     // ...set the InUse Characteristic to NOT Active
     }
 
   }; // WaterValve
