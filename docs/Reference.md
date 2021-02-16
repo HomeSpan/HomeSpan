@@ -123,6 +123,7 @@ The following methods are supported:
   
 * `SpanService *setHidden()`
   * specifies that this is hidden Service for the Accessory.  Returns a pointer to the Service itself so that the method can be chained during instantiation.
+  * note this does not seem to have any affect on the Home App.  Services marked as hidden still appear as normal
   
 * `SpanService *addLink(SpanService *svc)`
   * adds *svc* as a Linked Service.  Returns a pointer to the calling Service itself so that the method can be chained during instantiation.
