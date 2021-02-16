@@ -52,7 +52,11 @@ The following **optional** `homeSpan` methods override various HomeSpan initiali
   * this parameter can also be changed at runtime via the [HomeSpan CLI](CLI.md)
   
 * `void setMaxConnections(uint8_t nCon)`
-  * sets the maximum number of HAP Controllers that be simultaneously connected to HomeSpan (default=8)
+  * sets the desired maximum number of HAP Controllers that can be simultaneously connected to HomeSpan (default=8)
+  * due to limitations of the ESP32 Arduino library, HomeSpan will override *nCon* if it exceed the following internal limits:
+    * if OTA is not enabled, *nCon* will be reduced to 8 if it has been set to a value greater than 8
+    * if OTA is enabled, *nCon* will be reduced to 7 if it has been set to a value greater than 7
+  * if you add code to a sketch that uses it own network resources, you will need to determine how many TCP sockets your code may need to use, and use this method to reduce the maximum number of connections available to HomeSpan accordingly
   
 * `void setPortNum(uint16_t port)`
   * sets the TCP port number used for communication between HomeKit and HomeSpan (default=80)
