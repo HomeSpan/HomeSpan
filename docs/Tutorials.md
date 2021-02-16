@@ -87,6 +87,11 @@ This example introduces HomeSpan functionality that lets you easily connect real
 ### [Example 16 - ProgrammableSwitches](../examples/16-ProgrammableSwitches)
 Example 16 does not introduce any new HomeSpan functionality, but instead showcases a unique feature of HomeKit that you can readily access with HomeSpan.  In all prior examples we used the ESP32 to control a local appliance - something connected directly to the ESP32 device.  We've then seen how you can control the device via HomeKit's iOS or MacOS Home App, or by the addition of local pushbuttons connected directly to the ESP32 device. In this example we do the opposite, and use pushbuttons connected to the ESP32 to control OTHER HomeKit devices of any type.  To do so, we use HomeKit's Stateless Programmable Switch Service.
 
+### [Example 17 - LinkedServices](../examples/17-LinkedServices)
+Example 17 introduces the HAP concept of Linked Services and demonstrates how they are used through the implementation of a multi-head Shower.  This example also illustrates some different coding styles that showcase the power and flexibility of HomeSpan's C++ *structure-based* design paradigm.  New HomeSpan API topics covered in this example include:
+
+* creating Linked Services using the `addLink()` method
+
 ---
 
 [↩️](README.md) Back to the Welcome page
