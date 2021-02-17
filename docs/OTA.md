@@ -2,7 +2,7 @@
 
 HomeSpan supports Over-the-Air (OTA) updates, which allows you to *wirelessly* upload sketches directly from the Arduino IDE.  To activate this feature for your sketch, simply call the method `homeSpan.enableOTA()` prior to calling `homeSpan.begin()`.
 
-When a HomeSpan sketch is run with OTA enabled, the device shows up as a "network" port that can be selected under *Tools → Port* in the Arduino IDE.  Once selected, the IDE will direct all uploads to the device via WiFi instead of looking for it on a serial port.  Note that you can upload via OTA even if your device is still connected to a serial port, but the IDE does not presently support multiple port connections at the same time and will automatically close the Serial Monitor upon selecting your device via a network port.
+When a HomeSpan sketch is run with OTA enabled, the device shows up as a "network" port that can be selected under the *Tools → Port* menu in the Arduino IDE.  Once selected, the IDE will direct all uploads to the device via WiFi instead of looking for it on a serial port.  Note that you can upload via OTA even if your device is still connected to a serial port, but the Arduino IDE does not presently support multiple port connections at the same time and will automatically close the Serial Monitor upon selecting your device via a network port.
 
 By default, HomeSpan requires the use of a password whenever you begin an OTA upload.  The default OTA password is "homespan-ota".  The Arduino will prompt you for this when you attempt the first OTA upload after opening the Arduino IDE, after which it will remember the password until the IDE is shut down.
 
