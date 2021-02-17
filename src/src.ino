@@ -11,14 +11,14 @@ void setup() {
   homeSpan.setLogLevel(1);
   
 //  homeSpan.setHostNameSuffix("");
-  homeSpan.setPortNum(1200);
-  homeSpan.setMaxConnections(6);
+  homeSpan.setPortNum(1201);
+//  homeSpan.setMaxConnections(6);
 //  homeSpan.setQRID("One1");
-//  homeSpan.enableOTA(false);
-  homeSpan.setSketchVersion("Test 1.2.6");
+  homeSpan.enableOTA();
+  homeSpan.setSketchVersion("Test 1.3.0");
   homeSpan.setWifiCallback(wifiEstablished);
 
-  homeSpan.begin(Category::Lighting,"HomeSpanTest");
+  homeSpan.begin(Category::Lighting,"HomeSpan Lamp Server","homespanlamp");
 
   new SpanAccessory();                                  // Begin by creating a new Accessory using SpanAccessory(), which takes no arguments
 
@@ -41,8 +41,9 @@ void setup() {
       new Characteristic::On();
       new Characteristic::Brightness();
       new Characteristic::Name("Light 2");
-    new Service::Switch();
+    (new Service::Switch())->setPrimary();
       new Characteristic::On();
+      new Characteristic::Name("Switch 3");
 
 } // end of setup()
 
