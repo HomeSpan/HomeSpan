@@ -6,3 +6,6 @@ By default, HomeSpan requires the use of a password when updating a sketch via O
 
 Though not recommended, you can disable the requirement for a password by enabling OTA with *false* as the parameter as such: `homeSpan.enableOTA(false)`.  Use with caution!  Anyone who can access the device over your network will be able to upload a new sketch.
 
+If OTA is enabled, HomeSpan will check that the sketch has been compiled with OTA partitions, and output a confirmation message to the Arduino Serial Monitor upon start-up immediately after establishing WiFi connectivity.  If OTA is enabled in a sketch but OTA partitions are not found, HomeSpan will instead report a warning that it can't start OTA.  Partition selection is found under the *Tools* menu of the Arduino IDE.  Note that depending on your specific ESP32 device, the Partition Scheme labeled "default" may bne configured with OTA partitions.  The easiest way to find out is to select that scheme and check for verification by HomeSpan.
+
+
