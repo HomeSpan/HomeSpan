@@ -25,6 +25,6 @@
 * HomeSpan uses MDNS (multicast DNS) to broadcast a variety of HAP information used by Controllers wishing to pair with HomeSpan.  Apple uses the name *Bonjour* to refer to MDNS, and originally included a Bonjour "Browser" in Safari that has since been discontinued.  However, there are a number of alternative MDNS browsers available for free that operate on both the Mac and the iPhone, such as the [Discovery - DNS-SD Browser](https://apps.apple.com/us/app/discovery-dns-sd-browser/id1381004916?mt=12).  You'll find all your HomeSpan devices, as well as any other HomeKit devices you may have, under the MDNS service named *_hap._tcp.*  The fields broadcast by HomeSpan are a combination of all data elements requires by HAP (HAP-R2, Table 6-7) plus three additional HomeSpan fields:
 
   * *hspn* - the version number of the HomeSpan library used to compile the sketch
-  * *sketch* - the version number of the sketch, as specified with `homeSpan.setSketchVersion(const char *)`, or "n/a" if no version was specified
-  * *ota* - either "yes" or "no" depending on whether OTA was enabled for the sketch using the method `homeSpan.enableOTA()` 
+  * *sketch* - the version number of the sketch, as specified with `homeSpan.setSketchVersion(const char *)`, or *n/a* if no version was specified
+  * *ota* - either *yes* or *no* depending on whether OTA was enabled for the sketch using the method `homeSpan.enableOTA()` 
 
