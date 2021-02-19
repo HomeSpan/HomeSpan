@@ -37,9 +37,9 @@ HomeSpan provides a microcontroller-focused implementation of [Apple's HomeKit A
   * Launch the WiFi Access Point
 * A standalone, detailed End-User Guide
 
-## Latest Update (1/24/2021)
+## Latest Update (2/18/2021)
 
-* HomeSpan 1.1.4 - HomeSpan now recognizes QR Codes for pairing!  This release also includes a new method allowing you to change the TCP port used for communication to-and-from HomeKit, as well as a new method to modify the hostname suffix (or eliminate it all together). Improved parsing of text input through the Serial Monitor addresses (hopefully!) an issue using HomeSpan with Platform IO. See [Release](https://github.com/HomeSpan/HomeSpan/releases) for details.
+* HomeSpan 1.2.0 - HomeSpan now suports Over-the-Air ([OTA](https://github.com/HomeSpan/HomeSpan/blob/master/docs/OTA.md)) updates directly from the Arduino IDE (no serial connection needed)!  This release also adds support for Linked Services and includes a new [tutorial example](https://github.com/HomeSpan/HomeSpan/blob/release-1.2.0/docs/Tutorials.md#example-17---linkedservices) demonstrating how Linked Services can be used to implement a multi-headed spa shower.  Other new features include the ability to set the version number of your sketch (helpful when using OTA updates), and a method for specifying a user-defined function to callback after WiFi connectivity is established.  See [Release](https://github.com/HomeSpan/HomeSpan/releases) for details.
 
 # HomeSpan Resources
 
@@ -55,6 +55,7 @@ HomeSpan includes the following documentation:
 * [HomeSpan User Guide](https://github.com/HomeSpan/HomeSpan/blob/master/docs/UserGuide.md) - turnkey instructions on how to configure an already-programmed HomeSpan device's WiFi Credentials, modify its HomeKit Setup Code, and pair the device to HomeKit.  No computer needed!
 * [HomeSpan API Reference](https://github.com/HomeSpan/HomeSpan/blob/master/docs/Reference.md) - a complete guide to the HomeSpan Library API
 * [HomeSpan QR Codes](https://github.com/HomeSpan/HomeSpan/blob/master/docs/QRCodes.md) - create and use QR Codes for pairing HomeSpan devices
+* [HomeSpan OTA](https://github.com/HomeSpan/HomeSpan/blob/master/docs/OTA.md) - update your sketches Over-the-Air directly from the Arduino IDE without a serial connection
 * [HomeSpan Extras](https://github.com/HomeSpan/HomeSpan/blob/master/docs/Extras.md) - integrated access to the ESP32's on-chip PWM and Remote Control peripherals!
 * [HomeSpan Projects](https://github.com/topics/homespan) - real-world applications of the HomeSpan Library
 
