@@ -398,6 +398,16 @@ void Span::checkConnect(){
   else
     sprintf(hostName,"%s%s",hostNameBase,hostNameSuffix);
 
+  char d[strlen(hostName)+1];  
+  sscanf(hostName,"%[A-Za-z0-9-]",d);
+  
+  if(strlen(hostName)>255|| hostName[0]=='-' || hostName[strlen(hostName)-1]=='-' || strlen(hostName)!=strlen(d)){
+    Serial.printf("\n*** Error:  Can't start MDNS due to invalid hostname '%s'.\n",hostName);
+    Serial.print("*** Hostname must consist of 255 or less alphanumeric characters or a hyphen, except that the hyphen cannot be the first or last character.\n");
+    Serial.print("*** PROGRAM HALTED!\n\n");
+    while(1);
+  }
+    
   Serial.print("\nStarting MDNS...\n\n");
   Serial.print("HostName:      ");
   Serial.print(hostName);

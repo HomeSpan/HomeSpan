@@ -10,15 +10,15 @@ void setup() {
  
   homeSpan.setLogLevel(1);
   
-//  homeSpan.setHostNameSuffix("");
+  homeSpan.setHostNameSuffix("-lamp1");
   homeSpan.setPortNum(1201);
 //  homeSpan.setMaxConnections(6);
 //  homeSpan.setQRID("One1");
   homeSpan.enableOTA();
-  homeSpan.setSketchVersion("Test 1.3.0");
+  homeSpan.setSketchVersion("Test 1.3.1");
   homeSpan.setWifiCallback(wifiEstablished);
 
-  homeSpan.begin(Category::Lighting,"HomeSpan Lamp Server","homespanlamp");
+  homeSpan.begin(Category::Lighting,"HomeSpan Lamp Server","homespan");
 
   new SpanAccessory();                                  // Begin by creating a new Accessory using SpanAccessory(), which takes no arguments
 
