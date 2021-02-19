@@ -82,6 +82,7 @@ struct HAPClient {
   static nvs_handle hapNVS;                           // handle for non-volatile-storage of HAP data
   static nvs_handle wifiNVS;                          // handle for non-volatile-storage of WiFi data
   static nvs_handle srpNVS;                           // handle for non-volatile-storage of SRP data
+  static nvs_handle otaNVS;                           // handle for non-volatile-storage of OTA data
   static uint8_t httpBuf[MAX_HTTP+1];                 // buffer to store HTTP messages (+1 to leave room for storing an extra 'overflow' character)
   static HKDF hkdf;                                   // generates (and stores) HKDF-SHA-512 32-byte keys derived from an inputKey of arbitrary length, a salt string, and an info string
   static pairState pairStatus;                        // tracks pair-setup status

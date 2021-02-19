@@ -42,7 +42,19 @@ In addition to listening for incoming HAP requests, HomeSpan also continuously p
   * This command deletes whatever WiFi Credentials have been stored in the device NVS, and restarts.
  
 * **S** \<code\> - change the HomeKit Pairing Setup Code to \<code\>
-  * Every HomeKit device requires a unique 8-digit Setup code used for pairing.  When HomeSpan is run for the first time on a new device it sets the HomeKit Setup Code to a default value of **466-37-726**, and stores it in a dedicated NVS partition.  This command allows you to update the stored Setup Code to any other 8-digit code.  Note that in accordance with HAP specifications, HomeSpan actually stores a hashed version of the Setup Code, rather than the Setup Code itself.  This means the actual value is not recoverable, so if you forget your Setup Code you'll need to run this command and create a new one.
+  * Every HomeKit device requires a unique 8-digit Setup Code used for pairing.  When HomeSpan is run for the first time on a new device it sets the HomeKit Setup Code to a default value of **466-37-726**, and stores it in a dedicated NVS partition.  This command allows you to update the stored Setup Code to any other 8-digit code.  Note that in accordance with HAP specifications, HomeSpan actually stores a hashed version of the Setup Code, rather than the Setup Code itself.  This means the actual value is not recoverable, so if you forget your Setup Code you'll need to run this command and create a new one.  Alternatively, you can restore the default Setup Code by fully erasing the NVS with the 'E' command.
+  
+* **Q** \<id\> - change HomeSpan's default QR-pairing Setup ID to \<id\>
+  * This command changes HomeSpan's default Setup ID, which is used when pairing with a QR Code, from the new-device value of "HSPN" to \<id\>.  See [HomeSpan QR Codes](QRCodes.md) for details on how the Setup ID is used.  The Setup ID must be exactly 4 alphanumeric characters (0-9, A-Z, and a-z).
+  * Note the new Setup ID is retained in HomeSpan's NVS and used as the default for all sketches, unless a specific Setup ID is set in the sketch using the method `homeSpan.setQRID(const char *id)`.  See the [HomeSpan API Reference](Reference.md) for details.
+  * Deleting a device's HomeKit ID and Controller data with the 'H' command (see below) also restores the default Setup ID to "HSPN".
+  
+* **O** - prompts you to set the password used for Over-the-Air (OTA) Updating
+  * HomeSpan supports [Over-the-Air (OTA) Updating](OTA.md) but, by default, requires the use of a password.  Similar to a device's Setup Code, HomeSpan saves a non-recoverable *hashed* version of the OTA password you set with this command in NVS.  If you forget the password you specified, you'll need to create a new one using this command.  Alternatively, you can restore the default OTA password by fully erasing the NVS with the 'E' command.
+  * HomeSpan uses "homespan-ota" as its default OTA password for new devices.
+  * Changes to the OTA password do not take effect until the device is restarted.
+  * OTA is not active unless specifically enabled for a sketch using the method `homeSpan.enableOTA()`.  
+  * You can disable the use an authorizing password by invoking `homeSpan.enableOTA(false)` instead, though this creates a security risk and is therefore **not** recommended.  See the [HomeSpan API Reference](Reference.md) for details. 
   
 * **A** - start the HomeSpan Setup Access Point
   * This command starts HomeSpan's temporary Access Point, which provides users with an alternate methods for configuring a device's WiFi Credentials and HomeKit Setup Code.  Starting the Access Point with this command is identical to starting it via the Control Button.  See the [HomeSpan User Guide](UserGuide.md) for complete details.
@@ -53,12 +65,13 @@ In addition to listening for incoming HAP requests, HomeSpan also continuously p
   
 * **H** - delete HomeKit Device ID as well as all Controller data and restart
   * In addition to deleting all Controller data (as if the 'U' command was run), this command also deletes the device's HomeKit ID.  This unique ID is broadcast to all HomeKit Controllers so the device can be uniquely recognized.  When HomeSpan first runs on a new device, it creates this unique ID and stores it permanently in an NVS partition.  Normally, this ID should not changed once set.  However, if you are actively developing and testing a HomeSpan sketch, you may find that HomeKit is cacheing information about your device and the changes you have made to your HAP Accessory Database are not always reflected in the Home App.  Sometimes simply unpairing and re-pairing the device solves this HomeKit issue.  If not, deleting your device's HomeKit ID with this command forces HomeSpan to generate a new one after restarting, which means HomeKit will think this is a completely different device, thereby ignoring any prior data it had cached.
+  * This command also restores the device's default Setup ID, which is used for optional pairing with QR codes, to "HSPN". 
   
 * **R** - restart the device
   * This command simply reboots HomeSpan.
   
 * **F** - factory reset and restart
-  * This deletes all data stored in the NVS, *except* for the HomeKit Pairing Setup Code, and restarts the device.  This is effectively the same as executing the 'X' command followed by the 'H' command.
+  * This deletes all data stored in the NVS, *except* for the HomeKit Pairing Setup Code and OTA password, and restarts the device.  This is effectively the same as executing the 'X' command followed by the 'H' command.
   
 * **E** - erase ALL stored data and restart
   * This completely erases the NVS, deleting all stored data, *including* the HomeKit Pairing Setup code.  The device is then restarted and initialized as if it were new.

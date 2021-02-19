@@ -52,7 +52,11 @@ The following **optional** `homeSpan` methods override various HomeSpan initiali
   * this parameter can also be changed at runtime via the [HomeSpan CLI](CLI.md)
   
 * `void setMaxConnections(uint8_t nCon)`
-  * sets the maximum number of HAP Controllers that be simultaneously connected to HomeSpan (default=8)
+  * sets the desired maximum number of HAP Controllers that can be simultaneously connected to HomeSpan (default=8)
+  * due to limitations of the ESP32 Arduino library, HomeSpan will override *nCon* if it exceed the following internal limits:
+    * if OTA is not enabled, *nCon* will be reduced to 8 if it has been set to a value greater than 8
+    * if OTA is enabled, *nCon* will be reduced to 7 if it has been set to a value greater than 7
+  * if you add code to a sketch that uses it own network resources, you will need to determine how many TCP sockets your code may need to use, and use this method to reduce the maximum number of connections available to HomeSpan accordingly
   
 * `void setPortNum(uint16_t port)`
   * sets the TCP port number used for communication between HomeKit and HomeSpan (default=80)
@@ -60,14 +64,31 @@ The following **optional** `homeSpan` methods override various HomeSpan initiali
 * `void setHostNameSuffix(const char *suffix)`
   * sets the suffix HomeSpan appends to *hostNameBase* to create the full hostName
   * if not specified, the default is for HomeSpan to append a dash "-" followed the 6-byte Accessory ID of the HomeSpan device
-  * setting *suffix* to a null string "" is permitted.
+  * setting *suffix* to a null string "" is permitted
   * example: `homeSpan.begin(Category::Fans, "Living Room Ceiling Fan", "LivingRoomFan");` will yield a default *hostName* of the form *LivingRoomFan-A1B2C3D4E5F6.local*.  Calling `homeSpan.setHostNameSuffix("v2")` prior to `homeSpan.begin()` will instead yield a *hostName* of *LivingRoomFanv2.local*
   
-* `void setQRID(const char *ID)`
-  * changes the Setup ID from the HomeSpan default ("HSPN") to *ID*
-  * *ID* must be exactly 4 alphanumeric characters (0-9, A-Z, and a-z).  If not, the request to change the Setup ID is silently ignored and remains "HSPN"
-  * The Setup ID is an optional parameter used when pairing the device to HomeKit with a QR Code (instead of the usual Setup Code)
+* `void setQRID(const char *id)`
+  * changes the Setup ID, which is used for pairing a device with a [QR Code](QRCodes.md), from the HomeSpan default to *id*
+  * the HomeSpan default is "HSPN" unless permanently changed for the device via the [HomeSpan CLI](CLI.md) using the 'Q' command
+  * *id* must be exactly 4 alphanumeric characters (0-9, A-Z, and a-z).  If not, the request to change the Setup ID is silently ignored and the default is used instead
   
+* `void enableOTA(boolean auth=true)`
+  * enables [Over-the-Air (OTA) Updating](OTA.md) of a HomeSpan device, which is otherwise disabled
+  * HomeSpan OTA requires an authorizing password unless *auth* is specified and set to *false*
+  * the default OTA password for new HomeSpan devices is "homespan-ota"
+  * this can be changed via the [HomeSpan CLI](CLI.md) using the 'O' command
+  
+* `void setSketchVersion(const char *sVer)`
+  * sets the version of a HomeSpan sketch to *sVer*, which can be any arbitrary character string
+  * if unspecified, HomeSpan uses "n/a" as the default version text
+  * HomeSpan displays the version of the sketch in the Arduino IDE Serial Monitor upon start-up
+  * HomeSpan also includes both the version of the sketch, as well as the version of the HomeSpan library used to compile the sketch, as part of its HAP MDNS broadcast.  This data is *not* used by HAP.  Rather, it is for informational purposes and allows you to identify the version of a sketch for a device that is updated via [OTA](OTA.md), rather than connected to a computer
+  
+* `const char *getSketchVersion()`
+  * returns the version of a HomeSpan sketch, as set using `void setSketchVersion(const char *sVer)`, or "n/a" if not set
+  
+* `void setWifiCallback(void (*func)(void))`
+  * Sets an optional user-defined callback function, *func*, to be called by HomeSpan upon start-up just after WiFi connectivity has been established.  This one-time call to *func* is provided for users that are implementing other network-related services as part of their sketch, but that cannot be started until WiFi connectivity is established.  The function *func* must be of type *void* and have no arguments
   
 ## *SpanAccessory(uint32_t aid)*
 
@@ -97,10 +118,17 @@ This is a **base class** from which all HomeSpan Services are derived, and shoul
 The following methods are supported:
 
 * `SpanService *setPrimary()`
-  * specifies that this is the primary Service for the Accessory.  Returns a pointer to the Service itself so that the method can be chained during instantiation.  Example: `new Service::Fan->setPrimary();`
+  * specifies that this is the primary Service for the Accessory.  Returns a pointer to the Service itself so that the method can be chained during instantiation. 
+  * example: `(new Service::Fan)->setPrimary();`
   
 * `SpanService *setHidden()`
   * specifies that this is hidden Service for the Accessory.  Returns a pointer to the Service itself so that the method can be chained during instantiation.
+  * note this does not seem to have any affect on the Home App.  Services marked as hidden still appear as normal
+  
+* `SpanService *addLink(SpanService *svc)`
+  * adds *svc* as a Linked Service.  Returns a pointer to the calling Service itself so that the method can be chained during instantiation.
+  * note that Linked Services are only applicable for select HAP Services.  See Apple's [HAP-R2](https://developer.apple.com/support/homekit-accessory-protocol/) documentation for full details.
+  * example: `(new Service::Faucet)->addLink(new Service::Valve)->addLink(new Service::Valve);` (links two Valves to a Faucet)
   
 * `virtual boolean update()`
   * HomeSpan calls this method upon receiving a request from a HomeKit Controller to update one or more Characteristics associated with the Service.  Users should override this method with code that implements that requested updates using one or more of the SpanCharacteristic methods below.  Method **must** return *true* if update succeeds, or *false* if not.

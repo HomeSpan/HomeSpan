@@ -216,30 +216,6 @@ void TLV<tagType, maxTags>::print(){
 }
 
 //////////////////////////////////////
-// TLV pack_old(buf)
-
-template<class tagType, int maxTags>
-int TLV<tagType, maxTags>::pack_old(uint8_t *buf){
-
-  int n=0;
-
-  for(int i=0;i<numTags;i++){
-    
-    if(tlv[i].len>0){
-      *buf++=tlv[i].tag;
-      *buf++=tlv[i].len;
-      memcpy(buf,tlv[i].val,tlv[i].len);
-      buf+=tlv[i].len;
-      n+=tlv[i].len+2;      
-    } // len>0
-    
-  } // loop over all TLVs
-
-return(n);
-  
-}
-
-//////////////////////////////////////
 // TLV pack(tlvBuf)
 
 template<class tagType, int maxTags>

@@ -238,9 +238,8 @@ void SRP6A::createProof(){
 
 //////////////////////////////////////
 
-int SRP6A::loadTLV(kTLVType tag, mbedtls_mpi *mpi){
+int SRP6A::loadTLV(kTLVType tag, mbedtls_mpi *mpi, int nBytes){
 
-  int nBytes=mbedtls_mpi_size(mpi);
   uint8_t *buf=HAPClient::tlv8.buf(tag,nBytes);
 
   if(!buf)

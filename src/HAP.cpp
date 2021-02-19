@@ -28,6 +28,7 @@
 #include <ESPmDNS.h>
 #include <nvs_flash.h>
 #include <sodium.h>
+#include <MD5Builder.h>
 
 #include "HAP.h"
 #include "HomeSpan.h"
@@ -43,10 +44,21 @@ void HAPClient::init(){
   nvs_open("WIFI",NVS_READWRITE,&wifiNVS);      // open WIFI data namespace in NVS
   nvs_open("SRP",NVS_READWRITE,&srpNVS);        // open SRP data namespace in NVS 
   nvs_open("HAP",NVS_READWRITE,&hapNVS);        // open HAP data namespace in NVS
+  nvs_open("OTA",NVS_READWRITE,&otaNVS);        // open OTA data namespace in NVS
 
   if(!nvs_get_blob(wifiNVS,"WIFIDATA",NULL,&len))                        // if found WiFi data in NVS
     nvs_get_blob(wifiNVS,"WIFIDATA",&homeSpan.network.wifiData,&len);      // retrieve data  
-  
+
+  if(!nvs_get_str(otaNVS,"OTADATA",NULL,&len)){                     // if found OTA data in NVS
+    nvs_get_str(otaNVS,"OTADATA",homeSpan.otaPwd,&len);              // retrieve data  
+  } else {
+    MD5Builder otaPwdHash;
+    otaPwdHash.begin();
+    otaPwdHash.add(DEFAULT_OTA_PASSWORD);
+    otaPwdHash.calculate();
+    otaPwdHash.getChars(homeSpan.otaPwd);
+  }
+
   struct {                                      // temporary structure to hold SRP verification code and salt stored in NVS
     uint8_t salt[16];
     uint8_t verifyCode[384];
@@ -66,6 +78,14 @@ void HAPClient::init(){
     Serial.print("Setup Payload for Optional QR Code: ");
     Serial.print(homeSpan.qrCode.get(atoi(homeSpan.defaultSetupCode),homeSpan.qrID,atoi(homeSpan.category)));
     Serial.print("\n\n");          
+  }
+
+  if(!strlen(homeSpan.qrID)){                                      // Setup ID has not been specified in sketch
+    if(!nvs_get_str(hapNVS,"SETUPID",NULL,&len)){                    // check for saved value
+      nvs_get_str(hapNVS,"SETUPID",homeSpan.qrID,&len);                 // retrieve data
+    } else {
+      sprintf(homeSpan.qrID,"%s",DEFAULT_QR_ID);                     // use default
+   }
   }
   
   if(!nvs_get_blob(hapNVS,"ACCESSORY",NULL,&len)){                    // if found long-term Accessory data in NVS
@@ -443,8 +463,8 @@ int HAPClient::postPairSetupURL(){
       tlv8.clear();
       tlv8.val(kTLVType_State,pairState_M2);            // set State=<M2>
       srp.createPublicKey();                          // create accessory public key from random Pair-Setup code (displayed to user)
-      srp.loadTLV(kTLVType_PublicKey,&srp.B);         // load server public key, B
-      srp.loadTLV(kTLVType_Salt,&srp.s);              // load salt, s
+      srp.loadTLV(kTLVType_PublicKey,&srp.B,384);         // load server public key, B
+      srp.loadTLV(kTLVType_Salt,&srp.s,16);              // load salt, s
       tlvRespond();                                   // send response to client
 
       pairStatus=pairState_M3;                        // set next expected pair-state request from client
@@ -481,7 +501,7 @@ int HAPClient::postPairSetupURL(){
       srp.createProof();                                  // M1 has been successully verified; now create accessory proof M2
       tlv8.clear();                                         // clear TLV records
       tlv8.val(kTLVType_State,pairState_M4);                // set State=<M4>
-      srp.loadTLV(kTLVType_Proof,&srp.M2);                // load M2 counter-proof
+      srp.loadTLV(kTLVType_Proof,&srp.M2,64);               // load M2 counter-proof
       tlvRespond();                                       // send response to client
 
       pairStatus=pairState_M5;                            // set next expected pair-state request from client
@@ -1635,6 +1655,7 @@ TLV<kTLVType,10> HAPClient::tlv8;
 nvs_handle HAPClient::hapNVS;
 nvs_handle HAPClient::wifiNVS;
 nvs_handle HAPClient::srpNVS;
+nvs_handle HAPClient::otaNVS;
 uint8_t HAPClient::httpBuf[MAX_HTTP+1];                 
 HKDF HAPClient::hkdf;                                   
 pairState HAPClient::pairStatus;                        

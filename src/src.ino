@@ -10,11 +10,15 @@ void setup() {
  
   homeSpan.setLogLevel(1);
   
-  homeSpan.setHostNameSuffix("");
-  homeSpan.setPortNum(1200);
-  homeSpan.setQRID("One1");
+  homeSpan.setHostNameSuffix("-lamp1");
+  homeSpan.setPortNum(1201);
+//  homeSpan.setMaxConnections(6);
+//  homeSpan.setQRID("One1");
+  homeSpan.enableOTA();
+  homeSpan.setSketchVersion("Test 1.3.1");
+  homeSpan.setWifiCallback(wifiEstablished);
 
-  homeSpan.begin(Category::Lighting,"HomeSpanTest");
+  homeSpan.begin(Category::Lighting,"HomeSpan Lamp Server","homespan");
 
   new SpanAccessory();                                  // Begin by creating a new Accessory using SpanAccessory(), which takes no arguments
 
@@ -29,8 +33,17 @@ void setup() {
     new Service::HAPProtocolInformation();                  // Create the HAP Protcol Information Service  
       new Characteristic::Version("1.1.0");                     // Set the Version Characteristic to "1.1.0" as required by HAP
 
-    new Service::LightBulb();                               // Create the Light Bulb Service
-      new Characteristic::On();                                 // This Service requires the "On" Characteristic to turn the light on and off
+    new Service::LightBulb();
+      new Characteristic::On();
+      new Characteristic::Brightness();
+      new Characteristic::Name("Light 1");
+    new Service::LightBulb();
+      new Characteristic::On();
+      new Characteristic::Brightness();
+      new Characteristic::Name("Light 2");
+    (new Service::Switch())->setPrimary();
+      new Characteristic::On();
+      new Characteristic::Name("Switch 3");
 
 } // end of setup()
 
@@ -39,5 +52,11 @@ void setup() {
 void loop(){
 
   homeSpan.poll();
-  
+
 } // end of loop()
+
+//////////////////////////////////////
+
+void wifiEstablished(){
+  Serial.print("IN CALLBACK FUNCTION\n\n");
+}

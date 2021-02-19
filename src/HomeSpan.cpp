@@ -29,6 +29,8 @@
 #include <nvs_flash.h>
 #include <sodium.h>
 #include <WiFi.h>
+#include <ArduinoOTA.h>
+#include <esp_ota_ops.h>
 
 #include "HomeSpan.h"
 #include "HAP.h"
@@ -52,10 +54,16 @@ void Span::begin(Category catID, const char *displayName, const char *hostNameBa
   controlButton.init(controlPin);
   statusLED.init(statusPin);
 
+  int maxLimit=CONFIG_LWIP_MAX_SOCKETS-2-otaEnabled;
+  if(maxConnections>maxLimit)
+    maxConnections=maxLimit;
+
   hap=(HAPClient **)calloc(maxConnections,sizeof(HAPClient *));
   for(int i=0;i<maxConnections;i++)
     hap[i]=new HAPClient;
-  
+
+  hapServer=new WiFiServer(tcpPortNum);
+
   delay(2000);
  
   Serial.print("\n************************************************************\n"
@@ -69,11 +77,19 @@ void Span::begin(Category catID, const char *displayName, const char *hostNameBa
   Serial.print("\nStatus LED:       Pin ");
   Serial.print(statusPin);  
   Serial.print("\nDevice Control:   Pin ");
-  Serial.print(controlPin);  
+  Serial.print(controlPin);
+  Serial.print("\nSketch Version:   ");
+  Serial.print(getSketchVersion());  
   Serial.print("\nHomeSpan Version: ");
   Serial.print(HOMESPAN_VERSION);
   Serial.print("\nESP-IDF Version:  ");
   Serial.print(esp_get_idf_version());
+  
+  #ifdef ARDUINO_VARIANT
+    Serial.print("\nESP32 Board:      ");
+    Serial.print(ARDUINO_VARIANT);
+  #endif
+  
   Serial.print("\nSketch Compiled:  ");
   Serial.print(__DATE__);
   Serial.print(" ");
@@ -125,7 +141,6 @@ void Span::poll() {
       statusLED.start(LED_WIFI_NEEDED);
     } else {
       homeSpan.statusLED.start(LED_WIFI_CONNECTING);
-      hapServer=new WiFiServer(tcpPortNum,maxConnections);
     }
           
     controlButton.reset();        
@@ -149,7 +164,7 @@ void Span::poll() {
 
   WiFiClient newClient;
 
-  if(hapServer && (newClient=hapServer->available())){         // found a new HTTP client
+  if(newClient=hapServer->available()){                        // found a new HTTP client
     int freeSlot=getFreeSlot();                                // get next free slot
 
     if(freeSlot==-1){                                          // no available free slots
@@ -174,6 +189,10 @@ void Span::poll() {
     LOG1(millis()/1000);
     LOG1(" sec) ");
     LOG1(hap[freeSlot]->client.remoteIP());
+    LOG1(" on Socket ");
+    LOG1(hap[freeSlot]->client.fd()-LWIP_SOCKET_OFFSET+1);
+    LOG1("/");
+    LOG1(CONFIG_LWIP_MAX_SOCKETS);
     LOG1("\n");
     LOG2("\n");
 
@@ -206,6 +225,9 @@ void Span::poll() {
   HAPClient::checkPushButtons();
   HAPClient::checkNotifications();  
   HAPClient::checkTimedWrites();
+
+  if(otaEnabled)
+    ArduinoOTA.handle();
 
   if(controlButton.primed()){
     statusLED.start(LED_ALERT);
@@ -376,6 +398,16 @@ void Span::checkConnect(){
   else
     sprintf(hostName,"%s%s",hostNameBase,hostNameSuffix);
 
+  char d[strlen(hostName)+1];  
+  sscanf(hostName,"%[A-Za-z0-9-]",d);
+  
+  if(strlen(hostName)>255|| hostName[0]=='-' || hostName[strlen(hostName)-1]=='-' || strlen(hostName)!=strlen(d)){
+    Serial.printf("\n*** Error:  Can't start MDNS due to invalid hostname '%s'.\n",hostName);
+    Serial.print("*** Hostname must consist of 255 or less alphanumeric characters or a hyphen, except that the hyphen cannot be the first or last character.\n");
+    Serial.print("*** PROGRAM HALTED!\n\n");
+    while(1);
+  }
+    
   Serial.print("\nStarting MDNS...\n\n");
   Serial.print("HostName:      ");
   Serial.print(hostName);
@@ -385,7 +417,9 @@ void Span::checkConnect(){
   Serial.print(displayName);
   Serial.print("\nModel Name:    ");
   Serial.print(modelName);
-  Serial.print("\n");
+  Serial.print("\nSetup ID:      ");
+  Serial.print(qrID);
+  Serial.print("\n\n");
 
   MDNS.begin(hostName);                         // set server host name (.local implied)
   MDNS.setInstanceName(displayName);            // set server display name
@@ -410,6 +444,10 @@ void Span::checkConnect(){
   else
     mdns_service_txt_item_set("_hap","_tcp","sf","0");           // set Status Flag = 0
 
+  mdns_service_txt_item_set("_hap","_tcp","hspn",HOMESPAN_VERSION);           // HomeSpan Version Number (info only - NOT used by HAP)
+  mdns_service_txt_item_set("_hap","_tcp","sketch",sketchVersion);            // Sketch Version (info only - NOT used by HAP)
+  mdns_service_txt_item_set("_hap","_tcp","ota",otaEnabled?"yes":"no");       // OTA Enabled (info only - NOT used by HAP)
+
   uint8_t hashInput[22];
   uint8_t hashOutput[64];
   char setupHash[9];
@@ -421,10 +459,57 @@ void Span::checkConnect(){
   mbedtls_base64_encode((uint8_t *)setupHash,9,&len,hashOutput,4);    // Step 3: Encode the first 4 bytes of hashOutput in base64, which results in an 8-character, null-terminated, setupHash
   mdns_service_txt_item_set("_hap","_tcp","sh",setupHash);            // Step 4: broadcast the resulting Setup Hash
 
-  Serial.print("\nStarting Web (HTTP) Server supporting up to ");
+  if(otaEnabled){
+    if(esp_ota_get_running_partition()!=esp_ota_get_next_update_partition(NULL)){
+      ArduinoOTA.setHostname(hostName);
+
+      if(otaAuth)
+        ArduinoOTA.setPasswordHash(otaPwd);
+    
+      ArduinoOTA
+        .onStart([]() {
+          String type;
+          if (ArduinoOTA.getCommand() == U_FLASH)
+            type = "sketch";
+          else // U_SPIFFS
+            type = "filesystem";
+          Serial.println("\n*** OTA Starting:" + type);
+          homeSpan.statusLED.start(LED_OTA_STARTED);
+        })
+        .onEnd([]() {
+          Serial.println("\n*** OTA Completed.  Rebooting...");
+          homeSpan.statusLED.off();
+        })
+        .onProgress([](unsigned int progress, unsigned int total) {
+          Serial.printf("*** Progress: %u%%\r", (progress / (total / 100)));
+        })
+        .onError([](ota_error_t error) {
+          Serial.printf("*** OTA Error[%u]: ", error);
+          if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed\n");
+          else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed\n");
+          else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed\n");
+          else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed\n");
+          else if (error == OTA_END_ERROR) Serial.println("End Failed\n");
+        });    
+      
+      ArduinoOTA.begin();
+      Serial.print("Starting OTA Server: ");
+      Serial.print(displayName);
+      Serial.print(" at ");
+      Serial.print(WiFi.localIP());
+      Serial.print("\nAuthorization Password: ");
+      Serial.print(otaAuth?"Enabled\n\n":"DISABLED!\n\n");
+    } else {
+      Serial.print("\n*** Warning: Can't start OTA Server - Partition table used to compile this sketch is not configured for OTA.\n\n");
+    }
+  }
+
+  Serial.print("Starting Web (HTTP) Server supporting up to ");
   Serial.print(maxConnections);
-  Serial.print(" simultaneous connections...\n\n");
+  Serial.print(" simultaneous connections...\n");
   hapServer->begin();
+
+  Serial.print("\n");
 
   if(!HAPClient::nAdminControllers()){
     Serial.print("DEVICE NOT YET PAIRED -- PLEASE PAIR WITH HOMEKIT APP\n\n");
@@ -432,6 +517,9 @@ void Span::checkConnect(){
   } else {
     statusLED.on();
   }
+
+  if(wifiCallback)
+    wifiCallback();
   
 } // initWiFi
 
@@ -443,7 +531,7 @@ void Span::setQRID(const char *id){
   sscanf(id,"%4[0-9A-Za-z]",tBuf);
   
   if(strlen(id)==4 && strlen(tBuf)==4){
-    qrID=id;
+    sprintf(qrID,"%s",id);
   }
     
 } // setQRID
@@ -477,14 +565,17 @@ void Span::processSerialCommand(const char *c){
         if(hap[i]->client){
       
           Serial.print(hap[i]->client.remoteIP());
-          Serial.print(" ");
-      
+          Serial.print(" on Socket ");
+          Serial.print(hap[i]->client.fd()-LWIP_SOCKET_OFFSET+1);
+          Serial.print("/");
+          Serial.print(CONFIG_LWIP_MAX_SOCKETS);
+          
           if(hap[i]->cPair){
-            Serial.print("ID=");
+            Serial.print("  ID=");
             HAPClient::charPrintRow(hap[i]->cPair->ID,36);
             Serial.print(hap[i]->cPair->admin?"   (admin)":" (regular)");
           } else {
-            Serial.print("(unverified)");
+            Serial.print("  (unverified)");
           }
       
         } else {
@@ -494,7 +585,7 @@ void Span::processSerialCommand(const char *c){
         Serial.print("\n");
       }
 
-      Serial.print("\n*** End Status ***\n");
+      Serial.print("\n*** End Status ***\n\n");
     } 
     break;
 
@@ -510,6 +601,61 @@ void Span::processSerialCommand(const char *c){
       Serial.print(" ***\n\n");
       prettyPrint(qBuf.buf);
       Serial.print("\n*** End Database ***\n\n");
+    }
+    break;
+
+    case 'Q': {
+      char tBuf[5];
+      const char *s=c+1+strspn(c+1," ");
+      sscanf(s," %4[0-9A-Za-z]",tBuf);
+  
+      if(strlen(s)==4 && strlen(tBuf)==4){
+        sprintf(qrID,"%s",tBuf);
+        Serial.print("\nChanging default Setup ID for QR Code to: '");
+        Serial.print(qrID);
+        Serial.print("'.  Will take effect after next restart.\n\n");
+        nvs_set_str(HAPClient::hapNVS,"SETUPID",qrID);                           // update data
+        nvs_commit(HAPClient::hapNVS);          
+      } else {
+        Serial.print("\n*** Invalid request to change Setup ID for QR Code to: '");
+        Serial.print(s);
+        Serial.print("'.  Setup ID must be exactly 4 alphanumeric characters (0-9, A-Z, and a-z).\n\n");  
+      }        
+    }
+    break;
+    
+    case 'O': {
+
+      char textPwd[34]="\0";
+      
+      Serial.print("\n>>> New OTA Password, or <return> to cancel request: ");
+      readSerial(textPwd,33);
+      
+      if(strlen(textPwd)==0){
+        Serial.print("(cancelled)\n\n");
+        return;
+      }
+
+      if(strlen(textPwd)==33){
+        Serial.print("\n*** Sorry, 32 character limit - request cancelled\n\n");
+        return;
+      }
+      
+      Serial.print(mask(textPwd,2));
+      Serial.print("\n");      
+      
+      MD5Builder otaPwdHash;
+      otaPwdHash.begin();
+      otaPwdHash.add(textPwd);
+      otaPwdHash.calculate();
+      otaPwdHash.getChars(otaPwd);
+      nvs_set_str(HAPClient::otaNVS,"OTADATA",otaPwd);                 // update data
+      nvs_commit(HAPClient::otaNVS);          
+      
+      Serial.print("... Accepted! Password change will take effect after next restart.\n");
+      if(!otaEnabled)
+        Serial.print("... Note: OTA has not been enabled in this sketch.\n");
+      Serial.print("\n");
     }
     break;
 
@@ -695,20 +841,24 @@ void Span::processSerialCommand(const char *c){
       Serial.print("\n\n");
 
       char d[]="------------------------------";
-      char cBuf[256];
-      sprintf(cBuf,"%-30s  %s  %10s  %s  %s  %s  %s\n","Service","Type","AID","IID","Update","Loop","Button");
-      Serial.print(cBuf);
-      sprintf(cBuf,"%.30s  %.4s  %.10s  %.3s  %.6s  %.4s  %.6s\n",d,d,d,d,d,d,d);
-      Serial.print(cBuf);
+      Serial.printf("%-30s  %s  %10s  %s  %s  %s  %s  %s\n","Service","Type","AID","IID","Update","Loop","Button","Linked Services");
+      Serial.printf("%.30s  %.4s  %.10s  %.3s  %.6s  %.4s  %.6s  %.15s\n",d,d,d,d,d,d,d,d);
       for(int i=0;i<Accessories.size();i++){                             // identify all services with over-ridden loop() methods
         for(int j=0;j<Accessories[i]->Services.size();j++){
           SpanService *s=Accessories[i]->Services[j];
-          sprintf(cBuf,"%-30s  %4s  %10u  %3d  %6s  %4s  %6s\n",s->hapName,s->type,Accessories[i]->aid,s->iid, 
+          Serial.printf("%-30s  %4s  %10u  %3d  %6s  %4s  %6s  ",s->hapName,s->type,Accessories[i]->aid,s->iid, 
                  (void(*)())(s->*(&SpanService::update))!=(void(*)())(&SpanService::update)?"YES":"NO",
                  (void(*)())(s->*(&SpanService::loop))!=(void(*)())(&SpanService::loop)?"YES":"NO",
                  (void(*)(int,boolean))(s->*(&SpanService::button))!=(void(*)(int,boolean))(&SpanService::button)?"YES":"NO"
                  );
-          Serial.print(cBuf);
+          if(s->linkedServices.empty())
+            Serial.print("-");
+          for(int k=0;k<s->linkedServices.size();k++){
+            Serial.print(s->linkedServices[k]->iid);
+            if(k<s->linkedServices.size()-1)
+              Serial.print(",");
+          }
+          Serial.print("\n");
         }
       }
       Serial.print("\n*** End Info ***\n");
@@ -725,6 +875,8 @@ void Span::processSerialCommand(const char *c){
       Serial.print("  W - configure WiFi Credentials and restart\n");      
       Serial.print("  X - delete WiFi Credentials and restart\n");      
       Serial.print("  S <code> - change the HomeKit Pairing Setup Code to <code>\n");
+      Serial.print("  Q <id> - change the HomeKit Setup ID for QR Codes to <id>\n");
+      Serial.print("  O - change the OTA password\n");
       Serial.print("  A - start the HomeSpan Setup Access Point\n");      
       Serial.print("\n");      
       Serial.print("  U - unpair device by deleting all Controller data\n");
@@ -1240,6 +1392,13 @@ SpanService *SpanService::setHidden(){
 
 ///////////////////////////////
 
+SpanService *SpanService::addLink(SpanService *svc){
+  linkedServices.push_back(svc);
+  return(this);
+}
+
+///////////////////////////////
+
 int SpanService::sprintfAttributes(char *cBuf){
   int nBytes=0;
 
@@ -1250,6 +1409,16 @@ int SpanService::sprintfAttributes(char *cBuf){
     
   if(primary)
     nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,"\"primary\":true,");
+
+  if(!linkedServices.empty()){
+    nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,"\"linked\":[");
+    for(int i=0;i<linkedServices.size();i++){
+      nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,"%d",linkedServices[i]->iid);
+      if(i+1<linkedServices.size())
+        nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",");
+    }
+     nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,"],");
+  }
     
   nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,"\"characteristics\":[");
   

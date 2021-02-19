@@ -87,6 +87,7 @@ struct Span{
   String configLog;                             // log of configuration process, including any errors
   boolean isBridge=true;                        // flag indicating whether device is configured as a bridge (i.e. first Accessory contains nothing but AccessoryInformation and HAPProtocolInformation)
   HapQR qrCode;                                 // optional QR Code to use for pairing
+  const char *sketchVersion="n/a";              // version of the sketch
 
   boolean connected=false;                      // WiFi connection status
   unsigned long waitTime=60000;                 // time to wait (in milliseconds) between WiFi connection attempts
@@ -99,7 +100,11 @@ struct Span{
   uint8_t maxConnections=DEFAULT_MAX_CONNECTIONS;             // number of simultaneous HAP connections
   unsigned long comModeLife=DEFAULT_COMMAND_TIMEOUT*1000;     // length of time (in milliseconds) to keep Command Mode alive before resuming normal operations
   uint16_t tcpPortNum=DEFAULT_TCP_PORT;                       // port for TCP communications between HomeKit and HomeSpan
-  const char *qrID=DEFAULT_QR_ID;                             // optional Setup ID used to pair with QR Code
+  char qrID[5]="";                                            // Setup ID used for pairing with QR Code
+  boolean otaEnabled=false;                                   // enables Over-the-Air ("OTA") updates
+  char otaPwd[33];                                            // MD5 Hash of OTA password, represented as a string of hexidecimal characters
+  boolean otaAuth;                                            // OTA requires password when set to true
+  void (*wifiCallback)()=NULL;                                // optional callback function to invoke once WiFi connectivity is established
 
   WiFiServer *hapServer;                            // pointer to the HAP Server connection
   Blinker statusLED;                                // indicates HomeSpan status
@@ -150,6 +155,10 @@ struct Span{
   void setHostNameSuffix(const char *suffix){hostNameSuffix=suffix;}      // sets the hostName suffix to be used instead of the 6-byte AccessoryID
   void setPortNum(uint16_t port){tcpPortNum=port;}                        // sets the TCP port number to use for communications between HomeKit and HomeSpan
   void setQRID(const char *id);                                           // sets the Setup ID for optional pairing with a QR Code
+  void enableOTA(boolean auth=true){otaEnabled=true;otaAuth=auth;}        // enables Over-the-Air updates, with (auth=true) or without (auth=false) authorization password
+  void setSketchVersion(const char *sVer){sketchVersion=sVer;}            // set optional sketch version number
+  const char *getSketchVersion(){return sketchVersion;}                   // get sketch version number
+  void setWifiCallback(void (*f)()){wifiCallback=f;}                      // sets an optional user-defined function to call once WiFi connectivity is established
 };
 
 ///////////////////////////////
@@ -178,11 +187,13 @@ struct SpanService{
   vector<SpanCharacteristic *> Characteristics;           // vector of pointers to all Characteristics in this Service  
   vector<HapCharType *> req;                              // vector of pointers to all required HAP Characteristic Types for this Service
   vector<HapCharType *> opt;                              // vector of pointers to all optional HAP Characteristic Types for this Service
+  vector<SpanService *> linkedServices;                   // vector of pointers to any optional linked Services
   
   SpanService(const char *type, const char *hapName);
 
   SpanService *setPrimary();                              // sets the Service Type to be primary and returns pointer to self
   SpanService *setHidden();                               // sets the Service Type to be hidden and returns pointer to self
+  SpanService *addLink(SpanService *svc);                 // adds svc as a Linked Service
 
   int sprintfAttributes(char *cBuf);                      // prints Service JSON records into buf; return number of characters printed, excluding null terminator
   void validate();                                        // error-checks Service
