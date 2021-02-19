@@ -10,7 +10,7 @@
 
 #### Does HomeSpan support video and audio streams?
 
-* No, HomeSpan does not support streaming services, such as Audio Stream Management, Data Stream Transport Management, or Camera RTP Management.
+* No, HomeSpan does not support streaming services, such as Audio Stream Management, Data Stream Transport Management, or Camera RTP Management.  See [HomeSpan Services and Characteristics](ServiceList.md) for a complete list of all Services supported by HomeSpan.
 
 #### Does HomeSpan work with PlatformIO?
 
@@ -25,6 +25,6 @@
 * HomeSpan uses MDNS (multicast DNS) to broadcast a variety of HAP information used by Controllers wishing to pair with HomeSpan.  Apple uses the name *Bonjour* to refer to MDNS, and for years included a Bonjour "Browser" in Safari, though that was eliminated a number of years ago.  However, there are a number of alternative MDNS browsers available for free that operate on both the Mac and the iPhone, such as the [Discovery - DNS-SD Browser](https://apps.apple.com/us/app/discovery-dns-sd-browser/id1381004916?mt=12).  You'll find all your HomeSpan devices, as well as any other HomeKit devices you may have, broadcasting under *_hap._tcp.* services.  The fields broadcast by HomeSpan are a combination of all data elements requires by HAP (HAP-R2 see table 6-7) plus three additional HomeSpan fields:
 
   * *hspn* - the version number of the HomeSpan library used to compile the sketch
-  * *sketch* - the version number of the sketch, as specified by the user with the method `homeSpan.setSketchVersion(const char *)`, or *n/a* if no version was specified
+  * *sketch* - the version number of the sketch, as specified with `homeSpan.setSketchVersion(const char *)`, or "n/a" if no version was specified
   * *ota* - either "yes" or "no" depending on whether OTA was enabled for the sketch using the method `homeSpan.enableOTA()` 
 
