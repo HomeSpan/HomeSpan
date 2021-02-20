@@ -32,5 +32,7 @@
 
 * Though HomeKit now supports Television controls, at the time of this posting Apple has not publicly released any specifications, SDKs, or ADKs, related to HAP Television Services or any HAP Television Characteristics.  It appears that for now these Services are meant only for commercial use.  Support for HAP Television Services and Characteristics will be added to HomeSpan as soon as Apple makes the specifications publicly available in some form or another.
 
+---
 
+[↩️](README.md) Back to the Welcome page
 
