@@ -399,7 +399,7 @@ namespace Characteristic {
   CREATE_CHAR(CarbonDioxideDetected,uint8_t,0);
   CREATE_CHAR(ChargingState,uint8_t,0);
   CREATE_CHAR(CoolingThresholdTemperature,double,10); 
-  CREATE_CHAR(ColorTemperature,uint32_t,50);
+  CREATE_CHAR(ColorTemperature,uint32_t,200);
   CREATE_CHAR(ContactSensorState,uint8_t,1);
   CREATE_CHAR(CurrentAmbientLightLevel,double,1);
   CREATE_CHAR(CurrentHorizontalTiltAngle,int,0);
