@@ -24,6 +24,8 @@ This is because HomeSpan checks that a sketch has been compiled with OTA partiti
 
 * The ESP32 itself supports "automated" rollbacks that are designed to restore a device with a previously-working sketch if the latest sketch causes a reboot before being able to set a self-test flag verifiying the code is operating correctly.  However, the version of the ESP32-IDF library (3.2.3) used by the latest version of the Arduino-ESP32 Library (1.0.4, at the time of this posting) does not support this feature.
 
+---
 
+[↩️](README.md) Back to the Welcome page
 
 
