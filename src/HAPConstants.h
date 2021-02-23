@@ -99,6 +99,8 @@ struct HapCharType {
 
 #define HAPCHAR(name,id,perms)  HapCharType name {#id,#name,perms}
 
+struct HapCharList {
+
   enum {          // create bitflags based on HAP Table 6-4
     PR=1,
     PW=2,
@@ -109,8 +111,6 @@ struct HapCharType {
     WR=64,
     NV=128
   };
-
-struct HapCharList {
   
   HAPCHAR( Active, B0, PW+PR+EV );
   HAPCHAR( AirQuality, 95, PR+EV );

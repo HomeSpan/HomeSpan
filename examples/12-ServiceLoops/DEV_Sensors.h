@@ -15,7 +15,8 @@ struct DEV_TempSensor : Service::TemperatureSensor {     // A standalone Tempera
     // Though the HAP documentation includes a Characteristic that appears to allow the device to over-ride this setting by specifying a display
     // of Celsius or Fahrenheit for each Service, it does not appear to work as advertised.
     
-    temp=new Characteristic::CurrentTemperature(20.0);        // instantiate the Current Temperature Characteristic
+    temp=new Characteristic::CurrentTemperature(30.0);        // instantiate the Current Temperature Characteristic
+    new SpanRange(-50,100,1);                                 // expand the range from the HAP default of 0-100 to -50 to 100 to allow for negative temperatures
     
     Serial.print("Configuring Temperature Sensor");           // initialization message
     Serial.print("\n");
@@ -39,8 +40,8 @@ struct DEV_TempSensor : Service::TemperatureSensor {     // A standalone Tempera
 
     if(temp->timeVal()>5000){                               // check time elapsed since last update and proceed only if greater than 5 seconds
       float temperature=temp->getVal<float>()+0.5;          // "simulate" a half-degree temperature change...
-      if(temperature>35.0)                                  // ...but cap the maximum at 35C before starting over at 10C
-        temperature=10.0;
+      if(temperature>35.0)                                  // ...but cap the maximum at 35C before starting over at -30C
+        temperature=-30.0;
       
       temp->setVal(temperature);                            // set the new temperature; this generates an Event Notification and also resets the elapsed time
       
