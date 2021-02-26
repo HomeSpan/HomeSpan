@@ -1771,10 +1771,47 @@ void SpanCharacteristic::setVal(int val){
         newValue.UINT64=(uint64_t)val;
       break;
 
+      case FLOAT:
+        value.FLOAT=(double)val;
+        newValue.FLOAT=(double)val;
+      break;
+
       default:
       break;
     }
 
+    updateTime=homeSpan.snapTime;
+
+    SpanBuf sb;                             // create SpanBuf object
+    sb.characteristic=this;                 // set characteristic          
+    sb.status=StatusCode::OK;               // set status
+    char dummy[]="";
+    sb.val=dummy;                           // set dummy "val" so that sprintfNotify knows to consider this "update"
+    homeSpan.Notifications.push_back(sb);   // store SpanBuf in Notifications vector
+}
+
+///////////////////////////////
+
+void SpanCharacteristic::setVal(uint32_t val){
+  
+    value.UINT32=(uint32_t)val;  
+    newValue.UINT32=(uint32_t)val;  
+    updateTime=homeSpan.snapTime;
+
+    SpanBuf sb;                             // create SpanBuf object
+    sb.characteristic=this;                 // set characteristic          
+    sb.status=StatusCode::OK;               // set status
+    char dummy[]="";
+    sb.val=dummy;                           // set dummy "val" so that sprintfNotify knows to consider this "update"
+    homeSpan.Notifications.push_back(sb);   // store SpanBuf in Notifications vector
+}
+
+///////////////////////////////
+
+void SpanCharacteristic::setVal(uint64_t val){
+  
+    value.UINT64=(uint64_t)val;  
+    newValue.UINT64=(uint64_t)val;  
     updateTime=homeSpan.snapTime;
 
     SpanBuf sb;                             // create SpanBuf object

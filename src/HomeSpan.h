@@ -273,8 +273,10 @@ struct SpanCharacteristic{
   template <class T=int> T getNewVal(){return(getValue<T>(newValue));}              // returns UVal newValue
   template <class T> T getValue(UVal v);                                            // returns UVal v
 
-  void setVal(int value);                                                           // sets value of UVal value for all integer-based Characterstic types
-  void setVal(double value);                                                        // sets value of UVal value for FLOAT Characteristic type
+  void setVal(uint64_t value);                                                      // sets value of UVal value for UINT64 Characteristic when parameter type is uint64_t
+  void setVal(uint32_t value);                                                      // sets value of UVal value for UINT32 Characteristic when parameter type is uint32_t
+  void setVal(double value);                                                        // sets value of UVal value for FLOAT Characteristic when parameter type is float or double
+  void setVal(int value);                                                           // sets value of UVal value for ANY Characteristic (except char *) when parameter type does not exactly match uint64_t, uint32_t, double, or float
 
   boolean updated(){return(isUpdated);}                                             // returns isUpdated
   unsigned long  timeVal();                                                         // returns time elapsed (in millis) since value was last updated
