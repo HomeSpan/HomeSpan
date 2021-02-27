@@ -107,7 +107,40 @@ union UVal {
         FLOAT=(double)val;
       break;
     }
-  }
+  } // set()
+
+  template <class T> T get(FORMAT fmt){
+  
+    switch(fmt){
+    
+      case FORMAT::BOOL:
+        return((T) BOOL);
+        
+      case FORMAT::INT:
+        return((T) INT);
+        
+      case FORMAT::UINT8:
+        return((T) UINT8);
+        
+      case FORMAT::UINT16:
+        return((T) UINT16);
+        
+      case FORMAT::UINT32:
+        return((T) UINT32);
+        
+      case FORMAT::UINT64:
+        return((T) UINT64);
+        
+      case FORMAT::FLOAT:
+        return((T) FLOAT);
+        
+      case FORMAT::STRING:
+        Serial.print("*** ERROR:  Can't use getVal() or getNewVal() for string Characteristics.\n\n");
+        return(0);
+    }
+
+  } // get()
+  
 };
 
 ///////////////////////////////
@@ -321,34 +354,9 @@ struct SpanCharacteristic{
   boolean updated(){return(isUpdated);}                                             // returns isUpdated
   unsigned long timeVal();                                                          // returns time elapsed (in millis) since value was last updated
 
-  template <class T=int> T getVal(){return(getValue<T>(value));}                    // returns UVal value
-  template <class T=int> T getNewVal(){return(getValue<T>(newValue));}              // returns UVal newValue
-  
-  template <class T> T getValue(UVal v){
-  
-    switch(format){
-      case BOOL:
-        return((T) v.BOOL);
-      case INT:
-        return((T) v.INT);
-      case UINT8:
-        return((T) v.UINT8);
-      case UINT16:
-        return((T) v.UINT16);
-      case UINT32:
-        return((T) v.UINT32);
-      case UINT64:
-        return((T) v.UINT64);
-      case FLOAT:
-        return((T) v.FLOAT);
-      case STRING:
-        Serial.print("*** ERROR:  Can't use getVal() or getNewVal() for string Characteristics.\n\n");
-        return(0);
-        
-    } // switch
-          
-  } // getValue
-  
+  template <class T=int> T getVal(){return(value.get<T>(format));}                    // returns UVal value
+  template <class T=int> T getNewVal(){return(newValue.get<T>(format));}              // returns UVal newValue
+    
   template <typename T> void setVal(T val){
     
     value.set(format, val);
