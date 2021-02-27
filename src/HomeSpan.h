@@ -54,6 +54,64 @@ enum {
   GET_ALL=255
 };
 
+enum FORMAT {   // HAP Table 6-5
+  BOOL,
+  UINT8,
+  UINT16,
+  UINT32,
+  UINT64,
+  INT,
+  FLOAT,
+  STRING
+};
+
+union UVal {                                  
+  boolean BOOL;
+  uint8_t UINT8;
+  uint16_t UINT16;
+  uint32_t UINT32;
+  uint64_t UINT64;
+  int32_t INT;
+  double FLOAT;
+  const char *STRING;
+
+  template <typename T> void set(FORMAT fmt, T val){
+
+    switch(fmt){
+     
+      case FORMAT::BOOL:
+        BOOL=(boolean)val;
+      break;
+
+      case FORMAT::INT:
+        INT=(int)val;
+      break;
+
+      case FORMAT::UINT8:
+        UINT8=(uint8_t)val;
+      break;
+
+      case FORMAT::UINT16:
+        UINT16=(uint16_t)val;
+      break;
+
+      case FORMAT::UINT32:
+        UINT32=(uint32_t)val;
+      break;
+
+      case FORMAT::UINT64:
+        UINT64=(uint64_t)val;
+      break;
+
+      case FORMAT::FLOAT:
+        FLOAT=(double)val;
+      break;
+    }
+  }
+};
+
+///////////////////////////////
+
 // Forward-Declarations
 
 struct Span;
@@ -64,6 +122,8 @@ struct SpanRange;
 struct SpanBuf;
 struct SpanButton;
 
+extern Span homeSpan;
+
 ///////////////////////////////
 
 struct SpanConfig {                         
@@ -71,6 +131,17 @@ struct SpanConfig {
   uint8_t hashCode[48]={0};                   // SHA-384 hash of Span Database stored as a form of unique "signature" to know when to update the config number upon changes
 };
 
+///////////////////////////////
+
+struct SpanBuf{                               // temporary storage buffer for use with putCharacteristicsURL() and checkTimedResets() 
+  uint32_t aid=0;                             // updated aid 
+  int iid=0;                                  // updated iid
+  char *val=NULL;                             // updated value (optional, though either at least 'val' or 'ev' must be specified)
+  char *ev=NULL;                              // updated event notification flag (optional, though either at least 'val' or 'ev' must be specified)
+  StatusCode status;                          // return status (HAP Table 6-11)
+  SpanCharacteristic *characteristic=NULL;    // Characteristic to update (NULL if not found)
+};
+  
 ///////////////////////////////
 
 struct Span{
@@ -217,28 +288,6 @@ struct SpanCharacteristic{
     WR=64,
     NV=128
   };
-
-  enum FORMAT {   // HAP Table 6-5
-    BOOL=0,
-    UINT8=1,
-    UINT16=2,
-    UINT32=3,
-    UINT64=4,
-    INT=5,
-    FLOAT=6,
-    STRING=7
-  };
-    
-  union UVal {                                  
-    boolean BOOL;
-    uint8_t UINT8;
-    uint16_t UINT16;
-    uint32_t UINT32;
-    uint64_t UINT64;
-    int32_t INT;
-    double FLOAT;
-    const char *STRING;      
-  };
      
   int iid=0;                               // Instance ID (HAP Table 6-3)
   const char *type;                        // Characteristic Type
@@ -269,44 +318,53 @@ struct SpanCharacteristic{
   int sprintfAttributes(char *cBuf, int flags);   // prints Characteristic JSON records into buf, according to flags mask; return number of characters printed, excluding null terminator  
   StatusCode loadUpdate(char *val, char *ev);     // load updated val/ev from PUT /characteristic JSON request.  Return intiial HAP status code (checks to see if characteristic is found, is writable, etc.)
   
+  boolean updated(){return(isUpdated);}                                             // returns isUpdated
+  unsigned long timeVal();                                                          // returns time elapsed (in millis) since value was last updated
+
   template <class T=int> T getVal(){return(getValue<T>(value));}                    // returns UVal value
   template <class T=int> T getNewVal(){return(getValue<T>(newValue));}              // returns UVal newValue
-  template <class T> T getValue(UVal v);                                            // returns UVal v
-
-  void setVal(uint64_t value);                                                      // sets value of UVal value for UINT64 Characteristic when parameter type is uint64_t
-  void setVal(uint32_t value);                                                      // sets value of UVal value for UINT32 Characteristic when parameter type is uint32_t
-  void setVal(double value);                                                        // sets value of UVal value for FLOAT Characteristic when parameter type is float or double
-  void setVal(int value);                                                           // sets value of UVal value for ANY Characteristic (except char *) when parameter type does not exactly match uint64_t, uint32_t, double, or float
-
-  boolean updated(){return(isUpdated);}                                             // returns isUpdated
-  unsigned long  timeVal();                                                         // returns time elapsed (in millis) since value was last updated
   
-};
-
-///////////////////////////////
-
-template <class T> T SpanCharacteristic::getValue(UVal v){
-
-  switch(format){
-    case BOOL:
-      return((T) v.BOOL);
-    case INT:
-      return((T) v.INT);
-    case UINT8:
-      return((T) v.UINT8);
-    case UINT16:
-      return((T) v.UINT16);
-    case UINT32:
-      return((T) v.UINT32);
-    case UINT64:
-      return((T) v.UINT64);
-    case FLOAT:
-      return((T) v.FLOAT);
-    case STRING:
-      Serial.print("*** ERROR:  Can't use getVal() or getNewVal() for string Characteristics.\n\n");
-      return(0);
-  }
+  template <class T> T getValue(UVal v){
+  
+    switch(format){
+      case BOOL:
+        return((T) v.BOOL);
+      case INT:
+        return((T) v.INT);
+      case UINT8:
+        return((T) v.UINT8);
+      case UINT16:
+        return((T) v.UINT16);
+      case UINT32:
+        return((T) v.UINT32);
+      case UINT64:
+        return((T) v.UINT64);
+      case FLOAT:
+        return((T) v.FLOAT);
+      case STRING:
+        Serial.print("*** ERROR:  Can't use getVal() or getNewVal() for string Characteristics.\n\n");
+        return(0);
+        
+    } // switch
+          
+  } // getValue
+  
+  template <typename T> void setVal(T val){
     
+    value.set(format, val);
+    newValue.set(format, val);
+      
+    updateTime=homeSpan.snapTime;
+    
+    SpanBuf sb;                             // create SpanBuf object
+    sb.characteristic=this;                 // set characteristic          
+    sb.status=StatusCode::OK;               // set status
+    char dummy[]="";
+    sb.val=dummy;                           // set dummy "val" so that sprintfNotify knows to consider this "update"
+    homeSpan.Notifications.push_back(sb);   // store SpanBuf in Notifications vector  
+    
+  } // setValue
+  
 };
 
 ///////////////////////////////
@@ -319,17 +377,6 @@ struct SpanRange{
   SpanRange(int min, int max, int step);
 };
 
-///////////////////////////////
-
-struct SpanBuf{                               // temporary storage buffer for use with putCharacteristicsURL() and checkTimedResets() 
-  uint32_t aid=0;                             // updated aid 
-  int iid=0;                                  // updated iid
-  char *val=NULL;                             // updated value (optional, though either at least 'val' or 'ev' must be specified)
-  char *ev=NULL;                              // updated event notification flag (optional, though either at least 'val' or 'ev' must be specified)
-  StatusCode status;                          // return status (HAP Table 6-11)
-  SpanCharacteristic *characteristic=NULL;    // Characteristic to update (NULL if not found)
-};
-  
 ///////////////////////////////
 
 struct SpanButton{
@@ -352,10 +399,6 @@ struct SpanButton{
 };
 
 /////////////////////////////////////////////////
-// Extern Variables
 
-extern Span homeSpan;
-
-/////////////////////////////////////////////////
 
 #include "Services.h"
