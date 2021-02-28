@@ -39,6 +39,7 @@ using namespace Utils;
 
 HAPClient **hap;                    // HAP Client structure containing HTTP client connections, parsing routines, and state variables (global-scoped variable)
 Span homeSpan;                      // HAP Attributes database and all related control functions for this Accessory (global-scoped variable)
+HapCharacteristics hapChars;        // Instantiation of all HAP Characteristics (used to create SpanCharacteristics)
 
 ///////////////////////////////
 //         Span              //
@@ -1203,10 +1204,10 @@ int Span::sprintfAttributes(char **ids, int numIDs, int flags, char *cBuf){
 
   for(int i=0;i<numIDs;i++){              // PASS 1: loop over all ids requested to check status codes - only errors are if characteristic not found, or not readable
     sscanf(ids[i],"%u.%d",&aid,&iid);     // parse aid and iid
-    Characteristics[i]=find(aid,iid);      // find matching chararacteristic
+    Characteristics[i]=find(aid,iid);     // find matching chararacteristic
     
     if(Characteristics[i]){                                          // if found
-      if(Characteristics[i]->perms&SpanCharacteristic::PR){          // if permissions allow reading
+      if(Characteristics[i]->perms&PERMS::PR){                       // if permissions allow reading
         status[i]=StatusCode::OK;                                    // always set status to OK (since no actual reading of device is needed)
       } else {
         Characteristics[i]=NULL;                                     
@@ -1440,10 +1441,10 @@ void SpanService::validate(){
   for(int i=0;i<req.size();i++){
     boolean valid=false;
     for(int j=0;!valid && j<Characteristics.size();j++)
-      valid=!strcmp(req[i]->id,Characteristics[j]->type);
+      valid=!strcmp(req[i]->type,Characteristics[j]->type);
       
     if(!valid){
-      homeSpan.configLog+="    !Characteristic " + String(req[i]->name);
+      homeSpan.configLog+="    !Characteristic " + String(req[i]->hapName);
       homeSpan.configLog+=" *** ERROR!  Required Characteristic for this Service not found. ***\n";
       homeSpan.nFatalErrors++;
     }
@@ -1454,10 +1455,11 @@ void SpanService::validate(){
 //    SpanCharacteristic     //
 ///////////////////////////////
 
-SpanCharacteristic::SpanCharacteristic(const char *type, uint8_t perms, const char *hapName){
-  this->type=type;
-  this->perms=perms;
-  this->hapName=hapName;
+SpanCharacteristic::SpanCharacteristic(HapChar *hapChar){
+  type=hapChar->type;
+  perms=hapChar->perms;
+  hapName=hapChar->hapName;
+  format=hapChar->format;
 
   homeSpan.configLog+="---->Characteristic " + String(hapName);
 
@@ -1478,10 +1480,10 @@ SpanCharacteristic::SpanCharacteristic(const char *type, uint8_t perms, const ch
   boolean valid=false;
 
   for(int i=0; !valid && i<homeSpan.Accessories.back()->Services.back()->req.size(); i++)
-    valid=!strcmp(type,homeSpan.Accessories.back()->Services.back()->req[i]->id);
+    valid=!strcmp(type,homeSpan.Accessories.back()->Services.back()->req[i]->type);
 
   for(int i=0; !valid && i<homeSpan.Accessories.back()->Services.back()->opt.size(); i++)
-    valid=!strcmp(type,homeSpan.Accessories.back()->Services.back()->opt[i]->id);
+    valid=!strcmp(type,homeSpan.Accessories.back()->Services.back()->opt[i]->type);
 
   if(!valid){
     homeSpan.configLog+=" *** ERROR!  Service does not support this Characteristic. ***";
@@ -1500,64 +1502,7 @@ SpanCharacteristic::SpanCharacteristic(const char *type, uint8_t perms, const ch
 
   homeSpan.Accessories.back()->Services.back()->Characteristics.push_back(this);  
 
-  homeSpan.configLog+="\n";
-
-}
-
-///////////////////////////////
-
-SpanCharacteristic::SpanCharacteristic(const  char *type, uint8_t perms, boolean value, const char *hapName) : SpanCharacteristic(type, perms, hapName) {
-  this->format=BOOL;
-  this->value.BOOL=value;
-}
-
-///////////////////////////////
-
-SpanCharacteristic::SpanCharacteristic(const char *type, uint8_t perms, int32_t value, const char *hapName) : SpanCharacteristic(type, perms, hapName) {
-  this->format=INT;
-  this->value.INT=value;
-}
-
-///////////////////////////////
-
-SpanCharacteristic::SpanCharacteristic(const char *type, uint8_t perms, uint8_t value, const char *hapName) : SpanCharacteristic(type, perms, hapName) {
-  this->format=UINT8;
-  this->value.UINT8=value;
-}
-
-///////////////////////////////
-
-SpanCharacteristic::SpanCharacteristic(const char *type, uint8_t perms, uint16_t value, const char *hapName) : SpanCharacteristic(type, perms, hapName) {
-  this->format=UINT16;
-  this->value.UINT16=value;
-}
-
-///////////////////////////////
-
-SpanCharacteristic::SpanCharacteristic(const char *type, uint8_t perms, uint32_t value, const char *hapName) : SpanCharacteristic(type, perms, hapName) {
-  this->format=UINT32;
-  this->value.UINT32=value;
-}
-
-///////////////////////////////
-
-SpanCharacteristic::SpanCharacteristic(const char *type, uint8_t perms, uint64_t value, const char *hapName) : SpanCharacteristic(type, perms, hapName) {
-  this->format=UINT64;
-  this->value.UINT64=value;
-}
-
-///////////////////////////////
-
-SpanCharacteristic::SpanCharacteristic(const char *type, uint8_t perms, double value, const char *hapName) : SpanCharacteristic(type, perms, hapName) {
-  this->format=FLOAT;
-  this->value.FLOAT=value;
-}
-
-///////////////////////////////
-
-SpanCharacteristic::SpanCharacteristic(const char *type, uint8_t perms, const char* value, const char *hapName) : SpanCharacteristic(type, perms, hapName) {
-  this->format=STRING;
-  this->value.STRING=value;
+  homeSpan.configLog+="\n"; 
 }
 
 ///////////////////////////////

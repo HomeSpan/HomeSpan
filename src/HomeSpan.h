@@ -39,6 +39,7 @@
 #include "Network.h"
 #include "HAPConstants.h"
 #include "HapQR.h"
+#include "Characteristics.h"
 
 using std::vector;
 using std::unordered_map;
@@ -52,17 +53,6 @@ enum {
   GET_DESC=32,
   GET_NV=64,
   GET_ALL=255
-};
-
-enum FORMAT {   // HAP Table 6-5
-  BOOL,
-  UINT8,
-  UINT16,
-  UINT32,
-  UINT64,
-  INT,
-  FLOAT,
-  STRING
 };
 
 union UVal {                                  
@@ -222,8 +212,6 @@ struct Span{
   vector<SpanButton *> PushButtons;                 // vector of pointer to all PushButtons
   unordered_map<uint64_t, uint32_t> TimedWrites;    // map of timed-write PIDs and Alarm Times (based on TTLs)
 
-  HapCharList chr;                                  // list of all HAP Characteristics
-
   void begin(Category catID=DEFAULT_CATEGORY,
              const char *displayName=DEFAULT_DISPLAY_NAME,
              const char *hostNameBase=DEFAULT_HOST_NAME,
@@ -289,8 +277,8 @@ struct SpanService{
   boolean hidden=false;                                   // optional property indicating service is hidden
   boolean primary=false;                                  // optional property indicating service is primary
   vector<SpanCharacteristic *> Characteristics;           // vector of pointers to all Characteristics in this Service  
-  vector<HapCharType *> req;                              // vector of pointers to all required HAP Characteristic Types for this Service
-  vector<HapCharType *> opt;                              // vector of pointers to all optional HAP Characteristic Types for this Service
+  vector<HapChar *> req;                                  // vector of pointers to all required HAP Characteristic Types for this Service
+  vector<HapChar *> opt;                                  // vector of pointers to all optional HAP Characteristic Types for this Service
   vector<SpanService *> linkedServices;                   // vector of pointers to any optional linked Services
   
   SpanService(const char *type, const char *hapName);
@@ -311,17 +299,6 @@ struct SpanService{
 
 struct SpanCharacteristic{
 
-  enum {          // create bitflags based on HAP Table 6-4
-    PR=1,
-    PW=2,
-    EV=4,
-    AA=8,
-    TW=16,
-    HD=32,
-    WR=64,
-    NV=128
-  };
-     
   int iid=0;                               // Instance ID (HAP Table 6-3)
   const char *type;                        // Characteristic Type
   const char *hapName;                     // HAP Name
@@ -338,15 +315,11 @@ struct SpanCharacteristic{
   UVal newValue;                           // the updated value requested by PUT /characteristic
   SpanService *service=NULL;               // pointer to Service containing this Characteristic
       
-  SpanCharacteristic(const char *type, uint8_t perms, const char *hapName);
-  SpanCharacteristic(const char *type, uint8_t perms, boolean value, const char *hapName);
-  SpanCharacteristic(const char *type, uint8_t perms, uint8_t value, const char *hapName);
-  SpanCharacteristic(const char *type, uint8_t perms, uint16_t value, const char *hapName);
-  SpanCharacteristic(const char *type, uint8_t perms, uint32_t value, const char *hapName);
-  SpanCharacteristic(const char *type, uint8_t perms, uint64_t value, const char *hapName);
-  SpanCharacteristic(const char *type, uint8_t perms, int32_t value, const char *hapName);
-  SpanCharacteristic(const char *type, uint8_t perms, double value, const char *hapName);
-  SpanCharacteristic(const char *type, uint8_t perms, const char* value, const char *hapName);
+  SpanCharacteristic(HapChar *hapChar);    // contructor
+
+  template <typename T> void init(T val){
+    value.set(format,val);
+  }
 
   int sprintfAttributes(char *cBuf, int flags);   // prints Characteristic JSON records into buf, according to flags mask; return number of characters printed, excluding null terminator  
   StatusCode loadUpdate(char *val, char *ev);     // load updated val/ev from PUT /characteristic JSON request.  Return intiial HAP status code (checks to see if characteristic is found, is writable, etc.)

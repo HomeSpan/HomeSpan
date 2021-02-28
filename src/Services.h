@@ -24,15 +24,15 @@
  *  SOFTWARE.
  *  
  ********************************************************************************/
- 
+
 ///////////////////////////////////
 // SPAN SERVICES (HAP Chapter 8) //
 ///////////////////////////////////
 
 // Macros to define vectors of required and optional characteristics for each Span Service structure
 
-#define REQ(name) req.push_back(&homeSpan.chr.name)
-#define OPT(name) opt.push_back(&homeSpan.chr.name)
+#define REQ(HAPCHAR) req.push_back(&hapChars.HAPCHAR)
+#define OPT(HAPCHAR) opt.push_back(&hapChars.HAPCHAR)
 
 namespace Service {
 
@@ -381,109 +381,116 @@ namespace Service {
 // SPAN CHARACTERISTICS (HAP Chapter 9) //
 //////////////////////////////////////////
 
-// Macro to define Span Characteristic structures based on name of HAP Characteristic (see HAPConstants.h), its type (e.g. int, double) and its default value
+// Macro to define Span Characteristic structures based on name of HAP Characteristic, default value, and mix/max value (not applicable for STRING)
 
-#define CREATE_CHAR(CHR,TYPE,DEFVAL) struct CHR : SpanCharacteristic { CHR(TYPE value=DEFVAL) : SpanCharacteristic{homeSpan.chr.CHR.id, homeSpan.chr.CHR.perms,(TYPE)value, homeSpan.chr.CHR.name}{} }
+#define CREATE_CHAR_FLOAT(HAPCHAR,DEFVAL) struct HAPCHAR : SpanCharacteristic { HAPCHAR(double val=DEFVAL) : SpanCharacteristic {&hapChars.HAPCHAR} { init(val); } };
+#define CREATE_CHAR_INT(HAPCHAR,DEFVAL) struct HAPCHAR : SpanCharacteristic { HAPCHAR(int val=DEFVAL) : SpanCharacteristic {&hapChars.HAPCHAR} { init(val); } };
+#define CREATE_CHAR_UINT8(HAPCHAR,DEFVAL) struct HAPCHAR : SpanCharacteristic { HAPCHAR(uint8_t val=DEFVAL) : SpanCharacteristic {&hapChars.HAPCHAR} { init(val); } };
+#define CREATE_CHAR_UINT16(HAPCHAR,DEFVAL) struct HAPCHAR : SpanCharacteristic { HAPCHAR(uint16_t val=DEFVAL) : SpanCharacteristic {&hapChars.HAPCHAR} { init(val); } };
+#define CREATE_CHAR_UINT32(HAPCHAR,DEFVAL) struct HAPCHAR : SpanCharacteristic { HAPCHAR(uint32_t val=DEFVAL) : SpanCharacteristic {&hapChars.HAPCHAR} { init(val); } };
+#define CREATE_CHAR_UINT64(HAPCHAR,DEFVAL) struct HAPCHAR : SpanCharacteristic { HAPCHAR(uint64_t val=DEFVAL) : SpanCharacteristic {&hapChars.HAPCHAR} { init(val); } };
+#define CREATE_CHAR_BOOL(HAPCHAR,DEFVAL) struct HAPCHAR : SpanCharacteristic { HAPCHAR(boolean val=DEFVAL) : SpanCharacteristic {&hapChars.HAPCHAR} { init(val); } };
+#define CREATE_CHAR_STRING(HAPCHAR,DEFVAL) struct HAPCHAR : SpanCharacteristic { HAPCHAR(const char *val=DEFVAL) : SpanCharacteristic {&hapChars.HAPCHAR} { value.STRING=val; } };
 
 namespace Characteristic {
-  
-  CREATE_CHAR(Active,uint8_t,0);
-  CREATE_CHAR(AirQuality,uint8_t,0);
-  CREATE_CHAR(BatteryLevel,uint8_t,0);
-  CREATE_CHAR(Brightness,int,0);
-  CREATE_CHAR(CarbonMonoxideLevel,double,0);
-  CREATE_CHAR(CarbonMonoxidePeakLevel,double,0);
-  CREATE_CHAR(CarbonMonoxideDetected,uint8_t,0);
-  CREATE_CHAR(CarbonDioxideLevel,double,0);
-  CREATE_CHAR(CarbonDioxidePeakLevel,double,0);
-  CREATE_CHAR(CarbonDioxideDetected,uint8_t,0);
-  CREATE_CHAR(ChargingState,uint8_t,0);
-  CREATE_CHAR(CoolingThresholdTemperature,double,10); 
-  CREATE_CHAR(ColorTemperature,uint32_t,200);
-  CREATE_CHAR(ContactSensorState,uint8_t,1);
-  CREATE_CHAR(CurrentAmbientLightLevel,double,1);
-  CREATE_CHAR(CurrentHorizontalTiltAngle,int,0);
-  CREATE_CHAR(CurrentAirPurifierState,uint8_t,1);
-  CREATE_CHAR(CurrentSlatState,uint8_t,0);
-  CREATE_CHAR(CurrentPosition,uint8_t,0);
-  CREATE_CHAR(CurrentVerticalTiltAngle,int,0);
-  CREATE_CHAR(CurrentHumidifierDehumidifierState,uint8_t,1);
-  CREATE_CHAR(CurrentDoorState,uint8_t,1);
-  CREATE_CHAR(CurrentFanState,uint8_t,1);
-  CREATE_CHAR(CurrentHeatingCoolingState,uint8_t,0);
-  CREATE_CHAR(CurrentHeaterCoolerState,uint8_t,1);
-  CREATE_CHAR(CurrentRelativeHumidity,double,0);
-  CREATE_CHAR(CurrentTemperature,double,0);
-  CREATE_CHAR(CurrentTiltAngle,int,0);
-  CREATE_CHAR(FilterLifeLevel,double,0);
-  CREATE_CHAR(FilterChangeIndication,uint8_t,0);
-  CREATE_CHAR(FirmwareRevision,const char *,"1.0.0");
-  CREATE_CHAR(HardwareRevision,const char *,"1.0.0");
-  CREATE_CHAR(HeatingThresholdTemperature,double,16);
-  CREATE_CHAR(HoldPosition,boolean,false);
-  CREATE_CHAR(Hue,double,0);
-  CREATE_CHAR(Identify,boolean,false);
-  CREATE_CHAR(InUse,uint8_t,0);
-  CREATE_CHAR(IsConfigured,uint8_t,0);
-  CREATE_CHAR(LeakDetected,uint8_t,0);
-  CREATE_CHAR(LockCurrentState,uint8_t,0);
-  CREATE_CHAR(LockPhysicalControls,uint8_t,0);
-  CREATE_CHAR(LockTargetState,uint8_t,0);
-  CREATE_CHAR(Manufacturer,const char *,"HomeSpan");
-  CREATE_CHAR(Model,const char *,"HomeSpan-ESP32");
-  CREATE_CHAR(MotionDetected,boolean,false);
-  CREATE_CHAR(Mute,boolean,false);
-  CREATE_CHAR(Name,const char *,"unnamed");
-  CREATE_CHAR(NitrogenDioxideDensity,double,0);
-  CREATE_CHAR(ObstructionDetected,boolean,false);
-  CREATE_CHAR(PM25Density,double,0);
-  CREATE_CHAR(OccupancyDetected,uint8_t,0);
-  CREATE_CHAR(OutletInUse,boolean,false);
-  CREATE_CHAR(On,boolean,false);
-  CREATE_CHAR(OzoneDensity,double,0);
-  CREATE_CHAR(PM10Density,double,0);
-  CREATE_CHAR(PositionState,uint8_t,2);
-  CREATE_CHAR(ProgramMode,uint8_t,0);
-  CREATE_CHAR(ProgrammableSwitchEvent,uint8_t,0);
-  CREATE_CHAR(RelativeHumidityDehumidifierThreshold,double,50);
-  CREATE_CHAR(RelativeHumidityHumidifierThreshold,double,50);
-  CREATE_CHAR(RemainingDuration,uint32_t,60);
-  CREATE_CHAR(ResetFilterIndication,uint8_t,0);
-  CREATE_CHAR(RotationDirection,int,0);
-  CREATE_CHAR(RotationSpeed,double,0);
-  CREATE_CHAR(Saturation,double,0);
-  CREATE_CHAR(SecuritySystemAlarmType,uint8_t,0);
-  CREATE_CHAR(SecuritySystemCurrentState,uint8_t,3);
-  CREATE_CHAR(SecuritySystemTargetState,uint8_t,3); 
-  CREATE_CHAR(SerialNumber,const char *,"HS-12345");
-  CREATE_CHAR(ServiceLabelIndex,uint8_t,1);
-  CREATE_CHAR(ServiceLabelNamespace,uint8_t,1);
-  CREATE_CHAR(SlatType,uint8_t,0);
-  CREATE_CHAR(SmokeDetected,uint8_t,0);
-  CREATE_CHAR(StatusActive,boolean,true);
-  CREATE_CHAR(StatusFault,uint8_t,0);
-  CREATE_CHAR(StatusJammed,uint8_t,0);
-  CREATE_CHAR(StatusLowBattery,uint8_t,0);
-  CREATE_CHAR(StatusTampered,uint8_t,0);
-  CREATE_CHAR(SulphurDioxideDensity,double,0);
-  CREATE_CHAR(SwingMode,uint8_t,0);
-  CREATE_CHAR(TargetAirPurifierState,uint8_t,1);
-  CREATE_CHAR(TargetFanState,uint8_t,1);
-  CREATE_CHAR(TargetTiltAngle,int,0);
-  CREATE_CHAR(SetDuration,uint32_t,60);
-  CREATE_CHAR(TargetHorizontalTiltAngle,int,0);
-  CREATE_CHAR(TargetHumidifierDehumidifierState,uint8_t,0);
-  CREATE_CHAR(TargetPosition,uint8_t,0);
-  CREATE_CHAR(TargetDoorState,uint8_t,1);
-  CREATE_CHAR(TargetHeatingCoolingState,uint8_t,0);
-  CREATE_CHAR(TargetRelativeHumidity,double,0);
-  CREATE_CHAR(TargetTemperature,double,16);
-  CREATE_CHAR(TemperatureDisplayUnits,uint8_t,0);
-  CREATE_CHAR(TargetVerticalTiltAngle,int,0);
-  CREATE_CHAR(ValveType,uint8_t,0);
-  CREATE_CHAR(Version,const char *,"1.0.0");
-  CREATE_CHAR(VOCDensity,double,0);
-  CREATE_CHAR(Volume,uint8_t,0);
-  CREATE_CHAR(WaterLevel,double,0);
 
+  CREATE_CHAR_UINT8(Active,0);
+  CREATE_CHAR_UINT8(AirQuality,0);
+  CREATE_CHAR_UINT8(BatteryLevel,0);
+  CREATE_CHAR_INT(Brightness,0);
+  CREATE_CHAR_FLOAT(CarbonMonoxideLevel,0);
+  CREATE_CHAR_FLOAT(CarbonMonoxidePeakLevel,0);
+  CREATE_CHAR_UINT8(CarbonMonoxideDetected,0);
+  CREATE_CHAR_FLOAT(CarbonDioxideLevel,0);
+  CREATE_CHAR_FLOAT(CarbonDioxidePeakLevel,0);
+  CREATE_CHAR_UINT8(CarbonDioxideDetected,0);
+  CREATE_CHAR_UINT8(ChargingState,0);
+  CREATE_CHAR_FLOAT(CoolingThresholdTemperature,10); 
+  CREATE_CHAR_UINT32(ColorTemperature,200);
+  CREATE_CHAR_UINT8(ContactSensorState,1);
+  CREATE_CHAR_FLOAT(CurrentAmbientLightLevel,1);
+  CREATE_CHAR_INT(CurrentHorizontalTiltAngle,0);
+  CREATE_CHAR_UINT8(CurrentAirPurifierState,1);
+  CREATE_CHAR_UINT8(CurrentSlatState,0);
+  CREATE_CHAR_UINT8(CurrentPosition,0);
+  CREATE_CHAR_INT(CurrentVerticalTiltAngle,0);
+  CREATE_CHAR_UINT8(CurrentHumidifierDehumidifierState,1);
+  CREATE_CHAR_UINT8(CurrentDoorState,1);
+  CREATE_CHAR_UINT8(CurrentFanState,1);
+  CREATE_CHAR_UINT8(CurrentHeatingCoolingState,0);
+  CREATE_CHAR_UINT8(CurrentHeaterCoolerState,1);
+  CREATE_CHAR_FLOAT(CurrentRelativeHumidity,0);
+  CREATE_CHAR_FLOAT(CurrentTemperature,0);
+  CREATE_CHAR_INT(CurrentTiltAngle,0);
+  CREATE_CHAR_FLOAT(FilterLifeLevel,0);
+  CREATE_CHAR_UINT8(FilterChangeIndication,0);
+  CREATE_CHAR_STRING(FirmwareRevision,"1.0.0");
+  CREATE_CHAR_STRING(HardwareRevision,"1.0.0");
+  CREATE_CHAR_FLOAT(HeatingThresholdTemperature,16);
+  CREATE_CHAR_BOOL(HoldPosition,false);
+  CREATE_CHAR_FLOAT(Hue,0);
+  CREATE_CHAR_BOOL(Identify,false);
+  CREATE_CHAR_UINT8(InUse,0);
+  CREATE_CHAR_UINT8(IsConfigured,0);
+  CREATE_CHAR_UINT8(LeakDetected,0);
+  CREATE_CHAR_UINT8(LockCurrentState,0);
+  CREATE_CHAR_UINT8(LockPhysicalControls,0);
+  CREATE_CHAR_UINT8(LockTargetState,0);
+  CREATE_CHAR_STRING(Manufacturer,"HomeSpan");
+  CREATE_CHAR_STRING(Model,"HomeSpan-ESP32");
+  CREATE_CHAR_BOOL(MotionDetected,false);
+  CREATE_CHAR_BOOL(Mute,false);
+  CREATE_CHAR_STRING(Name,"unnamed");
+  CREATE_CHAR_FLOAT(NitrogenDioxideDensity,0);
+  CREATE_CHAR_BOOL(ObstructionDetected,false);
+  CREATE_CHAR_FLOAT(PM25Density,0);
+  CREATE_CHAR_UINT8(OccupancyDetected,0);
+  CREATE_CHAR_BOOL(OutletInUse,false);
+  CREATE_CHAR_BOOL(On,false);
+  CREATE_CHAR_FLOAT(OzoneDensity,0);
+  CREATE_CHAR_FLOAT(PM10Density,0);
+  CREATE_CHAR_UINT8(PositionState,2);
+  CREATE_CHAR_UINT8(ProgramMode,0);
+  CREATE_CHAR_UINT8(ProgrammableSwitchEvent,0);
+  CREATE_CHAR_FLOAT(RelativeHumidityDehumidifierThreshold,50);
+  CREATE_CHAR_FLOAT(RelativeHumidityHumidifierThreshold,50);
+  CREATE_CHAR_UINT32(RemainingDuration,60);
+  CREATE_CHAR_UINT8(ResetFilterIndication,0);
+  CREATE_CHAR_INT(RotationDirection,0);
+  CREATE_CHAR_FLOAT(RotationSpeed,0);
+  CREATE_CHAR_FLOAT(Saturation,0);
+  CREATE_CHAR_UINT8(SecuritySystemAlarmType,0);
+  CREATE_CHAR_UINT8(SecuritySystemCurrentState,3);
+  CREATE_CHAR_UINT8(SecuritySystemTargetState,3); 
+  CREATE_CHAR_STRING(SerialNumber,"HS-12345");
+  CREATE_CHAR_UINT8(ServiceLabelIndex,1);
+  CREATE_CHAR_UINT8(ServiceLabelNamespace,1);
+  CREATE_CHAR_UINT8(SlatType,0);
+  CREATE_CHAR_UINT8(SmokeDetected,0);
+  CREATE_CHAR_BOOL(StatusActive,true);
+  CREATE_CHAR_UINT8(StatusFault,0);
+  CREATE_CHAR_UINT8(StatusJammed,0);
+  CREATE_CHAR_UINT8(StatusLowBattery,0);
+  CREATE_CHAR_UINT8(StatusTampered,0);
+  CREATE_CHAR_FLOAT(SulphurDioxideDensity,0);
+  CREATE_CHAR_UINT8(SwingMode,0);
+  CREATE_CHAR_UINT8(TargetAirPurifierState,1);
+  CREATE_CHAR_UINT8(TargetFanState,1);
+  CREATE_CHAR_INT(TargetTiltAngle,0);
+  CREATE_CHAR_UINT32(SetDuration,60);
+  CREATE_CHAR_INT(TargetHorizontalTiltAngle,0);
+  CREATE_CHAR_UINT8(TargetHumidifierDehumidifierState,0);
+  CREATE_CHAR_UINT8(TargetPosition,0);
+  CREATE_CHAR_UINT8(TargetDoorState,1);
+  CREATE_CHAR_UINT8(TargetHeatingCoolingState,0);
+  CREATE_CHAR_FLOAT(TargetRelativeHumidity,0);
+  CREATE_CHAR_FLOAT(TargetTemperature,16);
+  CREATE_CHAR_UINT8(TemperatureDisplayUnits,0);
+  CREATE_CHAR_INT(TargetVerticalTiltAngle,0);
+  CREATE_CHAR_UINT8(ValveType,0);
+  CREATE_CHAR_STRING(Version,"1.0.0");
+  CREATE_CHAR_FLOAT(VOCDensity,0);
+  CREATE_CHAR_UINT8(Volume,0);
+  CREATE_CHAR_FLOAT(WaterLevel,0);
+  
 }
