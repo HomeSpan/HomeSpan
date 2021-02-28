@@ -390,7 +390,7 @@ namespace Service {
 #define CREATE_CHAR_UINT32(HAPCHAR,DEFVAL) struct HAPCHAR : SpanCharacteristic { HAPCHAR(uint32_t val=DEFVAL) : SpanCharacteristic {&hapChars.HAPCHAR} { init(val); } };
 #define CREATE_CHAR_UINT64(HAPCHAR,DEFVAL) struct HAPCHAR : SpanCharacteristic { HAPCHAR(uint64_t val=DEFVAL) : SpanCharacteristic {&hapChars.HAPCHAR} { init(val); } };
 #define CREATE_CHAR_BOOL(HAPCHAR,DEFVAL) struct HAPCHAR : SpanCharacteristic { HAPCHAR(boolean val=DEFVAL) : SpanCharacteristic {&hapChars.HAPCHAR} { init(val); } };
-#define CREATE_CHAR_STRING(HAPCHAR,DEFVAL) struct HAPCHAR : SpanCharacteristic { HAPCHAR(const char *val=DEFVAL) : SpanCharacteristic {&hapChars.HAPCHAR} { value.STRING=val; } };
+#define CREATE_CHAR_STRING(HAPCHAR,DEFVAL) struct HAPCHAR : SpanCharacteristic { HAPCHAR(const char *val=DEFVAL) : SpanCharacteristic {&hapChars.HAPCHAR} { init(val); } };
 
 namespace Characteristic {
 

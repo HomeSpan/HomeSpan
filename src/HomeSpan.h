@@ -65,6 +65,10 @@ union UVal {
   double FLOAT;
   const char *STRING;
 
+  void set(FORMAT fmt, const char *val){
+    STRING=val;
+  };
+
   template <typename T> void set(FORMAT fmt, T val){
 
     switch(fmt){
@@ -98,7 +102,7 @@ union UVal {
       break;
     }
   } // set()
-
+ 
   template <class T> T get(FORMAT fmt){
   
     switch(fmt){
@@ -125,7 +129,7 @@ union UVal {
         return((T) FLOAT);
         
       case FORMAT::STRING:
-        Serial.print("*** ERROR:  Can't use getVal() or getNewVal() for string Characteristics.\n\n");
+        Serial.print("\n*** WARNING:  Can't use getVal() or getNewVal() with string Characteristics.\n\n");
         return(0);
     }
 
@@ -331,6 +335,11 @@ struct SpanCharacteristic{
   template <class T=int> T getNewVal(){return(newValue.get<T>(format));}              // returns UVal newValue
     
   template <typename T> void setVal(T val){
+
+    if(format==STRING){
+      Serial.printf("\n*** WARNING:  Attempt to update Characteristic::%s(\"%s\") with setVal() ignored.  Can't update string characteristics once they are initialized!\n\n",hapName,value.STRING);
+      return;
+    }
     
     value.set(format, val);
     newValue.set(format, val);
@@ -382,4 +391,4 @@ struct SpanButton{
 /////////////////////////////////////////////////
 
 
-#include "Services.h"
+#include "Span.h"
