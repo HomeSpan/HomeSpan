@@ -383,7 +383,7 @@ namespace Service {
 
 // Macro to define Span Characteristic structures based on name of HAP Characteristic, default value, and mix/max value (not applicable for STRING)
 
-#define CREATE_CHAR_FLOAT(HAPCHAR,DEFVAL) struct HAPCHAR : SpanCharacteristic { HAPCHAR(double val=DEFVAL) : SpanCharacteristic {&hapChars.HAPCHAR} { init(val); } };
+#define CREATE_CHAR_FLOAT(HAPCHAR,DEFVAL,MINVAL,MAXVAL) struct HAPCHAR : SpanCharacteristic { HAPCHAR(double val=DEFVAL) : SpanCharacteristic {&hapChars.HAPCHAR} { init(val,(double)MINVAL,(double)MAXVAL); } };
 #define CREATE_CHAR_INT(HAPCHAR,DEFVAL) struct HAPCHAR : SpanCharacteristic { HAPCHAR(int val=DEFVAL) : SpanCharacteristic {&hapChars.HAPCHAR} { init(val); } };
 #define CREATE_CHAR_UINT8(HAPCHAR,DEFVAL) struct HAPCHAR : SpanCharacteristic { HAPCHAR(uint8_t val=DEFVAL) : SpanCharacteristic {&hapChars.HAPCHAR} { init(val); } };
 #define CREATE_CHAR_UINT16(HAPCHAR,DEFVAL) struct HAPCHAR : SpanCharacteristic { HAPCHAR(uint16_t val=DEFVAL) : SpanCharacteristic {&hapChars.HAPCHAR} { init(val); } };
@@ -398,17 +398,17 @@ namespace Characteristic {
   CREATE_CHAR_UINT8(AirQuality,0);
   CREATE_CHAR_UINT8(BatteryLevel,0);
   CREATE_CHAR_INT(Brightness,0);
-  CREATE_CHAR_FLOAT(CarbonMonoxideLevel,0);
-  CREATE_CHAR_FLOAT(CarbonMonoxidePeakLevel,0);
+  CREATE_CHAR_FLOAT(CarbonMonoxideLevel,0,0,100);
+  CREATE_CHAR_FLOAT(CarbonMonoxidePeakLevel,0,0,100);
   CREATE_CHAR_UINT8(CarbonMonoxideDetected,0);
-  CREATE_CHAR_FLOAT(CarbonDioxideLevel,0);
-  CREATE_CHAR_FLOAT(CarbonDioxidePeakLevel,0);
+  CREATE_CHAR_FLOAT(CarbonDioxideLevel,0,0,100000);
+  CREATE_CHAR_FLOAT(CarbonDioxidePeakLevel,0,0,100000);
   CREATE_CHAR_UINT8(CarbonDioxideDetected,0);
   CREATE_CHAR_UINT8(ChargingState,0);
-  CREATE_CHAR_FLOAT(CoolingThresholdTemperature,10); 
+  CREATE_CHAR_FLOAT(CoolingThresholdTemperature,10,10,35); 
   CREATE_CHAR_UINT32(ColorTemperature,200);
   CREATE_CHAR_UINT8(ContactSensorState,1);
-  CREATE_CHAR_FLOAT(CurrentAmbientLightLevel,1);
+  CREATE_CHAR_FLOAT(CurrentAmbientLightLevel,1,0.0001,100000);
   CREATE_CHAR_INT(CurrentHorizontalTiltAngle,0);
   CREATE_CHAR_UINT8(CurrentAirPurifierState,1);
   CREATE_CHAR_UINT8(CurrentSlatState,0);
@@ -419,16 +419,16 @@ namespace Characteristic {
   CREATE_CHAR_UINT8(CurrentFanState,1);
   CREATE_CHAR_UINT8(CurrentHeatingCoolingState,0);
   CREATE_CHAR_UINT8(CurrentHeaterCoolerState,1);
-  CREATE_CHAR_FLOAT(CurrentRelativeHumidity,0);
-  CREATE_CHAR_FLOAT(CurrentTemperature,0);
+  CREATE_CHAR_FLOAT(CurrentRelativeHumidity,0,0,100);
+  CREATE_CHAR_FLOAT(CurrentTemperature,0,0,100);
   CREATE_CHAR_INT(CurrentTiltAngle,0);
-  CREATE_CHAR_FLOAT(FilterLifeLevel,0);
+  CREATE_CHAR_FLOAT(FilterLifeLevel,0,0,100);
   CREATE_CHAR_UINT8(FilterChangeIndication,0);
   CREATE_CHAR_STRING(FirmwareRevision,"1.0.0");
   CREATE_CHAR_STRING(HardwareRevision,"1.0.0");
-  CREATE_CHAR_FLOAT(HeatingThresholdTemperature,16);
+  CREATE_CHAR_FLOAT(HeatingThresholdTemperature,16,0,25);
   CREATE_CHAR_BOOL(HoldPosition,false);
-  CREATE_CHAR_FLOAT(Hue,0);
+  CREATE_CHAR_FLOAT(Hue,0,0,360);
   CREATE_CHAR_BOOL(Identify,false);
   CREATE_CHAR_UINT8(InUse,0);
   CREATE_CHAR_UINT8(IsConfigured,0);
@@ -441,24 +441,24 @@ namespace Characteristic {
   CREATE_CHAR_BOOL(MotionDetected,false);
   CREATE_CHAR_BOOL(Mute,false);
   CREATE_CHAR_STRING(Name,"unnamed");
-  CREATE_CHAR_FLOAT(NitrogenDioxideDensity,0);
+  CREATE_CHAR_FLOAT(NitrogenDioxideDensity,0,0,1000);
   CREATE_CHAR_BOOL(ObstructionDetected,false);
-  CREATE_CHAR_FLOAT(PM25Density,0);
+  CREATE_CHAR_FLOAT(PM25Density,0,0,1000);
   CREATE_CHAR_UINT8(OccupancyDetected,0);
   CREATE_CHAR_BOOL(OutletInUse,false);
   CREATE_CHAR_BOOL(On,false);
-  CREATE_CHAR_FLOAT(OzoneDensity,0);
-  CREATE_CHAR_FLOAT(PM10Density,0);
+  CREATE_CHAR_FLOAT(OzoneDensity,0,0,1000);
+  CREATE_CHAR_FLOAT(PM10Density,0,0,1000);
   CREATE_CHAR_UINT8(PositionState,2);
   CREATE_CHAR_UINT8(ProgramMode,0);
   CREATE_CHAR_UINT8(ProgrammableSwitchEvent,0);
-  CREATE_CHAR_FLOAT(RelativeHumidityDehumidifierThreshold,50);
-  CREATE_CHAR_FLOAT(RelativeHumidityHumidifierThreshold,50);
+  CREATE_CHAR_FLOAT(RelativeHumidityDehumidifierThreshold,50,0,100);
+  CREATE_CHAR_FLOAT(RelativeHumidityHumidifierThreshold,50,0,100);
   CREATE_CHAR_UINT32(RemainingDuration,60);
   CREATE_CHAR_UINT8(ResetFilterIndication,0);
   CREATE_CHAR_INT(RotationDirection,0);
-  CREATE_CHAR_FLOAT(RotationSpeed,0);
-  CREATE_CHAR_FLOAT(Saturation,0);
+  CREATE_CHAR_FLOAT(RotationSpeed,0,0,100);
+  CREATE_CHAR_FLOAT(Saturation,0,0,100);
   CREATE_CHAR_UINT8(SecuritySystemAlarmType,0);
   CREATE_CHAR_UINT8(SecuritySystemCurrentState,3);
   CREATE_CHAR_UINT8(SecuritySystemTargetState,3); 
@@ -472,7 +472,7 @@ namespace Characteristic {
   CREATE_CHAR_UINT8(StatusJammed,0);
   CREATE_CHAR_UINT8(StatusLowBattery,0);
   CREATE_CHAR_UINT8(StatusTampered,0);
-  CREATE_CHAR_FLOAT(SulphurDioxideDensity,0);
+  CREATE_CHAR_FLOAT(SulphurDioxideDensity,0,0,1000);
   CREATE_CHAR_UINT8(SwingMode,0);
   CREATE_CHAR_UINT8(TargetAirPurifierState,1);
   CREATE_CHAR_UINT8(TargetFanState,1);
@@ -483,14 +483,14 @@ namespace Characteristic {
   CREATE_CHAR_UINT8(TargetPosition,0);
   CREATE_CHAR_UINT8(TargetDoorState,1);
   CREATE_CHAR_UINT8(TargetHeatingCoolingState,0);
-  CREATE_CHAR_FLOAT(TargetRelativeHumidity,0);
-  CREATE_CHAR_FLOAT(TargetTemperature,16);
+  CREATE_CHAR_FLOAT(TargetRelativeHumidity,0,0,100);
+  CREATE_CHAR_FLOAT(TargetTemperature,16,10,38);
   CREATE_CHAR_UINT8(TemperatureDisplayUnits,0);
   CREATE_CHAR_INT(TargetVerticalTiltAngle,0);
   CREATE_CHAR_UINT8(ValveType,0);
   CREATE_CHAR_STRING(Version,"1.0.0");
-  CREATE_CHAR_FLOAT(VOCDensity,0);
+  CREATE_CHAR_FLOAT(VOCDensity,0,0,1000);
   CREATE_CHAR_UINT8(Volume,0);
-  CREATE_CHAR_FLOAT(WaterLevel,0);
+  CREATE_CHAR_FLOAT(WaterLevel,0,0,100);
   
 }

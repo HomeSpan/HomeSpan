@@ -310,6 +310,8 @@ struct SpanCharacteristic{
   uint8_t perms;                           // Characteristic Permissions
   FORMAT format;                           // Characteristic Format        
   char *desc=NULL;                         // Characteristic Description (optional)
+  UVal minValue;                           // Characteristic minimum (not applicable for STRING)
+  UVal maxValue;                           // Characteristic maximum (not applicable for STRING)
   SpanRange *range=NULL;                   // Characteristic min/max/step; NULL = default values (optional)
   boolean *ev;                             // Characteristic Event Notify Enable (per-connection)
   
@@ -321,8 +323,10 @@ struct SpanCharacteristic{
       
   SpanCharacteristic(HapChar *hapChar);    // contructor
 
-  template <typename T> void init(T val){
+  template <typename T, typename A=boolean, typename B=boolean> void init(T val, A min=0, B max=1){
     value.set(format,val);
+    minValue.set(format,min);
+    maxValue.set(format,max);
   }
 
   int sprintfAttributes(char *cBuf, int flags);   // prints Characteristic JSON records into buf, according to flags mask; return number of characters printed, excluding null terminator  
@@ -337,10 +341,15 @@ struct SpanCharacteristic{
   template <typename T> void setVal(T val){
 
     if(format==STRING){
-      Serial.printf("\n*** WARNING:  Attempt to update Characteristic::%s(\"%s\") with setVal() ignored.  Can't update string characteristics once they are initialized!\n\n",hapName,value.STRING);
+      Serial.printf("\n*** WARNING:  Attempt to update Characteristic::%s(\"%s\") with setVal() ignored.  Can't update string Characteristics once they are initialized!\n\n",hapName,value.STRING);
       return;
     }
-    
+
+    if(val<minValue.get<T>(format) || val>maxValue.get<T>(format)){
+      Serial.printf("\n*** WARNING:  Attempt to update Characteristic::%s with setVal(%llg) is out of range [%llg,%llg].  This may cause device to become non-reponsive!\n\n",
+      hapName,(double)val,minValue.get<double>(format),maxValue.get<double>(format));
+    }
+   
     value.set(format, val);
     newValue.set(format, val);
       
