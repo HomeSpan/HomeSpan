@@ -1519,61 +1519,22 @@ int SpanCharacteristic::sprintfAttributes(char *cBuf, int flags){
   if(flags&GET_TYPE)  
     nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"type\":\"%s\"",type);
 
-  if(perms&PR){
-    
-    if(perms&NV && !(flags&GET_NV)){   
+  if(perms&PR){    
+    if(perms&NV && !(flags&GET_NV))
       nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"value\":null");
-    } else {
-      
-      switch(format){
-        case BOOL:
-          nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"value\":%s",value.BOOL?"true":"false");
-        break;
-    
-        case INT:
-          nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"value\":%d",value.INT);
-        break;
-    
-        case UINT8:
-          nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"value\":%u",value.UINT8);
-        break;
-          
-        case UINT16:
-          nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"value\":%u",value.UINT16);
-        break;
-          
-        case UINT32:
-          nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"value\":%u",value.UINT32);
-        break;
-          
-        case UINT64:
-          nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"value\":%llu",value.UINT64);
-        break;
-          
-        case FLOAT:
-          nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"value\":%lg",value.FLOAT);
-          if(customRange && (flags&GET_META)){
-            nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?128:0,",\"minValue\":%lg,\"maxValue\":%lg",minValue.FLOAT,maxValue.FLOAT);
-            if(stepValue.FLOAT>0)
-              nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?128:0,",\"minStep\":%lg",stepValue.FLOAT);
-          }
-        break;
-          
-        case STRING:
-          nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"value\":\"%s\"",value.STRING);
-        break;
-        
-      } // switch
-    } // print Characteristic value
-  } // permissions=PR
-
-
+    else
+      nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"value\":%s",uvPrint(value).c_str());      
+  }
 
   if(flags&GET_META){
     nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"format\":\"%s\"",formatCodes[format]);
     
-    if(range && (flags&GET_META))
-      nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?128:0,",\"minValue\":%d,\"maxValue\":%d,\"minStep\":%d",range->min,range->max,range->step);    
+    if(customRange && (flags&GET_META)){
+      nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?128:0,",\"minValue\":%s,\"maxValue\":%s",uvPrint(minValue).c_str(),uvPrint(maxValue).c_str());
+        
+      if(uvGet<float>(stepValue)>0)
+        nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?128:0,",\"minStep\":%s",uvPrint(stepValue).c_str());
+    }
   }
     
   if(desc && (flags&GET_DESC)){
@@ -1699,20 +1660,13 @@ unsigned long SpanCharacteristic::timeVal(){
 ///////////////////////////////
 
 SpanRange::SpanRange(int min, int max, int step){
-  this->min=min;
-  this->max=max;
-  this->step=step;
-
-  homeSpan.configLog+="------>SpanRange: " + String(min) + "/" + String(max) + "/" + String(step);
 
   if(homeSpan.Accessories.empty() || homeSpan.Accessories.back()->Services.empty() || homeSpan.Accessories.back()->Services.back()->Characteristics.empty() ){
-    homeSpan.configLog+=" *** ERROR!  Can't create new Range without a defined Characteristic! ***\n";
+    homeSpan.configLog+="------>SpanRange: *** ERROR!  Can't create new Range without a defined Characteristic! ***\n";
     homeSpan.nFatalErrors++;
-    return;
+  } else {
+    homeSpan.Accessories.back()->Services.back()->Characteristics.back()->setRange(min,max,step);
   }
-
-  homeSpan.configLog+="\n";    
-  homeSpan.Accessories.back()->Services.back()->Characteristics.back()->range=this;  
 }
 
 ///////////////////////////////

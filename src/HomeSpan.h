@@ -244,7 +244,6 @@ struct SpanCharacteristic{
   UVal maxValue;                           // Characteristic maximum (not applicable for STRING)
   UVal stepValue;                          // Characteristic step size (not applicable for STRING)
   boolean customRange=false;               // Flag for custom ranges
-  SpanRange *range=NULL;                   // Characteristic min/max/step; NULL = default values (optional)
   boolean *ev;                             // Characteristic Event Notify Enable (per-connection)
   
   uint32_t aid=0;                          // Accessory ID - passed through from Service containing this Characteristic
@@ -281,7 +280,8 @@ struct SpanCharacteristic{
         sprintf(c,"%llg",u.FLOAT);
         return(String(c));        
       case FORMAT::STRING:
-        return(String(u.STRING));
+        sprintf(c,"\"%s\"",u.STRING);
+        return(String(c));        
     } // switch
   } // str()
 
@@ -339,19 +339,38 @@ struct SpanCharacteristic{
   } // get()
     
   template <typename A, typename B, typename S=int> SpanCharacteristic *setRange(A min, B max, S step=0){
-    uvSet(minValue,min);
-    uvSet(maxValue,max);
-    uvSet(stepValue,step);  
-    customRange=true; 
-  }
 
+    char c[256];
+    homeSpan.configLog+="------>Range: ";     
+        
+    if(format==BOOL || format==STRING){     
+      sprintf(c,"*** ERROR!  Can't change range for STRING or BOOL Characteristics! ***\n",hapName);
+      homeSpan.nFatalErrors++;
+    } else {
+      
+      uvSet(minValue,min);
+      uvSet(maxValue,max);
+      uvSet(stepValue,step);  
+      customRange=true; 
+      
+      if(step>0)
+        sprintf(c,"%s/%s/%s\n",uvPrint(minValue),uvPrint(maxValue),uvPrint(stepValue));
+      else
+        sprintf(c,"%s/%s\n",uvPrint(minValue),uvPrint(maxValue));        
+    }
+    homeSpan.configLog+=c;         
+    return(this);
+    
+  } // setRange()
+    
   template <typename T, typename A=boolean, typename B=boolean> void init(T val, A min=0, B max=1){
     uvSet(value,val);
     uvSet(newValue,val);
     uvSet(minValue,min);
     uvSet(maxValue,max);
     uvSet(stepValue,0);
-  }
+    
+  } // init()
 
   template <class T=int> T getVal(){
     return(uvGet<T>(value));
@@ -364,7 +383,7 @@ struct SpanCharacteristic{
   template <typename T> void setVal(T val){
 
     if(format==STRING){
-      Serial.printf("\n*** WARNING:  Attempt to update Characteristic::%s(\"%s\") with setVal() ignored.  Can't update string Characteristics once they are initialized!\n\n",hapName,value.STRING);
+      Serial.printf("\n*** WARNING:  Attempt to update Characteristic::%s(\"%s\") with setVal() ignored.  Can't update STRING Characteristics once they are initialized!\n\n",hapName,value.STRING);
       return;
     }
 
@@ -385,17 +404,13 @@ struct SpanCharacteristic{
     sb.val=dummy;                           // set dummy "val" so that sprintfNotify knows to consider this "update"
     homeSpan.Notifications.push_back(sb);   // store SpanBuf in Notifications vector  
     
-  } // setValue
+  } // setVal()
   
 };
 
 ///////////////////////////////
 
 struct SpanRange{
-  int min;
-  int max;
-  int step;
-
   SpanRange(int min, int max, int step);
 };
 
