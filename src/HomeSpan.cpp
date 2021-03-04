@@ -1552,6 +1552,11 @@ int SpanCharacteristic::sprintfAttributes(char *cBuf, int flags){
           
         case FLOAT:
           nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"value\":%lg",value.FLOAT);
+          if(customRange && (flags&GET_META)){
+            nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?128:0,",\"minValue\":%lg,\"maxValue\":%lg",minValue.FLOAT,maxValue.FLOAT);
+            if(stepValue.FLOAT>0)
+              nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?128:0,",\"minStep\":%lg",stepValue.FLOAT);
+          }
         break;
           
         case STRING:
@@ -1561,6 +1566,8 @@ int SpanCharacteristic::sprintfAttributes(char *cBuf, int flags){
       } // switch
     } // print Characteristic value
   } // permissions=PR
+
+
 
   if(flags&GET_META){
     nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"format\":\"%s\"",formatCodes[format]);

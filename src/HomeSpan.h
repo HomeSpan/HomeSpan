@@ -55,88 +55,6 @@ enum {
   GET_ALL=255
 };
 
-union UVal {                                  
-  boolean BOOL;
-  uint8_t UINT8;
-  uint16_t UINT16;
-  uint32_t UINT32;
-  uint64_t UINT64;
-  int32_t INT;
-  double FLOAT;
-  const char *STRING;
-
-  void set(FORMAT fmt, const char *val){
-    STRING=val;
-  };
-
-  template <typename T> void set(FORMAT fmt, T val){
-
-    switch(fmt){
-     
-      case FORMAT::BOOL:
-        BOOL=(boolean)val;
-      break;
-
-      case FORMAT::INT:
-        INT=(int)val;
-      break;
-
-      case FORMAT::UINT8:
-        UINT8=(uint8_t)val;
-      break;
-
-      case FORMAT::UINT16:
-        UINT16=(uint16_t)val;
-      break;
-
-      case FORMAT::UINT32:
-        UINT32=(uint32_t)val;
-      break;
-
-      case FORMAT::UINT64:
-        UINT64=(uint64_t)val;
-      break;
-
-      case FORMAT::FLOAT:
-        FLOAT=(double)val;
-      break;
-    }
-  } // set()
- 
-  template <class T> T get(FORMAT fmt){
-  
-    switch(fmt){
-    
-      case FORMAT::BOOL:
-        return((T) BOOL);
-        
-      case FORMAT::INT:
-        return((T) INT);
-        
-      case FORMAT::UINT8:
-        return((T) UINT8);
-        
-      case FORMAT::UINT16:
-        return((T) UINT16);
-        
-      case FORMAT::UINT32:
-        return((T) UINT32);
-        
-      case FORMAT::UINT64:
-        return((T) UINT64);
-        
-      case FORMAT::FLOAT:
-        return((T) FLOAT);
-        
-      case FORMAT::STRING:
-        Serial.print("\n*** WARNING:  Can't use getVal() or getNewVal() with string Characteristics.\n\n");
-        return(0);
-    }
-
-  } // get()
-  
-};
-
 ///////////////////////////////
 
 // Forward-Declarations
@@ -289,7 +207,7 @@ struct SpanService{
 
   SpanService *setPrimary();                              // sets the Service Type to be primary and returns pointer to self
   SpanService *setHidden();                               // sets the Service Type to be hidden and returns pointer to self
-  SpanService *addLink(SpanService *svc);                 // adds svc as a Linked Service
+  SpanService *addLink(SpanService *svc);                 // adds svc as a Linked Service and returns pointer to self
 
   int sprintfAttributes(char *cBuf);                      // prints Service JSON records into buf; return number of characters printed, excluding null terminator
   void validate();                                        // error-checks Service
@@ -303,6 +221,18 @@ struct SpanService{
 
 struct SpanCharacteristic{
 
+
+  union UVal {                                  
+    boolean BOOL;
+    uint8_t UINT8;
+    uint16_t UINT16;
+    uint32_t UINT32;
+    uint64_t UINT64;
+    int32_t INT;
+    double FLOAT;
+    const char *STRING;
+  };
+
   int iid=0;                               // Instance ID (HAP Table 6-3)
   const char *type;                        // Characteristic Type
   const char *hapName;                     // HAP Name
@@ -312,6 +242,8 @@ struct SpanCharacteristic{
   char *desc=NULL;                         // Characteristic Description (optional)
   UVal minValue;                           // Characteristic minimum (not applicable for STRING)
   UVal maxValue;                           // Characteristic maximum (not applicable for STRING)
+  UVal stepValue;                          // Characteristic step size (not applicable for STRING)
+  boolean customRange=false;               // Flag for custom ranges
   SpanRange *range=NULL;                   // Characteristic min/max/step; NULL = default values (optional)
   boolean *ev;                             // Characteristic Event Notify Enable (per-connection)
   
@@ -321,22 +253,113 @@ struct SpanCharacteristic{
   UVal newValue;                           // the updated value requested by PUT /characteristic
   SpanService *service=NULL;               // pointer to Service containing this Characteristic
       
-  SpanCharacteristic(HapChar *hapChar);    // contructor
-
-  template <typename T, typename A=boolean, typename B=boolean> void init(T val, A min=0, B max=1){
-    value.set(format,val);
-    minValue.set(format,min);
-    maxValue.set(format,max);
-  }
-
+  SpanCharacteristic(HapChar *hapChar);           // contructor
+  
   int sprintfAttributes(char *cBuf, int flags);   // prints Characteristic JSON records into buf, according to flags mask; return number of characters printed, excluding null terminator  
   StatusCode loadUpdate(char *val, char *ev);     // load updated val/ev from PUT /characteristic JSON request.  Return intiial HAP status code (checks to see if characteristic is found, is writable, etc.)
   
-  boolean updated(){return(isUpdated);}                                             // returns isUpdated
-  unsigned long timeVal();                                                          // returns time elapsed (in millis) since value was last updated
+  boolean updated(){return(isUpdated);}           // returns isUpdated
+  unsigned long timeVal();                        // returns time elapsed (in millis) since value was last updated
+    
+  String uvPrint(UVal &u){
+    char c[64];
+    switch(format){
+      case FORMAT::BOOL:
+        return(String(u.BOOL));      
+      case FORMAT::INT:
+        return(String(u.INT));
+      case FORMAT::UINT8:
+        return(String(u.UINT8));        
+      case FORMAT::UINT16:
+        return(String(u.UINT16));        
+      case FORMAT::UINT32:
+        return(String(u.UINT32));        
+      case FORMAT::UINT64:
+        sprintf(c,"%llu",u.UINT64);
+        return(String(c));        
+      case FORMAT::FLOAT:
+        sprintf(c,"%llg",u.FLOAT);
+        return(String(c));        
+      case FORMAT::STRING:
+        return(String(u.STRING));
+    } // switch
+  } // str()
 
-  template <class T=int> T getVal(){return(value.get<T>(format));}                    // returns UVal value
-  template <class T=int> T getNewVal(){return(newValue.get<T>(format));}              // returns UVal newValue
+  void uvSet(UVal &u, const char *val){  
+    u.STRING=val;
+  }
+
+  template <typename T> void uvSet(UVal &u, T val){  
+    switch(format){
+      case FORMAT::BOOL:
+        u.BOOL=(boolean)val;
+      break;
+      case FORMAT::INT:
+        u.INT=(int)val;
+      break;
+      case FORMAT::UINT8:
+        u.UINT8=(uint8_t)val;
+      break;
+      case FORMAT::UINT16:
+        u.UINT16=(uint16_t)val;
+      break;
+      case FORMAT::UINT32:
+        u.UINT32=(uint32_t)val;
+      break;
+      case FORMAT::UINT64:
+        u.UINT64=(uint64_t)val;
+      break;
+      case FORMAT::FLOAT:
+        u.FLOAT=(double)val;
+      break;
+    } // switch
+  } // set()
+ 
+  template <class T> T uvGet(UVal &u){
+  
+    switch(format){   
+      case FORMAT::BOOL:
+        return((T) u.BOOL);        
+      case FORMAT::INT:
+        return((T) u.INT);        
+      case FORMAT::UINT8:
+        return((T) u.UINT8);        
+      case FORMAT::UINT16:
+        return((T) u.UINT16);        
+      case FORMAT::UINT32:
+        return((T) u.UINT32);        
+      case FORMAT::UINT64:
+        return((T) u.UINT64);        
+      case FORMAT::FLOAT:
+        return((T) u.FLOAT);        
+      case FORMAT::STRING:
+        Serial.print("\n*** WARNING:  Can't use getVal() or getNewVal() with string Characteristics.\n\n");
+        return(0);
+    }
+  } // get()
+    
+  template <typename A, typename B, typename S=int> SpanCharacteristic *setRange(A min, B max, S step=0){
+    uvSet(minValue,min);
+    uvSet(maxValue,max);
+    uvSet(stepValue,step);  
+    customRange=true; 
+  }
+
+  template <typename T, typename A=boolean, typename B=boolean> void init(T val, A min=0, B max=1){
+    uvSet(value,val);
+    uvSet(newValue,val);
+    uvSet(minValue,min);
+    uvSet(maxValue,max);
+    uvSet(stepValue,0);
+  }
+
+  template <class T=int> T getVal(){
+    return(uvGet<T>(value));
+  }                    
+  
+  template <class T=int> T getNewVal(){
+    return(uvGet<T>(newValue));
+  }                    
     
   template <typename T> void setVal(T val){
 
@@ -345,13 +368,13 @@ struct SpanCharacteristic{
       return;
     }
 
-    if(val<minValue.get<T>(format) || val>maxValue.get<T>(format)){
+    if(val < uvGet<T>(minValue) || val > uvGet<T>(maxValue)){
       Serial.printf("\n*** WARNING:  Attempt to update Characteristic::%s with setVal(%llg) is out of range [%llg,%llg].  This may cause device to become non-reponsive!\n\n",
-      hapName,(double)val,minValue.get<double>(format),maxValue.get<double>(format));
+      hapName,(double)val,uvGet<double>(minValue),uvGet<double>(maxValue));
     }
    
-    value.set(format, val);
-    newValue.set(format, val);
+    uvSet(value,val);
+    uvSet(newValue,val);
       
     updateTime=homeSpan.snapTime;
     

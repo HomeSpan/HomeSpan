@@ -16,7 +16,8 @@ struct DEV_TempSensor : Service::TemperatureSensor {     // A standalone Tempera
     // of Celsius or Fahrenheit for each Service, it does not appear to work as advertised.
     
     temp=new Characteristic::CurrentTemperature(30.0);        // instantiate the Current Temperature Characteristic
-    new SpanRange(-50,100,1);                               // expand the range from the HAP default of 0-100 to -50 to 100 to allow for negative temperatures
+    //new SpanRange(-50,100,1);                               // expand the range from the HAP default of 0-100 to -50 to 100 to allow for negative temperatures
+    temp->setRange(-50,100,5.5);
     
     Serial.print("Configuring Temperature Sensor");           // initialization message
     Serial.print("\n");

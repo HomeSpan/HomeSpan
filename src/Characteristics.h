@@ -41,14 +41,14 @@ enum PERMS{       // create bitflags based on HAP Table 6-4
 };
 
 enum FORMAT {     // HAP Table 6-5
-  BOOL,
-  UINT8,
-  UINT16,
-  UINT32,
-  UINT64,
-  INT,
-  FLOAT,
-  STRING
+  BOOL=0,
+  UINT8=1,
+  UINT16=2,
+  UINT32=3,
+  UINT64=4,
+  INT=5,
+  FLOAT=6,
+  STRING=7
 };
 
 ///////////////////////////////
