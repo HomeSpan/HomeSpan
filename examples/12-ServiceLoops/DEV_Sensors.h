@@ -70,6 +70,8 @@ struct DEV_AirQualitySensor : Service::AirQualitySensor {     // A standalone Ai
     airQuality=new Characteristic::AirQuality(1);                         // instantiate the Air Quality Characteristic and set initial value to 1
     o3Density=new Characteristic::OzoneDensity(300.0);                    // instantiate the Ozone Density Characteristic and set initial value to 300.0
     no2Density=new Characteristic::NitrogenDioxideDensity(700.0);         // instantiate the Nitrogen Dioxide Density Characteristic and set initial value to 700.0
+        new SpanRange(300,500,2);
+
     
     Serial.print("Configuring Air Quality Sensor");   // initialization message
     Serial.print("\n");

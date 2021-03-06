@@ -342,7 +342,12 @@ struct SpanCharacteristic{
   template <typename A, typename B, typename S=int> SpanCharacteristic *setRange(A min, B max, S step=0){
 
     char c[256];
-    homeSpan.configLog+=String("------>Set Range for ") + String(hapName) + "-" + String(iid);     
+    homeSpan.configLog+=String("------>Set Range for ") + String(hapName) + "-" + String(iid);
+
+    if(customRange){
+      sprintf(c,"  *** ERROR!  Range already set for this Characteristic! ***\n");
+      homeSpan.nFatalErrors++;
+    } else 
         
     if(staticRange){     
       sprintf(c,"  *** ERROR!  Can't change range for this Characteristic! ***\n");
