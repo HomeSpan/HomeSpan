@@ -243,6 +243,7 @@ struct SpanCharacteristic{
   UVal minValue;                           // Characteristic minimum (not applicable for STRING)
   UVal maxValue;                           // Characteristic maximum (not applicable for STRING)
   UVal stepValue;                          // Characteristic step size (not applicable for STRING)
+  boolean staticRange;                     // Flag that indiates whether Range is static and cannot be changed with setRange()
   boolean customRange=false;               // Flag for custom ranges
   boolean *ev;                             // Characteristic Event Notify Enable (per-connection)
   
@@ -341,10 +342,10 @@ struct SpanCharacteristic{
   template <typename A, typename B, typename S=int> SpanCharacteristic *setRange(A min, B max, S step=0){
 
     char c[256];
-    homeSpan.configLog+="------>Range: ";     
+    homeSpan.configLog+=String("------>Set Range for ") + String(hapName) + "-" + String(iid);     
         
-    if(format==BOOL || format==STRING){     
-      sprintf(c,"*** ERROR!  Can't change range for STRING or BOOL Characteristics! ***\n",hapName);
+    if(staticRange){     
+      sprintf(c,"  *** ERROR!  Can't change range for this Characteristic! ***\n");
       homeSpan.nFatalErrors++;
     } else {
       
@@ -354,9 +355,9 @@ struct SpanCharacteristic{
       customRange=true; 
       
       if(step>0)
-        sprintf(c,"%s/%s/%s\n",uvPrint(minValue),uvPrint(maxValue),uvPrint(stepValue));
+        sprintf(c,": %s/%s/%s\n",uvPrint(minValue),uvPrint(maxValue),uvPrint(stepValue));
       else
-        sprintf(c,"%s/%s\n",uvPrint(minValue),uvPrint(maxValue));        
+        sprintf(c,": %s/%s\n",uvPrint(minValue),uvPrint(maxValue));        
     }
     homeSpan.configLog+=c;         
     return(this);
@@ -364,6 +365,7 @@ struct SpanCharacteristic{
   } // setRange()
     
   template <typename T, typename A=boolean, typename B=boolean> void init(T val, A min=0, B max=1){
+
     uvSet(value,val);
     uvSet(newValue,val);
     uvSet(minValue,min);

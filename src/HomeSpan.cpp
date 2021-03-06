@@ -1460,6 +1460,7 @@ SpanCharacteristic::SpanCharacteristic(HapChar *hapChar){
   perms=hapChar->perms;
   hapName=hapChar->hapName;
   format=hapChar->format;
+  staticRange=hapChar->staticRange;
 
   homeSpan.configLog+="---->Characteristic " + String(hapName);
 
