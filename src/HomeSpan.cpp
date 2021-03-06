@@ -1310,6 +1310,17 @@ void SpanAccessory::validate(){
       foundProtocol=true;
     else if(aid==1)                             // this is an Accessory with aid=1, but it has more than just AccessoryInfo and HAPProtocolInformation.  So...
       homeSpan.isBridge=false;                  // ...this is not a bridge device
+
+    for(int j=0;j<Services[i]->Characteristics.size();j++){       // check that initial values are all in range of mix/max (which may have been modified by setRange)
+      SpanCharacteristic *chr=Services[i]->Characteristics[j];
+
+      if(chr->format!=STRING && (chr->uvGet<double>(chr->value) < chr->uvGet<double>(chr->minValue) || chr->uvGet<double>(chr->value) > chr->uvGet<double>(chr->maxValue))){
+        char c[256];
+        sprintf(c,"    !Warning: Initial value of %lg for %s-%d is out of range [%llg,%llg].  This may cause device to be non-reponsive!\n",
+               chr->uvGet<double>(chr->value),chr->hapName,chr->iid,chr->uvGet<double>(chr->minValue),chr->uvGet<double>(chr->maxValue));
+        homeSpan.configLog+=c;
+      }       
+    }
   }
 
   if(!foundInfo){

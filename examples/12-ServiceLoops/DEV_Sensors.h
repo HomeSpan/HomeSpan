@@ -15,7 +15,7 @@ struct DEV_TempSensor : Service::TemperatureSensor {     // A standalone Tempera
     // Though the HAP documentation includes a Characteristic that appears to allow the device to over-ride this setting by specifying a display
     // of Celsius or Fahrenheit for each Service, it does not appear to work as advertised.
     
-    temp=new Characteristic::CurrentTemperature(30.0);        // instantiate the Current Temperature Characteristic
+    temp=new Characteristic::CurrentTemperature(-10.0);        // instantiate the Current Temperature Characteristic
     temp->setRange(-50,100);                                  // expand the range from the HAP default of 0-100 to -50 to 100 to allow for negative temperatures
         
     Serial.print("Configuring Temperature Sensor");           // initialization message
@@ -70,8 +70,6 @@ struct DEV_AirQualitySensor : Service::AirQualitySensor {     // A standalone Ai
     airQuality=new Characteristic::AirQuality(1);                         // instantiate the Air Quality Characteristic and set initial value to 1
     o3Density=new Characteristic::OzoneDensity(300.0);                    // instantiate the Ozone Density Characteristic and set initial value to 300.0
     no2Density=new Characteristic::NitrogenDioxideDensity(700.0);         // instantiate the Nitrogen Dioxide Density Characteristic and set initial value to 700.0
-        new SpanRange(300,500,2);
-
     
     Serial.print("Configuring Air Quality Sensor");   // initialization message
     Serial.print("\n");
