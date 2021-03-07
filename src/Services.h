@@ -475,6 +475,7 @@ namespace Characteristic {
   CREATE_CHAR(TargetHumidifierDehumidifierState,uint8_t,0);
   CREATE_CHAR(TargetPosition,uint8_t,0);
   CREATE_CHAR(TargetDoorState,uint8_t,1);
+  CREATE_CHAR(TargetHeaterCoolerState,uint8_t,0);
   CREATE_CHAR(TargetHeatingCoolingState,uint8_t,0);
   CREATE_CHAR(TargetRelativeHumidity,double,0);
   CREATE_CHAR(TargetTemperature,double,16);
