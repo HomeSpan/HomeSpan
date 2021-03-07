@@ -171,15 +171,16 @@ The following methods are supported:
   
 * `int timeVal()`
   * returns time elapsed (in millis) since value of the Characteristic was last updated (whether by `setVal()` or as the result of a successful update request from a HomeKit Controller)
+
+* `SpanCharacteristic *setRange(min, max, step)`
+  * overrides the default HAP range for a Characteristic with the *min*, *max*, and *step* values specified
+  * only applicable for Characteristics that support value ranges, else error is thrown
+  * can only set set once per Characteristic.  Calling setRange twice for the same Characteristic throws an error
+  * works with any integer or floating-based parameters, though HomeSpan will recast the values into the appropriate format for the Characteristic, which means if you specify *step*=0.5 for a UINT8 Characteristic, *step* will be truncated to zero
+  * *step* is an optional parameter.  If unspecified, or set to zero or a negative number, the default HAP step size remains unchanged
+  * Returns a pointer to the Characteristic itself so that the method can be chained during instantiation
+  * example: `(new Characteristic::Brightness(50))->setRange(10,100,5);`
   
-## *SpanRange(int min, int max, int step)*
-
-Creating an instance of this **class** overrides the default HAP range for a Characteristic with the *min*, *max*, and *step* values specified.
-
-* instantiated Ranges are added to the HomeSpan HAP Database and associated with the last Characteristic instantiated
-* instantiating a Range without first instantiating a Characteristic throws an error during initialization
-* example: `new Characteristic::Brightness(50); new SpanRange(10,100,5);`
-
 ## *SpanButton(int pin, uint16_t longTime, uint16_t singleTime, uint16_t doubleTime)*
 
 Creating an instance of this **class** attaches a pushbutton handler to the ESP32 *pin* specified.
@@ -213,6 +214,15 @@ If REQUIRED is defined in the main sketch prior to including the HomeSpan librar
 ```C++
 #define REQUIRED VERISON(2,1,3)   // throws a compile-time error unless HomeSpan library used is version 2.1.3 or later
 ```
+### *SpanRange(int min, int max, int step)*
+
+Creating an instance of this **class** overrides the default HAP range for a Characteristic with the *min*, *max*, and *step* values specified.
+
+* instantiated Ranges are added to the HomeSpan HAP Database and associated with the last Characteristic instantiated
+* instantiating a Range without first instantiating a Characteristic throws an error during initialization
+* example: `new Characteristic::Brightness(50); new SpanRange(10,100,5);`
+* **this is a legacy function that is limited to integer-based parameters, and has been re-coded to simply call the more generic `setRange(min, max, step)` method**
+* **please use setRange(min, max, step) for all new sketches**
 
 ---
 
