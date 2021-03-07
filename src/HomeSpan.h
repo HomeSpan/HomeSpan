@@ -359,7 +359,7 @@ struct SpanCharacteristic{
       uvSet(stepValue,step);  
       customRange=true; 
       
-      if(step>0)
+      if(uvGet<double>(stepValue)>0)
         sprintf(c,": %s/%s/%s\n",uvPrint(minValue),uvPrint(maxValue),uvPrint(stepValue));
       else
         sprintf(c,": %s/%s\n",uvPrint(minValue),uvPrint(maxValue));        

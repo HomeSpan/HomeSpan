@@ -71,11 +71,11 @@ struct DEV_WindowShade : Service::WindowCovering {     // A motorized Window Sha
 
   DEV_WindowShade() : Service::WindowCovering(){       // constructor() method
         
-    current=new Characteristic::CurrentPosition(0);     // Windows Shades have positions that range from 0 (fully lowered) to 100 (fully raised)
-    new SpanRange(0,100,10);                            // set the allowable current-position range to 0-100 IN STEPS of 10
+    current=new Characteristic::CurrentPosition(0);     // Window Shades have positions that range from 0 (fully lowered) to 100 (fully raised)
+    current->setRange(0,100,10);                        // set the allowable current-position range to 0-100 IN STEPS of 10
     
-    target=new Characteristic::TargetPosition(0);       // Windows Shades have positions that range from 0 (fully lowered) to 100 (fully raised)
-    new SpanRange(0,100,10);                            // set the allowable target-position range to 0-100 IN STEPS of 10
+    target=new Characteristic::TargetPosition(0);       // Window Shades have positions that range from 0 (fully lowered) to 100 (fully raised)
+    target->setRange(0,100,10);                         // set the allowable target-position range to 0-100 IN STEPS of 10
         
     Serial.print("Configuring Motorized Window Shade");   // initialization message
     Serial.print("\n");
