@@ -226,7 +226,7 @@ Creating an instance of this **class** overrides the default HAP range for a Cha
 * instantiating a Range without first instantiating a Characteristic throws an error during initialization
 * example: `new Characteristic::Brightness(50); new SpanRange(10,100,5);`
 * this is a legacy function that is limited to integer-based parameters, and has been re-coded to simply call the more generic `setRange(min, max, step)` method
-* **please use setRange(min, max, step) for all new sketches**
+* **please use** `setRange(min, max, step)` **for all new sketches**
 
 ---
 
