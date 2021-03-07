@@ -151,6 +151,7 @@ This is a **base class** from which all HomeSpan Characteristics are derived, an
 * instantiated Characteristics are added to the HomeSpan HAP Database and associated with the last Service instantiated
 * instantiating a Characteristic without first instantiating a Service throws an error during initialization
 * a single, optional argument is used to set the initial value of the Characteristic at startup
+* throws a runtime warning if value is outside of the min/max range for the Characteristic, where min/max is either the HAP default, or any new values set via a call to `setRange()`
 * example: `new Characteristic::Brightness(50);`
 
 The following methods are supported:
@@ -167,7 +168,8 @@ The following methods are supported:
   * returns *true* if a HomeKit Controller has requested an update to the value of the Characteristic, otherwise *false*.  The requested value itself can retrieved with `getNewVal<>()`
   
 * `void setVal(value)`
-  * sets the value of the Characteristic to *value*, and notifies all HomeKit Controllers of the change.  Works with any integer, boolean, or floating-based numerical value.
+  * sets the value of the Characteristic to *value*, and notifies all HomeKit Controllers of the change.  Works with any integer, boolean, or floating-based numerical value
+  * throws a runtime warning if value is outside of the min/max range for the Characteristic, where min/max is either the HAP default, or any new values set via a prior call to `setRange()`
   
 * `int timeVal()`
   * returns time elapsed (in millis) since value of the Characteristic was last updated (whether by `setVal()` or as the result of a successful update request from a HomeKit Controller)
