@@ -214,14 +214,16 @@ If REQUIRED is defined in the main sketch prior to including the HomeSpan librar
 ```C++
 #define REQUIRED VERISON(2,1,3)   // throws a compile-time error unless HomeSpan library used is version 2.1.3 or later
 ```
-### *SpanRange(int min, int max, int step)*
+---
+
+## *SpanRange(int min, int max, int step)*
 
 Creating an instance of this **class** overrides the default HAP range for a Characteristic with the *min*, *max*, and *step* values specified.
 
 * instantiated Ranges are added to the HomeSpan HAP Database and associated with the last Characteristic instantiated
 * instantiating a Range without first instantiating a Characteristic throws an error during initialization
 * example: `new Characteristic::Brightness(50); new SpanRange(10,100,5);`
-* **this is a legacy function that is limited to integer-based parameters, and has been re-coded to simply call the more generic `setRange(min, max, step)` method**
+* this is a legacy function that is limited to integer-based parameters, and has been re-coded to simply call the more generic `setRange(min, max, step)` method
 * **please use setRange(min, max, step) for all new sketches**
 
 ---
