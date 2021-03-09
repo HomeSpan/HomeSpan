@@ -168,8 +168,9 @@ The following methods are supported:
   * returns *true* if a HomeKit Controller has requested an update to the value of the Characteristic, otherwise *false*.  The requested value itself can retrieved with `getNewVal<>()`
   
 * `void setVal(value)`
-  * sets the value of the Characteristic to *value*, and notifies all HomeKit Controllers of the change.  Works with any integer, boolean, or floating-based numerical value
-  * throws a runtime warning if value is outside of the min/max range for the Characteristic, where min/max is either the HAP default, or any new values set via a prior call to `setRange()`
+  * sets the value of the Characteristic to *value*, and notifies all HomeKit Controllers of the change.  Works with any integer, boolean, or floating-based numerical *value*, though HomeSpan will convert *value* into the appropriate type for each Characteristic (e.g. value=5.5 is converted to 5 if used with an integer-based Characteristic)
+  * throws a runtime warning if *value* is outside of the min/max range for the Characteristic, where min/max is either the HAP default, or any new values set via a prior call to `setRange()`
+  * accepts any *value* within the allowed min/max range regardless of the setting of step size.  Step size is only used by the Home App to limit the increments of adjustment for sliders, and will use a rounded version of *value* for display purposes of the slider while retaining the actual numerical value internally 
   
 * `int timeVal()`
   * returns time elapsed (in millis) since value of the Characteristic was last updated (whether by `setVal()` or as the result of a successful update request from a HomeKit Controller)
