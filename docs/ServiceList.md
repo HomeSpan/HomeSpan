@@ -155,6 +155,7 @@ Additionally, when first starting up, HomeSpan begins by validating the device's
 |TargetHumidifierDehumidifierState|uint8_t|0|
 |TargetPosition|uint8_t|0|
 |TargetDoorState|uint8_t|1|
+|TargetHeaterCoolerState|uint8_t|0|
 |TargetHeatingCoolingState|uint8_t|0|
 |TargetRelativeHumidity|double|0|
 |TargetTemperature|double|16|
