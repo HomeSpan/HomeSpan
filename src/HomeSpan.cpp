@@ -1459,6 +1459,9 @@ void SpanService::validate(){
       homeSpan.configLog+=" *** WARNING!  Required Characteristic for this Service not found. ***\n";
     }
   }
+
+  vector<HapChar *>().swap(opt);
+  vector<HapChar *>().swap(req);
 }
 
 ///////////////////////////////
