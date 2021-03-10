@@ -365,7 +365,7 @@ namespace Service {
   struct WindowCovering : SpanService { WindowCovering() : SpanService{"8C","WindowCovering"}{
     REQ(TargetPosition);
     REQ(CurrentPosition);
-    OPT(PositionState);   
+    REQ(PositionState);   
     OPT(Name);
     OPT(HoldPosition);
     OPT(CurrentHorizontalTiltAngle);

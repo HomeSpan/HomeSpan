@@ -501,7 +501,7 @@ void Span::checkConnect(){
       Serial.print("\nAuthorization Password: ");
       Serial.print(otaAuth?"Enabled\n\n":"DISABLED!\n\n");
     } else {
-      Serial.print("\n*** Warning: Can't start OTA Server - Partition table used to compile this sketch is not configured for OTA.\n\n");
+      Serial.print("\n*** WARNING: Can't start OTA Server - Partition table used to compile this sketch is not configured for OTA.\n\n");
     }
   }
 
@@ -1316,7 +1316,7 @@ void SpanAccessory::validate(){
 
       if(chr->format!=STRING && (chr->uvGet<double>(chr->value) < chr->uvGet<double>(chr->minValue) || chr->uvGet<double>(chr->value) > chr->uvGet<double>(chr->maxValue))){
         char c[256];
-        sprintf(c,"    !Warning: Initial value of %lg for %s-%d is out of range [%llg,%llg].  This may cause device to be non-reponsive!\n",
+        sprintf(c,"    !WARNING: Initial value of %lg for %s-%d is out of range [%llg,%llg].  This may cause device to be non-reponsive!\n",
                chr->uvGet<double>(chr->value),chr->hapName,chr->iid,chr->uvGet<double>(chr->minValue),chr->uvGet<double>(chr->maxValue));
         homeSpan.configLog+=c;
       }       
@@ -1456,8 +1456,7 @@ void SpanService::validate(){
       
     if(!valid){
       homeSpan.configLog+="    !Characteristic " + String(req[i]->hapName);
-      homeSpan.configLog+=" *** ERROR!  Required Characteristic for this Service not found. ***\n";
-      homeSpan.nFatalErrors++;
+      homeSpan.configLog+=" *** WARNING!  Required Characteristic for this Service not found. ***\n";
     }
   }
 }
