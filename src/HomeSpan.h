@@ -100,6 +100,7 @@ struct Span{
   unsigned long snapTime;                       // current time (in millis) snapped before entering Service loops() or updates()
   boolean isInitialized=false;                  // flag indicating HomeSpan has been initialized
   int nFatalErrors=0;                           // number of fatal errors in user-defined configuration
+  int nWarnings=0;                              // number of warnings errors in user-defined configuration
   String configLog;                             // log of configuration process, including any errors
   boolean isBridge=true;                        // flag indicating whether device is configured as a bridge (i.e. first Accessory contains nothing but AccessoryInformation and HAPProtocolInformation)
   HapQR qrCode;                                 // optional QR Code to use for pairing
@@ -342,7 +343,7 @@ struct SpanCharacteristic{
   template <typename A, typename B, typename S=int> SpanCharacteristic *setRange(A min, B max, S step=0){
 
     char c[256];
-    homeSpan.configLog+=String("------>Set Range for ") + String(hapName) + "-" + String(iid);
+    homeSpan.configLog+=String("         \u2b0c Set Range for ") + String(hapName) + " with IID=" + String(iid);
 
     if(customRange){
       sprintf(c,"  *** ERROR!  Range already set for this Characteristic! ***\n");
@@ -360,9 +361,9 @@ struct SpanCharacteristic{
       customRange=true; 
       
       if(uvGet<double>(stepValue)>0)
-        sprintf(c,": %s/%s/%s\n",uvPrint(minValue),uvPrint(maxValue),uvPrint(stepValue));
+        sprintf(c,": Min=%s, Max=%s, Step=%s\n",uvPrint(minValue),uvPrint(maxValue),uvPrint(stepValue));
       else
-        sprintf(c,": %s/%s\n",uvPrint(minValue),uvPrint(maxValue));        
+        sprintf(c,": Min=%s, Max=%s\n",uvPrint(minValue),uvPrint(maxValue));        
     }
     homeSpan.configLog+=c;         
     return(this);
@@ -376,7 +377,38 @@ struct SpanCharacteristic{
     uvSet(minValue,min);
     uvSet(maxValue,max);
     uvSet(stepValue,0);
-    
+
+  homeSpan.configLog+="(" + uvPrint(value) + ")" + ":  IID=" + String(iid) + ", UUID=0x" + String(type);
+  if(format!=STRING && format!=BOOL)
+    homeSpan.configLog+= "  Range=[" + String(uvPrint(minValue)) + "," + String(uvPrint(maxValue)) + "]";
+
+  boolean valid=false;
+
+  for(int i=0; !valid && i<homeSpan.Accessories.back()->Services.back()->req.size(); i++)
+    valid=!strcmp(type,homeSpan.Accessories.back()->Services.back()->req[i]->type);
+
+  for(int i=0; !valid && i<homeSpan.Accessories.back()->Services.back()->opt.size(); i++)
+    valid=!strcmp(type,homeSpan.Accessories.back()->Services.back()->opt[i]->type);
+
+  if(!valid){
+    homeSpan.configLog+=" *** ERROR!  Service does not support this Characteristic. ***";
+    homeSpan.nFatalErrors++;
+  }
+
+  boolean repeated=false;
+  
+  for(int i=0; !repeated && i<homeSpan.Accessories.back()->Services.back()->Characteristics.size(); i++)
+    repeated=!strcmp(type,homeSpan.Accessories.back()->Services.back()->Characteristics[i]->type);
+  
+  if(valid && repeated){
+    homeSpan.configLog+=" *** ERROR!  Characteristic already defined for this Service. ***";
+    homeSpan.nFatalErrors++;
+  }
+
+  homeSpan.Accessories.back()->Services.back()->Characteristics.push_back(this);  
+
+  homeSpan.configLog+="\n"; 
+   
   } // init()
 
   template <class T=int> T getVal(){

@@ -121,6 +121,10 @@ void Span::poll() {
       homeSpan.Accessories.back()->validate();    
     }
 
+    if(nWarnings>0){
+      configLog+="\n*** CAUTION: There " + String((nWarnings>1?"are ":"is ")) + String(nWarnings) + " WARNING" + (nWarnings>1?"S":"") + " associated with this configuration that may lead to the device becoming non-responsive, or operating in an unexpected manner. ***\n";
+    }
+
     processSerialCommand("i");        // print homeSpan configuration info
    
     if(nFatalErrors>0){
@@ -842,7 +846,7 @@ void Span::processSerialCommand(const char *c){
       Serial.print("\n\n");
 
       char d[]="------------------------------";
-      Serial.printf("%-30s  %s  %10s  %s  %s  %s  %s  %s\n","Service","Type","AID","IID","Update","Loop","Button","Linked Services");
+      Serial.printf("%-30s  %s  %10s  %s  %s  %s  %s  %s\n","Service","UUID","AID","IID","Update","Loop","Button","Linked Services");
       Serial.printf("%.30s  %.4s  %.10s  %.3s  %.6s  %.4s  %.6s  %.15s\n",d,d,d,d,d,d,d,d);
       for(int i=0;i<Accessories.size();i++){                             // identify all services with over-ridden loop() methods
         for(int j=0;j<Accessories[i]->Services.size();j++){
@@ -1277,7 +1281,7 @@ SpanAccessory::SpanAccessory(uint32_t aid){
     this->aid=aid;
   }
 
-  homeSpan.configLog+="+Accessory-" + String(this->aid);
+  homeSpan.configLog+="\u27a4 Accessory:  AID=" + String(this->aid);
 
   for(int i=0;i<homeSpan.Accessories.size()-1;i++){
     if(this->aid==homeSpan.Accessories[i]->aid){
@@ -1316,21 +1320,22 @@ void SpanAccessory::validate(){
 
       if(chr->format!=STRING && (chr->uvGet<double>(chr->value) < chr->uvGet<double>(chr->minValue) || chr->uvGet<double>(chr->value) > chr->uvGet<double>(chr->maxValue))){
         char c[256];
-        sprintf(c,"    !WARNING: Initial value of %lg for %s-%d is out of range [%llg,%llg].  This may cause device to be non-reponsive!\n",
-               chr->uvGet<double>(chr->value),chr->hapName,chr->iid,chr->uvGet<double>(chr->minValue),chr->uvGet<double>(chr->maxValue));
+        sprintf(c,"      \u2718 Characteristic %s with IID=%d  *** WARNING: Initial value of %lg is out of range [%llg,%llg]. ***\n",
+               chr->hapName,chr->iid,chr->uvGet<double>(chr->value),chr->uvGet<double>(chr->minValue),chr->uvGet<double>(chr->maxValue));
         homeSpan.configLog+=c;
+        homeSpan.nWarnings++;
       }       
     }
   }
 
   if(!foundInfo){
-    homeSpan.configLog+="  !Service AccessoryInformation";
+    homeSpan.configLog+="   \u2718 Service AccessoryInformation";
     homeSpan.configLog+=" *** ERROR!  Required Service for this Accessory not found. ***\n";
     homeSpan.nFatalErrors++;
   }    
 
   if(!foundProtocol && (aid==1 || !homeSpan.isBridge)){           // HAPProtocolInformation must always be present in Accessory if aid=1, and any other Accessory if the device is not a bridge)
-    homeSpan.configLog+="  !Service HAPProtocolInformation";
+    homeSpan.configLog+="   \u2718 Service HAPProtocolInformation";
     homeSpan.configLog+=" *** ERROR!  Required Service for this Accessory not found. ***\n";
     homeSpan.nFatalErrors++;
   }    
@@ -1366,7 +1371,7 @@ SpanService::SpanService(const char *type, const char *hapName){
   this->type=type;
   this->hapName=hapName;
 
-  homeSpan.configLog+="-->Service " + String(hapName);
+  homeSpan.configLog+="   \u279f Service " + String(hapName);
   
   if(homeSpan.Accessories.empty()){
     homeSpan.configLog+=" *** ERROR!  Can't create new Service without a defined Accessory! ***\n";
@@ -1377,7 +1382,7 @@ SpanService::SpanService(const char *type, const char *hapName){
   homeSpan.Accessories.back()->Services.push_back(this);  
   iid=++(homeSpan.Accessories.back()->iidCount);  
 
-  homeSpan.configLog+="-" + String(iid) + String(" (") + String(type) + String(") ");
+  homeSpan.configLog+=":  IID=" + String(iid) + ", UUID=0x" + String(type);
 
   if(!strcmp(this->type,"3E") && iid!=1){
     homeSpan.configLog+=" *** ERROR!  The AccessoryInformation Service must be defined before any other Services in an Accessory. ***";
@@ -1455,8 +1460,9 @@ void SpanService::validate(){
       valid=!strcmp(req[i]->type,Characteristics[j]->type);
       
     if(!valid){
-      homeSpan.configLog+="    !Characteristic " + String(req[i]->hapName);
+      homeSpan.configLog+="      \u2718 Characteristic " + String(req[i]->hapName);
       homeSpan.configLog+=" *** WARNING!  Required Characteristic for this Service not found. ***\n";
+      homeSpan.nWarnings++;
     }
   }
 
@@ -1475,7 +1481,7 @@ SpanCharacteristic::SpanCharacteristic(HapChar *hapChar){
   format=hapChar->format;
   staticRange=hapChar->staticRange;
 
-  homeSpan.configLog+="---->Characteristic " + String(hapName);
+  homeSpan.configLog+="      \u21e8 Characteristic " + String(hapName);
 
   if(homeSpan.Accessories.empty() || homeSpan.Accessories.back()->Services.empty()){
     homeSpan.configLog+=" *** ERROR!  Can't create new Characteristic without a defined Service! ***\n";
@@ -1488,35 +1494,6 @@ SpanCharacteristic::SpanCharacteristic(HapChar *hapChar){
   aid=homeSpan.Accessories.back()->aid;
 
   ev=(boolean *)calloc(homeSpan.maxConnections,sizeof(boolean));
-
-  homeSpan.configLog+="-" + String(iid) + String(" (") + String(type) + String(") ");
-
-  boolean valid=false;
-
-  for(int i=0; !valid && i<homeSpan.Accessories.back()->Services.back()->req.size(); i++)
-    valid=!strcmp(type,homeSpan.Accessories.back()->Services.back()->req[i]->type);
-
-  for(int i=0; !valid && i<homeSpan.Accessories.back()->Services.back()->opt.size(); i++)
-    valid=!strcmp(type,homeSpan.Accessories.back()->Services.back()->opt[i]->type);
-
-  if(!valid){
-    homeSpan.configLog+=" *** ERROR!  Service does not support this Characteristic. ***";
-    homeSpan.nFatalErrors++;
-  }
-
-  boolean repeated=false;
-  
-  for(int i=0; !repeated && i<homeSpan.Accessories.back()->Services.back()->Characteristics.size(); i++)
-    repeated=!strcmp(type,homeSpan.Accessories.back()->Services.back()->Characteristics[i]->type);
-  
-  if(valid && repeated){
-    homeSpan.configLog+=" *** ERROR!  Characteristic already defined for this Service. ***";
-    homeSpan.nFatalErrors++;
-  }
-
-  homeSpan.Accessories.back()->Services.back()->Characteristics.push_back(this);  
-
-  homeSpan.configLog+="\n"; 
 }
 
 ///////////////////////////////
@@ -1676,7 +1653,7 @@ unsigned long SpanCharacteristic::timeVal(){
 SpanRange::SpanRange(int min, int max, int step){
 
   if(homeSpan.Accessories.empty() || homeSpan.Accessories.back()->Services.empty() || homeSpan.Accessories.back()->Services.back()->Characteristics.empty() ){
-    homeSpan.configLog+="------>SpanRange: *** ERROR!  Can't create new Range without a defined Characteristic! ***\n";
+    homeSpan.configLog+="    \u2718 SpanRange: *** ERROR!  Can't create new Range without a defined Characteristic! ***\n";
     homeSpan.nFatalErrors++;
   } else {
     homeSpan.Accessories.back()->Services.back()->Characteristics.back()->setRange(min,max,step);
@@ -1689,7 +1666,7 @@ SpanRange::SpanRange(int min, int max, int step){
 
 SpanButton::SpanButton(int pin, uint16_t longTime, uint16_t singleTime, uint16_t doubleTime){
 
-  homeSpan.configLog+="---->SpanButton: Pin=" + String(pin) + " Long/Single/Double=" + String(longTime) + "/" + String(singleTime) + "/" + String(doubleTime) + " ms";
+  homeSpan.configLog+="      \u25bc SpanButton: Pin=" + String(pin) + ", Single=" + String(singleTime) + "ms, Double=" + String(doubleTime) + "ms, Long=" + String(longTime) + "ms";
 
   if(homeSpan.Accessories.empty() || homeSpan.Accessories.back()->Services.empty()){
     homeSpan.configLog+=" *** ERROR!  Can't create new PushButton without a defined Service! ***\n";
@@ -1707,8 +1684,10 @@ SpanButton::SpanButton(int pin, uint16_t longTime, uint16_t singleTime, uint16_t
   this->doubleTime=doubleTime;
   service=homeSpan.Accessories.back()->Services.back();
 
-  if((void(*)(int,int))(service->*(&SpanService::button))==(void(*)(int,int))(&SpanService::button))
+  if((void(*)(int,int))(service->*(&SpanService::button))==(void(*)(int,int))(&SpanService::button)){
     homeSpan.configLog+=" *** WARNING:  No button() method defined for this PushButton! ***";
+    homeSpan.nWarnings++;
+  }
 
   pushButton=new PushButton(pin);         // create underlying PushButton
   
