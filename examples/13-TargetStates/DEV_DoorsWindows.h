@@ -72,7 +72,6 @@ struct DEV_WindowShade : Service::WindowCovering {     // A motorized Window Sha
   DEV_WindowShade() : Service::WindowCovering(){       // constructor() method
         
     current=new Characteristic::CurrentPosition(0);     // Window Shades have positions that range from 0 (fully lowered) to 100 (fully raised)
-    current->setRange(0,100,10);                        // set the allowable current-position range to 0-100 IN STEPS of 10
     
     target=new Characteristic::TargetPosition(0);       // Window Shades have positions that range from 0 (fully lowered) to 100 (fully raised)
     target->setRange(0,100,10);                         // set the allowable target-position range to 0-100 IN STEPS of 10
@@ -106,20 +105,21 @@ struct DEV_WindowShade : Service::WindowCovering {     // A motorized Window Sha
 
   void loop(){                                     // loop() method
 
-    // Here we simulate a window shade that moves 10% higher or lower every 1 second as it seeks to reach its target-position
+    // Here we simulate a window shade that takes 5 seconds to move to its new target posiiton
     
-    if(current->timeVal()>1000){                      // if 1 second has elapsed since the current-position was last modified
-      if(target->getVal()>current->getVal()){         // increase the current-position by 10 if the target-position is greater than the current-position
-        current->setVal(current->getVal()+10);
-      } else                      
-      if(target->getVal()<current->getVal()){         // else decrease the current-position by 10 if the target-position is less than the current-position
-        current->setVal(current->getVal()-10);        
-      }
+    if(target->timeVal()>5000){                       // if 5 seconds have elapsed since the target-position was last modified...
+      current->setVal(target->getVal());              // ...set the current position to equal the target position
     }
 
-    // Note we do NOTHING if target-positon and current-position is the same - HomeKit will detect this and adjust its tile icon accordingly.
-    // Unlike the Garage Door Service above, we do not need to set any Characteristic telling HomeKit the shade is actually raising, lowering, or stopped.
-    // HomeKit figures this out automatically, which is very good, though unfortunately inconsistent with the HAP Documentation.
+    // Note there is no reason to send continuous updates of the current position to the HomeKit.  HomeKit does NOT display the
+    // current position.  Rather, it simply compares the value of the current position to the value of target positon as set by the
+    // the user in the Home App.  If it finds current and target positions are the same, it knows the shade is stopped.  Otherwise
+    // it will report the shade is raising or lowering depending on whether the specified target state is greater or less than
+    // the current state.
+
+    // According to HAP, the Characteristic Position State is also required.  However, this seems duplicative and is NOT needed
+    // at all given the way HomeKit uses current position.  HomeSpan will warn you if Position State is not defined (since it 
+    // is technically required) but this works fine without it.
     
   } // loop
   
