@@ -37,9 +37,9 @@ HomeSpan provides a microcontroller-focused implementation of [Apple's HomeKit A
   * Launch the WiFi Access Point
 * A standalone, detailed End-User Guide
 
-## Latest Update (2/18/2021)
+## Latest Update (3/13/2021)
 
-* HomeSpan 1.2.0 - HomeSpan now suports Over-the-Air ([OTA](https://github.com/HomeSpan/HomeSpan/blob/master/docs/OTA.md)) updates directly from the Arduino IDE (no serial connection needed)!  This release also adds support for Linked Services and includes a new [tutorial example](https://github.com/HomeSpan/HomeSpan/blob/master/docs/Tutorials.md#example-17---linkedservices) demonstrating how Linked Services can be used to implement a multi-headed spa shower.  Other new features include the ability to set the version number of your sketch (helpful when using OTA updates), and a method for specifying a user-defined function to callback after WiFi connectivity is established.  See [Release](https://github.com/HomeSpan/HomeSpan/releases) for details.
+* HomeSpan 1.2.1 - This update adds run-time range-checking for all Characteristics and will warn you if the initial value you set for a Characteristic, or any subsequent changes you make to that value, are outside the Characteristic's allowable min/max range.  This helps diagnosis "No Response" errors in the Home App.  This update also introduces `setRange(min,max,step)` as a new and more robust method for changing a Characteristic's range.  See [Release](https://github.com/HomeSpan/HomeSpan/releases) for details on all changes includes in this update.
 
 # HomeSpan Resources
 
