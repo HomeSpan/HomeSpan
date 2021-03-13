@@ -39,7 +39,7 @@ HomeSpan provides a microcontroller-focused implementation of [Apple's HomeKit A
 
 ## Latest Update (3/13/2021)
 
-* HomeSpan 1.2.1 - This update adds run-time range-checking for all Characteristics and will warn you if the initial value you set for a Characteristic, or any subsequent changes you make to that value, are outside the Characteristic's allowable min/max range.  This helps diagnosis "No Response" errors in the Home App.  This update also introduces `setRange(min,max,step)` as a new and more robust method for changing a Characteristic's range.  See [Release](https://github.com/HomeSpan/HomeSpan/releases) for details on all changes includes in this update.
+* HomeSpan 1.2.1 - This update adds run-time range-checking for all Characteristics and will warn you if the initial value you set for a Characteristic, or any subsequent changes you make to that value, are outside the Characteristic's allowable min/max range.  This helps diagnosis "No Response" errors in the Home App.  This update also introduces `setRange(min,max,step)` as a new and more robust method for changing a Characteristic's range.  See [Release](https://github.com/HomeSpan/HomeSpan/releases) for details on all changes included in this update.
 
 # HomeSpan Resources
 
