@@ -33,7 +33,7 @@ struct DEV_DimmableLED : Service::LightBulb {       // Dimmable LED
     power=new Characteristic::On();     
                 
     level=new Characteristic::Brightness(favoriteLevel);       // Brightness Characteristic with an initial value equal to the favorite level
-    new SpanRange(5,100,1);                                    // sets the range of the Brightness to be from a min of 5%, to a max of 100%, in steps of 1%
+    level->setRange(5,100,1);                                  // sets the range of the Brightness to be from a min of 5%, to a max of 100%, in steps of 1%
 
     // NEW!  Below we create three SpanButton() objects.  In the first we specify the pin number, as required, but allow SpanButton() to use
     // its default values for a LONG press (2000 ms), a SINGLE press (5 ms), and a DOUBLE press (200 ms).  In the second and third we change the

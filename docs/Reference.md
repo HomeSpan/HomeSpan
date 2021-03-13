@@ -151,6 +151,7 @@ This is a **base class** from which all HomeSpan Characteristics are derived, an
 * instantiated Characteristics are added to the HomeSpan HAP Database and associated with the last Service instantiated
 * instantiating a Characteristic without first instantiating a Service throws an error during initialization
 * a single, optional argument is used to set the initial value of the Characteristic at startup
+* throws a runtime warning if value is outside of the min/max range for the Characteristic, where min/max is either the HAP default, or any new values set via a call to `setRange()`
 * example: `new Characteristic::Brightness(50);`
 
 The following methods are supported:
@@ -167,19 +168,24 @@ The following methods are supported:
   * returns *true* if a HomeKit Controller has requested an update to the value of the Characteristic, otherwise *false*.  The requested value itself can retrieved with `getNewVal<>()`
   
 * `void setVal(value)`
-  * sets the value of the Characteristic to *value*, and notifies all HomeKit Controllers of the change.  Works with any integer, boolean, or floating-based numerical value.
+  * sets the value of the Characteristic to *value*, and notifies all HomeKit Controllers of the change
+  * works with any integer, boolean, or floating-based numerical *value*, though HomeSpan will convert *value* into the appropriate type for each Characteristic (e.g. calling `setValue(5.5)` on an integer-based Characteristic results in *value*=5)
+  * throws a runtime warning if *value* is outside of the min/max range for the Characteristic, where min/max is either the HAP default, or any new min/max range set via a prior call to `setRange()`
+  * *value* is **not** restricted to being an increment of the step size; for example it is perfectly valid to call `setVal(43.5)` after calling `setRange(0,100,5)` on a floating-based Characteristic even though 43.5 does does not align with the step size specified.  The Home App will properly retain the value as 43.5, though it will round to the nearest step size increment (in this case 45) when used in a slider graphic (such as setting the temperature of a thermostat)
   
 * `int timeVal()`
   * returns time elapsed (in millis) since value of the Characteristic was last updated (whether by `setVal()` or as the result of a successful update request from a HomeKit Controller)
+
+* `SpanCharacteristic *setRange(min, max, step)`
+  * overrides the default HAP range for a Characteristic with the *min*, *max*, and *step* parameters specified
+  * *step* is optional; if unspecified (or set to a non-positive number), the default HAP step size remains unchanged
+  * works with any integer or floating-based parameters, though HomeSpan will recast the parameters into the appropriate type for each Characteristic (e.g. calling `setRange(50.5,70.3,0.5)` on an integer-based Characteristic results in *min*=50, *max*=70, and *step*=0)
+  * an error is thrown if:
+    * called on a Characteristic that does not suport range changes, or
+    * called more than once on the same Characteristic
+  * returns a pointer to the Characteristic itself so that the method can be chained during instantiation
+  * example: `(new Characteristic::Brightness(50))->setRange(10,100,5);`
   
-## *SpanRange(int min, int max, int step)*
-
-Creating an instance of this **class** overrides the default HAP range for a Characteristic with the *min*, *max*, and *step* values specified.
-
-* instantiated Ranges are added to the HomeSpan HAP Database and associated with the last Characteristic instantiated
-* instantiating a Range without first instantiating a Characteristic throws an error during initialization
-* example: `new Characteristic::Brightness(50); new SpanRange(10,100,5);`
-
 ## *SpanButton(int pin, uint16_t longTime, uint16_t singleTime, uint16_t doubleTime)*
 
 Creating an instance of this **class** attaches a pushbutton handler to the ESP32 *pin* specified.
@@ -213,6 +219,17 @@ If REQUIRED is defined in the main sketch prior to including the HomeSpan librar
 ```C++
 #define REQUIRED VERISON(2,1,3)   // throws a compile-time error unless HomeSpan library used is version 2.1.3 or later
 ```
+---
+
+## *SpanRange(int min, int max, int step)*
+
+Creating an instance of this **class** overrides the default HAP range for a Characteristic with the *min*, *max*, and *step* values specified.
+
+* instantiated Ranges are added to the HomeSpan HAP Database and associated with the last Characteristic instantiated
+* instantiating a Range without first instantiating a Characteristic throws an error during initialization
+* example: `new Characteristic::Brightness(50); new SpanRange(10,100,5);`
+* this is a legacy function that is limited to integer-based parameters, and has been re-coded to simply call the more generic `setRange(min, max, step)` method
+* **please use** `setRange(min, max, step)` **for all new sketches**
 
 ---
 

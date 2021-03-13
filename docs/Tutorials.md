@@ -21,7 +21,7 @@ Example 3 shows how adding multiple Services to a single Accessory allows us to 
 ### [Example 4 - AdvancedCeilingFan](../examples/04-AdvancedCeilingFan)
 Example 4 expands on Example 3 by adding Characteristics to set fan speed, fan rotation direction, and light brightness.  New HomeSpan API topics covered in this example include:
 
-* using `SpanRange()` to set the allowable range and increment values for a Characteristic
+* using `setRange()` to set the allowable range and increment values for a Characteristic
 
 ### [Example 5 - WorkingLED](../examples/05-WorkingLED)
 Example 5 expands on Example 2 by adding in the code needed to actually control LEDs connected to the ESP32 from HomeKit. In Example 2 we built out all the functionality to create a "Tile" Acessories inside HomeKit that displayed an on/off light, but these control did not actually operate anything on the ESP32.  To operate actual devices HomeSpan needs to be programmed to respond to "update" requests from HomeKit by performing some form of operation.  New HomeSpan API topics covered in this example include:

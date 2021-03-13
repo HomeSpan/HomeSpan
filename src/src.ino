@@ -14,7 +14,7 @@ void setup() {
   homeSpan.setPortNum(1201);
 //  homeSpan.setMaxConnections(6);
 //  homeSpan.setQRID("One1");
-  homeSpan.enableOTA();
+//  homeSpan.enableOTA();
   homeSpan.setSketchVersion("Test 1.3.1");
   homeSpan.setWifiCallback(wifiEstablished);
 
@@ -30,20 +30,21 @@ void setup() {
       new Characteristic::FirmwareRevision(HOMESPAN_VERSION);   // Firmware of the Accessory (arbitrary text string, and can be the same for every Accessory)  
       new Characteristic::Identify();                           // Create the required Identify
   
-    new Service::HAPProtocolInformation();                  // Create the HAP Protcol Information Service  
+//    new Service::HAPProtocolInformation();                  // Create the HAP Protcol Information Service  
       new Characteristic::Version("1.1.0");                     // Set the Version Characteristic to "1.1.0" as required by HAP
 
     new Service::LightBulb();
-      new Characteristic::On();
+//      new Characteristic::On();
       new Characteristic::Brightness();
       new Characteristic::Name("Light 1");
     new Service::LightBulb();
-      new Characteristic::On();
-      new Characteristic::Brightness();
+      new Characteristic::On(2);
+      (new Characteristic::Brightness(150))->setRange(0,140,5);
       new Characteristic::Name("Light 2");
     (new Service::Switch())->setPrimary();
       new Characteristic::On();
       new Characteristic::Name("Switch 3");
+      new SpanButton(17);
 
 } // end of setup()
 

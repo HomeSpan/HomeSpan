@@ -39,6 +39,7 @@ using namespace Utils;
 
 HAPClient **hap;                    // HAP Client structure containing HTTP client connections, parsing routines, and state variables (global-scoped variable)
 Span homeSpan;                      // HAP Attributes database and all related control functions for this Accessory (global-scoped variable)
+HapCharacteristics hapChars;        // Instantiation of all HAP Characteristics (used to create SpanCharacteristics)
 
 ///////////////////////////////
 //         Span              //
@@ -118,6 +119,10 @@ void Span::poll() {
         homeSpan.Accessories.back()->Services.back()->validate();    
         
       homeSpan.Accessories.back()->validate();    
+    }
+
+    if(nWarnings>0){
+      configLog+="\n*** CAUTION: There " + String((nWarnings>1?"are ":"is ")) + String(nWarnings) + " WARNING" + (nWarnings>1?"S":"") + " associated with this configuration that may lead to the device becoming non-responsive, or operating in an unexpected manner. ***\n";
     }
 
     processSerialCommand("i");        // print homeSpan configuration info
@@ -500,7 +505,7 @@ void Span::checkConnect(){
       Serial.print("\nAuthorization Password: ");
       Serial.print(otaAuth?"Enabled\n\n":"DISABLED!\n\n");
     } else {
-      Serial.print("\n*** Warning: Can't start OTA Server - Partition table used to compile this sketch is not configured for OTA.\n\n");
+      Serial.print("\n*** WARNING: Can't start OTA Server - Partition table used to compile this sketch is not configured for OTA.\n\n");
     }
   }
 
@@ -841,7 +846,7 @@ void Span::processSerialCommand(const char *c){
       Serial.print("\n\n");
 
       char d[]="------------------------------";
-      Serial.printf("%-30s  %s  %10s  %s  %s  %s  %s  %s\n","Service","Type","AID","IID","Update","Loop","Button","Linked Services");
+      Serial.printf("%-30s  %s  %10s  %s  %s  %s  %s  %s\n","Service","UUID","AID","IID","Update","Loop","Button","Linked Services");
       Serial.printf("%.30s  %.4s  %.10s  %.3s  %.6s  %.4s  %.6s  %.15s\n",d,d,d,d,d,d,d,d);
       for(int i=0;i<Accessories.size();i++){                             // identify all services with over-ridden loop() methods
         for(int j=0;j<Accessories[i]->Services.size();j++){
@@ -1203,10 +1208,10 @@ int Span::sprintfAttributes(char **ids, int numIDs, int flags, char *cBuf){
 
   for(int i=0;i<numIDs;i++){              // PASS 1: loop over all ids requested to check status codes - only errors are if characteristic not found, or not readable
     sscanf(ids[i],"%u.%d",&aid,&iid);     // parse aid and iid
-    Characteristics[i]=find(aid,iid);      // find matching chararacteristic
+    Characteristics[i]=find(aid,iid);     // find matching chararacteristic
     
     if(Characteristics[i]){                                          // if found
-      if(Characteristics[i]->perms&SpanCharacteristic::PR){          // if permissions allow reading
+      if(Characteristics[i]->perms&PERMS::PR){                       // if permissions allow reading
         status[i]=StatusCode::OK;                                    // always set status to OK (since no actual reading of device is needed)
       } else {
         Characteristics[i]=NULL;                                     
@@ -1276,7 +1281,7 @@ SpanAccessory::SpanAccessory(uint32_t aid){
     this->aid=aid;
   }
 
-  homeSpan.configLog+="+Accessory-" + String(this->aid);
+  homeSpan.configLog+="\u27a4 Accessory:  AID=" + String(this->aid);
 
   for(int i=0;i<homeSpan.Accessories.size()-1;i++){
     if(this->aid==homeSpan.Accessories[i]->aid){
@@ -1309,16 +1314,28 @@ void SpanAccessory::validate(){
       foundProtocol=true;
     else if(aid==1)                             // this is an Accessory with aid=1, but it has more than just AccessoryInfo and HAPProtocolInformation.  So...
       homeSpan.isBridge=false;                  // ...this is not a bridge device
+
+    for(int j=0;j<Services[i]->Characteristics.size();j++){       // check that initial values are all in range of mix/max (which may have been modified by setRange)
+      SpanCharacteristic *chr=Services[i]->Characteristics[j];
+
+      if(chr->format!=STRING && (chr->uvGet<double>(chr->value) < chr->uvGet<double>(chr->minValue) || chr->uvGet<double>(chr->value) > chr->uvGet<double>(chr->maxValue))){
+        char c[256];
+        sprintf(c,"      \u2718 Characteristic %s with IID=%d  *** WARNING: Initial value of %lg is out of range [%llg,%llg]. ***\n",
+               chr->hapName,chr->iid,chr->uvGet<double>(chr->value),chr->uvGet<double>(chr->minValue),chr->uvGet<double>(chr->maxValue));
+        homeSpan.configLog+=c;
+        homeSpan.nWarnings++;
+      }       
+    }
   }
 
   if(!foundInfo){
-    homeSpan.configLog+="  !Service AccessoryInformation";
+    homeSpan.configLog+="   \u2718 Service AccessoryInformation";
     homeSpan.configLog+=" *** ERROR!  Required Service for this Accessory not found. ***\n";
     homeSpan.nFatalErrors++;
   }    
 
   if(!foundProtocol && (aid==1 || !homeSpan.isBridge)){           // HAPProtocolInformation must always be present in Accessory if aid=1, and any other Accessory if the device is not a bridge)
-    homeSpan.configLog+="  !Service HAPProtocolInformation";
+    homeSpan.configLog+="   \u2718 Service HAPProtocolInformation";
     homeSpan.configLog+=" *** ERROR!  Required Service for this Accessory not found. ***\n";
     homeSpan.nFatalErrors++;
   }    
@@ -1354,7 +1371,7 @@ SpanService::SpanService(const char *type, const char *hapName){
   this->type=type;
   this->hapName=hapName;
 
-  homeSpan.configLog+="-->Service " + String(hapName);
+  homeSpan.configLog+="   \u279f Service " + String(hapName);
   
   if(homeSpan.Accessories.empty()){
     homeSpan.configLog+=" *** ERROR!  Can't create new Service without a defined Accessory! ***\n";
@@ -1365,7 +1382,7 @@ SpanService::SpanService(const char *type, const char *hapName){
   homeSpan.Accessories.back()->Services.push_back(this);  
   iid=++(homeSpan.Accessories.back()->iidCount);  
 
-  homeSpan.configLog+="-" + String(iid) + String(" (") + String(type) + String(") ");
+  homeSpan.configLog+=":  IID=" + String(iid) + ", UUID=0x" + String(type);
 
   if(!strcmp(this->type,"3E") && iid!=1){
     homeSpan.configLog+=" *** ERROR!  The AccessoryInformation Service must be defined before any other Services in an Accessory. ***";
@@ -1440,26 +1457,31 @@ void SpanService::validate(){
   for(int i=0;i<req.size();i++){
     boolean valid=false;
     for(int j=0;!valid && j<Characteristics.size();j++)
-      valid=!strcmp(req[i]->id,Characteristics[j]->type);
+      valid=!strcmp(req[i]->type,Characteristics[j]->type);
       
     if(!valid){
-      homeSpan.configLog+="    !Characteristic " + String(req[i]->name);
-      homeSpan.configLog+=" *** ERROR!  Required Characteristic for this Service not found. ***\n";
-      homeSpan.nFatalErrors++;
+      homeSpan.configLog+="      \u2718 Characteristic " + String(req[i]->hapName);
+      homeSpan.configLog+=" *** WARNING!  Required Characteristic for this Service not found. ***\n";
+      homeSpan.nWarnings++;
     }
   }
+
+  vector<HapChar *>().swap(opt);
+  vector<HapChar *>().swap(req);
 }
 
 ///////////////////////////////
 //    SpanCharacteristic     //
 ///////////////////////////////
 
-SpanCharacteristic::SpanCharacteristic(const char *type, uint8_t perms, const char *hapName){
-  this->type=type;
-  this->perms=perms;
-  this->hapName=hapName;
+SpanCharacteristic::SpanCharacteristic(HapChar *hapChar){
+  type=hapChar->type;
+  perms=hapChar->perms;
+  hapName=hapChar->hapName;
+  format=hapChar->format;
+  staticRange=hapChar->staticRange;
 
-  homeSpan.configLog+="---->Characteristic " + String(hapName);
+  homeSpan.configLog+="      \u21e8 Characteristic " + String(hapName);
 
   if(homeSpan.Accessories.empty() || homeSpan.Accessories.back()->Services.empty()){
     homeSpan.configLog+=" *** ERROR!  Can't create new Characteristic without a defined Service! ***\n";
@@ -1472,92 +1494,6 @@ SpanCharacteristic::SpanCharacteristic(const char *type, uint8_t perms, const ch
   aid=homeSpan.Accessories.back()->aid;
 
   ev=(boolean *)calloc(homeSpan.maxConnections,sizeof(boolean));
-
-  homeSpan.configLog+="-" + String(iid) + String(" (") + String(type) + String(") ");
-
-  boolean valid=false;
-
-  for(int i=0; !valid && i<homeSpan.Accessories.back()->Services.back()->req.size(); i++)
-    valid=!strcmp(type,homeSpan.Accessories.back()->Services.back()->req[i]->id);
-
-  for(int i=0; !valid && i<homeSpan.Accessories.back()->Services.back()->opt.size(); i++)
-    valid=!strcmp(type,homeSpan.Accessories.back()->Services.back()->opt[i]->id);
-
-  if(!valid){
-    homeSpan.configLog+=" *** ERROR!  Service does not support this Characteristic. ***";
-    homeSpan.nFatalErrors++;
-  }
-
-  boolean repeated=false;
-  
-  for(int i=0; !repeated && i<homeSpan.Accessories.back()->Services.back()->Characteristics.size(); i++)
-    repeated=!strcmp(type,homeSpan.Accessories.back()->Services.back()->Characteristics[i]->type);
-  
-  if(valid && repeated){
-    homeSpan.configLog+=" *** ERROR!  Characteristic already defined for this Service. ***";
-    homeSpan.nFatalErrors++;
-  }
-
-  homeSpan.Accessories.back()->Services.back()->Characteristics.push_back(this);  
-
-  homeSpan.configLog+="\n";
-
-}
-
-///////////////////////////////
-
-SpanCharacteristic::SpanCharacteristic(const  char *type, uint8_t perms, boolean value, const char *hapName) : SpanCharacteristic(type, perms, hapName) {
-  this->format=BOOL;
-  this->value.BOOL=value;
-}
-
-///////////////////////////////
-
-SpanCharacteristic::SpanCharacteristic(const char *type, uint8_t perms, int32_t value, const char *hapName) : SpanCharacteristic(type, perms, hapName) {
-  this->format=INT;
-  this->value.INT=value;
-}
-
-///////////////////////////////
-
-SpanCharacteristic::SpanCharacteristic(const char *type, uint8_t perms, uint8_t value, const char *hapName) : SpanCharacteristic(type, perms, hapName) {
-  this->format=UINT8;
-  this->value.UINT8=value;
-}
-
-///////////////////////////////
-
-SpanCharacteristic::SpanCharacteristic(const char *type, uint8_t perms, uint16_t value, const char *hapName) : SpanCharacteristic(type, perms, hapName) {
-  this->format=UINT16;
-  this->value.UINT16=value;
-}
-
-///////////////////////////////
-
-SpanCharacteristic::SpanCharacteristic(const char *type, uint8_t perms, uint32_t value, const char *hapName) : SpanCharacteristic(type, perms, hapName) {
-  this->format=UINT32;
-  this->value.UINT32=value;
-}
-
-///////////////////////////////
-
-SpanCharacteristic::SpanCharacteristic(const char *type, uint8_t perms, uint64_t value, const char *hapName) : SpanCharacteristic(type, perms, hapName) {
-  this->format=UINT64;
-  this->value.UINT64=value;
-}
-
-///////////////////////////////
-
-SpanCharacteristic::SpanCharacteristic(const char *type, uint8_t perms, double value, const char *hapName) : SpanCharacteristic(type, perms, hapName) {
-  this->format=FLOAT;
-  this->value.FLOAT=value;
-}
-
-///////////////////////////////
-
-SpanCharacteristic::SpanCharacteristic(const char *type, uint8_t perms, const char* value, const char *hapName) : SpanCharacteristic(type, perms, hapName) {
-  this->format=STRING;
-  this->value.STRING=value;
 }
 
 ///////////////////////////////
@@ -1574,54 +1510,22 @@ int SpanCharacteristic::sprintfAttributes(char *cBuf, int flags){
   if(flags&GET_TYPE)  
     nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"type\":\"%s\"",type);
 
-  if(perms&PR){
-    
-    if(perms&NV && !(flags&GET_NV)){   
+  if(perms&PR){    
+    if(perms&NV && !(flags&GET_NV))
       nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"value\":null");
-    } else {
-      
-      switch(format){
-        case BOOL:
-          nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"value\":%s",value.BOOL?"true":"false");
-        break;
-    
-        case INT:
-          nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"value\":%d",value.INT);
-        break;
-    
-        case UINT8:
-          nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"value\":%u",value.UINT8);
-        break;
-          
-        case UINT16:
-          nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"value\":%u",value.UINT16);
-        break;
-          
-        case UINT32:
-          nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"value\":%u",value.UINT32);
-        break;
-          
-        case UINT64:
-          nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"value\":%llu",value.UINT64);
-        break;
-          
-        case FLOAT:
-          nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"value\":%lg",value.FLOAT);
-        break;
-          
-        case STRING:
-          nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"value\":\"%s\"",value.STRING);
-        break;
-        
-      } // switch
-    } // print Characteristic value
-  } // permissions=PR
+    else
+      nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"value\":%s",uvPrint(value).c_str());      
+  }
 
   if(flags&GET_META){
     nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"format\":\"%s\"",formatCodes[format]);
     
-    if(range && (flags&GET_META))
-      nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?128:0,",\"minValue\":%d,\"maxValue\":%d,\"minStep\":%d",range->min,range->max,range->step);    
+    if(customRange && (flags&GET_META)){
+      nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?128:0,",\"minValue\":%s,\"maxValue\":%s",uvPrint(minValue).c_str(),uvPrint(maxValue).c_str());
+        
+      if(uvGet<float>(stepValue)>0)
+        nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?128:0,",\"minStep\":%s",uvPrint(stepValue).c_str());
+    }
   }
     
   if(desc && (flags&GET_DESC)){
@@ -1737,72 +1641,6 @@ StatusCode SpanCharacteristic::loadUpdate(char *val, char *ev){
 
 ///////////////////////////////
 
-void SpanCharacteristic::setVal(int val){
-
-    switch(format){
-      
-      case BOOL:
-        value.BOOL=(boolean)val;
-        newValue.BOOL=(boolean)val;        
-      break;
-
-      case INT:
-        value.INT=(int)val;
-        newValue.INT=(int)val;
-      break;
-
-      case UINT8:
-        value.UINT8=(uint8_t)val;
-        newValue.INT=(int)val;
-      break;
-
-      case UINT16:
-        value.UINT16=(uint16_t)val;
-        newValue.UINT16=(uint16_t)val;
-      break;
-
-      case UINT32:
-        value.UINT32=(uint32_t)val;
-        newValue.UINT32=(uint32_t)val;
-      break;
-
-      case UINT64:
-        value.UINT64=(uint64_t)val;
-        newValue.UINT64=(uint64_t)val;
-      break;
-
-      default:
-      break;
-    }
-
-    updateTime=homeSpan.snapTime;
-
-    SpanBuf sb;                             // create SpanBuf object
-    sb.characteristic=this;                 // set characteristic          
-    sb.status=StatusCode::OK;               // set status
-    char dummy[]="";
-    sb.val=dummy;                           // set dummy "val" so that sprintfNotify knows to consider this "update"
-    homeSpan.Notifications.push_back(sb);   // store SpanBuf in Notifications vector
-}
-
-///////////////////////////////
-
-void SpanCharacteristic::setVal(double val){
-  
-    value.FLOAT=(double)val;  
-    newValue.FLOAT=(double)val;  
-    updateTime=homeSpan.snapTime;
-
-    SpanBuf sb;                             // create SpanBuf object
-    sb.characteristic=this;                 // set characteristic          
-    sb.status=StatusCode::OK;               // set status
-    char dummy[]="";
-    sb.val=dummy;                           // set dummy "val" so that sprintfNotify knows to consider this "update"
-    homeSpan.Notifications.push_back(sb);   // store SpanBuf in Notifications vector
-}
-
-///////////////////////////////
-
 unsigned long SpanCharacteristic::timeVal(){
   
   return(homeSpan.snapTime-updateTime);
@@ -1813,20 +1651,13 @@ unsigned long SpanCharacteristic::timeVal(){
 ///////////////////////////////
 
 SpanRange::SpanRange(int min, int max, int step){
-  this->min=min;
-  this->max=max;
-  this->step=step;
-
-  homeSpan.configLog+="------>SpanRange: " + String(min) + "/" + String(max) + "/" + String(step);
 
   if(homeSpan.Accessories.empty() || homeSpan.Accessories.back()->Services.empty() || homeSpan.Accessories.back()->Services.back()->Characteristics.empty() ){
-    homeSpan.configLog+=" *** ERROR!  Can't create new Range without a defined Characteristic! ***\n";
+    homeSpan.configLog+="    \u2718 SpanRange: *** ERROR!  Can't create new Range without a defined Characteristic! ***\n";
     homeSpan.nFatalErrors++;
-    return;
+  } else {
+    homeSpan.Accessories.back()->Services.back()->Characteristics.back()->setRange(min,max,step);
   }
-
-  homeSpan.configLog+="\n";    
-  homeSpan.Accessories.back()->Services.back()->Characteristics.back()->range=this;  
 }
 
 ///////////////////////////////
@@ -1835,7 +1666,7 @@ SpanRange::SpanRange(int min, int max, int step){
 
 SpanButton::SpanButton(int pin, uint16_t longTime, uint16_t singleTime, uint16_t doubleTime){
 
-  homeSpan.configLog+="---->SpanButton: Pin=" + String(pin) + " Long/Single/Double=" + String(longTime) + "/" + String(singleTime) + "/" + String(doubleTime) + " ms";
+  homeSpan.configLog+="      \u25bc SpanButton: Pin=" + String(pin) + ", Single=" + String(singleTime) + "ms, Double=" + String(doubleTime) + "ms, Long=" + String(longTime) + "ms";
 
   if(homeSpan.Accessories.empty() || homeSpan.Accessories.back()->Services.empty()){
     homeSpan.configLog+=" *** ERROR!  Can't create new PushButton without a defined Service! ***\n";
@@ -1853,8 +1684,10 @@ SpanButton::SpanButton(int pin, uint16_t longTime, uint16_t singleTime, uint16_t
   this->doubleTime=doubleTime;
   service=homeSpan.Accessories.back()->Services.back();
 
-  if((void(*)(int,int))(service->*(&SpanService::button))==(void(*)(int,int))(&SpanService::button))
+  if((void(*)(int,int))(service->*(&SpanService::button))==(void(*)(int,int))(&SpanService::button)){
     homeSpan.configLog+=" *** WARNING:  No button() method defined for this PushButton! ***";
+    homeSpan.nWarnings++;
+  }
 
   pushButton=new PushButton(pin);         // create underlying PushButton
   

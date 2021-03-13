@@ -64,7 +64,7 @@ struct DEV_DimmableLED : Service::LightBulb {       // Dimmable LED
     power=new Characteristic::On();     
                 
     level=new Characteristic::Brightness(50);       // Brightness Characteristic with an initial value of 50%
-    new SpanRange(5,100,1);                         // sets the range of the Brightness to be from a min of 5%, to a max of 100%, in steps of 1%
+    level->setRange(5,100,1);                       // sets the range of the Brightness to be from a min of 5%, to a max of 100%, in steps of 1%
 
     this->channel=channel;                          // save the channel number (from 0-15)
     this->ledPin=ledPin;                            // LED pin number <- NEW!!
