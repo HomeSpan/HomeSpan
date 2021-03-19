@@ -20,10 +20,11 @@ PwmPin::PwmPin(uint8_t channel, uint8_t pin){
   ledChannel.timer_sel=LEDC_TIMER_0;
   ledChannel.duty=0;
   ledChannel.hpoint=0;
+  ledc_channel_config(&ledChannel);
   
 }
 
-void PwmPin::set(uint8_t channel, uint8_t level){
+void PwmPin::set(uint8_t level){
   ledChannel.duty=level*1023;
   ledChannel.duty/=100;
   ledChannel.duty&=0x03FF;

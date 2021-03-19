@@ -2,7 +2,10 @@
 // This is a placeholder .ino file that allows you to easily edit the contents of this library using the Arduino IDE,
 // as well as compile and test from this point.  This file is ignored when the library is included in other sketches.
 
-#include "RFControl.h"
+#include "PwmPin.h"
+
+PwmPin yellow(0,16);
+PwmPin red(1,17);
 
 void setup(){
 
@@ -11,20 +14,20 @@ void setup(){
 
   Serial.print("\n\nTest sketch for HomeSpan Extras Library\n\n");
 
-  RFControl rf(4);
-
   Serial.println("Starting...");
-  
-  rf.clear();
-  for(int i=0;i<3;i++)
-    rf.add(2000,2000);
-  rf.phase(10000,0); 
-  rf.start(5,100);
-  
-  Serial.println("Done!");
-  
+    
 }
 
 void loop(){
-  
+
+  for(int i=0;i<100;i++){
+    red.set(22,i);
+    delay(10);
+  }
+
+  for(int i=100;i>=0;i--){
+    yellow.set(i);
+    delay(10);
+  }
+
 }

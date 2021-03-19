@@ -16,9 +16,10 @@ class PwmPin {
   ledc_channel_config_t ledChannel;
 
   public:
-    PwmPin(uint8_t channel, uint8_t pin);               // assigns pin to be output of one of 16 PWM channels (0-15)
-    void set(uint8_t channel, uint8_t level);           // sets the PWM duty of channel to level (0-100)
-    int getPin(){return pin;}                           // returns the pin number
+    PwmPin(uint8_t channel, uint8_t pin);                   // assigns pin to be output of one of 16 PWM channels (0-15)
+    void set(uint8_t level);                                // sets the PWM duty to level (0-100)
+    void set(uint8_t channel, uint8_t level){set(level);}   // sets the PWM duty to level (0-100) - deprecated, but defined for backwards compatibility
+    int getPin(){return pin;}                               // returns the pin number
     
     static void HSVtoRGB(float h, float s, float v, float *r, float *g, float *b );       // converts Hue/Saturation/Brightness to R/G/B
 
