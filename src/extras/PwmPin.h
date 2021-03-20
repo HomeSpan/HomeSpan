@@ -24,3 +24,23 @@ class PwmPin {
     static void HSVtoRGB(float h, float s, float v, float *r, float *g, float *b );       // converts Hue/Saturation/Brightness to R/G/B
 
 };
+
+class ServoPin {
+  uint8_t channel;                                          // channel must be in range [0,7] (only HighSpeed Channels will be used)
+  uint8_t pin;
+  uint16_t minMicros;
+  uint16_t maxMicros;
+  double minDegrees;
+  double microsPerDegree;
+  ledc_channel_config_t ledChannel;
+
+  static const double micros2duty;
+
+  public:
+    ServoPin(uint8_t channel, uint8_t pin, double initDegrees, uint16_t minMicros, uint16_t maxMicros, double minDegrees, double maxDegrees);
+    ServoPin(uint8_t channel, uint8_t pin, double initDegrees=0) : ServoPin(channel,pin,initDegrees,1000,2000,-90,90) {};
+    
+    void set(double degrees);                               // sets the Servo to degrees, where degrees is bounded by [minDegrees,maxDegrees]  
+    int getPin(){return pin;}                               // returns the pin number
+
+};

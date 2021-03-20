@@ -88,3 +88,44 @@ void PwmPin::HSVtoRGB(float h, float s, float v, float *r, float *g, float *b ){
       break;
   }
 }
+
+////////////////////////////
+
+ServoPin::ServoPin(uint8_t channel, uint8_t pin, double initDegrees, uint16_t minMicros, uint16_t maxMicros, double minDegrees, double maxDegrees){
+  this->channel=channel & 0x07;
+  this->pin=pin;
+  this->minMicros=minMicros;
+  this->maxMicros=maxMicros;
+  this->minDegrees=minDegrees;
+  microsPerDegree=(double)(maxMicros-minMicros)/(maxDegrees-minDegrees);
+
+  ledc_timer_config_t ledTimer;
+  ledTimer.timer_num=LEDC_TIMER_1;
+  ledTimer.speed_mode=LEDC_HIGH_SPEED_MODE;
+  ledTimer.duty_resolution=LEDC_TIMER_16_BIT;
+  ledTimer.freq_hz=50;
+  ledc_timer_config(&ledTimer);
+
+  ledChannel.gpio_num=pin;
+  ledChannel.speed_mode=LEDC_HIGH_SPEED_MODE;
+  ledChannel.channel=(ledc_channel_t)(this->channel);
+  ledChannel.intr_type=LEDC_INTR_DISABLE;
+  ledChannel.timer_sel=LEDC_TIMER_1;
+  ledChannel.hpoint=0;
+  ledChannel.duty*=micros2duty;  
+  set(initDegrees);
+}
+
+void ServoPin::set(double degrees){
+  ledChannel.duty=(degrees-minDegrees)*microsPerDegree+minMicros;
+  
+  if(ledChannel.duty<minMicros)
+    ledChannel.duty=minMicros;
+  else if(ledChannel.duty>maxMicros)
+    ledChannel.duty=maxMicros;
+
+  ledChannel.duty*=micros2duty;  
+  ledc_channel_config(&ledChannel);
+}
+
+const double ServoPin::micros2duty=65535.0/20000.0;
