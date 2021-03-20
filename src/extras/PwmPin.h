@@ -29,7 +29,6 @@ class PwmPin {
 /////////////////////////////////////
 
 class LedPin {
-  uint8_t pin;
   boolean enabled=false;
   ledc_channel_config_t ledChannel;
   static uint8_t numChannels;
@@ -37,7 +36,7 @@ class LedPin {
   public:
     LedPin(uint8_t pin, uint8_t level=0);                   // assigns pin to be output of one of 16 PWM channels within initial level
     void set(uint8_t level);                                // sets the PWM duty to level (0-100)
-    int getPin(){return pin;}                               // returns the pin number
+    int getPin(){return ledChannel.gpio_num;}               // returns the pin number
     
     static void HSVtoRGB(float h, float s, float v, float *r, float *g, float *b );       // converts Hue/Saturation/Brightness to R/G/B
 

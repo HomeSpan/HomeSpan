@@ -97,7 +97,6 @@ LedPin::LedPin(uint8_t pin, uint8_t level){
   }
 
   enabled=true;
-  this->pin=pin;
 
   if(numChannels==0){         // first instantiation of an LedPin
     ledc_timer_config_t ledTimer;

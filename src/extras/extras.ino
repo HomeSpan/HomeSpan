@@ -6,7 +6,7 @@
 
 //ServoPin servo(3,18,-90);
 ServoPin servo(3,18,0,500,2200,-90,90);
-
+  
 void setup(){
  
   Serial.begin(115200);
@@ -15,6 +15,7 @@ void setup(){
   Serial.print("\n\nTest sketch for HomeSpan Extras Library\n\n");
 
   Serial.println("Starting...");
+
 
   LedPin yellow(16);
   LedPin d1(19);
@@ -33,7 +34,7 @@ void setup(){
   LedPin d14(19);
   LedPin d15(19);
   LedPin d16(19);
-  LedPin red(17);
+  LedPin red(17);  
 
   while(1){
     for(int i=0;i<100;i++){
