@@ -8,6 +8,7 @@
 // is hardcoded to 5000 Hz and either High-Speed Timer-0 (for channels 0-7) or Low-Speed Timer-0
 // for channels (8-15) is configured and selected automatically.
 
+#include <Arduino.h>
 #include <driver/ledc.h>
 
 class PwmPin {
@@ -24,6 +25,25 @@ class PwmPin {
     static void HSVtoRGB(float h, float s, float v, float *r, float *g, float *b );       // converts Hue/Saturation/Brightness to R/G/B
 
 };
+
+/////////////////////////////////////
+
+class LedPin {
+  uint8_t pin;
+  boolean enabled=false;
+  ledc_channel_config_t ledChannel;
+  static uint8_t numChannels;
+
+  public:
+    LedPin(uint8_t pin, uint8_t level=0);                   // assigns pin to be output of one of 16 PWM channels within initial level
+    void set(uint8_t level);                                // sets the PWM duty to level (0-100)
+    int getPin(){return pin;}                               // returns the pin number
+    
+    static void HSVtoRGB(float h, float s, float v, float *r, float *g, float *b );       // converts Hue/Saturation/Brightness to R/G/B
+
+};
+
+/////////////////////////////////////
 
 class ServoPin {
   uint8_t channel;                                          // channel must be in range [0,7] (only HighSpeed Channels will be used)
