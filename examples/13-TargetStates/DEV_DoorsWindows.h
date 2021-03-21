@@ -107,8 +107,8 @@ struct DEV_WindowShade : Service::WindowCovering {     // A motorized Window Sha
 
     // Here we simulate a window shade that takes 5 seconds to move to its new target posiiton
     
-    if(target->timeVal()>5000){                       // if 5 seconds have elapsed since the target-position was last modified...
-      current->setVal(target->getVal());              // ...set the current position to equal the target position
+    if(current->getVal()!=target->getVal() && target->timeVal()>5000){          // if 5 seconds have elapsed since the target-position was last modified...
+      current->setVal(target->getVal());                                        // ...set the current position to equal the target position
     }
 
     // Note there is no reason to send continuous updates of the current position to the HomeKit.  HomeKit does NOT display the
