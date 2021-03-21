@@ -3,10 +3,7 @@
 // as well as compile and test from this point.  This file is ignored when the library is included in other sketches.
 
 #include "PwmPin.h"
-
-//ServoPin servo(3,18,-90);
-//ServoPin servo(18,0,500,2200,-90,90);
-  
+ 
 void setup(){
  
   Serial.begin(115200);
@@ -30,14 +27,14 @@ void setup(){
   LedPin d10(19);
   LedPin d11(19);
   LedPin d12(19);
-  LedPin red(17,100);  
+  LedPin red(17);  
 
 //  ServoPin servo(18,0,500,2200,-90,90);
   ServoPin s0(19);
   ServoPin servo(18,45);
   ServoPin s1(19);
 
-  while(0){
+  while(1){
     for(int i=0;i<100;i++){
       yellow.set(i);
       delay(10);

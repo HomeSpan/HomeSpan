@@ -59,15 +59,15 @@ void setup() {
 
   new SpanAccessory();                                                          
     new DEV_Identify("On/Off LED","HomeSpan","123-ABC","20mA LED","0.9",0);
-    new DEV_LED(16);                                                                     // Create an On/Off LED attached to pin 16
+    new DEV_LED(16);                                                               // Create an On/Off LED attached to pin 16
 
   new SpanAccessory();                                                          
     new DEV_Identify("Dimmable LED","HomeSpan","123-ABC","20mA LED","0.9",0);
-    new DEV_DimmableLED(0,17);                                                           // Create a Dimmable LED using PWM channel 0, attached to pin 17
+    new DEV_DimmableLED(17);                                                       // Create a Dimmable (PWM-driven) LED using attached to pin 17
 
   new SpanAccessory();                                                          
     new DEV_Identify("RGB LED","HomeSpan","123-ABC","20mA LED","0.9",0);
-    new DEV_RgbLED(1,2,3,32,22,23);                                                      // Create an RGB LED using PWM channels 1,2,3, attached to pins 32,22,23 (for R, G, and B LED anodes)
+    new DEV_RgbLED(32,22,23);                                                      // Create an RGB LED attached to pins 32,22,23 (for R, G, and B LED anodes)
       
 } // end of setup()
 

@@ -6,12 +6,13 @@
 LedPin::LedPin(uint8_t pin, uint8_t level){
   if(numChannels+ServoPin::numChannels>15){
     Serial.printf("\n*** ERROR:  Can't create LedPin(%d) - no open PWM channels ***\n\n",pin);
+    ledChannel.gpio_num=0;
     return;
   }
 
   enabled=true;
 
-  if(numChannels==0){         // first instantiation of an LedPin
+  if(numChannels==0){                             // first instantiation of an LedPin
     ledc_timer_config_t ledTimer;
     ledTimer.timer_num=LEDC_TIMER_0;
     ledTimer.duty_resolution=LEDC_TIMER_10_BIT;
@@ -40,7 +41,6 @@ LedPin::LedPin(uint8_t pin, uint8_t level){
   ledChannel.hpoint=0;
   ledc_channel_config(&ledChannel);
   set(level);  
-  //Serial.printf("Configured LED on Pin %d using Channel %d in Speed Mode %d\n",ledChannel.gpio_num,ledChannel.channel,ledChannel.speed_mode);
 }
 
 ///////////////////
@@ -118,6 +118,7 @@ void LedPin::HSVtoRGB(float h, float s, float v, float *r, float *g, float *b ){
 ServoPin::ServoPin(uint8_t pin, double initDegrees, uint16_t minMicros, uint16_t maxMicros, double minDegrees, double maxDegrees){
   if(numChannels>7 || numChannels>(15-LedPin::numChannels)){
     Serial.printf("\n*** ERROR:  Can't create ServoPin(%d) - no open PWM channels ***\n\n",pin);
+    servoChannel.gpio_num=0;
     return;
   }
 
@@ -128,12 +129,14 @@ ServoPin::ServoPin(uint8_t pin, double initDegrees, uint16_t minMicros, uint16_t
   this->minDegrees=minDegrees;
   microsPerDegree=(double)(maxMicros-minMicros)/(maxDegrees-minDegrees);
 
-  ledc_timer_config_t ledTimer;
-  ledTimer.timer_num=LEDC_TIMER_1;
-  ledTimer.speed_mode=LEDC_HIGH_SPEED_MODE;
-  ledTimer.duty_resolution=LEDC_TIMER_16_BIT;
-  ledTimer.freq_hz=50;
-  ledc_timer_config(&ledTimer);
+  if(numChannels==0){                             // first instantiation of a ServoPin
+    ledc_timer_config_t ledTimer;
+    ledTimer.timer_num=LEDC_TIMER_1;
+    ledTimer.speed_mode=LEDC_HIGH_SPEED_MODE;
+    ledTimer.duty_resolution=LEDC_TIMER_16_BIT;
+    ledTimer.freq_hz=50;
+    ledc_timer_config(&ledTimer);
+  }
 
   servoChannel.gpio_num=pin;
   servoChannel.speed_mode=LEDC_HIGH_SPEED_MODE;
@@ -143,7 +146,6 @@ ServoPin::ServoPin(uint8_t pin, double initDegrees, uint16_t minMicros, uint16_t
   servoChannel.hpoint=0;
   servoChannel.duty*=micros2duty;  
   set(initDegrees);
-  //Serial.printf("Configured Servo on Pin %d using Channel %d in Speed Mode %d\n",servoChannel.gpio_num,servoChannel.channel,servoChannel.speed_mode);
 }
 
 ///////////////////

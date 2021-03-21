@@ -45,27 +45,21 @@ struct DEV_LED : Service::LightBulb {               // ON/OFF LED
 
 struct DEV_DimmableLED : Service::LightBulb {       // Dimmable LED
 
-  PwmPin *pwmPin;                                   // reference to PWM Pin
-  int ledPin;                                       // pin number defined for this LED
-  int channel;                                      // PWM channel used for this LED (should be unique for each LED)
+  LedPin *ledPin;                                   // reference to Led Pin
   SpanCharacteristic *power;                        // reference to the On Characteristic
   SpanCharacteristic *level;                        // reference to the Brightness Characteristic
   
-  DEV_DimmableLED(int channel, int ledPin) : Service::LightBulb(){  
+  DEV_DimmableLED(int pin) : Service::LightBulb(){       // constructor() method
 
     power=new Characteristic::On();     
                 
     level=new Characteristic::Brightness(50);       // Brightness Characteristic with an initial value of 50%
     level->setRange(5,100,1);                       // sets the range of the Brightness to be from a min of 5%, to a max of 100%, in steps of 1%
 
-    this->channel=channel;                          // save the channel number (from 0-15)
-    this->ledPin=ledPin;                            // save LED pin number
-    this->pwmPin=new PwmPin(channel, ledPin);       // configure the PWM channel and attach the specified ledPin
+    this->ledPin=new LedPin(pin);                   // configures a PWM LED for output to the specified pin
 
     Serial.print("Configuring Dimmable LED: Pin="); // initialization message
-    Serial.print(ledPin);
-    Serial.print(" Channel=");
-    Serial.print(channel);
+    Serial.print(ledPin->getPin());
     Serial.print("\n");
     
   } // end constructor
@@ -73,12 +67,12 @@ struct DEV_DimmableLED : Service::LightBulb {       // Dimmable LED
   boolean update(){                              // update() method
 
     LOG1("Updating Dimmable LED on pin=");
-    LOG1(ledPin);
+    LOG1(ledPin->getPin());
     LOG1(":  Current Power=");
     LOG1(power->getVal()?"true":"false");
     LOG1("  Current Brightness=");
     LOG1(level->getVal());
-  
+ 
     if(power->updated()){
       LOG1("  New Power=");
       LOG1(power->getNewVal()?"true":"false");
@@ -91,7 +85,7 @@ struct DEV_DimmableLED : Service::LightBulb {       // Dimmable LED
 
     LOG1("\n");
     
-    pwmPin->set(channel,power->getNewVal()*level->getNewVal());    
+    ledPin->set(power->getNewVal()*level->getNewVal());    
    
     return(true);                               // return true
   

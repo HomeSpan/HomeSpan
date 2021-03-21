@@ -98,7 +98,7 @@ void setup() {
   //  new Service::HAPProtocolInformation();      - DELETED - NO LONGER NEEDED
   //    new Characteristic::Version("1.1.0");     - DELETED - NO LONGER NEEDED
   
-    new DEV_DimmableLED(0,17);        // create a dimmable LED attached to pin 17 using PWM channel 0
+    new DEV_DimmableLED(17);        // create a dimmable (PWM-driven) LED attached to pin 17
 
 } // end of setup()
 

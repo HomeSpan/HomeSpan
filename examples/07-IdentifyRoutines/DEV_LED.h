@@ -31,26 +31,24 @@ struct DEV_LED : Service::LightBulb {               // ON/OFF LED
 
 struct DEV_DimmableLED : Service::LightBulb {       // Dimmable LED
 
-  PwmPin *pwmPin;                                   // reference to PWM Pin
-  int channel;                                      // PWM channel used for this LED (should be unique for each LED)
+  LedPin *ledPin;                                   // reference to Led Pin
   SpanCharacteristic *power;                        // reference to the On Characteristic
   SpanCharacteristic *level;                        // reference to the Brightness Characteristic
   
-  DEV_DimmableLED(int channel, int ledPin) : Service::LightBulb(){       // constructor() method
+  DEV_DimmableLED(int pin) : Service::LightBulb(){       // constructor() method
 
     power=new Characteristic::On();     
                 
     level=new Characteristic::Brightness(50);       // Brightness Characteristic with an initial value of 50%
     level->setRange(5,100,1);                       // sets the range of the Brightness to be from a min of 5%, to a max of 100%, in steps of 1%
 
-    this->channel=channel;                          // save the channel number (from 0-15)
-    this->pwmPin=new PwmPin(channel, ledPin);       // configure the PWM channel and attach the specified ledPin. pinMode() does NOT need to be called.
+    this->ledPin=new LedPin(pin);                   // configures a PWM LED for output to the specified pin
     
   } // end constructor
 
   boolean update(){                              // update() method
     
-    pwmPin->set(channel,power->getNewVal()*level->getNewVal());    
+    ledPin->set(power->getNewVal()*level->getNewVal());    
    
     return(true);                               // return true
   

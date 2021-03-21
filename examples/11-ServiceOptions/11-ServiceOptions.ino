@@ -83,7 +83,7 @@ void setup() {
 
   new SpanAccessory();                                                          
     new DEV_Identify("Ceiling Fan #1","HomeSpan","123-ABC","20mA LED","0.9",0);
-    (new DEV_DimmableLED(0,17))->setPrimary();                                      // Here we specify DEV_DimmableLED as the Primary Service by "chaining" setPrimary() to the pointer return by new.  Note parentheses!
+    (new DEV_DimmableLED(17))->setPrimary();                                      // Here we specify DEV_DimmableLED as the Primary Service by "chaining" setPrimary() to the pointer return by new.  Note parentheses!
     new Service::Fan();                             
       new Characteristic::Active();             
       new Characteristic::RotationDirection();
@@ -91,8 +91,8 @@ void setup() {
 
   new SpanAccessory();                                                          
     new DEV_Identify("Ceiling Fan #2","HomeSpan","123-ABC","20mA LED","0.9",0);
-    new DEV_DimmableLED(0,17);    
-    (new Service::Fan())->setPrimary();                                             // Here we specify the Fan as the Primary Service.  Again, note how we encapsulated the "new" command in parentheses, then chained setPrimary()
+    new DEV_DimmableLED(17);    
+    (new Service::Fan())->setPrimary();                                           // Here we specify the Fan as the Primary Service.  Again, note how we encapsulated the "new" command in parentheses, then chained setPrimary()
       new Characteristic::Active();             
       new Characteristic::RotationDirection();
       new Characteristic::RotationSpeed(0);
@@ -121,7 +121,7 @@ void setup() {
       
   new SpanAccessory();                                                          
     new DEV_Identify("Ceiling Fan #3","HomeSpan","123-ABC","20mA LED","0.9",0);
-    new DEV_DimmableLED(0,17);    
+    new DEV_DimmableLED(17);    
       new Characteristic::Name("Main Light");                                           // Here we create a name for the Dimmable LED
     new DEV_LED(16);    
       new Characteristic::Name("Night Light");                                          // Here we create a name for the On/Off LED
@@ -149,7 +149,7 @@ void setup() {
 
   new SpanAccessory();                                                          
     (new DEV_Identify("Ceiling Fan #4","HomeSpan","123-ABC","20mA LED","0.9",0))->setPrimary();      // specify DEV_Identify as the Primary Service
-    new DEV_DimmableLED(0,17);    
+    new DEV_DimmableLED(17);    
       new Characteristic::Name("Main Light");
     new DEV_LED(16);    
       new Characteristic::Name("Night Light");
@@ -172,7 +172,7 @@ void setup() {
       new Characteristic::RotationDirection();
       new Characteristic::RotationSpeed(0);
       new Characteristic::Name("Fan");
-    new DEV_DimmableLED(0,17);    
+    new DEV_DimmableLED(17);    
       new Characteristic::Name("Main Light");
     new DEV_LED(16);    
       new Characteristic::Name("Night Light");
