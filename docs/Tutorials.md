@@ -35,8 +35,8 @@ Example 5 expands on Example 2 by adding in the code needed to actually control 
 ### [Example 6 - DimmableLED](../examples/06-DimmableLED)
 Example 6 changes Example 5 so that LED #2 is now dimmable, instead of just on/off.  New HomeSpan API topics covered in this example include:
 
-* implementing pulse-width-modulation on any ESP32 pin by instantiating a `PwmPin()` object
-* setting the PWM level to control the brightness of an LED using the PwmPin `set()` method
+* implementing pulse-width-modulation (PWM) to control an LED attached to any ESP32 pin by instantiating an `LedPin()` object
+* setting the brightness of an LED using the LedPin `set()` method
 * storing similar derived Service classes in the same \*.h file for ease of use
 
 ### [Example 7 - IdentifyRoutines](../examples/07-IdentifyRoutines)
