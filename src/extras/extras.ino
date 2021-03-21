@@ -5,7 +5,7 @@
 #include "PwmPin.h"
 
 //ServoPin servo(3,18,-90);
-ServoPin servo(3,18,0,500,2200,-90,90);
+//ServoPin servo(18,0,500,2200,-90,90);
   
 void setup(){
  
@@ -17,7 +17,7 @@ void setup(){
   Serial.println("Starting...");
 
 
-  LedPin yellow(16);
+  LedPin yellow(16,10);
   LedPin d1(19);
   LedPin d2(19);
   LedPin d3(19);
@@ -30,13 +30,14 @@ void setup(){
   LedPin d10(19);
   LedPin d11(19);
   LedPin d12(19);
-  LedPin d13(19);
-  LedPin d14(19);
-  LedPin d15(19);
-  LedPin d16(19);
-  LedPin red(17);  
+  LedPin red(17,100);  
 
-  while(1){
+//  ServoPin servo(18,0,500,2200,-90,90);
+  ServoPin s0(19);
+  ServoPin servo(18,45);
+  ServoPin s1(19);
+
+  while(0){
     for(int i=0;i<100;i++){
       yellow.set(i);
       delay(10);
@@ -48,24 +49,21 @@ void setup(){
     }
   }
 
+  while(1){
+    double STEP=1;
+  
+    for(int i=-100*STEP;i<=100*STEP;i++){
+      servo.set((double)i/STEP);
+      delay(10);
+    }
+  
+    for(int i=100*STEP;i>=-100*STEP;i--){
+      servo.set((double)i/STEP);
+      delay(10);
+    }
+  }
+
 }
 
 void loop(){
-
-  
-//  double STEP=1;
-//
-//  for(int i=-100*STEP;i<=100*STEP;i++){
-//    servo.set((double)i/STEP);
-//    delay(10);
-//  }
-//
-//  for(int i=100*STEP;i>=-100*STEP;i--){
-//    servo.set((double)i/STEP);
-//    delay(10);
-//  }
- 
-//  return;
-
-
 }
