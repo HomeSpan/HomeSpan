@@ -35,14 +35,14 @@ See tutorial sketch [#10 (RGB_LED)](../examples/10-RGB_LED) for an example of us
 
 ### *ServoPin(uint8_t pin [,double initDegrees [,uint16_t minMicros, uint16_t maxMicros, double minDegrees, double maxDegrees]])*
 
-Creating an instance of this **class** configures the specified *pin* to output a 50 Hz PWM signal, which is suitable for controlling most Servo Motors.  There are three forms of the constructor: one with just a single argument; one with two arguments; and one with all six arguments.  Parameters, along with their defaults if left unspecified, are as follows:
+Creating an instance of this **class** configures the specified *pin* to output a 50 Hz PWM signal, which is suitable for controlling most Servo Motors.  There are three forms of the constructor: one with just a single argument; one with two arguments; and one with all six arguments.  Arguments, along with their defaults if left unspecified, are as follows:
 
   * *pin* - the pin on which the PWM control signal will be output.  The control wire of a Servo Motor should be connected this pin
   * *initDegrees* - the initial position (in degrees) to which the Servo Motor should be set (default=0°)
-  * minMicros - the pulse width (in microseconds) that moves the Servo Motor to its "minimium" position of *minDegrees* (default=1000𝛍s)
-  * maxMicros - the pulse width (in microseconds) that moves the Servo Motor to its "maximum" position of *maxDegrees* (default=2000𝛍s)
-  * minDegrees - the position (in degrees) to which the Servo Motor moves when receiving a pulse width of *minMicros* (default=—90°)
-  * maxDegrees - the position (in degrees) to which the Servo Motor moves when receiving a pulse width of *maxMicros* (default=90°)
+  * *minMicros* - the pulse width (in microseconds) that moves the Servo Motor to its "minimium" position of *minDegrees* (default=1000𝛍s)
+  * *maxMicros* - the pulse width (in microseconds) that moves the Servo Motor to its "maximum" position of *maxDegrees* (default=2000𝛍s)
+  * *minDegrees* - the position (in degrees) to which the Servo Motor moves when receiving a pulse width of *minMicros* (default=—90°)
+  * *maxDegrees* - the position (in degrees) to which the Servo Motor moves when receiving a pulse width of *maxMicros* (default=90°)
 
 The *minMicros* parameter must be less than the *maxMicros* parameter, but setting *minDegrees* to a value greater than *maxDegrees* is allowed and can be used to reverse the minimum and maximum positions of the Servo Motor. The following methods are supported:
 
@@ -106,7 +106,7 @@ Since most RF/IR signals repeat the same train of pulses more than once, the dur
    
    * *tickTime* - the duration, in **microseconds**, of a *tick*.  This is an optional argument with a default of 1𝛍s if not specified.  Valid range is 1-255𝛍s, or set to 0 for 256𝛍s
    
-Below is a complete sketch that produces two different pulse trains with the signal output linked to the ESP32 device's built-in LED (rather than an RF or IR transmitter).  For illustrative purposes the tick duration has been set to a very long 100𝛍s, and pulse times range from of 1000-10,000 ticks, so that the individual pulses are easily discernable on the LED.  Note this example sketch is also available in the Arduino IDE under *File → Examples → HomeSpan → Other Examples → RemoteControl*.
+Below is a complete sketch that produces two different pulse trains with the signal output linked to the ESP32 device's built-in LED (rather than an RF or IR transmitter).  For illustrative purposes the tick duration has been set to a very long 100𝛍s, and pulse times range from of 1000-10,000 ticks, so that the individual pulses are easily discernable on the LED.  Note this example sketch is also available in the Arduino IDE under [*File → Examples → HomeSpan → Other Examples → RemoteControl*](https://github.com/HomeSpan/HomeSpan/tree/dev/Other%20Examples/RemoteControl).
 
 ```C++
 /* HomeSpan Remote Control Example */
