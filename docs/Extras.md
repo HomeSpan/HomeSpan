@@ -48,7 +48,7 @@ The *minMicros* parameter must be less than the *maxMicros* parameter, but setti
 
 * `void set(uint8_t position)`
 
-  * sets the position of the Servo Motor to *position* (in degrees).  In order to protect the Servo Motor, values of *position* less than *minDegrees* are automatically reset to *minDegrees* and value greater than *maxDegrees* are automatically reset to *maxDegrees*.
+  * sets the position of the Servo Motor to *position* (in degrees).  In order to protect the Servo Motor, values of *position* less than *minDegrees* are automatically reset to *minDegrees*, and values greater than *maxDegrees* are automatically reset to *maxDegrees*.
   
 * `int getPin()`
 
