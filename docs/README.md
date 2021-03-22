@@ -21,7 +21,9 @@ HomeSpan provides a microcontroller-focused implementation of [Apple's HomeKit A
   * Complete transparency to every underlying HomeKit action, data request, and data response
   * Command-line interface with a variety of info, debugging, and configuration commands
 * Built-in database validation to ensure your configuration meets all HAP requirements
-* Integrated PWM functionality supporting pulse-wave-modulation on any ESP32 pin
+* Dedicated classes that utilize the ESP32's 16-channel PWM peripheral for easy control of:
+  * LED Brightness
+  * Servo Motors
 * Integrated Push Button functionality supporting single, double, and long presses 
 * Integrated access to the ESP32's on-chip Remote Control peripheral for easy generation of IR and RF signals
 * 17 detailed tutorial-sketches with extensive comments, HomeSpan documentation and tips and tricks
