@@ -223,10 +223,10 @@ If REQUIRED is defined in the main sketch prior to including the HomeSpan librar
 
 #### Deprecated functions (available for backwards compatibility with older sketches):
 
-[*SpanRange(int min, int max, int step)*](https://github.com/HomeSpan/HomeSpan/blob/release-1.2.0/docs/Reference.md#spanrangeint-min-int-max-int-step)
+*SpanRange(int min, int max, int step)*
 
   * this legacy function is limited to integer-based parameters and has been re-coded to simply call the more generic `setRange(min, max, step)` method
-  * last supported version: v1.2.0
+  * last supported version: [v1.2.0](https://github.com/HomeSpan/HomeSpan/blob/release-1.2.0/docs/Reference.md#spanrangeint-min-int-max-int-step)
   * **please use** `setRange(min, max, step)` **for all new sketches**
 
 ---
