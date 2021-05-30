@@ -221,15 +221,13 @@ If REQUIRED is defined in the main sketch prior to including the HomeSpan librar
 ```
 ---
 
-## *SpanRange(int min, int max, int step)*
+#### Deprecated functions (available for backwards compatibility with older sketches):
 
-Creating an instance of this **class** overrides the default HAP range for a Characteristic with the *min*, *max*, and *step* values specified.
+[*SpanRange(int min, int max, int step)*](https://github.com/HomeSpan/HomeSpan/blob/release-1.2.0/docs/Reference.md#spanrangeint-min-int-max-int-step)
 
-* instantiated Ranges are added to the HomeSpan HAP Database and associated with the last Characteristic instantiated
-* instantiating a Range without first instantiating a Characteristic throws an error during initialization
-* example: `new Characteristic::Brightness(50); new SpanRange(10,100,5);`
-* this is a legacy function that is limited to integer-based parameters, and has been re-coded to simply call the more generic `setRange(min, max, step)` method
-* **please use** `setRange(min, max, step)` **for all new sketches**
+  * this legacy function is limited to integer-based parameters and has been re-coded to simply call the more generic `setRange(min, max, step)` method
+  * last supported version: v1.2.0
+  * **please use** `setRange(min, max, step)` **for all new sketches**
 
 ---
 
