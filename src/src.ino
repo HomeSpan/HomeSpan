@@ -19,7 +19,7 @@ void setup() {
   homeSpan.setWifiCallback(wifiEstablished);
 
   new SpanUserCommand('d',"My Description",userCom1);
-  new SpanUserCommand('f',"My second Description",userCom2);
+  new SpanUserCommand('d',"My second Description",userCom2);
 
   homeSpan.begin(Category::Lighting,"HomeSpan Lamp Server","homespan");
 
