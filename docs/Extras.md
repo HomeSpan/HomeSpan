@@ -161,4 +161,20 @@ void loop(){
 
 ---
 
+#### Deprecated functions (available for backwards compatibility with older sketches):
+
+*PwmPin(uint8_t channel, uint8_t pin)*
+
+  * this legacy function was used to generically control the ESP32's built-in PWM generators to drive a dimmable LED and required the user to keep track of individual PWM channels.  It has been replaced by two specific (and much easier-to-use) methods:
+  
+    * *LedPin(uint8_t pin)* - drives a dimmable LED
+      
+    * *ServoPin(uint8_t pin [,double initDegrees [,uint16_t minMicros, uint16_t maxMicros, double minDegrees, double maxDegrees]])* - drives a Servo Motor
+   
+  * last supported version: [v1.2.1](https://github.com/HomeSpan/HomeSpan/blob/release-1.2.1/docs/Extras.md#pwmpinuint8_t-channel-uint8_t-pin)
+
+  * **please use** `LedPin` and `ServoPin` **for all new sketches**
+
+---
+
 [↩️](README.md) Back to the Welcome page
