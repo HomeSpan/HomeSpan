@@ -66,6 +66,7 @@ struct SpanCharacteristic;
 struct SpanRange;
 struct SpanBuf;
 struct SpanButton;
+struct SpanUserCommand;
 
 extern Span homeSpan;
 
@@ -134,6 +135,8 @@ struct Span{
   vector<SpanBuf> Notifications;                    // vector of SpanBuf objects that store info for Characteristics that are updated with setVal() and require a Notification Event
   vector<SpanButton *> PushButtons;                 // vector of pointer to all PushButtons
   unordered_map<uint64_t, uint32_t> TimedWrites;    // map of timed-write PIDs and Alarm Times (based on TTLs)
+  
+  unordered_map<char, SpanUserCommand *> UserCommands;           // map of pointers to all UserCommands
 
   void begin(Category catID=DEFAULT_CATEGORY,
              const char *displayName=DEFAULT_DISPLAY_NAME,
@@ -474,7 +477,15 @@ struct SpanButton{
   SpanButton(int pin, uint16_t longTime=2000, uint16_t singleTime=5, uint16_t doubleTime=200);
 };
 
-/////////////////////////////////////////////////
+///////////////////////////////
 
+struct SpanUserCommand {
+  const char *s;                              // description of command
+  void (*userFunction)(const char *v);              // user-defined function to call
+
+  SpanUserCommand(char c, const char *s, void (*f)(const char *v));  
+};
+
+/////////////////////////////////////////////////
 
 #include "Span.h"

@@ -892,17 +892,33 @@ void Span::processSerialCommand(const char *c){
       Serial.print("  E - erase ALL stored data and restart\n");      
       Serial.print("\n");          
       Serial.print("  L <level> - change the Log Level setting to <level>\n");
-      Serial.print("\n");      
-      Serial.print("  ? - print this list of commands\n");
-      Serial.print("\n");      
-      Serial.print("\n*** End Commands ***\n\n");
+      Serial.print("\n");
+
+      for(auto uCom=homeSpan.UserCommands.begin(); uCom!=homeSpan.UserCommands.end(); uCom++)      // loop over all UserCommands using an iterator
+        Serial.printf("  @%c %s\n",uCom->first,uCom->second->s);
+
+      if(!homeSpan.UserCommands.empty())
+        Serial.print("\n");
+        
+      Serial.print("  ? - print this list of commands\n\n");     
+      Serial.print("*** End Commands ***\n\n");
     }
     break;
 
+    case '@':{
+
+      auto uCom=UserCommands.find(c[1]);
+
+      if(uCom!=UserCommands.end()){
+        uCom->second->userFunction(c+1);
+        break;
+      }
+    }
+
     default:
-      Serial.print("** Unknown command: '");
+      Serial.print("*** Unknown command: '");
       Serial.print(c);
-      Serial.print("' - type '?' for list of commands.\n");
+      Serial.print("'.  Type '?' for list of commands.\n");
     break;
     
   } // switch
@@ -1695,4 +1711,14 @@ SpanButton::SpanButton(int pin, uint16_t longTime, uint16_t singleTime, uint16_t
   homeSpan.PushButtons.push_back(this);
 }
 
+
 ///////////////////////////////
+//     SpanUserCommand       //
+///////////////////////////////
+
+SpanUserCommand::SpanUserCommand(char c, const char *s, void (*f)(const char *v)){
+  this->s=s;
+  userFunction=f;
+   
+  homeSpan.UserCommands[c]=this;
+}

@@ -18,6 +18,9 @@ void setup() {
   homeSpan.setSketchVersion("Test 1.3.1");
   homeSpan.setWifiCallback(wifiEstablished);
 
+  new SpanUserCommand('d',"My Description",userCom1);
+  new SpanUserCommand('f',"My second Description",userCom2);
+
   homeSpan.begin(Category::Lighting,"HomeSpan Lamp Server","homespan");
 
   new SpanAccessory();                                  // Begin by creating a new Accessory using SpanAccessory(), which takes no arguments
@@ -30,21 +33,17 @@ void setup() {
       new Characteristic::FirmwareRevision(HOMESPAN_VERSION);   // Firmware of the Accessory (arbitrary text string, and can be the same for every Accessory)  
       new Characteristic::Identify();                           // Create the required Identify
   
-//    new Service::HAPProtocolInformation();                  // Create the HAP Protcol Information Service  
+    new Service::HAPProtocolInformation();                  // Create the HAP Protcol Information Service  
       new Characteristic::Version("1.1.0");                     // Set the Version Characteristic to "1.1.0" as required by HAP
 
     new Service::LightBulb();
-//      new Characteristic::On();
+      new Characteristic::On();
       new Characteristic::Brightness();
       new Characteristic::Name("Light 1");
     new Service::LightBulb();
       new Characteristic::On(2);
-      (new Characteristic::Brightness(150))->setRange(0,140,5);
+      (new Characteristic::Brightness(50))->setRange(10,100,5);
       new Characteristic::Name("Light 2");
-    (new Service::Switch())->setPrimary();
-      new Characteristic::On();
-      new Characteristic::Name("Switch 3");
-      new SpanButton(17);
 
 } // end of setup()
 
@@ -60,4 +59,16 @@ void loop(){
 
 void wifiEstablished(){
   Serial.print("IN CALLBACK FUNCTION\n\n");
+}
+
+//////////////////////////////////////
+
+void userCom1(const char *v){
+  Serial.printf("In User Command 1: '%s'\n\n",v);
+}
+
+//////////////////////////////////////
+
+void userCom2(const char *v){
+  Serial.printf("In User Command 2: '%s'\n\n",v);
 }
