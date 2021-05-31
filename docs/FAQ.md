@@ -32,6 +32,10 @@
 
 * Though HomeKit now supports Television controls, at the time of this posting Apple has not publicly released any specifications, SDKs, or ADKs, related to HAP Television Services or any HAP Television Characteristics.  It appears that for now these Services are meant only for commercial use.  Support for HAP Television Services and Characteristics will be added to HomeSpan as soon as Apple makes the specifications publicly available in some form or another.
 
+#### Can you use HomeSpan with an Ethernet connection instead of a WiFi connection?
+
+* Not as present.  Though with a compatible Ethernet board the ESP32 can be configured to run as an Ethernet Server, using MDNS over Ethernet does not work on the ESP32 due to some apparent problems with the Ethernet UDP stack.  Unfortunately, HomeSpan and HAP-R2 require MDNS to operate.  If anyone has managed to get an Ethernet version of MDNS working on an ESP32 please let me know - it would be great to add Ethernet support to HomeSpan.
+
 ---
 
 [↩️](README.md) Back to the Welcome page
