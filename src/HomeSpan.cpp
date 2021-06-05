@@ -142,8 +142,14 @@ void Span::poll() {
     HAPClient::init();        // read NVS and load HAP settings  
 
     if(!strlen(network.wifiData.ssid)){
-      Serial.print("*** WIFI CREDENTIALS DATA NOT FOUND.  YOU MAY CONFIGURE BY TYPING 'W <RETURN>'.\n\n");
-      statusLED.start(LED_WIFI_NEEDED);
+      Serial.print("*** WIFI CREDENTIALS DATA NOT FOUND.  ");
+      if(autoStartAPEnabled){
+        Serial.print("AUTO-START OF ACCESS POINT ENABLED...\n\n");
+        processSerialCommand("A");
+      } else {
+        Serial.print("YOU MAY CONFIGURE BY TYPING 'W <RETURN>'.\n\n");
+        statusLED.start(LED_WIFI_NEEDED);
+      }
     } else {
       homeSpan.statusLED.start(LED_WIFI_CONNECTING);
     }

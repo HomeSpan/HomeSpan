@@ -21,6 +21,8 @@ void setup() {
   new SpanUserCommand('d',"My Description",userCom1);
   new SpanUserCommand('d',"My second Description",userCom2);
 
+//  homeSpan.enableAutoStartAP();
+
   homeSpan.begin(Category::Lighting,"HomeSpan Lamp Server","homespan");
 
   new SpanAccessory();                                  // Begin by creating a new Accessory using SpanAccessory(), which takes no arguments
@@ -40,6 +42,7 @@ void setup() {
       new Characteristic::On();
       new Characteristic::Brightness();
       new Characteristic::Name("Light 1");
+      new Characteristic::ColorTemperature(0);
     new Service::LightBulb();
       new Characteristic::On(2);
       (new Characteristic::Brightness(50))->setRange(10,100,5);
