@@ -77,6 +77,10 @@ The following **optional** `homeSpan` methods override various HomeSpan initiali
   * HomeSpan OTA requires an authorizing password unless *auth* is specified and set to *false*
   * the default OTA password for new HomeSpan devices is "homespan-ota"
   * this can be changed via the [HomeSpan CLI](CLI.md) using the 'O' command
+
+* `void enableAutoStartAP()`
+  * enables automatic start-up of WiFi Access Point if WiFi Credentials are **not** found at boot time
+  * methods to alter the behavior the Access Point, such as `setApTimeout()` must be called prior to `enableAutoStartAP()` to have an effect  
   
 * `void setSketchVersion(const char *sVer)`
   * sets the version of a HomeSpan sketch to *sVer*, which can be any arbitrary character string
