@@ -395,6 +395,7 @@ struct SpanCharacteristic{
     
       if(!nvs_get_blob(homeSpan.charNVS,nvsKey,NULL,&len)){
         nvs_get_blob(homeSpan.charNVS,nvsKey,&value,&len);
+        newValue=value;
       }
       else {
         nvs_set_blob(homeSpan.charNVS,nvsKey,&value,sizeof(UVal));       // store data
@@ -469,6 +470,11 @@ struct SpanCharacteristic{
     char dummy[]="";
     sb.val=dummy;                           // set dummy "val" so that sprintfNotify knows to consider this "update"
     homeSpan.Notifications.push_back(sb);   // store SpanBuf in Notifications vector  
+
+    if(nvsKey){
+      nvs_set_blob(homeSpan.charNVS,nvsKey,&value,sizeof(UVal));    // store data
+      nvs_commit(homeSpan.charNVS);
+    }
     
   } // setVal()
   
