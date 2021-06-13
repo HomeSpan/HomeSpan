@@ -39,13 +39,13 @@ void setup() {
       new Characteristic::Version("1.1.0");                     // Set the Version Characteristic to "1.1.0" as required by HAP
 
     new Service::LightBulb();
-      new Characteristic::On();
-      new Characteristic::Brightness();
+      (new Characteristic::On())->restore();
+      (new Characteristic::Brightness())->restore();
       new Characteristic::Name("Light 1");
-      new Characteristic::ColorTemperature(0);
+      new Characteristic::ColorTemperature();
     new Service::LightBulb();
-      new Characteristic::On(2);
-      (new Characteristic::Brightness(50))->setRange(10,100,5);
+      (new Characteristic::On())->restore();
+      (new Characteristic::Brightness(50))->setRange(10,100,5)->restore();
       new Characteristic::Name("Light 2");
 
 } // end of setup()

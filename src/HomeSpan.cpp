@@ -65,6 +65,9 @@ void Span::begin(Category catID, const char *displayName, const char *hostNameBa
 
   hapServer=new WiFiServer(tcpPortNum);
 
+  nvs_flash_init();                             // initialize non-volatile-storage partition in flash  
+  nvs_open("CHAR",NVS_READWRITE,&charNVS);
+
   delay(2000);
  
   Serial.print("\n************************************************************\n"
@@ -1135,13 +1138,15 @@ int Span::updateCharacteristics(char *buf, SpanBuf *pObj){
           LOG1(pObj[j].characteristic->aid);
           LOG1(" iid=");  
           LOG1(pObj[j].characteristic->iid);
-          if(status==StatusCode::OK){                          // if status is okay
-            pObj[j].characteristic->value
-              =pObj[j].characteristic->newValue;               // update characteristic value with new value
+          if(status==StatusCode::OK){                                                     // if status is okay
+            pObj[j].characteristic->value=pObj[j].characteristic->newValue;               // update characteristic value with new value
+            if(pObj[j].characteristic->nvsKey){                                                                                               // if storage key found
+              nvs_set_blob(charNVS,pObj[j].characteristic->nvsKey,&(pObj[j].characteristic->value),sizeof(pObj[j].characteristic->value));    // store data
+              nvs_commit(charNVS);
+            }
             LOG1(" (okay)\n");
-          } else {                                             // if status not okay
-            pObj[j].characteristic->newValue
-              =pObj[j].characteristic->value;                  // replace characteristic new value with original value
+          } else {                                                                        // if status not okay
+            pObj[j].characteristic->newValue=pObj[j].characteristic->value;               // replace characteristic new value with original value
             LOG1(" (failed)\n");
           }
           pObj[j].characteristic->isUpdated=false;             // reset isUpdated flag for characteristic
@@ -1516,6 +1521,25 @@ SpanCharacteristic::SpanCharacteristic(HapChar *hapChar){
   aid=homeSpan.Accessories.back()->aid;
 
   ev=(boolean *)calloc(homeSpan.maxConnections,sizeof(boolean));
+}
+
+///////////////////////////////
+
+void SpanCharacteristic::restore(){
+
+  nvsKey=(char *)malloc(16);
+  uint16_t t;
+  sscanf(type,"%x",&t);
+  sprintf(nvsKey,"%04X%08X%03X",t,aid,iid&0xFFF);
+  size_t len;
+  
+  if(!nvs_get_blob(homeSpan.charNVS,nvsKey,NULL,&len)){
+    nvs_get_blob(homeSpan.charNVS,nvsKey,&value,&len);
+  }
+  else {
+    nvs_set_blob(homeSpan.charNVS,nvsKey,&value,sizeof(UVal));       // store data
+    nvs_commit(homeSpan.charNVS);                                    // commit to NVS  
+  }
 }
 
 ///////////////////////////////

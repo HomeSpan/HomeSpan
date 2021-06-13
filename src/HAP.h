@@ -28,7 +28,6 @@
 #pragma once
 
 #include <WiFi.h>
-#include <nvs.h>
 
 #include "HomeSpan.h"
 #include "TLV.h"

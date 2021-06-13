@@ -33,6 +33,7 @@
 
 #include <Arduino.h>
 #include <unordered_map>
+#include <nvs.h>
 
 #include "Settings.h"
 #include "Utils.h"
@@ -106,6 +107,7 @@ struct Span{
   boolean isBridge=true;                        // flag indicating whether device is configured as a bridge (i.e. first Accessory contains nothing but AccessoryInformation and HAPProtocolInformation)
   HapQR qrCode;                                 // optional QR Code to use for pairing
   const char *sketchVersion="n/a";              // version of the sketch
+  nvs_handle charNVS;                           // handle for non-volatile-storage of Characteristics data
 
   boolean connected=false;                      // WiFi connection status
   unsigned long waitTime=60000;                 // time to wait (in milliseconds) between WiFi connection attempts
@@ -252,6 +254,7 @@ struct SpanCharacteristic{
   boolean staticRange;                     // Flag that indiates whether Range is static and cannot be changed with setRange()
   boolean customRange=false;               // Flag for custom ranges
   boolean *ev;                             // Characteristic Event Notify Enable (per-connection)
+  char *nvsKey=NULL;                       // key for NVS storage of Characteristic value
   
   uint32_t aid=0;                          // Accessory ID - passed through from Service containing this Characteristic
   boolean isUpdated=false;                 // set to true when new value has been requested by PUT /characteristic
@@ -263,6 +266,7 @@ struct SpanCharacteristic{
   
   int sprintfAttributes(char *cBuf, int flags);   // prints Characteristic JSON records into buf, according to flags mask; return number of characters printed, excluding null terminator  
   StatusCode loadUpdate(char *val, char *ev);     // load updated val/ev from PUT /characteristic JSON request.  Return intiial HAP status code (checks to see if characteristic is found, is writable, etc.)
+  void restore();                                 // loads previous value of Characteristic from NVS (if found)
   
   boolean updated(){return(isUpdated);}           // returns isUpdated
   unsigned long timeVal();                        // returns time elapsed (in millis) since value was last updated

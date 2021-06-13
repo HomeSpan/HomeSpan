@@ -26,7 +26,6 @@
  ********************************************************************************/
  
 #include <ESPmDNS.h>
-#include <nvs_flash.h>
 #include <sodium.h>
 #include <MD5Builder.h>
 
@@ -38,8 +37,6 @@
 void HAPClient::init(){
 
   size_t len;             // not used but required to read blobs from NVS
-
-  nvs_flash_init();         // initialize non-volatile-storage partition in flash  
 
   nvs_open("WIFI",NVS_READWRITE,&wifiNVS);      // open WIFI data namespace in NVS
   nvs_open("SRP",NVS_READWRITE,&srpNVS);        // open SRP data namespace in NVS 
