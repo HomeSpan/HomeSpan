@@ -380,6 +380,8 @@ struct SpanCharacteristic{
     
   template <typename T, typename A=boolean, typename B=boolean> void init(T val, boolean nvsStore, A min=0, B max=1){
 
+    int nvsFlag=0;
+
     uvSet(value,val);
     uvSet(newValue,val);
     uvSet(minValue,min);
@@ -396,10 +398,12 @@ struct SpanCharacteristic{
       if(!nvs_get_blob(homeSpan.charNVS,nvsKey,NULL,&len)){
         nvs_get_blob(homeSpan.charNVS,nvsKey,&value,&len);
         newValue=value;
+        nvsFlag=2;
       }
       else {
         nvs_set_blob(homeSpan.charNVS,nvsKey,&value,sizeof(UVal));       // store data
         nvs_commit(homeSpan.charNVS);                                    // commit to NVS  
+        nvsFlag=1;
       }
     }
   
@@ -407,8 +411,10 @@ struct SpanCharacteristic{
     if(format!=STRING && format!=BOOL)
       homeSpan.configLog+= "  Range=[" + String(uvPrint(minValue)) + "," + String(uvPrint(maxValue)) + "]";
 
-    if(nvsStore)
+    if(nvsFlag==2)
       homeSpan.configLog+=" (restored)";
+    else if(nvsFlag==1)
+      homeSpan.configLog+=" (storing)";
   
     boolean valid=false;
   

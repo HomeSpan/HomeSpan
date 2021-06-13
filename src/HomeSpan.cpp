@@ -784,6 +784,14 @@ void Span::processSerialCommand(const char *c){
     }
     break;
 
+    case 'V': {
+      
+      nvs_erase_all(charNVS);
+      nvs_commit(charNVS);      
+      Serial.print("\n*** Values for all saved Characteristics erased!\n\n");
+    }
+    break;
+
     case 'H': {
       
       statusLED.off();
@@ -893,6 +901,7 @@ void Span::processSerialCommand(const char *c){
       Serial.print("  O - change the OTA password\n");
       Serial.print("  A - start the HomeSpan Setup Access Point\n");      
       Serial.print("\n");      
+      Serial.print("  V - delete value settings for all saved Characteristics\n");
       Serial.print("  U - unpair device by deleting all Controller data\n");
       Serial.print("  H - delete HomeKit Device ID as well as all Controller data and restart\n");      
       Serial.print("\n");      
