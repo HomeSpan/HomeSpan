@@ -1525,25 +1525,6 @@ SpanCharacteristic::SpanCharacteristic(HapChar *hapChar){
 
 ///////////////////////////////
 
-void SpanCharacteristic::restore(){
-
-  nvsKey=(char *)malloc(16);
-  uint16_t t;
-  sscanf(type,"%x",&t);
-  sprintf(nvsKey,"%04X%08X%03X",t,aid,iid&0xFFF);
-  size_t len;
-  
-  if(!nvs_get_blob(homeSpan.charNVS,nvsKey,NULL,&len)){
-    nvs_get_blob(homeSpan.charNVS,nvsKey,&value,&len);
-  }
-  else {
-    nvs_set_blob(homeSpan.charNVS,nvsKey,&value,sizeof(UVal));       // store data
-    nvs_commit(homeSpan.charNVS);                                    // commit to NVS  
-  }
-}
-
-///////////////////////////////
-
 int SpanCharacteristic::sprintfAttributes(char *cBuf, int flags){
   int nBytes=0;
 

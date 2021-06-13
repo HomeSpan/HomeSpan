@@ -266,7 +266,6 @@ struct SpanCharacteristic{
   
   int sprintfAttributes(char *cBuf, int flags);   // prints Characteristic JSON records into buf, according to flags mask; return number of characters printed, excluding null terminator  
   StatusCode loadUpdate(char *val, char *ev);     // load updated val/ev from PUT /characteristic JSON request.  Return intiial HAP status code (checks to see if characteristic is found, is writable, etc.)
-  void restore();                                 // loads previous value of Characteristic from NVS (if found)
   
   boolean updated(){return(isUpdated);}           // returns isUpdated
   unsigned long timeVal();                        // returns time elapsed (in millis) since value was last updated
@@ -379,7 +378,7 @@ struct SpanCharacteristic{
     
   } // setRange()
     
-  template <typename T, typename A=boolean, typename B=boolean> void init(T val, A min=0, B max=1){
+  template <typename T, typename A=boolean, typename B=boolean> void init(T val, boolean nvsStore, A min=0, B max=1){
 
     uvSet(value,val);
     uvSet(newValue,val);
@@ -387,36 +386,55 @@ struct SpanCharacteristic{
     uvSet(maxValue,max);
     uvSet(stepValue,0);
 
-  homeSpan.configLog+="(" + uvPrint(value) + ")" + ":  IID=" + String(iid) + ", UUID=0x" + String(type);
-  if(format!=STRING && format!=BOOL)
-    homeSpan.configLog+= "  Range=[" + String(uvPrint(minValue)) + "," + String(uvPrint(maxValue)) + "]";
-
-  boolean valid=false;
-
-  for(int i=0; !valid && i<homeSpan.Accessories.back()->Services.back()->req.size(); i++)
-    valid=!strcmp(type,homeSpan.Accessories.back()->Services.back()->req[i]->type);
-
-  for(int i=0; !valid && i<homeSpan.Accessories.back()->Services.back()->opt.size(); i++)
-    valid=!strcmp(type,homeSpan.Accessories.back()->Services.back()->opt[i]->type);
-
-  if(!valid){
-    homeSpan.configLog+=" *** ERROR!  Service does not support this Characteristic. ***";
-    homeSpan.nFatalErrors++;
-  }
-
-  boolean repeated=false;
+    if(nvsStore){
+      nvsKey=(char *)malloc(16);
+      uint16_t t;
+      sscanf(type,"%x",&t);
+      sprintf(nvsKey,"%04X%08X%03X",t,aid,iid&0xFFF);
+      size_t len;
+    
+      if(!nvs_get_blob(homeSpan.charNVS,nvsKey,NULL,&len)){
+        nvs_get_blob(homeSpan.charNVS,nvsKey,&value,&len);
+      }
+      else {
+        nvs_set_blob(homeSpan.charNVS,nvsKey,&value,sizeof(UVal));       // store data
+        nvs_commit(homeSpan.charNVS);                                    // commit to NVS  
+      }
+    }
   
-  for(int i=0; !repeated && i<homeSpan.Accessories.back()->Services.back()->Characteristics.size(); i++)
-    repeated=!strcmp(type,homeSpan.Accessories.back()->Services.back()->Characteristics[i]->type);
+    homeSpan.configLog+="(" + uvPrint(value) + ")" + ":  IID=" + String(iid) + ", UUID=0x" + String(type);
+    if(format!=STRING && format!=BOOL)
+      homeSpan.configLog+= "  Range=[" + String(uvPrint(minValue)) + "," + String(uvPrint(maxValue)) + "]";
+
+    if(nvsStore)
+      homeSpan.configLog+=" (restored)";
   
-  if(valid && repeated){
-    homeSpan.configLog+=" *** ERROR!  Characteristic already defined for this Service. ***";
-    homeSpan.nFatalErrors++;
-  }
-
-  homeSpan.Accessories.back()->Services.back()->Characteristics.push_back(this);  
-
-  homeSpan.configLog+="\n"; 
+    boolean valid=false;
+  
+    for(int i=0; !valid && i<homeSpan.Accessories.back()->Services.back()->req.size(); i++)
+      valid=!strcmp(type,homeSpan.Accessories.back()->Services.back()->req[i]->type);
+  
+    for(int i=0; !valid && i<homeSpan.Accessories.back()->Services.back()->opt.size(); i++)
+      valid=!strcmp(type,homeSpan.Accessories.back()->Services.back()->opt[i]->type);
+  
+    if(!valid){
+      homeSpan.configLog+=" *** ERROR!  Service does not support this Characteristic. ***";
+      homeSpan.nFatalErrors++;
+    }
+  
+    boolean repeated=false;
+    
+    for(int i=0; !repeated && i<homeSpan.Accessories.back()->Services.back()->Characteristics.size(); i++)
+      repeated=!strcmp(type,homeSpan.Accessories.back()->Services.back()->Characteristics[i]->type);
+    
+    if(valid && repeated){
+      homeSpan.configLog+=" *** ERROR!  Characteristic already defined for this Service. ***";
+      homeSpan.nFatalErrors++;
+    }
+  
+    homeSpan.Accessories.back()->Services.back()->Characteristics.push_back(this);  
+  
+    homeSpan.configLog+="\n"; 
    
   } // init()
 
