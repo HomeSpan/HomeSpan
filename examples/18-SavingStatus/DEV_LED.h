@@ -9,51 +9,35 @@
 
 struct DEV_DimmableLED : Service::LightBulb {       // Dimmable LED
 
-  // This version of the Dimmable LED Service is similar to the one last used in Example 11, but now includes support for 3 physical PushButtons
-  // performing the following actions:
-  //
-  // power button:  SHORT press toggles power on/off; LONG press saves current brightness as favorite level; DOUBLE press sets brightness to favorite level
-  // raise button:  SHORT press increases brightness by 1%; LONG press increases brightness by 10%; DOUBLE press increases brightness to maximum
-  // lower button:  SHORT press decreases brightness by 1%; LONG press decreases brightness by 10%; DOUBLE press decreases brightness to minimum
+  // This version of the Dimmable LED Service includes a PushButton that can be used to turn on/off the LED.  Status of both the
+  // power state and the brightness of the LED are stored in NVS for restoration if the device reboots.
   
-  LedPin *ledPin;                                   // reference to Led Pin
-  int powerPin;                                     // NEW! pin with pushbutton to turn on/off LED
+  LedPin *LED;                                      // reference to an LedPin
   SpanCharacteristic *power;                        // reference to the On Characteristic
   SpanCharacteristic *level;                        // reference to the Brightness Characteristic
+ 
+  DEV_DimmableLED(int ledPin, int buttonPin) : Service::LightBulb(){
 
-  // NEW!  Consructor includes 3 additional arguments to specify pin numbers for power, raise, and lower buttons
-  
-  DEV_DimmableLED(int pin, int powerPin) : Service::LightBulb(){
-
-    power=new Characteristic::On(0,true);     
-                
-    level=new Characteristic::Brightness(5,true);        // Brightness Characteristic with an initial value equal to the favorite level
+    power=new Characteristic::On(0,true);           // NEW! Second argument is true, so the value of the On Characteristic (initially set to 0) will be saved in NVS
+    level=new Characteristic::Brightness(5,true);   // NEW! Second argument is true, so the value of the Brightness Characteristic (initially set to 5) will be saved in NVS               
     level->setRange(5,100,1);                       // sets the range of the Brightness to be from a min of 5%, to a max of 100%, in steps of 1%
 
-    // NEW!  Below we create three SpanButton() objects.  In the first we specify the pin number, as required, but allow SpanButton() to use
-    // its default values for a LONG press (2000 ms), a SINGLE press (5 ms), and a DOUBLE press (200 ms).  In the second and third we change the
-    // default LONG press time to 500 ms, which works well for repeatedly increasing or decreasing the brightness.
-    
-    // All of the logic for increasing/decreasing brightness, turning on/off power, and setting/resetting a favorite brightness level is found
-    // in the button() method below.
+    new SpanButton(buttonPin);                      // create a new SpanButton to control power using PushButton on pin number "buttonPin"
 
-    new SpanButton(powerPin);                       // NEW! create new SpanButton to control power using pushbutton on pin number "powerPin"
-
-    this->powerPin=powerPin;                        // NEW! save power pushbutton pin number
-    this->ledPin=new LedPin(pin);                   // configures a PWM LED for output to the specified pin
+    this->LED=new LedPin(ledPin);                   // configures a PWM LED for output to pin number "ledPin"
 
     Serial.print("Configuring Dimmable LED: Pin="); // initialization message
-    Serial.print(ledPin->getPin());
+    Serial.print(LED->getPin());
     Serial.print("\n");
 
-    ledPin->set(power->getVal()*level->getVal());    
+    LED->set(power->getVal()*level->getVal());      // NEW! IMPORTANT: Set the LED to its initial state at startup.  Note we use getVal() here, since it is set upon instantiation.
     
   } // end constructor
 
   boolean update(){                              // update() method
 
     LOG1("Updating Dimmable LED on pin=");
-    LOG1(ledPin->getPin());
+    LOG1(LED->getPin());
     LOG1(":  Current Power=");
     LOG1(power->getVal()?"true":"false");
     LOG1("  Current Brightness=");
@@ -71,7 +55,7 @@ struct DEV_DimmableLED : Service::LightBulb {       // Dimmable LED
 
     LOG1("\n");
     
-    ledPin->set(power->getNewVal()*level->getNewVal());    
+    LED->set(power->getNewVal()*level->getNewVal());         // update the physical LED to reflect the new values    
    
     return(true);                               // return true
   
@@ -79,15 +63,9 @@ struct DEV_DimmableLED : Service::LightBulb {       // Dimmable LED
 
   void button(int pin, int pressType) override {
 
-    LOG1("Found button press on pin: ");            // always a good idea to log messages
-    LOG1(pin);
-    LOG1("  type: ");
-    LOG1(pressType==SpanButton::LONG?"LONG":(pressType==SpanButton::SINGLE)?"SINGLE":"DOUBLE");
-    LOG1("\n");
-
-    if(pin==powerPin && pressType==SpanButton::SINGLE){
+    if(pressType==SpanButton::SINGLE){                      // only respond to SINGLE presses
       power->setVal(1-power->getVal());                     // toggle the value of the power Characteristic
-      ledPin->set(power->getVal()*level->getVal());         // update the physical LED to reflect the new values
+      LED->set(power->getVal()*level->getVal());            // update the physical LED to reflect the new values
     }   
 
   } // button
