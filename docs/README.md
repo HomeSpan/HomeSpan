@@ -26,7 +26,7 @@ HomeSpan provides a microcontroller-focused implementation of [Apple's HomeKit A
   * Servo Motors
 * Integrated Push Button functionality supporting single, double, and long presses 
 * Integrated access to the ESP32's on-chip Remote Control peripheral for easy generation of IR and RF signals
-* 17 detailed tutorial-sketches with extensive comments, HomeSpan documentation and tips and tricks
+* 18 detailed tutorial-sketches with extensive comments, HomeSpan documentation and tips and tricks
 
 ### For the HomeSpan End-User
 
@@ -48,7 +48,6 @@ HomeSpan provides a microcontroller-focused implementation of [Apple's HomeKit A
 HomeSpan includes the following documentation:
 
 * [Getting Started with HomeSpan](https://github.com/HomeSpan/HomeSpan/blob/master/docs/GettingStarted.md) - setting up the software and the hardware needed to develop HomeSpan devices
-* [HomeKit Primer](https://github.com/HomeSpan/HomeSpan/blob/master/docs/HomeKitPrimer.md) - a gentle introduction to Apple HomeKit and HAP terminology :construction:
 * [HomeSpan API Overview](https://github.com/HomeSpan/HomeSpan/blob/master/docs/Overview.md) - an overview of the HomeSpan API, including a step-by-step guide to developing your first HomeSpan Sketch
 * [HomeSpan Tutorials](https://github.com/HomeSpan/HomeSpan/blob/master/docs/Tutorials.md) - a guide to HomeSpan's tutorial-sketches
 * [HomeSpan Services and Characteristics](https://github.com/HomeSpan/HomeSpan/blob/master/docs/ServiceList.md) - a list of all HAP Services and Characterstics supported by HomeSpan
