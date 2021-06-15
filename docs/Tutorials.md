@@ -92,6 +92,11 @@ Example 17 introduces the HAP concept of Linked Services and demonstrates how th
 
 * creating Linked Services using the `addLink()` method
 
+### [Example 18 - SavingStatus](../examples/18-SavingStatus)
+Example 18 demonstrates, through the implementaton of two Dimmable LEDs, how the values of Characteristics can be automatically saved in the device's non-volatile storage (NVS) for restoration upon start-up if the device is loses power.   New HomeSpan API topics covered in this example include:
+
+* instructing HomeSpan to store the value of a Characteristic in NVS by setting the second parameter of the constuctor to `true`
+
 ---
 
 [↩️](README.md) Back to the Welcome page

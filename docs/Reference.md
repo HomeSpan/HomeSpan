@@ -148,15 +148,19 @@ The following methods are supported:
       * 1=double press (SpanButton::DOUBLE)
       * 2=long press (SpanButton::LONG)
     
-## *SpanCharacteristic(value)*
+## *SpanCharacteristic(value [,boolean nvsStore])*
   
 This is a **base class** from which all HomeSpan Characteristics are derived, and should **not** be directly instantiated.  Rather, to create a new Characteristic instantiate one of the HomeSpan Characteristics defined in the [Characteristic](ServiceList.md) namespace.
 
 * instantiated Characteristics are added to the HomeSpan HAP Database and associated with the last Service instantiated
 * instantiating a Characteristic without first instantiating a Service throws an error during initialization
-* a single, optional argument is used to set the initial value of the Characteristic at startup
-* throws a runtime warning if value is outside of the min/max range for the Characteristic, where min/max is either the HAP default, or any new values set via a call to `setRange()`
-* example: `new Characteristic::Brightness(50);`
+* the first argument optionally allows you to set the initial *value* of the Characteristic at startup.  If *value* is not specified, HomeSpan will supply a reasonable default for the Characteristic
+* throws a runtime warning if *value* is outside of the min/max range for the Characteristic, where min/max is either the HAP default, or any new values set via a call to `setRange()`
+* the second optional argument, if set to `true`, instructs HomeSpan to save updates to this Characteristic's value in the device's non-volative storage (NVS) for restoration at startup if the device should lose power.  If not specified, *nvsStore* will default to `false` (no storage)
+* examples:
+  * `new Characteristic::Brightness();`           Brightness initialized to default value
+  * `new Characteristic::Brightness(50);`         Brightness initialized to 50
+  * `new Characteristic::Brightness(50,true);`    Brightness initialized to 50; updates saved in NVS
 
 The following methods are supported:
 
