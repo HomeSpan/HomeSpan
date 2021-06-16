@@ -39,9 +39,18 @@ HomeSpan provides a microcontroller-focused implementation of [Apple's HomeKit A
   * Launch the WiFi Access Point
 * A standalone, detailed End-User Guide
 
-## Latest Update (3/13/2021)
+## Latest Update - HomeSpan 1.3.0 (6/16/2021)
 
-* HomeSpan 1.2.1 - This update adds run-time range-checking for all Characteristics and will warn you if the initial value you set for a Characteristic, or any subsequent changes you make to that value, are outside the Characteristic's allowable min/max range.  This helps diagnosis "No Response" errors in the Home App.  This update also introduces `setRange(min,max,step)` as a new and more robust method for changing a Characteristic's range.  See [Release](https://github.com/HomeSpan/HomeSpan/releases) for details on all changes included in this update.
+This update brings a number of new features and enhancements:
+
+  * The PWM library has been—
+    * upgraded to allow for much easier control of up to 16 dimmable LEDs, ***and***
+    * extended with a dedicated class to simultaneously operate up to 8 Servo Motors!
+  * Characteristic values can be automatically saved in non-volatile storage for retention in the event of a power loss.  When power is restored your Accessories will automatically revert to their most recent state!
+  * The HomeSpan CLI can now be customized — extend the CLI with your own functions and commands!
+  * Enable the automatic launch of HomeSpan's WiFi Access Point upon start-up whenever WiFi Credentials are not found.
+  
+See [Releases](https://github.com/HomeSpan/HomeSpan/releases) for details on all changes included in this update.
 
 # HomeSpan Resources
 
