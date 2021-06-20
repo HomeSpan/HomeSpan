@@ -89,6 +89,16 @@ The following **optional** `homeSpan` methods enables additional features and pr
     * after identifying the SSID and password of the desired network, *func* must call `setWifiCredentials()` to save and use these values
     * it is recommended that *func* terminates by restarting the device using `ESP.restart()`. Upon restart HomeSpan will use the SSID and password just saved
   
+* `void setWifiCredentials(const char *ssid, const char *pwd)`
+  * sets the SSID (*ssid*) and password (*pwd*) of the WiFi network to which HomeSpan will connect
+  * *ssid* and *pwd* are automatically saved in HomeSpan's non-volatile storage (NVS) for retrieval when the device restarts
+  * note that the saved values are truncated if they exceed the maximum allowable characters (ssid=32; pwd=64)
+  
+> :warning: SECURITY WARNING: The purpose of this function is to allow advanced users to *dynamically* set the device's WiFi Credentials using a customized Access Point via `enableAutoStartAP(func)` or with some other method. It it NOT recommended to use this function to hardcode your WiFi SSID and password directly into your sketch.  Instead, use one of the more secure methods provided by HomeSpan, such as typing 'W' from the CLI, or launching HomeSpan's Access Point by typing 'A' from the CLI, to set your WiFi credentials without hardcoding them into your sketch.
+
+* `void setWifiCallback(void (*func)())`
+  * Sets an optional user-defined callback function, *func*, to be called by HomeSpan upon start-up just after WiFi connectivity has been established.  This one-time call to *func* is provided for users that are implementing other network-related services as part of their sketch, but that cannot be started until WiFi connectivity is established.  The function *func* must be of type *void* and have no arguments
+
 * `void setSketchVersion(const char *sVer)`
   * sets the version of a HomeSpan sketch to *sVer*, which can be any arbitrary character string
   * if unspecified, HomeSpan uses "n/a" as the default version text
@@ -97,10 +107,7 @@ The following **optional** `homeSpan` methods enables additional features and pr
   
 * `const char *getSketchVersion()`
   * returns the version of a HomeSpan sketch, as set using `void setSketchVersion(const char *sVer)`, or "n/a" if not set
-  
-* `void setWifiCallback(void (*func)())`
-  * Sets an optional user-defined callback function, *func*, to be called by HomeSpan upon start-up just after WiFi connectivity has been established.  This one-time call to *func* is provided for users that are implementing other network-related services as part of their sketch, but that cannot be started until WiFi connectivity is established.  The function *func* must be of type *void* and have no arguments
-  
+    
 ## *SpanAccessory(uint32_t aid)*
 
 Creating an instance of this **class** adds a new HAP Accessory to the HomeSpan HAP Database.
