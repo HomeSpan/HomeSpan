@@ -54,7 +54,7 @@ The *minMicros* parameter must be less than the *maxMicros* parameter, but setti
 
   * returns the pin number
 
-A worked example showing how ServoPin can be used to control the Horizontal Tilt of a motorized Window Shade can be found in the Arduino IDE under [*File → Examples → HomeSpan → Other Examples → ServoControl*](https://github.com/HomeSpan/HomeSpan/tree/dev/Other%20Examples/ServoControl).
+A worked example showing how ServoPin can be used to control the Horizontal Tilt of a motorized Window Shade can be found in the Arduino IDE under [*File → Examples → HomeSpan → Other Examples → ServoControl*](../Other%20Examples/ServoControl).
 
 Resource limitations:
 
