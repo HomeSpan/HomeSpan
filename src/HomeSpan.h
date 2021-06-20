@@ -126,6 +126,7 @@ struct Span{
   boolean otaAuth;                                            // OTA requires password when set to true
   void (*wifiCallback)()=NULL;                                // optional callback function to invoke once WiFi connectivity is established
   boolean autoStartAPEnabled=false;                           // enables auto start-up of Access Point when WiFi Credentials not found
+  void (*apFunction)()=NULL;                                  // optional function to invoke when using enableAutoStartAP()
 
   WiFiServer *hapServer;                            // pointer to the HAP Server connection
   Blinker statusLED;                                // indicates HomeSpan status
@@ -180,7 +181,8 @@ struct Span{
   void setSketchVersion(const char *sVer){sketchVersion=sVer;}            // set optional sketch version number
   const char *getSketchVersion(){return sketchVersion;}                   // get sketch version number
   void setWifiCallback(void (*f)()){wifiCallback=f;}                      // sets an optional user-defined function to call once WiFi connectivity is established
-  void enableAutoStartAP(){autoStartAPEnabled=true;}                      // enables auto start-up of Access Point when WiFi Credentials not found
+  
+  void enableAutoStartAP(void (*f)()=NULL){autoStartAPEnabled=true;apFunction=f;}   // enables auto start-up of Access Point when WiFi Credentials not found (will call optional f, if specified)
 };
 
 ///////////////////////////////

@@ -147,8 +147,12 @@ void Span::poll() {
     if(!strlen(network.wifiData.ssid)){
       Serial.print("*** WIFI CREDENTIALS DATA NOT FOUND.  ");
       if(autoStartAPEnabled){
-        Serial.print("AUTO-START OF ACCESS POINT ENABLED...\n\n");
-        processSerialCommand("A");
+        if(apFunction){
+          apFunction();
+        } else {
+          Serial.print("AUTO-START OF ACCESS POINT ENABLED...\n\n");
+          processSerialCommand("A");
+        }
       } else {
         Serial.print("YOU MAY CONFIGURE BY TYPING 'W <RETURN>'.\n\n");
         statusLED.start(LED_WIFI_NEEDED);

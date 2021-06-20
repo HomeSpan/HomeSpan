@@ -21,7 +21,7 @@ void setup() {
   new SpanUserCommand('d',"My Description",userCom1);
   new SpanUserCommand('d',"My second Description",userCom2);
 
-//  homeSpan.enableAutoStartAP();
+//  homeSpan.enableAutoStartAP(myWiFiAP);
 
   homeSpan.begin(Category::Lighting,"HomeSpan Lamp Server","homespan");
 
@@ -57,6 +57,12 @@ void loop(){
   homeSpan.poll();
 
 } // end of loop()
+
+//////////////////////////////////////
+
+void myWiFiAP(){
+  Serial.print("Calling My WIFI AP\n\n");
+}
 
 //////////////////////////////////////
 
