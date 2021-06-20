@@ -158,12 +158,8 @@ void Span::poll() {
     if(!strlen(network.wifiData.ssid)){
       Serial.print("*** WIFI CREDENTIALS DATA NOT FOUND.  ");
       if(autoStartAPEnabled){
-        if(apFunction){
-          apFunction();
-        } else {
-          Serial.print("AUTO-START OF ACCESS POINT ENABLED...\n\n");
-          processSerialCommand("A");
-        }
+        Serial.print("AUTO-START OF ACCESS POINT ENABLED...\n\n");
+        processSerialCommand("A");
       } else {
         Serial.print("YOU MAY CONFIGURE BY TYPING 'W <RETURN>'.\n\n");
         statusLED.start(LED_WIFI_NEEDED);
@@ -775,6 +771,11 @@ void Span::processSerialCommand(const char *c){
         MDNS.end();
         WiFi.disconnect();
       }
+
+      if(apFunction){
+        apFunction();
+        return;
+      }
       
       network.apConfigure();
       nvs_set_blob(wifiNVS,"WIFIDATA",&network.wifiData,sizeof(network.wifiData));    // update data
@@ -968,7 +969,7 @@ void Span::processSerialCommand(const char *c){
 
 ///////////////////////////////
 
-void Span::setWifiCredentials(char *ssid, char *pwd){
+void Span::setWifiCredentials(const char *ssid, const char *pwd){
   sprintf(network.wifiData.ssid,"%.*s",MAX_SSID,ssid);
   sprintf(network.wifiData.pwd,"%.*s",MAX_PWD,pwd);
   if(wifiNVS){                                                                      // is begin() already called and wifiNVS is open

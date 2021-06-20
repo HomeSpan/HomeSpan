@@ -108,7 +108,7 @@ struct Span{
   HapQR qrCode;                                 // optional QR Code to use for pairing
   const char *sketchVersion="n/a";              // version of the sketch
   nvs_handle charNVS;                           // handle for non-volatile-storage of Characteristics data
-  nvs_handle wifiNVS=NULL;                      // handle for non-volatile-storage of WiFi data
+  nvs_handle wifiNVS=0;                         // handle for non-volatile-storage of WiFi data
 
   boolean connected=false;                      // WiFi connection status
   unsigned long waitTime=60000;                 // time to wait (in milliseconds) between WiFi connection attempts
@@ -127,8 +127,8 @@ struct Span{
   boolean otaAuth;                                            // OTA requires password when set to true
   void (*wifiCallback)()=NULL;                                // optional callback function to invoke once WiFi connectivity is established
   boolean autoStartAPEnabled=false;                           // enables auto start-up of Access Point when WiFi Credentials not found
-  void (*apFunction)()=NULL;                                  // optional function to invoke when using enableAutoStartAP()
-
+  void (*apFunction)()=NULL;                                  // optional function to invoke when starting Access Point
+  
   WiFiServer *hapServer;                            // pointer to the HAP Server connection
   Blinker statusLED;                                // indicates HomeSpan status
   PushButton controlButton;                         // controls HomeSpan configuration and resets
@@ -182,9 +182,10 @@ struct Span{
   void setSketchVersion(const char *sVer){sketchVersion=sVer;}            // set optional sketch version number
   const char *getSketchVersion(){return sketchVersion;}                   // get sketch version number
   void setWifiCallback(void (*f)()){wifiCallback=f;}                      // sets an optional user-defined function to call once WiFi connectivity is established
+  void setApFunction(void (*f)()){apFunction=f;}                          // sets an optional user-defined function to call when activating the WiFi Access Point
   
-  void enableAutoStartAP(void (*f)()=NULL){autoStartAPEnabled=true;apFunction=f;}   // enables auto start-up of Access Point when WiFi Credentials not found (will call optional f, if specified)
-  void setWifiCredentials(char *ssid, char *pwd);                                   // sets WiFi Credentials
+  void enableAutoStartAP(){autoStartAPEnabled=true;}                      // enables auto start-up of Access Point when WiFi Credentials not found
+  void setWifiCredentials(const char *ssid, const char *pwd);             // sets WiFi Credentials
 };
 
 ///////////////////////////////
