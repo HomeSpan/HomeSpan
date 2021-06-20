@@ -90,7 +90,7 @@ In addition to listening for incoming HAP requests, HomeSpan also continuously p
 
 ### User-Defined Commands
   
-You can extend the HomeSpan CLI with custom functions using `SpanUserCommand()`.  This class allows you to assign a single-character name to any custom function that will be called when you type the '@' symbol following by the single-character name into the CLI.  For example, if you assigned the character 'K' to a custom function, you would type '@K' into the CLI to invoke it.  This allows you to use any single-character name, even if that character is already used by HomeSpan for its built-in commands.  The `SpanUserCommand` class also allows you to include a short text description of your function that will be added to the menu of commands when you type '?' into the CLI. See the the [API Reference](https://github.com/HomeSpan/HomeSpan/blob/dev/docs/Reference.md#spanusercommandchar-c-const-char-s-void-fconst-char-v) for full details.    
+You can extend the HomeSpan CLI with custom functions using `SpanUserCommand()`.  This class allows you to assign a single-character name to any custom function that will be called when you type the '@' symbol following by the single-character name into the CLI.  For example, if you assigned the character 'K' to a custom function, you would type '@K' into the CLI to invoke it.  This allows you to use any single-character name, even if that character is already used by HomeSpan for its built-in commands.  The `SpanUserCommand` class also allows you to include a short text description of your function that will be added to the menu of commands when you type '?' into the CLI. See the the [API Reference](Reference.md#spanusercommandchar-c-const-char-s-void-fconst-char-v) for full details.    
   
 ---
 
