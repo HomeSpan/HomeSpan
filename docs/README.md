@@ -39,7 +39,7 @@ HomeSpan provides a microcontroller-focused implementation of [Apple's HomeKit A
   * Launch the WiFi Access Point
 * A standalone, detailed End-User Guide
 
-## Latest Update - HomeSpan 1.3.0 (6/16/2021)
+## Latest Update - HomeSpan 1.3.0 (6/20/2021)
 
 This update brings a number of new features and enhancements:
 
@@ -49,6 +49,7 @@ This update brings a number of new features and enhancements:
   * Characteristic values can be automatically saved in non-volatile storage for retention in the event of a power loss.  When power is restored your Accessories will automatically revert to their most recent state!
   * The HomeSpan CLI can now be customized — extend the CLI with your own functions and commands!
   * Enable the automatic launch of HomeSpan's WiFi Access Point upon start-up whenever WiFi Credentials are not found.
+  * For advanced users: create your own custom WiFi Access Point and set your WiFi Credentials programmatically.
   
 See [Releases](https://github.com/HomeSpan/HomeSpan/releases) for details on all changes included in this update.
 
