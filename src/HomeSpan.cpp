@@ -66,7 +66,18 @@ void Span::begin(Category catID, const char *displayName, const char *hostNameBa
   hapServer=new WiFiServer(tcpPortNum);
 
   nvs_flash_init();                             // initialize non-volatile-storage partition in flash  
-  nvs_open("CHAR",NVS_READWRITE,&charNVS);
+  nvs_open("CHAR",NVS_READWRITE,&charNVS);      // open Characteristic data namespace in NVS
+  nvs_open("WIFI",NVS_READWRITE,&wifiNVS);      // open WIFI data namespace in NVS
+
+  size_t len;
+
+  if(strlen(network.wifiData.ssid)){                                                // if setWifiCredentials was already called
+    nvs_set_blob(wifiNVS,"WIFIDATA",&network.wifiData,sizeof(network.wifiData));    // update data
+    nvs_commit(wifiNVS);                                                            // commit to NVS
+  } else
+  
+  if(!nvs_get_blob(wifiNVS,"WIFIDATA",NULL,&len))                                   // else if found WiFi data in NVS
+    nvs_get_blob(wifiNVS,"WIFIDATA",&homeSpan.network.wifiData,&len);               // retrieve data  
 
   delay(2000);
  
@@ -739,9 +750,16 @@ void Span::processSerialCommand(const char *c){
 
     case 'W': {
 
+      if(strlen(network.wifiData.ssid)>0){
+        Serial.print("*** Stopping all current WiFi services...\n\n");
+        hapServer->end();
+        MDNS.end();
+        WiFi.disconnect();
+      }
+
       network.serialConfigure();
-      nvs_set_blob(HAPClient::wifiNVS,"WIFIDATA",&network.wifiData,sizeof(network.wifiData));    // update data
-      nvs_commit(HAPClient::wifiNVS);                                                            // commit to NVS
+      nvs_set_blob(wifiNVS,"WIFIDATA",&network.wifiData,sizeof(network.wifiData));    // update data
+      nvs_commit(wifiNVS);                                                            // commit to NVS
       Serial.print("\n*** WiFi Credentials SAVED!  Re-starting ***\n\n");
       statusLED.off();
       delay(1000);
@@ -759,8 +777,8 @@ void Span::processSerialCommand(const char *c){
       }
       
       network.apConfigure();
-      nvs_set_blob(HAPClient::wifiNVS,"WIFIDATA",&network.wifiData,sizeof(network.wifiData));    // update data
-      nvs_commit(HAPClient::wifiNVS);                                                            // commit to NVS
+      nvs_set_blob(wifiNVS,"WIFIDATA",&network.wifiData,sizeof(network.wifiData));    // update data
+      nvs_commit(wifiNVS);                                                            // commit to NVS
       Serial.print("\n*** Credentials saved!\n\n");
       if(strlen(network.setupCode)){
         char s[10];
@@ -780,8 +798,8 @@ void Span::processSerialCommand(const char *c){
     case 'X': {
 
       statusLED.off();
-      nvs_erase_all(HAPClient::wifiNVS);
-      nvs_commit(HAPClient::wifiNVS);      
+      nvs_erase_all(wifiNVS);
+      nvs_commit(wifiNVS);      
       Serial.print("\n*** WiFi Credentials ERASED!  Re-starting...\n\n");
       delay(1000);
       ESP.restart();                                                                             // re-start device   
@@ -821,8 +839,10 @@ void Span::processSerialCommand(const char *c){
       statusLED.off();
       nvs_erase_all(HAPClient::hapNVS);
       nvs_commit(HAPClient::hapNVS);      
-      nvs_erase_all(HAPClient::wifiNVS);
-      nvs_commit(HAPClient::wifiNVS);      
+      nvs_erase_all(wifiNVS);
+      nvs_commit(wifiNVS);   
+      nvs_erase_all(charNVS);
+      nvs_commit(charNVS);   
       Serial.print("\n*** FACTORY RESET!  Restarting...\n\n");
       delay(1000);
       ESP.restart();
@@ -944,6 +964,17 @@ void Span::processSerialCommand(const char *c){
     break;
     
   } // switch
+}
+
+///////////////////////////////
+
+void Span::setWifiCredentials(char *ssid, char *pwd){
+  sprintf(network.wifiData.ssid,"%.*s",MAX_SSID,ssid);
+  sprintf(network.wifiData.pwd,"%.*s",MAX_PWD,pwd);
+  if(wifiNVS){                                                                      // is begin() already called and wifiNVS is open
+    nvs_set_blob(wifiNVS,"WIFIDATA",&network.wifiData,sizeof(network.wifiData));    // update data
+    nvs_commit(wifiNVS);                                                            // commit to NVS
+  }
 }
 
 ///////////////////////////////

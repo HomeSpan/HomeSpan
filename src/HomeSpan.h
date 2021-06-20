@@ -108,6 +108,7 @@ struct Span{
   HapQR qrCode;                                 // optional QR Code to use for pairing
   const char *sketchVersion="n/a";              // version of the sketch
   nvs_handle charNVS;                           // handle for non-volatile-storage of Characteristics data
+  nvs_handle wifiNVS=NULL;                      // handle for non-volatile-storage of WiFi data
 
   boolean connected=false;                      // WiFi connection status
   unsigned long waitTime=60000;                 // time to wait (in milliseconds) between WiFi connection attempts
@@ -183,6 +184,7 @@ struct Span{
   void setWifiCallback(void (*f)()){wifiCallback=f;}                      // sets an optional user-defined function to call once WiFi connectivity is established
   
   void enableAutoStartAP(void (*f)()=NULL){autoStartAPEnabled=true;apFunction=f;}   // enables auto start-up of Access Point when WiFi Credentials not found (will call optional f, if specified)
+  void setWifiCredentials(char *ssid, char *pwd);                                   // sets WiFi Credentials
 };
 
 ///////////////////////////////

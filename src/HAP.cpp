@@ -38,13 +38,9 @@ void HAPClient::init(){
 
   size_t len;             // not used but required to read blobs from NVS
 
-  nvs_open("WIFI",NVS_READWRITE,&wifiNVS);      // open WIFI data namespace in NVS
   nvs_open("SRP",NVS_READWRITE,&srpNVS);        // open SRP data namespace in NVS 
   nvs_open("HAP",NVS_READWRITE,&hapNVS);        // open HAP data namespace in NVS
   nvs_open("OTA",NVS_READWRITE,&otaNVS);        // open OTA data namespace in NVS
-
-  if(!nvs_get_blob(wifiNVS,"WIFIDATA",NULL,&len))                        // if found WiFi data in NVS
-    nvs_get_blob(wifiNVS,"WIFIDATA",&homeSpan.network.wifiData,&len);      // retrieve data  
 
   if(!nvs_get_str(otaNVS,"OTADATA",NULL,&len)){                     // if found OTA data in NVS
     nvs_get_str(otaNVS,"OTADATA",homeSpan.otaPwd,&len);              // retrieve data  
@@ -1650,7 +1646,6 @@ void Nonce::inc(){
 
 TLV<kTLVType,10> HAPClient::tlv8;
 nvs_handle HAPClient::hapNVS;
-nvs_handle HAPClient::wifiNVS;
 nvs_handle HAPClient::srpNVS;
 nvs_handle HAPClient::otaNVS;
 uint8_t HAPClient::httpBuf[MAX_HTTP+1];                 
