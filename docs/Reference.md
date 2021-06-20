@@ -72,15 +72,22 @@ The following **optional** `homeSpan` methods override various HomeSpan initiali
   * the HomeSpan default is "HSPN" unless permanently changed for the device via the [HomeSpan CLI](CLI.md) using the 'Q' command
   * *id* must be exactly 4 alphanumeric characters (0-9, A-Z, and a-z).  If not, the request to change the Setup ID is silently ignored and the default is used instead
   
+The following **optional** `homeSpan` methods enables additional features and provides for further customization of the HomeSpan environment:
+
 * `void enableOTA(boolean auth=true)`
   * enables [Over-the-Air (OTA) Updating](OTA.md) of a HomeSpan device, which is otherwise disabled
   * HomeSpan OTA requires an authorizing password unless *auth* is specified and set to *false*
   * the default OTA password for new HomeSpan devices is "homespan-ota"
   * this can be changed via the [HomeSpan CLI](CLI.md) using the 'O' command
 
-* `void enableAutoStartAP()`
+* `void enableAutoStartAP(void (*func)()=NULL)`
   * enables automatic start-up of WiFi Access Point if WiFi Credentials are **not** found at boot time
-  * methods to alter the behavior the Access Point, such as `setApTimeout()` must be called prior to `enableAutoStartAP()` to have an effect  
+  * *func* is typically left unspecified (or set to NULL).  This causes HomeSpan to call its built-in WiFi Access Point, exactly as if you had typed 'A' into the CLI
+  * methods to alter the behavior HomeSpan's Access Point, such as `setApTimeout()`, must be called prior to `enableAutoStartAP()` to have an effect  
+  * advanced users can bypass HomeSpan's built-in Access Point and instead call their own Access Point code by specifying the function *func*
+    * *func* must be of type *void* and have no arguments
+    * after identifying the SSID and password of the desired network, *func* must call `setWifiCredentials()` to save and use these values
+    * it is recommended that *func* terminates by restarting the device using `ESP.restart()`. Upon restart HomeSpan will use the SSID and password just saved
   
 * `void setSketchVersion(const char *sVer)`
   * sets the version of a HomeSpan sketch to *sVer*, which can be any arbitrary character string
@@ -91,7 +98,7 @@ The following **optional** `homeSpan` methods override various HomeSpan initiali
 * `const char *getSketchVersion()`
   * returns the version of a HomeSpan sketch, as set using `void setSketchVersion(const char *sVer)`, or "n/a" if not set
   
-* `void setWifiCallback(void (*func)(void))`
+* `void setWifiCallback(void (*func)())`
   * Sets an optional user-defined callback function, *func*, to be called by HomeSpan upon start-up just after WiFi connectivity has been established.  This one-time call to *func* is provided for users that are implementing other network-related services as part of their sketch, but that cannot be started until WiFi connectivity is established.  The function *func* must be of type *void* and have no arguments
   
 ## *SpanAccessory(uint32_t aid)*
