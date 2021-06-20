@@ -18,11 +18,11 @@ void setup() {
   homeSpan.setSketchVersion("Test 1.3.1");
   homeSpan.setWifiCallback(wifiEstablished);
 
-  new SpanUserCommand('d',"My Description",userCom1);
-  new SpanUserCommand('d',"My second Description",userCom2);
+  new SpanUserCommand('d',"- My Description",userCom1);
+  new SpanUserCommand('e',"- My second Description",userCom2);
 
-//  homeSpan.enableAutoStartAP();
-//  homeSpan.setApFunction(myWiFiAP);
+  homeSpan.enableAutoStartAP();
+  homeSpan.setApFunction(myWiFiAP);
 
   homeSpan.begin(Category::Lighting,"HomeSpan Lamp Server","homespan");
 
