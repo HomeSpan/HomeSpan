@@ -65,6 +65,20 @@ void Span::begin(Category catID, const char *displayName, const char *hostNameBa
 
   hapServer=new WiFiServer(tcpPortNum);
 
+  nvs_flash_init();                             // initialize non-volatile-storage partition in flash  
+  nvs_open("CHAR",NVS_READWRITE,&charNVS);      // open Characteristic data namespace in NVS
+  nvs_open("WIFI",NVS_READWRITE,&wifiNVS);      // open WIFI data namespace in NVS
+
+  size_t len;
+
+  if(strlen(network.wifiData.ssid)){                                                // if setWifiCredentials was already called
+    nvs_set_blob(wifiNVS,"WIFIDATA",&network.wifiData,sizeof(network.wifiData));    // update data
+    nvs_commit(wifiNVS);                                                            // commit to NVS
+  } else
+  
+  if(!nvs_get_blob(wifiNVS,"WIFIDATA",NULL,&len))                                   // else if found WiFi data in NVS
+    nvs_get_blob(wifiNVS,"WIFIDATA",&homeSpan.network.wifiData,&len);               // retrieve data  
+
   delay(2000);
  
   Serial.print("\n************************************************************\n"
@@ -142,8 +156,14 @@ void Span::poll() {
     HAPClient::init();        // read NVS and load HAP settings  
 
     if(!strlen(network.wifiData.ssid)){
-      Serial.print("*** WIFI CREDENTIALS DATA NOT FOUND.  YOU MAY CONFIGURE BY TYPING 'W <RETURN>'.\n\n");
-      statusLED.start(LED_WIFI_NEEDED);
+      Serial.print("*** WIFI CREDENTIALS DATA NOT FOUND.  ");
+      if(autoStartAPEnabled){
+        Serial.print("AUTO-START OF ACCESS POINT ENABLED...\n\n");
+        processSerialCommand("A");
+      } else {
+        Serial.print("YOU MAY CONFIGURE BY TYPING 'W <RETURN>'.\n\n");
+        statusLED.start(LED_WIFI_NEEDED);
+      }
     } else {
       homeSpan.statusLED.start(LED_WIFI_CONNECTING);
     }
@@ -726,9 +746,16 @@ void Span::processSerialCommand(const char *c){
 
     case 'W': {
 
+      if(strlen(network.wifiData.ssid)>0){
+        Serial.print("*** Stopping all current WiFi services...\n\n");
+        hapServer->end();
+        MDNS.end();
+        WiFi.disconnect();
+      }
+
       network.serialConfigure();
-      nvs_set_blob(HAPClient::wifiNVS,"WIFIDATA",&network.wifiData,sizeof(network.wifiData));    // update data
-      nvs_commit(HAPClient::wifiNVS);                                                            // commit to NVS
+      nvs_set_blob(wifiNVS,"WIFIDATA",&network.wifiData,sizeof(network.wifiData));    // update data
+      nvs_commit(wifiNVS);                                                            // commit to NVS
       Serial.print("\n*** WiFi Credentials SAVED!  Re-starting ***\n\n");
       statusLED.off();
       delay(1000);
@@ -744,10 +771,15 @@ void Span::processSerialCommand(const char *c){
         MDNS.end();
         WiFi.disconnect();
       }
+
+      if(apFunction){
+        apFunction();
+        return;
+      }
       
       network.apConfigure();
-      nvs_set_blob(HAPClient::wifiNVS,"WIFIDATA",&network.wifiData,sizeof(network.wifiData));    // update data
-      nvs_commit(HAPClient::wifiNVS);                                                            // commit to NVS
+      nvs_set_blob(wifiNVS,"WIFIDATA",&network.wifiData,sizeof(network.wifiData));    // update data
+      nvs_commit(wifiNVS);                                                            // commit to NVS
       Serial.print("\n*** Credentials saved!\n\n");
       if(strlen(network.setupCode)){
         char s[10];
@@ -767,11 +799,19 @@ void Span::processSerialCommand(const char *c){
     case 'X': {
 
       statusLED.off();
-      nvs_erase_all(HAPClient::wifiNVS);
-      nvs_commit(HAPClient::wifiNVS);      
+      nvs_erase_all(wifiNVS);
+      nvs_commit(wifiNVS);      
       Serial.print("\n*** WiFi Credentials ERASED!  Re-starting...\n\n");
       delay(1000);
       ESP.restart();                                                                             // re-start device   
+    }
+    break;
+
+    case 'V': {
+      
+      nvs_erase_all(charNVS);
+      nvs_commit(charNVS);      
+      Serial.print("\n*** Values for all saved Characteristics erased!\n\n");
     }
     break;
 
@@ -800,8 +840,10 @@ void Span::processSerialCommand(const char *c){
       statusLED.off();
       nvs_erase_all(HAPClient::hapNVS);
       nvs_commit(HAPClient::hapNVS);      
-      nvs_erase_all(HAPClient::wifiNVS);
-      nvs_commit(HAPClient::wifiNVS);      
+      nvs_erase_all(wifiNVS);
+      nvs_commit(wifiNVS);   
+      nvs_erase_all(charNVS);
+      nvs_commit(charNVS);   
       Serial.print("\n*** FACTORY RESET!  Restarting...\n\n");
       delay(1000);
       ESP.restart();
@@ -884,6 +926,7 @@ void Span::processSerialCommand(const char *c){
       Serial.print("  O - change the OTA password\n");
       Serial.print("  A - start the HomeSpan Setup Access Point\n");      
       Serial.print("\n");      
+      Serial.print("  V - delete value settings for all saved Characteristics\n");
       Serial.print("  U - unpair device by deleting all Controller data\n");
       Serial.print("  H - delete HomeKit Device ID as well as all Controller data and restart\n");      
       Serial.print("\n");      
@@ -892,20 +935,47 @@ void Span::processSerialCommand(const char *c){
       Serial.print("  E - erase ALL stored data and restart\n");      
       Serial.print("\n");          
       Serial.print("  L <level> - change the Log Level setting to <level>\n");
-      Serial.print("\n");      
-      Serial.print("  ? - print this list of commands\n");
-      Serial.print("\n");      
-      Serial.print("\n*** End Commands ***\n\n");
+      Serial.print("\n");
+
+      for(auto uCom=homeSpan.UserCommands.begin(); uCom!=homeSpan.UserCommands.end(); uCom++)      // loop over all UserCommands using an iterator
+        Serial.printf("  @%c %s\n",uCom->first,uCom->second->s);
+
+      if(!homeSpan.UserCommands.empty())
+        Serial.print("\n");
+        
+      Serial.print("  ? - print this list of commands\n\n");     
+      Serial.print("*** End Commands ***\n\n");
     }
     break;
 
+    case '@':{
+
+      auto uCom=UserCommands.find(c[1]);
+
+      if(uCom!=UserCommands.end()){
+        uCom->second->userFunction(c+1);
+        break;
+      }
+    }
+
     default:
-      Serial.print("** Unknown command: '");
+      Serial.print("*** Unknown command: '");
       Serial.print(c);
-      Serial.print("' - type '?' for list of commands.\n");
+      Serial.print("'.  Type '?' for list of commands.\n");
     break;
     
   } // switch
+}
+
+///////////////////////////////
+
+void Span::setWifiCredentials(const char *ssid, const char *pwd){
+  sprintf(network.wifiData.ssid,"%.*s",MAX_SSID,ssid);
+  sprintf(network.wifiData.pwd,"%.*s",MAX_PWD,pwd);
+  if(wifiNVS){                                                                      // is begin() already called and wifiNVS is open
+    nvs_set_blob(wifiNVS,"WIFIDATA",&network.wifiData,sizeof(network.wifiData));    // update data
+    nvs_commit(wifiNVS);                                                            // commit to NVS
+  }
 }
 
 ///////////////////////////////
@@ -1113,13 +1183,15 @@ int Span::updateCharacteristics(char *buf, SpanBuf *pObj){
           LOG1(pObj[j].characteristic->aid);
           LOG1(" iid=");  
           LOG1(pObj[j].characteristic->iid);
-          if(status==StatusCode::OK){                          // if status is okay
-            pObj[j].characteristic->value
-              =pObj[j].characteristic->newValue;               // update characteristic value with new value
+          if(status==StatusCode::OK){                                                     // if status is okay
+            pObj[j].characteristic->value=pObj[j].characteristic->newValue;               // update characteristic value with new value
+            if(pObj[j].characteristic->nvsKey){                                                                                               // if storage key found
+              nvs_set_blob(charNVS,pObj[j].characteristic->nvsKey,&(pObj[j].characteristic->value),sizeof(pObj[j].characteristic->value));    // store data
+              nvs_commit(charNVS);
+            }
             LOG1(" (okay)\n");
-          } else {                                             // if status not okay
-            pObj[j].characteristic->newValue
-              =pObj[j].characteristic->value;                  // replace characteristic new value with original value
+          } else {                                                                        // if status not okay
+            pObj[j].characteristic->newValue=pObj[j].characteristic->value;               // replace characteristic new value with original value
             LOG1(" (failed)\n");
           }
           pObj[j].characteristic->isUpdated=false;             // reset isUpdated flag for characteristic
@@ -1695,4 +1767,14 @@ SpanButton::SpanButton(int pin, uint16_t longTime, uint16_t singleTime, uint16_t
   homeSpan.PushButtons.push_back(this);
 }
 
+
 ///////////////////////////////
+//     SpanUserCommand       //
+///////////////////////////////
+
+SpanUserCommand::SpanUserCommand(char c, const char *s, void (*f)(const char *v)){
+  this->s=s;
+  userFunction=f;
+   
+  homeSpan.UserCommands[c]=this;
+}

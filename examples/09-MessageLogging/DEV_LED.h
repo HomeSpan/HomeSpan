@@ -53,31 +53,26 @@ struct DEV_LED : Service::LightBulb {               // ON/OFF LED
 
 struct DEV_DimmableLED : Service::LightBulb {       // Dimmable LED
 
-  PwmPin *pwmPin;                                   // reference to PWM Pin
-  int ledPin;                                       // pin number defined for this LED <- NEW!!
-  int channel;                                      // PWM channel used for this LED (should be unique for each LED)
+  LedPin *ledPin;                                   // reference to Led Pin
   SpanCharacteristic *power;                        // reference to the On Characteristic
   SpanCharacteristic *level;                        // reference to the Brightness Characteristic
   
-  DEV_DimmableLED(int channel, int ledPin) : Service::LightBulb(){       // constructor() method
+  DEV_DimmableLED(int pin) : Service::LightBulb(){       // constructor() method
 
     power=new Characteristic::On();     
                 
     level=new Characteristic::Brightness(50);       // Brightness Characteristic with an initial value of 50%
     level->setRange(5,100,1);                       // sets the range of the Brightness to be from a min of 5%, to a max of 100%, in steps of 1%
 
-    this->channel=channel;                          // save the channel number (from 0-15)
-    this->ledPin=ledPin;                            // LED pin number <- NEW!!
-    this->pwmPin=new PwmPin(channel, ledPin);       // configure the PWM channel and attach the specified ledPin. pinMode() does NOT need to be called.
+    this->ledPin=new LedPin(pin);                   // configures a PWM LED for output to the specified pin
 
     // Here we output log messages when the constructor is initially called.
     // We use Serial.print() since to ensure the message is always output
-    // regardless of the VERBOSITY setting.
+    // regardless of the VERBOSITY setting.  Note that ledPin has a method getPin()
+    // that retrieves the pin number so you don't need to store it separately.
 
     Serial.print("Configuring Dimmable LED: Pin="); // initialization message
-    Serial.print(ledPin);
-    Serial.print(" Channel=");
-    Serial.print(channel);
+    Serial.print(ledPin->getPin());
     Serial.print("\n");
     
   } // end constructor
@@ -89,13 +84,8 @@ struct DEV_DimmableLED : Service::LightBulb {       // Dimmable LED
     // is not functioning as expected.  Since it's just for debugging,
     // we use LOG1() instead of Serial.print().
 
-    // Note that in the prior example we did not save the ledPin number for
-    // DimmableLED since it was only needed by the constructor for initializing
-    // PwmPin(). For this example we add ledPin as a saved variable (see the two
-    // lines marketed NEW!! above) for the sole purpose of this log message.
-
     LOG1("Updating Dimmable LED on pin=");
-    LOG1(ledPin);
+    LOG1(ledPin->getPin());
     LOG1(":  Current Power=");
     LOG1(power->getVal()?"true":"false");
     LOG1("  Current Brightness=");
@@ -121,7 +111,7 @@ struct DEV_DimmableLED : Service::LightBulb {       // Dimmable LED
 
     LOG1("\n");
     
-    pwmPin->set(channel,power->getNewVal()*level->getNewVal());      
+    ledPin->set(power->getNewVal()*level->getNewVal());    
    
     return(true);                               // return true
   

@@ -21,10 +21,12 @@ HomeSpan provides a microcontroller-focused implementation of [Apple's HomeKit A
   * Complete transparency to every underlying HomeKit action, data request, and data response
   * Command-line interface with a variety of info, debugging, and configuration commands
 * Built-in database validation to ensure your configuration meets all HAP requirements
-* Integrated PWM functionality supporting pulse-wave-modulation on any ESP32 pin
+* Dedicated classes that utilize the ESP32's 16-channel PWM peripheral for easy control of:
+  * LED Brightness
+  * Servo Motors
 * Integrated Push Button functionality supporting single, double, and long presses 
 * Integrated access to the ESP32's on-chip Remote Control peripheral for easy generation of IR and RF signals
-* 17 detailed tutorial-sketches with extensive comments, HomeSpan documentation and tips and tricks
+* 18 detailed tutorial-sketches with extensive comments, HomeSpan documentation and tips and tricks
 
 ### For the HomeSpan End-User
 
@@ -37,16 +39,25 @@ HomeSpan provides a microcontroller-focused implementation of [Apple's HomeKit A
   * Launch the WiFi Access Point
 * A standalone, detailed End-User Guide
 
-## Latest Update (3/13/2021)
+## Latest Update - HomeSpan 1.3.0 (6/20/2021)
 
-* HomeSpan 1.2.1 - This update adds run-time range-checking for all Characteristics and will warn you if the initial value you set for a Characteristic, or any subsequent changes you make to that value, are outside the Characteristic's allowable min/max range.  This helps diagnosis "No Response" errors in the Home App.  This update also introduces `setRange(min,max,step)` as a new and more robust method for changing a Characteristic's range.  See [Release](https://github.com/HomeSpan/HomeSpan/releases) for details on all changes included in this update.
+This update brings a number of new features and enhancements:
+
+  * The PWM library has been—
+    * upgraded to allow for much easier control of up to 16 dimmable LEDs, ***and***
+    * extended with a dedicated class to simultaneously operate up to 8 Servo Motors!
+  * Characteristic values can be automatically saved in non-volatile storage for retention in the event of a power loss.  When power is restored your Accessories will automatically revert to their most recent state!
+  * The HomeSpan CLI can now be customized — extend the CLI with your own functions and commands!
+  * Enable the automatic launch of HomeSpan's WiFi Access Point upon start-up whenever WiFi Credentials are not found.
+  * For advanced users: create your own custom WiFi Access Point and set your WiFi Credentials programmatically.
+  
+See [Releases](https://github.com/HomeSpan/HomeSpan/releases) for details on all changes included in this update.
 
 # HomeSpan Resources
 
 HomeSpan includes the following documentation:
 
 * [Getting Started with HomeSpan](https://github.com/HomeSpan/HomeSpan/blob/master/docs/GettingStarted.md) - setting up the software and the hardware needed to develop HomeSpan devices
-* [HomeKit Primer](https://github.com/HomeSpan/HomeSpan/blob/master/docs/HomeKitPrimer.md) - a gentle introduction to Apple HomeKit and HAP terminology :construction:
 * [HomeSpan API Overview](https://github.com/HomeSpan/HomeSpan/blob/master/docs/Overview.md) - an overview of the HomeSpan API, including a step-by-step guide to developing your first HomeSpan Sketch
 * [HomeSpan Tutorials](https://github.com/HomeSpan/HomeSpan/blob/master/docs/Tutorials.md) - a guide to HomeSpan's tutorial-sketches
 * [HomeSpan Services and Characteristics](https://github.com/HomeSpan/HomeSpan/blob/master/docs/ServiceList.md) - a list of all HAP Services and Characterstics supported by HomeSpan
@@ -56,7 +67,7 @@ HomeSpan includes the following documentation:
 * [HomeSpan API Reference](https://github.com/HomeSpan/HomeSpan/blob/master/docs/Reference.md) - a complete guide to the HomeSpan Library API
 * [HomeSpan QR Codes](https://github.com/HomeSpan/HomeSpan/blob/master/docs/QRCodes.md) - create and use QR Codes for pairing HomeSpan devices
 * [HomeSpan OTA](https://github.com/HomeSpan/HomeSpan/blob/master/docs/OTA.md) - update your sketches Over-the-Air directly from the Arduino IDE without a serial connection
-* [HomeSpan Extras](https://github.com/HomeSpan/HomeSpan/blob/master/docs/Extras.md) - integrated access to the ESP32's on-chip PWM and Remote Control peripherals!
+* [HomeSpan Extras](https://github.com/HomeSpan/HomeSpan/blob/master/docs/Extras.md) - integrated access to the ESP32's on-chip LED, Servo Motor, and Remote Control peripherals!
 * [HomeSpan Projects](https://github.com/topics/homespan) - real-world applications of the HomeSpan Library
 * [HomeSpan FAQ](https://github.com/HomeSpan/HomeSpan/blob/master/docs/FAQ.md) - answers to frequently-asked questions
 

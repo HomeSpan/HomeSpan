@@ -35,8 +35,8 @@ Example 5 expands on Example 2 by adding in the code needed to actually control 
 ### [Example 6 - DimmableLED](../examples/06-DimmableLED)
 Example 6 changes Example 5 so that LED #2 is now dimmable, instead of just on/off.  New HomeSpan API topics covered in this example include:
 
-* implementing pulse-width-modulation on any ESP32 pin by instantiating a `PwmPin()` object
-* setting the PWM level to control the brightness of an LED using the PwmPin `set()` method
+* implementing pulse-width-modulation (PWM) to control an LED attached to any ESP32 pin by instantiating an `LedPin()` object
+* setting the brightness of an LED using the LedPin `set()` method
 * storing similar derived Service classes in the same \*.h file for ease of use
 
 ### [Example 7 - IdentifyRoutines](../examples/07-IdentifyRoutines)
@@ -91,6 +91,11 @@ Example 16 does not introduce any new HomeSpan functionality, but instead showca
 Example 17 introduces the HAP concept of Linked Services and demonstrates how they are used through the implementation of a multi-head Shower.  This example also illustrates some different coding styles that showcase the power and flexibility of HomeSpan's C++ *structure-based* design paradigm.  New HomeSpan API topics covered in this example include:
 
 * creating Linked Services using the `addLink()` method
+
+### [Example 18 - SavingStatus](../examples/18-SavingStatus)
+Example 18 demonstrates, through the implementaton of two Dimmable LEDs, how the values of Characteristics can be automatically saved in the device's non-volatile storage (NVS) for restoration upon start-up if the device is loses power.   New HomeSpan API topics covered in this example include:
+
+* instructing HomeSpan to store the value of a Characteristic in NVS by setting the second parameter of the constuctor to `true`
 
 ---
 

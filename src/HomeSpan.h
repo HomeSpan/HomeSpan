@@ -33,6 +33,7 @@
 
 #include <Arduino.h>
 #include <unordered_map>
+#include <nvs.h>
 
 #include "Settings.h"
 #include "Utils.h"
@@ -66,6 +67,7 @@ struct SpanCharacteristic;
 struct SpanRange;
 struct SpanBuf;
 struct SpanButton;
+struct SpanUserCommand;
 
 extern Span homeSpan;
 
@@ -105,6 +107,8 @@ struct Span{
   boolean isBridge=true;                        // flag indicating whether device is configured as a bridge (i.e. first Accessory contains nothing but AccessoryInformation and HAPProtocolInformation)
   HapQR qrCode;                                 // optional QR Code to use for pairing
   const char *sketchVersion="n/a";              // version of the sketch
+  nvs_handle charNVS;                           // handle for non-volatile-storage of Characteristics data
+  nvs_handle wifiNVS=0;                         // handle for non-volatile-storage of WiFi data
 
   boolean connected=false;                      // WiFi connection status
   unsigned long waitTime=60000;                 // time to wait (in milliseconds) between WiFi connection attempts
@@ -122,7 +126,9 @@ struct Span{
   char otaPwd[33];                                            // MD5 Hash of OTA password, represented as a string of hexidecimal characters
   boolean otaAuth;                                            // OTA requires password when set to true
   void (*wifiCallback)()=NULL;                                // optional callback function to invoke once WiFi connectivity is established
-
+  boolean autoStartAPEnabled=false;                           // enables auto start-up of Access Point when WiFi Credentials not found
+  void (*apFunction)()=NULL;                                  // optional function to invoke when starting Access Point
+  
   WiFiServer *hapServer;                            // pointer to the HAP Server connection
   Blinker statusLED;                                // indicates HomeSpan status
   PushButton controlButton;                         // controls HomeSpan configuration and resets
@@ -134,6 +140,8 @@ struct Span{
   vector<SpanBuf> Notifications;                    // vector of SpanBuf objects that store info for Characteristics that are updated with setVal() and require a Notification Event
   vector<SpanButton *> PushButtons;                 // vector of pointer to all PushButtons
   unordered_map<uint64_t, uint32_t> TimedWrites;    // map of timed-write PIDs and Alarm Times (based on TTLs)
+  
+  unordered_map<char, SpanUserCommand *> UserCommands;           // map of pointers to all UserCommands
 
   void begin(Category catID=DEFAULT_CATEGORY,
              const char *displayName=DEFAULT_DISPLAY_NAME,
@@ -174,6 +182,10 @@ struct Span{
   void setSketchVersion(const char *sVer){sketchVersion=sVer;}            // set optional sketch version number
   const char *getSketchVersion(){return sketchVersion;}                   // get sketch version number
   void setWifiCallback(void (*f)()){wifiCallback=f;}                      // sets an optional user-defined function to call once WiFi connectivity is established
+  void setApFunction(void (*f)()){apFunction=f;}                          // sets an optional user-defined function to call when activating the WiFi Access Point
+  
+  void enableAutoStartAP(){autoStartAPEnabled=true;}                      // enables auto start-up of Access Point when WiFi Credentials not found
+  void setWifiCredentials(const char *ssid, const char *pwd);             // sets WiFi Credentials
 };
 
 ///////////////////////////////
@@ -247,6 +259,7 @@ struct SpanCharacteristic{
   boolean staticRange;                     // Flag that indiates whether Range is static and cannot be changed with setRange()
   boolean customRange=false;               // Flag for custom ranges
   boolean *ev;                             // Characteristic Event Notify Enable (per-connection)
+  char *nvsKey=NULL;                       // key for NVS storage of Characteristic value
   
   uint32_t aid=0;                          // Accessory ID - passed through from Service containing this Characteristic
   boolean isUpdated=false;                 // set to true when new value has been requested by PUT /characteristic
@@ -370,7 +383,9 @@ struct SpanCharacteristic{
     
   } // setRange()
     
-  template <typename T, typename A=boolean, typename B=boolean> void init(T val, A min=0, B max=1){
+  template <typename T, typename A=boolean, typename B=boolean> void init(T val, boolean nvsStore, A min=0, B max=1){
+
+    int nvsFlag=0;
 
     uvSet(value,val);
     uvSet(newValue,val);
@@ -378,36 +393,60 @@ struct SpanCharacteristic{
     uvSet(maxValue,max);
     uvSet(stepValue,0);
 
-  homeSpan.configLog+="(" + uvPrint(value) + ")" + ":  IID=" + String(iid) + ", UUID=0x" + String(type);
-  if(format!=STRING && format!=BOOL)
-    homeSpan.configLog+= "  Range=[" + String(uvPrint(minValue)) + "," + String(uvPrint(maxValue)) + "]";
-
-  boolean valid=false;
-
-  for(int i=0; !valid && i<homeSpan.Accessories.back()->Services.back()->req.size(); i++)
-    valid=!strcmp(type,homeSpan.Accessories.back()->Services.back()->req[i]->type);
-
-  for(int i=0; !valid && i<homeSpan.Accessories.back()->Services.back()->opt.size(); i++)
-    valid=!strcmp(type,homeSpan.Accessories.back()->Services.back()->opt[i]->type);
-
-  if(!valid){
-    homeSpan.configLog+=" *** ERROR!  Service does not support this Characteristic. ***";
-    homeSpan.nFatalErrors++;
-  }
-
-  boolean repeated=false;
+    if(nvsStore){
+      nvsKey=(char *)malloc(16);
+      uint16_t t;
+      sscanf(type,"%x",&t);
+      sprintf(nvsKey,"%04X%08X%03X",t,aid,iid&0xFFF);
+      size_t len;
+    
+      if(!nvs_get_blob(homeSpan.charNVS,nvsKey,NULL,&len)){
+        nvs_get_blob(homeSpan.charNVS,nvsKey,&value,&len);
+        newValue=value;
+        nvsFlag=2;
+      }
+      else {
+        nvs_set_blob(homeSpan.charNVS,nvsKey,&value,sizeof(UVal));       // store data
+        nvs_commit(homeSpan.charNVS);                                    // commit to NVS  
+        nvsFlag=1;
+      }
+    }
   
-  for(int i=0; !repeated && i<homeSpan.Accessories.back()->Services.back()->Characteristics.size(); i++)
-    repeated=!strcmp(type,homeSpan.Accessories.back()->Services.back()->Characteristics[i]->type);
+    homeSpan.configLog+="(" + uvPrint(value) + ")" + ":  IID=" + String(iid) + ", UUID=0x" + String(type);
+    if(format!=STRING && format!=BOOL)
+      homeSpan.configLog+= "  Range=[" + String(uvPrint(minValue)) + "," + String(uvPrint(maxValue)) + "]";
+
+    if(nvsFlag==2)
+      homeSpan.configLog+=" (restored)";
+    else if(nvsFlag==1)
+      homeSpan.configLog+=" (storing)";
   
-  if(valid && repeated){
-    homeSpan.configLog+=" *** ERROR!  Characteristic already defined for this Service. ***";
-    homeSpan.nFatalErrors++;
-  }
-
-  homeSpan.Accessories.back()->Services.back()->Characteristics.push_back(this);  
-
-  homeSpan.configLog+="\n"; 
+    boolean valid=false;
+  
+    for(int i=0; !valid && i<homeSpan.Accessories.back()->Services.back()->req.size(); i++)
+      valid=!strcmp(type,homeSpan.Accessories.back()->Services.back()->req[i]->type);
+  
+    for(int i=0; !valid && i<homeSpan.Accessories.back()->Services.back()->opt.size(); i++)
+      valid=!strcmp(type,homeSpan.Accessories.back()->Services.back()->opt[i]->type);
+  
+    if(!valid){
+      homeSpan.configLog+=" *** ERROR!  Service does not support this Characteristic. ***";
+      homeSpan.nFatalErrors++;
+    }
+  
+    boolean repeated=false;
+    
+    for(int i=0; !repeated && i<homeSpan.Accessories.back()->Services.back()->Characteristics.size(); i++)
+      repeated=!strcmp(type,homeSpan.Accessories.back()->Services.back()->Characteristics[i]->type);
+    
+    if(valid && repeated){
+      homeSpan.configLog+=" *** ERROR!  Characteristic already defined for this Service. ***";
+      homeSpan.nFatalErrors++;
+    }
+  
+    homeSpan.Accessories.back()->Services.back()->Characteristics.push_back(this);  
+  
+    homeSpan.configLog+="\n"; 
    
   } // init()
 
@@ -442,6 +481,11 @@ struct SpanCharacteristic{
     char dummy[]="";
     sb.val=dummy;                           // set dummy "val" so that sprintfNotify knows to consider this "update"
     homeSpan.Notifications.push_back(sb);   // store SpanBuf in Notifications vector  
+
+    if(nvsKey){
+      nvs_set_blob(homeSpan.charNVS,nvsKey,&value,sizeof(UVal));    // store data
+      nvs_commit(homeSpan.charNVS);
+    }
     
   } // setVal()
   
@@ -474,7 +518,15 @@ struct SpanButton{
   SpanButton(int pin, uint16_t longTime=2000, uint16_t singleTime=5, uint16_t doubleTime=200);
 };
 
-/////////////////////////////////////////////////
+///////////////////////////////
 
+struct SpanUserCommand {
+  const char *s;                              // description of command
+  void (*userFunction)(const char *v);              // user-defined function to call
+
+  SpanUserCommand(char c, const char *s, void (*f)(const char *v));  
+};
+
+/////////////////////////////////////////////////
 
 #include "Span.h"

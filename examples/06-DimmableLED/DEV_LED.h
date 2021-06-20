@@ -33,34 +33,33 @@ struct DEV_LED : Service::LightBulb {               // ON/OFF LED
 
 struct DEV_DimmableLED : Service::LightBulb {       // Dimmable LED
 
-  PwmPin *pwmPin;                                   // NEW! Create reference to PWM Pin instantiated below
-  int channel;                                      // NEW! Store the PWM channel used for this LED (should be unique for each LED)
+  LedPin *ledPin;                                   // NEW! Create reference to LED Pin instantiated below
   SpanCharacteristic *power;                        // reference to the On Characteristic
   SpanCharacteristic *level;                        // NEW! Create a reference to the Brightness Characteristic instantiated below
   
-  DEV_DimmableLED(int channel, int ledPin) : Service::LightBulb(){       // constructor() method
+  DEV_DimmableLED(int pin) : Service::LightBulb(){       // constructor() method
 
     power=new Characteristic::On();     
                 
     level=new Characteristic::Brightness(50);       // NEW! Instantiate the Brightness Characteristic with an initial value of 50% (same as we did in Example 4)
     level->setRange(5,100,1);                       // NEW! This sets the range of the Brightness to be from a min of 5%, to a max of 100%, in steps of 1% (different from Example 4 values)
 
-    this->channel=channel;                          // NEW! Save the channel number (from 0-15)
-    this->pwmPin=new PwmPin(channel, ledPin);       // NEW! Configures the PWM channel and attach the specified ledPin. pinMode() does NOT need to be called.
+    this->ledPin=new LedPin(pin);                   // NEW! Configures a PWM LED for output to the specified pin.  Note pinMode() does NOT need to be called in advance
     
   } // end constructor
 
   boolean update(){                              // update() method
 
-    // Here we set the duty cycle (brightness) of the LED by callng pwmPin with the appropriate channel.
-    // The second argument should be a number from 0-100 (representing %brightness).  HomeKit sets the on/off 
-    // status of the LED ("power") separately from the brightness of the LED ("level").  This means HomeKit can
-    // request the LED be turned off, but retain the brightness level so that it does not need to be resent if
-    // the LED is turned back on.  Multiplying the newValue of the power Characteristic (as a boolean) with the
-    // newValue of the Brightness Characteristic (as an int) is a short-hand way of creating the logic to
-    // set the PWM level when the LED is off (always zero) or on (whatever the brightness level is).
+    // Here we set the brightness of the LED by calling ledPin->set(brightness), where brightness=0-100.
+    // Note HomeKit sets the on/off status of a LightBulb separately from its brightness, which means HomeKit
+    // can request a LightBulb be turned off, but still retains the brightness level so that it does not need
+    // to be resent once the LightBulb is turned back on.
     
-    pwmPin->set(channel,power->getNewVal()*level->getNewVal());    
+    // Multiplying the newValue of the On Characteristic ("power", which is a boolean) with the newValue of the
+    // Brightness Characteristic ("level", which is an integer) is a short-hand way of creating the logic to
+    // set the LED level to zero when the LightBulb is off, or to the current brightness level when it is on.
+    
+    ledPin->set(power->getNewVal()*level->getNewVal());    
    
     return(true);                               // return true
   

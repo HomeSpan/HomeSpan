@@ -25,50 +25,30 @@
  *  
  ********************************************************************************/
  
-////////////////////////////////////////////////////////////
-//                                                        //
-//    HomeSpan: A HomeKit implementation for the ESP32    //
-//    ------------------------------------------------    //
-//                                                        //
-// Example 10: Controlling a full-color RGB LED           //
-//                                                        //
-//                                                        //
-////////////////////////////////////////////////////////////
+// This example demonstrates how to control a real-world Servo Motor using HomeSpan's
+// ServoPin Class, as included in "extras/PwmPin.h"  The code builds upon the
+// WindowShade Accessory from Example 13 by adding a Horizontal Tilt Characteristic that
+// is controlled by a Servo connected to the ESP32.
 
 #include "HomeSpan.h" 
-#include "DEV_LED.h"     
-#include "DEV_Identify.h"       
+#include "DEV_Identify.h"      
+#include "DEV_DoorsWindows.h" 
 
 void setup() {
 
-  // Example 10 illustrates how to control an RGB LED to set any color and brightness.
-  // The configuration below should look familiar by now.  We've created a new derived Service,
-  // call RgbLED to house all the required logic.  You'll find all the code in DEV_LED.h.
-  // For completeness, this configuration also contains an on/off LED and a dimmable LED as shown
-  // in prior examples.
-  
   Serial.begin(115200);
 
   homeSpan.begin(Category::Bridges,"HomeSpan Bridge");
-
 
   new SpanAccessory();  
     new DEV_Identify("Bridge #1","HomeSpan","123-ABC","HS Bridge","0.9",3);
     new Service::HAPProtocolInformation();
       new Characteristic::Version("1.1.0");
-
-  new SpanAccessory();                                                          
-    new DEV_Identify("On/Off LED","HomeSpan","123-ABC","20mA LED","0.9",0);
-    new DEV_LED(16);                                                               // Create an On/Off LED attached to pin 16
-
-  new SpanAccessory();                                                          
-    new DEV_Identify("Dimmable LED","HomeSpan","123-ABC","20mA LED","0.9",0);
-    new DEV_DimmableLED(17);                                                       // Create a Dimmable (PWM-driven) LED using attached to pin 17
-
-  new SpanAccessory();                                                          
-    new DEV_Identify("RGB LED","HomeSpan","123-ABC","20mA LED","0.9",0);
-    new DEV_RgbLED(32,22,23);                                                      // Create an RGB LED attached to pins 32,22,23 (for R, G, and B LED anodes)
       
+  new SpanAccessory();                                                          
+    new DEV_Identify("Window Shade","HomeSpan","123-ABC","Shade","0.9",0);
+    new DEV_WindowShade(18);                                                            // Create a motorized Window Shade with a Servo attached to Pin 18 that controls the Horizontal Tilt of the Shade
+
 } // end of setup()
 
 //////////////////////////////////////

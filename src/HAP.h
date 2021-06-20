@@ -28,7 +28,6 @@
 #pragma once
 
 #include <WiFi.h>
-#include <nvs.h>
 
 #include "HomeSpan.h"
 #include "TLV.h"
@@ -80,7 +79,6 @@ struct HAPClient {
   
   static TLV<kTLVType,10> tlv8;                       // TLV8 structure (HAP Section 14.1) with space for 10 TLV records of type kTLVType (HAP Table 5-6)
   static nvs_handle hapNVS;                           // handle for non-volatile-storage of HAP data
-  static nvs_handle wifiNVS;                          // handle for non-volatile-storage of WiFi data
   static nvs_handle srpNVS;                           // handle for non-volatile-storage of SRP data
   static nvs_handle otaNVS;                           // handle for non-volatile-storage of OTA data
   static uint8_t httpBuf[MAX_HTTP+1];                 // buffer to store HTTP messages (+1 to leave room for storing an extra 'overflow' character)

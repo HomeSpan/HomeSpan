@@ -4,28 +4,23 @@ HomeSpan includes integrated access to a number of ESP32 features you'll likely 
 
 ## Pulse Width Modulation (PWM)
 
-PWM on the ESP32 is more flexible, but slighly more complicated, than PWM on most Arduino devices (like the Uno or Mega).  On the ESP32, you use one of 16 built-in timer-channels to create a PWM signal, and then link that channel to any ESP32 pin.  HomeSpan includes a library that makes this very easy, and is accessed as by placing the following near the top of your sketch:
+The ESP32 has 16 PWM channels that can be used to drive a variety of devices.  HomeSpan includes an integrated PWM library with dedicated classes designed for controlling **Dimmable LEDs** as well as **Servo Motors**.  Both classes are provided in a standalone header file that is accessd by placing the following near the top of your sketch:
 
 `#include "extras/PwmPin.h"`
 
-### *PwmPin(uint8_t channel, uint8_t pin)*
+### *LedPin(uint8_t pin)*
 
-Creating an instance of this **class** links one of 16 timer-channels to an ESP32 pin.
+Creating an instance of this **class** configures the specified *pin* to output a 5000 Hz PWM signal, which is suitable for dimming LEDs. The following methods are supported:
 
-* *channel* - the ESP32 timer-channel number (0-15) to generate the PWM signal
-* *pin* - the ESP32 pin that will output the PWM signal produced by the channel
+* `void set(uint8_t level)`
 
-The following methods are supported:
-
-* `void set(uint8_t channel, uint8_t level)`
-
-  * sets the PWM %duty-cycle of timer-channel *channel* (0-15) to *level*, where *level* ranges from 0 (off) to 100 (steady on)
+  * sets the PWM %duty-cycle to *level*, where *level* ranges from 0 (LED completely off) to 100 (LED fully on)
   
 * `int getPin()`
 
   * returns the pin number
   
-PwmPin also includes a static class function that converts Hue/Saturation/Brightness values (typically used by HomeKit) to Red/Green/Blue values (typically used to control multi-color LEDS).
+LedPin also includes a static class function that converts Hue/Saturation/Brightness values (typically used by HomeKit) to Red/Green/Blue values (typically used to control multi-color LEDS).
 
 * `static void HSVtoRGB(float h, float s, float v, float *r, float *g, float *b)`
 
@@ -36,7 +31,38 @@ PwmPin also includes a static class function that converts Hue/Saturation/Bright
   * *g* - output Green value, range 0-1
   * *b* - output Blue value, range 0-1
 
-See tutorial sketch [#10 (RGB_LED)](../examples/10-RGB_LED) for an example of using PwmPin to control an RGB LED.
+See tutorial sketch [#10 (RGB_LED)](../examples/10-RGB_LED) for an example of using LedPin to control an RGB LED.
+
+### *ServoPin(uint8_t pin [,double initDegrees [,uint16_t minMicros, uint16_t maxMicros, double minDegrees, double maxDegrees]])*
+
+Creating an instance of this **class** configures the specified *pin* to output a 50 Hz PWM signal, which is suitable for controlling most Servo Motors.  There are three forms of the constructor: one with just a single argument; one with two arguments; and one with all six arguments.  Arguments, along with their defaults if left unspecified, are as follows:
+
+  * *pin* - the pin on which the PWM control signal will be output.  The control wire of a Servo Motor should be connected this pin
+  * *initDegrees* - the initial position (in degrees) to which the Servo Motor should be set (default=0°)
+  * *minMicros* - the pulse width (in microseconds) that moves the Servo Motor to its "minimium" position of *minDegrees* (default=1000𝛍s)
+  * *maxMicros* - the pulse width (in microseconds) that moves the Servo Motor to its "maximum" position of *maxDegrees* (default=2000𝛍s)
+  * *minDegrees* - the position (in degrees) to which the Servo Motor moves when receiving a pulse width of *minMicros* (default=-90°)
+  * *maxDegrees* - the position (in degrees) to which the Servo Motor moves when receiving a pulse width of *maxMicros* (default=90°)
+
+The *minMicros* parameter must be less than the *maxMicros* parameter, but setting *minDegrees* to a value greater than *maxDegrees* is allowed and can be used to reverse the minimum and maximum positions of the Servo Motor. The following methods are supported:
+
+* `void set(uint8_t position)`
+
+  * sets the position of the Servo Motor to *position* (in degrees).  In order to protect the Servo Motor, values of *position* less than *minDegrees* are automatically reset to *minDegrees*, and values greater than *maxDegrees* are automatically reset to *maxDegrees*.
+  
+* `int getPin()`
+
+  * returns the pin number
+
+A worked example showing how ServoPin can be used to control the Horizontal Tilt of a motorized Window Shade can be found in the Arduino IDE under [*File → Examples → HomeSpan → Other Examples → ServoControl*](https://github.com/HomeSpan/HomeSpan/tree/dev/Other%20Examples/ServoControl).
+
+Resource limitations:
+
+* A maximum of 16 LedPin objects can be instantiated
+* A maximum of 8 ServoPin objects can be instantiated
+* A maximum combined total of 16 LedPin and ServoPin objects can be instantiated (for example 10 LedPin and 6 ServoPin objects)
+
+HomeSpan will report a non-fatal error message to the Arduino Serial Monitor for each LedPin or ServoPin that instantiated beyond these limits.  Calls to the `set()` method for objects that exceed these limits are ignored.
 
 ## Remote Control Radio Frequency / Infrared Signal Generation
 
@@ -76,11 +102,11 @@ Since most RF/IR signals repeat the same train of pulses more than once, the dur
 
  * starts the transmission of the pulse train stored in the pulse train memory buffer.  The signal will be output on the *pin* specified when RFControl was instantiated.  Note this is a blocking call—the method waits until transmission is completed before returning.  This should not produce a noticeable delay in program operations since most RF/IR pulse trains are only a few tens-of-milliseconds long
  
-   * *numCycles* - the total number of times to transmit the pulse train (i.e. a value of 3 means the pulse train will be transmitted once, followed by 2 additional  re-transmissions)
+   * *numCycles* - the total number of times to transmit the pulse train (i.e. a value of 3 means the pulse train will be transmitted once, followed by 2 additional re-transmissions)
    
    * *tickTime* - the duration, in **microseconds**, of a *tick*.  This is an optional argument with a default of 1𝛍s if not specified.  Valid range is 1-255𝛍s, or set to 0 for 256𝛍s
    
-Below is a complete sketch that produces two different pulse trains with the signal output linked to the ESP32 device's built-in LED (rather than an RF or IR transmitter).  For illustrative purposes the tick duration has been set to a very long 100𝛍s, and pulse times range from of 1000-10,000 ticks, so that the individual pulses are easily discernable on the LED.  Note this example sketch is also available in the Arduino IDE under *File → Examples → HomeSpan → Other Examples → RemoteControl*.
+Below is a complete sketch that produces two different pulse trains with the signal output linked to the ESP32 device's built-in LED (rather than an RF or IR transmitter).  For illustrative purposes the tick duration has been set to a very long 100𝛍s, and pulse times range from of 1000-10,000 ticks, so that the individual pulses are easily discernable on the LED.  Note this example sketch is also available in the Arduino IDE under [*File → Examples → HomeSpan → Other Examples → RemoteControl*](https://github.com/HomeSpan/HomeSpan/tree/dev/Other%20Examples/RemoteControl).
 
 ```C++
 /* HomeSpan Remote Control Example */
@@ -132,6 +158,22 @@ void loop(){
 
 } // end of loop()
 ```
+
+---
+
+#### Deprecated functions (available for backwards compatibility with older sketches):
+
+*PwmPin(uint8_t channel, uint8_t pin)*
+
+  * this legacy function was used to generically control the ESP32's built-in PWM generators to drive a dimmable LED and required the user to keep track of individual PWM channels.  It has been replaced by two specific (and much easier-to-use) methods:
+  
+    * *LedPin(uint8_t pin)* - drives a dimmable LED
+      
+    * *ServoPin(uint8_t pin [,double initDegrees [,uint16_t minMicros, uint16_t maxMicros, double minDegrees, double maxDegrees]])* - drives a Servo Motor
+   
+  * last supported version: [v1.2.1](https://github.com/HomeSpan/HomeSpan/blob/release-1.2.1/docs/Extras.md#pwmpinuint8_t-channel-uint8_t-pin)
+
+  * **please use** `LedPin` and `ServoPin` **for all new sketches**
 
 ---
 

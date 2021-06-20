@@ -24,6 +24,8 @@ At runtime this HomeSpan will create a global **object** named `homeSpan` that s
    * checks for HAP requests, local commands, and device activity
    * **must** be called repeatedly in each sketch and is typically placed at the top of the Arduino `loop()` method
    
+---
+
 The following **optional** `homeSpan` methods override various HomeSpan initialization parameters used in `begin()`, and therefore **should** be called before `begin()` to take effect.  If a method is *not* called, HomeSpan uses the default parameter indicated below:
 
 * `void setControlPin(uint8_t pin)`
@@ -72,12 +74,40 @@ The following **optional** `homeSpan` methods override various HomeSpan initiali
   * the HomeSpan default is "HSPN" unless permanently changed for the device via the [HomeSpan CLI](CLI.md) using the 'Q' command
   * *id* must be exactly 4 alphanumeric characters (0-9, A-Z, and a-z).  If not, the request to change the Setup ID is silently ignored and the default is used instead
   
+---
+
+The following **optional** `homeSpan` methods enable additional features and provide for further customization of the HomeSpan environment:
+
 * `void enableOTA(boolean auth=true)`
   * enables [Over-the-Air (OTA) Updating](OTA.md) of a HomeSpan device, which is otherwise disabled
   * HomeSpan OTA requires an authorizing password unless *auth* is specified and set to *false*
   * the default OTA password for new HomeSpan devices is "homespan-ota"
   * this can be changed via the [HomeSpan CLI](CLI.md) using the 'O' command
+
+* `void enableAutoStartAP()`
+  * enables automatic start-up of WiFi Access Point if WiFi Credentials are **not** found at boot time
+  * methods to alter the behavior of HomeSpan's Access Point, such as `setApTimeout()`, must be called prior to `enableAutoStartAP()` to have an effect  
   
+* `void setApFunction(void (*func)())`
+  * replaces HomeSpan's built-in WiFi Access Point with user-defined function *func*
+  * *func* must be of type *void* and have no arguments
+  * *func* will be called instead of HomeSpan's built-in WiFi Access Point whenever the Access Point is launched:
+    * via the CLI by typing 'A', or
+    * via the Control Button using option 3 of the Command Mode, or
+    * automatically upon start-up if `enableAutoStartAP()` is set and there are no stored WiFi Credentials
+  * after identifying the SSID and password of the desired network, *func* must call `setWifiCredentials()` to save and use these values
+  * it is recommended that *func* terminates by restarting the device using `ESP.restart()`. Upon restart HomeSpan will use the SSID and password just saved
+  
+* `void setWifiCredentials(const char *ssid, const char *pwd)`
+  * sets the SSID (*ssid*) and password (*pwd*) of the WiFi network to which HomeSpan will connect
+  * *ssid* and *pwd* are automatically saved in HomeSpan's non-volatile storage (NVS) for retrieval when the device restarts
+  * note that the saved values are truncated if they exceed the maximum allowable characters (ssid=32; pwd=64)
+  
+> :warning: SECURITY WARNING: The purpose of this function is to allow advanced users to *dynamically* set the device's WiFi Credentials using a customized Access Point function specified by `setApFunction(func)`. It it NOT recommended to use this function to hardcode your WiFi SSID and password directly into your sketch.  Instead, use one of the more secure methods provided by HomeSpan, such as typing 'W' from the CLI, or launching HomeSpan's Access Point by typing 'A' from the CLI, to set your WiFi credentials without hardcoding them into your sketch.
+
+* `void setWifiCallback(void (*func)())`
+  * Sets an optional user-defined callback function, *func*, to be called by HomeSpan upon start-up just after WiFi connectivity has been established.  This one-time call to *func* is provided for users that are implementing other network-related services as part of their sketch, but that cannot be started until WiFi connectivity is established.  The function *func* must be of type *void* and have no arguments
+
 * `void setSketchVersion(const char *sVer)`
   * sets the version of a HomeSpan sketch to *sVer*, which can be any arbitrary character string
   * if unspecified, HomeSpan uses "n/a" as the default version text
@@ -86,10 +116,7 @@ The following **optional** `homeSpan` methods override various HomeSpan initiali
   
 * `const char *getSketchVersion()`
   * returns the version of a HomeSpan sketch, as set using `void setSketchVersion(const char *sVer)`, or "n/a" if not set
-  
-* `void setWifiCallback(void (*func)(void))`
-  * Sets an optional user-defined callback function, *func*, to be called by HomeSpan upon start-up just after WiFi connectivity has been established.  This one-time call to *func* is provided for users that are implementing other network-related services as part of their sketch, but that cannot be started until WiFi connectivity is established.  The function *func* must be of type *void* and have no arguments
-  
+    
 ## *SpanAccessory(uint32_t aid)*
 
 Creating an instance of this **class** adds a new HAP Accessory to the HomeSpan HAP Database.
@@ -144,15 +171,19 @@ The following methods are supported:
       * 1=double press (SpanButton::DOUBLE)
       * 2=long press (SpanButton::LONG)
     
-## *SpanCharacteristic(value)*
+## *SpanCharacteristic(value [,boolean nvsStore])*
   
 This is a **base class** from which all HomeSpan Characteristics are derived, and should **not** be directly instantiated.  Rather, to create a new Characteristic instantiate one of the HomeSpan Characteristics defined in the [Characteristic](ServiceList.md) namespace.
 
 * instantiated Characteristics are added to the HomeSpan HAP Database and associated with the last Service instantiated
 * instantiating a Characteristic without first instantiating a Service throws an error during initialization
-* a single, optional argument is used to set the initial value of the Characteristic at startup
-* throws a runtime warning if value is outside of the min/max range for the Characteristic, where min/max is either the HAP default, or any new values set via a call to `setRange()`
-* example: `new Characteristic::Brightness(50);`
+* the first argument optionally allows you to set the initial *value* of the Characteristic at startup.  If *value* is not specified, HomeSpan will supply a reasonable default for the Characteristic
+* throws a runtime warning if *value* is outside of the min/max range for the Characteristic, where min/max is either the HAP default, or any new values set via a call to `setRange()`
+* the second optional argument, if set to `true`, instructs HomeSpan to save updates to this Characteristic's value in the device's non-volative storage (NVS) for restoration at startup if the device should lose power.  If not specified, *nvsStore* will default to `false` (no storage)
+* examples:
+  * `new Characteristic::Brightness();`           Brightness initialized to default value
+  * `new Characteristic::Brightness(50);`         Brightness initialized to 50
+  * `new Characteristic::Brightness(50,true);`    Brightness initialized to 50; updates saved in NVS
 
 The following methods are supported:
 
@@ -212,6 +243,18 @@ HomeSpan automatically calls the `button(int pin, int pressType)` method of a Se
   
 HomeSpan will report a warning, but not an error, during initialization if the user had not overridden the virtual button() method for a Service contaning one or more Buttons; triggers of those Buttons will simply ignored.
 
+## *SpanUserCommand(char c, const char \*s, void (\*f)(const char \*v))*
+
+Creating an instance of this **class** adds a user-defined command to the HomeSpan Command-Line Interface (CLI), where:
+
+  * *c* is the single-letter name of the user-defined command
+  * *s* is a description of the user-defined command that is displayed when the user types '?' into the CLI
+  * *f* is a pointer to a user-defined function that is called when the command is invoked.  This function must be of the form `void f(const char *v)`, where *v* points to all characters typed into the CLI, beginning with the single-letter command name *c*.
+
+To invoke this command from the CLI, preface the single-letter name *c* with '@'.  This allows HomeSpan to distinguish user-defined commands from its built-in commands.  For example, `new SpanUserCommand('s', "save current configuration",saveConfig)` would add a new command '@s' to the CLI with description "save current configuration" that will call the user-defined function `void saveConfig(const char *v)` when invoked.  The argument *v* points to an array of all characters typed into the CLI after the '@'.  This allows the user to pass arguments from the CLI to the user-defined function.  For example, typing '@s123' into the CLI sets *v* to "s123" when saveConfig is called. 
+
+To create more than one user-defined command, simply create multiple instances of SpanUserCommand, each with its own single-letter name.  Note that re-using the same single-letter name in an instance of SpanUserCommand over-rides any previous instances using that same letter.
+
 ## *#define REQUIRED VERSION(major,minor,patch)*
 
 If REQUIRED is defined in the main sketch prior to including the HomeSpan library with `#include "HomeSpan.h"`, HomeSpan will throw a compile-time error unless the version of the library included is equal to, or later than, the version specified using the VERSION macro.  Example:
@@ -221,15 +264,13 @@ If REQUIRED is defined in the main sketch prior to including the HomeSpan librar
 ```
 ---
 
-## *SpanRange(int min, int max, int step)*
+#### Deprecated functions (available for backwards compatibility with older sketches):
 
-Creating an instance of this **class** overrides the default HAP range for a Characteristic with the *min*, *max*, and *step* values specified.
+*SpanRange(int min, int max, int step)*
 
-* instantiated Ranges are added to the HomeSpan HAP Database and associated with the last Characteristic instantiated
-* instantiating a Range without first instantiating a Characteristic throws an error during initialization
-* example: `new Characteristic::Brightness(50); new SpanRange(10,100,5);`
-* this is a legacy function that is limited to integer-based parameters, and has been re-coded to simply call the more generic `setRange(min, max, step)` method
-* **please use** `setRange(min, max, step)` **for all new sketches**
+  * this legacy function is limited to integer-based parameters and has been re-coded to simply call the more generic `setRange(min, max, step)` method
+  * last supported version: [v1.2.0](https://github.com/HomeSpan/HomeSpan/blob/release-1.2.0/docs/Reference.md#spanrangeint-min-int-max-int-step)
+  * **please use** `setRange(min, max, step)` **for all new sketches**
 
 ---
 

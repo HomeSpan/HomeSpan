@@ -59,6 +59,9 @@ In addition to listening for incoming HAP requests, HomeSpan also continuously p
 * **A** - start the HomeSpan Setup Access Point
   * This command starts HomeSpan's temporary Access Point, which provides users with an alternate methods for configuring a device's WiFi Credentials and HomeKit Setup Code.  Starting the Access Point with this command is identical to starting it via the Control Button.  See the [HomeSpan User Guide](UserGuide.md) for complete details.
   
+* **V** - erases the values of any saved Characteristics
+  * As Characteristics are updated via the Home App, their latest values can be (optionally) saved in the device's non-volatile storage (NVS).  If the device should ever lose power this allows HomeSpan to restore the latest values of saved Characteristic upon the next start-up.  Typing 'V' from the CLI deletes all previously-saved Characteristic values from the NVS, though it does not alter the current values of those Characteristics.  This is useful in the event that saved Characteristics become out-of-sync with their stored values during the development phase of your sketch when adding, deleting, and changing the configuration of new Accessories, Services, and Characteristics.
+  
 * **U** - unpair device by deleting all Controller data
   * This deletes all data stored about Controllers that have been paired with the device, which forces HomeSpan to reset its internal state to unpaired.  Normally, unpairing is done by HomeKit at the direction of an end-user via the Home App on an iPhone.  However, HomeKit requests to unpair a device are not subject to any confirmation from that device.  HomeKit simply assumes that once it requests a device to unpair, the device has received the message and has reset its pairing state accordingly.  In the event that HomeKit unpairs a HomeSpan device, but the device does not receive or properly process the request, its pairing status will be out of sync with HomeKit.  Forcing HomeKit to reset its internal state to unpaired using this command resolves the issue and allows HomeSpan to be re-paired with HomeKit.
   * Note that if you run this command when HomeKit thinks it is still paired to the device, pairing status will be out of sync in the opposite direction.  HomeKit Controllers will continue to send HAP requests to the device, thinking it is paired, but HomeSpan will ignore all these requests since it no longer recognizes any of the Controllers as being paired.  To resolve this issue, you must instruct HomeKit to unpair the device via the Home App, after which you can re-pair the device if needed.
@@ -82,8 +85,14 @@ In addition to listening for incoming HAP requests, HomeSpan also continuously p
     * 0 (minimal diagnostics),
     * 1 (all diagnostics), and 
     * 2 (all diagnostics plus a real-time stream of all HAP communication between HomeSpan and any connected HomeKit Controllers).
+
+* **?** - prints a menu of all CLI commands
+
+### User-Defined Commands
   
-  ---
+You can extend the HomeSpan CLI with custom functions using `SpanUserCommand()`.  This class allows you to assign a single-character name to any custom function that will be called when you type the '@' symbol following by the single-character name into the CLI.  For example, if you assigned the character 'K' to a custom function, you would type '@K' into the CLI to invoke it.  This allows you to use any single-character name, even if that character is already used by HomeSpan for its built-in commands.  The `SpanUserCommand` class also allows you to include a short text description of your function that will be added to the menu of commands when you type '?' into the CLI. See the the [API Reference](Reference.md#spanusercommandchar-c-const-char-s-void-fconst-char-v) for full details.    
+  
+---
 
 [↩️](README.md) Back to the Welcome page  
   

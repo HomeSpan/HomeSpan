@@ -16,8 +16,7 @@ struct DEV_DimmableLED : Service::LightBulb {       // Dimmable LED
   // raise button:  SHORT press increases brightness by 1%; LONG press increases brightness by 10%; DOUBLE press increases brightness to maximum
   // lower button:  SHORT press decreases brightness by 1%; LONG press decreases brightness by 10%; DOUBLE press decreases brightness to minimum
   
-  PwmPin *pwmPin;                                   // reference to PWM Pin
-  int ledPin;                                       // pin number defined for this LED
+  LedPin *ledPin;                                   // reference to Led Pin
   int powerPin;                                     // NEW! pin with pushbutton to turn on/off LED
   int raisePin;                                     // NEW! pin with pushbutton to increase brightness
   int lowerPin;                                     // NEW! pin with pushButton to decrease brightness
@@ -26,9 +25,9 @@ struct DEV_DimmableLED : Service::LightBulb {       // Dimmable LED
   SpanCharacteristic *level;                        // reference to the Brightness Characteristic
   int favoriteLevel=50;                             // NEW! keep track of a 'favorite' level
 
-  // NEW!  Consructor includes 3 additionl arguments to specify pin numbers for power, raise, and lower buttons
+  // NEW!  Consructor includes 3 additional arguments to specify pin numbers for power, raise, and lower buttons
   
-  DEV_DimmableLED(int channel, int ledPin, int powerPin, int raisePin, int lowerPin) : Service::LightBulb(){
+  DEV_DimmableLED(int pin, int powerPin, int raisePin, int lowerPin) : Service::LightBulb(){
 
     power=new Characteristic::On();     
                 
@@ -46,15 +45,13 @@ struct DEV_DimmableLED : Service::LightBulb {       // Dimmable LED
     new SpanButton(raisePin,500);                   // NEW! create new SpanButton to increase brightness using pushbutton on pin number "raisePin"
     new SpanButton(lowerPin,500);                   // NEW! create new SpanButton to decrease brightness using pushbutton on pin number "lowerPin"
 
-    this->channel=channel;                          // save the channel number (from 0-15)
-    this->ledPin=ledPin;                            // save LED pin number
     this->powerPin=powerPin;                        // NEW! save power pushbutton pin number
     this->raisePin=raisePin;                        // NEW! save increase brightness pushbutton pin number
     this->lowerPin=lowerPin;                        // NEW! save decrease brightness pushbutton pin number
-    this->pwmPin=new PwmPin(channel, ledPin);       // configure the PWM channel and attach the specified ledPin
+    this->ledPin=new LedPin(pin);                   // configures a PWM LED for output to the specified pin
 
     Serial.print("Configuring Dimmable LED: Pin="); // initialization message
-    Serial.print(ledPin);
+    Serial.print(ledPin->getPin());
     Serial.print(" Channel=");
     Serial.print(channel);
     Serial.print("\n");
@@ -64,7 +61,7 @@ struct DEV_DimmableLED : Service::LightBulb {       // Dimmable LED
   boolean update(){                              // update() method
 
     LOG1("Updating Dimmable LED on pin=");
-    LOG1(ledPin);
+    LOG1(ledPin->getPin());
     LOG1(":  Current Power=");
     LOG1(power->getVal()?"true":"false");
     LOG1("  Current Brightness=");
@@ -82,7 +79,7 @@ struct DEV_DimmableLED : Service::LightBulb {       // Dimmable LED
 
     LOG1("\n");
     
-    pwmPin->set(channel,power->getNewVal()*level->getNewVal());    
+    ledPin->set(power->getNewVal()*level->getNewVal());    
    
     return(true);                               // return true
   
@@ -115,9 +112,9 @@ struct DEV_DimmableLED : Service::LightBulb {       // Dimmable LED
         LOG1("Saved new brightness level=");        // ...and output log message
         LOG1(favoriteLevel);
         LOG1("\n");        
-        pwmPin->set(channel,(1-power->getVal())*level->getVal());       // blink the LED to indicate new level has been saved
+        ledPin->set((1-power->getVal())*level->getVal());       // blink the LED to indicate new level has been saved
         delay(100);
-        pwmPin->set(channel,(1-power->getVal())*level->getVal());
+        ledPin->set((1-power->getVal())*level->getVal());
       }
       
     } else
@@ -153,7 +150,7 @@ struct DEV_DimmableLED : Service::LightBulb {       // Dimmable LED
     // Don't forget to set the new power and level for the actual LED - the above code by itself only changes the values of the Characteristics
     // within HomeKit!  We still need to take an action on the actual LED itself.
     
-    // Note the line below is similar to, but not the same as, the pwmPin->set function used in the update() method above.  Within the
+    // Note the line below is similar to, but not the same as, the ledPin->set function used in the update() method above.  Within the
     // update() method we used getNewVal() because we wanted to change the LED to match the NEW VALUES requested by the user via the
     // HomeKit Controller.  We did not need to (and must not) use setVal() to modify these values in the update() method since HomeSpan
     // automatically does this for us, provided we return StatusCode::OK at the end of the update() method.
@@ -164,7 +161,7 @@ struct DEV_DimmableLED : Service::LightBulb {       // Dimmable LED
     // as shown below.  As usual, HomeSpan will send Event Notifications to all registered HomeKit Controllers letting them know about any changes
     // we made using setVal(). 
     
-    pwmPin->set(channel,power->getVal()*level->getVal());       // update the physical LED to reflect the new values
+    ledPin->set(power->getVal()*level->getVal());       // update the physical LED to reflect the new values
 
   }
 

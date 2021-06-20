@@ -56,7 +56,7 @@ The use of these two components to configure a standalone HomeSpan device, inclu
 
 ## What Next?
 
-If you've not yet read through the [HomeSpan API Overview](Overview.md) page, you should do so now so you'll have a good understanding of the framework for developing HomeSpan sketches.  If you are new to HomeKit development, you may also want to read through HomeSpan's [HomeKit Primer](HomeKitPrimer.md), which should provide you with some important foundational knowledge about HomeKit itself.
+If you've not yet read through the [HomeSpan API Overview](Overview.md) page, you should do so now so you'll have a good understanding of the framework for developing HomeSpan sketches.
 
 Next, explore the tutorial sketches, upload a few, and see how they work. The examples start simple and grow in complexity, taking you through all the functions and features of HomeSpan.  Along the way you'll also learn a lot of HomeKit tips and tricks.  See [HomeSpan Tutorials](Tutorials.md) for a summary of all the included examples.  Find something in a sketch you don't understand?  Visit the [HomeSpan API Reference](Reference.md) for details on all HomeSpan objects, functions, and methods.  Have a more general question?  See if it's been answered on the [HomeSpan FAQ](FAQ.md) page or any of the [Disussion](https://github.com/HomeSpan/HomeSpan/discussions) or [Issues](https://github.com/HomeSpan/HomeSpan/issues) pages.  If not, feel free to join the Discusion by adding a new question.
 

@@ -85,11 +85,11 @@ void setup() {
     new DEV_Identify("On/Off LED","HomeSpan","123-ABC","20mA LED","0.9",0);
     new DEV_LED(16);
 
-  // Defines a Dimmable LED Accessory attached to pin 17 using PWM channel 0
+  // Defines a Dimmable (PWM-driven) LED Accessory attached to pin 17
   
   new SpanAccessory();                                                        
     new DEV_Identify("Dimmable LED","HomeSpan","123-ABC","20mA LED","0.9",0);       
-    new DEV_DimmableLED(0,17);                                            
+    new DEV_DimmableLED(17);                                                                                      
 
 } // end of setup()
 
