@@ -24,6 +24,8 @@ At runtime this HomeSpan will create a global **object** named `homeSpan` that s
    * checks for HAP requests, local commands, and device activity
    * **must** be called repeatedly in each sketch and is typically placed at the top of the Arduino `loop()` method
    
+---
+
 The following **optional** `homeSpan` methods override various HomeSpan initialization parameters used in `begin()`, and therefore **should** be called before `begin()` to take effect.  If a method is *not* called, HomeSpan uses the default parameter indicated below:
 
 * `void setControlPin(uint8_t pin)`
@@ -72,7 +74,9 @@ The following **optional** `homeSpan` methods override various HomeSpan initiali
   * the HomeSpan default is "HSPN" unless permanently changed for the device via the [HomeSpan CLI](CLI.md) using the 'Q' command
   * *id* must be exactly 4 alphanumeric characters (0-9, A-Z, and a-z).  If not, the request to change the Setup ID is silently ignored and the default is used instead
   
-The following **optional** `homeSpan` methods enables additional features and provides for further customization of the HomeSpan environment:
+---
+
+The following **optional** `homeSpan` methods enable additional features and provide for further customization of the HomeSpan environment:
 
 * `void enableOTA(boolean auth=true)`
   * enables [Over-the-Air (OTA) Updating](OTA.md) of a HomeSpan device, which is otherwise disabled
@@ -80,21 +84,26 @@ The following **optional** `homeSpan` methods enables additional features and pr
   * the default OTA password for new HomeSpan devices is "homespan-ota"
   * this can be changed via the [HomeSpan CLI](CLI.md) using the 'O' command
 
-* `void enableAutoStartAP(void (*func)()=NULL)`
+* `void enableAutoStartAP()`
   * enables automatic start-up of WiFi Access Point if WiFi Credentials are **not** found at boot time
-  * *func* is typically left unspecified (or set to NULL).  This causes HomeSpan to call its built-in WiFi Access Point, exactly as if you had typed 'A' into the CLI
-  * methods to alter the behavior HomeSpan's Access Point, such as `setApTimeout()`, must be called prior to `enableAutoStartAP()` to have an effect  
-  * advanced users can bypass HomeSpan's built-in Access Point and instead call their own Access Point code by specifying the function *func*
-    * *func* must be of type *void* and have no arguments
-    * after identifying the SSID and password of the desired network, *func* must call `setWifiCredentials()` to save and use these values
-    * it is recommended that *func* terminates by restarting the device using `ESP.restart()`. Upon restart HomeSpan will use the SSID and password just saved
+  * methods to alter the behavior of HomeSpan's Access Point, such as `setApTimeout()`, must be called prior to `enableAutoStartAP()` to have an effect  
+  
+* `void setApFunction(void (*func)())`
+  * replaces HomeSpan's built-in WiFi Access Point with user-defined function *func*
+  * *func* must be of type *void* and have no arguments
+  * *func* will be called instead of HomeSpan's built-in WiFi Access Point whenever the Access Point is launched:
+    * via the CLI by typing 'A', or
+    * via the Control Button using option 3 of the Command Mode, or
+    * automatically upon start-up if `enableAutoStartAP()` is set and there are no stored WiFi Credentials
+  * after identifying the SSID and password of the desired network, *func* must call `setWifiCredentials()` to save and use these values
+  * it is recommended that *func* terminates by restarting the device using `ESP.restart()`. Upon restart HomeSpan will use the SSID and password just saved
   
 * `void setWifiCredentials(const char *ssid, const char *pwd)`
   * sets the SSID (*ssid*) and password (*pwd*) of the WiFi network to which HomeSpan will connect
   * *ssid* and *pwd* are automatically saved in HomeSpan's non-volatile storage (NVS) for retrieval when the device restarts
   * note that the saved values are truncated if they exceed the maximum allowable characters (ssid=32; pwd=64)
   
-> :warning: SECURITY WARNING: The purpose of this function is to allow advanced users to *dynamically* set the device's WiFi Credentials using a customized Access Point via `enableAutoStartAP(func)` or with some other method. It it NOT recommended to use this function to hardcode your WiFi SSID and password directly into your sketch.  Instead, use one of the more secure methods provided by HomeSpan, such as typing 'W' from the CLI, or launching HomeSpan's Access Point by typing 'A' from the CLI, to set your WiFi credentials without hardcoding them into your sketch.
+> :warning: SECURITY WARNING: The purpose of this function is to allow advanced users to *dynamically* set the device's WiFi Credentials using a customized Access Point function specified by `setApFunction(func)`. It it NOT recommended to use this function to hardcode your WiFi SSID and password directly into your sketch.  Instead, use one of the more secure methods provided by HomeSpan, such as typing 'W' from the CLI, or launching HomeSpan's Access Point by typing 'A' from the CLI, to set your WiFi credentials without hardcoding them into your sketch.
 
 * `void setWifiCallback(void (*func)())`
   * Sets an optional user-defined callback function, *func*, to be called by HomeSpan upon start-up just after WiFi connectivity has been established.  This one-time call to *func* is provided for users that are implementing other network-related services as part of their sketch, but that cannot be started until WiFi connectivity is established.  The function *func* must be of type *void* and have no arguments
