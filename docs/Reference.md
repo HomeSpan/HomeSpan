@@ -1,4 +1,4 @@
-# HomeSpan Library Reference
+# HomeSpan API Reference
 
 The HomeSpan Library is invoked by including *HomeSpan.h* in your Arduino sketch as follows:
 
