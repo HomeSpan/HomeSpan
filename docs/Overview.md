@@ -1,7 +1,5 @@
 # HomeSpan API Overview
 
-*Note: This page references a lot of HomeKit HAP terminology.  If you are new to HomeKit development, you may want to start by first reviewing the [HomeKit Primer](HomeKitPrimer.md) page.*
-
 The basic structure of a HomeSpan sketch is as follows:
 
 ```C++
