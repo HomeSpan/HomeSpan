@@ -99,6 +99,8 @@ void Span::begin(Category catID, const char *displayName, const char *hostNameBa
   Serial.print(HOMESPAN_VERSION);
   Serial.print("\nESP-IDF Version:  ");
   Serial.print(esp_get_idf_version());
+  Serial.printf("\nESP32 Chip:       %s Rev %d %s-core %dMB Flash", ESP.getChipModel(),ESP.getChipRevision(),
+                ESP.getChipCores()==1?"single":"dual",ESP.getFlashChipSize()/1024/1024);
   
   #ifdef ARDUINO_VARIANT
     Serial.print("\nESP32 Board:      ");
