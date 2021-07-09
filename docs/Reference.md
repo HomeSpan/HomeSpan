@@ -8,7 +8,7 @@ The HomeSpan Library is invoked by including *HomeSpan.h* in your Arduino sketch
 
 ## *homeSpan*
 
-At runtime this HomeSpan will create a global **object** named `homeSpan` that supports the following methods:
+At runtime HomeSpan will create a global **object** named `homeSpan` that supports the following methods:
 
 * `void begin(Category catID, const char *displayName, const char *hostNameBase, const char *modelName)` 
   * initializes HomeSpan
