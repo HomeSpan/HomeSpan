@@ -36,6 +36,10 @@
 
 * Not as present.  Though with a compatible Ethernet board the ESP32 can be configured to run as an Ethernet Server, using MDNS over Ethernet does not work on the ESP32 due to some apparent problems with the Ethernet UDP stack.  Unfortunately, HomeSpan and HAP-R2 require MDNS to operate.  If anyone has managed to get an Ethernet version of MDNS working on an ESP32 please let me know - it would be great to add Ethernet support to HomeSpan.
 
+#### Does HomeSpan work with SPI and I2C?
+
+* Yes, the standard Arduino libraries `SPI.h` and `Wire.h` both work well within the HomeSpan environment.  Typically the code to read from an SPI or I2C device is implemented within the `loop()` method of a HomeSpan Service with any initialization being done in the constructor for that Service.  See [TemperatureSensorI2C](https://github.com/HomeSpan/TempSensorI2C) for an illustrative example.
+
 ---
 
 [↩️](README.md) Back to the Welcome page
