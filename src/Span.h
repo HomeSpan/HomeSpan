@@ -199,6 +199,18 @@ namespace Service {
     OPT(StatusLowBattery);   
   }};
 
+  struct InputSource : SpanService { InputSource() : SpanService{"D9","InputSource"}{
+      REQ(ConfiguredName);
+      REQ(InputSourceType);
+      REQ(IsConfigured);
+      REQ(Name);
+      REQ(CurrentVisibilityState);
+
+      OPT(Identifier);
+      OPT(InputDeviceType);
+      OPT(TargetVisibilityState);
+  }};
+
   struct IrrigationSystem : SpanService { IrrigationSystem() : SpanService{"CF","IrrigationSystem"}{
     REQ(Active);
     REQ(ProgramMode);
@@ -319,6 +331,32 @@ namespace Service {
     OPT(Name);
   }};
 
+  struct Television : SpanService { Television() : SpanService{"D8","Television"}{
+      REQ(Active);
+      REQ(ActiveIdentifier);
+      REQ(ConfiguredName);
+      REQ(RemoteKey);
+      REQ(SleepDiscoveryMode);
+
+      OPT(Brightness);
+      OPT(ClosedCaptions);
+      //OPT(DisplayOrder);
+      OPT(CurrentMediaState);
+      OPT(TargetMediaState);
+      OPT(Name);
+      OPT(PictureMode);
+      OPT(PowerModeSelection);
+  }};
+
+  struct TelevisionSpeaker : SpanService { TelevisionSpeaker() : SpanService{"113","TelevisionSpeaker"}{
+      REQ(Mute);
+
+      OPT(Active);
+      OPT(Volume);
+      OPT(VolumeControlType);
+      OPT(VolumeSelector);
+  }};
+
   struct TemperatureSensor : SpanService { TemperatureSensor() : SpanService{"8A","TemperatureSensor"}{
     REQ(CurrentTemperature);
     OPT(Name);
@@ -389,6 +427,7 @@ namespace Service {
 namespace Characteristic {
 
   CREATE_CHAR(uint8_t,Active,0,0,1);
+  CREATE_CHAR(uint32_t,ActiveIdentifier,0,0,100);
   CREATE_CHAR(uint8_t,AirQuality,0,0,5);
   CREATE_CHAR(uint8_t,BatteryLevel,0,0,100);
   CREATE_CHAR(int,Brightness,0,0,100);
@@ -399,23 +438,28 @@ namespace Characteristic {
   CREATE_CHAR(double,CarbonDioxidePeakLevel,0,0,100000);
   CREATE_CHAR(uint8_t,CarbonDioxideDetected,0,0,1);
   CREATE_CHAR(uint8_t,ChargingState,0,0,2);
+  CREATE_CHAR(uint8_t,ClosedCaptions,0,0,1);
   CREATE_CHAR(double,CoolingThresholdTemperature,10,10,35); 
   CREATE_CHAR(uint32_t,ColorTemperature,200,140,500);
   CREATE_CHAR(uint8_t,ContactSensorState,1,0,1);
+  CREATE_CHAR(const char *,ConfiguredName,"unnamed",0,1);
   CREATE_CHAR(double,CurrentAmbientLightLevel,1,0.0001,100000);
   CREATE_CHAR(int,CurrentHorizontalTiltAngle,0,-90,90);
   CREATE_CHAR(uint8_t,CurrentAirPurifierState,1,0,2);
   CREATE_CHAR(uint8_t,CurrentSlatState,0,0,2);
   CREATE_CHAR(uint8_t,CurrentPosition,0,0,100);
   CREATE_CHAR(int,CurrentVerticalTiltAngle,0,-90,90);
+  CREATE_CHAR(uint8_t,CurrentVisibilityState,0,0,1);
   CREATE_CHAR(uint8_t,CurrentHumidifierDehumidifierState,1,0,3);
   CREATE_CHAR(uint8_t,CurrentDoorState,1,0,4);
   CREATE_CHAR(uint8_t,CurrentFanState,1,0,2);
   CREATE_CHAR(uint8_t,CurrentHeatingCoolingState,0,0,2);
   CREATE_CHAR(uint8_t,CurrentHeaterCoolerState,1,0,3);
+  CREATE_CHAR(uint8_t,CurrentMediaState,0,0,5);
   CREATE_CHAR(double,CurrentRelativeHumidity,0,0,100);
   CREATE_CHAR(double,CurrentTemperature,0,0,100);
   CREATE_CHAR(int,CurrentTiltAngle,0,-90,90);
+//  CREATE_CHAR(tlv8,DisplayOrder,0,0,1);
   CREATE_CHAR(double,FilterLifeLevel,0,0,100);
   CREATE_CHAR(uint8_t,FilterChangeIndication,0,0,1);
   CREATE_CHAR(const char *,FirmwareRevision,"1.0.0",0,1);
@@ -424,6 +468,9 @@ namespace Characteristic {
   CREATE_CHAR(boolean,HoldPosition,false,0,1);
   CREATE_CHAR(double,Hue,0,0,360);
   CREATE_CHAR(boolean,Identify,false,0,1);
+  CREATE_CHAR(uint32_t,Identifier,0,0,100);
+  CREATE_CHAR(uint8_t,InputDeviceType,0,0,6);
+  CREATE_CHAR(uint8_t,InputSourceType,0,0,10);
   CREATE_CHAR(uint8_t,InUse,0,0,1);
   CREATE_CHAR(uint8_t,IsConfigured,0,0,1);
   CREATE_CHAR(uint8_t,LeakDetected,0,0,1);
@@ -442,13 +489,16 @@ namespace Characteristic {
   CREATE_CHAR(boolean,OutletInUse,false,0,1);
   CREATE_CHAR(boolean,On,false,0,1);
   CREATE_CHAR(double,OzoneDensity,0,0,1000);
+  CREATE_CHAR(uint8_t,PictureMode,0,0,13);
   CREATE_CHAR(double,PM10Density,0,0,1000);
   CREATE_CHAR(uint8_t,PositionState,2,0,2);
+  CREATE_CHAR(uint8_t,PowerModeSelection,0,0,1);
   CREATE_CHAR(uint8_t,ProgramMode,0,0,2);
   CREATE_CHAR(uint8_t,ProgrammableSwitchEvent,0,0,2);
   CREATE_CHAR(double,RelativeHumidityDehumidifierThreshold,50,0,100);
   CREATE_CHAR(double,RelativeHumidityHumidifierThreshold,50,0,100);
   CREATE_CHAR(uint32_t,RemainingDuration,60,0,3600);
+  CREATE_CHAR(uint8_t,RemoteKey,0,0,16);
   CREATE_CHAR(uint8_t,ResetFilterIndication,0,1,1);
   CREATE_CHAR(int,RotationDirection,0,0,1);
   CREATE_CHAR(double,RotationSpeed,0,0,100);
@@ -460,6 +510,7 @@ namespace Characteristic {
   CREATE_CHAR(uint8_t,ServiceLabelIndex,1,1,255);
   CREATE_CHAR(uint8_t,ServiceLabelNamespace,1,0,1);
   CREATE_CHAR(uint8_t,SlatType,0,0,1);
+  CREATE_CHAR(uint8_t,SleepDiscoveryMode,0,0,1);
   CREATE_CHAR(uint8_t,SmokeDetected,0,0,1);
   CREATE_CHAR(boolean,StatusActive,true,0,1);
   CREATE_CHAR(uint8_t,StatusFault,0,0,1);
@@ -478,14 +529,18 @@ namespace Characteristic {
   CREATE_CHAR(uint8_t,TargetPosition,0,0,100);
   CREATE_CHAR(uint8_t,TargetDoorState,1,0,1);
   CREATE_CHAR(uint8_t,TargetHeatingCoolingState,0,0,3);
+  CREATE_CHAR(uint8_t,TargetMediaState,0,0,2);
   CREATE_CHAR(double,TargetRelativeHumidity,0,0,100);
   CREATE_CHAR(double,TargetTemperature,16,10,38);
+  CREATE_CHAR(uint8_t,TargetVisibilityState,0,0,1);
   CREATE_CHAR(uint8_t,TemperatureDisplayUnits,0,0,1);
   CREATE_CHAR(int,TargetVerticalTiltAngle,0,-90,90);
   CREATE_CHAR(uint8_t,ValveType,0,0,3);
   CREATE_CHAR(const char *,Version,"1.0.0",0,1);
   CREATE_CHAR(double,VOCDensity,0,0,1000);
   CREATE_CHAR(uint8_t,Volume,0,0,100);
+  CREATE_CHAR(uint8_t,VolumeControlType,0,0,3);
+  CREATE_CHAR(uint8_t,VolumeSelector,0,0,1);
   CREATE_CHAR(double,WaterLevel,0,0,100);
-  
+
 }
