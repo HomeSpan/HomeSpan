@@ -468,7 +468,7 @@ namespace Characteristic {
   CREATE_CHAR(boolean,HoldPosition,false,0,1);
   CREATE_CHAR(double,Hue,0,0,360);
   CREATE_CHAR(boolean,Identify,false,0,1);
-  CREATE_CHAR(uint32_t,Identifier,0,0,100);
+  CREATE_CHAR(uint32_t,Identifier,0,0,255);
   CREATE_CHAR(uint8_t,InputDeviceType,0,0,6);
   CREATE_CHAR(uint8_t,InputSourceType,0,0,10);
   CREATE_CHAR(uint8_t,InUse,0,0,1);
