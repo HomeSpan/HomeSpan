@@ -1701,6 +1701,13 @@ StatusCode SpanCharacteristic::loadUpdate(char *val, char *ev){
         return(StatusCode::InvalidValue);
       break;
 
+    case STRING:
+      newValue.STRING = (char *)realloc(newValue.STRING, strlen(val) + 1);
+      strncpy(newValue.STRING, val, strlen(val));
+      newValue.STRING[strlen(val)] = '\0';
+
+      break;
+
     default:
     break;
 

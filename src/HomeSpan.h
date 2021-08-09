@@ -243,7 +243,7 @@ struct SpanCharacteristic{
     uint64_t UINT64;
     int32_t INT;
     double FLOAT;
-    const char *STRING;
+    char *STRING = NULL;
   };
 
   int iid=0;                               // Instance ID (HAP Table 6-3)
@@ -300,8 +300,24 @@ struct SpanCharacteristic{
     } // switch
   } // str()
 
-  void uvSet(UVal &u, const char *val){  
-    u.STRING=val;
+  void uvSet(UVal &u, const char *val){
+    u.STRING = (char *)realloc(u.STRING, strlen(val) + 1);
+    strncpy(u.STRING, val, strlen(val));
+    u.STRING[strlen(val)] = '\0';
+  }
+
+  char *getString(){
+    if(format == FORMAT::STRING)
+        return value.STRING;
+
+    return NULL;
+  }
+
+  char *getNewString(){
+    if(format == FORMAT::STRING)
+        return newValue.STRING;
+
+    return NULL;
   }
 
   template <typename T> void uvSet(UVal &u, T val){  
@@ -389,9 +405,12 @@ struct SpanCharacteristic{
 
     uvSet(value,val);
     uvSet(newValue,val);
-    uvSet(minValue,min);
-    uvSet(maxValue,max);
-    uvSet(stepValue,0);
+
+    if(format != FORMAT::STRING) {
+        uvSet(minValue,min);
+        uvSet(maxValue,max);
+        uvSet(stepValue,0);
+    }
 
     if(nvsStore){
       nvsKey=(char *)malloc(16);
@@ -413,7 +432,7 @@ struct SpanCharacteristic{
     }
   
     homeSpan.configLog+="(" + uvPrint(value) + ")" + ":  IID=" + String(iid) + ", UUID=0x" + String(type);
-    if(format!=STRING && format!=BOOL)
+    if(format!=FORMAT::STRING && format!=FORMAT::BOOL)
       homeSpan.configLog+= "  Range=[" + String(uvPrint(minValue)) + "," + String(uvPrint(maxValue)) + "]";
 
     if(nvsFlag==2)
@@ -452,20 +471,20 @@ struct SpanCharacteristic{
 
   template <class T=int> T getVal(){
     return(uvGet<T>(value));
-  }                    
-  
+  }
+
   template <class T=int> T getNewVal(){
     return(uvGet<T>(newValue));
-  }                    
+  }
     
   template <typename T> void setVal(T val){
 
-    if(format==STRING){
-      Serial.printf("\n*** WARNING:  Attempt to update Characteristic::%s(\"%s\") with setVal() ignored.  Can't update STRING Characteristics once they are initialized!\n\n",hapName,value.STRING);
+    if(format==FORMAT::STRING && perms & PW == 0){
+      Serial.printf("\n*** WARNING:  Attempt to update Characteristic::%s(\"%s\") with setVal() ignored.  No WRITE permission on this characteristic\n\n",hapName,value.STRING);
       return;
     }
 
-    if(val < uvGet<T>(minValue) || val > uvGet<T>(maxValue)){
+    if(format!=FORMAT::STRING && ( val < uvGet<T>(minValue) || val > uvGet<T>(maxValue))){
       Serial.printf("\n*** WARNING:  Attempt to update Characteristic::%s with setVal(%llg) is out of range [%llg,%llg].  This may cause device to become non-reponsive!\n\n",
       hapName,(double)val,uvGet<double>(minValue),uvGet<double>(maxValue));
     }

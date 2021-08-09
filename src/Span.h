@@ -427,7 +427,7 @@ namespace Service {
 namespace Characteristic {
 
   CREATE_CHAR(uint8_t,Active,0,0,1);
-  CREATE_CHAR(uint32_t,ActiveIdentifier,0,0,100);
+  CREATE_CHAR(uint32_t,ActiveIdentifier,0,0,255);
   CREATE_CHAR(uint8_t,AirQuality,0,0,5);
   CREATE_CHAR(uint8_t,BatteryLevel,0,0,100);
   CREATE_CHAR(int,Brightness,0,0,100);
