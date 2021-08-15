@@ -22,7 +22,7 @@ void setup() {
   new SpanUserCommand('e',"- My second Description",userCom2);
 
   homeSpan.enableAutoStartAP();
-  homeSpan.setApFunction(myWiFiAP);
+//  homeSpan.setApFunction(myWiFiAP);
 
   homeSpan.begin(Category::Lighting,"HomeSpan Lamp Server","homespan");
 

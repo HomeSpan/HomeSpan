@@ -403,7 +403,8 @@ int Network::getFormValue(char *formData, const char *tag, char *value, int maxS
       sscanf(v,"%2x",(unsigned int *)value++);
       v+=2;
     } else {
-      *value++=*v++;
+      *value++=(*v=='+'?' ':*v);                  // HTML Forms use '+' for spaces (and '+' signs are escaped)
+      v++;
     }
     len++;
   }
