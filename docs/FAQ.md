@@ -20,6 +20,10 @@
 
 * No, HomeSpan is coded specifically for the ESP32 and will not operate on an ESP8266 device.
 
+#### Will HomeSpan work on an ESP32-S2 or ESP32-C3?
+
+* HomeSpan is not presently configured for the S2 or C3 versions of the ESP32.  Once Espressif publishes their initial stable release of the [Arduino-ESP32 2.0 library](https://github.com/espressif/arduino-esp32#esp32-s2-and-esp32-c3-support) (with support for the S2 and C3 chips), HomeSpan will be updated to run on those chips (to the extent possible). 
+
 #### How can I read HomeSpan's MDNS broadcast mentioned in the [OTA](OTA.md) documentation?
 
 * HomeSpan uses MDNS (multicast DNS) to broadcast a variety of HAP information used by Controllers wishing to pair with HomeSpan.  Apple uses the name *Bonjour* to refer to MDNS, and originally included a Bonjour "Browser" in Safari that has since been discontinued.  However, there are a number of alternative MDNS browsers available for free that operate on both the Mac and the iPhone, such as the [Discovery - DNS-SD Browser](https://apps.apple.com/us/app/discovery-dns-sd-browser/id1381004916?mt=12).  You'll find all your HomeSpan devices, as well as any other HomeKit devices you may have, under the MDNS service named *_hap._tcp.*  The fields broadcast by HomeSpan are a combination of all data elements requires by HAP (HAP-R2, Table 6-7) plus three additional HomeSpan fields:
