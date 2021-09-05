@@ -1726,7 +1726,7 @@ unsigned long SpanCharacteristic::timeVal(){
 
 ///////////////////////////////
 
-void SpanCharacteristic::setValidValues(int n, ...){
+SpanCharacteristic *SpanCharacteristic::setValidValues(int n, ...){
   char c[256];
   String *s = new String("[");
   va_list vl;
@@ -1756,6 +1756,7 @@ void SpanCharacteristic::setValidValues(int n, ...){
   }
 
   homeSpan.configLog+=c;
+  return(this);
 }
 
 ///////////////////////////////

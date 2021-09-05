@@ -275,7 +275,8 @@ struct SpanCharacteristic{
   
   boolean updated(){return(isUpdated);}           // returns isUpdated
   unsigned long timeVal();                        // returns time elapsed (in millis) since value was last updated
-  void setValidValues(int n, ...);                // sets a list of 'n' valid values allowed for a Characteristic.  Only applicable if format=uint8
+  
+  SpanCharacteristic *setValidValues(int n, ...);   // sets a list of 'n' valid values allowed for a Characteristic and returns pointer to self.  Only applicable if format=uint8
     
   String uvPrint(UVal &u){
     char c[64];
