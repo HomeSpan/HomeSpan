@@ -223,7 +223,7 @@ The following methods are supported:
     * called on a Characteristic that does not have specific enumerated Valid Values, or
     * called more than once on the same Characteristic
   * returns a pointer to the Characteristic itself so that the method can be chained during instantiation
-  * example: `(new Characteristic::SecuritySystemTargetState())->setValidValues(3,0,1,3);` creates a new valid value list of length=3 containing the values 0, 1, and 3.  This has the effect of informing the HomeKit that a SecuritySystemTargetState value of 2 (Night Arm) is not valid and should not be shown as a choice in the Home App
+  * example: `(new Characteristic::SecuritySystemTargetState())->setValidValues(3,0,1,3);` creates a new valid value list of length=3 containing the values 0, 1, and 3.  This has the effect of informing HomeKit that a SecuritySystemTargetState value of 2 (Night Arm) is not valid and should not be shown as a choice in the Home App
 
 ## *SpanButton(int pin, uint16_t longTime, uint16_t singleTime, uint16_t doubleTime)*
 
