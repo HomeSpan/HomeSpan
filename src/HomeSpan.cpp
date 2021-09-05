@@ -1600,6 +1600,10 @@ int SpanCharacteristic::sprintfAttributes(char *cBuf, int flags){
       if(uvGet<float>(stepValue)>0)
         nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?128:0,",\"minStep\":%s",uvPrint(stepValue).c_str());
     }
+
+    if(validValues){
+      nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?128:0,",\"valid-values\":%s",validValues);      
+    }
   }
     
   if(desc && (flags&GET_DESC)){
@@ -1718,6 +1722,40 @@ StatusCode SpanCharacteristic::loadUpdate(char *val, char *ev){
 unsigned long SpanCharacteristic::timeVal(){
   
   return(homeSpan.snapTime-updateTime);
+}
+
+///////////////////////////////
+
+void SpanCharacteristic::setValidValues(int n, ...){
+  char c[256];
+  String *s = new String("[");
+  va_list vl;
+  va_start(vl,n);
+  for(int i=0;i<n;i++){
+    *s+=va_arg(vl,int);
+    if(i!=n-1)
+      *s+=",";
+  }
+  va_end(vl);
+  *s+="]";
+
+  homeSpan.configLog+=String("         \u2b0c Set Valid Values for ") + String(hapName) + " with IID=" + String(iid);
+
+  if(validValues){
+    sprintf(c,"  *** ERROR!  Valid Values already set for this Characteristic! ***\n");
+    homeSpan.nFatalErrors++;
+  } else 
+
+  if(format!=UINT8){
+    sprintf(c,"  *** ERROR!  Can't set Valid Values for this Characteristic! ***\n");
+    homeSpan.nFatalErrors++;      
+  } else {
+    
+    validValues=s->c_str();
+    sprintf(c,":  ValidValues=%s\n",validValues);
+  }
+
+  homeSpan.configLog+=c;
 }
 
 ///////////////////////////////

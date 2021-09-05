@@ -256,8 +256,9 @@ struct SpanCharacteristic{
   UVal minValue;                           // Characteristic minimum (not applicable for STRING)
   UVal maxValue;                           // Characteristic maximum (not applicable for STRING)
   UVal stepValue;                          // Characteristic step size (not applicable for STRING)
-  boolean staticRange;                     // Flag that indiates whether Range is static and cannot be changed with setRange()
+  boolean staticRange;                     // Flag that indicates whether Range is static and cannot be changed with setRange()
   boolean customRange=false;               // Flag for custom ranges
+  const char *validValues=NULL;            // Optional JSON array of valid values.  Applicable only to uint8 Characteristics
   boolean *ev;                             // Characteristic Event Notify Enable (per-connection)
   char *nvsKey=NULL;                       // key for NVS storage of Characteristic value
   
@@ -274,6 +275,7 @@ struct SpanCharacteristic{
   
   boolean updated(){return(isUpdated);}           // returns isUpdated
   unsigned long timeVal();                        // returns time elapsed (in millis) since value was last updated
+  void setValidValues(int n, ...);                // sets a list of 'n' valid values allowed for a Characteristic.  Only applicable if format=uint8
     
   String uvPrint(UVal &u){
     char c[64];
