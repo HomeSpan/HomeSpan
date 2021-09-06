@@ -33,6 +33,7 @@
 
 #include <Arduino.h>
 #include <unordered_map>
+#include <vector>
 #include <nvs.h>
 
 #include "Settings.h"
@@ -301,7 +302,8 @@ struct SpanCharacteristic{
         sprintf(c,"\"%s\"",u.STRING);
         return(String(c));        
     } // switch
-  } // str()
+    return(String());       // included to prevent compiler warnings
+  }
 
   void uvSet(UVal &u, const char *val){  
     u.STRING=val;
@@ -331,7 +333,7 @@ struct SpanCharacteristic{
         u.FLOAT=(double)val;
       break;
     } // switch
-  } // set()
+  }
  
   template <class T> T uvGet(UVal &u){
   
@@ -354,7 +356,8 @@ struct SpanCharacteristic{
         Serial.print("\n*** WARNING:  Can't use getVal() or getNewVal() with string Characteristics.\n\n");
         return(0);
     }
-  } // get()
+    return(0);       // included to prevent compiler warnings  
+  }
     
   template <typename A, typename B, typename S=int> SpanCharacteristic *setRange(A min, B max, S step=0){
 
