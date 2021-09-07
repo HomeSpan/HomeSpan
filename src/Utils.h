@@ -184,14 +184,18 @@ class Blinker {
 //  the specified pin, obviating the need for a separate call to init().
 //
 //  pin:         Pin mumber to control.  Blinker will set pinMode to OUTPUT automatically 
-//  timerNum:    ESP32 Alarm Timer to use. 0=Group0/Timer0, 1=Group0/Timer1, 2=Group1/Timer0, 3=Group1/Timer1
+//  timerNum:    ESP32 Alarm Timer to use.
+//               For ESP32 and ESP32-S2:  0=Group0/Timer0, 1=Group0/Timer1, 2=Group1/Timer0, 3=Group1/Timer1
+//               For ESP32-C3:  0=Group0/Timer0, 1=Group1/Timer0
     
   void init(int pin, int timerNum=0);
 
 //  Initializes Blinker, if not configured during instantiation.
 //
 //  pin:         Pin mumber to control.  Blinker will set pinMode to OUTPUT automatically 
-//  timerNum:    ESP32 Alarm Timer to use. 0=Group0/Timer0, 1=Group0/Timer1, 2=Group1/Timer0, 3=Group1/Timer1
+//  timerNum:    ESP32 Alarm Timer to use.
+//               For ESP32 and ESP32-S2:  0=Group0/Timer0, 1=Group0/Timer1, 2=Group1/Timer0, 3=Group1/Timer1
+//               For ESP32-C3:  0=Group0/Timer0, 1=Group1/Timer0
 
   void start(int period, float dutyCycle=0.5);
     
