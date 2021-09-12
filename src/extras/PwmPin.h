@@ -33,30 +33,33 @@ using std::vector;
 class LedC {
 
   protected:
-    static uint8_t nChannels;
-    static vector<ledc_timer_config_t> timers;
     static ledc_channel_config_t *channelList[LEDC_CHANNEL_MAX][LEDC_SPEED_MODE_MAX];
     static ledc_timer_config_t *timerList[LEDC_TIMER_MAX][LEDC_SPEED_MODE_MAX];
+    
+    ledc_channel_config_t *channel=NULL;
+    ledc_timer_config_t *timer;
+    
+    LedC(uint8_t pin, uint16_t freq);
+
+  public:
+    int getPin(){return(channel?channel->gpio_num:-1);}               // returns the pin number
+    
 };
   
 /////////////////////////////////////
 
-class LedPin : LedC {
-  ledc_channel_config_t *ledChannel=NULL;
-  ledc_timer_config_t *ledTimer;
+class LedPin : public LedC {
 
   public:
     LedPin(uint8_t pin, uint8_t level=0, uint16_t freq=DEFAULT_PWM_FREQ);   // assigns pin to be output of one of 16 PWM channels initial level and frequency
     void set(uint8_t level);                                                // sets the PWM duty to level (0-100)
-    int getPin(){return(ledChannel?ledChannel->gpio_num:-1);}               // returns the pin number
     
-    static uint8_t numChannels;
     static void HSVtoRGB(float h, float s, float v, float *r, float *g, float *b );       // converts Hue/Saturation/Brightness to R/G/B
 };
 
 /////////////////////////////////////
 
-class ServoPin {
+class ServoPin : public LedC {
   boolean enabled=false;
   uint16_t minMicros;
   uint16_t maxMicros;

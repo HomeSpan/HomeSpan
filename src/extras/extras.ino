@@ -36,6 +36,11 @@ void setup(){
   led0.set(5);
   led2.set(100);
 
+  Serial.println(led0.getPin());
+  Serial.println(led14.getPin());
+  Serial.println(led15.getPin());
+  Serial.println(led16.getPin());
+
   uint32_t v=REG_READ(LEDC_HSTIMER0_CONF_REG);
   Serial.printf("HS %d %d %d %d\n",(v>>25)&1,v&0x1f,(v>>13)&0x3FF,(v>>5)&0xFF);
 
