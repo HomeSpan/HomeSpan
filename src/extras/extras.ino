@@ -3,7 +3,8 @@
 // as well as compile and test from this point.  This file is ignored when the library is included in other sketches.
 
 #include "PwmPin.h"
- 
+#include <soc/ledc_reg.h> 
+
 void setup(){
  
   Serial.begin(115200);
@@ -13,53 +14,37 @@ void setup(){
 
   Serial.println("Starting...");
 
+  LedPin led0(18,100,0);
+  LedPin led1(19,100,2000);
+  LedPin led2(16,10,80000);
+  LedPin led3(17,100,2000);
+  LedPin led4(23);
+  LedPin led5(22,0,3000);
+  LedPin led6(14,0,1);
+  LedPin led7(32,0,1850);
+  LedPin led8(15);
+  LedPin led9(33);
+  LedPin led10(27);
+  LedPin led11(12,100,23);
+  LedPin led12(13,100);
+  LedPin led13(26);
+  LedPin led14(25,0);
+  LedPin led15(4,0);
+  LedPin led16(5,0);
 
-  LedPin yellow(16,10);
-  LedPin d1(19);
-  LedPin d2(19);
-  LedPin d3(19);
-  LedPin d4(19);
-  LedPin d5(19);
-  LedPin d6(19);
-  LedPin d7(19);
-  LedPin d8(19);
-  LedPin d9(19);
-  LedPin d10(19);
-  LedPin d11(19);
-  LedPin d12(19);
-  LedPin red(17);  
+  led16.set(20);
+  led0.set(5);
+  led2.set(100);
 
-//  ServoPin servo(18,0,500,2200,-90,90);
-  ServoPin s0(19);
-  ServoPin servo(18,45);
-  ServoPin s1(19);
+  uint32_t v=REG_READ(LEDC_HSTIMER0_CONF_REG);
+  Serial.printf("HS %d %d %d %d\n",(v>>25)&1,v&0x1f,(v>>13)&0x3FF,(v>>5)&0xFF);
 
-  while(1){
-    for(int i=0;i<100;i++){
-      yellow.set(i);
-      delay(10);
-    }
+  v=REG_READ(LEDC_LSTIMER0_CONF_REG);
+  Serial.printf("LS %d %d %d %d %d\n",(v>>25)&1,v&0x1f,(v>>13)&0x3FF,(v>>5)&0xFF,REG_READ(LEDC_CONF_REG));
+
   
-    for(int i=100;i>=0;i--){
-      red.set(i);
-      delay(10);
-    }
-  }
 
-  while(1){
-    double STEP=1;
-  
-    for(int i=-100*STEP;i<=100*STEP;i++){
-      servo.set((double)i/STEP);
-      delay(10);
-    }
-  
-    for(int i=100*STEP;i>=-100*STEP;i--){
-      servo.set((double)i/STEP);
-      delay(10);
-    }
-  }
-
+  while(1);
 }
 
 void loop(){
