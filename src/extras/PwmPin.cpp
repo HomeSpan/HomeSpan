@@ -63,15 +63,6 @@ void LedPin::set(float level){
   if(!channel)
     return;
 
-  Serial.printf("LED pin=%d, ch=%d, mode=%d, timer=%d, freq=%d, res=%d\n",
-    channel->gpio_num,
-    channel->channel,
-    channel->speed_mode,
-    channel->timer_sel,
-    timer->freq_hz,
-    timer->duty_resolution
-    );
-
   if(level>100)
     level=100;
     
@@ -160,15 +151,6 @@ void ServoPin::set(double degrees){
 
   if(!channel)
     return;
-
-  Serial.printf("Servo pin=%d, ch=%d, mode=%d, timer=%d, freq=%d, res=%d\n",
-    channel->gpio_num,
-    channel->channel,
-    channel->speed_mode,
-    channel->timer_sel,
-    timer->freq_hz,
-    timer->duty_resolution
-    );
 
   double usec=(degrees-minDegrees)*microsPerDegree+minMicros;
   
