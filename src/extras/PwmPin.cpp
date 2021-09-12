@@ -58,12 +58,12 @@ LedPin::LedPin(uint8_t pin, uint8_t level, uint16_t freq) : LedC(pin, freq){
 
 ///////////////////
 
-void LedPin::set(uint8_t level){
+void LedPin::set(float level){
 
   if(!channel)
     return;
 
-  Serial.printf("pin=%d, ch=%d, mode=%d, timer=%d, freq=%d, res=%d\n",
+  Serial.printf("LED pin=%d, ch=%d, mode=%d, timer=%d, freq=%d, res=%d\n",
     channel->gpio_num,
     channel->channel,
     channel->speed_mode,
@@ -141,67 +141,54 @@ void LedPin::HSVtoRGB(float h, float s, float v, float *r, float *g, float *b ){
 ////////////////////////////
 
 ServoPin::ServoPin(uint8_t pin, double initDegrees, uint16_t minMicros, uint16_t maxMicros, double minDegrees, double maxDegrees) : LedC(pin, 50){
-//  if(numChannels>7 || numChannels>(15-numChannels)){
-//    Serial.printf("\n*** ERROR:  Can't create ServoPin(%d) - no open PWM channels ***\n\n",pin);
-//    servoChannel.gpio_num=0;
-//    return;
-//  }
-//
-//  enabled=true;
   
   if(!channel)
-    Serial.printf("\n*** ERROR:  Can't create LedPin(%d) - no open PWM channels and/or Timers ***\n\n",pin);
+    Serial.printf("\n*** ERROR:  Can't create ServoPin(%d) - no open PWM channels and/or Timers ***\n\n",pin);
       
-  set(initDegrees);
-
   this->minMicros=minMicros;
   this->maxMicros=maxMicros;
   this->minDegrees=minDegrees;
   microsPerDegree=(double)(maxMicros-minMicros)/(maxDegrees-minDegrees);
+
+  set(initDegrees);
       
-//  if(numChannels==0){                             // first instantiation of a ServoPin
-//    ledc_timer_config_t ledTimer;
-//    ledTimer.timer_num=LEDC_TIMER_1;
-//    ledTimer.speed_mode=LEDC_HIGH_SPEED_MODE;
-//    ledTimer.duty_resolution=LEDC_TIMER_16_BIT;
-//    ledTimer.freq_hz=50;
-//    ledc_timer_config(&ledTimer);
-//  }
-//
-//  servoChannel.gpio_num=pin;
-//  servoChannel.speed_mode=LEDC_HIGH_SPEED_MODE;
-//  servoChannel.channel=(ledc_channel_t)numChannels++;
-//  servoChannel.intr_type=LEDC_INTR_DISABLE;
-//  servoChannel.timer_sel=LEDC_TIMER_1;
-//  servoChannel.hpoint=0;
-//  servoChannel.duty*=micros2duty;  
-//  set(initDegrees);
 }
 
 ///////////////////
 
 void ServoPin::set(double degrees){
-  if(!enabled)
-    return;
-  
-  servoChannel.duty=(degrees-minDegrees)*microsPerDegree+minMicros;
-  
-  if(servoChannel.duty<minMicros)
-    servoChannel.duty=minMicros;
-  else if(servoChannel.duty>maxMicros)
-    servoChannel.duty=maxMicros;
 
-  servoChannel.duty*=micros2duty;  
-  ledc_channel_config(&servoChannel);
+  if(!channel)
+    return;
+
+  Serial.printf("Servo pin=%d, ch=%d, mode=%d, timer=%d, freq=%d, res=%d\n",
+    channel->gpio_num,
+    channel->channel,
+    channel->speed_mode,
+    channel->timer_sel,
+    timer->freq_hz,
+    timer->duty_resolution
+    );
+
+  double usec=(degrees-minDegrees)*microsPerDegree+minMicros;
+  
+  if(usec<minMicros)
+    usec=minMicros;
+  else if(usec>maxMicros)
+    usec=maxMicros;
+
+  usec*=timer->freq_hz/1e6*(pow(2,timer->duty_resolution)-1);
+
+  channel->duty=usec;  
+  ledc_channel_config(channel);
 }
 
 ////////////////////////////
 
-const double ServoPin::micros2duty=65535.0/20000.0;
-//uint8_t LedPin::numChannels=0;
-uint8_t ServoPin::numChannels=0;
 ledc_channel_config_t *LedC::channelList[LEDC_CHANNEL_MAX][LEDC_SPEED_MODE_MAX]={};
 ledc_timer_config_t *LedC::timerList[LEDC_TIMER_MAX][LEDC_SPEED_MODE_MAX]={};
+
+////////////////////////////
 
 //*******************************************************
 // DEPRECATED - INCLUDED FOR BACKWARDS COMPATIBILITY ONLY

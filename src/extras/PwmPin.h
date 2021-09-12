@@ -52,7 +52,7 @@ class LedPin : public LedC {
 
   public:
     LedPin(uint8_t pin, uint8_t level=0, uint16_t freq=DEFAULT_PWM_FREQ);   // assigns pin to be output of one of 16 PWM channels initial level and frequency
-    void set(uint8_t level);                                                // sets the PWM duty to level (0-100)
+    void set(float level);                                                  // sets the PWM duty to level (0-100)
     
     static void HSVtoRGB(float h, float s, float v, float *r, float *g, float *b );       // converts Hue/Saturation/Brightness to R/G/B
 };
@@ -60,23 +60,16 @@ class LedPin : public LedC {
 /////////////////////////////////////
 
 class ServoPin : public LedC {
-  boolean enabled=false;
   uint16_t minMicros;
   uint16_t maxMicros;
   double minDegrees;
   double microsPerDegree;
-  ledc_channel_config_t servoChannel;
-
-  static const double micros2duty;
 
   public:
     ServoPin(uint8_t pin, double initDegrees, uint16_t minMicros, uint16_t maxMicros, double minDegrees, double maxDegrees);
     ServoPin(uint8_t pin, double initDegrees=0) : ServoPin(pin,initDegrees,1000,2000,-90,90) {};
     
     void set(double degrees);                               // sets the Servo to degrees, where degrees is bounded by [minDegrees,maxDegrees]  
-    int getPin(){return servoChannel.gpio_num;}             // returns the pin number
-
-    static uint8_t numChannels;
 };
 
 //*******************************************************

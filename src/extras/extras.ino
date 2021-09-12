@@ -25,16 +25,16 @@ void setup(){
   LedPin led8(15);
   LedPin led9(33);
   LedPin led10(27);
+  ServoPin led14(25);
   LedPin led11(12,100,23);
   LedPin led12(13,100);
   LedPin led13(26);
-  LedPin led14(25,0);
   LedPin led15(4,0);
   LedPin led16(5,0);
 
   led16.set(20);
   led0.set(5);
-  led2.set(100);
+  led14.set(100);
 
   Serial.println(led0.getPin());
   Serial.println(led14.getPin());
