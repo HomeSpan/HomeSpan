@@ -4,21 +4,27 @@ HomeSpan includes integrated access to a number of ESP32 features you'll likely 
 
 ## Pulse Width Modulation (PWM)
 
-The ESP32 has 16 PWM channels that can be used to drive a variety of devices.  HomeSpan includes an integrated PWM library with dedicated classes designed for controlling **Dimmable LEDs** as well as **Servo Motors**.  Both classes are provided in a standalone header file that is accessd by placing the following near the top of your sketch:
+The ESP32 has up to 16 PWM channels that can be used to drive a variety of devices.  HomeSpan includes an integrated PWM library with dedicated classes designed for controlling **Dimmable LEDs** as well as **Servo Motors**.  Both classes are provided in a standalone header file that is accessed by placing the following near the top of your sketch:
 
 `#include "extras/PwmPin.h"`
 
-### *LedPin(uint8_t pin)*
+### *LedPin(uint8_t pin [,float level [,uint16_t frequency]])*
 
-Creating an instance of this **class** configures the specified *pin* to output a 5000 Hz PWM signal, which is suitable for dimming LEDs. The following methods are supported:
+Creating an instance of this **class** configures the specified *pin* to output a PWM signal suitable for a controlling dimmable LED.  Arguments, along with their defaults if left unspecified, are as follows:
 
-* `void set(uint8_t level)`
+  * *pin* - the pin on which the PWM control signal will be output
+  * *level* - sets the initial %duty-cycle of the PWM from from 0 (LED completely off) to 100 (LED fully on).  Default=0 (LED initially off)
+  * *frequency* - sets the PWM frequency, in Hz, from 1-65535.  Defaults to 5000 Hz if unspecified, or if set to 0
+ 
+ The following methods are supported:
+
+* `void set(float level)`
 
   * sets the PWM %duty-cycle to *level*, where *level* ranges from 0 (LED completely off) to 100 (LED fully on)
   
 * `int getPin()`
 
-  * returns the pin number
+  * returns the pin number, or -1 if LedPin was not successfully initialized
   
 LedPin also includes a static class function that converts Hue/Saturation/Brightness values (typically used by HomeKit) to Red/Green/Blue values (typically used to control multi-color LEDS).
 
@@ -46,21 +52,19 @@ Creating an instance of this **class** configures the specified *pin* to output 
 
 The *minMicros* parameter must be less than the *maxMicros* parameter, but setting *minDegrees* to a value greater than *maxDegrees* is allowed and can be used to reverse the minimum and maximum positions of the Servo Motor. The following methods are supported:
 
-* `void set(uint8_t position)`
+* `void set(double position)`
 
   * sets the position of the Servo Motor to *position* (in degrees).  In order to protect the Servo Motor, values of *position* less than *minDegrees* are automatically reset to *minDegrees*, and values greater than *maxDegrees* are automatically reset to *maxDegrees*.
   
 * `int getPin()`
 
-  * returns the pin number
+  * returns the pin number, or -1 if LedPin was not successfully initialized
 
 A worked example showing how ServoPin can be used to control the Horizontal Tilt of a motorized Window Shade can be found in the Arduino IDE under [*File → Examples → HomeSpan → Other Examples → ServoControl*](../Other%20Examples/ServoControl).
 
 Resource limitations:
 
-* A maximum of 16 LedPin objects can be instantiated
-* A maximum of 8 ServoPin objects can be instantiated
-* A maximum combined total of 16 LedPin and ServoPin objects can be instantiated (for example 10 LedPin and 6 ServoPin objects)
+* ESP32: 16 PWM Channels
 
 HomeSpan will report a non-fatal error message to the Arduino Serial Monitor for each LedPin or ServoPin that instantiated beyond these limits.  Calls to the `set()` method for objects that exceed these limits are ignored.
 
