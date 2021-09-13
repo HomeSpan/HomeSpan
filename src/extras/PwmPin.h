@@ -51,7 +51,7 @@ class LedC {
 class LedPin : public LedC {
 
   public:
-    LedPin(uint8_t pin, uint8_t level=0, uint16_t freq=DEFAULT_PWM_FREQ);   // assigns pin to be output of one of 16 PWM channels initial level and frequency
+    LedPin(uint8_t pin, float level=0, uint16_t freq=DEFAULT_PWM_FREQ);   // assigns pin to be output of one of 16 PWM channels initial level and frequency
     void set(float level);                                                  // sets the PWM duty to level (0-100)
     
     static void HSVtoRGB(float h, float s, float v, float *r, float *g, float *b );       // converts Hue/Saturation/Brightness to R/G/B

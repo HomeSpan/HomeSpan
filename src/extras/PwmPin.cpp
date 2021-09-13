@@ -47,7 +47,7 @@ LedC::LedC(uint8_t pin, uint16_t freq){
 
 ///////////////////
 
-LedPin::LedPin(uint8_t pin, uint8_t level, uint16_t freq) : LedC(pin, freq){
+LedPin::LedPin(uint8_t pin, float level, uint16_t freq) : LedC(pin, freq){
 
   if(!channel)
     Serial.printf("\n*** ERROR:  Can't create LedPin(%d) - no open PWM channels and/or Timers ***\n\n",pin);
