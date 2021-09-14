@@ -62,11 +62,17 @@ The *minMicros* parameter must be less than the *maxMicros* parameter, but setti
 
 A worked example showing how ServoPin can be used to control the Horizontal Tilt of a motorized Window Shade can be found in the Arduino IDE under [*File → Examples → HomeSpan → Other Examples → ServoControl*](../Other%20Examples/ServoControl).
 
-Resource limitations:
+### PWM Resource Allocation and Limitations
 
-* ESP32: 16 PWM Channels
+The following PWM resources are available:
 
-HomeSpan will report a non-fatal error message to the Arduino Serial Monitor for each LedPin or ServoPin that instantiated beyond these limits.  Calls to the `set()` method for objects that exceed these limits are ignored.
+* ESP32: 16 Channels / 8 Timers (arranged in two distinct sets of 8 Channels and 4 Timers)
+* ESP32-S2: 8 Channels / 4 Timer
+* ESP32-C3: 6 Channels / 4 Timers
+
+HomeSpan *automatically* allocates Channels and Timers to LedPin and ServoPin objects as they are instantiated. Every pin assigned consumes a single Channel;  every *unique* frequency specified among all channels (within the same set, for the ESP32) consumes a single Timer.  HomeSpan will conserve resources by re-using the same Timer for all Channels operating at the same frequency.  HoneSpan also automatically configures each Timer to support the maximum duty-resolution possible for the frequency specified.
+
+HomeSpan will report a non-fatal error message to the Arduino Serial Monitor when insufficient Channel or Timer resources prevent the creation of a new LedPin or ServoPin object.  Calls to the `set()` method for objects that failed to be properly created are silently ignored.
 
 ## Remote Control Radio Frequency / Infrared Signal Generation
 
