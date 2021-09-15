@@ -19,7 +19,7 @@ LedC::LedC(uint8_t pin, uint16_t freq){
             timerList[nTimer][nMode]->timer_num=(ledc_timer_t)nTimer;
             timerList[nTimer][nMode]->freq_hz=freq;
           
-            int res=20;                                                 // find the maximum possible resolution
+            int res=LEDC_TIMER_BIT_MAX-1;                               // find the maximum possible resolution
             while(getApbFrequency()/(freq*pow(2,res))<1)
               res--;      
               
@@ -51,7 +51,16 @@ LedPin::LedPin(uint8_t pin, float level, uint16_t freq) : LedC(pin, freq){
 
   if(!channel)
     Serial.printf("\n*** ERROR:  Can't create LedPin(%d) - no open PWM channels and/or Timers ***\n\n",pin);
-      
+  else
+    Serial.printf("LedPin=%d: mode=%d channel=%d, timer=%d, freq=%d Hz, resolution=%d bits\n",
+      channel->gpio_num,
+      channel->speed_mode,
+      channel->channel,
+      channel->timer_sel,
+      timer->freq_hz,
+      timer->duty_resolution
+      );
+            
   set(level);
    
 }
@@ -135,7 +144,16 @@ ServoPin::ServoPin(uint8_t pin, double initDegrees, uint16_t minMicros, uint16_t
   
   if(!channel)
     Serial.printf("\n*** ERROR:  Can't create ServoPin(%d) - no open PWM channels and/or Timers ***\n\n",pin);
-      
+  else
+    Serial.printf("ServoPin=%d: mode=%d channel=%d, timer=%d, freq=%d Hz, resolution=%d bits\n",
+      channel->gpio_num,
+      channel->speed_mode,
+      channel->channel,
+      channel->timer_sel,
+      timer->freq_hz,
+      timer->duty_resolution
+      );
+            
   this->minMicros=minMicros;
   this->maxMicros=maxMicros;
   this->minDegrees=minDegrees;

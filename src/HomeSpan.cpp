@@ -31,6 +31,7 @@
 #include <WiFi.h>
 #include <ArduinoOTA.h>
 #include <esp_ota_ops.h>
+#include <driver/ledc.h>
 
 #include "HomeSpan.h"
 #include "HAP.h"
@@ -107,6 +108,9 @@ void Span::begin(Category catID, const char *displayName, const char *hostNameBa
     Serial.print(ARDUINO_VARIANT);
   #endif
   
+  Serial.printf("\nPWM Resources:    %d channels, %d timers, max %d-bit duty resolution",
+                LEDC_SPEED_MODE_MAX*LEDC_CHANNEL_MAX,LEDC_SPEED_MODE_MAX*LEDC_TIMER_MAX,LEDC_TIMER_BIT_MAX-1);
+
   Serial.print("\nSketch Compiled:  ");
   Serial.print(__DATE__);
   Serial.print(" ");

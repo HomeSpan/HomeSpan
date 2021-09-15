@@ -18,7 +18,7 @@ void setup(){
   LedPin led1(19,100,2000);
   LedPin led2(16,10,80000);
   LedPin led3(17,100,2000);
-  LedPin led4(23);
+  LedPin led4(23,100,2);
   LedPin led5(22,0,3000);
   LedPin led6(14,0,1);
   LedPin led7(32,0,1850);
@@ -37,15 +37,15 @@ void setup(){
   led14.set(100);
 
   Serial.println(led0.getPin());
-  Serial.println(led14.getPin());
-  Serial.println(led15.getPin());
-  Serial.println(led16.getPin());
+//  Serial.println(led14.getPin());
+//  Serial.println(led15.getPin());
+//  Serial.println(led16.getPin());
 
-  uint32_t v=REG_READ(LEDC_HSTIMER0_CONF_REG);
-  Serial.printf("HS %d %d %d %d\n",(v>>25)&1,v&0x1f,(v>>13)&0x3FF,(v>>5)&0xFF);
+//  uint32_t v=REG_READ(LEDC_HSTIMER0_CONF_REG);
+//  Serial.printf("HS %d %d %d %d\n",(v>>25)&1,v&0x1f,(v>>13)&0x3FF,(v>>5)&0xFF);
 
-  v=REG_READ(LEDC_LSTIMER0_CONF_REG);
-  Serial.printf("LS %d %d %d %d %d\n",(v>>25)&1,v&0x1f,(v>>13)&0x3FF,(v>>5)&0xFF,REG_READ(LEDC_CONF_REG));
+//  v=REG_READ(LEDC_LSTIMER0_CONF_REG);
+//  Serial.printf("LS %d %d %d %d %d\n",(v>>25)&1,v&0x1f,(v>>13)&0x3FF,(v>>5)&0xFF,REG_READ(LEDC_CONF_REG));
 
   
 

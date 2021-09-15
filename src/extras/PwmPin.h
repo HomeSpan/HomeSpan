@@ -11,12 +11,6 @@
 // ServoPin(pin) - controls a Servo Motor on specified pin with frequency=50 Hz
 //               - use set(degrees) to set position to degrees
 //
-// Max number of LedPin instantiations:     16
-// Max number of ServoPin instantiatons:    8
-// Max combined limit (LedPins+ServoPins):  16
-//
-// Instantiation of an LedPin or ServoPin that causes any of the maximums above to be exceeded throws
-// an error message.  The object will still be created, but calls to set(level) or set(degrees) are ignored.
 //
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
