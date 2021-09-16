@@ -18,6 +18,7 @@ LedC::LedC(uint8_t pin, uint16_t freq){
             timerList[nTimer][nMode]->speed_mode=(ledc_mode_t)nMode;
             timerList[nTimer][nMode]->timer_num=(ledc_timer_t)nTimer;
             timerList[nTimer][nMode]->freq_hz=freq;
+            timerList[nTimer][nMode]->clk_cfg=LEDC_USE_APB_CLK;
           
             int res=LEDC_TIMER_BIT_MAX-1;                               // find the maximum possible resolution
             while(getApbFrequency()/(freq*pow(2,res))<1)
@@ -75,7 +76,7 @@ void LedPin::set(float level){
   if(level>100)
     level=100;
     
-  channel->duty=level*(pow(2,timer->duty_resolution)-1);
+  channel->duty=level*(pow(2,(int)timer->duty_resolution)-1);
   channel->duty/=100;
   ledc_channel_config(channel);
   
@@ -177,7 +178,7 @@ void ServoPin::set(double degrees){
   else if(usec>maxMicros)
     usec=maxMicros;
 
-  usec*=timer->freq_hz/1e6*(pow(2,timer->duty_resolution)-1);
+  usec*=timer->freq_hz/1e6*(pow(2,(int)timer->duty_resolution)-1);
 
   channel->duty=usec;  
   ledc_channel_config(channel);
