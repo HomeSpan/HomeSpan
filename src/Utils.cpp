@@ -243,7 +243,11 @@ void Blinker::init(int pin, int timerNum){
   conf.intr_type=TIMER_INTR_LEVEL;
   conf.counter_dir=TIMER_COUNT_UP;
   conf.auto_reload=TIMER_AUTORELOAD_EN;
-  conf.divider=8000;                      // 80 MHz clock / 8,000 = 10 kHz clock (0.1 ms pulses)
+  conf.divider=getApbFrequency()/10000;                      // set divider to yield 10 kHz clock (0.1 ms pulses)
+
+#ifdef SOC_TIMER_GROUP_SUPPORT_XTAL                          // set clock to APB (default is XTAL!) if clk_src is defined in conf structure
+  conf.clk_src=TIMER_SRC_CLK_APB;
+#endif
 
   timer_init(group,idx,&conf);
   timer_isr_register(group,idx,Blinker::isrTimer,(void *)this,0,NULL);
@@ -304,6 +308,7 @@ void Blinker::isrTimer(void *arg){
   }
   
   timer_set_alarm(b->group,b->idx,TIMER_ALARM_EN);
+
 }
 
 //////////////////////////////////////
