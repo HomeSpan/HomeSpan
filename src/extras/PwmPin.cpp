@@ -22,7 +22,9 @@ LedC::LedC(uint8_t pin, uint16_t freq){
           
             int res=LEDC_TIMER_BIT_MAX-1;                               // find the maximum possible resolution
             while(getApbFrequency()/(freq*pow(2,res))<1)
-              res--;      
+              res--;     
+
+            Serial.println(getApbFrequency()/(freq*pow(2,res)));
               
             timerList[nTimer][nMode]->duty_resolution=(ledc_timer_bit_t)res;
             ledc_timer_config(timerList[nTimer][nMode]);
@@ -191,9 +193,11 @@ ledc_timer_config_t *LedC::timerList[LEDC_TIMER_MAX][LEDC_SPEED_MODE_MAX]={};
 
 ////////////////////////////
 
-//*******************************************************
-// DEPRECATED - INCLUDED FOR BACKWARDS COMPATIBILITY ONLY
-//*******************************************************
+//*****************************************************************
+// DEPRECATED - INCLUDED FOR BACKWARDS COMPATIBILITY FOR ESP32 ONLY
+//*****************************************************************
+
+#ifdef CONFIG_IDF_TARGET_ESP32
 
 PwmPin::PwmPin(uint8_t channel, uint8_t pin){
   this->channel=channel & 0x0F;
@@ -283,3 +287,5 @@ void PwmPin::HSVtoRGB(float h, float s, float v, float *r, float *g, float *b ){
       break;
   }
 }
+
+#endif

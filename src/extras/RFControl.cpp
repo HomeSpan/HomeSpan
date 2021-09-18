@@ -15,7 +15,7 @@ RFControl::RFControl(int pin){
     REG_SET_BIT(RMT_APB_CONF_REG,3);                          // enables access to RMT memory and enables wraparound mode (though the latter does not seem to be needed to set continuous TX)
     REG_WRITE(RMT_INT_ENA_REG,1<<RMT_CH0_TX_END_INT_ENA_S);   // enable end-transmission interrupt so that interrupt vector is called
     REG_WRITE(RMT_CH0CONF0_REG,0x08000000);                   // disable carrier wave; set channel 0 to use all 8 blocks of RMT memory       
-    esp_intr_alloc(ETS_RMT_INTR_SOURCE,0,eot_int,NULL,NULL);  // set RMT general interrupt vector
+//    esp_intr_alloc(ETS_RMT_INTR_SOURCE,0,eot_int,NULL,NULL);  // set RMT general interrupt vector
 
     configured=true;
   }
@@ -99,5 +99,5 @@ void RFControl::eot_int(void *arg){
     
 boolean RFControl::configured=false;
 volatile int RFControl::numCycles;
-uint32_t *RFControl::pRMT=(uint32_t *)RMT_CHANNEL_MEM(0);
+//int32_t *RFControl::pRMT=(uint32_t *)RMT_CHANNEL_MEM(0);
 int RFControl::pCount=0;
