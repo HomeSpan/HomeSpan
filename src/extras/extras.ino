@@ -4,6 +4,7 @@
 
 #include "PwmPin.h"
 #include <soc/ledc_reg.h> 
+#include "esp_rom_gpio.h"
 
 void setup(){
  
@@ -14,49 +15,78 @@ void setup(){
 
   Serial.println("Starting...");
 
-  LedPin led12(12,99,500);
-  LedPin led5(5,20,20000);
-  LedPin led6(6,20,5000);
-//  LedPin led3(17,50,1);
-//  LedPin led2(16,10,8000);
-//  LedPin led4(23,100,2);
-//  LedPin led5(22,0,3000);
-//  LedPin led6(14,0,1);
-//  LedPin led7(32,0,1850);
-//  LedPin led8(15);
-//  LedPin led9(33);
-//  LedPin led10(27);
-//  ServoPin led14(25);
-//  LedPin led11(12,100,23);
-//  LedPin led12(13,100);
-//  LedPin led13(26);
-//  LedPin led15(4,0);
+  LedPin *led[20];
 
-Serial.printf("HELLO\n");
+//  int p[]={33,27,4,32,18,19,16,17,5};
+    int p[]={11,7,3,1,38,33,9};
 
-//  led16.set(20);
-//  led0.set(5);
-//  led14.set(100);
+  for(int i=0;i<sizeof(p)/4;i++)
+    led[i]=new LedPin(p[i],20,5000+i);    
 
-//  Serial.println(led0.getPin());
-//  Serial.println(led14.getPin());
-//  Serial.println(led15.getPin());
-//  Serial.println(led16.getPin());
-
-Serial.printf("RES0: %d\n",REG_GET_FIELD(LEDC_LSTIMER0_CONF_REG,LEDC_LSTIMER0_DUTY_RES));
-Serial.printf("RES1: %d\n",REG_GET_FIELD(LEDC_LSTIMER1_CONF_REG,LEDC_LSTIMER1_DUTY_RES));
-Serial.printf("RES2: %d\n",REG_GET_FIELD(LEDC_LSTIMER2_CONF_REG,LEDC_LSTIMER2_DUTY_RES));
-Serial.printf("DIV0: %d\n",REG_GET_FIELD(LEDC_LSTIMER0_CONF_REG,LEDC_CLK_DIV_LSTIMER0)>>8);
-Serial.printf("DIV1: %d\n",REG_GET_FIELD(LEDC_LSTIMER1_CONF_REG,LEDC_CLK_DIV_LSTIMER1)>>8);
-Serial.printf("DIV2: %d\n",REG_GET_FIELD(LEDC_LSTIMER2_CONF_REG,LEDC_CLK_DIV_LSTIMER2)>>8);
-
-//  uint32_t v=REG_READ(LEDC_HSTIMER0_CONF_REG);
-//  Serial.printf("HS %d %d %d %d\n",(v>>25)&1,v&0x1f,(v>>13)&0x3FF,(v>>5)&0xFF);
-
-//  v=REG_READ(LEDC_LSTIMER0_CONF_REG);
-//  Serial.printf("LS %d %d %d %d %d\n",(v>>25)&1,v&0x1f,(v>>13)&0x3FF,(v>>5)&0xFF,REG_READ(LEDC_CONF_REG));
-
+  new LedPin(10,200,65535);
+  new LedPin(5,200,65535);
   
+//Serial.printf("HSTIMER0: %d %d %d %d\n",
+//  REG_GET_FIELD(LEDC_HSTIMER0_CONF_REG,LEDC_TICK_SEL_HSTIMER0),
+//  REG_GET_FIELD(LEDC_HSTIMER0_CONF_REG,LEDC_DIV_NUM_HSTIMER0)>>8,
+//  REG_GET_FIELD(LEDC_HSTIMER0_CONF_REG,LEDC_DIV_NUM_HSTIMER0)&0xFF,
+//  REG_GET_FIELD(LEDC_HSTIMER0_CONF_REG,LEDC_HSTIMER0_DUTY_RES)
+//  );
+//
+//Serial.printf("HSCHAN0: %d %d %d %d %d\n",
+//  REG_READ(LEDC_HSCH0_CONF0_REG),
+//  REG_READ(LEDC_HSCH0_HPOINT_REG),
+//  REG_READ(LEDC_HSCH0_DUTY_REG)>>4,
+//  REG_READ(LEDC_HSCH0_DUTY_REG)&0xF,
+//  REG_GET_FIELD(LEDC_HSCH0_CONF1_REG,LEDC_DUTY_INC_HSCH0)
+//  );
+//
+//Serial.printf("LSTIMER0: %d %d %d %d\n",
+//  REG_GET_FIELD(LEDC_LSTIMER0_CONF_REG,LEDC_TICK_SEL_LSTIMER0),
+//  REG_GET_FIELD(LEDC_LSTIMER0_CONF_REG,LEDC_DIV_NUM_LSTIMER0)>>8, 
+//  REG_GET_FIELD(LEDC_LSTIMER0_CONF_REG,LEDC_DIV_NUM_LSTIMER0)&0xFF,
+//  REG_GET_FIELD(LEDC_LSTIMER0_CONF_REG,LEDC_LSTIMER0_DUTY_RES)
+//  );
+//
+//delay(100);
+//  
+//Serial.printf("LSCHAN0: %d %d %d %d %d\n",
+//  REG_READ(LEDC_LSCH0_CONF0_REG),
+//  REG_READ(LEDC_LSCH0_HPOINT_REG),
+//  REG_READ(LEDC_LSCH0_DUTY_REG)>>4,
+//  REG_READ(LEDC_LSCH0_DUTY_REG)&0xF,
+//  REG_GET_FIELD(LEDC_LSCH0_CONF1_REG,LEDC_DUTY_INC_LSCH0)
+//  );
+//
+//Serial.printf("LOW CLOCK: %d\n",REG_READ(LEDC_CONF_REG));  
+//
+//Serial.printf("GPIO 32: %d %d %d %d\n",
+//  REG_GET_FIELD(GPIO_FUNC32_OUT_SEL_CFG_REG,GPIO_FUNC32_OEN_INV_SEL),
+//  REG_GET_FIELD(GPIO_FUNC32_OUT_SEL_CFG_REG,GPIO_FUNC32_OEN_SEL),
+//  REG_GET_FIELD(GPIO_FUNC32_OUT_SEL_CFG_REG,GPIO_FUNC32_OUT_INV_SEL),
+//  REG_GET_FIELD(GPIO_FUNC32_OUT_SEL_CFG_REG,GPIO_FUNC32_OUT_SEL)
+//  );
+//  
+//Serial.printf("GPIO 5: %d %d %d %d\n",
+//  REG_GET_FIELD(GPIO_FUNC5_OUT_SEL_CFG_REG,GPIO_FUNC5_OEN_INV_SEL),
+//  REG_GET_FIELD(GPIO_FUNC5_OUT_SEL_CFG_REG,GPIO_FUNC5_OEN_SEL),
+//  REG_GET_FIELD(GPIO_FUNC5_OUT_SEL_CFG_REG,GPIO_FUNC5_OUT_INV_SEL),
+//  REG_GET_FIELD(GPIO_FUNC5_OUT_SEL_CFG_REG,GPIO_FUNC5_OUT_SEL)
+//  );
+//
+//Serial.printf("GPIO 4: %d %d %d %d\n",
+//  REG_GET_FIELD(GPIO_FUNC4_OUT_SEL_CFG_REG,GPIO_FUNC4_OEN_INV_SEL),
+//  REG_GET_FIELD(GPIO_FUNC4_OUT_SEL_CFG_REG,GPIO_FUNC4_OEN_SEL),
+//  REG_GET_FIELD(GPIO_FUNC4_OUT_SEL_CFG_REG,GPIO_FUNC4_OUT_INV_SEL),
+//  REG_GET_FIELD(GPIO_FUNC4_OUT_SEL_CFG_REG,GPIO_FUNC4_OUT_SEL)
+//  );  
+//
+//Serial.printf("GPIO 33: %d %d %d %d\n",
+//  REG_GET_FIELD(GPIO_FUNC33_OUT_SEL_CFG_REG,GPIO_FUNC33_OEN_INV_SEL),
+//  REG_GET_FIELD(GPIO_FUNC33_OUT_SEL_CFG_REG,GPIO_FUNC33_OEN_SEL),
+//  REG_GET_FIELD(GPIO_FUNC33_OUT_SEL_CFG_REG,GPIO_FUNC33_OUT_INV_SEL),
+//  REG_GET_FIELD(GPIO_FUNC33_OUT_SEL_CFG_REG,GPIO_FUNC33_OUT_SEL)
+//  );  
 
   while(1);
 }
