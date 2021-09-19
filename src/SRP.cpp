@@ -144,7 +144,10 @@ void SRP6A::createPublicKey(){
 void SRP6A::getPrivateKey(){
 
   uint8_t privateKey[32];
-  randombytes_buf(privateKey,16);                     // generate 32 random bytes using libsodium (which uses the ESP32 hardware-based random number generator)
+  randombytes_buf(privateKey,32);                     // generate 32 random bytes using libsodium (which uses the ESP32 hardware-based random number generator)
+
+  for(int i=0;i<32;i++)
+    privateKey[i]=i+1;
 
   mbedtls_mpi_read_binary(&b,privateKey,32);
 }
