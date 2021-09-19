@@ -16,9 +16,6 @@
 
 #include <Arduino.h>
 #include <driver/ledc.h>
-#include <vector>
-
-using std::vector;
 
 #define DEFAULT_PWM_FREQ     5000
 
