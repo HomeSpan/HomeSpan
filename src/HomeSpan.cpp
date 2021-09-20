@@ -32,6 +32,7 @@
 #include <ArduinoOTA.h>
 #include <esp_ota_ops.h>
 #include <driver/ledc.h>
+#include <mbedtls/version.h>
 
 #include "HomeSpan.h"
 #include "HAP.h"
@@ -110,6 +111,11 @@ void Span::begin(Category catID, const char *displayName, const char *hostNameBa
   
   Serial.printf("\nPWM Resources:    %d channels, %d timers, max %d-bit duty resolution",
                 LEDC_SPEED_MODE_MAX*LEDC_CHANNEL_MAX,LEDC_SPEED_MODE_MAX*LEDC_TIMER_MAX,LEDC_TIMER_BIT_MAX-1);
+
+  Serial.printf("\nSodium Version:   %s  Lib %d.%d",sodium_version_string(),sodium_library_version_major(),sodium_library_version_minor());
+  char mbtlsv[64];
+  mbedtls_version_get_string_full(mbtlsv);
+  Serial.printf("\nMbedTLS Version:  %s",mbtlsv);
 
   Serial.print("\nSketch Compiled:  ");
   Serial.print(__DATE__);
