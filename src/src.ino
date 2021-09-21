@@ -3,24 +3,12 @@
 // as well as compile and test from this point.  This file is ignored when the library is included in other sketches.
 
 #include "HomeSpan.h"
-#include <sodium.h>
-#include <mbedtls/version.h>
 
 void setup() {
  
   Serial.begin(115200);
  
   homeSpan.setLogLevel(1);
-
-  homeSpan.setStatusPin(5);
-  homeSpan.setControlPin(33);
-
-  Serial.println(sodium_version_string());
-  Serial.println(sodium_library_version_major());
-  Serial.println(sodium_library_version_minor());
-  char mb[64];
-  mbedtls_version_get_string_full(mb);
-  Serial.println(mb);
   
   homeSpan.setHostNameSuffix("-lamp1");
   homeSpan.setPortNum(1201);
