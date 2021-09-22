@@ -31,6 +31,8 @@
 #error ERROR: HOMESPAN IS ONLY AVAILABLE FOR ESP32 MICROCONTROLLERS!
 #endif
 
+#pragma GCC diagnostic ignored "-Wpmf-conversions"                // eliminates warning messages from use of pointers to member functions to detect whether update() and loop() are overridden by user
+
 #include <Arduino.h>
 #include <unordered_map>
 #include <vector>
