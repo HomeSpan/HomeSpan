@@ -144,8 +144,8 @@ void SRP6A::createPublicKey(){
 void SRP6A::getPrivateKey(){
 
   uint8_t privateKey[32];
+  
   randombytes_buf(privateKey,32);                     // generate 32 random bytes using libsodium (which uses the ESP32 hardware-based random number generator)
-
   mbedtls_mpi_read_binary(&b,privateKey,32);
 }
   
@@ -164,10 +164,11 @@ void SRP6A::createSessionKey(){
   mbedtls_mpi_read_binary(&u,tHash,64);           // load hash result into mpi structure u
 
   // compute S = (Av^u)^b %N
-  
+
   mbedtls_mpi_exp_mod(&t1,&v,&u,&N,&_rr);         // t1 = v^u %N
   mbedtls_mpi_mul_mpi(&t2,&A,&t1);                // t2 = A*t1
-  mbedtls_mpi_exp_mod(&S,&t2,&b,&N,&_rr);         // S = t2^b %N
+  mbedtls_mpi_mod_mpi(&t1,&t2,&N);                // t1 = t2 %N  (this is needed to reduce size of t2 before next calculation)
+  mbedtls_mpi_exp_mod(&S,&t1,&b,&N,&_rr);         // S = t1^b %N
 
   // compute K = SHA512( S )
   
@@ -176,7 +177,7 @@ void SRP6A::createSessionKey(){
   mbedtls_mpi_read_binary(&K,tHash,64);           // load hash result into mpi structure K.  This is the SRP SHARED SECRET KEY
 
   mbedtls_mpi_write_binary(&K,sharedSecret,64);   // store SHARED SECRET in easy-to-use binary (uint8_t) format
-    
+  
 }
 
 //////////////////////////////////////
@@ -267,10 +268,10 @@ int SRP6A::writeTLV(kTLVType tag, mbedtls_mpi *mpi){
 
 void SRP6A::print(mbedtls_mpi *mpi){
   
-  char sBuf[1000];
+  char sBuf[2000];
   size_t sLen;
 
-  mbedtls_mpi_write_string(mpi,16,sBuf,1000,&sLen);
+  mbedtls_mpi_write_string(mpi,16,sBuf,2000,&sLen);
   
   Serial.print((sLen-1)/2);         // subtract 1 for null-terminator, and then divide by 2 to get number of bytes (e.g. 4F = 2 characters, but represents just one mpi byte)
   Serial.print(" ");
