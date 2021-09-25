@@ -99,8 +99,7 @@ void Span::begin(Category catID, const char *displayName, const char *hostNameBa
   Serial.print(getSketchVersion());  
   Serial.print("\nHomeSpan Version: ");
   Serial.print(HOMESPAN_VERSION);
-  Serial.print("\nESP-IDF Version:  ");
-  Serial.print(esp_get_idf_version());
+  Serial.printf("\nESP-IDF Version:  %d.%d.%d",ESP_IDF_VERSION_MAJOR,ESP_IDF_VERSION_MINOR,ESP_IDF_VERSION_PATCH);
   Serial.printf("\nESP32 Chip:       %s Rev %d %s-core %dMB Flash", ESP.getChipModel(),ESP.getChipRevision(),
                 ESP.getChipCores()==1?"single":"dual",ESP.getFlashChipSize()/1024/1024);
   
