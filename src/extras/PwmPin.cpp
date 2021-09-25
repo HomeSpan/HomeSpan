@@ -18,7 +18,10 @@ LedC::LedC(uint8_t pin, uint16_t freq){
             timerList[nTimer][nMode]->speed_mode=(ledc_mode_t)nMode;
             timerList[nTimer][nMode]->timer_num=(ledc_timer_t)nTimer;
             timerList[nTimer][nMode]->freq_hz=freq;
+
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(4, 0, 0)
             timerList[nTimer][nMode]->clk_cfg=LEDC_USE_APB_CLK;
+#endif
             
             int res=LEDC_TIMER_BIT_MAX-1;                               // find the maximum possible resolution
             while(getApbFrequency()/(freq*pow(2,res))<1)
@@ -37,7 +40,9 @@ LedC::LedC(uint8_t pin, uint16_t freq){
             channelList[nChannel][nMode]->channel=(ledc_channel_t)nChannel;
             channelList[nChannel][nMode]->timer_sel=(ledc_timer_t)nTimer;
             channelList[nChannel][nMode]->intr_type=LEDC_INTR_DISABLE;
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(4, 4, 0)
             channelList[nChannel][nMode]->flags.output_invert=0;
+#endif
             channelList[nChannel][nMode]->hpoint=0;
             channelList[nChannel][nMode]->gpio_num=pin;
             timer=timerList[nTimer][nMode];
