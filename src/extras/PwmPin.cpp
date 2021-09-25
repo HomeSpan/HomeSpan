@@ -30,6 +30,8 @@ LedC::LedC(uint8_t pin, uint16_t freq){
             timerList[nTimer][nMode]->duty_resolution=(ledc_timer_bit_t)res;
             if(ledc_timer_config(timerList[nTimer][nMode])!=0){
               Serial.printf("\n*** ERROR:  Frequency=%d Hz is out of allowed range ---",freq);
+              delete timerList[nTimer][nMode];
+              timerList[nTimer][nMode]=NULL;
               return;              
             }
           }
