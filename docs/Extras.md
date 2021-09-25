@@ -14,7 +14,7 @@ Creating an instance of this **class** configures the specified *pin* to output 
 
   * *pin* - the pin on which the PWM control signal will be output
   * *level* - sets the initial %duty-cycle of the PWM from from 0 (LED completely off) to 100 (LED fully on).  Default=0 (LED initially off)
-  * *frequency* - sets the PWM frequency, in Hz, from 1-65535.  Defaults to 5000 Hz if unspecified, or if set to 0
+  * *frequency* - sets the PWM frequency, in Hz, from 1-65535 (ESP32 only) or 5-65535 (ESP32-S2 and ESP32-C3).  Defaults to 5000 Hz if unspecified, or if set to 0
  
  The following methods are supported:
 
@@ -24,7 +24,7 @@ Creating an instance of this **class** configures the specified *pin* to output 
   
 * `int getPin()`
 
-  * returns the pin number, or -1 if LedPin was not successfully initialized
+  * returns the pin number (or -1 if LedPin was not successfully initialized)
   
 LedPin also includes a static class function that converts Hue/Saturation/Brightness values (typically used by HomeKit) to Red/Green/Blue values (typically used to control multi-color LEDS).
 
@@ -58,7 +58,7 @@ The *minMicros* parameter must be less than the *maxMicros* parameter, but setti
   
 * `int getPin()`
 
-  * returns the pin number, or -1 if LedPin was not successfully initialized
+  * returns the pin number (or -1 if ServoPin was not successfully initialized)
 
 A worked example showing how ServoPin can be used to control the Horizontal Tilt of a motorized Window Shade can be found in the Arduino IDE under [*File → Examples → HomeSpan → Other Examples → ServoControl*](../Other%20Examples/ServoControl).
 
@@ -70,7 +70,7 @@ The following PWM resources are available:
 * ESP32-S2: 8 Channels / 4 Timer
 * ESP32-C3: 6 Channels / 4 Timers
 
-HomeSpan *automatically* allocates Channels and Timers to LedPin and ServoPin objects as they are instantiated. Every pin assigned consumes a single Channel;  every *unique* frequency specified among all channels (within the same set, for the ESP32) consumes a single Timer.  HomeSpan will conserve resources by re-using the same Timer for all Channels operating at the same frequency.  HoneSpan also automatically configures each Timer to support the maximum duty-resolution possible for the frequency specified.
+HomeSpan *automatically* allocates Channels and Timers to LedPin and ServoPin objects as they are instantiated. Every pin assigned consumes a single Channel;  every *unique* frequency specified among all channels (within the same set, for the ESP32) consumes a single Timer.  HomeSpan will conserve resources by re-using the same Timer for all Channels operating at the same frequency.  *HomeSpan also automatically configures each Timer to support the maximum duty-resolution possible for the frequency specified.*
 
 HomeSpan will report a non-fatal error message to the Arduino Serial Monitor when insufficient Channel or Timer resources prevent the creation of a new LedPin or ServoPin object.  Calls to the `set()` method for objects that failed to be properly created are silently ignored.
 
