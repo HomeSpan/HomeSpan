@@ -1,30 +1,83 @@
+/* HomeSpan Remote Control Example */
 
-// This is a placeholder .ino file that allows you to easily edit the contents of this library using the Arduino IDE,
-// as well as compile and test from this point.  This file is ignored when the library is included in other sketches.
+#include "RFControl.h"     // include RF Control Library
 
-#include "PwmPin.h"
-
-void setup(){
+void setup() {     
  
-  Serial.begin(115200);
-  delay(1000);
+  Serial.begin(115200);           // start the Serial interface
+  Serial.flush();
+  delay(1000);                    // wait for interface to flush
 
-  Serial.print("\n\nTest sketch for HomeSpan Extras Library\n\n");
+  Serial.print("\n\nHomeSpan RF Transmitter Example\n\n");
 
-  Serial.println("Starting...");
+  RFControl rf(17);               // create an instance of RFControl with signal output to pin 17 of the ESP32
 
-  LedPin *led[20];
+//  rf.phase(1000,HIGH);
+//  rf.phase(9000,LOW);
+//  rf.phase(1000,HIGH);
+//  rf.phase(9000,LOW);
+//  rf.phase(1000,HIGH);
+//  rf.phase(30000,LOW);
 
-//  uint8_t p[]={33,27,4,32,18,19,16,17,5};       // ESP32 test
-    uint8_t p[]={11,7,3,1,38,33,9,10};          // ESP32-S2 test
+//  rf.add(1000,9000);              // create a pulse train with three 5000-tick high/low pulses
+//  rf.add(1000,9000);              // create a pulse train with three 5000-tick high/low pulses
+//  rf.add(1000,9000);              // create a pulse train with three 5000-tick high/low pulses
+//  rf.add(1000,30000);              // create a pulse train with three 5000-tick high/low pulses
+//
+//  rf.start(2,100);
+//  Serial.println("Done");
+//  while(1);
 
-  for(int i=0;i<sizeof(p);i++)
-    led[i]=new LedPin(p[i],20,5000);    
+//
+//#define NPOINTS 3
+//  
+//  uint32_t data[NPOINTS];
+//
+//  for(int i=0;i<NPOINTS;i++){
+//    if(i<NPOINTS-1)
+//        data[i]=RF_PULSE(1000,9000);
+//    else
+//        data[i]=RF_PULSE(1000,30000);
+//
+//    Serial.println((uint32_t)data[i],HEX);
+//  }
+// 
+//  rf.start(data,NPOINTS,1,100);
+//
+//  Serial.println("Done.");
+//  while(1);
+  
 
-  led[7]->set(100);
+  rf.clear();                     // clear the pulse train memory buffer
 
-  while(1);
-}
+  rf.add(5000,5000);              // create a pulse train with three 5000-tick high/low pulses
+  rf.add(5000,5000);
+  rf.add(5000,10000);             // double duration of final low period
+
+  Serial.print("Starting 4 cycles of three 500 ms on pulses...");
+  
+  rf.start(4,100);                // start transmission of 4 cycles of the pulse train with 1 tick=100 microseconds
+
+  Serial.print("Done!\n");
+
+  delay(2000);
+
+  rf.clear();
+
+  for(int i=1000;i<10000;i+=1000)
+    rf.add(i,10000-i);
+  rf.add(10000,10000);
+  
+  Serial.print("Starting 3 cycles of 100-1000 ms pulses...");
+  
+  rf.start(3,100);                // start transmission of 3 cycles of the pulse train with 1 tick=100 microseconds
+
+  Serial.print("Done!\n");
+  
+  Serial.print("\nEnd Example");
+  
+} // end of setup()
 
 void loop(){
-}
+
+} // end of loop()
