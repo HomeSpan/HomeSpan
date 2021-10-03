@@ -10,7 +10,7 @@ using std::vector;
 
 class RFControl {
   private:
-    rmt_config_t config;
+    rmt_config_t *config=NULL;
     vector<uint32_t> data;
     boolean lowWord=true;
     static uint8_t nChannels;
