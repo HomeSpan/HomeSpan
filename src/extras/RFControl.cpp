@@ -22,7 +22,9 @@ RFControl::RFControl(uint8_t pin){
   config->rmt_mode=RMT_MODE_TX;
   config->tx_config.carrier_en=false;
   config->channel=(rmt_channel_t)nChannels;
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(4, 4, 0)
   config->flags=0;
+#endif
   config->clk_div = 1;
   config->mem_block_num=1;
   config->gpio_num=(gpio_num_t)pin;

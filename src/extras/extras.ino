@@ -10,11 +10,8 @@ void setup() {
 
   Serial.println("\n\nHomeSpan RF Transmitter Example");
 
-  RFControl rf(19);               // create an instance of RFControl with signal output to pin 6
+  RFControl rf(18);               // create an instance of RFControl with signal output to pin 6
 
-  for(int i=0;i<8;i++)
-    new RFControl(18);
- 
 #define NPOINTS 3
   
   uint32_t data[NPOINTS];
