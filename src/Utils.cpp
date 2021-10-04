@@ -227,6 +227,7 @@ Blinker::Blinker(int pin, int timerNum){
 void Blinker::init(int pin, int timerNum){
   this->pin=pin;
   pinMode(pin,OUTPUT);
+  gpio_set_direction((gpio_num_t)pin, GPIO_MODE_INPUT_OUTPUT);      // needed to ensure digitalRead() functions correctly on ESP32-C3
   digitalWrite(pin,0);
 
 #if SOC_TIMER_GROUP_TIMERS_PER_GROUP>1                        // ESP32 and ESP32-S2 contains two timers per timer group
