@@ -33,6 +33,7 @@
 #include <esp_ota_ops.h>
 #include <driver/ledc.h>
 #include <mbedtls/version.h>
+#include <esp_task_wdt.h>
 
 #include "HomeSpan.h"
 #include "HAP.h"
@@ -53,6 +54,8 @@ void Span::begin(Category catID, const char *displayName, const char *hostNameBa
   this->hostNameBase=hostNameBase;
   this->modelName=modelName;
   sprintf(this->category,"%d",(int)catID);
+
+  esp_task_wdt_delete(xTaskGetIdleTaskHandleForCPU(0));       // required to avoid watchdog timeout messages from ESP32-C3
 
   controlButton.init(controlPin);
   statusLED.init(statusPin);
