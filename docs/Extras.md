@@ -88,34 +88,52 @@ Signals are defined as a sequence of HIGH and LOW phases that together form a pu
 
 ![Pulse Train](images/pulseTrain.png)
 
-Since most RF/IR signals repeat the same train of pulses more than once, the duration of the last LOW phase should be extended to account for the delay between repeats of the pulse train.  The following methods are used to construct the pulse train, set the number of repeats, set the duration of a *tick*, and start the transmission:
+Since most RF/IR signals repeat the same train of pulses more than once, the duration of the last LOW phase should be extended to account for the delay between repeats of the pulse train.  Each instance of RFControl supports a distinct memory buffer to store its own pulse train, subject only to overall limitations of heap memory on the ESP32.  The following methods are used to construct a pulse train, set the number of repeats, set the duration of a *tick*, and start the transmission:
 
-* `static void phase(uint16_t numTicks, uint8_t phase)`
+* `void phase(uint16_t numTicks, uint8_t phase)`
 
-  * appends either a HIGH or LOW phase to the pulse train memory buffer, which has room to store a maximum of 1023 phases.  Requests to add more than 1023 phases are ignored, but raise a non-fatal warning message.  Note that this is a class-level method as there is only one pulse train memory buffer that is **shared** across all instances of the RFControl object
+  * appends either a HIGH or LOW phase to the pulse train memory buffer for a specific instance of RFControl
 
-    * *numTicks* - the duration, in *ticks* of the pulse phase.  Allowable range is 1-32767 ticks.  Requests to add a pulse with *numTicks* outside this range are ignored, but raise non-fatal warning message
+    * *numTicks* - the duration, in *ticks* of the pulse phase.  Allowable range is 0-32767 ticks.  Requests to add a pulse with *numTicks* outside this range are ignored, but raise non-fatal warning message
     
     * *phase* - set to 0 to create a LOW phase; set to 1 (or any non-zero number) to create a HIGH phase
     
   * repeated phases of the same type (e.g. HIGH followed by another HIGH) is permitted and result in a single HIGH phase with a duration equal to the sum of the *numTicks* specified for each repeated phase (this is helpful when generating Manchester-encoded signals)
 
-* `static void add(uint16_t onTime, uint16_t offTime)`
+* `void add(uint16_t onTime, uint16_t offTime)`
 
-  * a convenience function that create a single HIGH/LOW pulse.  Implemented as `phase(onTime,HIGH); phase(offTime,LOW);` as defined above, and subject to all the same limits and error-checks
+  * a convenience function that appends a single HIGH/LOW pulse to the pulse train of a specific instance of RFControl.  Implemented as `phase(onTime,HIGH); phase(offTime,LOW);` as defined above
       
-* `static void clear()`
+* `void clear()`
 
-  * clears the pulse train memory buffer
+  * clears the pulse train memory buffer of a specific instance of RFControl
 
 * `void start(uint8_t _numCycles, uint8_t tickTime)`
 
- * starts the transmission of the pulse train stored in the pulse train memory buffer.  The signal will be output on the *pin* specified when RFControl was instantiated.  Note this is a blocking call—the method waits until transmission is completed before returning.  This should not produce a noticeable delay in program operations since most RF/IR pulse trains are only a few tens-of-milliseconds long
+ * starts the transmission of the pulse train stored in the pulse train memory buffer for a given instance of RFControl.  The signal will be output on the *pin* specified when RFControl was instantiated.  Note this is a blocking call—the method waits until transmission is completed before returning.  This should not produce a noticeable delay in program operations since most RF/IR pulse trains are only a few tens-of-milliseconds long
  
-   * *numCycles* - the total number of times to transmit the pulse train (i.e. a value of 3 means the pulse train will be transmitted once, followed by 2 additional re-transmissions)
+   * *numCycles* - the total number of times to transmit the pulse train (i.e. a value of 3 means the pulse train will be transmitted once, followed by 2 additional re-transmissions).  This is an optional argument with a default of 1 if not specified.
    
    * *tickTime* - the duration, in **microseconds**, of a *tick*.  This is an optional argument with a default of 1𝛍s if not specified.  Valid range is 1-255𝛍s, or set to 0 for 256𝛍s
    
+* `void start(uint32_t *data, int nData, uint8_t nCycles, uint8_t tickTime)`
+
+  * as an alternative to starting the transmission of a pulse train stored in the memory buffer associated with a specific instance of RFControl, this method starts the transmission of a pulse train stored in the memory buffer *data*.  This allows the upfront creation and storage of different pulse trains that can be started by simply passing a pointer reference to the appropriate memory buffer
+  
+    * *data* - pointer to a memory buffer containing 32-bit *pulses* in the following format:
+      * bits 0-14: the duration, in *ticks* from 0-32767, of the first part of the pulse to be transmitted
+      * bit 15: indicates whether the first part of the pulse to be trasnmitted is HIGH (1) or LOW (0)
+      * bits 16-30: the duration, in *ticks* from 0-32767, of the second part of the pulse to be transmitted
+      * bit 31: indicates whether the second part of the pulse to be trasnmitted is HIGH (1) or LOW (0)
+     
+    * *nData* - the number of data elements (*pulses*) stored in *data*
+
+    * *numCycles* - the total number of times to transmit the pulse train (i.e. a value of 3 means the pulse train will be transmitted once, followed by 2 additional re-transmissions).  This is an optional argument with a default of 1 if not specified.
+   
+    * *tickTime* - the duration, in **microseconds**, of a *tick*.  This is an optional argument with a default of 1𝛍s if not specified.  Valid range is 1-255𝛍s, or set to 0 for 256𝛍s
+
+  * To aid in the creation of a pulse-train to be stored in *data*, RFControl includes the macro *RF_PULSE(highTicks,lowTicks)* that returns a properly-formatted uint32_t value defining a single HIGH/LOW pulse of duration highTicks and lowTicks, respectively.  This is an analog to the add() method above
+
 Below is a complete sketch that produces two different pulse trains with the signal output linked to the ESP32 device's built-in LED (rather than an RF or IR transmitter).  For illustrative purposes the tick duration has been set to a very long 100𝛍s, and pulse times range from of 1000-10,000 ticks, so that the individual pulses are easily discernable on the LED.  Note this example sketch is also available in the Arduino IDE under [*File → Examples → HomeSpan → Other Examples → RemoteControl*](https://github.com/HomeSpan/HomeSpan/tree/dev/Other%20Examples/RemoteControl).
 
 ```C++
@@ -168,22 +186,6 @@ void loop(){
 
 } // end of loop()
 ```
-
----
-
-#### Deprecated functions (available for backwards compatibility with older sketches):
-
-*PwmPin(uint8_t channel, uint8_t pin)*
-
-  * this legacy function was used to generically control the ESP32's built-in PWM generators to drive a dimmable LED and required the user to keep track of individual PWM channels.  It has been replaced by two specific (and much easier-to-use) methods:
-  
-    * *LedPin(uint8_t pin)* - drives a dimmable LED
-      
-    * *ServoPin(uint8_t pin [,double initDegrees [,uint16_t minMicros, uint16_t maxMicros, double minDegrees, double maxDegrees]])* - drives a Servo Motor
-   
-  * last supported version: [v1.2.1](https://github.com/HomeSpan/HomeSpan/blob/release-1.2.1/docs/Extras.md#pwmpinuint8_t-channel-uint8_t-pin)
-
-  * **please use** `LedPin` and `ServoPin` **for all new sketches**
 
 ---
 
