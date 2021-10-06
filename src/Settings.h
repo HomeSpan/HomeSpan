@@ -67,12 +67,17 @@
 
 #define     DEFAULT_QR_ID             "HSPN"              // change with homeSpan.setQRID(qrID);
 
-#define     DEFAULT_CONTROL_PIN       21                  // change with homeSpan.setControlPin(pin)
-#define     DEFAULT_STATUS_PIN        13                  // change with homeSpan.setStatusPin(pin)
+#define     DEFAULT_CONTROL_PIN       -1                  // change with homeSpan.setControlPin(pin)
 
-#define     DEFAULT_AP_SSID           "HomeSpan-Setup"   // change with homeSpan.setApSSID(ssid)
-#define     DEFAULT_AP_PASSWORD       "homespan"         // change with homeSpan.setApPassword(pwd)
-#define     DEFAULT_OTA_PASSWORD      "homespan-ota"     // change with 'O' command
+#ifdef      LED_BUILTIN
+#define     DEFAULT_STATUS_PIN        LED_BUILTIN         // change with homeSpan.setStatusPin(pin)
+#else
+#define     DEFAULT_STATUS_PIN        -1                  // change with homeSpan.setStatusPin(pin)
+#endif
+
+#define     DEFAULT_AP_SSID           "HomeSpan-Setup"    // change with homeSpan.setApSSID(ssid)
+#define     DEFAULT_AP_PASSWORD       "homespan"          // change with homeSpan.setApPassword(pwd)
+#define     DEFAULT_OTA_PASSWORD      "homespan-ota"      // change with 'O' command
 
 #define     DEFAULT_AP_TIMEOUT        300                 // change with homeSpan.setApTimeout(nSeconds)
 #define     DEFAULT_COMMAND_TIMEOUT   120                 // change with homeSpan.setCommandTimeout(nSeconds)
@@ -81,7 +86,6 @@
 
 #define     DEFAULT_MAX_CONNECTIONS   8                   // change with homeSpan.setMaxConnections(num);
 #define     DEFAULT_TCP_PORT          80                  // change with homeSpan.setPort(port);
-
 
 /////////////////////////////////////////////////////
 //              STATUS LED SETTINGS                //

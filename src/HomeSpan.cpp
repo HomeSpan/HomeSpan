@@ -95,14 +95,20 @@ void Span::begin(Category catID, const char *displayName, const char *hostNameBa
   Serial.print("Message Logs:     Level ");
   Serial.print(logLevel);  
   Serial.print("\nStatus LED:       Pin ");
-  Serial.print(statusPin);  
+  if(statusPin>=0)
+    Serial.print(statusPin);
+  else
+    Serial.print("-  *** WARNING: Status LED Pin is UNDEFINED");
   Serial.print("\nDevice Control:   Pin ");
-  Serial.print(controlPin);
+  if(controlPin>=0)
+    Serial.print(controlPin);
+  else
+    Serial.print("-  *** WARNING: Device Control Pin is UNDEFINED");
   Serial.print("\nSketch Version:   ");
   Serial.print(getSketchVersion());  
   Serial.print("\nHomeSpan Version: ");
   Serial.print(HOMESPAN_VERSION);
-  Serial.print("\nArduino-ESP Ver:  ");
+  Serial.print("\nArduino-ESP Ver.: ");
   Serial.print(ARDUINO_ESP_VERSION);
   Serial.printf("\nESP-IDF Version:  %d.%d.%d",ESP_IDF_VERSION_MAJOR,ESP_IDF_VERSION_MINOR,ESP_IDF_VERSION_PATCH);
   Serial.printf("\nESP32 Chip:       %s Rev %d %s-core %dMB Flash", ESP.getChipModel(),ESP.getChipRevision(),

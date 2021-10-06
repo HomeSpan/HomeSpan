@@ -74,7 +74,7 @@ struct TempBuffer {
 class PushButton{
   
   int status;
-  uint8_t pin;
+  int pin;
   boolean doubleCheck;
   uint32_t singleAlarm;
   uint32_t doubleAlarm;
@@ -90,7 +90,7 @@ class PushButton{
   };
   
   PushButton();
-  PushButton(uint8_t pin);
+  PushButton(int pin);
 
 //  Creates generic pushbutton functionality on specified pin
 //  that is wired to connect to ground when the button is pressed.
@@ -104,7 +104,7 @@ class PushButton{
 //
 //  pin:         Pin mumber to which pushbutton connects to ground when pressed
 
-  void init(uint8_t pin);
+  void init(int pin);
   
 //  Initializes PushButton, if not configured during instantiation.
 //

@@ -89,13 +89,17 @@ PushButton::PushButton(){}
 
 //////////////////////////////////////
 
-PushButton::PushButton(uint8_t pin){
+PushButton::PushButton(int pin){
   init(pin);
 }
 
 //////////////////////////////////////
 
-void PushButton::init(uint8_t pin){
+void PushButton::init(int pin){
+
+  if(pin<0)
+    return;
+    
   status=0;
   doubleCheck=false;
   this->pin=pin;
@@ -105,6 +109,9 @@ void PushButton::init(uint8_t pin){
 //////////////////////////////////////
 
 boolean PushButton::triggered(uint16_t singleTime, uint16_t longTime, uint16_t doubleTime){
+
+  if(pin<0)
+    return(false);
 
   unsigned long cTime=millis();
 
@@ -182,6 +189,9 @@ boolean PushButton::triggered(uint16_t singleTime, uint16_t longTime, uint16_t d
 //////////////////////////////////////
 
 boolean PushButton::primed(){
+
+  if(pin<0)
+    return(false); 
   
   if(millis()>singleAlarm && status==1){
     status=2;
@@ -200,6 +210,10 @@ int PushButton::type(){
 //////////////////////////////////////
 
 void PushButton::wait(){
+
+  if(pin<0)
+    return;
+  
   while(!digitalRead(pin));
 }
 
@@ -225,7 +239,11 @@ Blinker::Blinker(int pin, int timerNum){
 //////////////////////////////////////
 
 void Blinker::init(int pin, int timerNum){
+
   this->pin=pin;
+  if(pin<0)
+    return;
+  
   pinMode(pin,OUTPUT);
   digitalWrite(pin,0);
 
@@ -322,6 +340,9 @@ void Blinker::start(int period, float dutyCycle){
 
 void Blinker::start(int period, float dutyCycle, int nBlinks, int delayTime){
 
+  if(pin<0)
+    return;
+
   gpio_set_direction((gpio_num_t)pin, GPIO_MODE_INPUT_OUTPUT);      // needed to ensure digitalRead() functions correctly on ESP32-C3
 
   period*=10;
@@ -338,12 +359,20 @@ void Blinker::start(int period, float dutyCycle, int nBlinks, int delayTime){
 //////////////////////////////////////
 
 void Blinker::stop(){
+
+  if(pin<0)
+    return;
+  
   timer_pause(group,idx);  
 }
 
 //////////////////////////////////////
 
 void Blinker::on(){
+
+  if(pin<0)
+    return;
+
   stop();
   digitalWrite(pin,1);
 }
@@ -351,6 +380,10 @@ void Blinker::on(){
 //////////////////////////////////////
 
 void Blinker::off(){
+
+  if(pin<0)
+    return;
+
   stop();
   digitalWrite(pin,0);
 }
