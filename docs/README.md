@@ -4,6 +4,8 @@ Welcome to HomeSpan - a robust and extremely easy-to-use Arduino library for cre
 
 HomeSpan provides a microcontroller-focused implementation of [Apple's HomeKit Accessory Protocol Specification Release R2 (HAP-R2)](https://developer.apple.com/homekit/specification/) designed specifically for the Espressif ESP32 microcontroller running within the Arduino IDE.  HomeSpan pairs directly to HomeKit via your home WiFi network without the need for any external bridges or components.  With HomeSpan you can use the full power of the ESP32's I/O functionality to create custom control software and/or hardware to automatically operate external devices from the Home App on your iPhone, iPad, or Mac, or with Siri.
 
+> :exclamation: HomeSpan currently works only under the version 1 series of the Arduino-ESP32 board manager (the latest being version 1.0.6).  The new version 2 series (including version 2.0.0 released by Espressif in Sep 2021) is not backwards compatible with version 1.0.6 and breaks HomeSpan.  A new version of HomeSpan will be released shortly that is compatible with version 2.0.0 of the Arduino-ESP32 board manager.  At this time please use version 1.0.6 of the board manager to compile HomeSpan sketches.
+
 ### HomeSpan Highlights
 
 * Provides a natural, intuitive, and **very** easy-to-use framework

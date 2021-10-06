@@ -20,6 +20,10 @@
 
 * No, HomeSpan is coded specifically for the ESP32 and will not operate on an ESP8266 device.
 
+#### Will HomeSpan work on an ESP32-S2 or ESP32-C3?
+
+* HomeSpan is not presently configured for the S2 or C3 versions of the ESP32.  Once Espressif publishes their initial stable release of the [Arduino-ESP32 2.0 library](https://github.com/espressif/arduino-esp32#esp32-s2-and-esp32-c3-support) (with support for the S2 and C3 chips), HomeSpan will be updated to run on those chips (to the extent possible). 
+
 #### How can I read HomeSpan's MDNS broadcast mentioned in the [OTA](OTA.md) documentation?
 
 * HomeSpan uses MDNS (multicast DNS) to broadcast a variety of HAP information used by Controllers wishing to pair with HomeSpan.  Apple uses the name *Bonjour* to refer to MDNS, and originally included a Bonjour "Browser" in Safari that has since been discontinued.  However, there are a number of alternative MDNS browsers available for free that operate on both the Mac and the iPhone, such as the [Discovery - DNS-SD Browser](https://apps.apple.com/us/app/discovery-dns-sd-browser/id1381004916?mt=12).  You'll find all your HomeSpan devices, as well as any other HomeKit devices you may have, under the MDNS service named *_hap._tcp.*  The fields broadcast by HomeSpan are a combination of all data elements requires by HAP (HAP-R2, Table 6-7) plus three additional HomeSpan fields:
@@ -35,6 +39,15 @@
 #### Can you use HomeSpan with an Ethernet connection instead of a WiFi connection?
 
 * Not as present.  Though with a compatible Ethernet board the ESP32 can be configured to run as an Ethernet Server, using MDNS over Ethernet does not work on the ESP32 due to some apparent problems with the Ethernet UDP stack.  Unfortunately, HomeSpan and HAP-R2 require MDNS to operate.  If anyone has managed to get an Ethernet version of MDNS working on an ESP32 please let me know - it would be great to add Ethernet support to HomeSpan.
+
+#### Does HomeSpan work with SPI and I2C?
+
+* Yes, the standard Arduino libraries `SPI.h` and `Wire.h` both work well within the HomeSpan environment.  Typically the code to read from an SPI or I2C device is implemented within the `loop()` method of a HomeSpan Service with any initialization being done in the constructor for that Service.  See [TemperatureSensorI2C](https://github.com/HomeSpan/TempSensorI2C) for an illustrative example.
+
+#### Can you add a Web Server to HomeSpan?
+
+* Yes, provided you implement your Web Server using standard ESP32-Arduino libraries, such as `WebServer.h`. See [ProgrammableHub](https://github.com/HomeSpan/ProgrammableHub) for an illustrative example of how to easily integrate a Web Server into HomeSpan.  This project also covers various other advanced topics, including TCP slot management, dynamic creation of Accessories, and saving arbitrary data in the ESP32's NVS.
+* Note *ESP32AsyncWebServer* cannot be used since it requires a TCP stack that is unfortunately incompatible with HomeSpan.  
 
 ---
 
