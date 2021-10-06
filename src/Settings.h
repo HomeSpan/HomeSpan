@@ -27,6 +27,8 @@
  
 // USER-DEFINED SETTINGS AND REFERENCE ENUMERATION CLASSES
 
+#include <core_version.h>
+
 #pragma once
 
 //////////////////////////////////////////////////////
@@ -49,7 +51,9 @@
 
 #if (REQUIRED>VERSION(HS_MAJOR,HS_MINOR,HS_PATCH))
   #error THIS SKETCH REQUIRES A LATER VERISON OF THE HOMESPAN LIBRARY
-#endif            
+#endif
+
+#define     ARDUINO_ESP_VERSION   STRINGIFY(ARDUINO_ESP32_GIT_DESC)
 
 //////////////////////////////////////////////////////
 //                DEFAULT SETTINGS                  //  

@@ -34,7 +34,6 @@
 #include <driver/ledc.h>
 #include <mbedtls/version.h>
 #include <esp_task_wdt.h>
-#include <core_version.h>
 
 #include "HomeSpan.h"
 #include "HAP.h"
@@ -103,8 +102,8 @@ void Span::begin(Category catID, const char *displayName, const char *hostNameBa
   Serial.print(getSketchVersion());  
   Serial.print("\nHomeSpan Version: ");
   Serial.print(HOMESPAN_VERSION);
-  Serial.print("\nArduino Version:  ");
-  Serial.print(STRINGIFY(ARDUINO_ESP32_GIT_DESC));
+  Serial.print("\nArduino-ESP Ver:  ");
+  Serial.print(ARDUINO_ESP_VERSION);
   Serial.printf("\nESP-IDF Version:  %d.%d.%d",ESP_IDF_VERSION_MAJOR,ESP_IDF_VERSION_MINOR,ESP_IDF_VERSION_PATCH);
   Serial.printf("\nESP32 Chip:       %s Rev %d %s-core %dMB Flash", ESP.getChipModel(),ESP.getChipRevision(),
                 ESP.getChipCores()==1?"single":"dual",ESP.getFlashChipSize()/1024/1024);
