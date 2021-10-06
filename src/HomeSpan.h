@@ -501,7 +501,7 @@ struct SpanCharacteristic{
 
 ///////////////////////////////
 
-struct SpanRange{
+struct [[deprecated("Please use Characteristic::setRange() method instead.")]] SpanRange{
   SpanRange(int min, int max, int step);
 };
 
