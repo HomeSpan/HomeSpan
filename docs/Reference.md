@@ -29,10 +29,13 @@ At runtime HomeSpan will create a global **object** named `homeSpan` that suppor
 The following **optional** `homeSpan` methods override various HomeSpan initialization parameters used in `begin()`, and therefore **should** be called before `begin()` to take effect.  If a method is *not* called, HomeSpan uses the default parameter indicated below:
 
 * `void setControlPin(uint8_t pin)`
-  * sets the ESP32 pin to use for the HomeSpan Control Button (default=21)
+  * sets the ESP32 pin to use for the HomeSpan Control Button.  If not specified, HomeSpan will assume there is no Control Button
   
 * `void setStatusPin(uint8_t pin)`
-  * sets the ESP32 pin to use for the HomeSpan Status LED (default=13).  There is also a corresponding `getStatusPin()` method that returns this pin number
+  * sets the ESP32 pin to use for the HomeSpan Status LED.  If not specified, HomeSpan will assume there is no Status LED
+  
+* `int getStatusPin()`
+* returns the pin number of the Status LED as set by `setStatusPin(pin)`, or -1 if no pin has been set
 
 * `void setApSSID(const char *ssid)`
   * sets the SSID (network name) of the HomeSpan Setup Access Point (default="HomeSpan-Setup")
