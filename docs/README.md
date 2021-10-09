@@ -4,7 +4,7 @@ Welcome to HomeSpan - a robust and extremely easy-to-use Arduino library for cre
 
 HomeSpan provides a microcontroller-focused implementation of [Apple's HomeKit Accessory Protocol Specification Release R2 (HAP-R2)](https://developer.apple.com/homekit/specification/) designed specifically for the Espressif ESP32 microcontroller running within the Arduino IDE.  HomeSpan pairs directly to HomeKit via your home WiFi network without the need for any external bridges or components.  With HomeSpan you can use the full power of the ESP32's I/O functionality to create custom control software and/or hardware to automatically operate external devices from the Home App on your iPhone, iPad, or Mac, or with Siri.
 
-> :exclamation: HomeSpan currently works only under the version 1 series of the Arduino-ESP32 board manager (the latest being version 1.0.6).  The new version 2 series (including version 2.0.0 released by Espressif in Sep 2021) is not backwards compatible with version 1.0.6 and breaks HomeSpan.  A new version of HomeSpan will be released shortly that is compatible with version 2.0.0 of the Arduino-ESP32 board manager.  At this time please use version 1.0.6 of the board manager to compile HomeSpan sketches.
+> HomeSpan is fully compatible with both Versions 1 and 2 of the [Arduino-ESP32 Board Manager](https://github.com/espressif/arduino-esp32).  Under V1, HomeSpan can be run only on the original ESP32.  Under V2, HomeSpan can be run on the original ESP32 as well as Espressif's ESP32-S2 and ESP32-C3 chips.
 
 ### HomeSpan Highlights
 
@@ -41,18 +41,24 @@ HomeSpan provides a microcontroller-focused implementation of [Apple's HomeKit A
   * Launch the WiFi Access Point
 * A standalone, detailed End-User Guide
 
-## Latest Update - HomeSpan 1.3.0 (6/20/2021)
+## Latest Update - HomeSpan 1.4.0 (10/9/2021)
 
-This update brings a number of new features and enhancements:
+👍🏻 HomeSpan is now fully compatible with Version 2 of the Arduino-ESP32 Board Manager and will run on Espressif's ESP32-S2 and ESP32-C3 chips, as well as the original ESP32.  HomeSpan also maintains full backwards-compatability with Version 1 of the Arduino-ESP Board Manager should you need to revert to that version.
 
-  * The PWM library has been—
-    * upgraded to allow for much easier control of up to 16 dimmable LEDs, ***and***
-    * extended with a dedicated class to simultaneously operate up to 8 Servo Motors!
-  * Characteristic values can be automatically saved in non-volatile storage for retention in the event of a power loss.  When power is restored your Accessories will automatically revert to their most recent state!
-  * The HomeSpan CLI can now be customized — extend the CLI with your own functions and commands!
-  * Enable the automatic launch of HomeSpan's WiFi Access Point upon start-up whenever WiFi Credentials are not found.
-  * For advanced users: create your own custom WiFi Access Point and set your WiFi Credentials programmatically.
+This update also includes the following additional features and enhancements:
+
+* The PWM library has been upgraded---
+  * to allow the user to specify the PWM frequency of an LedPin()
+  * to automatically set the duty resolution to the maximum allowable value for a chosen PWM frequency
+  * to allow the user to set the duty cycle of an LedPin() as a decimal floating number (e.g., 34.56), instead of just an integer
+  * to optimize the distribution of multiple LedPin() and ServoPin() instances across all available PWM channels
   
+* The RFControl library has been upgraded---
+  * to allow for the transmisison of arbitrary-length pulse trains
+  * to transmit pre-computed pulse trains stored in any standalone array
+
+* A new method `setValidValues()` has been added to multiple-choice based Characteristics (such as SecuritySystemTargetState) to allow you to restrict which choices can be selected in the Home App
+ 
 See [Releases](https://github.com/HomeSpan/HomeSpan/releases) for details on all changes included in this update.
 
 # HomeSpan Resources
