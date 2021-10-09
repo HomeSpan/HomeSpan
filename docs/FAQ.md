@@ -22,7 +22,7 @@
 
 #### Will HomeSpan work on an ESP32-S2 or ESP32-C3?
 
-* HomeSpan is not presently configured for the S2 or C3 versions of the ESP32.  Once Espressif publishes their initial stable release of the [Arduino-ESP32 2.0 library](https://github.com/espressif/arduino-esp32#esp32-s2-and-esp32-c3-support) (with support for the S2 and C3 chips), HomeSpan will be updated to run on those chips (to the extent possible). 
+* Yes!  Starting with version 1.4.0, HomeSpan is fully compatible with Espressif's ESP32-S2 and ESP32-C3 chips, as well as the original ESP32 chip. Note that to select an ESP32-S2 or ESP32-C3 device from the Arduino IDE you'll need to install Version 2 of the [Arduino-ESP32 Board Manager](https://github.com/espressif/arduino-esp32).
 
 #### How can I read HomeSpan's MDNS broadcast mentioned in the [OTA](OTA.md) documentation?
 
