@@ -8,7 +8,9 @@ void setup() {
  
   Serial.begin(115200);
  
-  homeSpan.setLogLevel(1);
+  homeSpan.setLogLevel(2);
+  homeSpan.setStatusPin(5);
+  homeSpan.setControlPin(33);
   
   homeSpan.setHostNameSuffix("-lamp1");
   homeSpan.setPortNum(1201);
@@ -21,8 +23,8 @@ void setup() {
   new SpanUserCommand('d',"- My Description",userCom1);
   new SpanUserCommand('e',"- My second Description",userCom2);
 
-  homeSpan.enableAutoStartAP();
-  homeSpan.setApFunction(myWiFiAP);
+//  homeSpan.enableAutoStartAP();
+//  homeSpan.setApFunction(myWiFiAP);
 
   homeSpan.begin(Category::Lighting,"HomeSpan Lamp Server","homespan");
 

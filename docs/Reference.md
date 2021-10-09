@@ -29,10 +29,13 @@ At runtime HomeSpan will create a global **object** named `homeSpan` that suppor
 The following **optional** `homeSpan` methods override various HomeSpan initialization parameters used in `begin()`, and therefore **should** be called before `begin()` to take effect.  If a method is *not* called, HomeSpan uses the default parameter indicated below:
 
 * `void setControlPin(uint8_t pin)`
-  * sets the ESP32 pin to use for the HomeSpan Control Button (default=21)
+  * sets the ESP32 pin to use for the HomeSpan Control Button.  If not specified, HomeSpan will assume there is no Control Button
   
 * `void setStatusPin(uint8_t pin)`
-  * sets the ESP32 pin to use for the HomeSpan Status LED (default=13).  There is also a corresponding `getStatusPin()` method that returns this pin number
+  * sets the ESP32 pin to use for the HomeSpan Status LED.  If not specified, HomeSpan will assume there is no Status LED
+  
+* `int getStatusPin()`
+* returns the pin number of the Status LED as set by `setStatusPin(pin)`, or -1 if no pin has been set
 
 * `void setApSSID(const char *ssid)`
   * sets the SSID (network name) of the HomeSpan Setup Access Point (default="HomeSpan-Setup")
@@ -217,6 +220,14 @@ The following methods are supported:
   * returns a pointer to the Characteristic itself so that the method can be chained during instantiation
   * example: `(new Characteristic::Brightness(50))->setRange(10,100,5);`
   
+* `SpanCharacteristic *setValidValues(int n, [int v1, int v2 ...])`
+  * overrides the default HAP Valid Values for Characteristics that have specific enumerated Valid Values with a variable-length list of *n* values *v1*, *v2*, etc.
+  * an error is thrown if:
+    * called on a Characteristic that does not have specific enumerated Valid Values, or
+    * called more than once on the same Characteristic
+  * returns a pointer to the Characteristic itself so that the method can be chained during instantiation
+  * example: `(new Characteristic::SecuritySystemTargetState())->setValidValues(3,0,1,3);` creates a new Valid Value list of length=3 containing the values 0, 1, and 3.  This has the effect of informing HomeKit that a SecuritySystemTargetState value of 2 (Night Arm) is not valid and should not be shown as a choice in the Home App
+
 ## *SpanButton(int pin, uint16_t longTime, uint16_t singleTime, uint16_t doubleTime)*
 
 Creating an instance of this **class** attaches a pushbutton handler to the ESP32 *pin* specified.

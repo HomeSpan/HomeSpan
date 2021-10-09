@@ -31,8 +31,11 @@
 #error ERROR: HOMESPAN IS ONLY AVAILABLE FOR ESP32 MICROCONTROLLERS!
 #endif
 
+#pragma GCC diagnostic ignored "-Wpmf-conversions"                // eliminates warning messages from use of pointers to member functions to detect whether update() and loop() are overridden by user
+
 #include <Arduino.h>
 #include <unordered_map>
+#include <vector>
 #include <nvs.h>
 
 #include "Settings.h"
@@ -115,8 +118,8 @@ struct Span{
   unsigned long alarmConnect=0;                 // time after which WiFi connection attempt should be tried again
   
   const char *defaultSetupCode=DEFAULT_SETUP_CODE;            // Setup Code used for pairing
-  uint8_t statusPin=DEFAULT_STATUS_PIN;                       // pin for status LED    
-  uint8_t controlPin=DEFAULT_CONTROL_PIN;                     // pin for Control Pushbutton
+  int statusPin=DEFAULT_STATUS_PIN;                           // pin for status LED    
+  int controlPin=DEFAULT_CONTROL_PIN;                         // pin for Control Pushbutton
   uint8_t logLevel=DEFAULT_LOG_LEVEL;                         // level for writing out log messages to serial monitor
   uint8_t maxConnections=DEFAULT_MAX_CONNECTIONS;             // number of simultaneous HAP connections
   unsigned long comModeLife=DEFAULT_COMMAND_TIMEOUT*1000;     // length of time (in milliseconds) to keep Command Mode alive before resuming normal operations
@@ -168,7 +171,7 @@ struct Span{
 
   void setControlPin(uint8_t pin){controlPin=pin;}                        // sets Control Pin
   void setStatusPin(uint8_t pin){statusPin=pin;}                          // sets Status Pin
-  int getStatusPin(){return(statusPin);}                                  // gets Status Pin
+  int getStatusPin(){return(statusPin);}                                  // get Status Pin
   void setApSSID(const char *ssid){network.apSSID=ssid;}                  // sets Access Point SSID
   void setApPassword(const char *pwd){network.apPassword=pwd;}            // sets Access Point Password
   void setApTimeout(uint16_t nSec){network.lifetime=nSec*1000;}           // sets Access Point Timeout (seconds)
@@ -256,8 +259,9 @@ struct SpanCharacteristic{
   UVal minValue;                           // Characteristic minimum (not applicable for STRING)
   UVal maxValue;                           // Characteristic maximum (not applicable for STRING)
   UVal stepValue;                          // Characteristic step size (not applicable for STRING)
-  boolean staticRange;                     // Flag that indiates whether Range is static and cannot be changed with setRange()
+  boolean staticRange;                     // Flag that indicates whether Range is static and cannot be changed with setRange()
   boolean customRange=false;               // Flag for custom ranges
+  const char *validValues=NULL;            // Optional JSON array of valid values.  Applicable only to uint8 Characteristics
   boolean *ev;                             // Characteristic Event Notify Enable (per-connection)
   char *nvsKey=NULL;                       // key for NVS storage of Characteristic value
   
@@ -274,6 +278,8 @@ struct SpanCharacteristic{
   
   boolean updated(){return(isUpdated);}           // returns isUpdated
   unsigned long timeVal();                        // returns time elapsed (in millis) since value was last updated
+  
+  SpanCharacteristic *setValidValues(int n, ...);   // sets a list of 'n' valid values allowed for a Characteristic and returns pointer to self.  Only applicable if format=uint8
     
   String uvPrint(UVal &u){
     char c[64];
@@ -298,7 +304,8 @@ struct SpanCharacteristic{
         sprintf(c,"\"%s\"",u.STRING);
         return(String(c));        
     } // switch
-  } // str()
+    return(String());       // included to prevent compiler warnings
+  }
 
   void uvSet(UVal &u, const char *val){  
     u.STRING=val;
@@ -328,7 +335,7 @@ struct SpanCharacteristic{
         u.FLOAT=(double)val;
       break;
     } // switch
-  } // set()
+  }
  
   template <class T> T uvGet(UVal &u){
   
@@ -351,7 +358,8 @@ struct SpanCharacteristic{
         Serial.print("\n*** WARNING:  Can't use getVal() or getNewVal() with string Characteristics.\n\n");
         return(0);
     }
-  } // get()
+    return(0);       // included to prevent compiler warnings  
+  }
     
   template <typename A, typename B, typename S=int> SpanCharacteristic *setRange(A min, B max, S step=0){
 
@@ -493,7 +501,7 @@ struct SpanCharacteristic{
 
 ///////////////////////////////
 
-struct SpanRange{
+struct [[deprecated("Please use Characteristic::setRange() method instead.")]] SpanRange{
   SpanRange(int min, int max, int step);
 };
 

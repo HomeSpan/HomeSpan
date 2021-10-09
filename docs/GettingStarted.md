@@ -48,11 +48,13 @@ Though the device is now programmed and fully operational, it needs to be config
 In addition to being able to configure a HomeSpan device using the [HomeSpan CLI](CLI.md) via the Arduino Serial Monitor, HomeSpan provides an alternative method for end-users to configure a standalone HomeSpan device that is not connected to a computer.  This method requires the installation of two external components:
 
 1. a normally-open single-pole pushbutton to function as the HomeSpan Control Button, and
-1. an LED to function as the HomeSpan Status LED.
+1. an LED (with a current-limiting resistor) to function as the HomeSpan Status LED.
 
-The Control Button should be installed between the HomeSpan Control Pin on the ESP32 and ground.  The HomeSpan Control Pin defaults to pin 21, but can be set to any other pin during HomeSpan initializaton (see the [HomeSpan API Reference](Reference.md) for details).  The LED can similarly be connected to any pin you specify, but defaults to pin 13, which for some boards is connected to a built-in LED, thereby saving you the need to install a separate LED.
+The Control Button should be installed between ground and any pin on the ESP32 that can serve as an input.  To inform HomeSpan of which pin you chose, you must call the method `homeSpan.setControlPin(pin)` near the top of your sketch (see the [HomeSpan API Reference](Reference.md) for details), else HomeSpan will assume a Control Button has **not** be installed.
 
-The use of these two components to configure a standalone HomeSpan device, including starting HomeSpan's temporary WiFi network to configure the device's WiFi Credentials and HomeKit Setup Code, are fully explained in the [HomeSpan User Guide](UserGuide.md).
+Similarly, the Status LED can be connected to any pin on the ESP32 that can serve as an output (and grounded through an appropriately-sized current-limiting resistor).  To inform HomeSpan of which pin you chose, you must call the method `homeSpan.setStatusPin(pin)` near the top of your sketch, else HomeSpan will assume a Status LED has **not** been installed.  Note some ESP32 boards have a built-in LED --- it is fine to use this for the Status LED if it is a simple on/off LED, *not* an addressable color LED that requires a special driver.
+
+Using the Control Button and Status LED to configure a standalone HomeSpan device, including starting HomeSpan's temporary WiFi network to configure the device's WiFi Credentials and HomeKit Setup Code, is fully explained in the [HomeSpan User Guide](UserGuide.md).
 
 ## What Next?
 

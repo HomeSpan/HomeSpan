@@ -31,6 +31,9 @@
 #include <WiFi.h>
 #include <ArduinoOTA.h>
 #include <esp_ota_ops.h>
+#include <driver/ledc.h>
+#include <mbedtls/version.h>
+#include <esp_task_wdt.h>
 
 #include "HomeSpan.h"
 #include "HAP.h"
@@ -51,6 +54,8 @@ void Span::begin(Category catID, const char *displayName, const char *hostNameBa
   this->hostNameBase=hostNameBase;
   this->modelName=modelName;
   sprintf(this->category,"%d",(int)catID);
+
+  esp_task_wdt_delete(xTaskGetIdleTaskHandleForCPU(0));       // required to avoid watchdog timeout messages from ESP32-C3
 
   controlButton.init(controlPin);
   statusLED.init(statusPin);
@@ -90,21 +95,38 @@ void Span::begin(Category catID, const char *displayName, const char *hostNameBa
   Serial.print("Message Logs:     Level ");
   Serial.print(logLevel);  
   Serial.print("\nStatus LED:       Pin ");
-  Serial.print(statusPin);  
+  if(statusPin>=0)
+    Serial.print(statusPin);
+  else
+    Serial.print("-  *** WARNING: Status LED Pin is UNDEFINED");
   Serial.print("\nDevice Control:   Pin ");
-  Serial.print(controlPin);
+  if(controlPin>=0)
+    Serial.print(controlPin);
+  else
+    Serial.print("-  *** WARNING: Device Control Pin is UNDEFINED");
   Serial.print("\nSketch Version:   ");
   Serial.print(getSketchVersion());  
   Serial.print("\nHomeSpan Version: ");
   Serial.print(HOMESPAN_VERSION);
-  Serial.print("\nESP-IDF Version:  ");
-  Serial.print(esp_get_idf_version());
+  Serial.print("\nArduino-ESP Ver.: ");
+  Serial.print(ARDUINO_ESP_VERSION);
+  Serial.printf("\nESP-IDF Version:  %d.%d.%d",ESP_IDF_VERSION_MAJOR,ESP_IDF_VERSION_MINOR,ESP_IDF_VERSION_PATCH);
+  Serial.printf("\nESP32 Chip:       %s Rev %d %s-core %dMB Flash", ESP.getChipModel(),ESP.getChipRevision(),
+                ESP.getChipCores()==1?"single":"dual",ESP.getFlashChipSize()/1024/1024);
   
   #ifdef ARDUINO_VARIANT
     Serial.print("\nESP32 Board:      ");
     Serial.print(ARDUINO_VARIANT);
   #endif
   
+  Serial.printf("\nPWM Resources:    %d channels, %d timers, max %d-bit duty resolution",
+                LEDC_SPEED_MODE_MAX*LEDC_CHANNEL_MAX,LEDC_SPEED_MODE_MAX*LEDC_TIMER_MAX,LEDC_TIMER_BIT_MAX-1);
+
+  Serial.printf("\nSodium Version:   %s  Lib %d.%d",sodium_version_string(),sodium_library_version_major(),sodium_library_version_minor());
+  char mbtlsv[64];
+  mbedtls_version_get_string_full(mbtlsv);
+  Serial.printf("\nMbedTLS Version:  %s",mbtlsv);
+
   Serial.print("\nSketch Compiled:  ");
   Serial.print(__DATE__);
   Serial.print(" ");
@@ -1598,6 +1620,10 @@ int SpanCharacteristic::sprintfAttributes(char *cBuf, int flags){
       if(uvGet<float>(stepValue)>0)
         nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?128:0,",\"minStep\":%s",uvPrint(stepValue).c_str());
     }
+
+    if(validValues){
+      nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?128:0,",\"valid-values\":%s",validValues);      
+    }
   }
     
   if(desc && (flags&GET_DESC)){
@@ -1716,6 +1742,41 @@ StatusCode SpanCharacteristic::loadUpdate(char *val, char *ev){
 unsigned long SpanCharacteristic::timeVal(){
   
   return(homeSpan.snapTime-updateTime);
+}
+
+///////////////////////////////
+
+SpanCharacteristic *SpanCharacteristic::setValidValues(int n, ...){
+  char c[256];
+  String *s = new String("[");
+  va_list vl;
+  va_start(vl,n);
+  for(int i=0;i<n;i++){
+    *s+=va_arg(vl,int);
+    if(i!=n-1)
+      *s+=",";
+  }
+  va_end(vl);
+  *s+="]";
+
+  homeSpan.configLog+=String("         \u2b0c Set Valid Values for ") + String(hapName) + " with IID=" + String(iid);
+
+  if(validValues){
+    sprintf(c,"  *** ERROR!  Valid Values already set for this Characteristic! ***\n");
+    homeSpan.nFatalErrors++;
+  } else 
+
+  if(format!=UINT8){
+    sprintf(c,"  *** ERROR!  Can't set Valid Values for this Characteristic! ***\n");
+    homeSpan.nFatalErrors++;      
+  } else {
+    
+    validValues=s->c_str();
+    sprintf(c,":  ValidValues=%s\n",validValues);
+  }
+
+  homeSpan.configLog+=c;
+  return(this);
 }
 
 ///////////////////////////////

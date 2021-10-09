@@ -27,13 +27,15 @@
  
 // USER-DEFINED SETTINGS AND REFERENCE ENUMERATION CLASSES
 
+#include <core_version.h>
+
 #pragma once
 
 //////////////////////////////////////////////////////
 //              HomeSpan Version                    //
 
 #define     HS_MAJOR  1
-#define     HS_MINOR  3
+#define     HS_MINOR  4
 #define     HS_PATCH  0
 
 #define     STRINGIFY(x) _STR(x)
@@ -49,7 +51,9 @@
 
 #if (REQUIRED>VERSION(HS_MAJOR,HS_MINOR,HS_PATCH))
   #error THIS SKETCH REQUIRES A LATER VERISON OF THE HOMESPAN LIBRARY
-#endif            
+#endif
+
+#define     ARDUINO_ESP_VERSION   STRINGIFY(ARDUINO_ESP32_GIT_DESC)
 
 //////////////////////////////////////////////////////
 //                DEFAULT SETTINGS                  //  
@@ -63,12 +67,12 @@
 
 #define     DEFAULT_QR_ID             "HSPN"              // change with homeSpan.setQRID(qrID);
 
-#define     DEFAULT_CONTROL_PIN       21                  // change with homeSpan.setControlPin(pin)
-#define     DEFAULT_STATUS_PIN        13                  // change with homeSpan.setStatusPin(pin)
+#define     DEFAULT_CONTROL_PIN       -1                  // change with homeSpan.setControlPin(pin)
+#define     DEFAULT_STATUS_PIN        -1                  // change with homeSpan.setStatusPin(pin)
 
-#define     DEFAULT_AP_SSID           "HomeSpan-Setup"   // change with homeSpan.setApSSID(ssid)
-#define     DEFAULT_AP_PASSWORD       "homespan"         // change with homeSpan.setApPassword(pwd)
-#define     DEFAULT_OTA_PASSWORD      "homespan-ota"     // change with 'O' command
+#define     DEFAULT_AP_SSID           "HomeSpan-Setup"    // change with homeSpan.setApSSID(ssid)
+#define     DEFAULT_AP_PASSWORD       "homespan"          // change with homeSpan.setApPassword(pwd)
+#define     DEFAULT_OTA_PASSWORD      "homespan-ota"      // change with 'O' command
 
 #define     DEFAULT_AP_TIMEOUT        300                 // change with homeSpan.setApTimeout(nSeconds)
 #define     DEFAULT_COMMAND_TIMEOUT   120                 // change with homeSpan.setCommandTimeout(nSeconds)
@@ -77,7 +81,6 @@
 
 #define     DEFAULT_MAX_CONNECTIONS   8                   // change with homeSpan.setMaxConnections(num);
 #define     DEFAULT_TCP_PORT          80                  // change with homeSpan.setPort(port);
-
 
 /////////////////////////////////////////////////////
 //              STATUS LED SETTINGS                //

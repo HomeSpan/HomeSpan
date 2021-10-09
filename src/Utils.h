@@ -74,7 +74,7 @@ struct TempBuffer {
 class PushButton{
   
   int status;
-  uint8_t pin;
+  int pin;
   boolean doubleCheck;
   uint32_t singleAlarm;
   uint32_t doubleAlarm;
@@ -90,7 +90,7 @@ class PushButton{
   };
   
   PushButton();
-  PushButton(uint8_t pin);
+  PushButton(int pin);
 
 //  Creates generic pushbutton functionality on specified pin
 //  that is wired to connect to ground when the button is pressed.
@@ -104,7 +104,7 @@ class PushButton{
 //
 //  pin:         Pin mumber to which pushbutton connects to ground when pressed
 
-  void init(uint8_t pin);
+  void init(int pin);
   
 //  Initializes PushButton, if not configured during instantiation.
 //
@@ -184,14 +184,18 @@ class Blinker {
 //  the specified pin, obviating the need for a separate call to init().
 //
 //  pin:         Pin mumber to control.  Blinker will set pinMode to OUTPUT automatically 
-//  timerNum:    ESP32 Alarm Timer to use. 0=Group0/Timer0, 1=Group0/Timer1, 2=Group1/Timer0, 3=Group1/Timer1
+//  timerNum:    ESP32 Alarm Timer to use.
+//               For ESP32 and ESP32-S2:  0=Group0/Timer0, 1=Group0/Timer1, 2=Group1/Timer0, 3=Group1/Timer1
+//               For ESP32-C3:  0=Group0/Timer0, 1=Group1/Timer0
     
   void init(int pin, int timerNum=0);
 
 //  Initializes Blinker, if not configured during instantiation.
 //
 //  pin:         Pin mumber to control.  Blinker will set pinMode to OUTPUT automatically 
-//  timerNum:    ESP32 Alarm Timer to use. 0=Group0/Timer0, 1=Group0/Timer1, 2=Group1/Timer0, 3=Group1/Timer1
+//  timerNum:    ESP32 Alarm Timer to use.
+//               For ESP32 and ESP32-S2:  0=Group0/Timer0, 1=Group0/Timer1, 2=Group1/Timer0, 3=Group1/Timer1
+//               For ESP32-C3:  0=Group0/Timer0, 1=Group1/Timer0
 
   void start(int period, float dutyCycle=0.5);
     
