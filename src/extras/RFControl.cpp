@@ -69,11 +69,12 @@ void RFControl::start(uint32_t *data, int nData, uint8_t nCycles, uint8_t tickTi
 
 void RFControl::clear(){
   data.clear();
+  lowWord=true;
 }
 
 ///////////////////
 
-void RFControl::add(uint16_t onTime, uint16_t offTime){
+void RFControl::add(uint32_t onTime, uint32_t offTime){
 
   phase(onTime,HIGH);
   phase(offTime,LOW);  
@@ -81,16 +82,19 @@ void RFControl::add(uint16_t onTime, uint16_t offTime){
 
 ///////////////////
 
-void RFControl::phase(uint16_t nTicks, uint8_t phase){
+void RFControl::phase(uint32_t nTicks, uint8_t phase){
 
-  uint32_t ticks=nTicks&0x7FFF;
+  while(nTicks>0){                                      // create as many repeated phases as needed to accomodate duration of nTicks
+    uint32_t ticks=nTicks>0x7FFF?0x7FFF:nTicks;
+    nTicks-=ticks;
 
-  if(lowWord)
-    data.push_back(ticks | (phase?(1<<15):0));
-  else
-    data.back()|=ticks<<16 | (phase?(1<<31):0);
-
-  lowWord=!lowWord;
+    if(lowWord)
+      data.push_back(ticks | (phase?(1<<15):0));
+    else
+      data.back()|=ticks<<16 | (phase?(1<<31):0);
+  
+    lowWord=!lowWord;
+  }
 }
 
 ///////////////////

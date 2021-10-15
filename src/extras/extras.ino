@@ -10,23 +10,33 @@ void setup() {
 
   Serial.println("\n\nHomeSpan RF Transmitter Example");
 
-  RFControl rf(18);               // create an instance of RFControl with signal output to pin 6
+  RFControl rf(17);               // create an instance of RFControl with signal output to pin 17
 
-#define NPOINTS 3
-  
-  uint32_t data[NPOINTS];
+  rf.clear();
 
-  for(int i=0;i<NPOINTS;i++){
-    if(i<NPOINTS-1)
-        data[i]=RF_PULSE(1000,9000);
-    else
-        data[i]=RF_PULSE(1000,30000);
-  }
- 
-  rf.start(data,NPOINTS,2,100);
+  rf.add(10000,10000);
+  rf.add(10000,10000);
+  rf.add(10000,40000);
+
+  uint32_t t0=micros();
+  rf.start(4,100);
+  uint32_t t1=micros();
    
   Serial.println("End Example");
+  Serial.println((t1-t0)/1000);
   
+  rf.clear();
+
+  rf.add(10000,10000);
+  rf.add(10000,10000);
+
+  t0=micros();
+  rf.start(4,100);
+  t1=micros();
+   
+  Serial.println("End Example");
+  Serial.println((t1-t0)/1000);
+
 } // end of setup()
 
 void loop(){
