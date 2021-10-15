@@ -16,7 +16,7 @@ class RFControl {
     static uint8_t nChannels;
                                
   public:    
-    RFControl(uint8_t pin);                                                           // creates transmitter on pin   
+    RFControl(uint8_t pin, boolean refClock=true);                                    // creates transmitter on pin, using 1-MHz Ref Tick clock
     
     void start(uint32_t *data, int nData, uint8_t nCycles=1, uint8_t tickTime=1);     // starts transmission of pulses from specified data pointer, repeated for numCycles, where each tick in pulse is tickTime microseconds long
     void start(uint8_t nCycles=1, uint8_t tickTime=1);                                // starts transmission of pulses from internal data structure, repeated for numCycles, where each tick in pulse is tickTime microseconds long    

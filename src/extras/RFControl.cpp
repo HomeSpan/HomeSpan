@@ -6,7 +6,7 @@
 
 ///////////////////
 
-RFControl::RFControl(uint8_t pin){
+RFControl::RFControl(uint8_t pin, boolean refClock){
 
 #ifdef CONFIG_IDF_TARGET_ESP32C3
   if(nChannels==RMT_CHANNEL_MAX/2){
@@ -34,10 +34,11 @@ RFControl::RFControl(uint8_t pin){
   rmt_config(config);
   rmt_driver_install(config->channel,0,0);
 
-  // Below we set the base clock to 1 MHz so tick-units are in microseconds (before CLK_DIV)
+  // If specified, set the base clock to 1 MHz so tick-units are in microseconds (before any CLK_DIV is applied), otherwise default will be 80 MHz APB clock
 
+  if(refClock)
 #ifdef CONFIG_IDF_TARGET_ESP32C3
-  REG_SET_FIELD(RMT_SYS_CONF_REG,RMT_SCLK_DIV_NUM,80);        // ESP32-C3 does not have a 1 MHz REF Tick Clock, but allows the 80 MHz APB clock to be scaled by an additional RMT-specific divider
+  REG_SET_FIELD(RMT_SYS_CONF_REG,RMT_SCLK_DIV_NUM,79);        // ESP32-C3 does not have a 1 MHz REF Tick Clock, but allows the 80 MHz APB clock to be scaled by an additional RMT-specific divider
 #else  
   rmt_set_source_clk(config->channel,RMT_BASECLK_REF);        // use 1 MHz REF Tick Clock for ESP32 and ESP32-S2
 #endif
