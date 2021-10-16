@@ -18,48 +18,28 @@ void setup() {
 
   Serial.println("\n\nHomeSpan RF Transmitter Example\n\n");
 
-  RFControl rf(10);               // create an instance of RFControl with signal output to pin 10
+  RFControl rf(17);           
+  rf.enableCarrier(38000,0.5);
 
-  uint32_t cf = 1e6/(pronto[1]*PRONTO_N); 
-  double unit=pronto[1]*PRONTO_N;
+//  uint32_t code = 0xE0E019E6;       // OFF
+  uint32_t code = 0xE0E09966;       // ON
 
-  Serial.printf("Carrier Frequency = %d\n",cf);  
-  Serial.printf("Unit = %g\n",unit);
+  int unit=563;
 
-  rf.enableCarrier(
-
-  Serial.printf("CONF0: %d\n",REG_GET_FIELD(RMT_CH0CONF0_REG,RMT_DIV_CNT_CH0));
-  Serial.printf("CONF1: %d\n",REG_GET_FIELD(RMT_CH0CONF1_REG,RMT_REF_ALWAYS_ON_CH0));
-  Serial.printf("CHIGH: %d\n",REG_GET_FIELD(RMT_CH0CARRIER_DUTY_REG,RMT_CARRIER_HIGH_CH0));
-  Serial.printf("CLOW: %d\n",REG_GET_FIELD(RMT_CH0CARRIER_DUTY_REG,RMT_CARRIER_LOW_CH0));
-
-  rf.clear();
-
-  uint32_t len=0;
-
-  for(int i=0,n=4;i<pronto[3]*2;i++){
-    uint32_t pulse=pronto[n]*unit;
-    while((int)pulse>0){
-      uint16_t data = pulse>32767?32767:pulse;
-      boolean phase=(i%2==0);
-      Serial.printf("Pulse %d: %d %d %d\n",i,pronto[n],data,phase);
-      pulse-=32767;
-      rf.phase(data,phase);
-      len+=data;
-    }
-    n++;
+  rf.add(4500,4500);
+  
+  for(int i=31;i>=0;i--){
+    rf.add(unit,unit*((code&(1<<i))?3:1));
+    Serial.print((code&(1<<i))?1:0);
+    if(!(i%8))
+      Serial.print(" ");
   }
 
-  int repeat=20;
-  
-  Serial.printf("Total Time: %d usec\n",len*repeat);
+  rf.add(unit,45000);
 
-  uint32_t t0=micros();
-  rf.start(repeat,1);
-  uint32_t t1=micros();
-  Serial.printf("Actual Time: %d usec\n",t1-t0);
-   
-  Serial.println("End Example");
+  rf.start(10);
+
+  Serial.println("Done!");
   
 } // end of setup()
 
