@@ -21,8 +21,8 @@ void setup() {
   RFControl rf(17);           
   rf.enableCarrier(38000,0.5);
 
-//  uint32_t code = 0xE0E019E6;       // OFF
-  uint32_t code = 0xE0E09966;       // ON
+  uint32_t code = 0xE0E019E6;       // OFF
+//  uint32_t code = 0xE0E09966;       // ON
 
   int unit=563;
 
@@ -37,7 +37,7 @@ void setup() {
 
   rf.add(unit,45000);
 
-  rf.start(10);
+  rf.start(2);
 
   Serial.println("Done!");
   
