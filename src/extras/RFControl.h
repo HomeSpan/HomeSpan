@@ -13,6 +13,7 @@ class RFControl {
     rmt_config_t *config=NULL;
     vector<uint32_t> data;
     boolean lowWord=true;
+    boolean refClock;
     static uint8_t nChannels;
                                
   public:    
@@ -24,6 +25,8 @@ class RFControl {
     void clear();                                         // clears transmitter memory
     void add(uint32_t onTime, uint32_t offTime);          // adds pulse of onTime ticks HIGH followed by offTime ticks LOW
     void phase(uint32_t nTicks, uint8_t phase);           // adds either a HIGH phase or LOW phase lasting numTicks ticks
+    void enableCarrier(uint32_t freq, float duty=0.5);    // enables carrier wave if freq>0, else disables carrier wave; duty is a fraction from 0-1
+    void disableCarrier(){enableCarrier(0);}              // disables carrier wave
 };
 
 // Helper macro for creating your own storage of uint32_t data array elements - used with first variation of start() above

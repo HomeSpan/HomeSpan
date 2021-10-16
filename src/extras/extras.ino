@@ -14,12 +14,21 @@ void setup() {
 
   rf.clear();
 
-  rf.add(10000,10000);
-  rf.add(10000,10000);
-  rf.add(10000,30000);
+//  rf.add(1000000,1000000);
+//  rf.add(1000000,1000000);
+  rf.add(100000,1);
+
+  for(int i=100;i>=0;i-=5){
+    rf.enableCarrier(38000,i/100.0);
+    rf.start(1,4);
+  }
+//  rf.disableCarrier();
+//  rf.start(1,200);
+
+  while(1);
 
   uint32_t t0=micros();
-  rf.start(4,1);
+  rf.start(4,80);
   uint32_t t1=micros();
    
   Serial.println("End Example");
