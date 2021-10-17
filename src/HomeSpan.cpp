@@ -1137,7 +1137,7 @@ int Span::updateCharacteristics(char *buf, SpanBuf *pObj){
         pObj[nObj].iid=atoi(t3);
         okay|=2;
       } else 
-      if(!strcmp(t2,"value") && (t3=strtok_r(t1,"}[]:, \"\t\n\r",&p2))){
+      if(!strcmp(t2,"value") && (t3=strtok_r(t1,"}[]:,\"",&p2))){
         pObj[nObj].val=t3;
         okay|=4;
       } else 
@@ -1725,6 +1725,13 @@ StatusCode SpanCharacteristic::loadUpdate(char *val, char *ev){
     case FLOAT:
       if(!sscanf(val,"%lg",&newValue.FLOAT))
         return(StatusCode::InvalidValue);
+      break;
+
+    case STRING:
+      newValue.STRING = (char *)realloc(newValue.STRING, strlen(val) + 1);
+      strncpy(newValue.STRING, val, strlen(val));
+      newValue.STRING[strlen(val)] = '\0';
+
       break;
 
     default:

@@ -130,5 +130,6 @@ enum class Category {
   Dehumidifiers=23,
   Sprinklers=28,
   Faucets=29,
-  ShowerSystems=30
+  ShowerSystems=30,
+  Television=31
 };
