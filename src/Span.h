@@ -200,12 +200,11 @@ namespace Service {
   }};
 
   struct InputSource : SpanService { InputSource() : SpanService{"D9","InputSource"}{
-      REQ(ConfiguredName);
-      REQ(InputSourceType);
+      OPT(ConfiguredName);
+      OPT(InputSourceType);
       REQ(IsConfigured);
-      REQ(Name);
       REQ(CurrentVisibilityState);
-
+      OPT(Name);
       OPT(Identifier);
       OPT(InputDeviceType);
       OPT(TargetVisibilityState);
@@ -216,7 +215,6 @@ namespace Service {
     REQ(ProgramMode);
     REQ(InUse);
     OPT(RemainingDuration);
-    OPT(Name);
     OPT(StatusFault);
   }};
 
@@ -334,13 +332,11 @@ namespace Service {
   struct Television : SpanService { Television() : SpanService{"D8","Television"}{
       REQ(Active);
       REQ(ActiveIdentifier);
-      REQ(ConfiguredName);
-      REQ(RemoteKey);
-      REQ(SleepDiscoveryMode);
-
+      OPT(ConfiguredName);
+      OPT(RemoteKey);
+      OPT(SleepDiscoveryMode);
       OPT(Brightness);
       OPT(ClosedCaptions);
-      //OPT(DisplayOrder);
       OPT(CurrentMediaState);
       OPT(TargetMediaState);
       OPT(Name);
@@ -350,7 +346,6 @@ namespace Service {
 
   struct TelevisionSpeaker : SpanService { TelevisionSpeaker() : SpanService{"113","TelevisionSpeaker"}{
       REQ(Mute);
-
       OPT(Active);
       OPT(Volume);
       OPT(VolumeControlType);

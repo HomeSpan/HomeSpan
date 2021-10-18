@@ -38,17 +38,22 @@ struct HKTV : Service::Television {
   SpanCharacteristic  *netflixCurrentVisibility;
 
   HKTV() : Service::Television(){
-    Serial.print("Init HKTV\n");           // initialization message
+    
+    Serial.printf("Init TV\n");           // initialization message
 
     active            = new Characteristic::Active();
-    activeIdentifier   = new Characteristic::ActiveIdentifier(1);
-    configuredName     = new Characteristic::ConfiguredName();
-    remoteKey          = new Characteristic::RemoteKey();
-    sleepDiscoveryMode = new Characteristic::SleepDiscoveryMode(1);
+    activeIdentifier   = new Characteristic::ActiveIdentifier(0);
+    new Characteristic::ConfiguredName("My TV");
+//    new Characteristic::PowerModeSelection();             // write-only Characteristic that enables "View TV Settings" on controls screen 
+    new Characteristic::PictureMode(1);
+    new Characteristic::ClosedCaptions();
+    new Characteristic::Brightness(50);
+    new Characteristic::CurrentMediaState(1);
+    new Characteristic::RemoteKey();
 
     speaker = new Service::TelevisionSpeaker();
       mute = new Characteristic::Mute();
-      speakerActive = new Characteristic::Active();
+      speakerActive = new Characteristic::Active(1);
       volume = new Characteristic::Volume();
       new Characteristic::VolumeControlType(3);
       new Characteristic::VolumeSelector();
@@ -57,7 +62,6 @@ struct HKTV : Service::Television {
       new Characteristic::ConfiguredName("HDMI 1");
       new Characteristic::IsConfigured(1); // configured = 1, not configured = 0
       new Characteristic::InputSourceType(HDMI);
-      new Characteristic::Name("HDMI 1");
       netflixIdentifier = new Characteristic::Identifier(0);
       hdmi1CurrentVisibility = new Characteristic::CurrentVisibilityState(0);  // 0 shown, 1 hidden
 
@@ -65,17 +69,15 @@ struct HKTV : Service::Television {
       new Characteristic::ConfiguredName("HDMI 2");
       new Characteristic::IsConfigured(1); // configured = 1, not configured = 0
       new Characteristic::InputSourceType(HDMI);
-      new Characteristic::Name("HDMI 2");
-      hdmi2Identifier = new Characteristic::Identifier(1);
+      hdmi2Identifier = new Characteristic::Identifier(10);
       hdmi2CurrentVisibility = new Characteristic::CurrentVisibilityState(0);  // 0 shown, 1 hidden
 
     netflix = new Service::InputSource();
       new Characteristic::ConfiguredName("NETFLIX");
-      new Characteristic::IsConfigured(1); // configured = 1, not configured = 0
-      new Characteristic::InputSourceType(APPLICATION);
-      new Characteristic::Name("Netflix");
-      netflixIdentifier = new Characteristic::Identifier(2);
+//      new Characteristic::IsConfigured(0); // configured = 1, not configured = 0
+      netflixIdentifier = new Characteristic::Identifier(4);
       netflixCurrentVisibility = new Characteristic::CurrentVisibilityState(0);  // 0 shown, 1 hidden
+//      new Characteristic::TargetVisibilityState(0);  // 0 shown, 1 hidden
 
     addLink(hdmi1);
     addLink(hdmi2);
@@ -114,8 +116,8 @@ void setup() {
       new Characteristic::FirmwareRevision("0.1");
       new Characteristic::Identify();
 
-    new Service::HAPProtocolInformation();
-      new Characteristic::Version("1.1.0");
+  new Service::HAPProtocolInformation();
+    new Characteristic::Version("1.1.0");
 
   new HKTV();
 }
