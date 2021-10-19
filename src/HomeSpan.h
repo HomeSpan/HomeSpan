@@ -309,8 +309,7 @@ struct SpanCharacteristic{
 
   void uvSet(UVal &u, const char *val){
     u.STRING = (char *)realloc(u.STRING, strlen(val) + 1);
-    strncpy(u.STRING, val, strlen(val));
-    u.STRING[strlen(val)] = '\0';
+    strcpy(u.STRING, val);
   }
 
   char *getString(){

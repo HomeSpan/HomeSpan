@@ -44,19 +44,21 @@ struct HKTV : Service::Television {
     active            = new Characteristic::Active();
     activeIdentifier   = new Characteristic::ActiveIdentifier(0);
     new Characteristic::ConfiguredName("My TV");
-//    new Characteristic::PowerModeSelection();             // write-only Characteristic that enables "View TV Settings" on controls screen 
+    new Characteristic::PowerModeSelection();             // write-only Characteristic that enables "View TV Settings" on controls screen 
     new Characteristic::PictureMode(1);
     new Characteristic::ClosedCaptions();
     new Characteristic::Brightness(50);
     new Characteristic::CurrentMediaState(1);
+    new Characteristic::TargetMediaState(1);
     new Characteristic::RemoteKey();
+    new Characteristic::SleepDiscoveryMode(1);
 
     speaker = new Service::TelevisionSpeaker();
       mute = new Characteristic::Mute();
       speakerActive = new Characteristic::Active(1);
       volume = new Characteristic::Volume();
-      new Characteristic::VolumeControlType(3);
-      new Characteristic::VolumeSelector();
+      new Characteristic::VolumeControlType(1);
+      new Characteristic::VolumeSelector(1);
 
     hdmi1 = new Service::InputSource();
       new Characteristic::ConfiguredName("HDMI 1");
@@ -82,6 +84,7 @@ struct HKTV : Service::Television {
     addLink(hdmi1);
     addLink(hdmi2);
     addLink(netflix);
+    addLink(speaker);
   }
 
   boolean update(){
@@ -117,9 +120,17 @@ void setup() {
       new Characteristic::Identify();
 
   new Service::HAPProtocolInformation();
-    new Characteristic::Version("1.1.0");
+    new Characteristic::Version("1.1.0");  
 
   new HKTV();
+
+    new Service::Speaker();
+      new Characteristic::Mute();
+//      new Characteristic::Active(1);
+      new Characteristic::Volume();
+//      new Characteristic::VolumeControlType(1);
+//      new Characteristic::VolumeSelector(1);
+        
 }
 
 void loop() {
