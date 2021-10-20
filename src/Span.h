@@ -331,8 +331,8 @@ namespace Service {
 
   struct Television : SpanService { Television() : SpanService{"D8","Television"}{
       REQ(Active);
-      REQ(ActiveIdentifier);
       OPT(ConfiguredName);
+      OPT(ActiveIdentifier);
       OPT(RemoteKey);
       OPT(SleepDiscoveryMode);
       OPT(Brightness);
@@ -342,14 +342,6 @@ namespace Service {
       OPT(Name);
       OPT(PictureMode);
       OPT(PowerModeSelection);
-  }};
-
-  struct TelevisionSpeaker : SpanService { TelevisionSpeaker() : SpanService{"113","TelevisionSpeaker"}{
-      REQ(Mute);
-      OPT(Active);
-      OPT(Volume);
-      OPT(VolumeControlType);
-      OPT(VolumeSelector);
   }};
 
   struct TemperatureSensor : SpanService { TemperatureSensor() : SpanService{"8A","TemperatureSensor"}{
