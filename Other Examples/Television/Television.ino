@@ -85,6 +85,30 @@ struct HKTV : Service::Television {
   }
 };
 
+struct TV_Source : Service::InputSource{
+
+  SpanCharacteristic *currentState = new Characteristic::CurrentVisibilityState(0);
+  SpanCharacteristic *targetState = new Characteristic::TargetVisibilityState(0);
+
+  TV_Source() : Service::InputSource(){
+    new Characteristic::ConfiguredName("HDMI 12");
+    new Characteristic::Identifier(12);
+    new Characteristic::IsConfigured(1);
+  }
+
+  boolean update() override{
+
+    if(targetState->updated()){
+      Serial.printf("New Target State = %d\n",targetState->getNewVal());
+      currentState->setVal(targetState->getNewVal());
+    }
+
+    return(true);
+  }
+  
+};
+
+
 void setup() {
   Serial.begin(115200);
   homeSpan.begin(Category::Television,"HomeSpan Television");
@@ -162,11 +186,13 @@ void setup() {
     new Characteristic::CurrentVisibilityState(0);
 
   SpanService *hdmi11 = new Service::InputSource();
-    new Characteristic::ConfiguredNameStatic("HDMI 11");
+    new Characteristic::ConfiguredName("HDMI 11");
     new Characteristic::Identifier(11);
     new Characteristic::IsConfigured(1);
     new Characteristic::TargetVisibilityState(0);
     new Characteristic::CurrentVisibilityState(0);
+
+  SpanService *hdmi12 = new TV_Source();
     
   (new Service::Television())
     ->addLink(hdmi1)
@@ -180,6 +206,7 @@ void setup() {
     ->addLink(hdmi9)
     ->addLink(hdmi10)
     ->addLink(hdmi11)
+    ->addLink(hdmi12)
     ;
     new Characteristic::Active(1);
     new Characteristic::ConfiguredName("AdvancedTV");

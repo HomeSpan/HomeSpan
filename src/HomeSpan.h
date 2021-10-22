@@ -486,8 +486,8 @@ struct SpanCharacteristic{
     
   template <typename T> void setVal(T val){
 
-    if(format==FORMAT::STRING && perms & PW == 0){
-      Serial.printf("\n*** WARNING:  Attempt to update Characteristic::%s(\"%s\") with setVal() ignored.  No WRITE permission on this characteristic\n\n",hapName,value.STRING);
+    if((perms & EV) == 0){
+      Serial.printf("\n*** WARNING:  Attempt to update Characteristic::%s with setVal() ignored.  No NOTIFICATION permission on this characteristic\n\n",hapName);
       return;
     }
 
