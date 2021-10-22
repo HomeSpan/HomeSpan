@@ -83,6 +83,7 @@ struct HapCharacteristics {
   HAPCHAR( CoolingThresholdTemperature, D, PR+PW+EV, FLOAT, false );
   HAPCHAR( ColorTemperature, CE, PR+PW+EV, UINT32, false );
   HAPCHAR( ConfiguredName, E3, PW+PR+EV, STRING, false );
+  HAPCHAR( ConfiguredNameStatic, E3, PR+EV, STRING, false );
   HAPCHAR( ContactSensorState, 6A, PR+EV, UINT8, true );
   HAPCHAR( CurrentAmbientLightLevel, 6B, PR+EV, FLOAT, false );
   HAPCHAR( CurrentHorizontalTiltAngle, 6C, PR+EV, INT, false );  
@@ -100,7 +101,6 @@ struct HapCharacteristics {
   HAPCHAR( CurrentTemperature, 11, PR+EV, FLOAT, false );
   HAPCHAR( CurrentTiltAngle, C1, PR+EV, INT, false );
   HAPCHAR( CurrentVisibilityState, 135, PR+EV, UINT8, true );
-//  HAPCHAR( DisplayOrder, 136, PW+PR+EV, TLV8, false );
   HAPCHAR( FilterLifeLevel, AB, PR+EV, FLOAT, false );
   HAPCHAR( FilterChangeIndication, AC, PR+EV, UINT8, true );
   HAPCHAR( FirmwareRevision, 52, PR, STRING, true );

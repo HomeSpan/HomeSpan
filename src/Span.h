@@ -332,8 +332,11 @@ namespace Service {
   struct Television : SpanService { Television() : SpanService{"D8","Television"}{
       REQ(Active);
       OPT(ConfiguredName);
+      OPT(ConfiguredNameStatic);
       OPT(ActiveIdentifier);
       OPT(RemoteKey);
+      OPT(PowerModeSelection);
+      
       OPT(SleepDiscoveryMode);
       OPT(Brightness);
       OPT(ClosedCaptions);
@@ -341,7 +344,6 @@ namespace Service {
       OPT(TargetMediaState);
       OPT(Name);
       OPT(PictureMode);
-      OPT(PowerModeSelection);
   }};
 
   struct TemperatureSensor : SpanService { TemperatureSensor() : SpanService{"8A","TemperatureSensor"}{
@@ -430,6 +432,7 @@ namespace Characteristic {
   CREATE_CHAR(uint32_t,ColorTemperature,200,140,500);
   CREATE_CHAR(uint8_t,ContactSensorState,1,0,1);
   CREATE_CHAR(const char *,ConfiguredName,"unnamed",0,1);
+  CREATE_CHAR(const char *,ConfiguredNameStatic,"unnamed",0,1);
   CREATE_CHAR(double,CurrentAmbientLightLevel,1,0.0001,100000);
   CREATE_CHAR(int,CurrentHorizontalTiltAngle,0,-90,90);
   CREATE_CHAR(uint8_t,CurrentAirPurifierState,1,0,2);
@@ -446,7 +449,6 @@ namespace Characteristic {
   CREATE_CHAR(double,CurrentRelativeHumidity,0,0,100);
   CREATE_CHAR(double,CurrentTemperature,0,0,100);
   CREATE_CHAR(int,CurrentTiltAngle,0,-90,90);
-//  CREATE_CHAR(tlv8,DisplayOrder,0,0,1);
   CREATE_CHAR(double,FilterLifeLevel,0,0,100);
   CREATE_CHAR(uint8_t,FilterChangeIndication,0,0,1);
   CREATE_CHAR(const char *,FirmwareRevision,"1.0.0",0,1);

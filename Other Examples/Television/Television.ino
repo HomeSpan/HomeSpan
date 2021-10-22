@@ -161,6 +161,13 @@ void setup() {
     new Characteristic::TargetVisibilityState(0);
     new Characteristic::CurrentVisibilityState(0);
 
+  SpanService *hdmi11 = new Service::InputSource();
+    new Characteristic::ConfiguredNameStatic("HDMI 11");
+    new Characteristic::Identifier(11);
+    new Characteristic::IsConfigured(1);
+    new Characteristic::TargetVisibilityState(0);
+    new Characteristic::CurrentVisibilityState(0);
+    
   (new Service::Television())
     ->addLink(hdmi1)
     ->addLink(hdmi2)
@@ -172,10 +179,12 @@ void setup() {
     ->addLink(hdmi8)
     ->addLink(hdmi9)
     ->addLink(hdmi10)
+    ->addLink(hdmi11)
     ;
     new Characteristic::Active(1);
     new Characteristic::ConfiguredName("AdvancedTV");
-    new Characteristic::ActiveIdentifier(3);    
+    new Characteristic::ActiveIdentifier(3);
+    new Characteristic::RemoteKey();
        
 }
 
