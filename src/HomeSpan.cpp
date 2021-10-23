@@ -1206,14 +1206,17 @@ int Span::updateCharacteristics(char *buf, SpanBuf *pObj){
           LOG1(" iid=");  
           LOG1(pObj[j].characteristic->iid);
           if(status==StatusCode::OK){                                                     // if status is okay
-            pObj[j].characteristic->value=pObj[j].characteristic->newValue;               // update characteristic value with new value
+            pObj[j].characteristic->uvSet(pObj[j].characteristic->value,pObj[j].characteristic->newValue);               // update characteristic value with new value
             if(pObj[j].characteristic->nvsKey){                                                                                               // if storage key found
-              nvs_set_blob(charNVS,pObj[j].characteristic->nvsKey,&(pObj[j].characteristic->value),sizeof(pObj[j].characteristic->value));    // store data
+              if(pObj[j].characteristic->format != FORMAT::STRING)
+                nvs_set_blob(charNVS,pObj[j].characteristic->nvsKey,&(pObj[j].characteristic->value),sizeof(pObj[j].characteristic->value));  // store data
+              else
+                nvs_set_str(charNVS,pObj[j].characteristic->nvsKey,pObj[j].characteristic->value.STRING);                                     // store data
               nvs_commit(charNVS);
             }
             LOG1(" (okay)\n");
           } else {                                                                        // if status not okay
-            pObj[j].characteristic->newValue=pObj[j].characteristic->value;               // replace characteristic new value with original value
+            pObj[j].characteristic->uvSet(pObj[j].characteristic->newValue,pObj[j].characteristic->value);                // replace characteristic new value with original value
             LOG1(" (failed)\n");
           }
           pObj[j].characteristic->isUpdated=false;             // reset isUpdated flag for characteristic
@@ -1728,8 +1731,7 @@ StatusCode SpanCharacteristic::loadUpdate(char *val, char *ev){
       break;
 
     case STRING:
-      newValue.STRING = (char *)realloc(newValue.STRING, strlen(val) + 1);
-      strcpy(newValue.STRING, val);
+      uvSet(newValue,(const char *)val);
       break;
 
     default:

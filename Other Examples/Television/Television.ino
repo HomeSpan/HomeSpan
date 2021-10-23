@@ -87,20 +87,31 @@ struct HKTV : Service::Television {
 
 struct TV_Source : Service::InputSource{
 
-  SpanCharacteristic *currentState = new Characteristic::CurrentVisibilityState(0);
-  SpanCharacteristic *targetState = new Characteristic::TargetVisibilityState(0);
+  SpanCharacteristic *currentState = new Characteristic::CurrentVisibilityState(0,true);
+  SpanCharacteristic *targetState = new Characteristic::TargetVisibilityState(0,true);
+  SpanCharacteristic *configName =  new Characteristic::ConfiguredName("HDMI 12",true);
 
   TV_Source() : Service::InputSource(){
-    new Characteristic::ConfiguredName("HDMI 12");
+//    new Characteristic::ConfiguredName("HDMI 12");
     new Characteristic::Identifier(12);
     new Characteristic::IsConfigured(1);
   }
 
   boolean update() override{
 
+    char c[50];
+    sprintf(c,"HERE I AM ");
+
     if(targetState->updated()){
-      Serial.printf("New Target State = %d\n",targetState->getNewVal());
+      Serial.printf("Old Target State = %d    New Target State = %d\n",targetState->getVal(),targetState->getNewVal());
       currentState->setVal(targetState->getNewVal());
+      Serial.printf("Name: %s\n",configName->getString());
+      configName->setString(c);
+      Serial.printf("Name: %s\n",configName->getString());
+    }
+
+    if(configName->updated()){
+      Serial.printf("CURRENT NAME: %s   NEW NAME:  %s\n",configName->getString(),configName->getNewString());
     }
 
     return(true);
