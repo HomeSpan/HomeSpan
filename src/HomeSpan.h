@@ -315,9 +315,7 @@ struct SpanCharacteristic{
   }
 
   void uvSet(UVal &u, const char *val){
-    Serial.printf("ADDRESS %d ",u.UINT32);
     u.STRING = (char *)realloc(u.STRING, strlen(val) + 1);
-    Serial.printf("-> %d \n",u.UINT32);
     strcpy(u.STRING, val);
   }
 
