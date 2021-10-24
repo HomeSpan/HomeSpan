@@ -201,12 +201,9 @@ namespace Service {
 
   struct InputSource : SpanService { InputSource() : SpanService{"D9","InputSource"}{
       OPT(ConfiguredName);
-      OPT(InputSourceType);
-      REQ(IsConfigured);
-      REQ(CurrentVisibilityState);
-      OPT(Name);
+      OPT(IsConfigured);
       OPT(Identifier);
-      OPT(InputDeviceType);
+      OPT(CurrentVisibilityState);
       OPT(TargetVisibilityState);
   }};
 
@@ -335,15 +332,7 @@ namespace Service {
       OPT(ConfiguredNameStatic);
       OPT(ActiveIdentifier);
       OPT(RemoteKey);
-      OPT(PowerModeSelection);
-      
-      OPT(SleepDiscoveryMode);
-      OPT(Brightness);
-      OPT(ClosedCaptions);
-      OPT(CurrentMediaState);
-      OPT(TargetMediaState);
-      OPT(Name);
-      OPT(PictureMode);
+      OPT(PowerModeSelection);      
   }};
 
   struct TemperatureSensor : SpanService { TemperatureSensor() : SpanService{"8A","TemperatureSensor"}{

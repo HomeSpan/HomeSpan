@@ -92,7 +92,6 @@ struct TV_Source : Service::InputSource{
   SpanCharacteristic *configName =  new Characteristic::ConfiguredName("HDMI 12",true);
 
   TV_Source() : Service::InputSource(){
-//    new Characteristic::ConfiguredName("HDMI 12");
     new Characteristic::Identifier(12);
     new Characteristic::IsConfigured(1);
   }
@@ -134,76 +133,59 @@ void setup() {
       new Characteristic::Identify();
 
   new Service::HAPProtocolInformation();
-    new Characteristic::Version("1.1.0");  
+    new Characteristic::Version("1.1.0");
        
-  SpanService *hdmi1 = new Service::InputSource();
+  SpanService *hdmi1 = new Service::InputSource();    // Source included in Selection List, but excluded from Settings Screen
     new Characteristic::ConfiguredName("HDMI 1");
     new Characteristic::Identifier(1);
 
   SpanService *hdmi2 = new Service::InputSource();
     new Characteristic::ConfiguredName("HDMI 2");
     new Characteristic::Identifier(2);
-    new Characteristic::IsConfigured(0);
+    new Characteristic::IsConfigured(0);              // Source excluded from both the Selection List and the Settings Screen
 
   SpanService *hdmi3 = new Service::InputSource();
     new Characteristic::ConfiguredName("HDMI 3");
     new Characteristic::Identifier(3);
-    new Characteristic::IsConfigured(1);
+    new Characteristic::IsConfigured(1);              // Source included in both the Selection List and the Settings Screen
 
   SpanService *hdmi4 = new Service::InputSource();
     new Characteristic::ConfiguredName("HDMI 4");
     new Characteristic::Identifier(4);
-    new Characteristic::IsConfigured(1);
-    new Characteristic::TargetVisibilityState(0);
-    new Characteristic::CurrentVisibilityState(0);    
+    new Characteristic::IsConfigured(1);              // Source included in the Settings Screen...
+    new Characteristic::CurrentVisibilityState(1);    // ...but excluded from the Selection List 
 
   SpanService *hdmi5 = new Service::InputSource();
     new Characteristic::ConfiguredName("HDMI 5");
     new Characteristic::Identifier(5);
-    new Characteristic::IsConfigured(1);
-    new Characteristic::TargetVisibilityState(1);
-    new Characteristic::CurrentVisibilityState(1);    
+    new Characteristic::IsConfigured(1);              // Source included in the Settings Screen...
+    new Characteristic::CurrentVisibilityState(0);    // ...and included in the Selection List 
 
   SpanService *hdmi6 = new Service::InputSource();
     new Characteristic::ConfiguredName("HDMI 6");
     new Characteristic::Identifier(6);
-    new Characteristic::IsConfigured(0);
-    new Characteristic::TargetVisibilityState(0);
-    new Characteristic::CurrentVisibilityState(0);    
+    new Characteristic::IsConfigured(0);              // Source excluded from both the Selection List and the Settings Screen
+    new Characteristic::CurrentVisibilityState(0);    // If IsConfigured(0) is specified, CurrentVisibilityState() has no effect
 
   SpanService *hdmi7 = new Service::InputSource();
     new Characteristic::ConfiguredName("HDMI 7");
-    new Characteristic::Identifier(0);
-    new Characteristic::IsConfigured(1);
-    new Characteristic::TargetVisibilityState(0);
-    new Characteristic::CurrentVisibilityState(0);    
+    new Characteristic::Identifier(7);
+    new Characteristic::IsConfigured(1);              // Source included in the Settings Screen...
+    new Characteristic::CurrentVisibilityState(0);    // ...and included in the Selection List...
+    new Characteristic::TargetVisibilityState(0);     // ...and a "checked" checkbox is provided on the Settings Screen that can be used to toggle CurrentVisibilityState()
 
   SpanService *hdmi8 = new Service::InputSource();
     new Characteristic::ConfiguredName("HDMI 8");
     new Characteristic::Identifier(8);
-    new Characteristic::TargetVisibilityState(0);
-    new Characteristic::CurrentVisibilityState(0);    
-
+    new Characteristic::IsConfigured(1);              // Source included in the Settings Screen...
+    new Characteristic::CurrentVisibilityState(1);    // ...but excluded from the Selection List...
+    new Characteristic::TargetVisibilityState(1);     // ...and an "un-checked" checkbox is provided on the Settings Screen that can be used to toggle CurrentVisibilityState()    
+   
   SpanService *hdmi9 = new Service::InputSource();
     new Characteristic::ConfiguredName("HDMI 9");
-    new Characteristic::Identifier(9);
-    new Characteristic::TargetVisibilityState(1);
-    new Characteristic::CurrentVisibilityState(1);
-    
-  SpanService *hdmi10 = new Service::InputSource();
-    new Characteristic::ConfiguredName("HDMI 10");
-    new Characteristic::IsConfigured(1);
+    new Characteristic::IsConfigured(1);              // Source included in the Settings Screen...
+    new Characteristic::CurrentVisibilityState(0);    // ...but without an Identifier() set, the Source is excluded from the Selection List regardless of CurrentVisibilityState(0)
     new Characteristic::TargetVisibilityState(0);
-    new Characteristic::CurrentVisibilityState(0);
-
-  SpanService *hdmi11 = new Service::InputSource();
-    new Characteristic::ConfiguredName("HDMI 11");
-    new Characteristic::Identifier(11);
-    new Characteristic::IsConfigured(1);
-    new Characteristic::TargetVisibilityState(0);
-    new Characteristic::CurrentVisibilityState(0);
-
-  SpanService *hdmi12 = new TV_Source();
     
   (new Service::Television())
     ->addLink(hdmi1)
@@ -215,14 +197,12 @@ void setup() {
     ->addLink(hdmi7)
     ->addLink(hdmi8)
     ->addLink(hdmi9)
-    ->addLink(hdmi10)
-    ->addLink(hdmi11)
-    ->addLink(hdmi12)
     ;
-    new Characteristic::Active(1);
-    new Characteristic::ConfiguredName("AdvancedTV");
-    new Characteristic::ActiveIdentifier(3);
-    new Characteristic::RemoteKey();
+    new Characteristic::Active(0);                  // TV On/Off (set to Off at start-up)
+    new Characteristic::ConfiguredName("Test TV");  // Name of TV
+    new Characteristic::ActiveIdentifier(3);        // Sets HDMI 3 on start-up
+    new Characteristic::RemoteKey();                // Used to receive button presses from the Remote Control widget
+    new Characteristic::PowerModeSelection();       // Adds "" option to Selection Screen
        
 }
 
