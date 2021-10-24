@@ -4,6 +4,33 @@
 
 #include "HomeSpan.h"
 
+#define HAPCHAR_NEW(hapName,type,perms,format,staticRange)  HapChar hapName {#type,#hapName,(PERMS)(perms),format,staticRange}
+
+#define CREATE_CHAR_NEW(TYPE,HAPCHAR,DEFVAL,MINVAL,MAXVAL) \
+  struct HAPCHAR : SpanCharacteristic { HAPCHAR(TYPE val=DEFVAL, boolean nvsStore=false) : SpanCharacteristic {&Custom_Char::HAPCHAR} { init(val,nvsStore,(TYPE)MINVAL,(TYPE)MAXVAL); } };
+
+#define CUSTOM_CHAR(NAME,UUID,PERMS,FORMAT,TYPE,DEFVAL,MINVAL,MAXVAL,STATIC_RANGE) \
+  namespace Custom_Char { HAPCHAR_NEW(NAME,UUID,PERMS,FORMAT,STATIC_RANGE); } \
+  namespace Characteristic { using namespace Custom_Char; CREATE_CHAR_NEW(TYPE,NAME,DEFVAL,MINVAL,MAXVAL); }
+
+
+CUSTOM_CHAR(CustomActive, 123-B0, PW+PR+EV, UINT8, uint8_t, 0, 0, 1, true);
+  
+//HAPCHAR_NEW( CustomActive, 123-B0, PW+PR+EV, UINT8, true );
+//CREATE_CHAR_NEW(uint8_t,CustomActive,0,0,1);
+
+//struct CustomActive : SpanCharacteristic {
+//  CustomActive(uint8_t val=0, boolean nvsStore=false) : SpanCharacteristic{&CustomActive}{
+//    
+//  }
+//};
+
+namespace Characteristic {
+  int xxx=0;
+}
+
+
+
 void setup() {
  
   Serial.begin(115200);
@@ -50,6 +77,7 @@ void setup() {
       new Characteristic::On(0,true);
       (new Characteristic::Brightness(50,true))->setRange(10,100,5);
       new Characteristic::Name("Light 2");
+      new Characteristic::CustomActive();
 
 } // end of setup()
 
