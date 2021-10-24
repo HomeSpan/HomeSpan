@@ -1,126 +1,66 @@
+/*********************************************************************************
+ *  MIT License
+ *  
+ *  Copyright (c) 2021 Gregg E. Berman
+ *  
+ *  https://github.com/HomeSpan/HomeSpan
+ *  
+ *  Permission is hereby granted, free of charge, to any person obtaining a copy
+ *  of this software and associated documentation files (the "Software"), to deal
+ *  in the Software without restriction, including without limitation the rights
+ *  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *  copies of the Software, and to permit persons to whom the Software is
+ *  furnished to do so, subject to the following conditions:
+ *  
+ *  The above copyright notice and this permission notice shall be included in all
+ *  copies or substantial portions of the Software.
+ *  
+ *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ *  SOFTWARE.
+ *  
+ ********************************************************************************/
+ 
+ // HomeSpan Television Service Example
+
+// Covers all Characteristics of the Television Service that appear to
+// be supported in the iOS 15 version of the Home App.  Note these Services
+// are not documented by Apple and are not officially part HAP-R2.
+//
+// For Service::Television():
+//
+//    * Characteristic::Active()
+//    * Characteristic::ConfiguredName()
+//    * Characteristic::ActiveIdentifier()
+//    * Characteristic::RemoteKey()
+//    * Characteristic::PowerModeSelection()
+//
+// For Service::InputSource():
+//
+//    * Characteristic::ConfiguredName()
+//    * Characteristic::ConfiguredNameStatic()        // a HomeSpan-specific variation of ConfiguredName()
+//    * Characteristic::Identifier()
+//    * Characteristic::IsConfigured()
+//    * Characteristic::CurrentVisibilityState()
+//    * Characteristic::TargetVisibilityState()
+
+// NOTE: This example is only designed to demonstrate how Television Services and Characteristics
+// appear in the Home App, and what they each control.  To keep things simple, actions for the
+// Characteristics have NOT been implemented in the code below.  For example, the code below does not include
+// any logic to update CurrentVisibilityState when the TargetVisibilityState checkboxes are clicked.
+
 #include "HomeSpan.h"
 
-struct HKTV : Service::Television {
-
-  SpanCharacteristic *active;
-  SpanCharacteristic *activeIdentifier;
-  SpanCharacteristic *configuredName;
-  SpanCharacteristic *remoteKey;
-  SpanCharacteristic *sleepDiscoveryMode;
-
-  SpanService *speaker;
-  SpanCharacteristic *mute;
-  SpanCharacteristic *speakerActive;
-  SpanCharacteristic *volume;
-
-  SpanService         *hdmi1;
-  SpanCharacteristic  *hdmi1Identifier;
-  SpanCharacteristic  *hdmi1CurrentVisibility;
-
-  SpanService         *hdmi2;
-  SpanCharacteristic  *hdmi2Identifier;
-  SpanCharacteristic  *hdmi2CurrentVisibility;
-
-  SpanService         *netflix;
-  SpanCharacteristic  *netflixIdentifier;
-  SpanCharacteristic  *netflixCurrentVisibility;
-
-  HKTV() : Service::Television(){
-    
-    Serial.printf("Init TV\n");           // initialization message
-
-    active            = new Characteristic::Active();
-    activeIdentifier   = new Characteristic::ActiveIdentifier(0);
-    new Characteristic::ConfiguredName("My TV");
-    new Characteristic::PowerModeSelection();             // write-only Characteristic that enables "View TV Settings" on controls screen 
-    new Characteristic::PictureMode(1);
-    new Characteristic::ClosedCaptions();
-    new Characteristic::Brightness(50);
-    new Characteristic::CurrentMediaState(1);
-    new Characteristic::TargetMediaState(1);
-    new Characteristic::RemoteKey();
-    new Characteristic::SleepDiscoveryMode(1);
-
-    hdmi1 = new Service::InputSource();
-      new Characteristic::ConfiguredName("HDMI 1");
-      new Characteristic::IsConfigured(1); // configured = 1, not configured = 0
-      netflixIdentifier = new Characteristic::Identifier(0);
-      hdmi1CurrentVisibility = new Characteristic::CurrentVisibilityState(0);  // 0 shown, 1 hidden
-
-    hdmi2 = new Service::InputSource();
-      new Characteristic::ConfiguredName("HDMI 2");
-      new Characteristic::IsConfigured(1); // configured = 1, not configured = 0
-      hdmi2Identifier = new Characteristic::Identifier(10);
-      hdmi2CurrentVisibility = new Characteristic::CurrentVisibilityState(0);  // 0 shown, 1 hidden
-
-    netflix = new Service::InputSource();
-      new Characteristic::ConfiguredName("NETFLIX");
-//      new Characteristic::IsConfigured(0); // configured = 1, not configured = 0
-      netflixIdentifier = new Characteristic::Identifier(4);
-      netflixCurrentVisibility = new Characteristic::CurrentVisibilityState(0);  // 0 shown, 1 hidden
-//      new Characteristic::TargetVisibilityState(0);  // 0 shown, 1 hidden
-
-    addLink(hdmi1);
-    addLink(hdmi2);
-    addLink(netflix);
-    addLink(speaker);
-  }
-
-  boolean update(){
-    if(active->updated()) {
-        if(active->getVal() != active->getNewVal()) {
-          Serial.printf("update(): active %d -> %d\n", active->getVal(), active->getNewVal());
-        }
-    }
-
-    if(activeIdentifier->updated()) {
-      Serial.printf("update(): activeIdentifier %d -> %d\n", activeIdentifier->getVal(), activeIdentifier->getNewVal());
-    }
-
-    return true;
-  }
-
-  void loop() {
-
-  }
-};
-
-struct TV_Source : Service::InputSource{
-
-  SpanCharacteristic *currentState = new Characteristic::CurrentVisibilityState(0,true);
-  SpanCharacteristic *targetState = new Characteristic::TargetVisibilityState(0,true);
-  SpanCharacteristic *configName =  new Characteristic::ConfiguredName("HDMI 12",true);
-
-  TV_Source() : Service::InputSource(){
-    new Characteristic::Identifier(12);
-    new Characteristic::IsConfigured(1);
-  }
-
-  boolean update() override{
-
-    char c[50];
-    sprintf(c,"HERE I AM ");
-
-    if(targetState->updated()){
-      Serial.printf("Old Target State = %d    New Target State = %d\n",targetState->getVal(),targetState->getNewVal());
-      currentState->setVal(targetState->getNewVal());
-      Serial.printf("Name: %s\n",configName->getString());
-      configName->setString(c);
-      Serial.printf("Name: %s\n",configName->getString());
-    }
-
-    if(configName->updated()){
-      Serial.printf("CURRENT NAME: %s   NEW NAME:  %s\n",configName->getString(),configName->getNewString());
-    }
-
-    return(true);
-  }
-  
-};
-
-
 void setup() {
+  
   Serial.begin(115200);
+
+  homeSpan.setLogLevel(2);        // allows you to see HAP transmissions that occur as various Television buttons are pressed in Home App
+  
   homeSpan.begin(Category::Television,"HomeSpan Television");
 
   new SpanAccessory();
@@ -134,6 +74,9 @@ void setup() {
 
   new Service::HAPProtocolInformation();
     new Characteristic::Version("1.1.0");
+
+  // Below we define 10 different InputSource Services using different combinations
+  // of Characteristics to demonstrate how they interact and appear to the user in the Home App
        
   SpanService *hdmi1 = new Service::InputSource();    // Source included in Selection List, but excluded from Settings Screen
     new Characteristic::ConfiguredName("HDMI 1");
@@ -187,7 +130,14 @@ void setup() {
     new Characteristic::CurrentVisibilityState(0);    // ...but without an Identifier() set, the Source is excluded from the Selection List regardless of CurrentVisibilityState(0)
     new Characteristic::TargetVisibilityState(0);
     
-  (new Service::Television())
+  SpanService *hdmi10 = new Service::InputSource();
+    new Characteristic::ConfiguredNameStatic("HDMI 10");    // Source Name is static and cannot be edited in Settings Screen
+    new Characteristic::Identifier(10);
+    new Characteristic::IsConfigured(1);              // Source included in the Settings Screen...
+    new Characteristic::CurrentVisibilityState(0);    // ...and included in the Selection List...
+    new Characteristic::TargetVisibilityState(0);     // ...and a "checked" checkbox is provided on the Settings Screen that can be used to toggle CurrentVisibilityState()
+
+  (new Service::Television())                         // Define a Television Service.  Must link in InputSources!
     ->addLink(hdmi1)
     ->addLink(hdmi2)
     ->addLink(hdmi3)
@@ -197,6 +147,7 @@ void setup() {
     ->addLink(hdmi7)
     ->addLink(hdmi8)
     ->addLink(hdmi9)
+    ->addLink(hdmi10)
     ;
     new Characteristic::Active(0);                  // TV On/Off (set to Off at start-up)
     new Characteristic::ConfiguredName("Test TV");  // Name of TV
