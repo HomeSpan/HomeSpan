@@ -4,12 +4,7 @@
 
 #include "HomeSpan.h"
 
-#define CUSTOM_CHAR(NAME,UUID,PERMISISONS,FORMAT,TYPE,DEFVAL,MINVAL,MAXVAL,STATIC_RANGE) \
-  HapChar _CUSTOM_##NAME {#UUID,#NAME,(PERMS)(PERMISISONS),FORMAT,STATIC_RANGE}; \
-  namespace Characteristic { struct NAME : SpanCharacteristic { NAME(TYPE val=DEFVAL, boolean nvsStore=false) : SpanCharacteristic {&_CUSTOM_##NAME} { init(val,nvsStore,(TYPE)MINVAL,(TYPE)MAXVAL); } }; }
-
-CUSTOM_CHAR(CustomActive, 123-B0, PW+PR+EV, UINT8, uint8_t, 0, 0, 1, true);
-
+CUSTOM_CHAR(CustomActive, AB-123-B0, PW+PR+EV, UINT8, uint8_t, 0, 0, 1, true);
 
 void setup() {
  

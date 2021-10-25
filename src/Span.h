@@ -522,3 +522,11 @@ namespace Characteristic {
   CREATE_CHAR(double,WaterLevel,0,0,100);
 
 }
+
+//////////////////////////////////////////
+// MACROS TO ADD CUSTOM CHARACTERISTICS //
+//////////////////////////////////////////
+
+#define CUSTOM_CHAR(NAME,UUID,PERMISISONS,FORMAT,TYPE,DEFVAL,MINVAL,MAXVAL,STATIC_RANGE) \
+  HapChar _CUSTOM_##NAME {#UUID,#NAME,(PERMS)(PERMISISONS),FORMAT,STATIC_RANGE}; \
+  namespace Characteristic { struct NAME : SpanCharacteristic { NAME(TYPE val=DEFVAL, boolean nvsStore=false) : SpanCharacteristic {&_CUSTOM_##NAME} { init(val,nvsStore,(TYPE)MINVAL,(TYPE)MAXVAL); } }; }

@@ -441,7 +441,7 @@ struct SpanCharacteristic{
         uvSet(stepValue,0);
     }
 
-    homeSpan.configLog+="(" + uvPrint(value) + ")" + ":  IID=" + String(iid) + ", UUID=0x" + String(type);
+    homeSpan.configLog+="(" + uvPrint(value) + ")" + ":  IID=" + String(iid) + ", UUID=" + String(type);
     if(format!=FORMAT::STRING && format!=FORMAT::BOOL)
       homeSpan.configLog+= "  Range=[" + String(uvPrint(minValue)) + "," + String(uvPrint(maxValue)) + "]";
 
