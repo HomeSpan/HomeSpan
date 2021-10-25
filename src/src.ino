@@ -4,7 +4,7 @@
 
 #include "HomeSpan.h"
 
-CUSTOM_CHAR(CustomActive, AB-123-B0, PW+PR+EV, UINT8, uint8_t, 0, 0, 1, true);
+// CUSTOM_CHAR(CustomActive, AB-123-B0, PW+PR+EV, UINT8, uint8_t, 0, 0, 1, true);
 
 void setup() {
  
@@ -52,7 +52,6 @@ void setup() {
       new Characteristic::On(0,true);
       (new Characteristic::Brightness(50,true))->setRange(10,100,5);
       new Characteristic::Name("Light 2");
-      new Characteristic::CustomActive();
 
 } // end of setup()
 
