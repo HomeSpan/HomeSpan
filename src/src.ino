@@ -4,31 +4,11 @@
 
 #include "HomeSpan.h"
 
-#define HAPCHAR_NEW(hapName,type,perms,format,staticRange)  HapChar hapName {#type,#hapName,(PERMS)(perms),format,staticRange}
-
-#define CREATE_CHAR_NEW(TYPE,HAPCHAR,DEFVAL,MINVAL,MAXVAL) \
-  struct HAPCHAR : SpanCharacteristic { HAPCHAR(TYPE val=DEFVAL, boolean nvsStore=false) : SpanCharacteristic {&Custom_Char::HAPCHAR} { init(val,nvsStore,(TYPE)MINVAL,(TYPE)MAXVAL); } };
-
-#define CUSTOM_CHAR(NAME,UUID,PERMS,FORMAT,TYPE,DEFVAL,MINVAL,MAXVAL,STATIC_RANGE) \
-  namespace Custom_Char { HAPCHAR_NEW(NAME,UUID,PERMS,FORMAT,STATIC_RANGE); } \
-  namespace Characteristic { using namespace Custom_Char; CREATE_CHAR_NEW(TYPE,NAME,DEFVAL,MINVAL,MAXVAL); }
-
+#define CUSTOM_CHAR(NAME,UUID,PERMISISONS,FORMAT,TYPE,DEFVAL,MINVAL,MAXVAL,STATIC_RANGE) \
+  HapChar _CUSTOM_##NAME {#UUID,#NAME,(PERMS)(PERMISISONS),FORMAT,STATIC_RANGE}; \
+  namespace Characteristic { struct NAME : SpanCharacteristic { NAME(TYPE val=DEFVAL, boolean nvsStore=false) : SpanCharacteristic {&_CUSTOM_##NAME} { init(val,nvsStore,(TYPE)MINVAL,(TYPE)MAXVAL); } }; }
 
 CUSTOM_CHAR(CustomActive, 123-B0, PW+PR+EV, UINT8, uint8_t, 0, 0, 1, true);
-  
-//HAPCHAR_NEW( CustomActive, 123-B0, PW+PR+EV, UINT8, true );
-//CREATE_CHAR_NEW(uint8_t,CustomActive,0,0,1);
-
-//struct CustomActive : SpanCharacteristic {
-//  CustomActive(uint8_t val=0, boolean nvsStore=false) : SpanCharacteristic{&CustomActive}{
-//    
-//  }
-//};
-
-namespace Characteristic {
-  int xxx=0;
-}
-
 
 
 void setup() {
