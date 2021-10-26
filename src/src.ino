@@ -4,7 +4,7 @@
 
 #include "HomeSpan.h"
 
-// CUSTOM_CHAR(CustomActive, AB-123-B0, PW+PR+EV, UINT8, uint8_t, 0, 0, 1, true);
+CUSTOM_CHAR(CustomActive, AB-123-B0, PW+PR+EV, UINT8, 0, 0, 1, false);
 
 void setup() {
  
@@ -45,9 +45,11 @@ void setup() {
 
     new Service::LightBulb();
       new Characteristic::On(0);
-      new Characteristic::Brightness();
+      (new Characteristic::CustomActive(2))->setRange(0,10,3);
+      new Characteristic::Brightness(500);
       new Characteristic::Name("Light 1");
       new Characteristic::ColorTemperature();
+      new Characteristic::Active();
     new Service::LightBulb();
       new Characteristic::On(0,true);
       (new Characteristic::Brightness(50,true))->setRange(10,100,5);

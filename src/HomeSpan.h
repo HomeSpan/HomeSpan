@@ -239,14 +239,14 @@ struct SpanCharacteristic{
 
 
   union UVal {                                  
-    boolean BOOL;
-    uint8_t UINT8;
-    uint16_t UINT16;
-    uint32_t UINT32;
-    uint64_t UINT64;
-    int32_t INT;
-    double FLOAT;
-    char *STRING = NULL;
+    BOOL_t BOOL;
+    UINT8_t UINT8;
+    UINT16_t UINT16;
+    UINT32_t UINT32;
+    UINT64_t UINT64;
+    INT_t INT;
+    FLOAT_t FLOAT;
+    STRING_t STRING = NULL;
   };
 
   int iid=0;                               // Instance ID (HAP Table 6-3)
@@ -441,16 +441,18 @@ struct SpanCharacteristic{
         uvSet(stepValue,0);
     }
 
-    homeSpan.configLog+="(" + uvPrint(value) + ")" + ":  IID=" + String(iid) + ", UUID=" + String(type);
+    boolean isCustom=strchr(type,'-');
+
+    homeSpan.configLog+="(" + uvPrint(value) + ")" + ":  IID=" + String(iid) + ", UUID=\"" + String(type) + "\"";
     if(format!=FORMAT::STRING && format!=FORMAT::BOOL)
-      homeSpan.configLog+= "  Range=[" + String(uvPrint(minValue)) + "," + String(uvPrint(maxValue)) + "]";
+      homeSpan.configLog+= ", Range=[" + String(uvPrint(minValue)) + "," + String(uvPrint(maxValue)) + "]";
 
     if(nvsFlag==2)
       homeSpan.configLog+=" (restored)";
     else if(nvsFlag==1)
       homeSpan.configLog+=" (storing)";
-  
-    boolean valid=false;
+
+    boolean valid=isCustom;
   
     for(int i=0; !valid && i<homeSpan.Accessories.back()->Services.back()->req.size(); i++)
       valid=!strcmp(type,homeSpan.Accessories.back()->Services.back()->req[i]->type);
