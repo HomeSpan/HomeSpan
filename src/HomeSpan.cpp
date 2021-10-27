@@ -157,6 +157,8 @@ void Span::poll() {
       homeSpan.Accessories.back()->validate();    
     }
 
+    checkRanges();
+
     if(nWarnings>0){
       configLog+="\n*** CAUTION: There " + String((nWarnings>1?"are ":"is ")) + String(nWarnings) + " WARNING" + (nWarnings>1?"S":"") + " associated with this configuration that may lead to the device becoming non-responsive, or operating in an unexpected manner. ***\n";
     }
@@ -1348,6 +1350,37 @@ int Span::sprintfAttributes(char **ids, int numIDs, int flags, char *cBuf){
 }
 
 ///////////////////////////////
+
+void Span::checkRanges(){
+
+  boolean okay=true;
+  homeSpan.configLog+="\nRange Check:";
+  
+  for(int i=0;i<Accessories.size();i++){
+    for(int j=0;j<Accessories[i]->Services.size();j++){
+      for(int k=0;k<Accessories[i]->Services[j]->Characteristics.size();k++){
+        SpanCharacteristic *chr=Accessories[i]->Services[j]->Characteristics[k];
+
+        if(chr->format!=STRING && (chr->uvGet<double>(chr->value) < chr->uvGet<double>(chr->minValue) || chr->uvGet<double>(chr->value) > chr->uvGet<double>(chr->maxValue))){
+          char c[256];
+          sprintf(c,"\n  \u2718 Characteristic %s with AID=%d, IID=%d: Initial value of %lg is out of range [%llg,%llg]",
+                chr->hapName,chr->aid,chr->iid,chr->uvGet<double>(chr->value),chr->uvGet<double>(chr->minValue),chr->uvGet<double>(chr->maxValue));
+          if(okay)
+            homeSpan.configLog+="\n";
+          homeSpan.configLog+=c;
+          homeSpan.nWarnings++;
+          okay=false;
+        }       
+      }
+    }
+  }
+
+  if(okay)
+    homeSpan.configLog+=" No Warnings";
+  homeSpan.configLog+="\n\n";
+}
+
+///////////////////////////////
 //      SpanAccessory        //
 ///////////////////////////////
 
@@ -1411,18 +1444,6 @@ void SpanAccessory::validate(){
       foundProtocol=true;
     else if(aid==1)                             // this is an Accessory with aid=1, but it has more than just AccessoryInfo and HAPProtocolInformation.  So...
       homeSpan.isBridge=false;                  // ...this is not a bridge device
-
-    for(int j=0;j<Services[i]->Characteristics.size();j++){       // check that initial values are all in range of mix/max (which may have been modified by setRange)
-      SpanCharacteristic *chr=Services[i]->Characteristics[j];
-
-      if(chr->format!=STRING && (chr->uvGet<double>(chr->value) < chr->uvGet<double>(chr->minValue) || chr->uvGet<double>(chr->value) > chr->uvGet<double>(chr->maxValue))){
-        char c[256];
-        sprintf(c,"      \u2718 Characteristic %s with IID=%d  *** WARNING: Initial value of %lg is out of range [%llg,%llg]. ***\n",
-               chr->hapName,chr->iid,chr->uvGet<double>(chr->value),chr->uvGet<double>(chr->minValue),chr->uvGet<double>(chr->maxValue));
-        homeSpan.configLog+=c;
-        homeSpan.nWarnings++;
-      }       
-    }
   }
 
   if(!foundInfo){

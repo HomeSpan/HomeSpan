@@ -156,6 +156,7 @@ struct Span{
   void checkConnect();                          // check WiFi connection; connect if needed
   void commandMode();                           // allows user to control and reset HomeSpan settings with the control button
   void processSerialCommand(const char *c);     // process command 'c' (typically from readSerial, though can be called with any 'c')
+  void checkRanges();                           // checks values of all Characteristics to ensure they are each within range
 
   int sprintfAttributes(char *cBuf);            // prints Attributes JSON database into buf, unless buf=NULL; return number of characters printed, excluding null terminator, even if buf=NULL
   void prettyPrint(char *buf, int nsp=2);       // print arbitrary JSON from buf to serial monitor, formatted with indentions of 'nsp' spaces
