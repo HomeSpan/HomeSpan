@@ -329,7 +329,6 @@ namespace Service {
   struct Television : SpanService { Television() : SpanService{"D8","Television"}{
       REQ(Active);
       OPT(ConfiguredName);
-      OPT(ConfiguredNameStatic);
       OPT(ActiveIdentifier);
       OPT(RemoteKey);
       OPT(PowerModeSelection);      

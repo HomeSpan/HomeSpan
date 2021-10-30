@@ -442,9 +442,12 @@ struct SpanCharacteristic{
         uvSet(stepValue,0);
     }
 
-    boolean isCustom=strchr(type,'-');
+    int x=0;
+    sscanf(type,"%*8[0-9a-fA-F]-%*4[0-9a-fA-F]-%*4[0-9a-fA-F]-%*4[0-9a-fA-F]-%*12[0-9a-fA-F]%n",&x);
+    
+    boolean isCustom=(strlen(type)==36 && x==36);
 
-    homeSpan.configLog+="(" + uvPrint(value) + ")" + ":  IID=" + String(iid) + ", UUID=\"" + String(type) + "\"";
+    homeSpan.configLog+="(" + uvPrint(value) + ")" + ":  IID=" + String(iid) + ", " + (isCustom?"Custom-":"") + "UUID=\"" + String(type) + "\"";
     if(format!=FORMAT::STRING && format!=FORMAT::BOOL)
       homeSpan.configLog+= ", Range=[" + String(uvPrint(minValue)) + "," + String(uvPrint(maxValue)) + "]";
 
@@ -462,8 +465,8 @@ struct SpanCharacteristic{
       valid=!strcmp(type,homeSpan.Accessories.back()->Services.back()->opt[i]->type);
   
     if(!valid){
-      homeSpan.configLog+=" *** ERROR!  Service does not support this Characteristic. ***";
-      homeSpan.nFatalErrors++;
+      homeSpan.configLog+=" *** WARNING!  Service does not support this Characteristic. ***";
+      homeSpan.nWarnings++;
     }
   
     boolean repeated=false;

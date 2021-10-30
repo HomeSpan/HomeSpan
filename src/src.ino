@@ -4,7 +4,7 @@
 
 #include "HomeSpan.h"
 
-CUSTOM_CHAR(CustomActive, AB-123-B0, PW+PR+EV, UINT8, 0, 0, 1, false);
+CUSTOM_CHAR(CustomActive, E863F10A-079E-48FF-8F27-9C2605A29F52, PR+EV, UINT16, 0, 0, 4800, false);
 
 void setup() {
  
@@ -45,19 +45,18 @@ void setup() {
 
     new Service::LightBulb();
       new Characteristic::On(0);
-      SpanCharacteristic *active = new Characteristic::CustomActive();
+      new Characteristic::CustomActive(1200);
       new Characteristic::Brightness(50);
       new Characteristic::Name("Light 1");
       new Characteristic::ColorTemperature();
       new Characteristic::Active();
     new Service::LightBulb();
       new Characteristic::On(0,true);
-      (new Characteristic::Brightness(50,true))->setRange(10,100,5);
+      (new Characteristic::Brightness(50,false))->setRange(10,100,5);
       new Characteristic::Name("Light 2");
 
   new SpanAccessory();                                  // Begin by creating a new Accessory using SpanAccessory(), which takes no arguments
 
-//      active->setRange(0,10,3);
     new Service::AccessoryInformation();                    // HAP requires every Accessory to implement an AccessoryInformation Service, which has 6 required Characteristics
       new Characteristic::Name("HomeSpan Test");                // Name of the Accessory, which shows up on the HomeKit "tiles", and should be unique across Accessories                                                            
       new Characteristic::Manufacturer("HomeSpan");             // Manufacturer of the Accessory (arbitrary text string, and can be the same for every Accessory)
@@ -73,6 +72,8 @@ void setup() {
       new Characteristic::On(0,true);
       (new Characteristic::Brightness(50,true))->setRange(10,100,5);
       new Characteristic::Name("Light 3");
+      new Characteristic::TargetPosition();
+      new Characteristic::OzoneDensity();
 
 } // end of setup()
 
