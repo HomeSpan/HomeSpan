@@ -266,7 +266,7 @@ To invoke this command from the CLI, preface the single-letter name *c* with '@'
 
 To create more than one user-defined command, simply create multiple instances of SpanUserCommand, each with its own single-letter name.  Note that re-using the same single-letter name in an instance of SpanUserCommand over-rides any previous instances using that same letter.
 
-## *#define REQUIRED VERSION(major,minor,patch)*
+### *#define REQUIRED VERSION(major,minor,patch)*
 
 If REQUIRED is defined in the main sketch prior to including the HomeSpan library with `#include "HomeSpan.h"`, HomeSpan will throw a compile-time error unless the version of the library included is equal to, or later than, the version specified using the VERSION macro.  Example:
 
