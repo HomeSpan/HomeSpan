@@ -121,7 +121,7 @@ Details of each function are as follows:
 
 * `void enableCarrier(uint32_t freq, float duty=0.5)`
 
-  * enables the overlay of a "square" carrier wave on the pulse train.  In practice this is only used for IR signals (not RF)
+  * enables modulation of the pulse train with a "square" carrier wave.  In practice this is only used for IR signals (not RF)
   
     * *freq* - the frequency, in Hz, of the carrier wave.  If freq=0, carrier wave is disabled
     
