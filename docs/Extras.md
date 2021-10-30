@@ -80,11 +80,11 @@ The ESP32 has an on-chip signal-generator peripheral designed to drive an RF or 
 
 `#include "extras/RFControl.h"`
 
-### *RFControl(int pin)*
+### *RFControl(int pin, boolean refClock=true)*
 
-Creating an instance of this **class** initializes the RF/IR signal generator and specifies the ESP32 *pin* to output the signal.  You may create more than one instance of this class if driving more than one RF/IR transmitter (each connected to different *pin*), subject to the following limitations:  ESP32 - 8 instances; ESP32-S2 - 4 instances; ESP32-C3 - 2 instances.
+Creating an instance of this **class** initializes the RF/IR signal generator and specifies the ESP32 *pin* to output the signal.  You may create more than one instance of this class if driving more than one RF/IR transmitter (each connected to different *pin*), subject to the following limitations:  ESP32 - 8 instances; ESP32-S2 - 4 instances; ESP32-C3 - 2 instances.  The optional parameter *refClock* is more fully described further below under the `start()` method.
 
-Signals are defined as a sequence of HIGH and LOW phases that together form a pulse train where you specify the duration, in *ticks*, of each HIGH and LOW phase, shown respectively as H1-H4 and L1-L4 in the diagram below.
+Signals are defined as a sequence of HIGH and LOW phases that together form a pulse train where you specify the duration, in *ticks*, of each HIGH and LOW phase, shown respectively as H1-H4 and L1-L4 in the following diagram:  
 
 ![Pulse Train](images/pulseTrain.png)
 
@@ -105,19 +105,33 @@ Details of each function are as follows:
 
   * clears the pulse train memory structure of a specific instance of RFControl
 
-* `void phase(uint16_t numTicks, uint8_t phase)`
+* `void phase(uint32_t numTicks, uint8_t phase)`
 
   * appends either a HIGH or LOW phase to the pulse train memory buffer for a specific instance of RFControl
 
-    * *numTicks* - the duration, in *ticks* of the pulse phase.  Allowable range is 0-32767 ticks.  Requests to add a pulse with *numTicks* outside this range are ignored, but raise non-fatal warning message
+    * *numTicks* - the duration, in *ticks* of the pulse phase.  Durations of greater than 32767 ticks allowed (the system automatically creates repeated pulses of a maximum of 32767 ticks each until the specified duration of *numTicks* is reached)
     
     * *phase* - set to 0 to create a LOW phase; set to 1 (or any non-zero number) to create a HIGH phase
     
   * repeated phases of the same type (e.g. HIGH followed by another HIGH) are permitted and result in a single HIGH or LOW phase with a duration equal to the sum of the *numTicks* specified for each repeated phase (this is helpful when generating Manchester-encoded signals)
 
-* `void add(uint16_t onTime, uint16_t offTime)`
+* `void add(uint32_t onTime, uint32_t offTime)`
 
-  * appends a single HIGH/LOW pulse with duration *onTime* followed by *offTime* to the pulse train of a specific instance of RFControl.  This is functionally equivalent to calling `phase(onTime,HIGH);` followed by `phase(offTime,LOW);` as defined above      
+  * appends a single HIGH/LOW pulse with duration *onTime* followed by *offTime* to the pulse train of a specific instance of RFControl.  This is functionally equivalent to calling `phase(onTime,HIGH);` followed by `phase(offTime,LOW);` as defined above
+
+* `void enableCarrier(uint32_t freq, float duty=0.5)`
+
+  * enables the overlay of a "square" carrier wave on the pulse train.  In practice this is only used for IR signals (not RF)
+  
+    * *freq* - the frequency, in Hz, of the carrier wave.  If freq=0, carrier wave is disabled
+    
+    * *duty* - the duty cycle of the carrier wave, from 0-1.  Default is 0.5 if not specified
+
+  * RFControl will report an error if the combination of the specified frequency and duty cycle is outside the range of supported configurations
+
+* `void disableCarrier()`
+
+  * disables the carrier wave.  Equivalent to `enableCarrier(0);`
 
 * `void start(uint8_t _numCycles, uint8_t tickTime)`
 * `void start(uint32_t *data, int nData, uint8_t nCycles, uint8_t tickTime)`
@@ -126,7 +140,7 @@ Details of each function are as follows:
  
    * *numCycles* - the total number of times to transmit the pulse train (i.e. a value of 3 means the pulse train will be transmitted once, followed by 2 additional re-transmissions).  This is an optional argument with a default of 1 if not specified.
    
-   * *tickTime* - the duration, in **microseconds**, of a *tick*.  This is an optional argument with a default of 1𝛍s if not specified.  Valid range is 1-255𝛍s, or set to 0 for 256𝛍s
+   * *tickTime* - the duration, in ***clock units***, of a *tick*.  This is an optional argument with a default of 1 *clock unit* if not specified.  Valid range is 1-255 *clock units*, or set to 0 for 256 *clock units*.  The duration of a *clock unit* is determined by the *refClock* parameter (the second, optional argument, in the RFControl constructor described above).  If *refClock* is set to true (the default), RFControl uses the ESP32's 1 MHz Reference Clock for timing so that each *clock unit* equals 1𝛍s.  If *refClock* is set to false, RFControl uses the ESP32's faster 80 MHz APB Clock so that each *clock unit* equals 0.0125𝛍s (1/80 of microsecond) 
    
 * To aid in the creation of a pulse train stored in an external array of 32-bit words, RFControl includes the macro *RF_PULSE(highTicks,lowTicks)* that returns a properly-formatted 32-bit value representing a single HIGH/LOW pulse of duration *highTicks* followed by *lowTicks*.  This is basically an analog to the `add()` function.  For example, the following code snippet shows two ways of creating and transmitting the same 3-pulse pulse-train --- the only difference being that one uses the internal memory structure of RFControl, and the second uses an external array:
 
