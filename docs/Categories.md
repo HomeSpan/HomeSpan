@@ -35,6 +35,7 @@ The table below provides a list of all HomeSpan Categories.
 * VideoDoorbells
 * Windows
 * WindowCoverings
+* Television
 
 Note that the HomeKit primarily uses the Accessory Category of a device for determining the icon to show in the Home App when a device is being paired.  Apart from this purely cosmetic function, the Category assigned to a device does not in any way limit which Services or Characteristics can be implemented on that device.
 
