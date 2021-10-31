@@ -202,7 +202,7 @@ namespace Service {
   struct InputSource : SpanService { InputSource() : SpanService{"D9","InputSource"}{
       OPT(ConfiguredName);
       OPT(IsConfigured);
-      OPT(Identifier);
+      REQ(Identifier);
       OPT(CurrentVisibilityState);
       OPT(TargetVisibilityState);
   }};
