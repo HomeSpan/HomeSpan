@@ -32,9 +32,9 @@
   * *sketch* - the version number of the sketch, as specified with `homeSpan.setSketchVersion(const char *)`, or *n/a* if no version was specified
   * *ota* - either *yes* or *no* depending on whether OTA was enabled for the sketch using the method `homeSpan.enableOTA()` 
 
-#### Where are the Television Services?
+#### Does HomeSpan support Television Services?
 
-* Though HomeKit now supports Television controls, at the time of this posting Apple has not publicly released any specifications, SDKs, or ADKs, related to HAP Television Services or any HAP Television Characteristics.  It appears that for now these Services are meant only for commercial use.  Support for HAP Television Services and Characteristics will be added to HomeSpan as soon as Apple makes the specifications publicly available in some form or another.
+* Yes.  Though undocumented by Apple and not officially part of HAP-R2, HomeSpan supports HomeKit Television controls.  See [Television Services](../TVServices.md) for details.
 
 #### Can you use HomeSpan with an Ethernet connection instead of a WiFi connection?
 
