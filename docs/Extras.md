@@ -160,7 +160,7 @@ rf.start(pulseTrain,3,4,1000);  // start transmission using the same parameters
 
 ### Example RFControl Sketch
 
-Below is a complete sketch that produces two different pulse trains with the signal output linked to the ESP32 device's built-in LED (rather than an RF or IR transmitter).  For illustrative purposes the tick duration has been set to a very long 100𝛍s, and pulse times range from of 1000-10,000 ticks, so that the individual pulses are easily discernable on the LED.  Note this example sketch is also available in the Arduino IDE under [*File → Examples → HomeSpan → Other Examples → RemoteControl*](https://github.com/HomeSpan/HomeSpan/tree/master/Other%20Examples/RemoteControl).
+Below is a complete sketch that produces two different pulse trains with the signal output linked to the ESP32 device's built-in LED (rather than an RF or IR transmitter).  For illustrative purposes the tick duration has been set to a very long 100𝛍s, and pulse times range from of 1000-10,000 ticks, so that the individual pulses are easily discernable on the LED.  Note this example sketch is also available in the Arduino IDE under [*File → Examples → HomeSpan → Other Examples → RemoteControl*](../Other%20Examples/RemoteControl).
 
 ```C++
 /* HomeSpan Remote Control Example */
