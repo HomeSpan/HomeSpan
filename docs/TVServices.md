@@ -36,8 +36,11 @@ More advanced control of a TV can enabled with two other optional Characteristic
   
 * `Characteristic::PowerModeSelection()` - this write-only Characteristic causes the text "View TV Settings" to appear in the Home App under the Settings page for a TV Accessory.  When this text is pressed, the Home App sends an update with value=0 to `Characteristic::PowerModeSelection()` that can be read by HomeSpan using the usual `update()` method
 
+* `Characteristic::ActiveIdentifier()` - this numerical Characteristic is used to control the input source for the TV (e.g. HDMI-1, HDMI-2, Netflix, etc.).  It is only used when input sources are defined and linked using `Service::InputSource()` (see below), in which case it is a *required* Characteristic
 
+### `Service::InputSource()`
 
+Use `Service::InputSource()` to create a new input source selection for the TV, such as HDMI-1, HDMI-2, Netflix, etc.  The use of `Service::InputSource()` is optional - it is perfectly okay to create a Television Service without the ability to select different Input Sources.  However, if used, each Input Source Service added should be defined in the *same* Accessory as the Television Service to which it applies, and ***must*** be linked to that Television Service using `addLink()`.  The Home App behaves unexpectedly if it finds any Input Source Services that are not linked to a Television Service.  `Service::InputSource()` support the following Characteristics:
 
 
 
