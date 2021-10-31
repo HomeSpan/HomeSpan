@@ -10,7 +10,7 @@ Use `Category::Television` as the category in `homeSpan.begin()` to specify a Te
 
 Use `Service::Television()` as the Service to create a Television Accessory Tile.  It support two primary Characteristics:
 
-* `Characteristic::Active()` - this is the standard HomeKit Active Characteristic used to turn the TV on or off.  It is a required Characteristic
+* `Characteristic::Active()` - this HAP-R2 standard Characteristic it used to turn the TV on or off.  It is a required Characteristic
 
 * `Characteristic::ConfiguredName()` - this is an optional, TV-specific version of `Characteristic::Name()` that seems to be the only way to set the default name of the TV.  Unlike all other HomeKit Services, the Home App ignores any names specified with `Characeteristic::Name()` when used with `Service::Television()`
 
@@ -23,9 +23,18 @@ new Service::Television();
 ```
 More advanced control of a TV can enabled with two other optional Characteristics:
 
-* `Characteristic::RemoteKey()` - this write-only numerical Characteristic enables HomeSpan to read button presses from the Remote Control widget on an iPhone.  This widget is normally used to control Apple TVs, but it seems any Television Accessory created per above can be selected from the widget.  The layout of the widget (which cannot be modified) includes 4 arrows, a central select button, a play/pause button, a large "back" button, and an "info" button.  When a key is pressed, the Home App will send an update to `Characteristic::Remote()` that can be read by HomeSpan using the usual `update()` method.  Values are as follows: up=4, down=5, left=6, right=7, select=8, back=9, play/pause=11, and info=15
-
-* `Characteristic::PowerModeSelection()` - this write-only Characteristic activates an option in the Home App under the Settings page for a TV Accessory named 
+* `Characteristic::RemoteKey()` - this write-only numerical Characteristic enables HomeSpan to read button presses from the Remote Control widget on an iPhone that can be found under the Control Center.  This widget is normally used to control Apple TVs, but it seems any Television Accessory created per above can also be operated from the Remote Control widget.  The layout of the widget (which cannot be modified) includes 4 arrows, a central select button, a play/pause button, a large "back" button, and an "info" button.  When a "key" is pressed, the Home App sends an update to `Characteristic::RemoteKey()` that can be read by HomeSpan using the usual `update()` method.  Values are as follows:
+  
+  * 4 = up arrow  
+  * 5 = down arrow
+  * 6 = left arrow
+  * 7 = right arrow
+  * 8 = center select button
+  * 9 = back button
+  * 11 = play/pause button
+  * 15 = info button
+  
+* `Characteristic::PowerModeSelection()` - this write-only Characteristic causes the text "View TV Settings" to appear in the Home App under the Settings page for a TV Accessory.  When this text is pressed, the Home App sends an update with value=0 to `Characteristic::PowerModeSelection()` that can be read by HomeSpan using the usual `update()` method
 
 
 
