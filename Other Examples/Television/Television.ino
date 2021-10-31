@@ -50,17 +50,79 @@
 
 // NOTE: This example is only designed to demonstrate how Television Services and Characteristics
 // appear in the Home App, and what they each control.  To keep things simple, actions for the
-// Characteristics have NOT been implemented in the code below.  For example, the code below does not include
+// Input Sources have NOT been implemented in the code below.  For example, the code below does not include
 // any logic to update CurrentVisibilityState when the TargetVisibilityState checkboxes are clicked.
 
 #include "HomeSpan.h"
 
+struct HomeSpanTV : Service::Television {
+
+    SpanCharacteristic *active = new Characteristic::Active(0);                     // TV On/Off (set to Off at start-up)
+    SpanCharacteristic *activeID = new Characteristic::ActiveIdentifier(3);         // Sets HDMI 3 on start-up
+    SpanCharacteristic *remoteKey = new Characteristic::RemoteKey();                // Used to receive button presses from the Remote Control widget
+    SpanCharacteristic *settingsKey = new Characteristic::PowerModeSelection();     // Adds "View TV Setting" option to Selection Screen  
+
+    HomeSpanTV(const char *name) : Service::Television() {
+      new Characteristic::ConfiguredName(name);             // Name of TV
+      Serial.printf("Configured TV: %s\n",name);
+    }
+
+    boolean update() override {
+
+      if(active->updated()){
+        Serial.printf("Set TV Power to: %s\n",active->getNewVal()?"ON":"OFF");
+      }
+
+      if(activeID->updated()){
+        Serial.printf("Set Input Source to HDMI-%d\n",activeID->getNewVal());        
+      }
+
+      if(settingsKey->updated()){
+        Serial.printf("Received request to \"View TV Settings\"\n");
+      }
+      
+      if(remoteKey->updated()){
+        Serial.printf("Remote Control key pressed: ");
+        switch(remoteKey->getNewVal()){
+          case 4:
+            Serial.printf("UP ARROW\n");
+            break;
+          case 5:
+            Serial.printf("DOWN ARROW\n");
+            break;
+          case 6:
+            Serial.printf("LEFT ARROW\n");
+            break;
+          case 7:
+            Serial.printf("RIGHT ARROW\n");
+            break;
+          case 8:
+            Serial.printf("SELECT\n");
+            break;
+          case 9:
+            Serial.printf("BACK\n");
+            break;
+          case 11:
+            Serial.printf("PLAY/PAUSE\n");
+            break;
+          case 15:
+            Serial.printf("INFO\n");
+            break;
+          default:
+            Serial.print("UNKNOWN KEY\n");
+        }
+      }
+
+      return(true);
+    }
+};
+
+///////////////////////////////
+
 void setup() {
   
   Serial.begin(115200);
-
-  homeSpan.setLogLevel(2);        // allows you to see HAP transmissions that occur as various Television buttons are pressed in Home App
-  
+ 
   homeSpan.begin(Category::Television,"HomeSpan Television");
 
   new SpanAccessory();
@@ -137,7 +199,7 @@ void setup() {
     new Characteristic::CurrentVisibilityState(0);    // ...and included in the Selection List...
     new Characteristic::TargetVisibilityState(0);     // ...and a "checked" checkbox is provided on the Settings Screen that can be used to toggle CurrentVisibilityState()
 
-  (new Service::Television())                         // Define a Television Service.  Must link in InputSources!
+  (new HomeSpanTV("Test TV"))                         // Define a Television Service.  Must link in InputSources!
     ->addLink(hdmi1)
     ->addLink(hdmi2)
     ->addLink(hdmi3)
@@ -149,13 +211,10 @@ void setup() {
     ->addLink(hdmi9)
     ->addLink(hdmi10)
     ;
-    new Characteristic::Active(0);                  // TV On/Off (set to Off at start-up)
-    new Characteristic::ConfiguredName("Test TV");  // Name of TV
-    new Characteristic::ActiveIdentifier(3);        // Sets HDMI 3 on start-up
-    new Characteristic::RemoteKey();                // Used to receive button presses from the Remote Control widget
-    new Characteristic::PowerModeSelection();       // Adds "" option to Selection Screen
-       
+      
 }
+
+///////////////////////////////
 
 void loop() {
   homeSpan.poll();
