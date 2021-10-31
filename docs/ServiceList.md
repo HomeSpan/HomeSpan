@@ -56,6 +56,7 @@ Additionally, when first starting up, HomeSpan begins by validating the device's
 | Speaker | Mute | Name<br>Volume |
 | StatelessProgrammableSwitch | ProgrammableSwitchEvent | Name<br>ServiceLabelIndex |
 | Switch | On | Name |
+| Television | Active | ConfiguredName<br>ActiveIdentifier<br>RemoteKey<br>PowerModeSelection | 
 | TemperatureSensor | CurrentTemperature | Name<br>StatusActive<br>StatusFault<br>StatusTampered<br>StatusLowBattery |
 | Thermostat | CurrentHeatingCoolingState<br>TargetHeatingCoolingState<br>CurrentTemperature<br>TargetTemperature<br>TemperatureDisplayUnits | CoolingThresholdTemperature<br>CurrentRelativeHumidity<br>HeatingThresholdTemperature<br>Name<br>TargetRelativeHumidity | 
 | Valve | Active<br>InUse<br>ValveType | SetDuration<br>RemainingDuration<br>IsConfigured<br>ServiceLabelIndex<br>StatusFault<br>Name |
