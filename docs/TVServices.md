@@ -11,6 +11,7 @@ Use `Category::Television` as the category in `homeSpan.begin()` to specify a Te
 Use `Service::Television()` as the Service to create a Television Accessory Tile.  It support two primary Characteristics:
 
 * `Characteristic::Active()` - this is the standard HomeKit Active Characteristic used to turn the TV on or off.  It is a required Characteristic
+
 * `Characteristic::ConfiguredName()` - this is an optional, TV-specific version of `Characteristic::Name()` that seems to be the only way to set the default name of the TV.  Unlike all other HomeKit Services, the Home App ignores any names specified with `Characeteristic::Name()` when used with `Service::Television()`
 
 Based on the above, the following code snippet defines a simple TV Accessory with a basic on/off switch:
@@ -18,8 +19,15 @@ Based on the above, the following code snippet defines a simple TV Accessory wit
 ```C++
 new Service::Television();
   new Characteristic::Active(0);                    // set power to OFF at start-up
-  new Characteristic::ConfiguredName("My TV");      // optional Characteristic to set name of TV
+  new Characteristic::ConfiguredName("Sony TV");    // optional Characteristic to set name of TV
 ```
+More advanced control of a TV can enabled with two other optional Characteristics:
+
+* `Characteristic::RemoteKey()` - this write-only numerical Characteristic enables HomeSpan to read button presses from the Remote Control widget on an iPhone.  This widget is normally used to control Apple TVs, but it seems any Television Accessory created per above can be selected from the widget.  The layout of the widget (which cannot be modified) includes 4 arrows, a central select button, a play/pause button, a large "back" button, and an "info" button.  When a key is pressed, the Home App will send an update to `Characteristic::Remote()` that can be read by HomeSpan using the usual `update()` method.  Values are as follows: up=4, down=5, left=6, right=7, select=8, back=9, play/pause=11, and info=15
+
+* `Characteristic::PowerModeSelection()` - this write-only Characteristic activates an option in the Home App under the Settings page for a TV Accessory named 
+
+
 
 
 
