@@ -34,7 +34,7 @@
 
 #### Does HomeSpan support Television Services?
 
-* Yes.  Though undocumented by Apple and not officially part of HAP-R2, HomeSpan supports HomeKit Television controls.  See [Television Services](../TVServices.md) for details.
+* Yes.  Though undocumented by Apple and not officially part of HAP-R2, HomeSpan supports HomeKit Television controls.  See [Television Services](../docs/TVServices.md) for details.
 
 #### Can you use HomeSpan with an Ethernet connection instead of a WiFi connection?
 
