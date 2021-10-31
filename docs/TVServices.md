@@ -58,7 +58,9 @@ All of this is accomplished by using a combination of some, or all, of the follo
 
 ### Examples
 
-Please see [*File → Examples → HomeSpan → Other Examples → Television*](../Other%20Examples/Television) for a complete worked example demonstrating the effects of using different combinations of the above Characteristics 
+Please see [*File → Examples → HomeSpan → Other Examples → Television*](../Other%20Examples/Television) for a complete worked example demonstrating the effects of using different combinations of the above Characteristics.  Also, see the [HomeSpan Projects](https://github.com/topics/homespan) page for some real-world examples of Sony and Samsung TV sketches that use RFControl and an Infrared LED to control TV Power and Input Source from the Home App.
+
+
 
 
 
