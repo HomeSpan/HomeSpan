@@ -56,7 +56,9 @@ All of this is accomplished by using a combination of some, or all, of the follo
 
 * `Characteristic::CurrentVisibilityState()` and `Characteristic::TargetVisibilityState()` - these two Characteristics work in tandem much like any current-state/target-state pair.  When these are defined for an Input Source, a checkbox toggle appears next to the name of the Input Source on the Settings page, provided `Characteristic::IsConfigured()` has also been defined.  Clicking the checkbox causes the Home App to toggle the TargetVisibilityState between 0 to 1, where 0 ironically means the checkbox is *checked*, and 1 means it is *unchecked* (the reverse of what you might expect!).  If you read this update in HomeSpan you can then use `setVal()` to change the CurrentVisibiltyState() to match the TargetVisibilityState().  Setting CurrentVisibilityState() to 0 means the Input Source appears as a choice in the Input Source Selector.  Setting CurrentVisibilityState() to 1 means it does not appear as a selection.  Note these features only operate if an ID has been set for the Input Source with `Characteristic::Identifier()`, and IsConfigured() has been defined and set to 1.
 
+### Examples
 
+Please see [*File → Examples → HomeSpan → Other Examples → Television*](../Other%20Examples/Television) for a complete worked example demonstrating the effects of using different combinations of the above Characteristics 
 
 
 
