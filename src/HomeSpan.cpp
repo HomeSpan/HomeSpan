@@ -157,6 +157,8 @@ void Span::poll() {
       homeSpan.Accessories.back()->validate();    
     }
 
+    checkRanges();
+
     if(nWarnings>0){
       configLog+="\n*** CAUTION: There " + String((nWarnings>1?"are ":"is ")) + String(nWarnings) + " WARNING" + (nWarnings>1?"S":"") + " associated with this configuration that may lead to the device becoming non-responsive, or operating in an unexpected manner. ***\n";
     }
@@ -1137,7 +1139,7 @@ int Span::updateCharacteristics(char *buf, SpanBuf *pObj){
         pObj[nObj].iid=atoi(t3);
         okay|=2;
       } else 
-      if(!strcmp(t2,"value") && (t3=strtok_r(t1,"}[]:, \"\t\n\r",&p2))){
+      if(!strcmp(t2,"value") && (t3=strtok_r(t1,"}[]:,\"",&p2))){
         pObj[nObj].val=t3;
         okay|=4;
       } else 
@@ -1206,14 +1208,17 @@ int Span::updateCharacteristics(char *buf, SpanBuf *pObj){
           LOG1(" iid=");  
           LOG1(pObj[j].characteristic->iid);
           if(status==StatusCode::OK){                                                     // if status is okay
-            pObj[j].characteristic->value=pObj[j].characteristic->newValue;               // update characteristic value with new value
+            pObj[j].characteristic->uvSet(pObj[j].characteristic->value,pObj[j].characteristic->newValue);               // update characteristic value with new value
             if(pObj[j].characteristic->nvsKey){                                                                                               // if storage key found
-              nvs_set_blob(charNVS,pObj[j].characteristic->nvsKey,&(pObj[j].characteristic->value),sizeof(pObj[j].characteristic->value));    // store data
+              if(pObj[j].characteristic->format != FORMAT::STRING)
+                nvs_set_blob(charNVS,pObj[j].characteristic->nvsKey,&(pObj[j].characteristic->value),sizeof(pObj[j].characteristic->value));  // store data
+              else
+                nvs_set_str(charNVS,pObj[j].characteristic->nvsKey,pObj[j].characteristic->value.STRING);                                     // store data
               nvs_commit(charNVS);
             }
             LOG1(" (okay)\n");
           } else {                                                                        // if status not okay
-            pObj[j].characteristic->newValue=pObj[j].characteristic->value;               // replace characteristic new value with original value
+            pObj[j].characteristic->uvSet(pObj[j].characteristic->newValue,pObj[j].characteristic->value);                // replace characteristic new value with original value
             LOG1(" (failed)\n");
           }
           pObj[j].characteristic->isUpdated=false;             // reset isUpdated flag for characteristic
@@ -1345,6 +1350,37 @@ int Span::sprintfAttributes(char **ids, int numIDs, int flags, char *cBuf){
 }
 
 ///////////////////////////////
+
+void Span::checkRanges(){
+
+  boolean okay=true;
+  homeSpan.configLog+="\nRange Check:";
+  
+  for(int i=0;i<Accessories.size();i++){
+    for(int j=0;j<Accessories[i]->Services.size();j++){
+      for(int k=0;k<Accessories[i]->Services[j]->Characteristics.size();k++){
+        SpanCharacteristic *chr=Accessories[i]->Services[j]->Characteristics[k];
+
+        if(chr->format!=STRING && (chr->uvGet<double>(chr->value) < chr->uvGet<double>(chr->minValue) || chr->uvGet<double>(chr->value) > chr->uvGet<double>(chr->maxValue))){
+          char c[256];
+          sprintf(c,"\n  \u2718 Characteristic %s with AID=%d, IID=%d: Initial value of %lg is out of range [%llg,%llg]",
+                chr->hapName,chr->aid,chr->iid,chr->uvGet<double>(chr->value),chr->uvGet<double>(chr->minValue),chr->uvGet<double>(chr->maxValue));
+          if(okay)
+            homeSpan.configLog+="\n";
+          homeSpan.configLog+=c;
+          homeSpan.nWarnings++;
+          okay=false;
+        }       
+      }
+    }
+  }
+
+  if(okay)
+    homeSpan.configLog+=" No Warnings";
+  homeSpan.configLog+="\n\n";
+}
+
+///////////////////////////////
 //      SpanAccessory        //
 ///////////////////////////////
 
@@ -1408,18 +1444,6 @@ void SpanAccessory::validate(){
       foundProtocol=true;
     else if(aid==1)                             // this is an Accessory with aid=1, but it has more than just AccessoryInfo and HAPProtocolInformation.  So...
       homeSpan.isBridge=false;                  // ...this is not a bridge device
-
-    for(int j=0;j<Services[i]->Characteristics.size();j++){       // check that initial values are all in range of mix/max (which may have been modified by setRange)
-      SpanCharacteristic *chr=Services[i]->Characteristics[j];
-
-      if(chr->format!=STRING && (chr->uvGet<double>(chr->value) < chr->uvGet<double>(chr->minValue) || chr->uvGet<double>(chr->value) > chr->uvGet<double>(chr->maxValue))){
-        char c[256];
-        sprintf(c,"      \u2718 Characteristic %s with IID=%d  *** WARNING: Initial value of %lg is out of range [%llg,%llg]. ***\n",
-               chr->hapName,chr->iid,chr->uvGet<double>(chr->value),chr->uvGet<double>(chr->minValue),chr->uvGet<double>(chr->maxValue));
-        homeSpan.configLog+=c;
-        homeSpan.nWarnings++;
-      }       
-    }
   }
 
   if(!foundInfo){
@@ -1476,7 +1500,7 @@ SpanService::SpanService(const char *type, const char *hapName){
   homeSpan.Accessories.back()->Services.push_back(this);  
   iid=++(homeSpan.Accessories.back()->iidCount);  
 
-  homeSpan.configLog+=":  IID=" + String(iid) + ", UUID=0x" + String(type);
+  homeSpan.configLog+=":  IID=" + String(iid) + ", UUID=\"" + String(type) + "\"";
 
   if(!strcmp(this->type,"3E") && iid!=1){
     homeSpan.configLog+=" *** ERROR!  The AccessoryInformation Service must be defined before any other Services in an Accessory. ***";
@@ -1725,6 +1749,10 @@ StatusCode SpanCharacteristic::loadUpdate(char *val, char *ev){
     case FLOAT:
       if(!sscanf(val,"%lg",&newValue.FLOAT))
         return(StatusCode::InvalidValue);
+      break;
+
+    case STRING:
+      uvSet(newValue,(const char *)val);
       break;
 
     default:

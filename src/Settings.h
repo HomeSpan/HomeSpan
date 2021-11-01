@@ -36,7 +36,7 @@
 
 #define     HS_MAJOR  1
 #define     HS_MINOR  4
-#define     HS_PATCH  0
+#define     HS_PATCH  1
 
 #define     STRINGIFY(x) _STR(x)
 #define     _STR(x) #x
@@ -130,5 +130,6 @@ enum class Category {
   Dehumidifiers=23,
   Sprinklers=28,
   Faucets=29,
-  ShowerSystems=30
+  ShowerSystems=30,
+  Television=31
 };

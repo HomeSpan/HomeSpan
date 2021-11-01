@@ -97,12 +97,12 @@ PushButton::PushButton(int pin){
 
 void PushButton::init(int pin){
 
+  this->pin=pin;
   if(pin<0)
     return;
-    
+
   status=0;
   doubleCheck=false;
-  this->pin=pin;
   pinMode(pin, INPUT_PULLUP);
 }
 

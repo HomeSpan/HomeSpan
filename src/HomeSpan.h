@@ -156,6 +156,7 @@ struct Span{
   void checkConnect();                          // check WiFi connection; connect if needed
   void commandMode();                           // allows user to control and reset HomeSpan settings with the control button
   void processSerialCommand(const char *c);     // process command 'c' (typically from readSerial, though can be called with any 'c')
+  void checkRanges();                           // checks values of all Characteristics to ensure they are each within range
 
   int sprintfAttributes(char *cBuf);            // prints Attributes JSON database into buf, unless buf=NULL; return number of characters printed, excluding null terminator, even if buf=NULL
   void prettyPrint(char *buf, int nsp=2);       // print arbitrary JSON from buf to serial monitor, formatted with indentions of 'nsp' spaces
@@ -239,14 +240,14 @@ struct SpanCharacteristic{
 
 
   union UVal {                                  
-    boolean BOOL;
-    uint8_t UINT8;
-    uint16_t UINT16;
-    uint32_t UINT32;
-    uint64_t UINT64;
-    int32_t INT;
-    double FLOAT;
-    const char *STRING;
+    BOOL_t BOOL;
+    UINT8_t UINT8;
+    UINT16_t UINT16;
+    UINT32_t UINT32;
+    UINT64_t UINT64;
+    INT_t INT;
+    FLOAT_t FLOAT;
+    STRING_t STRING = NULL;
   };
 
   int iid=0;                               // Instance ID (HAP Table 6-3)
@@ -307,8 +308,16 @@ struct SpanCharacteristic{
     return(String());       // included to prevent compiler warnings
   }
 
-  void uvSet(UVal &u, const char *val){  
-    u.STRING=val;
+  void uvSet(UVal &dest, UVal &src){
+    if(format==FORMAT::STRING)
+      uvSet(dest,(const char *)src.STRING);
+    else
+      dest=src;
+  }
+
+  void uvSet(UVal &u, const char *val){
+    u.STRING = (char *)realloc(u.STRING, strlen(val) + 1);
+    strcpy(u.STRING, val);
   }
 
   template <typename T> void uvSet(UVal &u, T val){  
@@ -354,9 +363,6 @@ struct SpanCharacteristic{
         return((T) u.UINT64);        
       case FORMAT::FLOAT:
         return((T) u.FLOAT);        
-      case FORMAT::STRING:
-        Serial.print("\n*** WARNING:  Can't use getVal() or getNewVal() with string Characteristics.\n\n");
-        return(0);
     }
     return(0);       // included to prevent compiler warnings  
   }
@@ -364,7 +370,7 @@ struct SpanCharacteristic{
   template <typename A, typename B, typename S=int> SpanCharacteristic *setRange(A min, B max, S step=0){
 
     char c[256];
-    homeSpan.configLog+=String("         \u2b0c Set Range for ") + String(hapName) + " with IID=" + String(iid);
+    homeSpan.configLog+=String("         \u2b0c Set Range for ") + String(hapName) + " with AID=" + String(aid) + ", IID=" + String(iid);
 
     if(customRange){
       sprintf(c,"  *** ERROR!  Range already set for this Characteristic! ***\n");
@@ -394,42 +400,63 @@ struct SpanCharacteristic{
   template <typename T, typename A=boolean, typename B=boolean> void init(T val, boolean nvsStore, A min=0, B max=1){
 
     int nvsFlag=0;
-
     uvSet(value,val);
-    uvSet(newValue,val);
-    uvSet(minValue,min);
-    uvSet(maxValue,max);
-    uvSet(stepValue,0);
 
     if(nvsStore){
       nvsKey=(char *)malloc(16);
       uint16_t t;
       sscanf(type,"%x",&t);
       sprintf(nvsKey,"%04X%08X%03X",t,aid,iid&0xFFF);
-      size_t len;
-    
-      if(!nvs_get_blob(homeSpan.charNVS,nvsKey,NULL,&len)){
-        nvs_get_blob(homeSpan.charNVS,nvsKey,&value,&len);
-        newValue=value;
-        nvsFlag=2;
-      }
-      else {
-        nvs_set_blob(homeSpan.charNVS,nvsKey,&value,sizeof(UVal));       // store data
-        nvs_commit(homeSpan.charNVS);                                    // commit to NVS  
-        nvsFlag=1;
+      size_t len;    
+
+      if(format != FORMAT::STRING){
+        if(!nvs_get_blob(homeSpan.charNVS,nvsKey,NULL,&len)){
+          nvs_get_blob(homeSpan.charNVS,nvsKey,&value,&len);          
+          nvsFlag=2;
+        }
+        else {
+          nvs_set_blob(homeSpan.charNVS,nvsKey,&value,sizeof(UVal));     // store data           
+          nvs_commit(homeSpan.charNVS);                                    // commit to NVS  
+          nvsFlag=1;
+        }     
+      } else {
+        if(!nvs_get_str(homeSpan.charNVS,nvsKey,NULL,&len)){
+          char c[len];
+          nvs_get_str(homeSpan.charNVS,nvsKey,c,&len);                    
+          uvSet(value,(const char *)c);
+          nvsFlag=2;
+        }
+        else {
+          nvs_set_str(homeSpan.charNVS,nvsKey,value.STRING);             // store string data
+          nvs_commit(homeSpan.charNVS);                                    // commit to NVS  
+          nvsFlag=1;
+        }
       }
     }
   
-    homeSpan.configLog+="(" + uvPrint(value) + ")" + ":  IID=" + String(iid) + ", UUID=0x" + String(type);
-    if(format!=STRING && format!=BOOL)
-      homeSpan.configLog+= "  Range=[" + String(uvPrint(minValue)) + "," + String(uvPrint(maxValue)) + "]";
+    uvSet(newValue,value);
+
+    if(format != FORMAT::STRING) {
+        uvSet(minValue,min);
+        uvSet(maxValue,max);
+        uvSet(stepValue,0);
+    }
+
+    int x=0;
+    sscanf(type,"%*8[0-9a-fA-F]-%*4[0-9a-fA-F]-%*4[0-9a-fA-F]-%*4[0-9a-fA-F]-%*12[0-9a-fA-F]%n",&x);
+    
+    boolean isCustom=(strlen(type)==36 && x==36);
+
+    homeSpan.configLog+="(" + uvPrint(value) + ")" + ":  IID=" + String(iid) + ", " + (isCustom?"Custom-":"") + "UUID=\"" + String(type) + "\"";
+    if(format!=FORMAT::STRING && format!=FORMAT::BOOL)
+      homeSpan.configLog+= ", Range=[" + String(uvPrint(minValue)) + "," + String(uvPrint(maxValue)) + "]";
 
     if(nvsFlag==2)
       homeSpan.configLog+=" (restored)";
     else if(nvsFlag==1)
       homeSpan.configLog+=" (storing)";
-  
-    boolean valid=false;
+
+    boolean valid=isCustom;
   
     for(int i=0; !valid && i<homeSpan.Accessories.back()->Services.back()->req.size(); i++)
       valid=!strcmp(type,homeSpan.Accessories.back()->Services.back()->req[i]->type);
@@ -438,8 +465,8 @@ struct SpanCharacteristic{
       valid=!strcmp(type,homeSpan.Accessories.back()->Services.back()->opt[i]->type);
   
     if(!valid){
-      homeSpan.configLog+=" *** ERROR!  Service does not support this Characteristic. ***";
-      homeSpan.nFatalErrors++;
+      homeSpan.configLog+=" *** WARNING!  Service does not support this Characteristic. ***";
+      homeSpan.nWarnings++;
     }
   
     boolean repeated=false;
@@ -458,18 +485,59 @@ struct SpanCharacteristic{
    
   } // init()
 
+
   template <class T=int> T getVal(){
     return(uvGet<T>(value));
-  }                    
-  
+  }
+
   template <class T=int> T getNewVal(){
     return(uvGet<T>(newValue));
-  }                    
+  }
     
+  char *getString(){
+    if(format == FORMAT::STRING)
+        return value.STRING;
+
+    return NULL;
+  }
+
+  char *getNewString(){
+    if(format == FORMAT::STRING)
+        return newValue.STRING;
+
+    return NULL;
+  }
+
+  void setString(const char *val){
+
+    if((perms & EV) == 0){
+      Serial.printf("\n*** WARNING:  Attempt to update Characteristic::%s with setVal() ignored.  No NOTIFICATION permission on this characteristic\n\n",hapName);
+      return;
+    }
+
+    uvSet(value,val);
+    uvSet(newValue,value);
+      
+    updateTime=homeSpan.snapTime;
+    
+    SpanBuf sb;                             // create SpanBuf object
+    sb.characteristic=this;                 // set characteristic          
+    sb.status=StatusCode::OK;               // set status
+    char dummy[]="";
+    sb.val=dummy;                           // set dummy "val" so that sprintfNotify knows to consider this "update"
+    homeSpan.Notifications.push_back(sb);   // store SpanBuf in Notifications vector  
+
+    if(nvsKey){
+      nvs_set_str(homeSpan.charNVS,nvsKey,value.STRING);    // store data
+      nvs_commit(homeSpan.charNVS);
+    }
+    
+  } // setString()
+
   template <typename T> void setVal(T val){
 
-    if(format==STRING){
-      Serial.printf("\n*** WARNING:  Attempt to update Characteristic::%s(\"%s\") with setVal() ignored.  Can't update STRING Characteristics once they are initialized!\n\n",hapName,value.STRING);
+    if((perms & EV) == 0){
+      Serial.printf("\n*** WARNING:  Attempt to update Characteristic::%s with setVal() ignored.  No NOTIFICATION permission on this characteristic\n\n",hapName);
       return;
     }
 
@@ -479,7 +547,7 @@ struct SpanCharacteristic{
     }
    
     uvSet(value,val);
-    uvSet(newValue,val);
+    uvSet(newValue,value);
       
     updateTime=homeSpan.snapTime;
     

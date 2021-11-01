@@ -40,6 +40,7 @@ Additionally, when first starting up, HomeSpan begins by validating the device's
 | HeaterCooler | Active<br>CurrentTemperature<br>CurrentHeaterCoolerState<br>TargetHeaterCoolerState | Name<br>RotationSpeed<br>TemperatureDisplayUnits<br>SwingMode<br>CoolingThresholdTemperature<br>HeatingThresholdTemperature<br>LockPhysicalControls |
 | HumidifierDehumidifier | Active<br>CurrentRelativeHumidity<br>CurrentHumidifierDehumidifierState<br>TargetHumidifierDehumidifierState | Name<br>RelativeHumidityDehumidifierThreshold<br>RelativeHumidityHumidifierThreshold<br>RotationSpeed<br>SwingMode<br>WaterLevel<br>LockPhysicalControls |
 | HumiditySensor | CurrentRelativeHumidity | Name<br>StatusActive<br>StatusFault<br>StatusTampered<br>StatusLowBattery |
+| InputSource | Identifier | ConfiguredName<br>IsConfigured<br>CurrentVisibilityState<br>TargetVisibilityState |
 | IrrigationSystem | Active<br>ProgramMode<br>InUse | RemainingDuration<br>Name<br>StatusFault |
 | LeakSensor | LeakDetected | Name<br>StatusActive<br>StatusFault<br>StatusTampered<br>StatusLowBattery |
 | LightBulb | On | Brightness<br>Hue<br>Name<br>Saturation<br>ColorTemperature |
@@ -56,6 +57,7 @@ Additionally, when first starting up, HomeSpan begins by validating the device's
 | Speaker | Mute | Name<br>Volume |
 | StatelessProgrammableSwitch | ProgrammableSwitchEvent | Name<br>ServiceLabelIndex |
 | Switch | On | Name |
+| Television | Active | ConfiguredName<br>ActiveIdentifier<br>RemoteKey<br>PowerModeSelection | 
 | TemperatureSensor | CurrentTemperature | Name<br>StatusActive<br>StatusFault<br>StatusTampered<br>StatusLowBattery |
 | Thermostat | CurrentHeatingCoolingState<br>TargetHeatingCoolingState<br>CurrentTemperature<br>TargetTemperature<br>TemperatureDisplayUnits | CoolingThresholdTemperature<br>CurrentRelativeHumidity<br>HeatingThresholdTemperature<br>Name<br>TargetRelativeHumidity | 
 | Valve | Active<br>InUse<br>ValveType | SetDuration<br>RemainingDuration<br>IsConfigured<br>ServiceLabelIndex<br>StatusFault<br>Name |
@@ -68,6 +70,7 @@ Additionally, when first starting up, HomeSpan begins by validating the device's
 |Characteristic|Type|Default
 |---|---|---|
 |Active|uint8_t|0|
+|ActiveIdentifier|uint32_t|0|
 |AirQuality|uint8_t|0|
 |BatteryLevel|uint8_t|0|
 |Brightness|int|0|
@@ -80,6 +83,7 @@ Additionally, when first starting up, HomeSpan begins by validating the device's
 |ChargingState|uint8_t|0|
 |CoolingThresholdTemperature|double|10| 
 |ColorTemperature|uint32_t|50|
+|ConfiguredName|char \*|"unnamed"|
 |ContactSensorState|uint8_t|1|
 |CurrentAmbientLightLevel|double|1|
 |CurrentHorizontalTiltAngle|int|0|
@@ -95,6 +99,7 @@ Additionally, when first starting up, HomeSpan begins by validating the device's
 |CurrentRelativeHumidity|double|0|
 |CurrentTemperature|double|0|
 |CurrentTiltAngle|int|0|
+|CurrentVisibilityState|uint8_t|0|
 |FilterLifeLevel|double|0|
 |FilterChangeIndication|uint8_t|0|
 |FirmwareRevision|char \*|"1.0.0"|
@@ -102,6 +107,7 @@ Additionally, when first starting up, HomeSpan begins by validating the device's
 |HeatingThresholdTemperature|double|16|
 |HoldPosition|boolean|false|
 |Hue|double|0|
+|Identifier|uint32_t|0|
 |Identify|boolean|false|
 |InUse|uint8_t|0|
 |IsConfigured|uint8_t|0|
@@ -123,11 +129,13 @@ Additionally, when first starting up, HomeSpan begins by validating the device's
 |OzoneDensity|double|0|
 |PM10Density|double|0|
 |PositionState|uint8_t|2|
+|PowerModeSelection|uint8_t|0|
 |ProgramMode|uint8_t|0|
 |ProgrammableSwitchEvent|uint8_t|0|
 |RelativeHumidityDehumidifierThreshold|double|50|
 |RelativeHumidityHumidifierThreshold|double|50|
 |RemainingDuration|uint32_t|60|
+|RemoteKey|uint8_t|0|
 |ResetFilterIndication|uint8_t|0|
 |RotationDirection|int|0|
 |RotationSpeed|double|0|
@@ -161,6 +169,7 @@ Additionally, when first starting up, HomeSpan begins by validating the device's
 |TargetTemperature|double|16|
 |TemperatureDisplayUnits|uint8_t|0|
 |TargetVerticalTiltAngle|int|0|
+|TargetVisibilityState|uint8_t|0|
 |ValveType|uint8_t|0|
 |Version|char \*|"1.0.0"|
 |VOCDensity|double|0|

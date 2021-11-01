@@ -266,13 +266,42 @@ To invoke this command from the CLI, preface the single-letter name *c* with '@'
 
 To create more than one user-defined command, simply create multiple instances of SpanUserCommand, each with its own single-letter name.  Note that re-using the same single-letter name in an instance of SpanUserCommand over-rides any previous instances using that same letter.
 
-## *#define REQUIRED VERSION(major,minor,patch)*
+## User Macros
+
+### *#define REQUIRED VERSION(major,minor,patch)*
 
 If REQUIRED is defined in the main sketch prior to including the HomeSpan library with `#include "HomeSpan.h"`, HomeSpan will throw a compile-time error unless the version of the library included is equal to, or later than, the version specified using the VERSION macro.  Example:
 
 ```C++
 #define REQUIRED VERISON(2,1,3)   // throws a compile-time error unless HomeSpan library used is version 2.1.3 or later
 ```
+### *#define CUSTOM_CHAR(name,uuid,perms,format,defaultValue,minValue,maxValue,staticRange)*
+
+Creates a custom Characteristic that can be added to any Service.  Custom Characteristics are generally ignored by the Home App but may be used by other third-party applications (such as Eve for HomeKit).  Parameters are as follows (note that quotes should NOT be used in any of the string parameters):
+
+* *name* - the name of the custom Characteristic.  This will be added to the Characteristic namespace so that it is accessed the same as any HomeSpan Characteristic
+* *uuid* - the UUID of the Characteristic as defined by the manufacturer.  Must be *exactly* 36 characters in the form XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX, where *X* represent a valid hexidecimal digit.  Leading zeros are required if needed as described more fully in HAP-R2 Section 6.6.1
+* *perms* - additive list of permissions as described in HAP-R2 Table 6-4.  Valid values are PR, PW, EV, AA, TW, HD, and WR
+* *format* - specifies the format of the Characteristic value, as described in HAP-R2 Table 6-5.  Valid value are BOOL, UINT8, UINT16, UNIT32, UINT64, INT, FLOAT, and STRING. Note that the HomeSpan does not presently support the TLV8 or DATA formats
+* *defaultValue* - specifies the default value of the Characteristic if not defined during instantiation
+* *minValue* - specifies the default minimum range for a valid value, which may be able to be overriden by a call to `setRange()`
+* *minValue* - specifies the default minimum range for a valid value, which may be able to be overriden by a call to `setRange()`
+* *staticRange* - set to *true* if *minValue* and *maxValue* are static and cannot be overridden with a call to `setRange()`.  Set to *false* if calls to `setRange()` are allowed
+
+As an example, the following creates a custom Characteristic named "Voltage" with a UUID code that is recognized by Eve for HomeKit.  The parameters show that the Characteristic is read-only (PR) and notifications are enabled (EV).  The default range of allowed values is 0-240, with a default of 120.  The range *can* be overridden by subsequent calls to `setRange()`:
+
+```C++
+CUSTOM_CHAR(Voltage, E863F10A-079E-48FF-8F27-9C2605A29F52, PR+EV, UINT16, 120, 0, 240, false);
+...
+new Service::LightBulb();
+  new Characteristic::Name("Low-Voltage Lamp");
+  new Characteristic::On(0);
+  new Characteristic::Brightness(50);
+  new Characteristic::Voltage(12);      // adds Voltage Characteristics and sets initial value to 12 volts
+```
+
+Note that Custom Characteristics must be created prior to calling `homeSpan.begin()`
+
 ---
 
 #### Deprecated functions (available for backwards compatibility with older sketches):

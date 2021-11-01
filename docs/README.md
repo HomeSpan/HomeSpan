@@ -41,34 +41,13 @@ HomeSpan is fully compatible with both Versions 1 and 2 of the [Arduino-ESP32 Bo
   * Launch the WiFi Access Point
 * A standalone, detailed End-User Guide
 
-## ❗Latest Update - HomeSpan 1.4.0 (10/9/2021)
+## ❗Latest Update - HomeSpan 1.4.1 (10/31/2021)
  
-**HomeSpan is now fully compatible with Version 2.0.0 of the Arduino-ESP32 Board Manager and will run on the following Espressif chips:**
-* **ESP32**
-* **ESP32-S2**
-* **ESP32-C3**
+* **Television Services and Characteristics have been added to HomeSpan!** See [HomeSpan Television Services](https://github.com/HomeSpan/HomeSpan/blob/master/docs/TVServices.md) for complete details
 
-HomeSpan also maintains full backwards-compatability with Version 1.0.6 of the Arduino-ESP Board Manager should you need to revert to that version.  This has been a complicated update! Please report any bugs or issues found when using Version 2 of the Arduino-ESP32.
+* **The RFControl library has been updated to allow for the generation of a modulating carrier wave suitable for controlling an infrared LED.**  This allows you to create HomeKit-enabled TV remote controls with HomeSpan. See [HomeSpan Projects](https://github.com/topics/homespan) for some real-world examples!
 
-Also included in HomeSpan 1.4.0 are the following new features and enhancements:
-
-* **The PWM library has been upgraded**
-  * users can specify a custom PWM frequency for each instance of LedPin() (subject to chip-specific resource limitations)
-  * users can set the duty cycle of an LedPin() as a decimal floating number (e.g., 34.56), instead of just an integer
-  * the library automatically sets the duty resolution to the maximum allowable value for a chosen PWM frequency
-  * the library optimzizes the distribution of multiple LedPin() and ServoPin() instances to ensure all available PWM channels are used
-  
-* **The RFControl library has been upgraded**
-  * the library allows for the transmisison of arbitrary-length pulse trains
-  * users can pre-load pulse trains into one or more arbitrary-length arrays of 32-bit words for on-demand transmission as needed
-
-* Users can now **limit the selection choices** of certain Characteristics (such as the Target State for a Security System) in the Home App using a new method, `setValidValues()`
-
-* **The Status LED and Control Button are now optional components that are ignored unless specifically enabled**
-  * because HomeSpan now runs on chips with many different pin configurations, HomeSpan's use of preset pin numbers for the Status LED and Control Button is likely to conflict with many devices
-  * the default behavior for HomeSpan has been changed to ignore all logic related to the Status LED and Control Button
-  * to enable the Status LED you must specify the pin to which your LED is attached using the usual method `homeSpan.setStatusPin(pin)`
-  * to enable the Control Button you must specify the pin to which your Control Button is attached using the usual method `homeSpan.setControlPin(pin)`
+* **User-defined Custom Characteristics can be added to HomeSpan with a new macro.**  See the [HomeSpan API](https://github.com/HomeSpan/HomeSpan/blob/master/docs/Reference.md#define-custom_charnameuuidpermsformatdefaultvalueminvaluemaxvaluestaticrange) for details (for *advanced* users only)
  
 See [Releases](https://github.com/HomeSpan/HomeSpan/releases) for details on all changes included in this update.
 
@@ -87,6 +66,7 @@ HomeSpan includes the following documentation:
 * [HomeSpan QR Codes](https://github.com/HomeSpan/HomeSpan/blob/master/docs/QRCodes.md) - create and use QR Codes for pairing HomeSpan devices
 * [HomeSpan OTA](https://github.com/HomeSpan/HomeSpan/blob/master/docs/OTA.md) - update your sketches Over-the-Air directly from the Arduino IDE without a serial connection
 * [HomeSpan Extras](https://github.com/HomeSpan/HomeSpan/blob/master/docs/Extras.md) - integrated access to the ESP32's on-chip LED, Servo Motor, and Remote Control peripherals!
+* [HomeSpan Television Services](https://github.com/HomeSpan/HomeSpan/blob/master/docs/TVServices.md) - how to use HomeKit's undocumented Television Services and Characteristics
 * [HomeSpan Projects](https://github.com/topics/homespan) - real-world applications of the HomeSpan Library
 * [HomeSpan FAQ](https://github.com/HomeSpan/HomeSpan/blob/master/docs/FAQ.md) - answers to frequently-asked questions
 
