@@ -534,7 +534,7 @@ struct SpanCharacteristic{
     
   } // setString()
 
-  template <typename T> void setVal(T val){
+  template <typename T> void setVal(T val, boolean notify=true){
 
     if((perms & EV) == 0){
       Serial.printf("\n*** WARNING:  Attempt to update Characteristic::%s with setVal() ignored.  No NOTIFICATION permission on this characteristic\n\n",hapName);
@@ -550,17 +550,19 @@ struct SpanCharacteristic{
     uvSet(newValue,value);
       
     updateTime=homeSpan.snapTime;
-    
-    SpanBuf sb;                             // create SpanBuf object
-    sb.characteristic=this;                 // set characteristic          
-    sb.status=StatusCode::OK;               // set status
-    char dummy[]="";
-    sb.val=dummy;                           // set dummy "val" so that sprintfNotify knows to consider this "update"
-    homeSpan.Notifications.push_back(sb);   // store SpanBuf in Notifications vector  
 
-    if(nvsKey){
-      nvs_set_blob(homeSpan.charNVS,nvsKey,&value,sizeof(UVal));    // store data
-      nvs_commit(homeSpan.charNVS);
+    if(notify){
+      SpanBuf sb;                             // create SpanBuf object
+      sb.characteristic=this;                 // set characteristic          
+      sb.status=StatusCode::OK;               // set status
+      char dummy[]="";
+      sb.val=dummy;                           // set dummy "val" so that sprintfNotify knows to consider this "update"
+      homeSpan.Notifications.push_back(sb);   // store SpanBuf in Notifications vector  
+  
+      if(nvsKey){
+        nvs_set_blob(homeSpan.charNVS,nvsKey,&value,sizeof(UVal));    // store data
+        nvs_commit(homeSpan.charNVS);
+      }
     }
     
   } // setVal()
