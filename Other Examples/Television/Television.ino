@@ -193,7 +193,7 @@ void setup() {
     new Characteristic::TargetVisibilityState(0);
     
   SpanService *hdmi10 = new Service::InputSource();
-    new Characteristic::ConfiguredNameStatic("HDMI 10");    // Source Name is static and cannot be edited in Settings Screen
+    (new Characteristic::ConfiguredName("HDMI 10"))->removePerms(PW);    // Source Name permissions changed and now cannot be edited in Settings Screen
     new Characteristic::Identifier(10);
     new Characteristic::IsConfigured(1);              // Source included in the Settings Screen...
     new Characteristic::CurrentVisibilityState(0);    // ...and included in the Selection List...
