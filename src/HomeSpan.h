@@ -566,7 +566,38 @@ struct SpanCharacteristic{
     }
     
   } // setVal()
+
+  SpanCharacteristic *setPerms(uint8_t perms){
+    this->perms=perms;
+    homeSpan.configLog+=String("         \u2b0c Change Permissions for ") + String(hapName) + " with AID=" + String(aid) + ", IID=" + String(iid) + ":";
+
+    char pNames[][7]={"PR","PW","EV","AA","TW","HD","WR"};
+    char sep=' ';
+    
+    for(uint8_t i=0;i<7;i++){
+      if(perms & (1<<i)){
+        homeSpan.configLog+=String(sep) + String(pNames[i]);
+        sep='+';
+      }
+    }
+
+   if(perms==0){
+      homeSpan.configLog+="  *** ERROR!  Undefined Permissions! ***";
+      homeSpan.nFatalErrors++;
+    } 
+    
+    homeSpan.configLog+="\n";
+    return(this);
+  }
+
+  SpanCharacteristic *addPerms(uint8_t dPerms){
+    return(setPerms(perms|dPerms));
+  }
   
+  SpanCharacteristic *removePerms(uint8_t dPerms){
+    return(setPerms(perms&(~dPerms)));
+  }
+
 };
 
 ///////////////////////////////
