@@ -74,7 +74,7 @@ void setup() {
       new Characteristic::Name("Light 3");
       new Characteristic::TargetPosition();
       new Characteristic::OzoneDensity();
-      (new Characteristic::OzoneDensity())->addPerms(PW+AA)->removePerms(EV+PR);
+      (new Characteristic::OzoneDensity())->addPerms(PW|AA)->removePerms(EV|PR);
 
 } // end of setup()
 

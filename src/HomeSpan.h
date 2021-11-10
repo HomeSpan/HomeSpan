@@ -225,6 +225,7 @@ struct SpanService{
   SpanService *setPrimary();                              // sets the Service Type to be primary and returns pointer to self
   SpanService *setHidden();                               // sets the Service Type to be hidden and returns pointer to self
   SpanService *addLink(SpanService *svc);                 // adds svc as a Linked Service and returns pointer to self
+  vector<SpanService *> getLinks(){return(linkedServices);}   // returns linkedServices vector for use as range in "for-each" loops
 
   int sprintfAttributes(char *cBuf);                      // prints Service JSON records into buf; return number of characters printed, excluding null terminator
   void validate();                                        // error-checks Service
@@ -237,7 +238,6 @@ struct SpanService{
 ///////////////////////////////
 
 struct SpanCharacteristic{
-
 
   union UVal {                                  
     BOOL_t BOOL;
