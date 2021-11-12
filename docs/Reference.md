@@ -159,6 +159,12 @@ The following methods are supported:
   * adds *svc* as a Linked Service.  Returns a pointer to the calling Service itself so that the method can be chained during instantiation.
   * note that Linked Services are only applicable for select HAP Services.  See Apple's [HAP-R2](https://developer.apple.com/support/homekit-accessory-protocol/) documentation for full details.
   * example: `(new Service::Faucet)->addLink(new Service::Valve)->addLink(new Service::Valve);` (links two Valves to a Faucet)
+
+* `vector<SpanService *> getLinks()`
+  * returns a vector of pointers to Services that were added using `addLink()`
+  * useful for creating loops that iterate over all linked Services
+  * note that the returned vector points to generic SpanServices, which should be re-cast as needed
+  * example: `for(auto myValve : faucet::getLinks()) { if((MyValve *)myValve)->active->getVal()) ... }` checks all Valves linked to to a Faucet
   
 * `virtual boolean update()`
   * HomeSpan calls this method upon receiving a request from a HomeKit Controller to update one or more Characteristics associated with the Service.  Users should override this method with code that implements that requested updates using one or more of the SpanCharacteristic methods below.  Method **must** return *true* if update succeeds, or *false* if not.
