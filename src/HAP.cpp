@@ -52,11 +52,15 @@ void HAPClient::init(){
     otaPwdHash.getChars(homeSpan.otaPwd);
   }
 
+  if(strlen(homeSpan.pairingCodeCommand)){                          // load verification setup code if provided
+    homeSpan.processSerialCommand(homeSpan.pairingCodeCommand);     // if load failed due to invalid code, the logic below still runs and will pick up previous code or use the default one
+  } 
+
   struct {                                      // temporary structure to hold SRP verification code and salt stored in NVS
     uint8_t salt[16];
     uint8_t verifyCode[384];
   } verifyData;
-  
+ 
   if(!nvs_get_blob(srpNVS,"VERIFYDATA",NULL,&len)){                   // if found verification code data in NVS
     nvs_get_blob(srpNVS,"VERIFYDATA",&verifyData,&len);                  // retrieve data
     srp.loadVerifyCode(verifyData.verifyCode,verifyData.salt);           // load verification code and salt into SRP structure
