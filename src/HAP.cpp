@@ -1285,14 +1285,18 @@ void  HAPClient::checkTimedWrites(){
   unsigned long cTime=millis();                                       // get current time
 
   char c[64];
-  
-  for(auto tw=homeSpan.TimedWrites.begin(); tw!=homeSpan.TimedWrites.end(); tw++){      // loop over all Timed Writes using an iterator
+
+  auto tw=homeSpan.TimedWrites.begin();
+  while(tw!=homeSpan.TimedWrites.end()){
     if(cTime>tw->second){                                                               // timer has expired
        sprintf(c,"Removing PID=%llu  ALARM=%u\n",tw->first,tw->second);
        LOG2(c);
-       homeSpan.TimedWrites.erase(tw);
+       tw=homeSpan.TimedWrites.erase(tw);
       }
+    else
+      tw++; 
   }
+ 
 }
 
 //////////////////////////////////////
