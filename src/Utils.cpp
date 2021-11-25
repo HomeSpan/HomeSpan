@@ -279,7 +279,9 @@ void Blinker::isrTimer(void *arg){
 
   Blinker *b=(Blinker *)arg;
 
-#if CONFIG_IDF_TARGET_ESP32
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(4, 0, 0)               // use new method that is generic to ESP32, S2, and C3
+  timer_group_clr_intr_status_in_isr(b->group,b->idx);
+#else                                                             // use older method that is only for ESP32
   if(b->group){
     if(b->idx)
       TIMERG1.int_clr_timers.t1=1;
@@ -291,26 +293,8 @@ void Blinker::isrTimer(void *arg){
     else
       TIMERG0.int_clr_timers.t0=1;    
   }
-#elif CONFIG_IDF_TARGET_ESP32S2         // for some reason, the ESP32-S2 and ESP32-C3 use "int_clr" instead of "int_clr_timers" in their timer structure
-  if(b->group){
-    if(b->idx)
-      TIMERG1.int_clr.t1=1;
-    else
-      TIMERG1.int_clr.t0=1;
-  } else {
-    if(b->idx)
-      TIMERG0.int_clr.t1=1;
-    else
-      TIMERG0.int_clr.t0=1;
-  }
-#elif CONFIG_IDF_TARGET_ESP32C3        // ESP32-C3 only has one timer per timer group
-  if(b->group){
-    TIMERG1.int_clr.t0=1;
-  } else {
-    TIMERG0.int_clr.t0=1;    
-  }
 #endif
-
+  
   if(!digitalRead(b->pin)){
     digitalWrite(b->pin,1);
     timer_set_alarm_value(b->group,b->idx,b->onTime);
