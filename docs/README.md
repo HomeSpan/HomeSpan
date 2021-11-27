@@ -43,8 +43,8 @@ HomeSpan is fully compatible with both Versions 1 and 2 of the [Arduino-ESP32 Bo
 
 ## ❗Latest Update - HomeSpan 1.4.2 (11/27/2021)
 
-* **Updated for compatability with Arduino-ESP32 Board Manager 2.0.1.**
-  * Maintains backward compatability with all previous versions.
+* **Updated for compatability with Arduino-ESP32 Board Manager 2.0.1**
+  * Maintains backward compatability with all previous versions
 
 * **Some new methods and options for advance-use circumstances:**
 
