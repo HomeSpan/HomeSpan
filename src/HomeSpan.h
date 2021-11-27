@@ -112,6 +112,7 @@ struct Span{
   const char *sketchVersion="n/a";              // version of the sketch
   nvs_handle charNVS;                           // handle for non-volatile-storage of Characteristics data
   nvs_handle wifiNVS=0;                         // handle for non-volatile-storage of WiFi data
+  char pairingCodeCommand[12]="";               // user-specified Pairing Code - only needed if Pairing Setup Code is specified in sketch using setPairingCode()
 
   boolean connected=false;                      // WiFi connection status
   unsigned long waitTime=60000;                 // time to wait (in milliseconds) between WiFi connection attempts
@@ -188,6 +189,8 @@ struct Span{
   void setWifiCallback(void (*f)()){wifiCallback=f;}                      // sets an optional user-defined function to call once WiFi connectivity is established
   void setApFunction(void (*f)()){apFunction=f;}                          // sets an optional user-defined function to call when activating the WiFi Access Point
   
+  void setPairingCode(const char *s){sprintf(pairingCodeCommand,"S %9s",s);}   // sets the Pairing Code - use is NOT recommended.  Use 'S' from CLI instead
+  
   void enableAutoStartAP(){autoStartAPEnabled=true;}                      // enables auto start-up of Access Point when WiFi Credentials not found
   void setWifiCredentials(const char *ssid, const char *pwd);             // sets WiFi Credentials
 };
@@ -225,6 +228,7 @@ struct SpanService{
   SpanService *setPrimary();                              // sets the Service Type to be primary and returns pointer to self
   SpanService *setHidden();                               // sets the Service Type to be hidden and returns pointer to self
   SpanService *addLink(SpanService *svc);                 // adds svc as a Linked Service and returns pointer to self
+  vector<SpanService *> getLinks(){return(linkedServices);}   // returns linkedServices vector for use as range in "for-each" loops
 
   int sprintfAttributes(char *cBuf);                      // prints Service JSON records into buf; return number of characters printed, excluding null terminator
   void validate();                                        // error-checks Service
@@ -237,7 +241,6 @@ struct SpanService{
 ///////////////////////////////
 
 struct SpanCharacteristic{
-
 
   union UVal {                                  
     BOOL_t BOOL;
@@ -534,7 +537,7 @@ struct SpanCharacteristic{
     
   } // setString()
 
-  template <typename T> void setVal(T val){
+  template <typename T> void setVal(T val, boolean notify=true){
 
     if((perms & EV) == 0){
       Serial.printf("\n*** WARNING:  Attempt to update Characteristic::%s with setVal() ignored.  No NOTIFICATION permission on this characteristic\n\n",hapName);
@@ -550,21 +553,54 @@ struct SpanCharacteristic{
     uvSet(newValue,value);
       
     updateTime=homeSpan.snapTime;
-    
-    SpanBuf sb;                             // create SpanBuf object
-    sb.characteristic=this;                 // set characteristic          
-    sb.status=StatusCode::OK;               // set status
-    char dummy[]="";
-    sb.val=dummy;                           // set dummy "val" so that sprintfNotify knows to consider this "update"
-    homeSpan.Notifications.push_back(sb);   // store SpanBuf in Notifications vector  
 
-    if(nvsKey){
-      nvs_set_blob(homeSpan.charNVS,nvsKey,&value,sizeof(UVal));    // store data
-      nvs_commit(homeSpan.charNVS);
+    if(notify){
+      SpanBuf sb;                             // create SpanBuf object
+      sb.characteristic=this;                 // set characteristic          
+      sb.status=StatusCode::OK;               // set status
+      char dummy[]="";
+      sb.val=dummy;                           // set dummy "val" so that sprintfNotify knows to consider this "update"
+      homeSpan.Notifications.push_back(sb);   // store SpanBuf in Notifications vector  
+  
+      if(nvsKey){
+        nvs_set_blob(homeSpan.charNVS,nvsKey,&value,sizeof(UVal));    // store data
+        nvs_commit(homeSpan.charNVS);
+      }
     }
     
   } // setVal()
+
+  SpanCharacteristic *setPerms(uint8_t perms){
+    this->perms=perms;
+    homeSpan.configLog+=String("         \u2b0c Change Permissions for ") + String(hapName) + " with AID=" + String(aid) + ", IID=" + String(iid) + ":";
+
+    char pNames[][7]={"PR","PW","EV","AA","TW","HD","WR"};
+    char sep=' ';
+    
+    for(uint8_t i=0;i<7;i++){
+      if(perms & (1<<i)){
+        homeSpan.configLog+=String(sep) + String(pNames[i]);
+        sep='+';
+      }
+    }
+
+   if(perms==0){
+      homeSpan.configLog+="  *** ERROR!  Undefined Permissions! ***";
+      homeSpan.nFatalErrors++;
+    } 
+    
+    homeSpan.configLog+="\n";
+    return(this);
+  }
+
+  SpanCharacteristic *addPerms(uint8_t dPerms){
+    return(setPerms(perms|dPerms));
+  }
   
+  SpanCharacteristic *removePerms(uint8_t dPerms){
+    return(setPerms(perms&(~dPerms)));
+  }
+
 };
 
 ///////////////////////////////

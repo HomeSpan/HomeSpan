@@ -41,14 +41,21 @@ HomeSpan is fully compatible with both Versions 1 and 2 of the [Arduino-ESP32 Bo
   * Launch the WiFi Access Point
 * A standalone, detailed End-User Guide
 
-## ❗Latest Update - HomeSpan 1.4.1 (10/31/2021)
- 
-* **Television Services and Characteristics have been added to HomeSpan!** See [HomeSpan Television Services](https://github.com/HomeSpan/HomeSpan/blob/master/docs/TVServices.md) for complete details
+## ❗Latest Update - HomeSpan 1.4.2 (11/27/2021)
 
-* **The RFControl library has been updated to allow for the generation of a modulating carrier wave suitable for controlling an infrared LED.**  This allows you to create HomeKit-enabled TV remote controls with HomeSpan. See [HomeSpan Projects](https://github.com/topics/homespan) for some real-world examples!
+* **Updated for compatability with Arduino-ESP32 Board Manager 2.0.1**
+  * Maintains backward compatability with all previous versions
 
-* **User-defined Custom Characteristics can be added to HomeSpan with a new macro.**  See the [HomeSpan API](https://github.com/HomeSpan/HomeSpan/blob/master/docs/Reference.md#define-custom_charnameuuidpermsformatdefaultvalueminvaluemaxvaluestaticrange) for details (for *advanced* users only)
- 
+* **Some new methods and options for advance-use circumstances:**
+
+  * Added *optional* second argument to the `setVal()` method that allows the value of a Characteristic to be updated *without* sending notification messages to HomeKit.  Useful for keeping track of duration time when implementing a Sprinkler System - see [HomeSpan Reference Sprinkler](https://github.com/HomeSpan/HomeSpanReferenceSketches/tree/main/ReferenceSprinklers) for an example
+
+  * Added `getLinks()` as a new method to SpanService.  Returns a vector of pointers to SpanServices that have been linked to another Service with the addLink() method.  Useful for looping over all linked services, such as checking all valves in a Shower System - see [HomeSpan Reference Shower](https://github.com/HomeSpan/HomeSpanReferenceSketches/tree/main/ReferenceShower) or an example
+
+  * Added `setPerms()`, `addPerms()`, and `removePerms()` as new methods to SpanCharacteristic.  Allows the user to modify (set/add/remove) the default permissions for any Characteristic.  Useful for adding/deleting write-permissions for certain Characteristics
+
+  * Added `setPairingCode()` method to the global homeSpan object that allows for programmatically configuring the Pairing Setup Code inside your sketch. See the HomeSpan API for important security considerations when using this function!
+
 See [Releases](https://github.com/HomeSpan/HomeSpan/releases) for details on all changes included in this update.
 
 # HomeSpan Resources

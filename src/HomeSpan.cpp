@@ -721,11 +721,11 @@ void Span::processSerialCommand(const char *c){
       sscanf(c+1," %9[0-9]",setupCode);
       
       if(strlen(setupCode)!=8){
-        Serial.print("\n*** Invalid request to change Setup Code.  Code must be exactly 8 digits.\n");
+        Serial.print("\n*** Invalid request to change Setup Code.  Code must be exactly 8 digits.\n\n");
       } else
       
       if(!network.allowedCode(setupCode)){
-        Serial.print("\n*** Invalid request to change Setup Code.  Code too simple.\n");
+        Serial.print("\n*** Invalid request to change Setup Code.  Code too simple.\n\n");
       } else {
         
         sprintf(buf,"\n\nGenerating SRP verification data for new Setup Code: %.3s-%.2s-%.3s ... ",setupCode,setupCode+3,setupCode+5);

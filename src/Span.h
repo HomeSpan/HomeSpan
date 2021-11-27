@@ -420,7 +420,6 @@ namespace Characteristic {
   CREATE_CHAR(uint32_t,ColorTemperature,200,140,500);
   CREATE_CHAR(uint8_t,ContactSensorState,1,0,1);
   CREATE_CHAR(const char *,ConfiguredName,"unnamed",0,1);
-  CREATE_CHAR(const char *,ConfiguredNameStatic,"unnamed",0,1);
   CREATE_CHAR(double,CurrentAmbientLightLevel,1,0.0001,100000);
   CREATE_CHAR(int,CurrentHorizontalTiltAngle,0,-90,90);
   CREATE_CHAR(uint8_t,CurrentAirPurifierState,1,0,2);

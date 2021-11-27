@@ -11,8 +11,8 @@ void setup() {
   Serial.begin(115200);
  
   homeSpan.setLogLevel(2);
-  homeSpan.setStatusPin(5);
-  homeSpan.setControlPin(33);
+//  homeSpan.setStatusPin(13);
+//  homeSpan.setControlPin(33);
   
   homeSpan.setHostNameSuffix("-lamp1");
   homeSpan.setPortNum(1201);
@@ -74,6 +74,7 @@ void setup() {
       new Characteristic::Name("Light 3");
       new Characteristic::TargetPosition();
       new Characteristic::OzoneDensity();
+      (new Characteristic::OzoneDensity())->addPerms(PW|AA)->removePerms(EV|PR);
 
 } // end of setup()
 

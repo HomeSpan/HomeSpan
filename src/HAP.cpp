@@ -52,11 +52,15 @@ void HAPClient::init(){
     otaPwdHash.getChars(homeSpan.otaPwd);
   }
 
+  if(strlen(homeSpan.pairingCodeCommand)){                          // load verification setup code if provided
+    homeSpan.processSerialCommand(homeSpan.pairingCodeCommand);     // if load failed due to invalid code, the logic below still runs and will pick up previous code or use the default one
+  } 
+
   struct {                                      // temporary structure to hold SRP verification code and salt stored in NVS
     uint8_t salt[16];
     uint8_t verifyCode[384];
   } verifyData;
-  
+ 
   if(!nvs_get_blob(srpNVS,"VERIFYDATA",NULL,&len)){                   // if found verification code data in NVS
     nvs_get_blob(srpNVS,"VERIFYDATA",&verifyData,&len);                  // retrieve data
     srp.loadVerifyCode(verifyData.verifyCode,verifyData.salt);           // load verification code and salt into SRP structure
@@ -1281,14 +1285,18 @@ void  HAPClient::checkTimedWrites(){
   unsigned long cTime=millis();                                       // get current time
 
   char c[64];
-  
-  for(auto tw=homeSpan.TimedWrites.begin(); tw!=homeSpan.TimedWrites.end(); tw++){      // loop over all Timed Writes using an iterator
+
+  auto tw=homeSpan.TimedWrites.begin();
+  while(tw!=homeSpan.TimedWrites.end()){
     if(cTime>tw->second){                                                               // timer has expired
        sprintf(c,"Removing PID=%llu  ALARM=%u\n",tw->first,tw->second);
        LOG2(c);
-       homeSpan.TimedWrites.erase(tw);
+       tw=homeSpan.TimedWrites.erase(tw);
       }
+    else
+      tw++; 
   }
+ 
 }
 
 //////////////////////////////////////
