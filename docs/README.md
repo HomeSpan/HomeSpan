@@ -50,7 +50,7 @@ HomeSpan is fully compatible with both Versions 1 and 2 of the [Arduino-ESP32 Bo
 
   * Added *optional* second argument to the `setVal()` method that allows the value of a Characteristic to be updated *without* sending notification messages to HomeKit.  Useful for keeping track of duration time when implementing a Sprinkler System - see [HomeSpan Reference Sprinkler](https://github.com/HomeSpan/HomeSpanReferenceSketches/tree/main/ReferenceSprinklers) for an example
 
-  * Added `getLinks()` as a new method to SpanService.  Returns a vector of pointers to SpanServices that have been linked to another Service with the addLink() method.  Useful for looping over all linked services, such as checking all valves in a Shower System - see [HomeSpan Reference Shower](https://github.com/HomeSpan/HomeSpanReferenceSketches/blob/main/ReferenceShower/ReferenceShower) or an example
+  * Added `getLinks()` as a new method to SpanService.  Returns a vector of pointers to SpanServices that have been linked to another Service with the addLink() method.  Useful for looping over all linked services, such as checking all valves in a Shower System - see [HomeSpan Reference Shower](https://github.com/HomeSpan/HomeSpanReferenceSketches/tree/main/ReferenceShower) or an example
 
   * Added `setPerms()`, `addPerms()`, and `removePerms()` as new methods to SpanCharacteristic.  Allows the user to modify (set/add/remove) the default permissions for any Characteristic.  Useful for adding/deleting write-permissions for certain Characteristics
 
