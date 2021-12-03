@@ -305,28 +305,31 @@ If REQUIRED is defined in the main sketch prior to including the HomeSpan librar
 #define REQUIRED VERISON(2,1,3)   // throws a compile-time error unless HomeSpan library used is version 2.1.3 or later
 ```
 ### *#define CUSTOM_CHAR(name,uuid,perms,format,defaultValue,minValue,maxValue,staticRange)*
+### *#define CUSTOM_CHAR_STRING(name,uuid,perms,defaultValue)*
 
-Creates a custom Characteristic that can be added to any Service.  Custom Characteristics are generally ignored by the Home App but may be used by other third-party applications (such as Eve for HomeKit).  Parameters are as follows (note that quotes should NOT be used in any of the string parameters):
+Creates a custom Characteristic that can be added to any Service.  Custom Characteristics are generally ignored by the Home App but may be used by other third-party applications (such as Eve for HomeKit).  The first form should be used create numerical Characterstics (e.g., UINT8, BOOL...). The second form is used to String-based Characteristics. Parameters are as follows (note that quotes should NOT be used in any of the macro parameters, except for defaultValue):
 
 * *name* - the name of the custom Characteristic.  This will be added to the Characteristic namespace so that it is accessed the same as any HomeSpan Characteristic
 * *uuid* - the UUID of the Characteristic as defined by the manufacturer.  Must be *exactly* 36 characters in the form XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX, where *X* represent a valid hexidecimal digit.  Leading zeros are required if needed as described more fully in HAP-R2 Section 6.6.1
 * *perms* - additive list of permissions as described in HAP-R2 Table 6-4.  Valid values are PR, PW, EV, AA, TW, HD, and WR
-* *format* - specifies the format of the Characteristic value, as described in HAP-R2 Table 6-5.  Valid value are BOOL, UINT8, UINT16, UNIT32, UINT64, INT, FLOAT, and STRING. Note that the HomeSpan does not presently support the TLV8 or DATA formats
+* *format* - specifies the format of the Characteristic value, as described in HAP-R2 Table 6-5.  Valid value are BOOL, UINT8, UINT16, UNIT32, UINT64, INT, and FLOAT. Note that the HomeSpan does not presently support the TLV8 or DATA formats.  Not applicable for Strings-based Characteristics
 * *defaultValue* - specifies the default value of the Characteristic if not defined during instantiation
-* *minValue* - specifies the default minimum range for a valid value, which may be able to be overriden by a call to `setRange()`
-* *minValue* - specifies the default minimum range for a valid value, which may be able to be overriden by a call to `setRange()`
-* *staticRange* - set to *true* if *minValue* and *maxValue* are static and cannot be overridden with a call to `setRange()`.  Set to *false* if calls to `setRange()` are allowed
+* *minValue* - specifies the default minimum range for a valid value, which may be able to be overriden by a call to `setRange()`.  Not applicable for Strings-based Characteristics
+* *minValue* - specifies the default minimum range for a valid value, which may be able to be overriden by a call to `setRange()`. Not applicable for Strings-based Characteristics
+* *staticRange* - set to *true* if *minValue* and *maxValue* are static and cannot be overridden with a call to `setRange()`.  Set to *false* if calls to `setRange()` are allowed.  Not applicable for Strings-based Characteristics
 
-As an example, the following creates a custom Characteristic named "Voltage" with a UUID code that is recognized by Eve for HomeKit.  The parameters show that the Characteristic is read-only (PR) and notifications are enabled (EV).  The default range of allowed values is 0-240, with a default of 120.  The range *can* be overridden by subsequent calls to `setRange()`:
+As an example, the first line below creates a custom Characteristic named "Voltage" with a UUID code that is recognized by Eve for HomeKit.  The parameters show that the Characteristic is read-only (PR) and notifications are enabled (EV).  The default range of allowed values is 0-240, with a default of 120.  The range *can* be overridden by subsequent calls to `setRange()`.  The second line below creates a custom read-only String-based Characteristic:
 
 ```C++
 CUSTOM_CHAR(Voltage, E863F10A-079E-48FF-8F27-9C2605A29F52, PR+EV, UINT16, 120, 0, 240, false);
+CUSTOM_CHAR_STRING(UserTag, AAAAAAAA-BBBB-AAAA-AAAA-AAAAAAAAAAAA, PR, "Tag 123");
 ...
 new Service::LightBulb();
   new Characteristic::Name("Low-Voltage Lamp");
   new Characteristic::On(0);
   new Characteristic::Brightness(50);
-  new Characteristic::Voltage(12);      // adds Voltage Characteristics and sets initial value to 12 volts
+  new Characteristic::Voltage(12);      // adds Voltage Characteristic and sets initial value to 12 volts
+  new Characteristic::UserTag();        // adds UserTag Characteristic and retains default initial value of "Tag 123"
 ```
 
 Note that Custom Characteristics must be created prior to calling `homeSpan.begin()`
