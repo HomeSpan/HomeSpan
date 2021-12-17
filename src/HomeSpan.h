@@ -601,6 +601,12 @@ struct SpanCharacteristic{
     return(setPerms(perms&(~dPerms)));
   }
 
+  SpanCharacteristic *setDescription(const char *c){
+    desc = (char *)realloc(desc, strlen(c) + 1);
+    strcpy(desc, c);
+    return(this);
+  }  
+
 };
 
 ///////////////////////////////
