@@ -256,6 +256,11 @@ The following methods are supported:
   * returns a pointer to the Characteristic itself so that the method can be chained during instantiation
   * example: `(new Characteristic::ConfiguredName("HDMI 1"))->removePerms(PW);`
 
+* `SpanCharacteristic *setDescription(const char *desc)`
+  * adds an optional description, *desc*, to a Characteristic, as described in HAP-R2 Table 6-3
+  * this field is generally used to provide information about custom Characteristics, but does not appear to be used in any way by the Home App
+  * returns a pointer to the Characteristic itself so that the method can be chained during instantiation
+  * example: `(new Characteristic::MyCustomChar())->setDescription("Tuner Frequency");`
 
 ## *SpanButton(int pin, uint16_t longTime, uint16_t singleTime, uint16_t doubleTime)*
 
