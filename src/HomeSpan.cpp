@@ -1722,27 +1722,47 @@ StatusCode SpanCharacteristic::loadUpdate(char *val, char *ev){
       break;
 
     case INT:
-      if(!sscanf(val,"%d",&newValue.INT))
+      if(!strcmp(val,"false"))
+        newValue.INT=0;
+      else if(!strcmp(val,"true"))
+        newValue.INT=1;
+      else if(!sscanf(val,"%d",&newValue.INT))
         return(StatusCode::InvalidValue);
       break;
 
     case UINT8:
-      if(!sscanf(val,"%hhu",&newValue.UINT8))
+      if(!strcmp(val,"false"))
+        newValue.UINT8=0;
+      else if(!strcmp(val,"true"))
+        newValue.UINT8=1;
+      else if(!sscanf(val,"%hhu",&newValue.UINT8))
         return(StatusCode::InvalidValue);
       break;
             
     case UINT16:
-      if(!sscanf(val,"%hu",&newValue.UINT16))
+      if(!strcmp(val,"false"))
+        newValue.UINT16=0;
+      else if(!strcmp(val,"true"))
+        newValue.UINT16=1;
+      else if(!sscanf(val,"%hu",&newValue.UINT16))
         return(StatusCode::InvalidValue);
       break;
       
     case UINT32:
-      if(!sscanf(val,"%u",&newValue.UINT32))
+      if(!strcmp(val,"false"))
+        newValue.UINT32=0;
+      else if(!strcmp(val,"true"))
+        newValue.UINT32=1;
+      else if(!sscanf(val,"%u",&newValue.UINT32))
         return(StatusCode::InvalidValue);
       break;
       
     case UINT64:
-      if(!sscanf(val,"%llu",&newValue.UINT64))
+      if(!strcmp(val,"false"))
+        newValue.UINT64=0;
+      else if(!strcmp(val,"true"))
+        newValue.UINT64=1;
+      else if(!sscanf(val,"%llu",&newValue.UINT64))
         return(StatusCode::InvalidValue);
       break;
 
