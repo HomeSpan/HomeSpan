@@ -1645,6 +1645,13 @@ int SpanCharacteristic::sprintfAttributes(char *cBuf, int flags){
         nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?128:0,",\"minStep\":%s",uvPrint(stepValue).c_str());
     }
 
+    if(unit){
+      if(strlen(unit)>0)
+        nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?128:0,",\"unit\":\"%s\"",unit);
+     else
+        nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?128:0,",\"unit\":null");
+    }
+
     if(validValues){
       nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?128:0,",\"valid-values\":%s",validValues);      
     }

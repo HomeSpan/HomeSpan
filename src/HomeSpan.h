@@ -260,6 +260,7 @@ struct SpanCharacteristic{
   uint8_t perms;                           // Characteristic Permissions
   FORMAT format;                           // Characteristic Format        
   char *desc=NULL;                         // Characteristic Description (optional)
+  char *unit=NULL;                         // Characteristic Unit (optional)
   UVal minValue;                           // Characteristic minimum (not applicable for STRING)
   UVal maxValue;                           // Characteristic maximum (not applicable for STRING)
   UVal stepValue;                          // Characteristic step size (not applicable for STRING)
@@ -604,6 +605,12 @@ struct SpanCharacteristic{
   SpanCharacteristic *setDescription(const char *c){
     desc = (char *)realloc(desc, strlen(c) + 1);
     strcpy(desc, c);
+    return(this);
+  }  
+
+  SpanCharacteristic *setUnit(const char *c){
+    unit = (char *)realloc(unit, strlen(c) + 1);
+    strcpy(unit, c);
     return(this);
   }  
 
