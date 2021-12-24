@@ -262,6 +262,11 @@ The following methods are supported:
   * returns a pointer to the Characteristic itself so that the method can be chained during instantiation
   * example: `(new Characteristic::MyCustomChar())->setDescription("Tuner Frequency");`
 
+* `SpanCharacteristic *setUnit(const char *unit)`
+  * adds or overrides the *unit* for a Characteristic, as described in HAP-R2 Table 6-6
+  * returns a pointer to the Characteristic itself so that the method can be chained during instantiation
+  * example: `(new Characteristic::RotationSpeed())->setUnit("percentage");`
+
 ## *SpanButton(int pin, uint16_t longTime, uint16_t singleTime, uint16_t doubleTime)*
 
 Creating an instance of this **class** attaches a pushbutton handler to the ESP32 *pin* specified.
