@@ -58,7 +58,7 @@ void Span::begin(Category catID, const char *displayName, const char *hostNameBa
   esp_task_wdt_delete(xTaskGetIdleTaskHandleForCPU(0));       // required to avoid watchdog timeout messages from ESP32-C3
 
   controlButton.init(controlPin);
-  statusLED.init(statusPin);
+  statusLED.init(statusPin,0,autoOffLED);
 
   int maxLimit=CONFIG_LWIP_MAX_SOCKETS-2-otaEnabled;
   if(maxConnections>maxLimit)
@@ -85,7 +85,7 @@ void Span::begin(Category catID, const char *displayName, const char *hostNameBa
     nvs_get_blob(wifiNVS,"WIFIDATA",&homeSpan.network.wifiData,&len);               // retrieve data  
 
   delay(2000);
- 
+
   Serial.print("\n************************************************************\n"
                  "Welcome to HomeSpan!\n"
                  "Apple HomeKit for the Espressif ESP-32 WROOM and Arduino IDE\n"
@@ -95,8 +95,11 @@ void Span::begin(Category catID, const char *displayName, const char *hostNameBa
   Serial.print("Message Logs:     Level ");
   Serial.print(logLevel);  
   Serial.print("\nStatus LED:       Pin ");
-  if(statusPin>=0)
+  if(statusPin>=0){
     Serial.print(statusPin);
+    if(autoOffLED>0)
+      Serial.printf("  (Auto Off=%d sec)",autoOffLED);
+  }
   else
     Serial.print("-  *** WARNING: Status LED Pin is UNDEFINED");
   Serial.print("\nDevice Control:   Pin ");
@@ -291,6 +294,8 @@ void Span::poll() {
       commandMode();                    // COMMAND MODE
     }
   }
+
+  statusLED.check();
     
 } // poll
 

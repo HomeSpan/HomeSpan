@@ -119,7 +119,8 @@ struct Span{
   unsigned long alarmConnect=0;                 // time after which WiFi connection attempt should be tried again
   
   const char *defaultSetupCode=DEFAULT_SETUP_CODE;            // Setup Code used for pairing
-  int statusPin=DEFAULT_STATUS_PIN;                           // pin for status LED    
+  int statusPin=DEFAULT_STATUS_PIN;                           // pin for Status LED
+  uint16_t autoOffLED=0;                                      // automatic turn-off duration (in seconds) for Status LED
   int controlPin=DEFAULT_CONTROL_PIN;                         // pin for Control Pushbutton
   uint8_t logLevel=DEFAULT_LOG_LEVEL;                         // level for writing out log messages to serial monitor
   uint8_t maxConnections=DEFAULT_MAX_CONNECTIONS;             // number of simultaneous HAP connections
@@ -173,6 +174,7 @@ struct Span{
 
   void setControlPin(uint8_t pin){controlPin=pin;}                        // sets Control Pin
   void setStatusPin(uint8_t pin){statusPin=pin;}                          // sets Status Pin
+  void setStatusAutoOff(uint16_t duration){autoOffLED=duration;}          // sets Status LED auto off (seconds)  
   int getStatusPin(){return(statusPin);}                                  // get Status Pin
   void setApSSID(const char *ssid){network.apSSID=ssid;}                  // sets Access Point SSID
   void setApPassword(const char *pwd){network.apPassword=pwd;}            // sets Access Point Password
