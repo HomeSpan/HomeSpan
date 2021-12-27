@@ -33,6 +33,11 @@ The following **optional** `homeSpan` methods override various HomeSpan initiali
   
 * `void setStatusPin(uint8_t pin)`
   * sets the ESP32 pin to use for the HomeSpan Status LED.  If not specified, HomeSpan will assume there is no Status LED
+
+* `void setStatusAutoOff(uint16_t duration)`
+  * sets Status LED to automatically turn off after *duration* seconds
+  * Status LED will automatically turn on, and duration timer will be reset, whenever HomeSpan activates a new blinking pattern
+  * if *duration* is set to zero, auto-off is disabled (Status LED will remain on indefinitely)
   
 * `int getStatusPin()`
 * returns the pin number of the Status LED as set by `setStatusPin(pin)`, or -1 if no pin has been set
