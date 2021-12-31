@@ -18,6 +18,17 @@ void setup() {
   Serial.printf("Test 7 on Pin=%d check: %s\n",test7.getPin(),test7?"OKAY":"BAD");
   Serial.printf("Test 6 on Pin=%d check: %s\n",test6.getPin(),test6?"OKAY":"BAD");
 
+while(1){
+  px.setHSV(60,0.9,0.5);
+  delay(1000);
+  px.setHSV(120,0.9,0.5);
+  delay(1000);
+  px.setHSV(240,0.9,0.5);
+  delay(1000);
+}
+
+  while(1);
+
   while(1){
     for(int i=0;i<50;i++){
       px.setRGB(i,0,0);
