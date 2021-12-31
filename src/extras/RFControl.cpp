@@ -1,7 +1,4 @@
 
-#include <Arduino.h>
-#include <soc/rmt_reg.h>
-
 #include "RFControl.h"
 
 ///////////////////

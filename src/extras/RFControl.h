@@ -3,6 +3,10 @@
 //       RF Control Module        //
 ////////////////////////////////////
 
+#pragma once
+
+#include <Arduino.h>
+#include <soc/rmt_reg.h>
 #include "driver/rmt.h"
 #include <vector>
 
@@ -27,6 +31,12 @@ class RFControl {
     void phase(uint32_t nTicks, uint8_t phase);           // adds either a HIGH phase or LOW phase lasting numTicks ticks
     void enableCarrier(uint32_t freq, float duty=0.5);    // enables carrier wave if freq>0, else disables carrier wave; duty is a fraction from 0-1
     void disableCarrier(){enableCarrier(0);}              // disables carrier wave
+
+    int getPin(){return(config?config->gpio_num:-1);}               // returns the pin number   
+
+    operator bool(){                                      // override boolean operator to return true/false if creation succeeded/failed
+      return(config);    
+    }
 };
 
 // Helper macro for creating your own storage of uint32_t data array elements - used with first variation of start() above
