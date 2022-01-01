@@ -12,7 +12,7 @@ Pixel::Pixel(int pin, float high0, float low0, float high1, float low1, float lo
   LR=lowReset*80;  
 
   rf=new RFControl(pin,false);            // set clock to 1/80 usec
-  setRGB(0,255,0);
+  setRGB(0,0,0);
 }
 
 ///////////////////
