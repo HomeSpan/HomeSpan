@@ -19,7 +19,7 @@ class Pixel {
   
   public:
     Pixel(int pin, float high0, float low0, float high1, float low1, float lowReset);    // creates addressable single-wire RGB LED on pin (such as the SK68 or WS28); parameters are in MICROSECONDS!
-    Pixel(int pin) :  Pixel(pin, 0.32, 0.88, 0.64, 0.56, 80.0) {};                       // default parameters for some SK68XX chips
+    Pixel(int pin) :  Pixel(pin, 0.32, 0.88, 0.64, 0.56, 80.0) {};                       // default parameters for SK68XXMINI-HS LEDs, though will likely work with many other variations as well
     
     void setRGB(uint8_t r, uint8_t g, uint8_t b);     // sets color to rgb values (0-255)
     void setHSV(float h, float s, float v);           // sets color to hsv values where h=[0,360], s=[0,1], v=[0,1]
