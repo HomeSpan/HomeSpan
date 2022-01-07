@@ -22,11 +22,22 @@ void Pixel::setRGB(uint8_t r, uint8_t g, uint8_t b, int nPixels){
     return;
     
   rf->clear();
-  for(int i=0;i<nPixels;i++){
-    loadColor(g);
-    loadColor(r);
-    loadColor(b);
-  }
+  for(int i=0;i<nPixels;i++)
+    loadColor(getColorRGB(r,g,b));
+  rf->phase(LR,0);          // end-marker delay/reset
+  rf->start();
+}
+
+///////////////////
+
+void Pixel::setColor(color_t *color, int nPixels){
+  
+  if(!*rf)
+    return;
+    
+  rf->clear();
+  for(int i=0;i<nPixels;i++)
+    loadColor(color[i]);
   rf->phase(LR,0);          // end-marker delay/reset
   rf->start();
 }
@@ -41,12 +52,28 @@ void Pixel::setHSV(float h, float s, float v, int nPixels){
 
 ///////////////////
 
-void Pixel::loadColor(uint8_t c){
+void Pixel::loadColor(color_t c){
     
-  for(int i=7;i>=0;i--){
+  for(int i=23;i>=0;i--){
     if((c>>i)&1)
       rf->add(H1,L1);        // 1-bit
     else
       rf->add(H0,L0);        // 0-bit
   }
 }
+
+///////////////////
+
+color_t Pixel::getColorRGB(uint8_t r, uint8_t g, uint8_t b){
+  return(g<<16 | r<<8 | b);
+}
+
+///////////////////
+
+color_t Pixel::getColorHSV(float h, float s, float v){
+  float r,g,b;
+  LedPin::HSVtoRGB(h,s,v,&r,&g,&b);
+  return(getColorRGB(r*255,g*255,b*255));
+}
+
+///////////////////
