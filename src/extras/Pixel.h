@@ -17,7 +17,7 @@ class Pixel {
     uint32_t LR;          // Low time for a reset/end-of-data (in units of 1/80 microseconds)
     
     RFControl *rf;
-    void loadColor(color_t c);    // creates bit pattern for RGB color (encoded in low 24-bits)
+    void loadColor(color_t c);    // creates pulse pattern for pixel color (encoded as RGB in low 24-bits)
   
   public:
     Pixel(int pin, float high0, float low0, float high1, float low1, float lowReset);    // creates addressable single-wire RGB LED on pin (such as the SK68 or WS28); parameters are in MICROSECONDS!
