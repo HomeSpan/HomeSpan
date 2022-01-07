@@ -12,30 +12,31 @@ Pixel::Pixel(int pin, float high0, float low0, float high1, float low1, float lo
   LR=lowReset*80;  
 
   rf=new RFControl(pin,false);            // set clock to 1/80 usec
-  setRGB(0,0,0);
 }
 
 ///////////////////
 
-void Pixel::setRGB(uint8_t r, uint8_t g, uint8_t b){
+void Pixel::setRGB(uint8_t r, uint8_t g, uint8_t b, int nPixels){
   
   if(!*rf)
     return;
     
   rf->clear();
-  loadColor(g);
-  loadColor(r);
-  loadColor(b);
+  for(int i=0;i<nPixels;i++){
+    loadColor(g);
+    loadColor(r);
+    loadColor(b);
+  }
   rf->phase(LR,0);          // end-marker delay/reset
   rf->start();
 }
 
 ///////////////////
 
-void Pixel::setHSV(float h, float s, float v){
+void Pixel::setHSV(float h, float s, float v, int nPixels){
   float r,g,b;
   LedPin::HSVtoRGB(h,s,v,&r,&g,&b);
-  setRGB(r*255,g*255,b*255);  
+  setRGB(r*255,g*255,b*255,nPixels);  
 }
 
 ///////////////////
