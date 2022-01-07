@@ -14,7 +14,25 @@ void setup() {
 
   Serial.printf("PX on Pin=%d check: %s\n",px.getPin(),px?"OKAY":"BAD");
 
-  px.setRGB(0,0,0,8);
+  int H=0;
+  color_t x[8];
+  int s;
+  
+  while(1){
+
+    for(int i=0;i<8;i++)
+      x[i]=px.getColorHSV(H,i*3+79,i*2+5);
+
+    px.setColors(x,8);
+    delay(20);
+    H=H+1;
+    if(H>=360)
+      H=0;
+
+    s++;
+    if(s>8)
+      s=0;
+  }
   
 } // end of setup()
 
@@ -51,47 +69,47 @@ void loop(){
   uint32_t d=2;
   
   while(1){
-    px.setColor(x1,8);
+    px.setColors(x1,8);
     delay(d);
-    px.setColor(x2,8);
+    px.setColors(x2,8);
     delay(d);
-    px.setColor(x3,8);
+    px.setColors(x3,8);
     delay(d);
-    px.setColor(x4,8);
+    px.setColors(x4,8);
     delay(d);
-    px.setColor(x5,8);
+    px.setColors(x5,8);
     delay(d);
-    px.setColor(x6,8);
+    px.setColors(x6,8);
     delay(d);
-    px.setColor(x7,8);
+    px.setColors(x7,8);
     delay(d);
-    px.setColor(x0,8);
+    px.setColors(x0,8);
     delay(d);
-    px.setColor(x8,8);
+    px.setColors(x8,8);
     delay(d);
-    px.setColor(x9,8);
+    px.setColors(x9,8);
     delay(d);
-    px.setColor(x10,8);
+    px.setColors(x10,8);
     delay(d);
-    px.setColor(x11,8);
+    px.setColors(x11,8);
     delay(d);
-    px.setColor(x12,8);
+    px.setColors(x12,8);
     delay(d);
-    px.setColor(x13,8);
+    px.setColors(x13,8);
     delay(d);
-    px.setColor(x14,8);
+    px.setColors(x14,8);
     delay(d);
-    px.setColor(x0,8);
+    px.setColors(x0,8);
     delay(d);
   }
 
 //  x[0]=Pixel::getColorHSV(0,1,0.2);
 //  x[1]=px.getColorHSV(0,0.7,0.2);
-//  px.setColor(x,2);
+//  px.setColors(x,2);
 //  delay(1000);
 //  x[0]=px.getColorHSV(0,0.7,0.2);
 //  x[1]=px.getColorHSV(0,1,0.2);
-//  px.setColor(x,2);
+//  px.setColors(x,2);
 //  delay(1000);
 
 } // end of loop()

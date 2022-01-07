@@ -30,7 +30,7 @@ void Pixel::setRGB(uint8_t r, uint8_t g, uint8_t b, int nPixels){
 
 ///////////////////
 
-void Pixel::setColor(color_t *color, int nPixels){
+void Pixel::setColors(color_t *color, int nPixels){
   
   if(!*rf)
     return;
@@ -46,7 +46,7 @@ void Pixel::setColor(color_t *color, int nPixels){
 
 void Pixel::setHSV(float h, float s, float v, int nPixels){
   float r,g,b;
-  LedPin::HSVtoRGB(h,s,v,&r,&g,&b);
+  LedPin::HSVtoRGB(h,s/100.0,v/100.0,&r,&g,&b);
   setRGB(r*255,g*255,b*255,nPixels);  
 }
 
@@ -72,7 +72,7 @@ color_t Pixel::getColorRGB(uint8_t r, uint8_t g, uint8_t b){
 
 color_t Pixel::getColorHSV(float h, float s, float v){
   float r,g,b;
-  LedPin::HSVtoRGB(h,s,v,&r,&g,&b);
+  LedPin::HSVtoRGB(h,s/100.0,v/100.0,&r,&g,&b);
   return(getColorRGB(r*255,g*255,b*255));
 }
 

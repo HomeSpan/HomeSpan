@@ -24,12 +24,12 @@ class Pixel {
     Pixel(int pin) :  Pixel(pin, 0.32, 0.88, 0.64, 0.56, 80.0) {};                       // default parameters for SK68XXMINI-HS LEDs, though will likely work with many other variations as well
     
     void setRGB(uint8_t r, uint8_t g, uint8_t b, int nPixels=1);    // sets color of nPixels to RGB values (0-255)
-    void setHSV(float h, float s, float v, int nPixels=1);          // sets color of nPixels to HSV values where h=[0,360], s=[0,1], v=[0,1]   
-    void setColor(color_t *color, int nPixels);                     // sets color of nPixels from array of Colors
+    void setHSV(float h, float s, float v, int nPixels=1);          // sets color of nPixels to HSV values where h=[0,360], s=[0,100], v=[0,100]   
+    void setColors(color_t *color, int nPixels);                    // sets colors of nPixels from array of Colors
     int getPin(){return(rf->getPin());}                             // returns pixel pin if valid, else returns -1
     
-    static color_t getColorRGB(uint8_t r, uint8_t g, uint8_t b);            // return pixel Color from RGB values
-    static color_t getColorHSV(float h, float s, float v);                  // return pixel Color from HSV values
+    static color_t getColorRGB(uint8_t r, uint8_t g, uint8_t b);    // return pixel Color from RGB values
+    static color_t getColorHSV(float h, float s, float v);          // return pixel Color from HSV values
 
     operator bool(){         // override boolean operator to return true/false if creation succeeded/failed
       return(*rf);
