@@ -85,7 +85,23 @@ void setup() {
 
   Serial.println("\n\nHomeSpan Pixel Example\n");
   Serial.printf("PX on Pin=%d check: %s\n",px.getPin(),px?"OKAY":"BAD");
+
+  px.setRGB(0,0,0,8);
+  px.setRGB(255,0,0,1);
+  delay(500);
+  px.setRGB(0,255,0,2);
+  delay(500);
+  px.setRGB(0,255,0,4);
+  delay(500);
+  px.setRGB(0,255,255,6);
+  delay(500);
+  px.setRGB(0,0,255,8);
+  delay(500);
+
+//  while(1);
   
+  
+ 
 } // end of setup()
 
 void loop(){

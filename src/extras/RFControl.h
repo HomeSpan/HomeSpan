@@ -41,5 +41,5 @@ class RFControl {
 
 // Helper macro for creating your own storage of uint32_t data array elements - used with first variation of start() above
 
-#define RF_PULSE(highTicks,lowTicks) (1 << 15 | highTicks | lowTicks << 16)
+#define RF_PULSE(highTicks,lowTicks) (1 << 15 | uint32_t(highTicks) | uint32_t(lowTicks) << 16)
    

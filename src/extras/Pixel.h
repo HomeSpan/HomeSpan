@@ -12,17 +12,18 @@ typedef uint32_t color_t;
 
 class Pixel {
   private:
-    uint32_t H0, L0;      // High and Low times for a zero-pulse (in units of 1/80 microseconds)
-    uint32_t H1, L1;      // High and Low times for a one-pulse (in units of 1/80 microseconds)
-    uint32_t LR;          // Low time for a reset/end-of-data (in units of 1/80 microseconds)
+    uint32_t pattern[2];           // storage for zero-bit and one-bit pulses
+    uint32_t resetTime;            // minimum time (in usec) between pulse trains
+    uint32_t nTrain;               // number of Pixels to transmit per pulse train batch
     
     RFControl *rf;
-    void loadColor(color_t c);    // creates pulse pattern for pixel color (encoded as RGB in low 24-bits)
+    void loadColor(color_t c, uint32_t *p);    // creates pulse pattern for pixel color (encoded as RGB in low 24-bits of *p)
   
   public:
-    Pixel(int pin, float high0, float low0, float high1, float low1, float lowReset);    // creates addressable single-wire RGB LED on pin (such as the SK68 or WS28); parameters are in MICROSECONDS!
-    Pixel(int pin) :  Pixel(pin, 0.32, 0.88, 0.64, 0.56, 80.0) {};                       // default parameters for SK68XXMINI-HS LEDs, though will likely work with many other variations as well
+    Pixel(int pin, uint32_t nPixels=1);                             // creates addressable single-wire RGB LED on pin (such as the SK68 or WS28), with OPTIONAL reserve of memory for nPixels
     
+    void setTiming(float high0, float low0, float high1, float low1, uint32_t lowReset);    // changes default timings for bit pulse - note parameters are in MICROSECONDS
+      
     void setRGB(uint8_t r, uint8_t g, uint8_t b, int nPixels=1);    // sets color of nPixels to RGB values (0-255)
     void setHSV(float h, float s, float v, int nPixels=1);          // sets color of nPixels to HSV values where h=[0,360], s=[0,100], v=[0,100]   
     void setColors(color_t *color, int nPixels);                    // sets colors of nPixels from array of Colors
