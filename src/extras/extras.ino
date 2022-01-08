@@ -73,7 +73,7 @@ struct Effect2 {
   }
 };
 
-Pixel px(21);
+Pixel px(21,8);
 Effect1 effect1(&px,5);
 Effect2 effect2(&px,100);
 
@@ -87,21 +87,19 @@ void setup() {
   Serial.printf("PX on Pin=%d check: %s\n",px.getPin(),px?"OKAY":"BAD");
 
   px.setRGB(0,0,0,8);
-  px.setRGB(255,0,0,1);
-  delay(500);
-  px.setRGB(0,255,0,2);
-  delay(500);
-  px.setRGB(0,255,0,4);
-  delay(500);
-  px.setRGB(0,255,255,6);
-  delay(500);
-  px.setRGB(0,0,255,8);
-  delay(500);
+  for(int i=1;i<5;i++){
+    px.setHSV(0,100,20,i);
+    delay(500);
+  }
+  
+  for(int i=5;i<8;i++){
+    px.setHSV(60,100,30,i);
+    delay(500);
+  }
 
-//  while(1);
-  
-  
- 
+  px.setHSV(120,100,100,8);
+  delay(500);
+   
 } // end of setup()
 
 void loop(){

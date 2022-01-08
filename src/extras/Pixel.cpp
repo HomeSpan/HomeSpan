@@ -30,7 +30,7 @@ void Pixel::setRGB(uint8_t r, uint8_t g, uint8_t b, int nPixels){
   if(!*rf)
     return;
 
-  uint32_t *pulses = (uint32_t *) malloc(96);    
+  uint32_t *pulses = (uint32_t *) malloc(24*sizeof(uint32_t));    
 
   loadColor(getColorRGB(r,g,b),pulses);
   rf->start(pulses,24,nPixels);           // start pulse train and repeat for nPixels
@@ -44,25 +44,25 @@ void Pixel::setRGB(uint8_t r, uint8_t g, uint8_t b, int nPixels){
 void Pixel::setColors(color_t *color, int nPixels){
   
   if(!*rf)
+    return;    
+
+  uint32_t *pulses = (uint32_t *) malloc(nTrain*24*sizeof(uint32_t));
+
+  if(!pulses){
+    Serial.printf("*** ERROR:  Not enough memory to reserve for %d Pixels per batch transmission\n",nTrain);
     return;
-
-  uint32_t x0,x1,x2;
-    
-  x0=micros();
-
-  uint32_t *pulses = (uint32_t *) malloc(nTrain*96);
-
-  for(int i=0;i<nPixels;i++){
-    loadColor(color[i],pulses);
-    rf->start(pulses,24);                   // start pulse train
   }
 
-  x1=micros();
-  Serial.printf("%d\n",x1-x0);
+  int i,j;
+  
+  for(i=0;i<nPixels;){
+    for(j=0;j<nTrain && i<nPixels;j++,i++)
+      loadColor(color[i],pulses+j*24);
+    rf->start(pulses,j*24);
+  }
 
-  while(1);
-  delayMicroseconds(resetTime);
   free(pulses);
+  delayMicroseconds(resetTime);
 }
 
 ///////////////////
