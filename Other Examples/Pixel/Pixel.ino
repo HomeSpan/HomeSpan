@@ -36,19 +36,21 @@
 
 ///////////////////////////////
 
-struct Pixel_Light : Service::LightBulb {      // Addressable RGB Pixel
+struct Pixel_Light : Service::LightBulb {      // Addressable RGB Pixel Strand of nPixel Pixels - assume SAME color for every Pixel
  
   Characteristic::On power{0,true};
   Characteristic::Hue H{0,true};
   Characteristic::Saturation S{0,true};
   Characteristic::Brightness V{100,true};
-  Pixel *pixel;                                
+  Pixel *pixel; 
+  int nPixels;                                 // number of Pixels in Strand (default=1)
   
-  Pixel_Light(int pin) : Service::LightBulb(){
+  Pixel_Light(int pin, int nPixels=1) : Service::LightBulb(){
 
     V.setRange(5,100,1);                      // sets the range of the Brightness to be from a min of 5%, to a max of 100%, in steps of 1%
     pixel=new Pixel(pin);                     // creates pixel LED on specified pin using default timing parameters suitable for most SK68xx LEDs
-    update();                                 // manually call update() to set pixel with restored initial values    
+    this->nPixels=nPixels;                    // store number of Pixels in Strand
+    update();                                 // manually call update() to set pixel with restored initial values
   }
 
   boolean update() override {
@@ -59,7 +61,7 @@ struct Pixel_Light : Service::LightBulb {      // Addressable RGB Pixel
     float s=S.getNewVal<float>();                // range = [0,100]
     float v=V.getNewVal<float>();                // range = [0,100]
 
-    pixel->setHSV(h*p, s*p/100.0, v*p/100.0);     // must scale down S and V from [0,100] to [0.0,1.0]
+    pixel->setHSV(h*p, s*p, v*p, nPixels);       // sets all nPixels to HSV colors
           
     return(true);  
   }
@@ -85,8 +87,7 @@ void setup() {
   new Service::HAPProtocolInformation();
     new Characteristic::Version("1.1.0");
 
-  new Pixel_Light(8);                           // create Pixel LED attached to pin 8
-
+  new Pixel_Light(8);                         // create single Pixel attached to pin 8
       
 }
 
