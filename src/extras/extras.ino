@@ -73,9 +73,19 @@ struct Effect2 {
   }
 };
 
-Pixel px(21,8);
-Effect1 effect1(&px,5);
-Effect2 effect2(&px,100);
+//Pixel px(21,8);
+//Effect1 effect1(&px,5);
+//Effect2 effect2(&px,100);
+
+#ifdef CONFIG_IDF_TARGET_ESP32C3
+  #define PIN 7
+  #define RMT_MEM_SIZE 48
+#else  
+  #define PIN 13
+  #define RMT_MEM_SIZE 64
+#endif
+
+volatile uint32_t data[10];
 
 void setup() {     
  
@@ -84,25 +94,60 @@ void setup() {
   delay(1000);                    // wait for interface to flush
 
   Serial.println("\n\nHomeSpan Pixel Example\n");
-  Serial.printf("PX on Pin=%d check: %s\n",px.getPin(),px?"OKAY":"BAD");
 
-  px.setRGB(0,0,0,8);
-  for(int i=1;i<5;i++){
-    px.setHSV(0,100,20,i);
-    delay(500);
-  }
+  RFControl rf(PIN,true,false);
+  rmt_set_clk_div(rf.getChannel(),100);                  // set clock divider
+
+  rmt_isr_register(eot,(void *)data,0,NULL);
+  rmt_set_tx_intr_en(rf.getChannel(),true);
+  rmt_set_tx_thr_intr_en(rf.getChannel(),true,32);  
+
+  RMTMEM.chan[0].data32[0].val=5000<<16 | 5000 | 1<<15;
+  RMTMEM.chan[0].data32[1].val=5000<<16 | 5000 | 1<<15;
+
+  for(int i=2;i<RMT_MEM_SIZE;i++)
+    RMTMEM.chan[0].data32[i].val=200<<16 | 200 | 1<<15;
+
+  data[0]=5;
+
+  rmt_tx_start(rf.getChannel(),true);
+
+   while(1);
   
-  for(int i=5;i<8;i++){
-    px.setHSV(60,100,30,i);
-    delay(500);
-  }
-
-  px.setHSV(120,100,100,8);
-  delay(500);
+//  Serial.printf("PX on Pin=%d check: %s\n",px.getPin(),px?"OKAY":"BAD");
+//
+//  px.setRGB(0,0,0,8);
+//  for(int i=1;i<5;i++){
+//    px.setHSV(0,100,20,i);
+//    delay(500);
+//  }
+//  
+//  for(int i=5;i<8;i++){
+//    px.setHSV(60,100,30,i);
+//    delay(500);
+//  }
+//
+//  px.setHSV(120,100,100,8);
+//  delay(500);
    
 } // end of setup()
 
 void loop(){
 
-  effect2.update();
+//  effect2.update();
+}
+
+void eot(void *arg){
+  Serial.printf("%08X\n",RMT.int_st.val);
+  RMT.int_clr.ch0_tx_end=1;                           // must clear interrupt immediately, else havoc will break out
+  RMT.int_clr.ch0_tx_thr_event=1;                           // must clear interrupt immediately, else havoc will break out
+  Serial.printf("%08X\n",RMT.int_st.val);
+  volatile uint32_t *x=(uint32_t *)arg;
+  Serial.printf("%d\n",x[0]);
+  if(--x[0]==0)
+    RMTMEM.chan[0].data32[0].val=0;
+  
+//  x[1]--;
+//  if(x[1])
+//    REG_WRITE(RMT_CH0CONF1_REG,0x0000000D);           // use REF_TICK clock; reset xmit and receive memory address to start of channel; START TRANSMITTING!
 }

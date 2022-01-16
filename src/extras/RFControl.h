@@ -21,7 +21,7 @@ class RFControl {
     static uint8_t nChannels;
                                
   public:    
-    RFControl(uint8_t pin, boolean refClock=true);                                    // creates transmitter on pin, using 1-MHz Ref Tick clock
+    RFControl(uint8_t pin, boolean refClock=true, boolean installDriver=true);        // creates transmitter on pin, using 1-MHz Ref Tick clock
     
     void start(uint32_t *data, int nData, uint8_t nCycles=1, uint8_t tickTime=1);     // starts transmission of pulses from specified data pointer, repeated for numCycles, where each tick in pulse is tickTime microseconds long
     void start(uint8_t nCycles=1, uint8_t tickTime=1);                                // starts transmission of pulses from internal data structure, repeated for numCycles, where each tick in pulse is tickTime microseconds long    
@@ -32,7 +32,8 @@ class RFControl {
     void enableCarrier(uint32_t freq, float duty=0.5);    // enables carrier wave if freq>0, else disables carrier wave; duty is a fraction from 0-1
     void disableCarrier(){enableCarrier(0);}              // disables carrier wave
 
-    int getPin(){return(config?config->gpio_num:-1);}               // returns the pin number   
+    int getPin(){return(config?config->gpio_num:-1);}                             // returns the pin number
+    rmt_channel_t getChannel(){return(config?config->channel:RMT_CHANNEL_0);}     // returns channel, or channel_0 is no channel defined
 
     operator bool(){                                      // override boolean operator to return true/false if creation succeeded/failed
       return(config);    

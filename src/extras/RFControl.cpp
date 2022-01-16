@@ -3,7 +3,7 @@
 
 ///////////////////
 
-RFControl::RFControl(uint8_t pin, boolean refClock){
+RFControl::RFControl(uint8_t pin, boolean refClock, boolean installDriver){
 
 #ifdef CONFIG_IDF_TARGET_ESP32C3
   if(nChannels==RMT_CHANNEL_MAX/2){
@@ -29,7 +29,9 @@ RFControl::RFControl(uint8_t pin, boolean refClock){
   config->tx_config.loop_en=false;
 
   rmt_config(config);
-  rmt_driver_install(config->channel,0,0);
+
+  if(installDriver)
+    rmt_driver_install(config->channel,0,0);
 
   // If specified, set the base clock to 1 MHz so tick-units are in microseconds (before any CLK_DIV is applied), otherwise default will be 80 MHz APB clock
 
