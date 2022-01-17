@@ -99,13 +99,13 @@ void setup() {
 
   uint32_t colors[20];
 
-  colors[0]=px.getColorRGB(40,40,0);
-  colors[1]=px.getColorRGB(40,40,0);
+  colors[0]=px.getColorRGB(40,0,0);
+  colors[1]=px.getColorRGB(40,0,0);
   colors[2]=px.getColorRGB(40,0,0);
-  colors[3]=px.getColorRGB(0,0,40);
-  colors[4]=px.getColorRGB(40,0,0);
-  colors[5]=px.getColorRGB(40,0,0);
-  colors[6]=px.getColorRGB(40,0,0);
+  colors[3]=px.getColorRGB(40,40,0);
+  colors[4]=px.getColorRGB(40,40,0);
+  colors[5]=px.getColorRGB(40,40,0);
+  colors[6]=px.getColorRGB(0,40,0);
   colors[7]=px.getColorRGB(0,40,0);
   
   px.setColors(colors,8);

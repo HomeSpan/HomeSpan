@@ -42,7 +42,7 @@ class Pixel {
 
     volatile static pixel_status_t status;
     
-    static void isrHandler(void *arg);         // interrupt handler 
+    static void loadData(void *arg);            // interrupt handler 
     void loadColor(uint32_t c, uint32_t *p);    // creates pulse pattern for pixel color (encoded as RGB in low 24-bits of *p)
   
   public:
@@ -58,8 +58,6 @@ class Pixel {
     static uint32_t getColorRGB(uint8_t r, uint8_t g, uint8_t b);    // return pixel Color from RGB values
     static uint32_t getColorHSV(float h, float s, float v);          // return pixel Color from HSV values
     
-    void loadData();
-
     operator bool(){         // override boolean operator to return true/false if creation succeeded/failed
       return(*rf);
     }

@@ -8,11 +8,11 @@ Pixel::Pixel(int pin, uint32_t nPixels){
   rf=new RFControl(pin,false,false);          // set clock to 1/80 usec, no default driver
   setTiming(0.32, 0.88, 0.64, 0.56, 80.0);    // set default timing parameters (suitable for most SK68 and WS28 RGB pixels)
 
-  rmt_isr_register(isrHandler,(void *)this,0,NULL);     // end-transmission interrupt automatically enabled by rmt_tx_start
-  rmt_set_tx_thr_intr_en(rf->getChannel(),true,8);      // need to also enable threshold interrupt
+  rmt_isr_register(loadData,(void *)this,0,NULL);       // set custom interrupt handler
+  rmt_set_tx_thr_intr_en(rf->getChannel(),true,8);      // enable threshold interrupt (note end-transmission interrupt automatically enabled by rmt_tx_start)
 
-  channelNum=rf->getChannel();
-  txEndMask=TxEndMask(channelNum);
+  channelNum=rf->getChannel();          // save integer form of channel number
+  txEndMask=TxEndMask(channelNum);      // create bit mask for end-of-transmission interrupt specific to this channel
 
 }
 
@@ -54,8 +54,11 @@ void Pixel::setColors(const uint32_t *data, uint32_t nPixels){
   status.iBit=24;
   status.started=true;
 
-  loadData();             // load first 2 bytes
-  loadData();
+//  loadData();             // load first 2 bytes
+//  loadData();
+
+  loadData(this);
+  loadData(this);
 
   rmt_tx_start(rf->getChannel(),true);
 
@@ -120,27 +123,7 @@ uint32_t Pixel::getColorHSV(float h, float s, float v){
 
 ///////////////////
 
-void Pixel::loadData(){
-  
-  if(status.nPixels==0){
-    RMTMEM.chan[channelNum].data32[status.iMem].val=0;
-    return;
-  }
-  
-  for(int i=0;i<8;i++)
-    RMTMEM.chan[channelNum].data32[status.iMem++].val=pattern[(*status.data>>(--status.iBit))&1];
-    
-  if(status.iBit==0){
-    status.iBit=24;
-    status.data++;
-    status.nPixels--;    
-  }
-  status.iMem%=memSize;
-}
-
-///////////////////
-
-void Pixel::isrHandler(void *arg){
+void Pixel::loadData(void *arg){
 
   Pixel *pix=(Pixel *)arg;
 
@@ -151,7 +134,22 @@ void Pixel::isrHandler(void *arg){
   }
   
   RMT.int_clr.val=~0;
-  pix->loadData();
+
+  if(status.nPixels==0){
+    RMTMEM.chan[pix->channelNum].data32[status.iMem].val=0;
+    return;
+  }
+  
+  for(int i=0;i<8;i++)
+    RMTMEM.chan[pix->channelNum].data32[status.iMem++].val=pix->pattern[(*status.data>>(--status.iBit))&1];
+    
+  if(status.iBit==0){
+    status.iBit=24;
+    status.data++;
+    status.nPixels--;    
+  }
+  
+  status.iMem%=pix->memSize;    
 }
 
 ///////////////////
