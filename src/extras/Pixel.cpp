@@ -8,10 +8,13 @@ Pixel::Pixel(int pin){
   rf=new RFControl(pin,false,false);          // set clock to 1/80 usec, no default driver
   setTiming(0.32, 0.88, 0.64, 0.56, 80.0);    // set default timing parameters (suitable for most SK68 and WS28 RGB pixels)
 
-  rmt_isr_register(loadData,NULL,0,NULL);                // set custom interrupt handler
-  rmt_set_tx_thr_intr_en(rf->getChannel(),true,8);      // enable threshold interrupt (note end-transmission interrupt automatically enabled by rmt_tx_start)
+  rmt_isr_register(loadData,NULL,0,NULL);               // set custom interrupt handler
+  rmt_set_tx_thr_intr_en(rf->getChannel(),true,8);      // enable threshold interrupt to trigger every 8 pulses
 
-  txEndMask=TxEndMask(rf->getChannel());      // create bit mask for end-of-transmission interrupt specific to this channel
+  rmt_set_tx_intr_en(rf->getChannel(),false);           // disable end-of-transmission interrupt
+  txEndMask=RMT.int_ena.val;                            // save interrupt enable vector
+  rmt_set_tx_intr_en(rf->getChannel(),true);            // enable end-of-transmission interrupt
+  txEndMask^=RMT.int_ena.val;                           // find bit that flipped and save as end-of-transmission mask for this channel 
 
   Serial.printf("%d %d %08X\n",rf->getChannel(),txEndMask,RMT.int_ena.val);
 

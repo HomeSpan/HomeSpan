@@ -25,20 +25,9 @@ class Pixel {
     uint32_t pattern[2];           // storage for zero-bit and one-bit pulses
     uint32_t resetTime;            // minimum time (in usec) between pulse trains
     uint32_t txEndMask;            // mask for end-of-transmission interrupt
- 
-    #if defined(CONFIG_IDF_TARGET_ESP32)
-      const int memSize=64;
-      #define TxEndMask(chNum) (1<<(chNum*3))
-    #elif defined(CONFIG_IDF_TARGET_ESP32S2)
-      const int memSize=48;
-      #define TxEndMask(chNum) (1<<(chNum*3))
-    #elif defined(CONFIG_IDF_TARGET_ESP32C3)
-      const int memSize=48;
-      #define TxEndMask(chNum) (1<<chNum)
-    #else
-      const int memSize=0;
-    #endif
     
+    const int memSize=sizeof(RMTMEM.chan[0].data32)/4;    // determine size (in pulses) of one channel
+     
     static void loadData(void *arg);            // interrupt handler 
     volatile static pixel_status_t status;      // storage for volatile information modified in interupt handler   
   

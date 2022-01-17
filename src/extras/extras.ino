@@ -95,9 +95,9 @@ void setup() {
 
   Serial.println("\n\nHomeSpan Pixel Example\n");
 
-  Pixel px0(10);
+//  Pixel px0(10);
   Pixel px(1);
-  Pixel px1(0);
+//  Pixel px1(0);
 
   uint32_t colors[20];
 
