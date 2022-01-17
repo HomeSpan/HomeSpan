@@ -15,9 +15,6 @@ Pixel::Pixel(int pin){
   txEndMask=RMT.int_ena.val;                            // save interrupt enable vector
   rmt_set_tx_intr_en(rf->getChannel(),true);            // enable end-of-transmission interrupt
   txEndMask^=RMT.int_ena.val;                           // find bit that flipped and save as end-of-transmission mask for this channel 
-
-  Serial.printf("%d %d %08X\n",rf->getChannel(),txEndMask,RMT.int_ena.val);
-
 }
 
 ///////////////////
@@ -66,9 +63,6 @@ void Pixel::setColors(const uint32_t *data, uint32_t nPixels, boolean multiColor
   loadData(this);         // load first two bytes of data to get started
   loadData(this);
 
-  for(int i=0;i<status.px->memSize;i++)
-    Serial.printf("%d %08X\n",i,RMTMEM.chan[rf->getChannel()].data32[i].val);
-
   rmt_tx_start(rf->getChannel(),true);
 
   while(status.started);            // wait for transmission to be complete
@@ -93,7 +87,7 @@ uint32_t Pixel::getColorHSV(float h, float s, float v){
 
 void Pixel::loadData(void *arg){
 
-  if((RMT.int_st.val & status.px->txEndMask) >0){
+  if(RMT.int_st.val & status.px->txEndMask){
     RMT.int_clr.val=~0;
     status.started=false;
     return;
