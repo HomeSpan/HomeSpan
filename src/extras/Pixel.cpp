@@ -3,7 +3,7 @@
 
 ///////////////////
 
-Pixel::Pixel(int pin, uint32_t nPixels){
+Pixel::Pixel(int pin){
     
   rf=new RFControl(pin,false,false);          // set clock to 1/80 usec, no default driver
   setTiming(0.32, 0.88, 0.64, 0.56, 80.0);    // set default timing parameters (suitable for most SK68 and WS28 RGB pixels)
@@ -11,8 +11,7 @@ Pixel::Pixel(int pin, uint32_t nPixels){
   rmt_isr_register(loadData,(void *)this,0,NULL);       // set custom interrupt handler
   rmt_set_tx_thr_intr_en(rf->getChannel(),true,8);      // enable threshold interrupt (note end-transmission interrupt automatically enabled by rmt_tx_start)
 
-  channelNum=rf->getChannel();          // save integer form of channel number
-  txEndMask=TxEndMask(channelNum);      // create bit mask for end-of-transmission interrupt specific to this channel
+  txEndMask=TxEndMask(rf->getChannel());      // create bit mask for end-of-transmission interrupt specific to this channel
 
 }
 
@@ -27,23 +26,26 @@ void Pixel::setTiming(float high0, float low0, float high1, float low1, uint32_t
 
 ///////////////////
 
-void Pixel::setRGB(uint8_t r, uint8_t g, uint8_t b, int nPixels){
+void Pixel::setRGB(uint8_t r, uint8_t g, uint8_t b, uint32_t nPixels){
   
-  if(!*rf)
+  if(!*rf || nPixels==0)
     return;
 
-  uint32_t *pulses = (uint32_t *) malloc(24*sizeof(uint32_t));    
-
-  loadColor(getColorRGB(r,g,b),pulses);
-  rf->start(pulses,24,nPixels);           // start pulse train and repeat for nPixels
-  delayMicroseconds(resetTime);
-
-  free(pulses);
+  uint32_t data=getColorRGB(r,g,b);
+  setColors(&data,nPixels,false);
 }
 
 ///////////////////
 
-void Pixel::setColors(const uint32_t *data, uint32_t nPixels){
+void Pixel::setHSV(float h, float s, float v, uint32_t nPixels){
+  float r,g,b;
+  LedPin::HSVtoRGB(h,s/100.0,v/100.0,&r,&g,&b);
+  setRGB(r*255,g*255,b*255,nPixels);  
+}
+
+///////////////////
+
+void Pixel::setColors(const uint32_t *data, uint32_t nPixels, boolean multiColor){
   
   if(!*rf || nPixels==0)
     return;
@@ -53,58 +55,15 @@ void Pixel::setColors(const uint32_t *data, uint32_t nPixels){
   status.iMem=0;
   status.iBit=24;
   status.started=true;
+  this->multiColor=multiColor;
 
-//  loadData();             // load first 2 bytes
-//  loadData();
-
-  loadData(this);
+  loadData(this);         // load first two bytes of data to get started
   loadData(this);
 
   rmt_tx_start(rf->getChannel(),true);
 
-  while(status.started);
-
-
-  return;
-
-//  uint32_t *pulses = (uint32_t *) malloc(nTrain*24*sizeof(uint32_t));
-//
-//  if(!pulses){
-//    Serial.printf("*** ERROR:  Not enough memory to reserve for %d Pixels per batch transmission\n",nTrain);
-//    return;
-//  }
-//
-//  int i,j;
-//  
-//  for(i=0;i<nPixels;){
-//    for(j=0;j<nTrain && i<nPixels;j++,i++)
-//      loadColor(color[i],pulses+j*24);
-//    rf->start(pulses,j*24);
-//  }
-//
-//  free(pulses);
-//  delayMicroseconds(resetTime);
-}
-
-///////////////////
-
-void Pixel::setHSV(float h, float s, float v, int nPixels){
-  float r,g,b;
-  LedPin::HSVtoRGB(h,s/100.0,v/100.0,&r,&g,&b);
-  setRGB(r*255,g*255,b*255,nPixels);  
-}
-
-///////////////////
-
-void Pixel::loadColor(uint32_t c, uint32_t *p){
-
-  uint32_t count=24;
-  p+=23;
-  
-  while(count--){
-    *p--=pattern[c&1];
-    c=c>>1;
-  }
+  while(status.started);            // wait for transmission to be complete
+  delayMicroseconds(resetTime);     // end-of-marker delay
 }
 
 ///////////////////
@@ -136,16 +95,16 @@ void Pixel::loadData(void *arg){
   RMT.int_clr.val=~0;
 
   if(status.nPixels==0){
-    RMTMEM.chan[pix->channelNum].data32[status.iMem].val=0;
+    RMTMEM.chan[pix->rf->getChannel()].data32[status.iMem].val=0;
     return;
   }
   
   for(int i=0;i<8;i++)
-    RMTMEM.chan[pix->channelNum].data32[status.iMem++].val=pix->pattern[(*status.data>>(--status.iBit))&1];
+    RMTMEM.chan[pix->rf->getChannel()].data32[status.iMem++].val=pix->pattern[(*status.data>>(--status.iBit))&1];
     
   if(status.iBit==0){
     status.iBit=24;
-    status.data++;
+    status.data+=pix->multiColor;
     status.nPixels--;    
   }
   
@@ -154,4 +113,4 @@ void Pixel::loadData(void *arg){
 
 ///////////////////
 
-volatile pixel_status_t Pixel::status;
+volatile Pixel::pixel_status_t Pixel::status;
