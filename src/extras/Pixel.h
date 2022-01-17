@@ -8,15 +8,12 @@
 #include "RFControl.h"
 #include "PwmPin.h"
 
-typedef uint32_t color_t;
-
 struct pixel_status_t {
   int nPixels;
   const uint32_t *data;
   int iBit;
   int iMem;
   boolean started;
-  uint32_t txEndMask;            // mask for end-of-transmission interrupt
 };
 
 class Pixel {
@@ -24,6 +21,7 @@ class Pixel {
     uint32_t pattern[2];           // storage for zero-bit and one-bit pulses
     uint32_t resetTime;            // minimum time (in usec) between pulse trains
     int channelNum;                // channel number
+    uint32_t txEndMask;            // mask for end-of-transmission interrupt
  
     uint32_t nTrain;               // number of Pixels to transmit per pulse train batch
 
@@ -45,7 +43,7 @@ class Pixel {
     volatile static pixel_status_t status;
     
     static void isrHandler(void *arg);         // interrupt handler 
-    void loadColor(color_t c, uint32_t *p);    // creates pulse pattern for pixel color (encoded as RGB in low 24-bits of *p)
+    void loadColor(uint32_t c, uint32_t *p);    // creates pulse pattern for pixel color (encoded as RGB in low 24-bits of *p)
   
   public:
     Pixel(int pin, uint32_t nPixels=1);                             // creates addressable single-wire RGB LED on pin (such as the SK68 or WS28), with OPTIONAL reserve of memory for nPixels
@@ -57,8 +55,8 @@ class Pixel {
     void setColors(const uint32_t *data, uint32_t nPixels);              // sets colors of nPixels from array of Colors
     int getPin(){return(rf->getPin());}                             // returns pixel pin if valid, else returns -1
     
-    static color_t getColorRGB(uint8_t r, uint8_t g, uint8_t b);    // return pixel Color from RGB values
-    static color_t getColorHSV(float h, float s, float v);          // return pixel Color from HSV values
+    static uint32_t getColorRGB(uint8_t r, uint8_t g, uint8_t b);    // return pixel Color from RGB values
+    static uint32_t getColorHSV(float h, float s, float v);          // return pixel Color from HSV values
     
     void loadData();
 

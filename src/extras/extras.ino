@@ -6,7 +6,7 @@ struct Effect1 {
 
   Pixel *px;
   int H=0;
-  color_t x[8];
+  uint32_t x[8];
   uint32_t alarmTime=0;
   uint32_t speed;
 
@@ -35,7 +35,7 @@ struct Effect2 {
   int phase=0;
   int dir=1;
   int H=0;
-  color_t x[8];
+  uint32_t x[8];
   uint32_t alarmTime=0;
   uint32_t speed;
 
@@ -106,7 +106,7 @@ void setup() {
   colors[4]=px.getColorRGB(40,0,0);
   colors[5]=px.getColorRGB(40,0,0);
   colors[6]=px.getColorRGB(40,0,0);
-  colors[7]=px.getColorRGB(0,0,40);
+  colors[7]=px.getColorRGB(0,40,0);
   
   px.setColors(colors,8);
   Serial.println("\n\nDone\n\n");

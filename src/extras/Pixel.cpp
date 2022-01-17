@@ -10,7 +10,9 @@ Pixel::Pixel(int pin, uint32_t nPixels){
 
   rmt_isr_register(isrHandler,(void *)this,0,NULL);     // end-transmission interrupt automatically enabled by rmt_tx_start
   rmt_set_tx_thr_intr_en(rf->getChannel(),true,8);      // need to also enable threshold interrupt
+
   channelNum=rf->getChannel();
+  txEndMask=TxEndMask(channelNum);
 
 }
 
@@ -51,7 +53,6 @@ void Pixel::setColors(const uint32_t *data, uint32_t nPixels){
   status.iMem=0;
   status.iBit=24;
   status.started=true;
-  status.txEndMask=TxEndMask(channelNum);
 
   loadData();             // load first 2 bytes
   loadData();
@@ -92,7 +93,7 @@ void Pixel::setHSV(float h, float s, float v, int nPixels){
 
 ///////////////////
 
-void Pixel::loadColor(color_t c, uint32_t *p){
+void Pixel::loadColor(uint32_t c, uint32_t *p){
 
   uint32_t count=24;
   p+=23;
@@ -105,13 +106,13 @@ void Pixel::loadColor(color_t c, uint32_t *p){
 
 ///////////////////
 
-color_t Pixel::getColorRGB(uint8_t r, uint8_t g, uint8_t b){
+uint32_t Pixel::getColorRGB(uint8_t r, uint8_t g, uint8_t b){
   return(g<<16 | r<<8 | b);
 }
 
 ///////////////////
 
-color_t Pixel::getColorHSV(float h, float s, float v){
+uint32_t Pixel::getColorHSV(float h, float s, float v){
   float r,g,b;
   LedPin::HSVtoRGB(h,s/100.0,v/100.0,&r,&g,&b);
   return(getColorRGB(r*255,g*255,b*255));
@@ -143,7 +144,7 @@ void Pixel::isrHandler(void *arg){
 
   Pixel *pix=(Pixel *)arg;
 
-  if(RMT.int_st.val & status.txEndMask){
+  if(RMT.int_st.val & pix->txEndMask){
     RMT.int_clr.val=~0;
     status.started=false;
     return;
