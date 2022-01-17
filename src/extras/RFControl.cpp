@@ -128,7 +128,6 @@ void RFControl::enableCarrier(uint32_t freq, float duty){
       return;
     }
 
-//    Serial.printf("%d %g %d %d\n",freq,period,highTime,lowTime);
     rmt_set_tx_carrier(config->channel,true,highTime,lowTime,RMT_CARRIER_LEVEL_HIGH);       
   } else {
     rmt_set_tx_carrier(config->channel,false,0,0,RMT_CARRIER_LEVEL_HIGH);           
