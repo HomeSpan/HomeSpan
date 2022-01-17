@@ -8,10 +8,12 @@ Pixel::Pixel(int pin){
   rf=new RFControl(pin,false,false);          // set clock to 1/80 usec, no default driver
   setTiming(0.32, 0.88, 0.64, 0.56, 80.0);    // set default timing parameters (suitable for most SK68 and WS28 RGB pixels)
 
-  rmt_isr_register(loadData,(void *)this,0,NULL);       // set custom interrupt handler
+  rmt_isr_register(loadData,NULL,0,NULL);                // set custom interrupt handler
   rmt_set_tx_thr_intr_en(rf->getChannel(),true,8);      // enable threshold interrupt (note end-transmission interrupt automatically enabled by rmt_tx_start)
 
   txEndMask=TxEndMask(rf->getChannel());      // create bit mask for end-of-transmission interrupt specific to this channel
+
+  Serial.printf("%d %d %08X\n",rf->getChannel(),txEndMask,RMT.int_ena.val);
 
 }
 
@@ -55,10 +57,14 @@ void Pixel::setColors(const uint32_t *data, uint32_t nPixels, boolean multiColor
   status.iMem=0;
   status.iBit=24;
   status.started=true;
-  this->multiColor=multiColor;
+  status.px=this;
+  status.multiColor=multiColor;
 
   loadData(this);         // load first two bytes of data to get started
   loadData(this);
+
+  for(int i=0;i<status.px->memSize;i++)
+    Serial.printf("%d %08X\n",i,RMTMEM.chan[rf->getChannel()].data32[i].val);
 
   rmt_tx_start(rf->getChannel(),true);
 
@@ -84,9 +90,7 @@ uint32_t Pixel::getColorHSV(float h, float s, float v){
 
 void Pixel::loadData(void *arg){
 
-  Pixel *pix=(Pixel *)arg;
-
-  if(RMT.int_st.val & pix->txEndMask){
+  if((RMT.int_st.val & status.px->txEndMask) >0){
     RMT.int_clr.val=~0;
     status.started=false;
     return;
@@ -95,20 +99,20 @@ void Pixel::loadData(void *arg){
   RMT.int_clr.val=~0;
 
   if(status.nPixels==0){
-    RMTMEM.chan[pix->rf->getChannel()].data32[status.iMem].val=0;
+    RMTMEM.chan[status.px->rf->getChannel()].data32[status.iMem].val=0;
     return;
   }
   
   for(int i=0;i<8;i++)
-    RMTMEM.chan[pix->rf->getChannel()].data32[status.iMem++].val=pix->pattern[(*status.data>>(--status.iBit))&1];
+    RMTMEM.chan[status.px->rf->getChannel()].data32[status.iMem++].val=status.px->pattern[(*status.data>>(--status.iBit))&1];
     
   if(status.iBit==0){
     status.iBit=24;
-    status.data+=pix->multiColor;
+    status.data+=status.multiColor;
     status.nPixels--;    
   }
   
-  status.iMem%=pix->memSize;    
+  status.iMem%=status.px->memSize;    
 }
 
 ///////////////////

@@ -95,22 +95,23 @@ void setup() {
 
   Serial.println("\n\nHomeSpan Pixel Example\n");
 
-//  Pixel px0(10);
+  Pixel px0(10);
   Pixel px(1);
+  Pixel px1(0);
 
   uint32_t colors[20];
 
-  colors[0]=px.getColorRGB(0,40,0);
+  colors[0]=px.getColorRGB(40,0,0);
   colors[1]=px.getColorRGB(40,0,0);
   colors[2]=px.getColorRGB(40,0,0);
   colors[3]=px.getColorRGB(40,40,0);
   colors[4]=px.getColorRGB(40,40,0);
   colors[5]=px.getColorRGB(40,40,0);
   colors[6]=px.getColorRGB(0,40,0);
-  colors[7]=px.getColorRGB(0,40,0);
+  colors[7]=px.getColorRGB(40,0,0);
   
   px.setColors(colors,8);
-//  px.setHSV(240,80,40,3);
+  px.setHSV(0,100,40,3);
   Serial.println("\n\nDone\n\n");
   while(1);
 

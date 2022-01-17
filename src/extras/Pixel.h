@@ -16,6 +16,8 @@ class Pixel {
     int iBit;
     int iMem;
     boolean started;
+    Pixel *px;
+    boolean multiColor;
   };
   
   private:
@@ -23,7 +25,6 @@ class Pixel {
     uint32_t pattern[2];           // storage for zero-bit and one-bit pulses
     uint32_t resetTime;            // minimum time (in usec) between pulse trains
     uint32_t txEndMask;            // mask for end-of-transmission interrupt
-    boolean multiColor;            // flag to indicate array contains multiple colors (don't just repeat first color for nPixels)
  
     #if defined(CONFIG_IDF_TARGET_ESP32)
       const int memSize=64;
