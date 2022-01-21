@@ -82,9 +82,9 @@ struct Effect2 {
 #endif
 
 Pixel px2(2);
+Pixel px(PIN);
 Pixel px3(3);
 Pixel px4(4);
-Pixel px(PIN);
 Pixel px5(5);
 Pixel px6(6);
 Pixel px7(7);

@@ -25,6 +25,7 @@ class Pixel {
     uint32_t pattern[2];           // storage for zero-bit and one-bit pulses
     uint32_t resetTime;            // minimum time (in usec) between pulse trains
     uint32_t txEndMask;            // mask for end-of-transmission interrupt
+    uint32_t txThrMask;            // mask for threshold interrupt
     
     const int memSize=sizeof(RMTMEM.chan[0].data32)/4;    // determine size (in pulses) of one channel
      

@@ -12,7 +12,11 @@ Pixel::Pixel(int pin){
   setTiming(0.32, 0.88, 0.64, 0.56, 80.0);    // set default timing parameters (suitable for most SK68 and WS28 RGB pixels)
 
   rmt_isr_register(loadData,NULL,0,NULL);               // set custom interrupt handler
-  rmt_set_tx_thr_intr_en(rf->getChannel(),true,8);      // enable threshold interrupt to trigger every 8 pulses
+  
+  rmt_set_tx_thr_intr_en(rf->getChannel(),false,8);     // disable threshold interrupt
+  txThrMask=RMT.int_ena.val;                            // save interrupt enable vector
+  rmt_set_tx_thr_intr_en(rf->getChannel(),true,8);      // enable threshold interrupt to trigger every 8 pulses 
+  txThrMask^=RMT.int_ena.val;                           // find bit that flipped and save as threshold mask for this channel 
 
   rmt_set_tx_intr_en(rf->getChannel(),false);           // disable end-of-transmission interrupt
   txEndMask=RMT.int_ena.val;                            // save interrupt enable vector
@@ -88,15 +92,15 @@ uint32_t Pixel::getColorHSV(float h, float s, float v){
 
 ///////////////////
 
-void Pixel::loadData(void *arg){
+void IRAM_ATTR Pixel::loadData(void *arg){
 
   if(RMT.int_st.val & status.px->txEndMask){
-    RMT.int_clr.val=~0;
+    RMT.int_clr.val=status.px->txEndMask;
     status.started=false;
     return;
   }
   
-  RMT.int_clr.val=~0;
+  RMT.int_clr.val=status.px->txThrMask;       // if loadData() is called and it is NOT because of an END interrupt (above) then must either be a pre-load, or a threshold trigger
 
   if(status.nPixels==0){
     RMTMEM.chan[status.px->rf->getChannel()].data32[status.iMem].val=0;
