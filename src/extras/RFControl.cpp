@@ -33,21 +33,18 @@ RFControl::RFControl(uint8_t pin, boolean refClock, boolean installDriver){
   if(installDriver)
     rmt_driver_install(config->channel,0,0);
 
-  // If specified, set the base clock to 1 MHz so tick-units are in microseconds (before any CLK_DIV is applied), otherwise default will be 80 MHz APB clock
-
   this->refClock=refClock;
-  
-  if(refClock)
-#ifdef CONFIG_IDF_TARGET_ESP32C3
-  REG_SET_FIELD(RMT_SYS_CONF_REG,RMT_SCLK_DIV_NUM,79);        // ESP32-C3 does not have a 1 MHz REF Tick Clock, but allows the 80 MHz APB clock to be scaled by an additional RMT-specific divider
-#else  
-  rmt_set_source_clk(config->channel,RMT_BASECLK_REF);        // use 1 MHz REF Tick Clock for ESP32 and ESP32-S2
-#endif
-
   nChannels++;
 
+  if(refClock)
+#if SOC_RMT_SUPPORT_REF_TICK
+    rmt_set_source_clk(config->channel,RMT_BASECLK_REF);        // use 1 MHz REF Tick Clock for ESP32 and ESP32-S2 instead of 80 MHz APB clock
+#elif SOC_RMT_SUPPORT_XTAL
+    REG_SET_FIELD(RMT_SYS_CONF_REG,RMT_SCLK_DIV_NUM,79);        // ESP32-C3 does not have a 1 MHz REF Tick Clock, but allows the 80 MHz APB clock to be scaled by an additional RMT-specific divider
+#endif
+
 }
- 
+
 ///////////////////
 
 void RFControl::start(uint8_t nCycles, uint8_t tickTime){     // starts transmission of pulses from internal data structure, repeated for nCycles, where each tick in pulse is tickTime microseconds long
@@ -60,8 +57,8 @@ void RFControl::start(uint32_t *data, int nData, uint8_t nCycles, uint8_t tickTi
 
   if(!config || nData==0)
     return;
-    
-  rmt_set_clk_div(config->channel,tickTime);                  // set clock divider
+
+  rmt_set_clk_div(config->channel,tickTime);                // set clock divider
 
   for(int i=0;i<nCycles;i++)                                // loop over nCycles
     rmt_write_items(config->channel, (rmt_item32_t *) data, nData, true);      // start transmission and wait until completed before returning    
