@@ -30,6 +30,25 @@
 // Demonstrates use of HomeSpan Pixel Class that provides for control of single-wire
 // addressable RGB LEDs, such as the SK68xx or WS28xx models found in many devices,
 // including the Espressif ESP32, ESP32-S2, and ESP32-C3 development boards.
+//
+// IMPORTANT:  YOU LIKELY WILL NEED TO CHANGE THE PIN NUMBERS BELOW TO MATCH YOUR SPECIFIC ESP32/S2/C3 BOARD
+
+#if defined(CONFIG_IDF_TARGET_ESP32C3)
+
+  #define PIXEL_PIN           8
+  #define PIXEL_STRAND_PIN    1 
+
+#elif defined(CONFIG_IDF_TARGET_ESP32S2)
+
+  #define PIXEL_PIN           18
+  #define PIXEL_STRAND_PIN    7
+
+#elif defined(CONFIG_IDF_TARGET_ESP32)
+
+  #define PIXEL_PIN           23
+  #define PIXEL_STRAND_PIN    21
+  
+#endif
 
 #include "HomeSpan.h"
 #include "extras/Pixel.h"                       // include the HomeSpan Pixel class
@@ -139,7 +158,7 @@ void setup() {
   new Service::HAPProtocolInformation();
     new Characteristic::Version("1.1.0");
 
-  new Pixel_Light(8);                         // create single Pixel attached to pin 8
+  new Pixel_Light(PIXEL_PIN);                // create single Pixel Light
       
   new SpanAccessory();
     new Service::AccessoryInformation();
@@ -153,7 +172,7 @@ void setup() {
   new Service::HAPProtocolInformation();
     new Characteristic::Version("1.1.0");
 
-  new Pixel_KnightRider(1,8);               // create 8-Pixel Strand with Knight-Rider Effect attached to pin 1 
+  new Pixel_KnightRider(PIXEL_STRAND_PIN,8);     // create 8-Pixel Strand with Knight-Rider Effect 
 
 }
 
