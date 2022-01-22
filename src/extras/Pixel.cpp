@@ -6,7 +6,7 @@
 Pixel::Pixel(int pin){
     
   rf=new RFControl(pin,false,false);          // set clock to 1/80 usec, no default driver
-  if(!rf)
+  if(!*rf)
     return;
     
   setTiming(0.32, 0.88, 0.64, 0.56, 80.0);    // set default timing parameters (suitable for most SK68 and WS28 RGB pixels)
