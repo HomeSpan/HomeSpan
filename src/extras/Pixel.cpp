@@ -4,14 +4,10 @@
 ///////////////////
 
 Pixel::Pixel(int pin){
-
-  if(!rf)         // RMT Channel not yet assigned    
-    rf=new RFControl(pin,false,false);          // set clock to 1/80 usec, no default driver
     
-  if(!*rf)        // if RMT Channel could NOT be assigned (no more channels)
+  rf=new RFControl(pin,false,false);          // set clock to 1/80 usec, no default driver
+  if(!rf)
     return;
-
-  this->pin=pin;
     
   setTiming(0.32, 0.88, 0.64, 0.56, 80.0);    // set default timing parameters (suitable for most SK68 and WS28 RGB pixels)
 
@@ -71,8 +67,6 @@ void Pixel::setColors(const uint32_t *data, uint32_t nPixels, boolean multiColor
   status.px=this;
   status.multiColor=multiColor;
 
-  rmt_set_gpio(rf->getChannel(),RMT_MODE_TX,(gpio_num_t)(pin),false);
-
   loadData(this);         // load first two bytes of data to get started
   loadData(this);
 
@@ -128,4 +122,3 @@ void IRAM_ATTR Pixel::loadData(void *arg){
 ///////////////////
 
 volatile Pixel::pixel_status_t Pixel::status;
-RFControl *Pixel::rf=NULL;

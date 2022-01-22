@@ -81,12 +81,13 @@ struct Effect2 {
   #define PIN 21
 #endif
 
-Pixel px(PIN);
 Pixel px2(2);
-Pixel px5(5);
+Pixel px(PIN);
 Pixel px3(3);
 Pixel px4(4);
+Pixel px5(5);
 Pixel px6(6);
+Pixel px7(7);
 
 Effect1 effect1(&px,5);
 Effect2 effect2(&px,100);
@@ -98,13 +99,6 @@ void setup() {
   delay(1000);                    // wait for interface to flush
 
   Serial.println("\n\nHomeSpan Pixel Example\n");
-
-  Serial.println(px.getPin());
-  Serial.println(px2.getPin());
-  Serial.println(px3.getPin());
-  Serial.println(px4.getPin());
-  Serial.println(px5.getPin());
-  Serial.println(px6.getPin());
    
 } // end of setup()
 

@@ -21,12 +21,11 @@ class Pixel {
   };
   
   private:
-    static RFControl *rf;          // Pixel utilizes RFControl (shared across all Pixel instances)
+    RFControl *rf;                 // Pixel utilizes RFControl
     uint32_t pattern[2];           // storage for zero-bit and one-bit pulses
     uint32_t resetTime;            // minimum time (in usec) between pulse trains
     uint32_t txEndMask;            // mask for end-of-transmission interrupt
     uint32_t txThrMask;            // mask for threshold interrupt
-    int pin=-1;                    // pin number to which pixel is connected
     
     const int memSize=sizeof(RMTMEM.chan[0].data32)/4;    // determine size (in pulses) of one channel
      
@@ -42,7 +41,7 @@ class Pixel {
     void setHSV(float h, float s, float v, uint32_t nPixels=1);                       // sets color of nPixels to HSV values where h=[0,360], s=[0,100], v=[0,100]   
     void setColors(const uint32_t *data, uint32_t nPixels, bool multiColor=true);     // sets colors of nPixels from array of colors stored in data
     
-    int getPin(){return(pin);}                                       // returns pixel pin (or -1 if initialization failed)
+    int getPin(){return(rf->getPin());}                             // returns pixel pin if valid, else returns -1
     
     static uint32_t getColorRGB(uint8_t r, uint8_t g, uint8_t b);    // return pixel Color from RGB values
     static uint32_t getColorHSV(float h, float s, float v);          // return pixel Color from HSV values
