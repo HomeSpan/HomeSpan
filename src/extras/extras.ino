@@ -6,7 +6,6 @@ struct Effect1 {
 
   Pixel *px;
   int H=0;
-  uint32_t x[8];
   uint32_t alarmTime=0;
   uint32_t speed;
 
@@ -19,10 +18,7 @@ struct Effect1 {
     if(millis()<alarmTime)
       return;
     
-    for(int i=0;i<8;i++)
-      x[i]=px->getColorHSV(H,i*3+79,i*2+5);
-
-    px->setColors(x,8);
+    px->setHSV(H,100,100,0,60);
     H=(H+1)%360;
      
     alarmTime=millis()+speed;
@@ -35,7 +31,7 @@ struct Effect2 {
   int phase=0;
   int dir=1;
   int H=0;
-  uint32_t x[8];
+  uint32_t x[60];
   uint32_t alarmTime=0;
   uint32_t speed;
 
@@ -48,23 +44,23 @@ struct Effect2 {
     if(millis()<alarmTime)
       return;
     
-    for(int i=0;i<8;i++){
+    for(int i=0;i<60;i++){
       if(i==phase)
-        x[i]=px->getColorHSV(H,100,10);
-      else if(i==7-phase)
-        x[i]=px->getColorHSV(H+180,100,10);
+        x[i]=px->getColorHSV(H,100,100);
+      else if(i==59-phase)
+        x[i]=px->getColorHSV(H+180,100,100);
       else
         x[i]=0;
     }
 
-    px->setColors(x,8);
-    phase=(phase+dir)%8;
+    px->setColors(x,60);
+    phase=(phase+dir)%60;
     
     if(phase==0){
       dir=1;
       H=(H+10)%360;
     }
-    else if(phase==7){
+    else if(phase==59){
       dir=-1;
       H=(H+10)%360;
     }
@@ -74,23 +70,27 @@ struct Effect2 {
 };
 
 #if defined(CONFIG_IDF_TARGET_ESP32C3)
-  #define PIN 1
+
+  #define PIXEL_PIN_1   8
+  #define PIXEL_PIN_2   1 
+
 #elif defined(CONFIG_IDF_TARGET_ESP32S2)
-  #define PIN 1
-#else
-  #define PIN 21
+
+  #define PIXEL_PIN_1   18
+  #define PIXEL_PIN_2   7
+
+#elif defined(CONFIG_IDF_TARGET_ESP32)
+
+  #define PIXEL_PIN_1   23
+  #define PIXEL_PIN_2   21
+  
 #endif
 
-Pixel px2(2);
-Pixel px(PIN);
-Pixel px3(3);
-Pixel px4(4);
-Pixel px5(5);
-Pixel px6(6);
-Pixel px7(7);
+Pixel px1(PIXEL_PIN_1,Pixel::RGBW);
+Pixel px2(PIXEL_PIN_2,Pixel::RGBW);
 
-Effect1 effect1(&px,5);
-Effect2 effect2(&px,100);
+Effect1 effect1(&px1,20);
+Effect2 effect2(&px2,20);
 
 void setup() {     
  
@@ -103,5 +103,6 @@ void setup() {
 } // end of setup()
 
 void loop(){
+  effect1.update();
   effect2.update();
 }
