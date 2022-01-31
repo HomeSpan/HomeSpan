@@ -145,6 +145,7 @@ struct Span{
   vector<SpanBuf> Notifications;                    // vector of SpanBuf objects that store info for Characteristics that are updated with setVal() and require a Notification Event
   vector<SpanButton *> PushButtons;                 // vector of pointer to all PushButtons
   unordered_map<uint64_t, uint32_t> TimedWrites;    // map of timed-write PIDs and Alarm Times (based on TTLs)
+  unordered_map<uint8_t, uint8_t> ProtectedGPIOs;   // map of pins to protect when running an ISR during NVS operations
   
   unordered_map<char, SpanUserCommand *> UserCommands;           // map of pointers to all UserCommands
 
@@ -159,6 +160,7 @@ struct Span{
   void commandMode();                           // allows user to control and reset HomeSpan settings with the control button
   void processSerialCommand(const char *c);     // process command 'c' (typically from readSerial, though can be called with any 'c')
   void checkRanges();                           // checks values of all Characteristics to ensure they are each within range
+  void protectGPIOs(boolean suspend);           // true - disable ISRs on protectedGPIOs; false - re-enable ISRs on protectedGPIOs
 
   int sprintfAttributes(char *cBuf);            // prints Attributes JSON database into buf, unless buf=NULL; return number of characters printed, excluding null terminator, even if buf=NULL
   void prettyPrint(char *buf, int nsp=2);       // print arbitrary JSON from buf to serial monitor, formatted with indentions of 'nsp' spaces
@@ -190,6 +192,7 @@ struct Span{
   const char *getSketchVersion(){return sketchVersion;}                   // get sketch version number
   void setWifiCallback(void (*f)()){wifiCallback=f;}                      // sets an optional user-defined function to call once WiFi connectivity is established
   void setApFunction(void (*f)()){apFunction=f;}                          // sets an optional user-defined function to call when activating the WiFi Access Point
+  void protectPinISR(uint8_t pin){ProtectedGPIOs[pin]=0;}                 // protects ISR on pin from NVS operations
   
   void setPairingCode(const char *s){sprintf(pairingCodeCommand,"S %9s",s);}   // sets the Pairing Code - use is NOT recommended.  Use 'S' from CLI instead
   
@@ -409,6 +412,7 @@ struct SpanCharacteristic{
     uvSet(value,val);
 
     if(nvsStore){
+      homeSpan.protectGPIOs(true);
       nvsKey=(char *)malloc(16);
       uint16_t t;
       sscanf(type,"%x",&t);
@@ -438,6 +442,7 @@ struct SpanCharacteristic{
           nvsFlag=1;
         }
       }
+      homeSpan.protectGPIOs(false);
     }
   
     uvSet(newValue,value);
@@ -534,8 +539,10 @@ struct SpanCharacteristic{
     homeSpan.Notifications.push_back(sb);   // store SpanBuf in Notifications vector  
 
     if(nvsKey){
+      homeSpan.protectGPIOs(true);     
       nvs_set_str(homeSpan.charNVS,nvsKey,value.STRING);    // store data
       nvs_commit(homeSpan.charNVS);
+      homeSpan.protectGPIOs(false);     
     }
     
   } // setString()
@@ -566,8 +573,10 @@ struct SpanCharacteristic{
       homeSpan.Notifications.push_back(sb);   // store SpanBuf in Notifications vector  
   
       if(nvsKey){
+        homeSpan.protectGPIOs(true);     
         nvs_set_blob(homeSpan.charNVS,nvsKey,&value,sizeof(UVal));    // store data
         nvs_commit(homeSpan.charNVS);
+        homeSpan.protectGPIOs(false);     
       }
     }
     
