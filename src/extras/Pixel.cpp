@@ -9,13 +9,16 @@
 //     Single-Wire RGB/RGBW NeoPixels     //
 ////////////////////////////////////////////
 
-Pixel::Pixel(int pin, pixel_type_t pType){
+Pixel::Pixel(int pin, boolean isRGBW){
     
   rf=new RFControl(pin,false,false);          // set clock to 1/80 usec, no default driver
   if(!*rf)
     return;
 
-  this->pType=pType;
+  if(isRGBW)
+    this->lastBit=0;
+  else
+    this->lastBit=8;
   
   setTiming(0.32, 0.88, 0.64, 0.56, 80.0);    // set default timing parameters (suitable for most SK68 and WS28 RGB pixels)
 
@@ -43,32 +46,13 @@ void Pixel::setTiming(float high0, float low0, float high1, float low1, uint32_t
 
 ///////////////////
 
-void Pixel::setRGB(uint8_t r, uint8_t g, uint8_t b, uint8_t w, uint32_t nPixels){
-  
-  if(!*rf || nPixels==0)
-    return;
-
-  uint32_t data=getColorRGB(r,g,b,w);
-  setColors(&data,nPixels,false);
-}
-
-///////////////////
-
-void Pixel::setHSV(float h, float s, float v, double w, uint32_t nPixels){
-  float r,g,b;
-  LedPin::HSVtoRGB(h,s/100.0,v/100.0,&r,&g,&b);
-  setRGB(r*255,g*255,b*255,w*2.555,nPixels);  
-}
-
-///////////////////
-
-void Pixel::setColors(const uint32_t *data, uint32_t nPixels, boolean multiColor){
+void Pixel::set(Color *c, int nPixels, boolean multiColor){
   
   if(!*rf || nPixels==0)
     return;
 
   status.nPixels=nPixels;
-  status.data=data;
+  status.color=c;
   status.iMem=0;
   status.iBit=32;
   status.started=true;
@@ -86,17 +70,21 @@ void Pixel::setColors(const uint32_t *data, uint32_t nPixels, boolean multiColor
 
 ///////////////////
 
-uint32_t Pixel::getColorRGB(uint8_t r, uint8_t g, uint8_t b, uint8_t w){
-//  return(g<<16 | r<<8 | b);
-  return(g<<24 | r<<16 | b<<8 | w);
+Pixel::Color Pixel::RGB(uint8_t red, uint8_t green, uint8_t blue, uint8_t white){
+  Color x;
+  x.red=red;
+  x.green=green;
+  x.blue=blue;
+  x.white=white;
+  return(x);
 }
 
 ///////////////////
 
-uint32_t Pixel::getColorHSV(float h, float s, float v, double w){
+Pixel::Color Pixel::HSV(float h, float s, float v, double w){
   float r,g,b;
   LedPin::HSVtoRGB(h,s/100.0,v/100.0,&r,&g,&b);
-  return(getColorRGB(r*255,g*255,b*255,w*2.555));
+  return(RGB(r*255,g*255,b*255,w*2.555));  
 }
 
 ///////////////////
@@ -117,11 +105,11 @@ void IRAM_ATTR Pixel::loadData(void *arg){
   }
   
   for(int i=0;i<8;i++)
-    RMTMEM.chan[status.px->rf->getChannel()].data32[status.iMem++].val=status.px->pattern[(*status.data>>(--status.iBit))&1];
+    RMTMEM.chan[status.px->rf->getChannel()].data32[status.iMem++].val=status.px->pattern[(status.color->val>>(--status.iBit))&1];
     
-  if(status.iBit==status.px->pType){
+  if(status.iBit==status.px->lastBit){
     status.iBit=32;
-    status.data+=status.multiColor;
+    status.color+=status.multiColor;
     status.nPixels--;    
   }
   
@@ -190,8 +178,7 @@ void Dot::set(Color *c, int nPixels, boolean multiColor){
       *clockSetReg=clockMask;
       *clockClearReg=clockMask;
     }
-    if(multiColor)
-      c++;
+    c+=multiColor;
   }
 
   *dataClearReg=dataMask;           // send all zeros
@@ -213,13 +200,12 @@ Dot::Color Dot::RGB(uint8_t red, uint8_t green, uint8_t blue, uint8_t drive){
   return(x);
 }
 
-
 ///////////////////
 
-Dot::Color Dot::HSV(float h, float s, float v, float level){
+Dot::Color Dot::HSV(float h, float s, float v, double level){
   float r,g,b;
   LedPin::HSVtoRGB(h,s/100.0,v/100.0,&r,&g,&b);
-  return(RGB(r*255,g*255,b*255,level/100*31.5));  
+  return(RGB(r*255,g*255,b*255,level*0.315));  
 }
 
 ////////////////////////////////////////////
