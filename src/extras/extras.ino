@@ -100,25 +100,17 @@ struct Effect3 {
 
 #if defined(CONFIG_IDF_TARGET_ESP32C3)
 
-  #define PIXEL_PIN_1   8
-  #define PIXEL_PIN_2   1 
-
-#elif defined(CONFIG_IDF_TARGET_ESP32S2)
-
-  #define PIXEL_PIN_1   18
-  #define PIXEL_PIN_2   7
+  Pixel px1(8);          // NeoPixel RGB
+  Pixel px2(9,true);     // NeoPixel RGBW
+  Dot dot(2,3);          // DotStar
 
 #elif defined(CONFIG_IDF_TARGET_ESP32)
 
-  #define PIXEL_PIN_1   23
-  #define PIXEL_PIN_2   21
-
-  Dot dot(32,5);
+  Pixel px1(23);          // NeoPixel RGB
+  Pixel px2(21,true);     // NeoPixel RGBW
+  Dot dot(32,5);          // DotStar
   
 #endif
-
-Pixel px1(PIXEL_PIN_1);
-Pixel px2(PIXEL_PIN_2,true);
 
 Effect1 effect1(&px1,20,8);
 Effect2 effect2(&px2,20,60);
