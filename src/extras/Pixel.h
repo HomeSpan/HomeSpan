@@ -1,12 +1,16 @@
 
-////////////////////////////////////
-//      Addressable LED Pixel     //
-////////////////////////////////////
+////////////////////////////////////////////
+//           Addressable LEDs             //
+////////////////////////////////////////////
 
 #pragma once
 
 #include "RFControl.h"
 #include "PwmPin.h"
+
+////////////////////////////////////////////
+//     Single-Wire RGB/RGBW NeoPixels     //
+////////////////////////////////////////////
 
 class Pixel {
 
@@ -57,3 +61,41 @@ class Pixel {
       return(*rf);
     }
 };
+
+////////////////////////////////////////////
+//          Two-Wire RGB DotStars         //
+////////////////////////////////////////////
+
+class Dot {
+
+  public:
+    struct Color {
+      union{
+        struct {
+          uint8_t red:8;
+          uint8_t green:8;
+          uint8_t blue:8;
+          uint8_t drive:5;
+          uint8_t flags:3;
+        };
+        uint32_t val;
+      };
+    };
+
+  private:
+    uint32_t dataMask;
+    uint32_t clockMask;
+    volatile uint32_t *dataSetReg;
+    volatile uint32_t *dataClearReg;
+    volatile uint32_t *clockSetReg;
+    volatile uint32_t *clockClearReg;
+
+  public:
+    Dot(uint8_t dataPin, uint8_t clockPin);
+    void set(Color c, int nPixels=1){set(&c,nPixels,false);}
+    void set (Color *c, int nPixels, boolean multiColor=true);
+    static Color RGB(uint8_t red, uint8_t green, uint8_t blue, uint8_t drive=31);  
+    static Color HSV(float h, float s, float v, float level=100);  
+};
+
+////////////////////////////////////////////

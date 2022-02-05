@@ -1,7 +1,13 @@
 
+////////////////////////////////////////////
+//           Addressable LEDs             //
+////////////////////////////////////////////
+
 #include "Pixel.h"
 
-///////////////////
+////////////////////////////////////////////
+//     Single-Wire RGB/RGBW NeoPixels     //
+////////////////////////////////////////////
 
 Pixel::Pixel(int pin, pixel_type_t pType){
     
@@ -125,3 +131,95 @@ void IRAM_ATTR Pixel::loadData(void *arg){
 ///////////////////
 
 volatile Pixel::pixel_status_t Pixel::status;
+
+////////////////////////////////////////////
+//          Two-Wire RGB DotStars         //
+////////////////////////////////////////////
+
+Dot::Dot(uint8_t dataPin, uint8_t clockPin){
+
+  pinMode(dataPin,OUTPUT);
+  pinMode(clockPin,OUTPUT);
+  digitalWrite(dataPin,LOW);
+  digitalWrite(clockPin,LOW);
+
+  dataMask=1<<(dataPin%32);
+  clockMask=1<<(clockPin%32);
+
+#ifdef CONFIG_IDF_TARGET_ESP32C3
+  dataSetReg=&GPIO.out_w1ts.val;
+  dataClearReg=&GPIO.out_w1tc.val;
+  clockSetReg=&GPIO.out_w1ts.val;
+  clockClearReg=&GPIO.out_w1tc.val;
+#else
+  if(dataPin<32){
+    dataSetReg=&GPIO.out_w1ts;
+    dataClearReg=&GPIO.out_w1tc;
+  } else {
+    dataSetReg=&GPIO.out1_w1ts.val;
+    dataClearReg=&GPIO.out1_w1tc.val;    
+  }
+
+  if(clockPin<32){
+    clockSetReg=&GPIO.out_w1ts;
+    clockClearReg=&GPIO.out_w1tc;
+  } else {
+    clockSetReg=&GPIO.out1_w1ts.val;
+    clockClearReg=&GPIO.out1_w1tc.val;    
+  }
+#endif
+
+}
+
+///////////////////
+
+void Dot::set(Color *c, int nPixels, boolean multiColor){
+  
+  *dataClearReg=dataMask;           // send all zeros
+  for(int j=0;j<31;j++){
+    *clockSetReg=clockMask;
+    *clockClearReg=clockMask;    
+  }
+  
+  for(int i=0;i<nPixels;i++){
+    for(int b=31;b>=0;b--){
+      if((c->val>>b)&1)
+        *dataSetReg=dataMask;
+      else
+        *dataClearReg=dataMask;
+      *clockSetReg=clockMask;
+      *clockClearReg=clockMask;
+    }
+    if(multiColor)
+      c++;
+  }
+
+  *dataClearReg=dataMask;           // send all zeros
+  for(int j=0;j<31;j++){
+    *clockSetReg=clockMask;
+    *clockClearReg=clockMask;    
+  }
+}
+
+///////////////////
+
+Dot::Color Dot::RGB(uint8_t red, uint8_t green, uint8_t blue, uint8_t drive){
+  Color x;
+  x.red=red;
+  x.green=green;
+  x.blue=blue;
+  x.drive=drive;
+  x.flags=7;
+  return(x);
+}
+
+
+///////////////////
+
+Dot::Color Dot::HSV(float h, float s, float v, float level){
+  float r,g,b;
+  LedPin::HSVtoRGB(h,s/100.0,v/100.0,&r,&g,&b);
+  return(RGB(r*255,g*255,b*255,level/100*31.5));  
+}
+
+////////////////////////////////////////////
