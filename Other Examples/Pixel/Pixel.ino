@@ -25,48 +25,38 @@
  *  
  ********************************************************************************/
  
- // HomeSpan Addressable RGB LED Example
-
-// Demonstrates use of HomeSpan Pixel Class that provides for control of single-wire
-// addressable RGB LEDs, such as the SK68xx or WS28xx models found in many devices,
-// including the Espressif ESP32, ESP32-S2, and ESP32-C3 development boards.
+// HomeSpan Addressable RGB LED Examples.  Demonstrates use of:
+//
+//  * HomeSpan Pixel Class that provides for control of single-wire addressable RGB and RGBW LEDs, such as the WS2812 and SK6812
+//  * HomeSpan Dot Class that provides for control of two-wire addressable RGB LEDs, such as the APA102 and SK9822
 //
 // IMPORTANT:  YOU LIKELY WILL NEED TO CHANGE THE PIN NUMBERS BELOW TO MATCH YOUR SPECIFIC ESP32/S2/C3 BOARD
+//
 
-#if defined(CONFIG_IDF_TARGET_ESP32C3)
+#define NEOPIXEL_PIN            23           // only one pin needed for NeoPixels
 
-  #define PIXEL_PIN           8
-  #define PIXEL_STRAND_PIN    1 
-
-#elif defined(CONFIG_IDF_TARGET_ESP32S2)
-
-  #define PIXEL_PIN           18
-  #define PIXEL_STRAND_PIN    7
-
-#elif defined(CONFIG_IDF_TARGET_ESP32)
-
-  #define PIXEL_PIN           23
-  #define PIXEL_STRAND_PIN    21
+#define DOTSTAR_DATA_PIN        32           // two pins are needed to DotStars
+#define DOTSTAR_CLOCK_PIN       5
   
-#endif
-
 #include "HomeSpan.h"
 #include "extras/Pixel.h"                       // include the HomeSpan Pixel class
 
 ///////////////////////////////
 
-struct Pixel_Light : Service::LightBulb {      // Addressable RGB Pixel
+struct Pixel_Light : Service::LightBulb {      // Addressable single-wire RGB LED Strand (e.g. NeoPixel)
  
   Characteristic::On power{0,true};
   Characteristic::Hue H{0,true};
   Characteristic::Saturation S{0,true};
   Characteristic::Brightness V{100,true};
-  Pixel *pixel; 
+  Pixel *pixel;
+  uint8_t nPixels;
   
-  Pixel_Light(int pin) : Service::LightBulb(){
+  Pixel_Light(uint8_t pin, uint8_t nPixels) : Service::LightBulb(){
 
     V.setRange(5,100,1);                      // sets the range of the Brightness to be from a min of 5%, to a max of 100%, in steps of 1%
-    pixel=new Pixel(pin);                     // creates pixel LED on specified pin using default timing parameters suitable for most SK68xx LEDs
+    pixel=new Pixel(pin);                     // creates Pixel LED on specified pin using default timing parameters suitable for most SK68xx LEDs
+    this->nPixels=nPixels;                    // save number of Pixels in this LED Strand
     update();                                 // manually call update() to set pixel with restored initial values
   }
 
@@ -78,7 +68,7 @@ struct Pixel_Light : Service::LightBulb {      // Addressable RGB Pixel
     float s=S.getNewVal<float>();       // range = [0,100]
     float v=V.getNewVal<float>();       // range = [0,100]
 
-    pixel->setHSV(h*p, s*p, v*p);       // sets pixel to HSV colors
+    pixel->set(Pixel::HSV(h*p, s*p, v*p),nPixels);       // sets all nPixels to the same HSV color
           
     return(true);  
   }
@@ -86,38 +76,32 @@ struct Pixel_Light : Service::LightBulb {      // Addressable RGB Pixel
 
 ///////////////////////////////
 
-struct Pixel_KnightRider : Service::LightBulb {      // Addressable RGB Pixel Strand of nPixel Pixels - Knight Rider Effect
+struct Dot_Light : Service::LightBulb {      // Addressable two-wire RGB LED Strand (e.g. DotStar) - Chasing Light Effect
  
   Characteristic::On power{0,true};
   Characteristic::Hue H{0,true};
-  Characteristic::Saturation S{100,true};
-  Pixel *pixel; 
-  int nPixels;                                 
-  uint32_t *colors;
+  Characteristic::Saturation S{0,true};
+  Characteristic::Brightness V{100,true};
+  Dot *dot; 
+  uint8_t nPixels;                                 
+  Dot::Color *colors;
   int phase=0;
   int dir=1;
   uint32_t alarmTime=0;
   
-  Pixel_KnightRider(int pin, int nPixels) : Service::LightBulb(){
+  Dot_Light(uint8_t dataPin, uint8_t clockPin, uint8_t nPixels) : Service::LightBulb(){
 
-    pixel=new Pixel(pin);                     // creates pixel LED on specified pin using default timing parameters suitable for most SK68xx LEDs
-    this->nPixels=nPixels;                    // store number of Pixels in Strand
+    dot=new Dot(dataPin,clockPin);            // creates Dot LED on specified pins - suitable for APA102 or SK9822
+    this->nPixels=nPixels;                    // save number of Pixels in this LED Strand
 
-    colors=(uint32_t *)calloc(2*nPixels-1,sizeof(uint32_t));   // storage for dynamic pixel pattern
-    update();                                                  // manually call update() to set pixelk pattern with restored initial values
+    colors=(Dot::Color *)calloc(2*nPixels-1,sizeof(Dot::Color));   // storage for dynamic pixel pattern
+    update();                                                      // manually call update() to set pixel with restored initial values
   }
 
   boolean update() override {
 
-    if(!power.getNewVal()){
-      pixel->setRGB(0,0,0,8);
-    } else {
-      float level=100;
-      for(int i=0;i<nPixels;i++,level/=2.5){
-        colors[nPixels+i-1]=pixel->getColorHSV(H.getNewVal<float>(),S.getNewVal<float>(),level);
-        colors[nPixels-i-1]=colors[nPixels+i-1];
-      }
-    }
+    if(!power.getNewVal())
+      dot->set(Dot::RGB(0,0,0),nPixels);        // turn off all LEDs in Strand
     
     return(true);  
   }
@@ -125,15 +109,23 @@ struct Pixel_KnightRider : Service::LightBulb {      // Addressable RGB Pixel St
   void loop() override {
 
     if(millis()>alarmTime && power.getVal()){
-      alarmTime=millis()+80;
-      pixel->setColors(colors+phase,nPixels);
-      if(phase==7)
+      alarmTime=millis()+40;
+      colors[phase]=Dot::HSV(0,0,0);
+      if(phase==nPixels-1)
         dir=-1;
       else if(phase==0)
         dir=1;
       phase+=dir;
+
+      float h=H.getNewVal<float>();       // range = [0,360]
+      float s=S.getNewVal<float>();       // range = [0,100]
+      float v=V.getNewVal<float>();       // range = [0,100]
+      
+      colors[phase]=Dot::HSV(h,s,100,v);
+
+      dot->set(colors,nPixels);           // update Strand with new colors
     }
-    
+          
   }
 
 };
@@ -148,31 +140,31 @@ void setup() {
 
   new SpanAccessory();
     new Service::AccessoryInformation();
-      new Characteristic::Name("RGB Pixel");
+      new Characteristic::Name("NeoPixel");
       new Characteristic::Manufacturer("HomeSpan");
       new Characteristic::SerialNumber("123-ABC");
-      new Characteristic::Model("SK68 LED");
+      new Characteristic::Model("8-LED Strand");
       new Characteristic::FirmwareRevision("1.0");
       new Characteristic::Identify();
 
   new Service::HAPProtocolInformation();
     new Characteristic::Version("1.1.0");
 
-  new Pixel_Light(PIXEL_PIN);                // create single Pixel Light
+  new Pixel_Light(NEOPIXEL_PIN,8);                       // create 8-LED NeoPixel Strand
       
   new SpanAccessory();
     new Service::AccessoryInformation();
-      new Characteristic::Name("Pixel Strand");
+      new Characteristic::Name("DotStar");
       new Characteristic::Manufacturer("HomeSpan");
       new Characteristic::SerialNumber("123-ABC");
-      new Characteristic::Model("8-LED NeoPixel");
+      new Characteristic::Model("30-LED Strand");
       new Characteristic::FirmwareRevision("1.0");
       new Characteristic::Identify();
 
   new Service::HAPProtocolInformation();
     new Characteristic::Version("1.1.0");
 
-  new Pixel_KnightRider(PIXEL_STRAND_PIN,8);     // create 8-Pixel Strand with Knight-Rider Effect 
+  new Dot_Light(DOTSTAR_DATA_PIN,DOTSTAR_CLOCK_PIN,30);     // create 30-LED DotStar Strand with Chasing-Light effect
 
 }
 
