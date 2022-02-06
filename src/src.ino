@@ -50,7 +50,6 @@ void setup() {
       new Characteristic::On(0);
       new Characteristic::LightMode("HELLO");
       new Characteristic::DarkMode();
-      new Characteristic::DarkMode("OVERRIDE");
       new Characteristic::Brightness(50);
       new Characteristic::Name("Light 1");
       new Characteristic::ColorTemperature();

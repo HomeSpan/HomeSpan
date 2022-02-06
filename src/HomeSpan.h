@@ -131,6 +131,7 @@ struct Span{
   char otaPwd[33];                                            // MD5 Hash of OTA password, represented as a string of hexidecimal characters
   boolean otaAuth;                                            // OTA requires password when set to true
   void (*wifiCallback)()=NULL;                                // optional callback function to invoke once WiFi connectivity is established
+  void (*pairCallback)(boolean isPaired)=NULL;                // optional callback function to invoke when pairing is established (true) or lost (false)
   boolean autoStartAPEnabled=false;                           // enables auto start-up of Access Point when WiFi Credentials not found
   void (*apFunction)()=NULL;                                  // optional function to invoke when starting Access Point
   
@@ -191,6 +192,7 @@ struct Span{
   void setSketchVersion(const char *sVer){sketchVersion=sVer;}            // set optional sketch version number
   const char *getSketchVersion(){return sketchVersion;}                   // get sketch version number
   void setWifiCallback(void (*f)()){wifiCallback=f;}                      // sets an optional user-defined function to call once WiFi connectivity is established
+  void setPairCallback(void (*f)(boolean isPaired)){pairCallback=f;}      // sets an optional user-defined function to call when Pairing is established (true) or lost (false)
   void setApFunction(void (*f)()){apFunction=f;}                          // sets an optional user-defined function to call when activating the WiFi Access Point
   void protectPinISR(uint8_t pin){ProtectedGPIOs[pin]=0;}                 // protects ISR on pin from NVS operations
   
