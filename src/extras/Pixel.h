@@ -25,6 +25,49 @@ class Pixel {
         };
         uint32_t val;
       };
+
+      bool operator==(const Color& color){
+        return(val==color.val);
+      }
+      
+      bool operator!=(const Color& color){
+        return(val!=color.val);
+      }
+
+      Color operator+(const Color& color){
+        Color newColor;
+        newColor.white=white+color.white;
+        newColor.blue=blue+color.blue;
+        newColor.red=red+color.red;
+        newColor.green=green+color.green;
+        return(newColor);
+      }
+
+      Color& operator+=(const Color& color){
+        white+=color.white;
+        red+=color.red;
+        blue+=color.blue;
+        green+=color.green;
+        return(*this);
+      }
+            
+      Color operator-(const Color& color){
+        Color newColor;
+        newColor.white=white-color.white;
+        newColor.blue=blue-color.blue;
+        newColor.red=red-color.red;
+        newColor.green=green-color.green;
+        return(newColor);
+      }
+
+      Color& operator-=(const Color& color){
+        white-=color.white;
+        red-=color.red;
+        blue-=color.blue;
+        green-=color.green;
+        return(*this);
+      }
+            
     };
   
   private:
@@ -83,6 +126,45 @@ class Dot {
         };
         uint32_t val;
       };
+
+      bool operator==(const Color& color){
+        return(val==color.val);
+      }
+      
+      bool operator!=(const Color& color){
+        return(val!=color.val);
+      }
+
+      Color operator+(const Color& color){
+        Color newColor;
+        newColor.blue=blue+color.blue;
+        newColor.red=red+color.red;
+        newColor.green=green+color.green;
+        return(newColor);
+      }
+
+      Color& operator+=(const Color& color){
+        red+=color.red;
+        blue+=color.blue;
+        green+=color.green;
+        return(*this);
+      }
+            
+      Color operator-(const Color& color){
+        Color newColor;
+        newColor.blue=blue-color.blue;
+        newColor.red=red-color.red;
+        newColor.green=green-color.green;
+        return(newColor);
+      }
+
+      Color& operator-=(const Color& color){
+        red-=color.red;
+        blue-=color.blue;
+        green-=color.green;
+        return(*this);
+      }
+            
     };
 
   private:
