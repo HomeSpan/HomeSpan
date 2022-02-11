@@ -559,9 +559,8 @@ void Span::checkConnect(){
     }
   }
 
-  Serial.print("Starting Web (HTTP) Server supporting up to ");
-  Serial.print(maxConnections);
-  Serial.print(" simultaneous connections...\n");
+  Serial.printf("Starting HAP Server on port %d supporting %d simultaneous HomeKit Controller Connections...\n",tcpPortNum,maxConnections);
+
   hapServer->begin();
 
   Serial.print("\n");
