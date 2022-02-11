@@ -129,7 +129,7 @@ The following **optional** `homeSpan` methods enable additional features and pro
   * if *s* contains an invalid code, an error will be reported and the code will *not* be saved.  Instead, the currently-stored Pairing Code (or the HomeSpan default Pairing Code if no code has been stored) will be used
   * :exclamation: SECURTY WARNING: Hardcoding a device's Pairing Code into your sketch is considered a security risk and is **not** recommended.  Instead, use one of the more secure methods provided by HomeSpan, such as typing 'S \<code\>' from the CLI, or launching HomeSpan's Access Point, to set your Pairing Code without hardcoding it into your sketch
 
-* `deleteStoredValues()`
+* `void deleteStoredValues()`
   * deletes the value settings of all stored Characteristics from the NVS
 
 * `void setSketchVersion(const char *sVer)`
