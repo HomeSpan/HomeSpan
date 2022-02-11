@@ -378,7 +378,7 @@ Note that Custom Characteristics must be created prior to calling `homeSpan.begi
 
 * `void homeSpan.setMaxConnections(uint8_t nCon)`
   * this legacy method was used to set the total number of HAP Controller Connections HomeSpan implements upon start-up to ensure there are still free sockets available for user-defined code requiring separate network resources
-  * last supported version: [v1.4.2](https://github.com/HomeSpan/HomeSpan/blob/release-1.2.0/docs/Reference.md)
+  * last supported version: [v1.4.2](https://github.com/HomeSpan/HomeSpan/blob/release-1.4.2/docs/Reference.md)
   * this method has been replaced by the more flexible method, `reserveSocketConnections(uint8_t nSockets)`
     * allows you to simply reserve network sockets for other custom code as needed
     * upon calling `homespan.begin()`, HomeSpan automatically determines how many sockets are left that it can use for HAP Controller Connections 
