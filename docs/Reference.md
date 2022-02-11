@@ -86,7 +86,7 @@ The following **optional** `homeSpan` methods override various HomeSpan initiali
   
 ---
 
-The following **optional** `homeSpan` methods enable additional features and provide for further customization of the HomeSpan environment and **should** be called before `begin()` to take effect:
+The following **optional** `homeSpan` methods enable additional features and provide for further customization of the HomeSpan environment.  Calls **should** be made before `begin()` to take effect:
 
 * `void enableOTA(boolean auth=true)`
   * enables [Over-the-Air (OTA) Updating](OTA.md) of a HomeSpan device, which is otherwise disabled
