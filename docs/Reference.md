@@ -63,7 +63,7 @@ The following **optional** `homeSpan` methods override various HomeSpan initiali
   
 * `void reserveSocketConnections(uint8_t nSockets)`
   * reserves *nSockets* network sockets for uses **other than** by the HomeSpan HAP Server for HomeKit Controller Connections
-    * for sketches compiled under Arduino-ESP32 v2.0.2, HomeSpan reserves 14 sockets for HAP Controller Connections
+    * for sketches compiled under Arduino-ESP32 v2.0.1 or later, HomeSpan reserves 14 sockets for HAP Controller Connections
     * each call to `reserveSocketConnections(nSockets)` reduces this number by *nSockets*
     * use this method if you add code to a sketch that requires its own socket connections (e.g. a separate web service, an MQTT server, etc.)
   * multiple calls to this method are allowed - the number of sockets reserved will be the sum of *nSockets* across all calls
