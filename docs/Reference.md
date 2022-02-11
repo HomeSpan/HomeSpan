@@ -61,12 +61,14 @@ The following **optional** `homeSpan` methods override various HomeSpan initiali
     * 2 = all status messages plus all HAP communication packets to and from the HomeSpan device
   * this parameter can also be changed at runtime via the [HomeSpan CLI](CLI.md)
   
-* `void setMaxConnections(uint8_t nCon)`
-  * sets the desired maximum number of HAP Controllers that can be simultaneously connected to HomeSpan (default=14)
-  * due to limitations of the ESP32 Arduino library, HomeSpan will override *nCon* if it exceed the following internal limits:
-    * if OTA is not enabled, *nCon* will be reduced to 14 if it has been set to a value greater than 14
-    * if OTA is enabled, *nCon* will be reduced to 13 if it has been set to a value greater than 13
-  * if you add code to a sketch that uses it own network resources, you will need to determine how many TCP sockets your code may need to use, and use this method to reduce the maximum number of connections available to HomeSpan accordingly
+* `void reserveSocketConnections(uint8_t nSockets)`
+  * reserves *nSockets* network sockets for uses **other than** by the HomeSpan HAP Server for HomeKit Controller Connections
+    * for sketches compiled under Arduino-ESP32 v2.0.2, HomeSpan reserves 14 sockets for HAP Controller Connections
+    * each call to `reserveSocketConnections(nSockets)` reduces this number by *nSockets*
+    * use this method if you add code to a sketch that requires its own socket connections (e.g. a separate web service, an MQTT server, etc.)
+  * multiple calls to this method are allowed - the number of sockets reserved will be the sum of *nSockets* across all calls
+  * note you do not need to separately reserve sockets for built-in HomeSpan functionality
+    * for example, `enableOTA()` already contains an embedded call to `reserveSocketConnections(1)` since HomeSpan knows one socket must be reserved to support OTA
   
 * `void setPortNum(uint16_t port)`
   * sets the TCP port number used for communication between HomeKit and HomeSpan (default=80)
@@ -91,6 +93,7 @@ The following **optional** `homeSpan` methods enable additional features and pro
   * HomeSpan OTA requires an authorizing password unless *auth* is specified and set to *false*
   * the default OTA password for new HomeSpan devices is "homespan-ota"
   * this can be changed via the [HomeSpan CLI](CLI.md) using the 'O' command
+  * note enabling OTA reduces the number of HAP Controller Connections by 1
 
 * `void enableAutoStartAP()`
   * enables automatic start-up of WiFi Access Point if WiFi Credentials are **not** found at boot time
@@ -371,6 +374,11 @@ Note that Custom Characteristics must be created prior to calling `homeSpan.begi
   * last supported version: [v1.2.0](https://github.com/HomeSpan/HomeSpan/blob/release-1.2.0/docs/Reference.md#spanrangeint-min-int-max-int-step)
   * **please use** `setRange(min, max, step)` **for all new sketches**
 
+`void homeSpan.setMaxConnections(uint8_t nCon)`
+  * this legacy function was used to reduce the total number of HAP Controller Connections HomeSpan implements upon start-up to ensure there are still free sockets available for user-defined code requiring separate network resources
+  * last supported version: [v1.4.2](https://github.com/HomeSpan/HomeSpan/blob/release-1.2.0/docs/Reference.md)
+  * **please use** `homeSpan.reserveSocketsConnections(uint8_t nSockets)` **for all new sketches**
+  
 ---
 
 [↩️](README.md) Back to the Welcome page
