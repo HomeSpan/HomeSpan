@@ -86,7 +86,7 @@ The following **optional** `homeSpan` methods override various HomeSpan initiali
   
 ---
 
-The following **optional** `homeSpan` methods enable additional features and provide for further customization of the HomeSpan environment.  Calls **should** be made before `begin()` to take effect:
+The following **optional** `homeSpan` methods enable additional features and provide for further customization of the HomeSpan environment.  Unless otherwise noted, calls **should** be made before `begin()` to take effect:
 
 * `void enableOTA(boolean auth=true)`
   * enables [Over-the-Air (OTA) Updating](OTA.md) of a HomeSpan device, which is otherwise disabled
@@ -135,6 +135,7 @@ The following **optional** `homeSpan` methods enable additional features and pro
 * `void deleteStoredValues()`
   * deletes the value settings of all stored Characteristics from the NVS
   * performs the same function as typing 'V' into the CLI
+  * can by called from anywhere in a sketch
 
 * `void setSketchVersion(const char *sVer)`
   * sets the version of a HomeSpan sketch to *sVer*, which can be any arbitrary character string
@@ -144,6 +145,7 @@ The following **optional** `homeSpan` methods enable additional features and pro
   
 * `const char *getSketchVersion()`
   * returns the version of a HomeSpan sketch, as set using `void setSketchVersion(const char *sVer)`, or "n/a" if not set
+  * can by called from anywhere in a sketch
     
 ## *SpanAccessory(uint32_t aid)*
 
@@ -376,10 +378,10 @@ Note that Custom Characteristics must be created prior to calling `homeSpan.begi
 
 * `void homeSpan.setMaxConnections(uint8_t nCon)`
   * this legacy method was used to set the total number of HAP Controller Connections HomeSpan implements upon start-up to ensure there are still free sockets available for user-defined code requiring separate network resources
-  * this has been replaces by the more flexible method, `reserveSocketConnections(uint8_t nSockets)`
-    * allows you to simply reserve network sockets for other custom code as needed
-    * HomeSpan will then automatically determine how many sockets are left that it can use for HAP Controller Connections 
   * last supported version: [v1.4.2](https://github.com/HomeSpan/HomeSpan/blob/release-1.2.0/docs/Reference.md)
+  * this method has been replaced by the more flexible method, `reserveSocketConnections(uint8_t nSockets)`
+    * allows you to simply reserve network sockets for other custom code as needed
+    * upon calling `homespan.begin()`, HomeSpan automatically determines how many sockets are left that it can use for HAP Controller Connections 
   * **please use** `homeSpan.reserveSocketConnections(uint8_t nSockets)` **for all new sketches**
   
 ---
