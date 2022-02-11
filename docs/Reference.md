@@ -368,16 +368,17 @@ Note that Custom Characteristics must be created prior to calling `homeSpan.begi
 
 #### Deprecated functions (available for backwards compatibility with older sketches):
 
-*SpanRange(int min, int max, int step)*
+* `SpanRange(int min, int max, int step)`
 
-  * this legacy function is limited to integer-based parameters and has been re-coded to simply call the more generic `setRange(min, max, step)` method
+  * this legacy class was limited to integer-based parameters and has been re-coded to simply call the more generic `setRange(min, max, step)` method
   * last supported version: [v1.2.0](https://github.com/HomeSpan/HomeSpan/blob/release-1.2.0/docs/Reference.md#spanrangeint-min-int-max-int-step)
   * **please use** `setRange(min, max, step)` **for all new sketches**
 
-`void homeSpan.setMaxConnections(uint8_t nCon)`
-  * this legacy function was used to reduce the total number of HAP Controller Connections HomeSpan implements upon start-up to ensure there are still free sockets available for user-defined code requiring separate network resources
+* `void homeSpan.setMaxConnections(uint8_t nCon)`
+  * this legacy method was used to set the total number of HAP Controller Connections HomeSpan implements upon start-up to ensure there are still free sockets available for user-defined code requiring separate network resources
+  * this has been replaces by the more flexible method, `reserveSocketConnections(uint8_t nSockets)`, that allows you to simply reserve network sockets for other functions as needed - HomeSpan will then automarically determine how many sockts are left that it can use for HAP Controller Connections 
   * last supported version: [v1.4.2](https://github.com/HomeSpan/HomeSpan/blob/release-1.2.0/docs/Reference.md)
-  * **please use** `homeSpan.reserveSocketsConnections(uint8_t nSockets)` **for all new sketches**
+  * **please use** `homeSpan.reserveSocketConnections(uint8_t nSockets)` **for all new sketches**
   
 ---
 
