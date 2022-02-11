@@ -131,6 +131,7 @@ The following **optional** `homeSpan` methods enable additional features and pro
 
 * `void deleteStoredValues()`
   * deletes the value settings of all stored Characteristics from the NVS
+  * performs the same function as typing 'V' into the CLI
 
 * `void setSketchVersion(const char *sVer)`
   * sets the version of a HomeSpan sketch to *sVer*, which can be any arbitrary character string
