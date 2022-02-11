@@ -197,6 +197,7 @@ struct Span{
   void protectPinISR(uint8_t pin){ProtectedGPIOs[pin]=0;}                 // protects ISR on pin from NVS operations
   
   void setPairingCode(const char *s){sprintf(pairingCodeCommand,"S %9s",s);}   // sets the Pairing Code - use is NOT recommended.  Use 'S' from CLI instead
+  void deleteStoredValues(){processSerialCommand("V");}                         // deletes stored Characteristic values from NVS
   
   void enableAutoStartAP(){autoStartAPEnabled=true;}                      // enables auto start-up of Access Point when WiFi Credentials not found
   void setWifiCredentials(const char *ssid, const char *pwd);             // sets WiFi Credentials
