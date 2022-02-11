@@ -86,7 +86,7 @@ The following **optional** `homeSpan` methods override various HomeSpan initiali
   
 ---
 
-The following **optional** `homeSpan` methods enable additional features and provide for further customization of the HomeSpan environment:
+The following **optional** `homeSpan` methods enable additional features and provide for further customization of the HomeSpan environment and **should** be called before `begin()` to take effect:
 
 * `void enableOTA(boolean auth=true)`
   * enables [Over-the-Air (OTA) Updating](OTA.md) of a HomeSpan device, which is otherwise disabled
@@ -376,7 +376,9 @@ Note that Custom Characteristics must be created prior to calling `homeSpan.begi
 
 * `void homeSpan.setMaxConnections(uint8_t nCon)`
   * this legacy method was used to set the total number of HAP Controller Connections HomeSpan implements upon start-up to ensure there are still free sockets available for user-defined code requiring separate network resources
-  * this has been replaces by the more flexible method, `reserveSocketConnections(uint8_t nSockets)`, that allows you to simply reserve network sockets for other functions as needed - HomeSpan will then automarically determine how many sockts are left that it can use for HAP Controller Connections 
+  * this has been replaces by the more flexible method, `reserveSocketConnections(uint8_t nSockets)`
+    * allows you to simply reserve network sockets for other custom code as needed
+    * HomeSpan will then automatically determine how many sockets are left that it can use for HAP Controller Connections 
   * last supported version: [v1.4.2](https://github.com/HomeSpan/HomeSpan/blob/release-1.2.0/docs/Reference.md)
   * **please use** `homeSpan.reserveSocketConnections(uint8_t nSockets)` **for all new sketches**
   
