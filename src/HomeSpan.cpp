@@ -60,10 +60,9 @@ void Span::begin(Category catID, const char *displayName, const char *hostNameBa
   controlButton.init(controlPin);
   statusLED.init(statusPin,0,autoOffLED);
 
-  int maxLimit=CONFIG_LWIP_MAX_SOCKETS-2-otaEnabled;
-  if(maxConnections>maxLimit)
-    maxConnections=maxLimit;
-
+  if(requestedMaxCon<maxConnections)                          // if specific request for max connections is less than computed max connections
+    maxConnections=requestedMaxCon;                           // over-ride max connections with requested value
+    
   hap=(HAPClient **)calloc(maxConnections,sizeof(HAPClient *));
   for(int i=0;i<maxConnections;i++)
     hap[i]=new HAPClient;
