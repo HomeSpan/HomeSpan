@@ -1388,24 +1388,6 @@ void Span::checkRanges(){
 }
 
 ///////////////////////////////
-
-void Span::protectGPIOs(boolean suspend){
-  
-  auto gp=ProtectedGPIOs.begin();
-  while(gp!=ProtectedGPIOs.end()){
-    if(suspend){
-      Serial.printf("PIN: %d  Status: %d  :  ",gp->first,GPIO.pin[gp->first].int_type);
-      gp->second=GPIO.pin[gp->first].int_type;
-      GPIO.pin[gp->first].int_type=0;      
-      Serial.printf("PIN: %d  Status: %d\n",gp->first,GPIO.pin[gp->first].int_type);
-    } else {
-      GPIO.pin[gp->first].int_type=gp->second;      
-    }
-    gp++; 
-  }
-}
-
-///////////////////////////////
 //      SpanAccessory        //
 ///////////////////////////////
 
