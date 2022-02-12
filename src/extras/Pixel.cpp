@@ -70,25 +70,6 @@ void Pixel::set(Color *c, int nPixels, boolean multiColor){
 
 ///////////////////
 
-Pixel::Color Pixel::RGB(uint8_t red, uint8_t green, uint8_t blue, uint8_t white){
-  Color x;
-  x.red=red;
-  x.green=green;
-  x.blue=blue;
-  x.white=white;
-  return(x);
-}
-
-///////////////////
-
-Pixel::Color Pixel::HSV(float h, float s, float v, double w){
-  float r,g,b;
-  LedPin::HSVtoRGB(h,s/100.0,v/100.0,&r,&g,&b);
-  return(RGB(r*255,g*255,b*255,w*2.555));  
-}
-
-///////////////////
-
 void IRAM_ATTR Pixel::loadData(void *arg){
 
   if(RMT.int_st.val & status.px->txEndMask){
@@ -186,26 +167,6 @@ void Dot::set(Color *c, int nPixels, boolean multiColor){
     *clockSetReg=clockMask;
     *clockClearReg=clockMask;    
   }
-}
-
-///////////////////
-
-Dot::Color Dot::RGB(uint8_t red, uint8_t green, uint8_t blue, uint8_t drive){
-  Color x;
-  x.red=red;
-  x.green=green;
-  x.blue=blue;
-  x.drive=drive;
-  x.flags=7;
-  return(x);
-}
-
-///////////////////
-
-Dot::Color Dot::HSV(float h, float s, float v, double level){
-  float r,g,b;
-  LedPin::HSVtoRGB(h,s/100.0,v/100.0,&r,&g,&b);
-  return(RGB(r*255,g*255,b*255,level*0.315));  
 }
 
 ////////////////////////////////////////////

@@ -26,6 +26,24 @@ class Pixel {
         uint32_t val;
       };
 
+      Color RGB(uint8_t r, uint8_t g, uint8_t b, uint8_t w=0){         // returns Color based on provided RGB(W) values where r/g/b/w=[0-255]
+        this->red=r;
+        this->green=g;
+        this->blue=b;
+        this->white=w;
+        return(*this);
+      }
+
+      Color HSV(float h, float s, float v, double w=0){                // returns Color based on provided HSV(W) values where h=[0,360] and s/v/w=[0,100]
+        float r,g,b;
+        LedPin::HSVtoRGB(h,s/100.0,v/100.0,&r,&g,&b);
+        this->red=r*255;
+        this->green=g*255;
+        this->blue=b*255;
+        this->white=w*2.555;      
+        return(*this);
+      }      
+
       bool operator==(const Color& color){
         return(val==color.val);
       }
@@ -68,7 +86,7 @@ class Pixel {
         return(*this);
       }
             
-    };
+    }; // Color
   
   private:
     struct pixel_status_t {
@@ -95,8 +113,6 @@ class Pixel {
   
   public:    
     Pixel(int pin, boolean isRGBW=false);                                                   // creates addressable single-wire RGB (false) or RGBW (true) LED connected to pin (such as the SK68 or WS28)   
-    static Color RGB(uint8_t red, uint8_t green, uint8_t blue, uint8_t white=0);            // returns Color based on provided RGB(W) values where r/g/b/w=[0-255]
-    static Color HSV(float h, float s, float v, double w=0);                                // returns Color based on provided HSV(W) values where h=[0,360] and s/v/w=[0,100]
     void set(Color *c, int nPixels, boolean multiColor=true);                               // sets colors of nPixels based on array of Colors c; setting multiColor to false repeats Color in c[0] for all nPixels
     void set(Color c, int nPixels=1){set(&c,nPixels,false);}                                // sets color of nPixels to be equal to specific Color c
               
@@ -126,6 +142,26 @@ class Dot {
         };
         uint32_t val;
       };
+
+      Color RGB(uint8_t r, uint8_t g, uint8_t b, uint8_t driveLevel=31){         // returns Color based on provided RGB values where r/g/b=[0-255] and current-limiting drive level=[0,31]       
+        this->red=r;
+        this->green=g;
+        this->blue=b;
+        this->drive=driveLevel;
+        this->flags=7;
+        return(*this);
+      }
+
+      Color HSV(float h, float s, float v, double drivePercent=100){              // returns Color based on provided HSV values where h=[0,360], s/v=[0,100], and current-limiting drive percent=[0,100]
+        float r,g,b;
+        LedPin::HSVtoRGB(h,s/100.0,v/100.0,&r,&g,&b);
+        this->red=r*255;
+        this->green=g*255;
+        this->blue=b*255;
+        this->drive=drivePercent*0.315;
+        this->flags=7;           
+        return(*this);
+      }       
 
       bool operator==(const Color& color){
         return(val==color.val);
@@ -177,8 +213,6 @@ class Dot {
 
   public:
     Dot(uint8_t dataPin, uint8_t clockPin);                                                 // creates addressable two-wire RGB LED connected to dataPin and clockPin (such as the DotStar SK9822 or APA102)
-    static Color RGB(uint8_t red, uint8_t green, uint8_t blue, uint8_t drive=31);           // returns Color based on provided RGB values where r/g/b=[0-255] and current-limiting drive=[0,31]
-    static Color HSV(float h, float s, float v, double level=100);                          // returns Color based on provided HSV values where h=[0,360], s/v=[0,100], and current-limiting drive=[0,100]
     void set(Color *c, int nPixels, boolean multiColor=true);                               // sets colors of nPixels based on array of Colors c; setting multiColor to false repeats Color in c[0] for all nPixels
     void set(Color c, int nPixels=1){set(&c,nPixels,false);}                                // sets color of nPixels to be equal to specific Color c
 };

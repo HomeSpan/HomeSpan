@@ -9,6 +9,7 @@ struct Effect1 {
   uint32_t alarmTime=0;
   uint32_t speed;
   uint8_t nPixels;
+  Pixel::Color c;
 
   Effect1(Pixel *px, uint32_t speed, uint8_t nPixels){
     this->px=px;
@@ -19,8 +20,8 @@ struct Effect1 {
   void update(){
     if(millis()<alarmTime)
       return;
-    
-    px->set(px->HSV(H,100,10),nPixels);
+
+    px->set(c.HSV(H,100,10),nPixels);
     H=(H+1)%360;
 
     alarmTime=millis()+speed;
@@ -50,11 +51,11 @@ struct Effect2 {
     
     for(int i=0;i<nPixels;i++){
       if(i==phase)
-        x[i]=px->HSV(H,100,100);
+        x[i].HSV(H,100,100);
       else if(i==nPixels-1-phase)
-        x[i]=px->HSV(H+180,100,100);
+        x[i].HSV(H+180,100,100);
       else
-        x[i]=Pixel::HSV(0,0,0);
+        x[i].RGB(0,0,0);
     }
 
     px->set(x,nPixels);
@@ -80,6 +81,7 @@ struct Effect3 {
   uint32_t alarmTime=0;
   uint32_t speed;
   uint8_t nPixels;
+  Dot::Color c;
 
   Effect3(Dot *dot, uint32_t speed, uint8_t nPixels){
     this->dot=dot;
@@ -91,7 +93,7 @@ struct Effect3 {
     if(millis()<alarmTime)
       return;
     
-    dot->set(Dot::HSV(H,100,100),nPixels);
+    dot->set(c.HSV(H,100,100),nPixels);
     H=(H+1)%360;
      
     alarmTime=millis()+speed;
@@ -106,14 +108,15 @@ struct Effect3 {
 
 #elif defined(CONFIG_IDF_TARGET_ESP32)
 
-  Pixel px1(23);          // NeoPixel RGB
+  Pixel px1(23,true);          // NeoPixel RGB
   Pixel px2(21,true);     // NeoPixel RGBW
   Dot dot(32,5);          // DotStar
   
 #endif
 
-Effect1 effect1(&px1,20,8);
-Effect2 effect2(&px2,20,60);
+//Effect1 effect1(&px1,20,60);
+//Effect2 effect2(&px2,20,60);
+Effect2 effect2(&px1,20,60);
 Effect3 effect3(&dot,20,30);
 
 void setup() {     
@@ -127,7 +130,7 @@ void setup() {
 } // end of setup()
 
 void loop(){
-  effect1.update();
+//  effect1.update();
   effect2.update();
   effect3.update();
 }
