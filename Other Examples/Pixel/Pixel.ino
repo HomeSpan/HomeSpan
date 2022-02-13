@@ -33,13 +33,31 @@
 // IMPORTANT:  YOU LIKELY WILL NEED TO CHANGE THE PIN NUMBERS BELOW TO MATCH YOUR SPECIFIC ESP32/S2/C3 BOARD
 //
 
-#define NEOPIXEL_RGB_PIN       26
-#define NEOPIXEL_RGBW_PIN      32
-#define DOTSTAR_DATA_PIN       33
-#define DOTSTAR_CLOCK_PIN      27
+#if defined(CONFIG_IDF_TARGET_ESP32)
 
-#define NEOPIXEL_PIN            23           // only one pin needed for NeoPixels
+  #define NEOPIXEL_RGB_PIN       26
+  #define NEOPIXEL_RGBW_PIN      32
+  #define DOTSTAR_DATA_PIN       33
+  #define DOTSTAR_CLOCK_PIN      27
+  #define DEVICE_SUFFIX          ""
 
+#elif defined(CONFIG_IDF_TARGET_ESP32S2)
+
+  #define NEOPIXEL_RGB_PIN       17
+  #define NEOPIXEL_RGBW_PIN      38
+  #define DOTSTAR_DATA_PIN       3
+  #define DOTSTAR_CLOCK_PIN      7
+  #define DEVICE_SUFFIX          "-S2"
+
+#elif defined(CONFIG_IDF_TARGET_ESP32C3)
+
+  #define NEOPIXEL_RGB_PIN       8
+  #define NEOPIXEL_RGBW_PIN      2
+  #define DOTSTAR_DATA_PIN       0
+  #define DOTSTAR_CLOCK_PIN      1
+  #define DEVICE_SUFFIX          "-C3"
+
+#endif
   
 #include "HomeSpan.h"
 #include "extras/Pixel.h"                       // include the HomeSpan Pixel class
@@ -155,11 +173,11 @@ void setup() {
   
   Serial.begin(115200);
  
-  homeSpan.begin(Category::Lighting,"Addressable LEDs");
+  homeSpan.begin(Category::Lighting,"Pixel LEDS" DEVICE_SUFFIX);
 
   new SpanAccessory();                                          // create Bridge
     new Service::AccessoryInformation();
-      new Characteristic::Name("Addressable LEDs");
+      new Characteristic::Name("Pixel LEDS" DEVICE_SUFFIX);
       new Characteristic::Manufacturer("HomeSpan");
       new Characteristic::SerialNumber("123-ABC");
       new Characteristic::Model("Neo/Dot Pixels");
