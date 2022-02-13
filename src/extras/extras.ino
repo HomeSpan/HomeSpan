@@ -108,16 +108,17 @@ struct Effect3 {
 
 #elif defined(CONFIG_IDF_TARGET_ESP32)
 
-  Pixel px1(23,true);          // NeoPixel RGB
-  Pixel px2(21,true);     // NeoPixel RGBW
-  Dot dot(32,5);          // DotStar
+//  Pixel px1(23,true);          // NeoPixel RGB
+//  Dot dot(32,5);          // DotStar
+  Pixel px2(21);     // NeoPixel RGBW
+  Pixel neo(26);
   
 #endif
 
 //Effect1 effect1(&px1,20,60);
 //Effect2 effect2(&px2,20,60);
-Effect2 effect2(&px1,20,60);
-Effect3 effect3(&dot,20,30);
+//Effect2 effect2(&px1,20,60);
+//Effect3 effect3(&dot,20,30);
 
 void setup() {     
  
@@ -126,11 +127,22 @@ void setup() {
   delay(1000);                    // wait for interface to flush
 
   Serial.println("\n\nHomeSpan Pixel Example\n");
+
+  Pixel::Color c;
+  int hue=0;
+
+//  Pixel px2(21);     // NeoPixel RGBW
+
+  while(1){
+    neo.set(c.HSV(hue,100,10),8);
+    hue=(hue+10)%360;
+    delay(100);
+  }
    
 } // end of setup()
 
 void loop(){
 //  effect1.update();
-  effect2.update();
-  effect3.update();
+//  effect2.update();
+//  effect3.update();
 }

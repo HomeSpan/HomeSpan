@@ -33,17 +33,20 @@
 // IMPORTANT:  YOU LIKELY WILL NEED TO CHANGE THE PIN NUMBERS BELOW TO MATCH YOUR SPECIFIC ESP32/S2/C3 BOARD
 //
 
+#define NEOPIXEL_RGB_PIN       26
+#define NEOPIXEL_RGBW_PIN      32
+#define DOTSTAR_DATA_PIN       33
+#define DOTSTAR_CLOCK_PIN      27
+
 #define NEOPIXEL_PIN            23           // only one pin needed for NeoPixels
 
-#define DOTSTAR_DATA_PIN        32           // two pins are needed to DotStars
-#define DOTSTAR_CLOCK_PIN       5
   
 #include "HomeSpan.h"
 #include "extras/Pixel.h"                       // include the HomeSpan Pixel class
 
 ///////////////////////////////
 
-struct Pixel_Light : Service::LightBulb {      // Addressable single-wire RGB LED Strand (e.g. NeoPixel)
+struct NeoPixel_RGB : Service::LightBulb {      // Addressable single-wire RGB LED Strand (e.g. NeoPixel)
  
   Characteristic::On power{0,true};
   Characteristic::Hue H{0,true};
@@ -52,10 +55,10 @@ struct Pixel_Light : Service::LightBulb {      // Addressable single-wire RGB LE
   Pixel *pixel;
   uint8_t nPixels;
   
-  Pixel_Light(uint8_t pin, uint8_t nPixels) : Service::LightBulb(){
+  NeoPixel_RGB(uint8_t pin, uint8_t nPixels) : Service::LightBulb(){
 
     V.setRange(5,100,1);                      // sets the range of the Brightness to be from a min of 5%, to a max of 100%, in steps of 1%
-    pixel=new Pixel(pin);                     // creates Pixel LED on specified pin using default timing parameters suitable for most SK68xx LEDs
+    pixel=new Pixel(pin);                     // creates Pixel LED on specified pin
     this->nPixels=nPixels;                    // save number of Pixels in this LED Strand
     update();                                 // manually call update() to set pixel with restored initial values
   }
@@ -68,7 +71,9 @@ struct Pixel_Light : Service::LightBulb {      // Addressable single-wire RGB LE
     float s=S.getNewVal<float>();       // range = [0,100]
     float v=V.getNewVal<float>();       // range = [0,100]
 
-    pixel->set(Pixel::HSV(h*p, s*p, v*p),nPixels);       // sets all nPixels to the same HSV color
+    Pixel::Color color;
+
+    pixel->set(color.HSV(h*p, s*p, v*p),nPixels);       // sets all nPixels to the same HSV color
           
     return(true);  
   }
@@ -76,58 +81,72 @@ struct Pixel_Light : Service::LightBulb {      // Addressable single-wire RGB LE
 
 ///////////////////////////////
 
-struct Dot_Light : Service::LightBulb {      // Addressable two-wire RGB LED Strand (e.g. DotStar) - Chasing Light Effect
+struct NeoPixel_RGBW : Service::LightBulb {      // Addressable single-wire RGBW LED Strand (e.g. NeoPixel)
+ 
+  Characteristic::On power{0,true};
+  Characteristic::Brightness V{100,true};
+  Characteristic::ColorTemperature T{140,true};
+  Pixel *pixel;
+  uint8_t nPixels;
+  
+  NeoPixel_RGBW(uint8_t pin, uint8_t nPixels) : Service::LightBulb(){
+
+    V.setRange(5,100,1);                      // sets the range of the Brightness to be from a min of 5%, to a max of 100%, in steps of 1%
+    pixel=new Pixel(pin,true);                // creates Pixel RGBW LED (second parameter set to true for RGBW) on specified pin
+    this->nPixels=nPixels;                    // save number of Pixels in this LED Strand
+    update();                                 // manually call update() to set pixel with restored initial values
+  }
+
+  boolean update() override {
+
+    int p=power.getNewVal();
+    
+    float v=V.getNewVal<float>();       // range = [0,100]
+    float t=T.getNewVal<float>();       // range = [140,500] (140=coldest, 500=warmest)
+
+    float hue=240-(t-140)/3;            // add in a splash of color between blue and green to simulated change of color temperature
+
+    Pixel::Color color;
+
+    pixel->set(color.HSV(hue, 100, v*p, v*p),nPixels);       // sets all nPixels to the same HSV color
+          
+    return(true);  
+  }
+};
+
+///////////////////////////////
+
+struct DotStar_RGB : Service::LightBulb {      // Addressable two-wire RGB LED Strand (e.g. DotStar)
  
   Characteristic::On power{0,true};
   Characteristic::Hue H{0,true};
   Characteristic::Saturation S{0,true};
   Characteristic::Brightness V{100,true};
-  Dot *dot; 
-  uint8_t nPixels;                                 
-  Dot::Color *colors;
-  int phase=0;
-  int dir=1;
-  uint32_t alarmTime=0;
+  Dot *pixel;
+  uint8_t nPixels;
   
-  Dot_Light(uint8_t dataPin, uint8_t clockPin, uint8_t nPixels) : Service::LightBulb(){
+  DotStar_RGB(uint8_t dataPin, uint8_t clockPin, uint8_t nPixels) : Service::LightBulb(){
 
-    dot=new Dot(dataPin,clockPin);            // creates Dot LED on specified pins - suitable for APA102 or SK9822
+    V.setRange(5,100,1);                      // sets the range of the Brightness to be from a min of 5%, to a max of 100%, in steps of 1%
+    pixel=new Dot(dataPin,clockPin);          // creates Dot LED on specified pins
     this->nPixels=nPixels;                    // save number of Pixels in this LED Strand
-
-    colors=(Dot::Color *)calloc(2*nPixels-1,sizeof(Dot::Color));   // storage for dynamic pixel pattern
-    update();                                                      // manually call update() to set pixel with restored initial values
+    update();                                 // manually call update() to set pixel with restored initial values
   }
 
   boolean update() override {
 
-    if(!power.getNewVal())
-      dot->set(Dot::RGB(0,0,0),nPixels);        // turn off all LEDs in Strand
+    int p=power.getNewVal();
     
+    float h=H.getNewVal<float>();       // range = [0,360]
+    float s=S.getNewVal<float>();       // range = [0,100]
+    float v=V.getNewVal<float>();       // range = [0,100]
+
+    Dot::Color color;
+
+    pixel->set(color.HSV(h*p, s*p, 100, v*p),nPixels);       // sets all nPixels to the same HSV color, but instead of PWM, using current-limiting parameter to control overall brightness
+          
     return(true);  
   }
-
-  void loop() override {
-
-    if(millis()>alarmTime && power.getVal()){
-      alarmTime=millis()+40;
-      colors[phase]=Dot::HSV(0,0,0);
-      if(phase==nPixels-1)
-        dir=-1;
-      else if(phase==0)
-        dir=1;
-      phase+=dir;
-
-      float h=H.getNewVal<float>();       // range = [0,360]
-      float s=S.getNewVal<float>();       // range = [0,100]
-      float v=V.getNewVal<float>();       // range = [0,100]
-      
-      colors[phase]=Dot::HSV(h,s,100,v);
-
-      dot->set(colors,nPixels);           // update Strand with new colors
-    }
-          
-  }
-
 };
 
 ///////////////////////////////
@@ -136,35 +155,58 @@ void setup() {
   
   Serial.begin(115200);
  
-  homeSpan.begin(Category::Lighting,"RGB Pixels");
+  homeSpan.begin(Category::Lighting,"Addressable LEDs");
+
+  new SpanAccessory();                                          // create Bridge
+    new Service::AccessoryInformation();
+      new Characteristic::Name("Addressable LEDs");
+      new Characteristic::Manufacturer("HomeSpan");
+      new Characteristic::SerialNumber("123-ABC");
+      new Characteristic::Model("Neo/Dot Pixels");
+      new Characteristic::FirmwareRevision("1.0");
+      new Characteristic::Identify();
+
+    new Service::HAPProtocolInformation();
+      new Characteristic::Version("1.1.0");
+
+/////////
 
   new SpanAccessory();
     new Service::AccessoryInformation();
-      new Characteristic::Name("NeoPixel");
+      new Characteristic::Name("Neo RGB");
       new Characteristic::Manufacturer("HomeSpan");
       new Characteristic::SerialNumber("123-ABC");
       new Characteristic::Model("8-LED Strand");
       new Characteristic::FirmwareRevision("1.0");
       new Characteristic::Identify();
+    
+    new NeoPixel_RGB(NEOPIXEL_RGB_PIN,8);                       // create 8-LED NeoPixel RGB Strand with full color control
 
-  new Service::HAPProtocolInformation();
-    new Characteristic::Version("1.1.0");
+/////////
 
-  new Pixel_Light(NEOPIXEL_PIN,8);                       // create 8-LED NeoPixel Strand
-      
   new SpanAccessory();
     new Service::AccessoryInformation();
-      new Characteristic::Name("DotStar");
+      new Characteristic::Name("Neo RGBW");
+      new Characteristic::Manufacturer("HomeSpan");
+      new Characteristic::SerialNumber("123-ABC");
+      new Characteristic::Model("60-LED Strand");
+      new Characteristic::FirmwareRevision("1.0");
+      new Characteristic::Identify();
+
+  new NeoPixel_RGBW(NEOPIXEL_RGBW_PIN,60);                      // create 60-LED NeoPixel RGBW Strand  with simulated color temperature control 
+
+/////////
+
+  new SpanAccessory();
+    new Service::AccessoryInformation();
+      new Characteristic::Name("Dot RGB");
       new Characteristic::Manufacturer("HomeSpan");
       new Characteristic::SerialNumber("123-ABC");
       new Characteristic::Model("30-LED Strand");
       new Characteristic::FirmwareRevision("1.0");
       new Characteristic::Identify();
 
-  new Service::HAPProtocolInformation();
-    new Characteristic::Version("1.1.0");
-
-  new Dot_Light(DOTSTAR_DATA_PIN,DOTSTAR_CLOCK_PIN,30);     // create 30-LED DotStar Strand with Chasing-Light effect
+  new DotStar_RGB(DOTSTAR_DATA_PIN,DOTSTAR_CLOCK_PIN,30);       // create 30-LED DotStar RGB Strand  with full color control, but use current-limiting feature to create flicker-free dimming
 
 }
 
