@@ -124,9 +124,9 @@ struct NeoPixel_RGBW : Service::LightBulb {      // Addressable single-wire RGBW
 
     float hue=240-(t-140)/3;            // add in a splash of color between blue and green to simulated change of color temperature
 
-    Pixel::Color color;
+    // Pixel::Color color;              // if static HSV method is used (below), there is no need to first create a Color object
 
-    pixel->set(color.HSV(hue, 100, v*p, v*p),nPixels);       // sets all nPixels to the same HSV color
+    pixel->set(pixel->HSV(hue, 100, v*p, v*p),nPixels);       // sets all nPixels to the same HSV color (note use of static method pixel->HSV, instead of defining and setting Pixel::Color)
           
     return(true);  
   }
@@ -159,9 +159,14 @@ struct DotStar_RGB : Service::LightBulb {      // Addressable two-wire RGB LED S
     float s=S.getNewVal<float>();       // range = [0,100]
     float v=V.getNewVal<float>();       // range = [0,100]
 
-    Dot::Color color;
+    Dot::Color color[nPixels];          // create an arrary of Colors
 
-    pixel->set(color.HSV(h*p, s*p, 100, v*p),nPixels);       // sets all nPixels to the same HSV color, but instead of PWM, using current-limiting parameter to control overall brightness
+    float hueStep=360.0/nPixels;        // step size for change in hue from one pixel to the next
+
+    for(int i=0;i<nPixels;i++)
+      color[i].HSV(h+i*hueStep*p,s*p,100,v*p);   // create spectrum of all hues starting with specified Hue; use current-limiting parameter (4th argument) to control overall brightness, instead of PWM
+
+    pixel->set(color,nPixels);          // set the colors according to the array
           
     return(true);  
   }
@@ -224,7 +229,7 @@ void setup() {
       new Characteristic::FirmwareRevision("1.0");
       new Characteristic::Identify();
 
-  new DotStar_RGB(DOTSTAR_DATA_PIN,DOTSTAR_CLOCK_PIN,30);       // create 30-LED DotStar RGB Strand  with full color control, but use current-limiting feature to create flicker-free dimming
+  new DotStar_RGB(DOTSTAR_DATA_PIN,DOTSTAR_CLOCK_PIN,30);       // create 30-LED DotStar RGB Strand displaying a spectrum of colors and using the current-limiting feature of DotStars to create flicker-free dimming
 
 }
 

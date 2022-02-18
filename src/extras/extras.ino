@@ -105,6 +105,7 @@ struct Effect3 {
   Pixel px1(8);          // NeoPixel RGB
   Pixel px2(9,true);     // NeoPixel RGBW
   Dot dot(2,3);          // DotStar
+  Pixel neo(0);
 
 #elif defined(CONFIG_IDF_TARGET_ESP32)
 
