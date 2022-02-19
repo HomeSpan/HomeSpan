@@ -1,6 +1,10 @@
 ## Addressable RGB LEDs
 
-HomeSpan includes two dedicated classes that provide for precise control of Addressable RGB LEDs.  The *Pixel()* class is used for RGB and RGBW LEDs that require only a single "data" control wire, such as the [NeoPixel 8-element RGB Stick](https://www.adafruit.com/product/1426) or this [NeoPixel Single RGBW LED](https://www.adafruit.com/product/2759).  These LEDs typically contain embedded driver chips such as the SK6812 or WS2812.  The *Dot()* class is used for RGB LEDs that require two control wires ("data" and "clock"), such as this [DotStar 144-element RGB Strip](https://www.adafruit.com/product/2241).  These LEDs typically contain embedded driver chips such as the SK9822 or WS2801.
+HomeSpan includes two dedicated classes that provide for easy control of "addressable" RGB LEDs.  The *Pixel()* class is used for RGB and RGBW LEDs that require only a single "data" control wire, such as this 8-pixel [NeoPixel RGB Stick](https://www.adafruit.com/product/1426) or this single-pixel [NeoPixel RGBW LED](https://www.adafruit.com/product/2759).  The *Dot()* class is used for RGB LEDs that require two control wires ("data" and "clock"), such as this 144-pixel [DotStar RGB Strip](https://www.adafruit.com/product/2241).
+
+Both classes allow you to individually set each of the "pixels" in a multi-pixel LED strip to a different 24-bit RGB color (or 32-bit color, if using RGBW LEDs).  Alternatively, the classes allow you to simply specify a single 24-bit (or 32-bit) color to duplicate across all pixels.
+
+The methods for both classes are nearly identical, which allows you to interchange code written for single-wire devices to use with two-wire devices (and vice-versa) with only minor modifications.
 
 The ESP32 has up to 16 PWM channels that can be used to drive a variety of devices.  HomeSpan includes an integrated PWM library with dedicated classes designed for controlling **Dimmable LEDs** as well as **Servo Motors**.  Both classes are provided in a standalone header file that is accessed by placing the following near the top of your sketch:
 
