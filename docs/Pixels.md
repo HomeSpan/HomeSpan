@@ -15,25 +15,35 @@ Both classes are provided in a standalone header file that is accessed by placin
 Creating an instance of this **class** configures the specified *pin* to output a waveform signal suitable for a controlling single-wire, addressable RGB or RGBW LEDs.  Arguments, along with their defaults if left unspecified, are as follows:
 
   * *pin* - the pin on which the RGB control signal will be output; normally connected to the "data" input of the addressable LED device
-  * *isRGBW* - set to *true* for RGBW devices that contain 4-color (red/green/blue/white) LEDs; set to *false* for the more typical 3-color RGB devices.  Defaults to *false* if unspecified 
+  * *isRGBW* - set to *true* for RGBW devices that contain 4-color (red/green/blue/white) LEDs; set to *false* for the more typical 3-color RGB devices.  Defaults to *false* if unspecified.  Note you must set the *isRGBW* flag to *true* if you are using an RGBW device, even if you do not intend on utilizing the white LED
  
  The following methods are supported:
 
 * `void set(Color color, int nPixels=1)`
 
-  * sets the color of all pixels in an *nPixel* device to *color*, which is a structure of type **Color** defined below.  *nPixels* defaults to 1 if left unspecified
+  * sets the color of a pixel in a single-pixel device, or equivalently, the color of the first *nPixels* in a multi-pixel device, to *color*, where *color* is a structure of type **Color** defined below.  If unspecified, *nPixels* defaults to 1 (i.e. a single pixel).  It is not a problem if the value specified for *nPixels* does not match the total number of actual RGB (or RGBW) pixels in your device; if *nPixels* is less than the total number of device pixels, only the first *nPixels* will be set to *color*;  if *nPixels* is greater than the total number of device pixels, the device will simply ignore the additional input
   
 * `void set(Color *color, int nPixels)`
 
-  * individually sets the color of each pixel in an *nPixel* device according to the values specified in the **Color** array *\*color*, where the first pixel is set to the value in *color\[0\]*, the second pixel is set to the value in *color\[1\]*, etc.  The number of pixels in array, *nPixels*, must be specified
+  * individually sets the color of each pixel in a multi-pixel device to the color values specified in the **Color** array *\*color*, of *nPixels* size, where the  first pixel of the device is set to the value in *color\[0\]*, the second pixel is set to the value in *color\[1\]* ... and the last pixel is set to the value in *color\[nPixels-1\]*.   The number of pixels in *\*color* array, *nPixels*, must be specified.  Similar to above, it is not a problem if the value specified for *nPixels* does not match the total number of actual RGB (or RGBW) pixels in your device; if *nPixels* is less than the total number of device pixels, only the first *nPixels* will be set to the values in the *\*color* array;  if *nPixels* is greater than the total number of device pixels, the device will simply ignore the additional input
 
 * `static Color RGB(uint8_t r, uint8_t g, uint8_t b, uint8_t w=0)`
 
- * returns a **Color** object, where *r*, *g*, and *b*, represent 8-bit red, green, and blue values [0-255], and *w* represents an 8-bit value [0-255] for the white LED.  The white value may be left unspecified, in which case it defaults to 0.  Also, the white value will be ignored by *set()* unless the *isRGBW* flag was set to *true* in the constructor
+ * returns a **Color** object, where *r*, *g*, and *b*, represent 8-bit red, green, and blue values over the range 0-255, and *w* represents an 8-bit value [0-255] for the white LED.  The white value may be left unspecified, in which case it defaults to 0.  Also, the white value will be ignored by *set()* unless the *isRGBW* flag was specified as *true* in the constructor
+
+* `static Color HSV(float h, float s, float v, double w=0)`
+
+ * returns a **Color** object after converting the values of *h* (a Hue from 0-360), *s* (a Saturation percentage from 0-100), and *v* (a Brightness percentage from 0-100) to equivalent 8-bit RGB values, each from 0-255.  The *w* value is treated separately and represents a percentage of brightness for the white LED (from 0-100) that is subsequently converted into an 8-bit value from 0-255.  The white value may be left unspecified, in which case it defaults to 0.  Also, the white value will be ignored by *set()* unless the *isRGBW* flag was specified as *true* in the constructor
+
+
 
 * `int getPin()`
 
-  * returns the pin number (or -1 if LedPin was not successfully initialized)
+  * returns the pin number (or -1 if the instantiation failed due to lack of resources - see below)
+
+* `void setTiming(float high0, float low0, float high1, float low1, uint32_t lowReset)`
+
+  * the waveform that the *set()* methods generate to set the color(s) of an RGB or RGBW device are calibrated to work with most commercial devices.  However, if you have a device that utilizes non-standard pulses, you may use *setTiming()* to specify a custom pulse width, where 
   
 LedPin also includes a static class function that converts Hue/Saturation/Brightness values (typically used by HomeKit) to Red/Green/Blue values (typically used to control multi-color LEDS).
 
