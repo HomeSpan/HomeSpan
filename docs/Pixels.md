@@ -1,29 +1,36 @@
 ## Addressable RGB LEDs
 
-HomeSpan includes two dedicated classes that provide for easy control of "addressable" RGB LEDs.  The *Pixel()* class is used for RGB and RGBW LEDs that require only a single "data" control wire, such as this 8-pixel [NeoPixel RGB Stick](https://www.adafruit.com/product/1426) or this single-pixel [NeoPixel RGBW LED](https://www.adafruit.com/product/2759).  The *Dot()* class is used for RGB LEDs that require two control wires ("data" and "clock"), such as this 144-pixel [DotStar RGB Strip](https://www.adafruit.com/product/2241).
+HomeSpan includes two dedicated classes that provide for easy control of "addressable" RGB LEDs.  The *Pixel()* class is used for RGB and RGBW LEDs that require only a single "data" control wire, such as this 8-pixel [NeoPixel RGB Stick](https://www.adafruit.com/product/1426) or this single-pixel [NeoPixel RGBW LED](https://www.adafruit.com/product/2759).  The *Dot()* class is used for RGB LEDs that require two control wires ("data" and "clock"), such as this 144-pixel [DotStar RGB Strip](https://www.adafruit.com/product/2241) or this 60-pixel [RGB LED Strip](https://www.sparkfun.com/products/14015).
 
 Both classes allow you to individually set each of the "pixels" in a multi-pixel LED strip to a different 24-bit RGB color (or 32-bit color, if using RGBW LEDs).  Alternatively, the classes allow you to simply specify a single 24-bit (or 32-bit) color to duplicate across all pixels.
 
-The methods for both classes are nearly identical, which allows you to interchange code written for single-wire devices to use with two-wire devices (and vice-versa) with only minor modifications.
+The methods for both classes are nearly identical, which allows you to readily interchange code written for single-wire devices to use with two-wire devices (and vice-versa) with only minor modifications.
 
-The ESP32 has up to 16 PWM channels that can be used to drive a variety of devices.  HomeSpan includes an integrated PWM library with dedicated classes designed for controlling **Dimmable LEDs** as well as **Servo Motors**.  Both classes are provided in a standalone header file that is accessed by placing the following near the top of your sketch:
+Both classes are provided in a standalone header file that is accessed by placing the following near the top of your sketch:
 
-`#include "extras/PwmPin.h"`
+`#include "extras/Pixel.h"`
 
-### *LedPin(uint8_t pin [,float level [,uint16_t frequency]])*
+### *Pixel(uint8_t pin, [boolean isRGBW])*
 
-Creating an instance of this **class** configures the specified *pin* to output a PWM signal suitable for a controlling dimmable LED.  Arguments, along with their defaults if left unspecified, are as follows:
+Creating an instance of this **class** configures the specified *pin* to output a waveform signal suitable for a controlling single-wire, addressable RGB or RGBW LEDs.  Arguments, along with their defaults if left unspecified, are as follows:
 
-  * *pin* - the pin on which the PWM control signal will be output
-  * *level* - sets the initial %duty-cycle of the PWM from from 0 (LED completely off) to 100 (LED fully on).  Default=0 (LED initially off)
-  * *frequency* - sets the PWM frequency, in Hz, from 1-65535 (ESP32 only) or 5-65535 (ESP32-S2 and ESP32-C3).  Defaults to 5000 Hz if unspecified, or if set to 0
+  * *pin* - the pin on which the RGB control signal will be output; normally connected to the "data" input of the addressable LED device
+  * *isRGBW* - set to *true* for RGBW devices that contain 4-color (red/green/blue/white) LEDs; set to *false* for the more typical 3-color RGB devices.  Defaults to *false* if unspecified 
  
  The following methods are supported:
 
-* `void set(float level)`
+* `void set(Color color, int nPixels=1)`
 
-  * sets the PWM %duty-cycle to *level*, where *level* ranges from 0 (LED completely off) to 100 (LED fully on)
+  * sets the color of all pixels in an *nPixel* device to *color*, which is a structure of type **Color** defined below.  *nPixels* defaults to 1 if left unspecified
   
+* `void set(Color *color, int nPixels)`
+
+  * individually sets the color of each pixel in an *nPixel* device according to the values specified in the **Color** array *\*color*, where the first pixel is set to the value in *color\[0\]*, the second pixel is set to the value in *color\[1\]*, etc.  The number of pixels in array, *nPixels*, must be specified
+
+* `static Color RGB(uint8_t r, uint8_t g, uint8_t b, uint8_t w=0)`
+
+ * returns a **Color** object, where *r*, *g*, and *b*, represent 8-bit red, green, and blue values [0-255], and *w* represents an 8-bit value [0-255] for the white LED.  The white value may be left unspecified, in which case it defaults to 0.  Also, the white value will be ignored by *set()* unless the *isRGBW* flag was set to *true* in the constructor
+
 * `int getPin()`
 
   * returns the pin number (or -1 if LedPin was not successfully initialized)
