@@ -16,8 +16,8 @@ Creating an instance of this **class** configures the specified *pin* to output 
 
   * *pin* - the pin on which the RGB control signal will be output; normally connected to the "data" input of the addressable LED device
   * *isRGBW* - set to *true* for RGBW devices that contain 4-color (red/green/blue/white) LEDs; set to *false* for the more typical 3-color RGB devices.  Defaults to *false* if unspecified.  Note you must set the *isRGBW* flag to *true* if you are using an RGBW device, even if you do not intend on utilizing the white LED
- 
- The following methods are supported:
+
+The two main methods to set pixel colors are:
 
 * `void set(Color color, int nPixels=1)`
 
@@ -27,31 +27,31 @@ Creating an instance of this **class** configures the specified *pin* to output 
 
   * individually sets the color of each pixel in a multi-pixel device to the color values specified in the **Color** array *\*color*, of *nPixels* size, where the  first pixel of the device is set to the value in *color\[0\]*, the second pixel is set to the value in *color\[1\]* ... and the last pixel is set to the value in *color\[nPixels-1\]*.  Similar to above, it is not a problem if the value specified for *nPixels* does not match the total number of actual RGB (or RGBW) pixels in your device
 
-* `struct Color`
-
-  * instantiates a "blank" 32-bit Color object capable of holding four 8-bit RGBW values
-  * examples: `Pixel::Color myColor;` or `Pixel::Color myColors[8];`
-  * values for a Color object are set using the following methods:
+In both of the methods above, colors are stored in a 32-bit **Color** object configured to hold four 8-bit RGBW value.  **Color** objects can be instantiated as single variables (e.g. `Pixel::Color myColor;`) or as arrays (e.g. Pixel::Color myColors\[8\];`).  Note that the **Color** object used by the **Pixel** class is scoped to the **Pixel** class itself, so you need to use the fully-scoped class name "Pixel::Color".  Once a **Color** object is created, the color it stores can be set using one of the two following methods:
   
-    * `Color RGB(uint8_t r, uint8_t g, uint8_t b, uint8_t w=0)`
-      * where *r*, *g*, and *b*, represent 8-bit red, green, and blue values over the range 0-255, and *w* represents an 8-bit value [0-255] for the white LED.  The white value may be left unspecified, in which case it defaults to 0.  Also, the white value will be ignored by *set()* unless the *isRGBW* flag was specified as *true* in the constructor
-      * example: `myColor.RGB(255,255,0)` sets myColor to bright yellow
+  * `Color RGB(uint8_t r, uint8_t g, uint8_t b, uint8_t w=0)`
+
+   * where *r*, *g*, and *b*, represent 8-bit red, green, and blue values over the range 0-255, and *w* represents an 8-bit value [0-255] for the white LED.  The white value may be left unspecified, in which case it defaults to 0.  Also, the white value will be ignored by *set()* unless the *isRGBW* flag was specified as *true* in the constructor
+   * example: `myColor.RGB(255,255,0)` sets myColor to bright yellow
       
-    * `Color HSV(float h, float s, float v, double w=0)`
+  * `Color HSV(float h, float s, float v, double w=0)`
     
-      * where *h*=Hue, over the range 0-360; *s*=Saturation percentage from 0-100; and *v*=Brightness percentage from 0-100.  These values are converted to equivalent 8-bit RGB values, each from 0-255 for storage in the *Color* object.  Note the *w* value is treated separately and represents a percentage of brightness for the white LED (from 0-100) that is also converted into an 8-bit value from 0-255 for storage in the **Color** object.  Similar to above, the white value may be left unspecified, in which case it defaults to 0
-      * example: `myColor.HSV(120,100,50)` sets myColor to fully-saturated green with 50% brightness
+    * where *h*=Hue, over the range 0-360; *s*=Saturation percentage from 0-100; and *v*=Brightness percentage from 0-100.  These values are converted to equivalent 8-bit RGB values, each from 0-255 for storage in the *Color* object.  Note the *w* value is treated separately and represents a percentage of brightness for the white LED (from 0-100) that is also converted into an 8-bit value from 0-255 for storage in the **Color** object.  Similar to above, the white value may be left unspecified, in which case it defaults to 0
+    * example: `myColor.HSV(120,100,50)` sets myColor to fully-saturated green with 50% brightness
       
-  * both methods above return the completed **Color** object itself and can thus be used wherever a **Color** object is required
-    * example: `Pixel p(5); Pixel::Color myColor; p.set(myColor.RGB(255,215,0))` sets the color of a single pixel device attached to pin 5 to bright gold
+Note both methods above return the completed **Color** object itself and can thus be used wherever a **Color** object is required:  For example: `Pixel p(5); Pixel::Color myColor; p.set(myColor.RGB(255,215,0))` sets the color of a single pixel device attached to pin 5 to bright gold.
+
+The **Pixel** class also supports the following class-level methods as a convenient alterntive to creating colors:
   
 * `static Color RGB(uint8_t r, uint8_t g, uint8_t b, uint8_t w=0)`
-
-  * a convenience, class-level function that returns a **Color** object.  Equivalent to `return(Color().RGB(r,g,b,w));`
+  * equivalent to `return(Color().RGB(r,g,b,w));`
 
 * `static Color HSV(float h, float s, float v, double w=0)`
+  * equivalent to `return(Color().HSV(h,s,v,w));`
 
-  * a convenience, class-level function that returns a **Color** object.  Equivalent to `return(Color().HSV(h,s,v,w));`
+For example: ``
+
+Finally, the **Pixel** class supports these two lesser-use methods:
 
 * `int getPin()`
 
@@ -65,9 +65,11 @@ Creating an instance of this **class** configures the specified *pin* to output 
     * *lowReset* specifies the delay (in microseconds) representing the end of a pulse stream
    * for reference, the **Pixel** class uses the following defaults: *high0=0.32𝛍s, low0=0.88𝛍s, high1=0.64𝛍s, low1=0.56𝛍s, lowReset=80.0𝛍s* 
 
-Resources usage.  The **Pixel** class relies on the ESP32's RMT peripheral to create the precise pulse trains required to control single-wire addressable RGB LEDs.  Since each instantiation of **Pixel** consumes an RMT channel, the number of **Pixel** objects you can instantiate (each controlling a separate multi-pixel RGB LED device attached to a specific pin) is limited to the number of RMT available as follows: ESP32 - 8 instances; ESP32-S2 - 4 instances; ESP32-C3 - 2 instances.
+Notes on Resource Usage and Resource Conflicts
 
-Conflict Alert:  The **Pixel** class is optimized to handle aribtrarily-long LED strips containing hundreds of RGB or RGBW pixels.  To accomplish this efficiently, the **Pixel** class implements its own RMT driver, which conflicts with the default RMT driver used by HomeSpan's RFControl library.  Unfortunately this means you cannot use both the *Pixel* class library and *RFControl* class library in the same HomeSpan sketch.
+  * the **Pixel** class relies on the ESP32's RMT peripheral to create the precise pulse trains required to control single-wire addressable RGB LEDs.  Since each instantiation of **Pixel** consumes an RMT channel, the number of **Pixel** objects you can instantiate (each controlling a separate multi-pixel RGB LED device attached to a specific pin) is limited to the number of RMT available as follows: ESP32 - 8 instances; ESP32-S2 - 4 instances; ESP32-C3 - 2 instances.
+
+  * the **Pixel** class is optimized to handle aribtrarily-long LED strips containing hundreds of RGB or RGBW pixels.  To accomplish this efficiently, the **Pixel** class implements its own RMT driver, which conflicts with the default RMT driver used by HomeSpan's RFControl library.  Unfortunately this means you cannot use both the *Pixel* class library and *RFControl* class library in the same HomeSpan sketch.
 
 
 
