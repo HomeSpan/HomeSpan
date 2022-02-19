@@ -1,6 +1,6 @@
 # Addressable RGB LEDs
 
-HomeSpan includes two dedicated classes that provide for easy control of "addressable" RGB LEDs.  The *Pixel()* class is used for RGB and RGBW LEDs that require only a single "data" control wire, such as this 8-pixel [NeoPixel RGB Stick](https://www.adafruit.com/product/1426) or this single-pixel [NeoPixel RGBW LED](https://www.adafruit.com/product/2759).  The *Dot()* class is used for RGB LEDs that require two control wires ("data" and "clock"), such as this 144-pixel [DotStar RGB Strip](https://www.adafruit.com/product/2241) or this 60-pixel [RGB LED Strip](https://www.sparkfun.com/products/14015).
+HomeSpan includes two dedicated classes that provide for easy control of "addressable" RGB LEDs.  The **Pixel()** class is used for RGB and RGBW LEDs that require only a single "data" control wire, such as this 8-pixel [NeoPixel RGB Stick](https://www.adafruit.com/product/1426) or this single-pixel [NeoPixel RGBW LED](https://www.adafruit.com/product/2759).  The **Dot()** class is used for RGB LEDs that require two control wires ("data" and "clock"), such as this 144-pixel [DotStar RGB Strip](https://www.adafruit.com/product/2241) or this 60-pixel [RGB LED Strip](https://www.sparkfun.com/products/14015).
 
 Both classes allow you to individually set each of the "pixels" in a multi-pixel LED strip to a different 24-bit RGB color (or 32-bit color, if using RGBW LEDs).  Alternatively, the classes allow you to simply specify a single 24-bit (or 32-bit) color to duplicate across all pixels.
 
