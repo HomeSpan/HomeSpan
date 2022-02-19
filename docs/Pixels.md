@@ -1,8 +1,6 @@
-# HomeSpan Extras
+## Addressable RGB LEDs
 
-HomeSpan includes integrated access to a number of ESP32 features you'll likely find particularly useful when constructing your HomeSpan devices.
-
-## Pulse Width Modulation (PWM)
+HomeSpan includes two dedicated classes that provide for precise control of Addressable RGB LEDs.  The *Pixel()* class is used for RGB and RGBW LEDs that require only a single "data" control wire, such as the [NeoPixel 8-element RGB Stick](https://www.adafruit.com/product/1426) or this [NeoPixel Single RGBW LED](https://www.adafruit.com/product/2759).  These LEDs typically contain embedded driver chips such as the SK6812 or WS2812.  The *Dot()* class is used for RGB LEDs that require two control wires ("data" and "clock"), such as this [DotStar 144-element RGB Strip](https://www.adafruit.com/product/2241).  These LEDs typically contain embedded driver chips such as the SK9822 or WS2801.
 
 The ESP32 has up to 16 PWM channels that can be used to drive a variety of devices.  HomeSpan includes an integrated PWM library with dedicated classes designed for controlling **Dimmable LEDs** as well as **Servo Motors**.  Both classes are provided in a standalone header file that is accessed by placing the following near the top of your sketch:
 
