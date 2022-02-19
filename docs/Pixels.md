@@ -34,11 +34,16 @@ Creating an instance of this **class** configures the specified *pin* to output 
   * values for a Color object are set using the following methods:
   
     * `Color RGB(uint8_t r, uint8_t g, uint8_t b, uint8_t w=0)`
-      * where *r*, *g*, and *b*, represent 8-bit red, green, and blue values over the range 0-255, and *w* represents an 8-bit value [0-255] for the white LED.  The white value may be left unspecified, in which case it defaults to 0.  Also, the white value will be ignored by *set()* unless the *isRGBW* flag was specified as *true* in the constructor; and
+      * where *r*, *g*, and *b*, represent 8-bit red, green, and blue values over the range 0-255, and *w* represents an 8-bit value [0-255] for the white LED.  The white value may be left unspecified, in which case it defaults to 0.  Also, the white value will be ignored by *set()* unless the *isRGBW* flag was specified as *true* in the constructor
+      * example: `myColor.RGB(255,255,0)` sets myColor to bright yellow
+      
     * `Color HSV(float h, float s, float v, double w=0)`
     
-      * where *h*=Hue, over the range 0-360; *s*=Saturation percentage from 0-100; and *v*=Brightness percentage from 0-100.  These values are converted to equivalent 8-bit RGB values, each from 0-255 for storage in the Color object.  Note the *w* value is treated separately and represents a percentage of brightness for the white LED (from 0-100) that is also converted into an 8-bit value from 0-255 for storage in the Color object.  Similar to above, the white value may be left unspecified, in which case it defaults to 0
-  * both methods above return the completed Color object itself and can thus be used wherever a Color object is required
+      * where *h*=Hue, over the range 0-360; *s*=Saturation percentage from 0-100; and *v*=Brightness percentage from 0-100.  These values are converted to equivalent 8-bit RGB values, each from 0-255 for storage in the *Color* object.  Note the *w* value is treated separately and represents a percentage of brightness for the white LED (from 0-100) that is also converted into an 8-bit value from 0-255 for storage in the **Color** object.  Similar to above, the white value may be left unspecified, in which case it defaults to 0
+      * example: `myColor.HSV(120,100,50)` sets myColor to fully-saturated green with 50% brightness
+      
+  * both methods above return the completed **Color** object itself and can thus be used wherever a **Color** object is required
+    * example: `Pixel p(5); Pixel::Color myColor; p.set(myColor.RGB(255,215,0))` sets the color of a single pixel device attached to pin 5 to bright gold
   
 * `static Color RGB(uint8_t r, uint8_t g, uint8_t b, uint8_t w=0)`
 
@@ -48,28 +53,24 @@ Creating an instance of this **class** configures the specified *pin* to output 
 
   * a convenience, class-level function that returns a **Color** object.  Equivalent to `return(Color().HSV(h,s,v,w));`
 
-* returns a **Color** object after converting the values of *h*, *s*, and *v* (where *h*=Hue from 0-360; *s*=Saturation percentage from 0-100; *v*=Brightness percentage from 0-100) to equivalent 8-bit RGB values, each from 0-255.  The *w* value is treated separately and represents a percentage of brightness for the white LED (from 0-100) that is subsequently converted into an 8-bit value from 0-255.  The white value may be left unspecified, in which case it defaults to 0.  Also, the white value will be ignored by *set()* unless the *isRGBW* flag was specified as *true* in the constructor
-
-
-
 * `int getPin()`
 
   * returns the pin number (or -1 if the instantiation failed due to lack of resources - see below)
 
 * `void setTiming(float high0, float low0, float high1, float low1, uint32_t lowReset)`
 
-  * the waveform that the *set()* methods generate to set the color(s) of an RGB or RGBW device are calibrated to work with most commercial devices.  However, if you have a device that utilizes non-standard pulses, you may use *setTiming()* to specify a custom pulse width, where 
-  
-LedPin also includes a static class function that converts Hue/Saturation/Brightness values (typically used by HomeKit) to Red/Green/Blue values (typically used to control multi-color LEDS).
+  * the default timing parameters used by the **Pixel** class to generate the "data" signal needed to set the colors of an RGB LED device should work with most commercial products based on SK6812 or WS2812 driver chips.  Use this method if you need to override the class defaults and replace them with your own timing parameters, where
+    * *high0* and *low0* specify the duration (in microseconds) of the high phase and low phase for a pulse encoding a zero-bit;
+    * *high1* and *low1* specify the duration (in microseconds) of the high phase and low phase for a pulse encoding a one-bit; and
+    * *lowReset* specifies the delay (in microseconds) representing the end of a pulse stream
+   * for reference, the **Pixel** class uses the following defaults: *high0=0.32𝛍s, low0=0.88𝛍s, high1=0.64𝛍s, low1=0.56𝛍s, lowReset=80.0𝛍s* 
 
-* `static void HSVtoRGB(float h, float s, float v, float *r, float *g, float *b)`
+Resources usage.  The **Pixel** class relies on the ESP32's RMT peripheral to create the precise pulse trains required to control single-wire addressable RGB LEDs.  Since each instantiation of **Pixel** consumes an RMT channel, the number of **Pixel** objects you can instantiate (each controlling a separate multi-pixel RGB LED device attached to a specific pin) is limited to the number of RMT available as follows: ESP32 - 8 instances; ESP32-S2 - 4 instances; ESP32-C3 - 2 instances.
 
-  * *h* - input Hue value, range 0-360
-  * *s* - input Saturation value, range 0-1
-  * *v* - input Brightness value, range 0-1
-  * *r* - output Red value, range 0-1
-  * *g* - output Green value, range 0-1
-  * *b* - output Blue value, range 0-1
+Conflict Alert:  The **Pixel** class is optimized to handle aribtrarily-long LED strips containing hundreds of RGB or RGBW pixels.  To accomplish this efficiently, the **Pixel** class implements its own RMT driver, which conflicts with the default RMT driver used by HomeSpan's RFControl library.  Unfortunately this means you cannot use both the *Pixel* class library and *RFControl* class library in the same HomeSpan sketch.
+
+
+
 
 See tutorial sketch [#10 (RGB_LED)](../examples/10-RGB_LED) for an example of using LedPin to control an RGB LED.
 
