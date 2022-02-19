@@ -1,4 +1,4 @@
-## Addressable RGB LEDs
+# Addressable RGB LEDs
 
 HomeSpan includes two dedicated classes that provide for easy control of "addressable" RGB LEDs.  The *Pixel()* class is used for RGB and RGBW LEDs that require only a single "data" control wire, such as this 8-pixel [NeoPixel RGB Stick](https://www.adafruit.com/product/1426) or this single-pixel [NeoPixel RGBW LED](https://www.adafruit.com/product/2759).  The *Dot()* class is used for RGB LEDs that require two control wires ("data" and "clock"), such as this 144-pixel [DotStar RGB Strip](https://www.adafruit.com/product/2241) or this 60-pixel [RGB LED Strip](https://www.sparkfun.com/products/14015).
 
@@ -10,7 +10,7 @@ Both classes are provided in a standalone header file that is accessed by placin
 
 `#include "extras/Pixel.h"`
 
-### *Pixel(uint8_t pin, [boolean isRGBW])*
+## *Pixel(uint8_t pin, [boolean isRGBW])*
 
 Creating an instance of this **class** configures the specified *pin* to output a waveform signal suitable for a controlling single-wire, addressable RGB or RGBW LEDs.  Arguments, along with their defaults if left unspecified, are as follows:
 
@@ -31,8 +31,8 @@ In both of the methods above, colors are stored in a 32-bit **Color** object con
   
   * `Color RGB(uint8_t r, uint8_t g, uint8_t b, uint8_t w=0)`
 
-   * where *r*, *g*, and *b*, represent 8-bit red, green, and blue values over the range 0-255, and *w* represents an 8-bit value [0-255] for the white LED.  The white value may be left unspecified, in which case it defaults to 0.  Also, the white value will be ignored by *set()* unless the *isRGBW* flag was specified as *true* in the constructor
-   * example: `myColor.RGB(255,255,0)` sets myColor to bright yellow
+    * where *r*, *g*, and *b*, represent 8-bit red, green, and blue values over the range 0-255, and *w* represents an 8-bit value [0-255] for the white LED.  The white value may be left unspecified, in which case it defaults to 0.  Also, the white value will be ignored by *set()* unless the *isRGBW* flag was specified as *true* in the constructor
+    * example: `myColor.RGB(255,255,0)` sets myColor to bright yellow
       
   * `Color HSV(float h, float s, float v, double w=0)`
     
@@ -41,17 +41,17 @@ In both of the methods above, colors are stored in a 32-bit **Color** object con
       
 Note both methods above return the completed **Color** object itself and can thus be used wherever a **Color** object is required:  For example: `Pixel p(5); Pixel::Color myColor; p.set(myColor.RGB(255,215,0))` sets the color of a single pixel device attached to pin 5 to bright gold.
 
-The **Pixel** class also supports the following class-level methods as a convenient alterntive to creating colors:
+The **Pixel** class also supports the following class-level methods as a convenient alternative to creating colors:
   
 * `static Color RGB(uint8_t r, uint8_t g, uint8_t b, uint8_t w=0)`
   * equivalent to `return(Color().RGB(r,g,b,w));`
+  * example: `Pixel p(8);  p.set(Pixel::RGB(0,0,255),8);` sets the color of each pixel in an 8-pixel device to blue
 
 * `static Color HSV(float h, float s, float v, double w=0)`
   * equivalent to `return(Color().HSV(h,s,v,w));`
+  * example: `Pixel::Color c[]={Pixel::HSV(120,100,100),Pixel::HSV(60,100,100),Pixel::HSV(0,100,100)};` to create a red-yellow-green traffic light pattern
 
-For example: ``
-
-Finally, the **Pixel** class supports these two lesser-use methods:
+Finally, the **Pixel** class supports these two lesser-used methods:
 
 * `int getPin()`
 
@@ -65,11 +65,11 @@ Finally, the **Pixel** class supports these two lesser-use methods:
     * *lowReset* specifies the delay (in microseconds) representing the end of a pulse stream
    * for reference, the **Pixel** class uses the following defaults: *high0=0.32𝛍s, low0=0.88𝛍s, high1=0.64𝛍s, low1=0.56𝛍s, lowReset=80.0𝛍s* 
 
-Notes on Resource Usage and Resource Conflicts
+### Resource Usage and Resource Conflicts
 
-  * the **Pixel** class relies on the ESP32's RMT peripheral to create the precise pulse trains required to control single-wire addressable RGB LEDs.  Since each instantiation of **Pixel** consumes an RMT channel, the number of **Pixel** objects you can instantiate (each controlling a separate multi-pixel RGB LED device attached to a specific pin) is limited to the number of RMT available as follows: ESP32 - 8 instances; ESP32-S2 - 4 instances; ESP32-C3 - 2 instances.
+The **Pixel** class relies on the ESP32's RMT peripheral to create the precise pulse trains required to control single-wire addressable RGB LEDs.  Since each instantiation of **Pixel** consumes an RMT channel, the number of **Pixel** objects you can instantiate (each controlling a separate multi-pixel RGB LED device attached to a specific pin) is limited to the number of RMT available as follows: ESP32 - 8 instances; ESP32-S2 - 4 instances; ESP32-C3 - 2 instances.
 
-  * the **Pixel** class is optimized to handle aribtrarily-long LED strips containing hundreds of RGB or RGBW pixels.  To accomplish this efficiently, the **Pixel** class implements its own RMT driver, which conflicts with the default RMT driver used by HomeSpan's RFControl library.  Unfortunately this means you cannot use both the *Pixel* class library and *RFControl* class library in the same HomeSpan sketch.
+Also, the **Pixel** class is optimized to handle arbitrarily-long LED strips containing hundreds of RGB or RGBW pixels.  To accomplish this efficiently, the **Pixel** class implements its own RMT driver, which conflicts with the default RMT driver used by HomeSpan's **RFControl** library.  Unfortunately this means you cannot use both the **Pixel** class library and **RFControl** class library in the same HomeSpan sketch.
 
 
 
