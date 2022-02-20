@@ -12,7 +12,7 @@ Both classes are provided in a standalone header file that is accessed by placin
 
 ## *Pixel(uint8_t pin, [boolean isRGBW])*
 
-Creating an instance of this **class** configures the specified *pin* to output a waveform signal suitable for controlling a single-wire, addressable RGB or RGBW LED device with an arbitrary number of pixels.  Such devices typically contain embedded SK6812 or WS2812 driver chips.  Arguments, along with their defaults if left unspecified, are as follows:
+Creating an instance of this **class** configures the specified *pin* to output a waveform signal suitable for controlling a single-wire, addressable RGB or RGBW LED device with an arbitrary number of pixels.  Such devices typically contain SK6812 or WS2812 LEDs.  Arguments, along with their defaults if left unspecified, are as follows:
 
   * *pin* - the pin on which the RGB control signal will be output; normally connected to the "data" input of the addressable LED device
   * *isRGBW* - set to *true* for RGBW devices that contain 4-color (red/green/blue/white) LEDs; set to *false* for the more typical 3-color RGB devices.  Defaults to *false* if unspecified.  Note you must set the *isRGBW* flag to *true* if you are using an RGBW device, even if you do not intend on utilizing the white LED
@@ -73,7 +73,7 @@ Also, the **Pixel** class is optimized to handle arbitrarily-long LED strips con
 
 ## *Dot(uint8_t dataPin, uint8_t clockPin)*
 
-Creating an instance of this **class** configures the specified pins to output waveform signals suitable for controlling a two-wire, addressable RGB LED device with an arbitrary number of pixels.  Arguments, along with their defaults if left unspecified, are as follows:
+Creating an instance of this **class** configures the specified pins to output waveform signals suitable for controlling a two-wire, addressable RGB LED device with an arbitrary number of pixels.  Such devices typically contain SK9822 or APA102 LEDs, or an embedded WS2801 driver chip.  Arguments, along with their defaults if left unspecified, are as follows:
 
   * *dataPin* - the pin on which the RGB data signal will be output; normally connected to the "data" input of the addressable LED device
   * *clockPin* - the pin on which the RGB clock signal will be output; normally connected to the "clock" input of the addressable LED device
