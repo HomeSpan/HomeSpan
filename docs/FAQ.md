@@ -8,6 +8,10 @@
 
 * Instead, HomeSpan stores your WiFi Credentials in a dedicated non-volatile storage (NVS) partition of the ESP32.  There are two ways of entering this information.  If you are developing a sketch within the Arduino IDE, simply use the HomeSpan Command Line Interface and type 'W' into the Serial Monitor.  HomeSpan will prompt you to input your WiFi SSID and Password (see [CLI](CLI.md) for details).  As an alternative, if your HomeSpan device is not connected to a computer, you can launch HomeSpan's Temporary WiFi Setup Network and input your WiFi Credentials directly into the web forms served by your device (see the [User Guide](UserGuide.md#setting-homespans-wifi-credentials-and-setup-code) for details).
 
+#### What is the Setup Code used for pairing a HomeSpan device to HomeKit?
+
+* The HomeSpan default Setup Code is 466-37-726.  You can (and should) use the HomeSpan Command Line Interface to change this default to a secret code unique for each of your devices.  Simply type 'S \<code\>' into the Serial Monitor, or specify your desired Setup Code at the outset when configuring your WiFi Credentials using HomeSpan's Temporary WiFi Setup Network.
+
 #### Does HomeSpan support video and audio streams?
 
 * No, HomeSpan does not support streaming services, such as Audio Stream Management, Data Stream Transport Management, or Camera RTP Management.  See [HomeSpan Services and Characteristics](ServiceList.md) for a complete list of all Services supported by HomeSpan.
