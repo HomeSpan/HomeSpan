@@ -66,7 +66,7 @@ Ready to start creating your own HomeSpan sketches?  Check out the [HomeSpan Ser
 
 While developing your sketch remember to utilize the Arduino Serial Monitor.  HomeSpan produces extensive diagnostics that will help you debug your sketches as well as monitor all aspects of the HomeSpan device.  You'll also be able to control various aspects of HomeSpan from the Serial Monitor using the [HomeSpan Command-Line Interface (CLI)](CLI.md), including configuring the device's WiFi Credentials and HomeKit Setup Code.
 
-For access to even more advanced features, check out the [HomeSpan Extras](Extras.md) page for details on how to use HomeSpan's integrated PWM and Remote Control libraries.
+For access to even more advanced features, check out the [HomeSpan PWM](https://github.com/HomeSpan/HomeSpan/blob/master/docs/PWM.md), [HomeSpan RFControl](https://github.com/HomeSpan/HomeSpan/blob/master/docs/RMT.md), and [HomeSpan Pixels](https://github.com/HomeSpan/HomeSpan/blob/master/docs/Pixels.md) pages for tutorials and details on how HomeSpan can be used to control LEDs, lights, and Servo Motors with PWM signals; generate RF and IR Remote Control codes to operate appliances and TVs; and even control multicolor RGB LED strips.
 
 Finally, disconnect your HomeSpan device from the computer and power it directly from a wall adapter.  After all, HomeSpan devices are designed to run on a standalone basis connected to real-world applicances like lights, fans, door locks, and window shades.  See the [HomeSpan User Guide](UserGuide.md) for end-user instructions on how to operate and configure a standlone HomeSpan device's WiFi Credentials and HomeKit Setup Code *without the need to connect the device to a computer*.
 
