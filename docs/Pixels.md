@@ -12,7 +12,7 @@ Both classes are provided in a standalone header file that is accessed by placin
 
 ## *Pixel(uint8_t pin, [boolean isRGBW])*
 
-Creating an instance of this **class** configures the specified *pin* to output a waveform signal suitable for controlling a single-wire, addressable RGB or RGBW LED device with an arbitrary number of pixels.  Arguments, along with their defaults if left unspecified, are as follows:
+Creating an instance of this **class** configures the specified *pin* to output a waveform signal suitable for controlling a single-wire, addressable RGB or RGBW LED device with an arbitrary number of pixels.  Such devices typically contain embedded SK6812 or WS2812 driver chips.  Arguments, along with their defaults if left unspecified, are as follows:
 
   * *pin* - the pin on which the RGB control signal will be output; normally connected to the "data" input of the addressable LED device
   * *isRGBW* - set to *true* for RGBW devices that contain 4-color (red/green/blue/white) LEDs; set to *false* for the more typical 3-color RGB devices.  Defaults to *false* if unspecified.  Note you must set the *isRGBW* flag to *true* if you are using an RGBW device, even if you do not intend on utilizing the white LED
@@ -27,7 +27,7 @@ The two main methods to set pixel colors are:
 
   * individually sets the color of each pixel in a multi-pixel device to the color values specified in the **Color** array *\*color*, of *nPixels* size, where the  first pixel of the device is set to the value in *color\[0\]*, the second pixel is set to the value in *color\[1\]* ... and the last pixel is set to the value in *color\[nPixels-1\]*.  Similar to above, it is not a problem if the value specified for *nPixels* does not match the total number of actual RGB (or RGBW) pixels in your device
 
-In both of the methods above, colors are stored in a 32-bit **Color** object configured to hold four 8-bit RGBW values.  **Color** objects can be instantiated as single variables (e.g. `Pixel::Color myColor;`) or as arrays (e.g. Pixel::Color myColors\[8\];`).  Note that the **Color** object used by the **Pixel** class is scoped to the **Pixel** class itself, so you need to use the fully-scoped class name "Pixel::Color".  Once a **Color** object is created, the color it stores can be set using one of the two following methods:
+In both of the methods above, colors are stored in a 32-bit **Color** object configured to hold four 8-bit RGBW values.  **Color** objects can be instantiated as single variables (e.g. `Pixel::Color myColor;`) or as arrays (e.g. `Pixel::Color myColors\[8\];`).  Note that the **Color** object used by the **Pixel** class is scoped to the **Pixel** class itself, so you need to use the fully-qualified class name "Pixel::Color".  Once a **Color** object is created, the color it stores can be set using one of the two following methods:
   
   * `Color RGB(uint8_t r, uint8_t g, uint8_t b, uint8_t w=0)`
 
@@ -51,15 +51,15 @@ The **Pixel** class also supports the following class-level methods as a conveni
   * equivalent to `return(Color().HSV(h,s,v,w));`
   * example: `Pixel::Color c[]={Pixel::HSV(120,100,100),Pixel::HSV(60,100,100),Pixel::HSV(0,100,100)};` to create a red-yellow-green traffic light pattern
 
-Finally, the **Pixel** class supports these two lesser-used methods:
+Finally, the **Pixel** class supports these two additional, but rarely-needed, methods:
 
 * `int getPin()`
 
-  * returns the pin number (or -1 if the instantiation failed due to lack of resources - see below)
+  * returns the pin number, or -1 if the instantiation failed due to lack of resources 
 
 * `void setTiming(float high0, float low0, float high1, float low1, uint32_t lowReset)`
 
-  * the default timing parameters used by the **Pixel** class to generate the "data" signal needed to set the colors of an RGB LED device should work with most commercial products based on SK6812 or WS2812 driver chips.  Use this method if you need to override the class defaults and replace them with your own timing parameters, where
+  * the default timing parameters used by the **Pixel** class to generate the "data" signal needed to set the colors of an RGB LED device should work with most commercial products based on SK6812 or WS2812 driver chips.  Use this method **ONLY** if you need to override the class defaults and replace them with your own timing parameters, where
     * *high0* and *low0* specify the duration (in microseconds) of the high phase and low phase for a pulse encoding a zero-bit;
     * *high1* and *low1* specify the duration (in microseconds) of the high phase and low phase for a pulse encoding a one-bit; and
     * *lowReset* specifies the delay (in microseconds) representing the end of a pulse stream
@@ -88,7 +88,7 @@ The two main methods to set pixel colors are:
 
   * individually sets the color of each pixel in a multi-pixel device to the color values specified in the **Color** array *\*color*, of *nPixels* size, where the  first pixel of the device is set to the value in *color\[0\]*, the second pixel is set to the value in *color\[1\]* ... and the last pixel is set to the value in *color\[nPixels-1\]*.  Similar to above, it is not a problem if the value specified for *nPixels* does not match the total number of actual RGB pixels in your device
 
-In both of the methods above, colors are stored in a 32-bit **Color** object configured to hold three 8-bit RGB values plus a 5-bit value that can be used to limit the LED curent.  **Color** objects can be instantiated as single variables (e.g. `Dot::Color myColor;`) or as arrays (e.g. Pixel::Color myColors\[8\];`).  Note that the **Color** object used by the **Dot** class is scoped to the **Dot** class itself, so you need to use the fully-scoped class name "Dot::Color".  Once a **Color** object is created, the color it stores can be set using one of the two following methods:
+In both of the methods above, colors are stored in a 32-bit **Color** object configured to hold three 8-bit RGB values plus a 5-bit value that can be used to limit the LED current.  **Color** objects can be instantiated as single variables (e.g. `Dot::Color myColor;`) or as arrays (e.g. `Dot::Color myColors\[8\];`).  Note that the **Color** object used by the **Dot** class is scoped to the **Dot** class itself, so you need to use the fully-qualified class name "Dot::Color".  Once a **Color** object is created, the color it stores can be set using one of the two following methods:
   
   * `Color RGB(uint8_t r, uint8_t g, uint8_t b, uint8_t driveLevel=31)`
 
@@ -114,7 +114,9 @@ The **Pixel** class also supports the following class-level methods as a conveni
   * equivalent to `return(Color().HSV(h,s,v,drivePercent));`
   * example: `Dot::Color c[]={Dot::HSV(120,100,100),Dot::HSV(60,100,100),Dot::HSV(0,100,100)};` to create a red-yellow-green traffic light pattern
 
-Unlike the **Pixel** class, the **Dot** class does not utilize the ESP32'2 RMT peripheral and thus there are no limits to the number of **Dot** objects you can instantiate, not any conflicts with using the **RFControl** library at the same time in the same sketch.  There are also no timing parameters to set since the clock signal is generated by the **Dot** class itself.
+Unlike the **Pixel** class, the **Dot** class does *not* utilize the ESP32's RMT peripheral and thus there are no limits to the number of **Dot** objects you can instantiate, nor are there any conflicts with using the **Dot** class and the **RFControl** library at the same time in the same sketch.  Also, since the clock signal is generated by the **Dot** class itself, there are no timing parameters to set and no need for a *setTiming()* method.
+
+### Example Sketches
 
 A fully worked example showing how to use the Pixel library within a HomeSpan sketch to control an RGB Pixel Device, an RGBW Pixel Device, and an RGB DotStar Device, all from the Home App on your iPhone, can be found in the Arduino IDE under [*File → Examples → HomeSpan → Other Examples → Pixel*](../Other%20Examples/Pixel).
 
