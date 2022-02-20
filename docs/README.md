@@ -28,7 +28,10 @@ HomeSpan is fully compatible with both Versions 1 and 2 of the [Arduino-ESP32 Bo
   * Servo Motors
 * Integrated Push Button functionality supporting single, double, and long presses 
 * Integrated access to the ESP32's on-chip Remote Control peripheral for easy generation of IR and RF signals
-* 18 detailed tutorial-sketches with extensive comments, HomeSpan documentation and tips and tricks
+* Dedicated classes to control one- and two-wire addressable RGB and RGBW LEDs and LED strips
+* Extensively-commented Tutorial Sketches taking you from the very basics of HomeSpan through advanced HomeKit topics
+* Additional examples and projects showcasing real-world implementations of HomeSpan
+* A complete set of documentation explaining every aspect of the HomeSpan API
 
 ### For the HomeSpan End-User
 
@@ -41,22 +44,26 @@ HomeSpan is fully compatible with both Versions 1 and 2 of the [Arduino-ESP32 Bo
   * Launch the WiFi Access Point
 * A standalone, detailed End-User Guide
 
-## ❗Latest Update - HomeSpan 1.4.2 (11/27/2021)
+## ❗Latest Update - HomeSpan 1.5.0 (2/20/2022)
 
-* **Updated for compatability with Arduino-ESP32 Board Manager 2.0.1**
-  * Maintains backward compatability with all previous versions
+* **New integrated library to control one- and two-wire Addressable RGB and RGBW LEDs and LED strips!**
+  * Adds two new class:
+    * **Pixel()** for control of one-wire RGB and RGBW LEDs and LED strips, such as this [NeoPixel RGBW LED](https://www.adafruit.com/product/2759)
+    * **Dot()** for control of two-wire RGB LEDs and LED strips, such as this [DotStar RGB Strip](https://www.adafruit.com/product/2241)
+    
+  * See [HomeSpan Pixels](https://github.com/HomeSpan/HomeSpan/blob/master/docs/Pixel.md) for full details, including a detailed tutorial sketch demonstrating different ways of using the **Pixel()** and **Dot()** classes, as well an advanced HomeSpan "HolidayLights" Project that shows how to develop custom special effects!
 
-* **Some new methods and options for advance-use circumstances:**
+* **Increased the maximum number of simultaneous Controller connections from 8 to 14 (for Arduino-ESP32 version 2.0.1 and later)**
+  * Added new method `reserveSocketConnection(uint8_t nSockets)` to the global homeSpan object that allows for better management of custom connections
+  * Deprecated older `setMaxConnections(uint8_t nCon)` method
 
-  * Added *optional* second argument to the `setVal()` method that allows the value of a Characteristic to be updated *without* sending notification messages to HomeKit.  Useful for keeping track of duration time when implementing a Sprinkler System - see [HomeSpan Reference Sprinkler](https://github.com/HomeSpan/HomeSpanReferenceSketches/tree/main/ReferenceSprinklers) for an example
+* **Additional updates include:**
+  * Added new methods `setDescription(const char *desc)` and `setUnit(const char *unit)` to SpanCharacteristic.  Useful when creating and working with Custom Characteristics
+  * Added new method `setStatusAutoOff(uint16_t duration)` to the global homeSpan object.  Causes the Status LED (if used) to automatically turn off after *duration* seconds.  Very handy for devices located in bedrooms or TV rooms!
+  * Added new method `setPairCallback(func)` to the global homeSpan object.  Allows you to create custom actions whenever HomeSpan pairs or subsequently unpairs the device to the Home App
+  * Added new method `deleteStoredValues()` to the global homeSpan object. Provides a programmatic way of deleting the value settings of all Characteristics stored in the NVS
 
-  * Added `getLinks()` as a new method to SpanService.  Returns a vector of pointers to SpanServices that have been linked to another Service with the addLink() method.  Useful for looping over all linked services, such as checking all valves in a Shower System - see [HomeSpan Reference Shower](https://github.com/HomeSpan/HomeSpanReferenceSketches/tree/main/ReferenceShower) for an example
-
-  * Added `setPerms()`, `addPerms()`, and `removePerms()` as new methods to SpanCharacteristic.  Allows the user to modify (set/add/remove) the default permissions for any Characteristic.  Useful for adding/deleting write-permissions for certain Characteristics - see [Television Example](https://github.com/HomeSpan/HomeSpan/tree/master/Other%20Examples/Television) for an example
-
-  * Added `setPairingCode()` method to the global homeSpan object that allows for programmatically configuring the Pairing Setup Code inside your sketch. See the HomeSpan API for important security considerations when using this function!
-
-See [Releases](https://github.com/HomeSpan/HomeSpan/releases) for details on all changes included in this update.
+See [Releases](https://github.com/HomeSpan/HomeSpan/releases) for details on all changes and bug fixes included in this update.
 
 # HomeSpan Resources
 
@@ -72,7 +79,9 @@ HomeSpan includes the following documentation:
 * [HomeSpan API Reference](https://github.com/HomeSpan/HomeSpan/blob/master/docs/Reference.md) - a complete guide to the HomeSpan Library API
 * [HomeSpan QR Codes](https://github.com/HomeSpan/HomeSpan/blob/master/docs/QRCodes.md) - create and use QR Codes for pairing HomeSpan devices
 * [HomeSpan OTA](https://github.com/HomeSpan/HomeSpan/blob/master/docs/OTA.md) - update your sketches Over-the-Air directly from the Arduino IDE without a serial connection
-* [HomeSpan Extras](https://github.com/HomeSpan/HomeSpan/blob/master/docs/Extras.md) - integrated access to the ESP32's on-chip LED, Servo Motor, and Remote Control peripherals!
+* [HomeSpan PWM](https://github.com/HomeSpan/HomeSpan/blob/master/docs/PWM.md) - integrated control of standard LEDs and Servo Motors using the ESP32's on-chip PWM peripheral
+* [HomeSpan RFControl](https://github.com/HomeSpan/HomeSpan/blob/master/docs/RMT.md) - easy generation of RF and IR Remote Control signals using the ESP32's on-chip RMT peripheral
+* [HomeSpan Pixels](https://github.com/HomeSpan/HomeSpan/blob/master/docs/Pixels.md) - integrated control of addressable one- and two-wire RGB and RGBW LEDs and LED strips
 * [HomeSpan Television Services](https://github.com/HomeSpan/HomeSpan/blob/master/docs/TVServices.md) - how to use HomeKit's undocumented Television Services and Characteristics
 * [HomeSpan Projects](https://github.com/topics/homespan) - real-world applications of the HomeSpan Library
 * [HomeSpan FAQ](https://github.com/HomeSpan/HomeSpan/blob/master/docs/FAQ.md) - answers to frequently-asked questions

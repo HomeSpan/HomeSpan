@@ -33,6 +33,11 @@ The following **optional** `homeSpan` methods override various HomeSpan initiali
   
 * `void setStatusPin(uint8_t pin)`
   * sets the ESP32 pin to use for the HomeSpan Status LED.  If not specified, HomeSpan will assume there is no Status LED
+
+* `void setStatusAutoOff(uint16_t duration)`
+  * sets Status LED to automatically turn off after *duration* seconds
+  * Status LED will automatically turn on, and duration timer will be reset, whenever HomeSpan activates a new blinking pattern
+  * if *duration* is set to zero, auto-off is disabled (Status LED will remain on indefinitely)
   
 * `int getStatusPin()`
 * returns the pin number of the Status LED as set by `setStatusPin(pin)`, or -1 if no pin has been set
@@ -56,12 +61,14 @@ The following **optional** `homeSpan` methods override various HomeSpan initiali
     * 2 = all status messages plus all HAP communication packets to and from the HomeSpan device
   * this parameter can also be changed at runtime via the [HomeSpan CLI](CLI.md)
   
-* `void setMaxConnections(uint8_t nCon)`
-  * sets the desired maximum number of HAP Controllers that can be simultaneously connected to HomeSpan (default=8)
-  * due to limitations of the ESP32 Arduino library, HomeSpan will override *nCon* if it exceed the following internal limits:
-    * if OTA is not enabled, *nCon* will be reduced to 8 if it has been set to a value greater than 8
-    * if OTA is enabled, *nCon* will be reduced to 7 if it has been set to a value greater than 7
-  * if you add code to a sketch that uses it own network resources, you will need to determine how many TCP sockets your code may need to use, and use this method to reduce the maximum number of connections available to HomeSpan accordingly
+* `void reserveSocketConnections(uint8_t nSockets)`
+  * reserves *nSockets* network sockets for uses **other than** by the HomeSpan HAP Server for HomeKit Controller Connections
+    * for sketches compiled under Arduino-ESP32 v2.0.1 or later, HomeSpan reserves 14 sockets for HAP Controller Connections
+    * each call to `reserveSocketConnections(nSockets)` reduces this number by *nSockets*
+    * use this method if you add code to a sketch that requires its own socket connections (e.g. a separate web service, an MQTT server, etc.)
+  * multiple calls to this method are allowed - the number of sockets reserved will be the sum of *nSockets* across all calls
+  * note you do not need to separately reserve sockets for built-in HomeSpan functionality
+    * for example, `enableOTA()` already contains an embedded call to `reserveSocketConnections(1)` since HomeSpan knows one socket must be reserved to support OTA
   
 * `void setPortNum(uint16_t port)`
   * sets the TCP port number used for communication between HomeKit and HomeSpan (default=80)
@@ -79,13 +86,14 @@ The following **optional** `homeSpan` methods override various HomeSpan initiali
   
 ---
 
-The following **optional** `homeSpan` methods enable additional features and provide for further customization of the HomeSpan environment:
+The following **optional** `homeSpan` methods enable additional features and provide for further customization of the HomeSpan environment.  Unless otherwise noted, calls **should** be made before `begin()` to take effect:
 
 * `void enableOTA(boolean auth=true)`
   * enables [Over-the-Air (OTA) Updating](OTA.md) of a HomeSpan device, which is otherwise disabled
   * HomeSpan OTA requires an authorizing password unless *auth* is specified and set to *false*
   * the default OTA password for new HomeSpan devices is "homespan-ota"
   * this can be changed via the [HomeSpan CLI](CLI.md) using the 'O' command
+  * note enabling OTA reduces the number of HAP Controller Connections by 1
 
 * `void enableAutoStartAP()`
   * enables automatic start-up of WiFi Access Point if WiFi Credentials are **not** found at boot time
@@ -109,7 +117,13 @@ The following **optional** `homeSpan` methods enable additional features and pro
 > :warning: SECURITY WARNING: The purpose of this function is to allow advanced users to *dynamically* set the device's WiFi Credentials using a customized Access Point function specified by `setApFunction(func)`. It it NOT recommended to use this function to hardcode your WiFi SSID and password directly into your sketch.  Instead, use one of the more secure methods provided by HomeSpan, such as typing 'W' from the CLI, or launching HomeSpan's Access Point, to set your WiFi credentials without hardcoding them into your sketch
 
 * `void setWifiCallback(void (*func)())`
-  * Sets an optional user-defined callback function, *func*, to be called by HomeSpan upon start-up just after WiFi connectivity has been established.  This one-time call to *func* is provided for users that are implementing other network-related services as part of their sketch, but that cannot be started until WiFi connectivity is established.  The function *func* must be of type *void* and have no arguments
+  * sets an optional user-defined callback function, *func*, to be called by HomeSpan upon start-up just after WiFi connectivity has been established.  This one-time call to *func* is provided for users that are implementing other network-related services as part of their sketch, but that cannot be started until WiFi connectivity is established.  The function *func* must be of type *void* and have no arguments
+
+* `void setPairCallback(void (*func)(boolean status))`
+  * sets an optional user-defined callback function, *func*, to be called by HomeSpan upon completion of pairing to a controller (*status=true*) or unpairing from a controller (*status=false*)
+  *   this one-time call to *func* is provided for users that would like to trigger additional actions when the device is first paired, or the device is later unpaired
+  *   note this *func* is **not** called upon start-up and should not be used to simply check whether a device is paired or unpaired.  It is only called when pairing status changes
+  *   the function *func* must be of type *void* and have one *boolean* argument
 
 * `void setPairingCode(const char *s)`
   * sets the Setup Pairing Code to *s*, which **must** be exactly eight numerical digits (no dashes)
@@ -117,6 +131,11 @@ The following **optional** `homeSpan` methods enable additional features and pro
   * a hashed version of the Pairing Code will be saved to the device's non-volatile storage, overwriting any currently-stored Pairing Code
   * if *s* contains an invalid code, an error will be reported and the code will *not* be saved.  Instead, the currently-stored Pairing Code (or the HomeSpan default Pairing Code if no code has been stored) will be used
   * :exclamation: SECURTY WARNING: Hardcoding a device's Pairing Code into your sketch is considered a security risk and is **not** recommended.  Instead, use one of the more secure methods provided by HomeSpan, such as typing 'S \<code\>' from the CLI, or launching HomeSpan's Access Point, to set your Pairing Code without hardcoding it into your sketch
+
+* `void deleteStoredValues()`
+  * deletes the value settings of all stored Characteristics from the NVS
+  * performs the same function as typing 'V' into the CLI
+  * can by called from anywhere in a sketch
 
 * `void setSketchVersion(const char *sVer)`
   * sets the version of a HomeSpan sketch to *sVer*, which can be any arbitrary character string
@@ -126,6 +145,7 @@ The following **optional** `homeSpan` methods enable additional features and pro
   
 * `const char *getSketchVersion()`
   * returns the version of a HomeSpan sketch, as set using `void setSketchVersion(const char *sVer)`, or "n/a" if not set
+  * can by called from anywhere in a sketch
     
 ## *SpanAccessory(uint32_t aid)*
 
@@ -256,6 +276,16 @@ The following methods are supported:
   * returns a pointer to the Characteristic itself so that the method can be chained during instantiation
   * example: `(new Characteristic::ConfiguredName("HDMI 1"))->removePerms(PW);`
 
+* `SpanCharacteristic *setDescription(const char *desc)`
+  * adds an optional description, *desc*, to a Characteristic, as described in HAP-R2 Table 6-3
+  * this field is generally used to provide information about custom Characteristics, but does not appear to be used in any way by the Home App
+  * returns a pointer to the Characteristic itself so that the method can be chained during instantiation
+  * example: `(new Characteristic::MyCustomChar())->setDescription("Tuner Frequency");`
+
+* `SpanCharacteristic *setUnit(const char *unit)`
+  * adds or overrides the *unit* for a Characteristic, as described in HAP-R2 Table 6-6
+  * returns a pointer to the Characteristic itself so that the method can be chained during instantiation
+  * example: `(new Characteristic::RotationSpeed())->setUnit("percentage");`
 
 ## *SpanButton(int pin, uint16_t longTime, uint16_t singleTime, uint16_t doubleTime)*
 
@@ -299,48 +329,62 @@ To create more than one user-defined command, simply create multiple instances o
 
 ### *#define REQUIRED VERSION(major,minor,patch)*
 
-If REQUIRED is defined in the main sketch prior to including the HomeSpan library with `#include "HomeSpan.h"`, HomeSpan will throw a compile-time error unless the version of the library included is equal to, or later than, the version specified using the VERSION macro.  Example:
+If REQUIRED is defined in the main sketch *prior* to including the HomeSpan library with `#include "HomeSpan.h"`, HomeSpan will throw a compile-time error unless the version of the library included is equal to, or later than, the version specified using the VERSION macro.  Example:
 
 ```C++
-#define REQUIRED VERISON(2,1,3)   // throws a compile-time error unless HomeSpan library used is version 2.1.3 or later
+#define REQUIRED VERSION(1,3,0)   // throws a compile-time error unless HomeSpan library used is version 1.3.0 or later
+#include "HomeSpan.h"
 ```
 ### *#define CUSTOM_CHAR(name,uuid,perms,format,defaultValue,minValue,maxValue,staticRange)*
+### *#define CUSTOM_CHAR_STRING(name,uuid,perms,defaultValue)*
 
-Creates a custom Characteristic that can be added to any Service.  Custom Characteristics are generally ignored by the Home App but may be used by other third-party applications (such as Eve for HomeKit).  Parameters are as follows (note that quotes should NOT be used in any of the string parameters):
+Creates a custom Characteristic that can be added to any Service.  Custom Characteristics are generally ignored by the Home App but may be used by other third-party applications (such as Eve for HomeKit).  The first form should be used create numerical Characterstics (e.g., UINT8, BOOL...). The second form is used to String-based Characteristics. Parameters are as follows (note that quotes should NOT be used in any of the macro parameters, except for defaultValue):
 
 * *name* - the name of the custom Characteristic.  This will be added to the Characteristic namespace so that it is accessed the same as any HomeSpan Characteristic
 * *uuid* - the UUID of the Characteristic as defined by the manufacturer.  Must be *exactly* 36 characters in the form XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX, where *X* represent a valid hexidecimal digit.  Leading zeros are required if needed as described more fully in HAP-R2 Section 6.6.1
 * *perms* - additive list of permissions as described in HAP-R2 Table 6-4.  Valid values are PR, PW, EV, AA, TW, HD, and WR
-* *format* - specifies the format of the Characteristic value, as described in HAP-R2 Table 6-5.  Valid value are BOOL, UINT8, UINT16, UNIT32, UINT64, INT, FLOAT, and STRING. Note that the HomeSpan does not presently support the TLV8 or DATA formats
+* *format* - specifies the format of the Characteristic value, as described in HAP-R2 Table 6-5.  Valid value are BOOL, UINT8, UINT16, UNIT32, UINT64, INT, and FLOAT. Note that the HomeSpan does not presently support the TLV8 or DATA formats.  Not applicable for Strings-based Characteristics
 * *defaultValue* - specifies the default value of the Characteristic if not defined during instantiation
-* *minValue* - specifies the default minimum range for a valid value, which may be able to be overriden by a call to `setRange()`
-* *minValue* - specifies the default minimum range for a valid value, which may be able to be overriden by a call to `setRange()`
-* *staticRange* - set to *true* if *minValue* and *maxValue* are static and cannot be overridden with a call to `setRange()`.  Set to *false* if calls to `setRange()` are allowed
+* *minValue* - specifies the default minimum range for a valid value, which may be able to be overriden by a call to `setRange()`.  Not applicable for Strings-based Characteristics
+* *minValue* - specifies the default minimum range for a valid value, which may be able to be overriden by a call to `setRange()`. Not applicable for Strings-based Characteristics
+* *staticRange* - set to *true* if *minValue* and *maxValue* are static and cannot be overridden with a call to `setRange()`.  Set to *false* if calls to `setRange()` are allowed.  Not applicable for Strings-based Characteristics
 
-As an example, the following creates a custom Characteristic named "Voltage" with a UUID code that is recognized by Eve for HomeKit.  The parameters show that the Characteristic is read-only (PR) and notifications are enabled (EV).  The default range of allowed values is 0-240, with a default of 120.  The range *can* be overridden by subsequent calls to `setRange()`:
+As an example, the first line below creates a custom Characteristic named "Voltage" with a UUID code that is recognized by Eve for HomeKit.  The parameters show that the Characteristic is read-only (PR) and notifications are enabled (EV).  The default range of allowed values is 0-240, with a default of 120.  The range *can* be overridden by subsequent calls to `setRange()`.  The second line below creates a custom read-only String-based Characteristic:
 
 ```C++
 CUSTOM_CHAR(Voltage, E863F10A-079E-48FF-8F27-9C2605A29F52, PR+EV, UINT16, 120, 0, 240, false);
+CUSTOM_CHAR_STRING(UserTag, AAAAAAAA-BBBB-AAAA-AAAA-AAAAAAAAAAAA, PR, "Tag 123");
 ...
 new Service::LightBulb();
   new Characteristic::Name("Low-Voltage Lamp");
   new Characteristic::On(0);
   new Characteristic::Brightness(50);
-  new Characteristic::Voltage(12);      // adds Voltage Characteristics and sets initial value to 12 volts
+  new Characteristic::Voltage(12);      // adds Voltage Characteristic and sets initial value to 12 volts
+  new Characteristic::UserTag();        // adds UserTag Characteristic and retains default initial value of "Tag 123"
 ```
 
 Note that Custom Characteristics must be created prior to calling `homeSpan.begin()`
+
+> Advanced Tip: When presented with an unrecognized Custom Characteristic, Eve for HomeKit helpfully displays a *generic control* allowing you to interact with any Custom Characteristic you create in HomeSpan.  However, since Eve does not recognize the Characteristic, it will only render the generic control if the Characteristic includes a **description** field, which you can add to any Characteristic using the `setDescription()` method described above.  You may also want to use `setUnit()` and `setRange()` so that the Eve App displays a control with appropriate ranges for your Custom Characteristic.
 
 ---
 
 #### Deprecated functions (available for backwards compatibility with older sketches):
 
-*SpanRange(int min, int max, int step)*
+* `SpanRange(int min, int max, int step)`
 
-  * this legacy function is limited to integer-based parameters and has been re-coded to simply call the more generic `setRange(min, max, step)` method
+  * this legacy class was limited to integer-based parameters and has been re-coded to simply call the more generic `setRange(min, max, step)` method
   * last supported version: [v1.2.0](https://github.com/HomeSpan/HomeSpan/blob/release-1.2.0/docs/Reference.md#spanrangeint-min-int-max-int-step)
   * **please use** `setRange(min, max, step)` **for all new sketches**
 
+* `void homeSpan.setMaxConnections(uint8_t nCon)`
+  * this legacy method was used to set the total number of HAP Controller Connections HomeSpan implements upon start-up to ensure there are still free sockets available for user-defined code requiring separate network resources
+  * last supported version: [v1.4.2](https://github.com/HomeSpan/HomeSpan/blob/release-1.4.2/docs/Reference.md)
+  * this method has been replaced by the more flexible method, `reserveSocketConnections(uint8_t nSockets)`
+    * allows you to simply reserve network sockets for other custom code as needed
+    * upon calling `homespan.begin()`, HomeSpan automatically determines how many sockets are left that it can use for HAP Controller Connections 
+  * **please use** `homeSpan.reserveSocketConnections(uint8_t nSockets)` **for all new sketches**
+  
 ---
 
 [↩️](README.md) Back to the Welcome page

@@ -1,7 +1,7 @@
 /*********************************************************************************
  *  MIT License
  *  
- *  Copyright (c) 2020-2021 Gregg E. Berman
+ *  Copyright (c) 2020-2022 Gregg E. Berman
  *  
  *  https://github.com/HomeSpan/HomeSpan
  *  
@@ -119,10 +119,12 @@ struct Span{
   unsigned long alarmConnect=0;                 // time after which WiFi connection attempt should be tried again
   
   const char *defaultSetupCode=DEFAULT_SETUP_CODE;            // Setup Code used for pairing
-  int statusPin=DEFAULT_STATUS_PIN;                           // pin for status LED    
+  int statusPin=DEFAULT_STATUS_PIN;                           // pin for Status LED
+  uint16_t autoOffLED=0;                                      // automatic turn-off duration (in seconds) for Status LED
   int controlPin=DEFAULT_CONTROL_PIN;                         // pin for Control Pushbutton
   uint8_t logLevel=DEFAULT_LOG_LEVEL;                         // level for writing out log messages to serial monitor
-  uint8_t maxConnections=DEFAULT_MAX_CONNECTIONS;             // number of simultaneous HAP connections
+  uint8_t maxConnections=CONFIG_LWIP_MAX_SOCKETS-2;           // maximum number of allowed simultaneous HAP connections
+  uint8_t requestedMaxCon=CONFIG_LWIP_MAX_SOCKETS-2;          // requested maximum number of simultaneous HAP connections
   unsigned long comModeLife=DEFAULT_COMMAND_TIMEOUT*1000;     // length of time (in milliseconds) to keep Command Mode alive before resuming normal operations
   uint16_t tcpPortNum=DEFAULT_TCP_PORT;                       // port for TCP communications between HomeKit and HomeSpan
   char qrID[5]="";                                            // Setup ID used for pairing with QR Code
@@ -130,6 +132,7 @@ struct Span{
   char otaPwd[33];                                            // MD5 Hash of OTA password, represented as a string of hexidecimal characters
   boolean otaAuth;                                            // OTA requires password when set to true
   void (*wifiCallback)()=NULL;                                // optional callback function to invoke once WiFi connectivity is established
+  void (*pairCallback)(boolean isPaired)=NULL;                // optional callback function to invoke when pairing is established (true) or lost (false)
   boolean autoStartAPEnabled=false;                           // enables auto start-up of Access Point when WiFi Credentials not found
   void (*apFunction)()=NULL;                                  // optional function to invoke when starting Access Point
   
@@ -173,26 +176,34 @@ struct Span{
 
   void setControlPin(uint8_t pin){controlPin=pin;}                        // sets Control Pin
   void setStatusPin(uint8_t pin){statusPin=pin;}                          // sets Status Pin
+  void setStatusAutoOff(uint16_t duration){autoOffLED=duration;}          // sets Status LED auto off (seconds)  
   int getStatusPin(){return(statusPin);}                                  // get Status Pin
   void setApSSID(const char *ssid){network.apSSID=ssid;}                  // sets Access Point SSID
   void setApPassword(const char *pwd){network.apPassword=pwd;}            // sets Access Point Password
   void setApTimeout(uint16_t nSec){network.lifetime=nSec*1000;}           // sets Access Point Timeout (seconds)
   void setCommandTimeout(uint16_t nSec){comModeLife=nSec*1000;}           // sets Command Mode Timeout (seconds)
   void setLogLevel(uint8_t level){logLevel=level;}                        // sets Log Level for log messages (0=baseline, 1=intermediate, 2=all)
-  void setMaxConnections(uint8_t nCon){maxConnections=nCon;}              // sets maximum number of simultaneous HAP connections (HAP requires devices support at least 8)
+  void reserveSocketConnections(uint8_t n){maxConnections-=n;}            // reserves n socket connections *not* to be used for HAP
   void setHostNameSuffix(const char *suffix){hostNameSuffix=suffix;}      // sets the hostName suffix to be used instead of the 6-byte AccessoryID
   void setPortNum(uint16_t port){tcpPortNum=port;}                        // sets the TCP port number to use for communications between HomeKit and HomeSpan
   void setQRID(const char *id);                                           // sets the Setup ID for optional pairing with a QR Code
-  void enableOTA(boolean auth=true){otaEnabled=true;otaAuth=auth;}        // enables Over-the-Air updates, with (auth=true) or without (auth=false) authorization password
   void setSketchVersion(const char *sVer){sketchVersion=sVer;}            // set optional sketch version number
   const char *getSketchVersion(){return sketchVersion;}                   // get sketch version number
   void setWifiCallback(void (*f)()){wifiCallback=f;}                      // sets an optional user-defined function to call once WiFi connectivity is established
+  void setPairCallback(void (*f)(boolean isPaired)){pairCallback=f;}      // sets an optional user-defined function to call when Pairing is established (true) or lost (false)
   void setApFunction(void (*f)()){apFunction=f;}                          // sets an optional user-defined function to call when activating the WiFi Access Point
-  
-  void setPairingCode(const char *s){sprintf(pairingCodeCommand,"S %9s",s);}   // sets the Pairing Code - use is NOT recommended.  Use 'S' from CLI instead
-  
+
   void enableAutoStartAP(){autoStartAPEnabled=true;}                      // enables auto start-up of Access Point when WiFi Credentials not found
   void setWifiCredentials(const char *ssid, const char *pwd);             // sets WiFi Credentials
+
+  void setPairingCode(const char *s){sprintf(pairingCodeCommand,"S %9s",s);}    // sets the Pairing Code - use is NOT recommended.  Use 'S' from CLI instead
+  void deleteStoredValues(){processSerialCommand("V");}                         // deletes stored Characteristic values from NVS  
+
+  void enableOTA(boolean auth=true){otaEnabled=true;otaAuth=auth;reserveSocketConnections(1);}        // enables Over-the-Air updates, with (auth=true) or without (auth=false) authorization password
+
+  [[deprecated("Please use reserveSocketConnections(n) method instead.")]]
+  void setMaxConnections(uint8_t n){requestedMaxCon=n;}                   // sets maximum number of simultaneous HAP connections 
+
 };
 
 ///////////////////////////////
@@ -260,6 +271,7 @@ struct SpanCharacteristic{
   uint8_t perms;                           // Characteristic Permissions
   FORMAT format;                           // Characteristic Format        
   char *desc=NULL;                         // Characteristic Description (optional)
+  char *unit=NULL;                         // Characteristic Unit (optional)
   UVal minValue;                           // Characteristic minimum (not applicable for STRING)
   UVal maxValue;                           // Characteristic maximum (not applicable for STRING)
   UVal stepValue;                          // Characteristic step size (not applicable for STRING)
@@ -600,6 +612,18 @@ struct SpanCharacteristic{
   SpanCharacteristic *removePerms(uint8_t dPerms){
     return(setPerms(perms&(~dPerms)));
   }
+
+  SpanCharacteristic *setDescription(const char *c){
+    desc = (char *)realloc(desc, strlen(c) + 1);
+    strcpy(desc, c);
+    return(this);
+  }  
+
+  SpanCharacteristic *setUnit(const char *c){
+    unit = (char *)realloc(unit, strlen(c) + 1);
+    strcpy(unit, c);
+    return(this);
+  }  
 
 };
 

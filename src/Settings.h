@@ -1,7 +1,7 @@
 /*********************************************************************************
  *  MIT License
  *  
- *  Copyright (c) 2020-2021 Gregg E. Berman
+ *  Copyright (c) 2020-2022 Gregg E. Berman
  *  
  *  https://github.com/HomeSpan/HomeSpan
  *  
@@ -35,8 +35,8 @@
 //              HomeSpan Version                    //
 
 #define     HS_MAJOR  1
-#define     HS_MINOR  4
-#define     HS_PATCH  2
+#define     HS_MINOR  5
+#define     HS_PATCH  0
 
 #define     STRINGIFY(x) _STR(x)
 #define     _STR(x) #x
@@ -50,7 +50,7 @@
 #endif
 
 #if (REQUIRED>VERSION(HS_MAJOR,HS_MINOR,HS_PATCH))
-  #error THIS SKETCH REQUIRES A LATER VERISON OF THE HOMESPAN LIBRARY
+  #error THIS SKETCH REQUIRES A LATER VERSION OF THE HOMESPAN LIBRARY
 #endif
 
 #define     ARDUINO_ESP_VERSION   STRINGIFY(ARDUINO_ESP32_GIT_DESC)
@@ -79,7 +79,6 @@
 
 #define     DEFAULT_LOG_LEVEL         0                   // change with homeSpan.setLogLevel(level)
 
-#define     DEFAULT_MAX_CONNECTIONS   8                   // change with homeSpan.setMaxConnections(num);
 #define     DEFAULT_TCP_PORT          80                  // change with homeSpan.setPort(port);
 
 /////////////////////////////////////////////////////

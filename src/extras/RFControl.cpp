@@ -1,12 +1,35 @@
-
-#include <Arduino.h>
-#include <soc/rmt_reg.h>
-
+/*********************************************************************************
+ *  MIT License
+ *  
+ *  Copyright (c) 2020-2022 Gregg E. Berman
+ *  
+ *  https://github.com/HomeSpan/HomeSpan
+ *  
+ *  Permission is hereby granted, free of charge, to any person obtaining a copy
+ *  of this software and associated documentation files (the "Software"), to deal
+ *  in the Software without restriction, including without limitation the rights
+ *  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *  copies of the Software, and to permit persons to whom the Software is
+ *  furnished to do so, subject to the following conditions:
+ *  
+ *  The above copyright notice and this permission notice shall be included in all
+ *  copies or substantial portions of the Software.
+ *  
+ *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ *  SOFTWARE.
+ *  
+ ********************************************************************************/
+ 
 #include "RFControl.h"
 
 ///////////////////
 
-RFControl::RFControl(uint8_t pin, boolean refClock){
+RFControl::RFControl(uint8_t pin, boolean refClock, boolean installDriver){
 
 #ifdef CONFIG_IDF_TARGET_ESP32C3
   if(nChannels==RMT_CHANNEL_MAX/2){
@@ -32,7 +55,9 @@ RFControl::RFControl(uint8_t pin, boolean refClock){
   config->tx_config.loop_en=false;
 
   rmt_config(config);
-  rmt_driver_install(config->channel,0,0);
+
+  if(installDriver)
+    rmt_driver_install(config->channel,0,0);
 
   // If specified, set the base clock to 1 MHz so tick-units are in microseconds (before any CLK_DIV is applied), otherwise default will be 80 MHz APB clock
 
@@ -129,7 +154,6 @@ void RFControl::enableCarrier(uint32_t freq, float duty){
       return;
     }
 
-//    Serial.printf("%d %g %d %d\n",freq,period,highTime,lowTime);
     rmt_set_tx_carrier(config->channel,true,highTime,lowTime,RMT_CARRIER_LEVEL_HIGH);       
   } else {
     rmt_set_tx_carrier(config->channel,false,0,0,RMT_CARRIER_LEVEL_HIGH);           

@@ -1,7 +1,7 @@
 /*********************************************************************************
  *  MIT License
  *  
- *  Copyright (c) 2020-2021 Gregg E. Berman
+ *  Copyright (c) 2020-2022 Gregg E. Berman
  *  
  *  https://github.com/HomeSpan/HomeSpan
  *  
@@ -58,12 +58,11 @@ void Span::begin(Category catID, const char *displayName, const char *hostNameBa
   esp_task_wdt_delete(xTaskGetIdleTaskHandleForCPU(0));       // required to avoid watchdog timeout messages from ESP32-C3
 
   controlButton.init(controlPin);
-  statusLED.init(statusPin);
+  statusLED.init(statusPin,0,autoOffLED);
 
-  int maxLimit=CONFIG_LWIP_MAX_SOCKETS-2-otaEnabled;
-  if(maxConnections>maxLimit)
-    maxConnections=maxLimit;
-
+  if(requestedMaxCon<maxConnections)                          // if specific request for max connections is less than computed max connections
+    maxConnections=requestedMaxCon;                           // over-ride max connections with requested value
+    
   hap=(HAPClient **)calloc(maxConnections,sizeof(HAPClient *));
   for(int i=0;i<maxConnections;i++)
     hap[i]=new HAPClient;
@@ -85,7 +84,7 @@ void Span::begin(Category catID, const char *displayName, const char *hostNameBa
     nvs_get_blob(wifiNVS,"WIFIDATA",&homeSpan.network.wifiData,&len);               // retrieve data  
 
   delay(2000);
- 
+
   Serial.print("\n************************************************************\n"
                  "Welcome to HomeSpan!\n"
                  "Apple HomeKit for the Espressif ESP-32 WROOM and Arduino IDE\n"
@@ -95,8 +94,11 @@ void Span::begin(Category catID, const char *displayName, const char *hostNameBa
   Serial.print("Message Logs:     Level ");
   Serial.print(logLevel);  
   Serial.print("\nStatus LED:       Pin ");
-  if(statusPin>=0)
+  if(statusPin>=0){
     Serial.print(statusPin);
+    if(autoOffLED>0)
+      Serial.printf("  (Auto Off=%d sec)",autoOffLED);
+  }
   else
     Serial.print("-  *** WARNING: Status LED Pin is UNDEFINED");
   Serial.print("\nDevice Control:   Pin ");
@@ -291,6 +293,8 @@ void Span::poll() {
       commandMode();                    // COMMAND MODE
     }
   }
+
+  statusLED.check();
     
 } // poll
 
@@ -494,6 +498,8 @@ void Span::checkConnect(){
     mdns_service_txt_item_set("_hap","_tcp","sf","0");           // set Status Flag = 0
 
   mdns_service_txt_item_set("_hap","_tcp","hspn",HOMESPAN_VERSION);           // HomeSpan Version Number (info only - NOT used by HAP)
+  mdns_service_txt_item_set("_hap","_tcp","ard-esp32",ARDUINO_ESP_VERSION);   // Arduino-ESP32 Version Number (info only - NOT used by HAP)
+  mdns_service_txt_item_set("_hap","_tcp","board",ARDUINO_VARIANT);           // Board Name (info only - NOT used by HAP)
   mdns_service_txt_item_set("_hap","_tcp","sketch",sketchVersion);            // Sketch Version (info only - NOT used by HAP)
   mdns_service_txt_item_set("_hap","_tcp","ota",otaEnabled?"yes":"no");       // OTA Enabled (info only - NOT used by HAP)
 
@@ -553,9 +559,8 @@ void Span::checkConnect(){
     }
   }
 
-  Serial.print("Starting Web (HTTP) Server supporting up to ");
-  Serial.print(maxConnections);
-  Serial.print(" simultaneous connections...\n");
+  Serial.printf("Starting HAP Server on port %d supporting %d simultaneous HomeKit Controller Connections...\n",tcpPortNum,maxConnections);
+
   hapServer->begin();
 
   Serial.print("\n");
@@ -1645,6 +1650,13 @@ int SpanCharacteristic::sprintfAttributes(char *cBuf, int flags){
         nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?128:0,",\"minStep\":%s",uvPrint(stepValue).c_str());
     }
 
+    if(unit){
+      if(strlen(unit)>0)
+        nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?128:0,",\"unit\":\"%s\"",unit);
+     else
+        nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?128:0,",\"unit\":null");
+    }
+
     if(validValues){
       nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?128:0,",\"valid-values\":%s",validValues);      
     }
@@ -1722,27 +1734,47 @@ StatusCode SpanCharacteristic::loadUpdate(char *val, char *ev){
       break;
 
     case INT:
-      if(!sscanf(val,"%d",&newValue.INT))
+      if(!strcmp(val,"false"))
+        newValue.INT=0;
+      else if(!strcmp(val,"true"))
+        newValue.INT=1;
+      else if(!sscanf(val,"%d",&newValue.INT))
         return(StatusCode::InvalidValue);
       break;
 
     case UINT8:
-      if(!sscanf(val,"%hhu",&newValue.UINT8))
+      if(!strcmp(val,"false"))
+        newValue.UINT8=0;
+      else if(!strcmp(val,"true"))
+        newValue.UINT8=1;
+      else if(!sscanf(val,"%hhu",&newValue.UINT8))
         return(StatusCode::InvalidValue);
       break;
             
     case UINT16:
-      if(!sscanf(val,"%hu",&newValue.UINT16))
+      if(!strcmp(val,"false"))
+        newValue.UINT16=0;
+      else if(!strcmp(val,"true"))
+        newValue.UINT16=1;
+      else if(!sscanf(val,"%hu",&newValue.UINT16))
         return(StatusCode::InvalidValue);
       break;
       
     case UINT32:
-      if(!sscanf(val,"%u",&newValue.UINT32))
+      if(!strcmp(val,"false"))
+        newValue.UINT32=0;
+      else if(!strcmp(val,"true"))
+        newValue.UINT32=1;
+      else if(!sscanf(val,"%u",&newValue.UINT32))
         return(StatusCode::InvalidValue);
       break;
       
     case UINT64:
-      if(!sscanf(val,"%llu",&newValue.UINT64))
+      if(!strcmp(val,"false"))
+        newValue.UINT64=0;
+      else if(!strcmp(val,"true"))
+        newValue.UINT64=1;
+      else if(!sscanf(val,"%llu",&newValue.UINT64))
         return(StatusCode::InvalidValue);
       break;
 

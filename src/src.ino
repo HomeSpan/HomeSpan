@@ -4,7 +4,10 @@
 
 #include "HomeSpan.h"
 
-CUSTOM_CHAR(CustomActive, E863F10A-079E-48FF-8F27-9C2605A29F52, PR+EV, UINT16, 0, 0, 4800, false);
+#define STRING_t  const char *          // WORK-AROUND
+
+CUSTOM_CHAR(LightMode, AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAAAAAA, PR, STRING, "ANY_VALUE", NULL, NULL, true);
+CUSTOM_CHAR_STRING(DarkMode, AAAAAAAA-BBBB-AAAA-AAAA-AAAAAAAAAAAA, PR, "MY_VALUE");
 
 void setup() {
  
@@ -45,7 +48,8 @@ void setup() {
 
     new Service::LightBulb();
       new Characteristic::On(0);
-      new Characteristic::CustomActive(1200);
+      new Characteristic::LightMode("HELLO");
+      new Characteristic::DarkMode();
       new Characteristic::Brightness(50);
       new Characteristic::Name("Light 1");
       new Characteristic::ColorTemperature();

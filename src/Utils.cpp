@@ -1,7 +1,7 @@
 /*********************************************************************************
  *  MIT License
  *  
- *  Copyright (c) 2020-2021 Gregg E. Berman
+ *  Copyright (c) 2020-2022 Gregg E. Berman
  *  
  *  https://github.com/HomeSpan/HomeSpan
  *  
@@ -232,13 +232,13 @@ Blinker::Blinker(){
 
 //////////////////////////////////////
 
-Blinker::Blinker(int pin, int timerNum){
-  init(pin, timerNum);
+Blinker::Blinker(int pin, int timerNum, uint16_t autoOffDuration){
+  init(pin, timerNum, autoOffDuration);
 }
 
 //////////////////////////////////////
 
-void Blinker::init(int pin, int timerNum){
+void Blinker::init(int pin, int timerNum, uint16_t autoOffDuration){
 
   this->pin=pin;
   if(pin<0)
@@ -246,6 +246,8 @@ void Blinker::init(int pin, int timerNum){
   
   pinMode(pin,OUTPUT);
   digitalWrite(pin,0);
+
+  pauseDuration=autoOffDuration*1000;
 
 #if SOC_TIMER_GROUP_TIMERS_PER_GROUP>1                        // ESP32 and ESP32-S2 contains two timers per timer group
   group=((timerNum/2)%2==0)?TIMER_GROUP_0:TIMER_GROUP_1;
@@ -327,7 +329,9 @@ void Blinker::start(int period, float dutyCycle, int nBlinks, int delayTime){
   if(pin<0)
     return;
 
-  gpio_set_direction((gpio_num_t)pin, GPIO_MODE_INPUT_OUTPUT);      // needed to ensure digitalRead() functions correctly on ESP32-C3
+  pauseTime=millis();
+  isPaused=false;
+  gpio_set_direction((gpio_num_t)pin, GPIO_MODE_INPUT_OUTPUT);      // needed to ensure digitalRead() functions correctly on ESP32-C3; also needed to re-enable after pause()
 
   period*=10;
   onTime=dutyCycle*period;
@@ -357,6 +361,10 @@ void Blinker::on(){
   if(pin<0)
     return;
 
+  pauseTime=millis();
+  isPaused=false;
+  gpio_set_direction((gpio_num_t)pin, GPIO_MODE_INPUT_OUTPUT);
+
   stop();
   digitalWrite(pin,1);
 }
@@ -368,6 +376,25 @@ void Blinker::off(){
   if(pin<0)
     return;
 
+  pauseTime=millis();
+  isPaused=false;
+  gpio_set_direction((gpio_num_t)pin, GPIO_MODE_INPUT_OUTPUT);
+
   stop();
   digitalWrite(pin,0);
+}
+
+//////////////////////////////////////
+
+void Blinker::check(){
+
+  if(pin<0)
+    return;
+
+  if(pauseDuration==0 || isPaused || (millis()-pauseTime)<pauseDuration)
+    return;
+
+  Serial.print("Pausing Status LED\n");
+  isPaused=true;
+  gpio_set_direction((gpio_num_t)pin, GPIO_MODE_DISABLE);
 }

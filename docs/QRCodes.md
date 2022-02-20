@@ -11,7 +11,14 @@ In contrast, pairing a HomeKit device with a **QR Code** requires you to only sc
 
 This is possible because the QR Code includes a 4-character *Setup ID* that is unique to the device associated with the QR Code.  The QR Code also embeds other paring information about the device, such as its Category (e.g. Light, Fan, Door) and its 8-digit *Setup Code*.
 
-HomeSpan supports pairing with QR Codes and uses "HSPN" as its default *Setup ID*.  However, if you have more than one device that you intend on pairing with a QR Code, you'll need to change each device's *Setup ID* from "HSPN" to something unique using the method `homeSpan.setQRID(const char *ID)` (see the [HomeSpan API Reference](https://github.com/HomeSpan/HomeSpan/blob/master/docs/Reference.md) for details).  If you do not intend on pairing your devices with QR Codes, it is fine for them to all have the same *Setup ID*, as this ID is only used to initiate the pairing process via a QR code and serves no other purpose.
+HomeSpan supports pairing with QR Codes and uses "HSPN" as its default *Setup ID*.  However, if you have more than one device that you intend on pairing with a QR Code, you'll need to enure each has a unique *Setup ID*.  You can change the *Setup ID* on your device in one of two ways:
+
+* Store a new code in the device NVS by typing 'O \<code\>' into the HomeSpan [Command Line Interface](https://github.com/HomeSpan/HomeSpan/blob/master/docs/CLI.md); or
+* Specify the QR *Setup ID* directly in your sketch using the method `homeSpan.setQRID(const char *ID)`. 
+  
+The order of preference is as follows:  If your sketch contains a call to `homeSpan.setQRID(const char *ID)`, the specified ID is used.  If not, HomeSpan will instead search the NVS for a stored *Setup ID*.  If not found, HomeSpan defaults to using "HSPN" as the *Setup ID*.
+  
+Note that if you do not intend on pairing your devices with QR Codes, it is fine for them to all retain the default *Setup ID* of "HSPN" since this ID is only used to initiate the pairing process via a QR code and serves no other purpose.
 
 ### Creating Scannable QR Codes
 

@@ -1,7 +1,7 @@
 /*********************************************************************************
  *  MIT License
  *  
- *  Copyright (c) 2020-2021 Gregg E. Berman
+ *  Copyright (c) 2020-2022 Gregg E. Berman
  *  
  *  https://github.com/HomeSpan/HomeSpan
  *  
@@ -660,6 +660,9 @@ int HAPClient::postPairSetupURL(){
       
       LOG1("\n*** ACCESSORY PAIRED! ***\n");
       homeSpan.statusLED.on();
+      
+      if(homeSpan.pairCallback)                     // if set, invoke user-defined Pairing Callback to indicate device has been paired
+        homeSpan.pairCallback(true);
       
       return(1);        
              
@@ -1592,6 +1595,8 @@ void HAPClient::removeController(uint8_t *id){
       LOG1("That was last Admin Controller!  Removing any remaining Regular Controllers and unpairing Accessory\n");  
       mdns_service_txt_item_set("_hap","_tcp","sf","1");           // set Status Flag = 1 (Table 6-8)
       homeSpan.statusLED.start(LED_PAIRING_NEEDED);
+      if(homeSpan.pairCallback)                                    // if set, invoke user-defined Pairing Callback to indicate device has been paired
+        homeSpan.pairCallback(false);
     }
 
     LOG2("\n");
