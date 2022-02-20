@@ -28,7 +28,10 @@ HomeSpan is fully compatible with both Versions 1 and 2 of the [Arduino-ESP32 Bo
   * Servo Motors
 * Integrated Push Button functionality supporting single, double, and long presses 
 * Integrated access to the ESP32's on-chip Remote Control peripheral for easy generation of IR and RF signals
-* 18 detailed tutorial-sketches with extensive comments, HomeSpan documentation and tips and tricks
+* Dedicated classes to control one- and two-wire addressable RGBW LEDs and LED strips
+* Extensively-commented Tutorial Sketches taking you from the very basics of HomeSpan through advanced HomeKit topics
+* Additional examples and projects showcasing advanced real-world implementations of HomeSpan
+* A complete set of documentation explaining every aspect of the HomeSpan API
 
 ### For the HomeSpan End-User
 
