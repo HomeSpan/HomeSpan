@@ -77,7 +77,7 @@ HomeSpan includes the following documentation:
 * [HomeSpan OTA](https://github.com/HomeSpan/HomeSpan/blob/master/docs/OTA.md) - update your sketches Over-the-Air directly from the Arduino IDE without a serial connection
 * [HomeSpan PWM](https://github.com/HomeSpan/HomeSpan/blob/master/docs/PWM.md) - integrated control of standard LEDs and Servo Motors using the ESP32's on-chip PWM peripheral
 * [HomeSpan RFControl](https://github.com/HomeSpan/HomeSpan/blob/master/docs/RMT.md) - easy generation of RF and IR Remote Control signals using the ESP32's on-chip RMT peripheral
-* [HomeSpan Pixel](https://github.com/HomeSpan/HomeSpan/blob/master/docs/Pixel.md) - integrated control of addressable one- and two-wire RGB and RGBW LEDs and LED strips
+* [HomeSpan Pixels](https://github.com/HomeSpan/HomeSpan/blob/master/docs/Pixel.md) - integrated control of addressable one- and two-wire RGB and RGBW LEDs and LED strips
 * [HomeSpan Television Services](https://github.com/HomeSpan/HomeSpan/blob/master/docs/TVServices.md) - how to use HomeKit's undocumented Television Services and Characteristics
 * [HomeSpan Projects](https://github.com/topics/homespan) - real-world applications of the HomeSpan Library
 * [HomeSpan FAQ](https://github.com/HomeSpan/HomeSpan/blob/master/docs/FAQ.md) - answers to frequently-asked questions
