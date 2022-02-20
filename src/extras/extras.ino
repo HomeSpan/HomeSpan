@@ -1,4 +1,5 @@
-/* HomeSpan Pixel Example */
+// This is a placeholder .ino file that allows you to easily edit the contents of this files using the Arduino IDE,
+// as well as compile and test from this point.  This file is ignored when the library is included in other sketches.
 
 #include "Pixel.h"
 
