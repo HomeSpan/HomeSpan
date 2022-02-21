@@ -51,10 +51,11 @@
 
 #elif defined(CONFIG_IDF_TARGET_ESP32C3)
 
-  #define NEOPIXEL_RGB_PIN       8
-  #define NEOPIXEL_RGBW_PIN      2
-  #define DOTSTAR_DATA_PIN       0
-  #define DOTSTAR_CLOCK_PIN      1
+  #define NEOPIXEL_RGB_PIN       0
+  #define NEOPIXEL_RGBW_PIN      3
+  #define DOTSTAR_DATA_PIN       7
+  #define DOTSTAR_CLOCK_PIN      2
+
   #define DEVICE_SUFFIX          "-C3"
 
 #endif
@@ -149,6 +150,7 @@ struct DotStar_RGB : Service::LightBulb {      // Addressable two-wire RGB LED S
     pixel=new Dot(dataPin,clockPin);          // creates Dot LED on specified pins
     this->nPixels=nPixels;                    // save number of Pixels in this LED Strand
     update();                                 // manually call update() to set pixel with restored initial values
+    update();                                 // call second update() a second time - DotStar seems to need to be "refreshed" upon start-up
   }
 
   boolean update() override {
@@ -164,8 +166,8 @@ struct DotStar_RGB : Service::LightBulb {      // Addressable two-wire RGB LED S
     float hueStep=360.0/nPixels;        // step size for change in hue from one pixel to the next
 
     for(int i=0;i<nPixels;i++)
-      color[i].HSV(h+i*hueStep*p,s*p,100,v*p);   // create spectrum of all hues starting with specified Hue; use current-limiting parameter (4th argument) to control overall brightness, instead of PWM
-
+      color[i].HSV(h+i*hueStep,s,100,v*p);   // create spectrum of all hues starting with specified Hue; use current-limiting parameter (4th argument) to control overall brightness, instead of PWM
+      
     pixel->set(color,nPixels);          // set the colors according to the array
           
     return(true);  
