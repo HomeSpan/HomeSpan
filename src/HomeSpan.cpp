@@ -982,7 +982,10 @@ void Span::processSerialCommand(const char *c){
       auto uCom=UserCommands.find(c[1]);
 
       if(uCom!=UserCommands.end()){
-        uCom->second->userFunction(c+1);
+        if(uCom->second->userFunction1)        
+          uCom->second->userFunction1(c+1);
+        else
+          uCom->second->userFunction2(c+1,uCom->second->userArg);
         break;
       }
     }
@@ -1893,9 +1896,19 @@ SpanButton::SpanButton(int pin, uint16_t longTime, uint16_t singleTime, uint16_t
 //     SpanUserCommand       //
 ///////////////////////////////
 
-SpanUserCommand::SpanUserCommand(char c, const char *s, void (*f)(const char *v)){
+SpanUserCommand::SpanUserCommand(char c, const char *s, void (*f)(const char *)){
   this->s=s;
-  userFunction=f;
+  userFunction1=f;
+   
+  homeSpan.UserCommands[c]=this;
+}
+
+///////////////////////////////
+
+SpanUserCommand::SpanUserCommand(char c, const char *s, void (*f)(const char *, void *), void *arg){
+  this->s=s;
+  userFunction2=f;
+  userArg=arg;
    
   homeSpan.UserCommands[c]=this;
 }

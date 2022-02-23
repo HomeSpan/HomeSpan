@@ -657,10 +657,13 @@ struct SpanButton{
 ///////////////////////////////
 
 struct SpanUserCommand {
-  const char *s;                              // description of command
-  void (*userFunction)(const char *v);              // user-defined function to call
+  const char *s;                                            // description of command
+  void (*userFunction1)(const char *v)=NULL;                // user-defined function to call
+  void (*userFunction2)(const char *v, void *arg)=NULL;     // user-defined function to call with user-defined arg
+  void *userArg;
 
-  SpanUserCommand(char c, const char *s, void (*f)(const char *v));  
+  SpanUserCommand(char c, const char *s, void (*f)(const char *));  
+  SpanUserCommand(char c, const char *s, void (*f)(const char *, void *), void *arg);  
 };
 
 /////////////////////////////////////////////////
