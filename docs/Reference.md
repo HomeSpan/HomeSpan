@@ -338,7 +338,7 @@ If REQUIRED is defined in the main sketch *prior* to including the HomeSpan libr
 ### *#define CUSTOM_CHAR(name,uuid,perms,format,defaultValue,minValue,maxValue,staticRange)*
 ### *#define CUSTOM_CHAR_STRING(name,uuid,perms,defaultValue)*
 
-Creates a custom Characteristic that can be added to any Service.  Custom Characteristics are generally ignored by the Home App but may be used by other third-party applications (such as Eve for HomeKit).  The first form should be used create numerical Characterstics (e.g., UINT8, BOOL...). The second form is used to String-based Characteristics. Parameters are as follows (note that quotes should NOT be used in any of the macro parameters, except for defaultValue):
+Creates a custom Characteristic that can be added to any Service.  Custom Characteristics are generally ignored by the Home App but may be used by other third-party applications (such as *Eve for HomeKit*).  The first form should be used create numerical Characterstics (e.g., UINT8, BOOL...). The second form is used to String-based Characteristics. Parameters are as follows (note that quotes should NOT be used in any of the macro parameters, except for defaultValue):
 
 * *name* - the name of the custom Characteristic.  This will be added to the Characteristic namespace so that it is accessed the same as any HomeSpan Characteristic
 * *uuid* - the UUID of the Characteristic as defined by the manufacturer.  Must be *exactly* 36 characters in the form XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX, where *X* represent a valid hexidecimal digit.  Leading zeros are required if needed as described more fully in HAP-R2 Section 6.6.1
@@ -349,7 +349,7 @@ Creates a custom Characteristic that can be added to any Service.  Custom Charac
 * *minValue* - specifies the default minimum range for a valid value, which may be able to be overriden by a call to `setRange()`. Not applicable for Strings-based Characteristics
 * *staticRange* - set to *true* if *minValue* and *maxValue* are static and cannot be overridden with a call to `setRange()`.  Set to *false* if calls to `setRange()` are allowed.  Not applicable for Strings-based Characteristics
 
-As an example, the first line below creates a custom Characteristic named "Voltage" with a UUID code that is recognized by Eve for HomeKit.  The parameters show that the Characteristic is read-only (PR) and notifications are enabled (EV).  The default range of allowed values is 0-240, with a default of 120.  The range *can* be overridden by subsequent calls to `setRange()`.  The second line below creates a custom read-only String-based Characteristic:
+As an example, the first line below creates a custom Characteristic named "Voltage" with a UUID code that is recognized by the *Eve for HomeKit* app.  The parameters show that the Characteristic is read-only (PR) and notifications are enabled (EV).  The default range of allowed values is 0-240, with a default of 120.  The range *can* be overridden by subsequent calls to `setRange()`.  The second line below creates a custom read-only String-based Characteristic:
 
 ```C++
 CUSTOM_CHAR(Voltage, E863F10A-079E-48FF-8F27-9C2605A29F52, PR+EV, UINT16, 120, 0, 240, false);
@@ -365,7 +365,18 @@ new Service::LightBulb();
 
 Note that Custom Characteristics must be created prior to calling `homeSpan.begin()`
 
-> Advanced Tip: When presented with an unrecognized Custom Characteristic, Eve for HomeKit helpfully displays a *generic control* allowing you to interact with any Custom Characteristic you create in HomeSpan.  However, since Eve does not recognize the Characteristic, it will only render the generic control if the Characteristic includes a **description** field, which you can add to any Characteristic using the `setDescription()` method described above.  You may also want to use `setUnit()` and `setRange()` so that the Eve App displays a control with appropriate ranges for your Custom Characteristic.
+> Advanced Tip: When presented with an unrecognized Custom Characteristic, *Eve for HomeKit* helpfully displays a *generic control* allowing you to interact with any Custom Characteristic you create in HomeSpan.  However, since Eve does not recognize the Characteristic, it will only render the generic control if the Characteristic includes a **description** field, which you can add to any Characteristic using the `setDescription()` method described above.  You may also want to use `setUnit()` and `setRange()` so that the Eve App displays a control with appropriate ranges for your Custom Characteristic.
+
+### *#define CUSTOM_SERV(name,uuid)*
+
+Creates a custom Service for use with third-party applications (such as *Eve for HomeKit*).  Custom Services will be displayed in the native Apple Home App with a Tile labeled "Not Supported", but otherwise the Service will be safely ignored by the Home App.  Parameters are as follows (note that quotes should NOT be used in either of the macro parameters):
+
+* *name* - the name of the custom Service.  This will be added to the Service namespace so that it is accessed the same as any HomeSpan Service
+* *uuid* - the UUID of the Service as defined by the manufacturer.  Must be *exactly* 36 characters in the form XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX, where *X* represent a valid hexidecimal digit.  Leading zeros are required if needed as described more fully in HAP-R2 Section 6.6.1
+
+Custom Services may contain a mix of both Custom Characteristics and standard HAP Characteristics, though since the Service itself is custom, the Home App will ignore the entire Service even if it contains some standard HAP Characterstics.  Note that Custom Services must be created prior to calling `homeSpan.begin()`
+
+A fully worked example showing how to use both the ***CUSTOM_SERV()*** and ***CUSTOM_CHAR()*** macros to create a Pressure Sensor Accessory that is recognized by *Eve for HomeKit* can be found in the Arduino IDE under [*File → Examples → HomeSpan → Other Examples → CustomService*](../Other%20Examples/CustomService).
 
 ---
 
