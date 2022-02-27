@@ -917,12 +917,12 @@ void Span::processSerialCommand(const char *c){
       Serial.print("\n\n");
 
       char d[]="------------------------------";
-      Serial.printf("%-30s  %s  %10s  %s  %s  %s  %s  %s\n","Service","UUID","AID","IID","Update","Loop","Button","Linked Services");
-      Serial.printf("%.30s  %.4s  %.10s  %.3s  %.6s  %.4s  %.6s  %.15s\n",d,d,d,d,d,d,d,d);
+      Serial.printf("%-30s  %8s  %10s  %s  %s  %s  %s  %s\n","Service","UUID","AID","IID","Update","Loop","Button","Linked Services");
+      Serial.printf("%.30s  %.8s  %.10s  %.3s  %.6s  %.4s  %.6s  %.15s\n",d,d,d,d,d,d,d,d);
       for(int i=0;i<Accessories.size();i++){                             // identify all services with over-ridden loop() methods
         for(int j=0;j<Accessories[i]->Services.size();j++){
           SpanService *s=Accessories[i]->Services[j];
-          Serial.printf("%-30s  %4s  %10u  %3d  %6s  %4s  %6s  ",s->hapName,s->type,Accessories[i]->aid,s->iid, 
+          Serial.printf("%-30s  %8.8s  %10u  %3d  %6s  %4s  %6s  ",s->hapName,s->type,Accessories[i]->aid,s->iid, 
                  (void(*)())(s->*(&SpanService::update))!=(void(*)())(&SpanService::update)?"YES":"NO",
                  (void(*)())(s->*(&SpanService::loop))!=(void(*)())(&SpanService::loop)?"YES":"NO",
                  (void(*)(int,boolean))(s->*(&SpanService::button))!=(void(*)(int,boolean))(&SpanService::button)?"YES":"NO"
@@ -1489,13 +1489,14 @@ int SpanAccessory::sprintfAttributes(char *cBuf){
 //       SpanService         //
 ///////////////////////////////
 
-SpanService::SpanService(const char *type, const char *hapName){
+SpanService::SpanService(const char *type, const char *hapName, boolean isCustom){
 
   if(!homeSpan.Accessories.empty() && !homeSpan.Accessories.back()->Services.empty())      // this is not the first Service to be defined for this Accessory
     homeSpan.Accessories.back()->Services.back()->validate();    
 
   this->type=type;
   this->hapName=hapName;
+  this->isCustom=isCustom;
 
   homeSpan.configLog+="   \u279f Service " + String(hapName);
   
@@ -1508,7 +1509,12 @@ SpanService::SpanService(const char *type, const char *hapName){
   homeSpan.Accessories.back()->Services.push_back(this);  
   iid=++(homeSpan.Accessories.back()->iidCount);  
 
-  homeSpan.configLog+=":  IID=" + String(iid) + ", UUID=\"" + String(type) + "\"";
+  homeSpan.configLog+=":  IID=" + String(iid) + ", " + (isCustom?"Custom-":"") + "UUID=\"" + String(type) + "\"";
+
+  if(Span::invalidUUID(type,isCustom)){
+    homeSpan.configLog+=" *** ERROR!  Format of UUID is invalid. ***";
+    homeSpan.nFatalErrors++;    
+  }
 
   if(!strcmp(this->type,"3E") && iid!=1){
     homeSpan.configLog+=" *** ERROR!  The AccessoryInformation Service must be defined before any other Services in an Accessory. ***";
@@ -1600,12 +1606,13 @@ void SpanService::validate(){
 //    SpanCharacteristic     //
 ///////////////////////////////
 
-SpanCharacteristic::SpanCharacteristic(HapChar *hapChar){
+SpanCharacteristic::SpanCharacteristic(HapChar *hapChar, boolean isCustom){
   type=hapChar->type;
   perms=hapChar->perms;
   hapName=hapChar->hapName;
   format=hapChar->format;
   staticRange=hapChar->staticRange;
+  this->isCustom=isCustom;
 
   homeSpan.configLog+="      \u21e8 Characteristic " + String(hapName);
 

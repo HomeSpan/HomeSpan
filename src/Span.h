@@ -43,7 +43,7 @@ namespace Service {
     REQ(Model);
     REQ(Name);
     REQ(SerialNumber);
-    OPT(HardwareRevision);      
+    OPT(HardwareRevision);    
   }};
 
   struct AirPurifier : SpanService { AirPurifier() : SpanService{"BB","AirPurifier"}{
@@ -521,14 +521,23 @@ namespace Characteristic {
 
 }
 
-//////////////////////////////////////////
-// MACRO TO ADD CUSTOM CHARACTERISTICS  //
-//////////////////////////////////////////
+////////////////////////////////////////////////////////
+// MACROS TO ADD CUSTOM SERVICES AND CHARACTERISTICS  //
+////////////////////////////////////////////////////////
 
 #define CUSTOM_CHAR(NAME,UUID,PERMISISONS,FORMAT,DEFVAL,MINVAL,MAXVAL,STATIC_RANGE) \
   HapChar _CUSTOM_##NAME {#UUID,#NAME,(PERMS)(PERMISISONS),FORMAT,STATIC_RANGE}; \
-  namespace Characteristic { struct NAME : SpanCharacteristic { NAME(FORMAT##_t val=DEFVAL, boolean nvsStore=false) : SpanCharacteristic {&_CUSTOM_##NAME} { init(val,nvsStore,(FORMAT##_t)MINVAL,(FORMAT##_t)MAXVAL); } }; }
+  namespace Characteristic { struct NAME : SpanCharacteristic { NAME(FORMAT##_t val=DEFVAL, boolean nvsStore=false) : SpanCharacteristic {&_CUSTOM_##NAME,true} { init(val,nvsStore,(FORMAT##_t)MINVAL,(FORMAT##_t)MAXVAL); } }; }
 
 #define CUSTOM_CHAR_STRING(NAME,UUID,PERMISISONS,DEFVAL) \
   HapChar _CUSTOM_##NAME {#UUID,#NAME,(PERMS)(PERMISISONS),STRING,true}; \
-  namespace Characteristic { struct NAME : SpanCharacteristic { NAME(const char * val=DEFVAL, boolean nvsStore=false) : SpanCharacteristic {&_CUSTOM_##NAME} { init(val,nvsStore); } }; }
+  namespace Characteristic { struct NAME : SpanCharacteristic { NAME(const char * val=DEFVAL, boolean nvsStore=false) : SpanCharacteristic {&_CUSTOM_##NAME,true} { init(val,nvsStore); } }; }
+
+#define CUSTOM_SERV(NAME,UUID) \
+  namespace Service { struct NAME : SpanService { NAME() : SpanService{#UUID,#NAME,true}{} }; }
+
+
+
+
+
+  

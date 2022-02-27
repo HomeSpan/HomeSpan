@@ -202,7 +202,13 @@ struct Span{
   void enableOTA(boolean auth=true){otaEnabled=true;otaAuth=auth;reserveSocketConnections(1);}        // enables Over-the-Air updates, with (auth=true) or without (auth=false) authorization password
 
   [[deprecated("Please use reserveSocketConnections(n) method instead.")]]
-  void setMaxConnections(uint8_t n){requestedMaxCon=n;}                   // sets maximum number of simultaneous HAP connections 
+  void setMaxConnections(uint8_t n){requestedMaxCon=n;}                   // sets maximum number of simultaneous HAP connections
+
+  static boolean invalidUUID(const char *uuid, boolean isCustom){
+    int x=0;
+    sscanf(uuid,"%*8[0-9a-fA-F]-%*4[0-9a-fA-F]-%*4[0-9a-fA-F]-%*4[0-9a-fA-F]-%*12[0-9a-fA-F]%n",&x);
+    return(isCustom && (strlen(uuid)!=36 || x!=36));    
+  }
 
 };
 
@@ -233,8 +239,9 @@ struct SpanService{
   vector<HapChar *> req;                                  // vector of pointers to all required HAP Characteristic Types for this Service
   vector<HapChar *> opt;                                  // vector of pointers to all optional HAP Characteristic Types for this Service
   vector<SpanService *> linkedServices;                   // vector of pointers to any optional linked Services
+  boolean isCustom;                                       // flag to indicate this is a Custom Service
   
-  SpanService(const char *type, const char *hapName);
+  SpanService(const char *type, const char *hapName, boolean isCustom=false);     // constructor
 
   SpanService *setPrimary();                              // sets the Service Type to be primary and returns pointer to self
   SpanService *setHidden();                               // sets the Service Type to be hidden and returns pointer to self
@@ -280,6 +287,7 @@ struct SpanCharacteristic{
   const char *validValues=NULL;            // Optional JSON array of valid values.  Applicable only to uint8 Characteristics
   boolean *ev;                             // Characteristic Event Notify Enable (per-connection)
   char *nvsKey=NULL;                       // key for NVS storage of Characteristic value
+  boolean isCustom;                        // flag to indicate this is a Custom Characteristic
   
   uint32_t aid=0;                          // Accessory ID - passed through from Service containing this Characteristic
   boolean isUpdated=false;                 // set to true when new value has been requested by PUT /characteristic
@@ -287,7 +295,7 @@ struct SpanCharacteristic{
   UVal newValue;                           // the updated value requested by PUT /characteristic
   SpanService *service=NULL;               // pointer to Service containing this Characteristic
       
-  SpanCharacteristic(HapChar *hapChar);           // contructor
+  SpanCharacteristic(HapChar *hapChar, boolean isCustom=false);           // contructor
   
   int sprintfAttributes(char *cBuf, int flags);   // prints Characteristic JSON records into buf, according to flags mask; return number of characters printed, excluding null terminator  
   StatusCode loadUpdate(char *val, char *ev);     // load updated val/ev from PUT /characteristic JSON request.  Return intiial HAP status code (checks to see if characteristic is found, is writable, etc.)
@@ -457,11 +465,6 @@ struct SpanCharacteristic{
         uvSet(stepValue,0);
     }
 
-    int x=0;
-    sscanf(type,"%*8[0-9a-fA-F]-%*4[0-9a-fA-F]-%*4[0-9a-fA-F]-%*4[0-9a-fA-F]-%*12[0-9a-fA-F]%n",&x);
-    
-    boolean isCustom=(strlen(type)==36 && x==36);
-
     homeSpan.configLog+="(" + uvPrint(value) + ")" + ":  IID=" + String(iid) + ", " + (isCustom?"Custom-":"") + "UUID=\"" + String(type) + "\"";
     if(format!=FORMAT::STRING && format!=FORMAT::BOOL)
       homeSpan.configLog+= ", Range=[" + String(uvPrint(minValue)) + "," + String(uvPrint(maxValue)) + "]";
@@ -471,7 +474,12 @@ struct SpanCharacteristic{
     else if(nvsFlag==1)
       homeSpan.configLog+=" (storing)";
 
-    boolean valid=isCustom;
+    if(Span::invalidUUID(type,isCustom)){
+      homeSpan.configLog+=" *** ERROR!  Format of UUID is invalid. ***";
+      homeSpan.nFatalErrors++;    
+    }   
+
+    boolean valid=isCustom|service->isCustom;         // automatically set valid if either Characteristic or containing Service is Custom
   
     for(int i=0; !valid && i<homeSpan.Accessories.back()->Services.back()->req.size(); i++)
       valid=!strcmp(type,homeSpan.Accessories.back()->Services.back()->req[i]->type);
