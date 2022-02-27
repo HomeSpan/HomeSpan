@@ -55,7 +55,11 @@
 #### Can you add a Web Server to HomeSpan?
 
 * Yes, provided you implement your Web Server using standard ESP32-Arduino libraries, such as `WebServer.h`. See [ProgrammableHub](https://github.com/HomeSpan/ProgrammableHub) for an illustrative example of how to easily integrate a Web Server into HomeSpan.  This project also covers various other advanced topics, including TCP slot management, dynamic creation of Accessories, and saving arbitrary data in the ESP32's NVS.
-* Note *ESP32AsyncWebServer* cannot be used since it requires a TCP stack that is unfortunately incompatible with HomeSpan.  
+* Note *ESP32AsyncWebServer* cannot be used since it requires a TCP stack that is unfortunately incompatible with HomeSpan.
+
+#### Can you add *custom* Services and Characteristics to HomeSpan?
+
+* Yes, HomeSpan includes two easy-to-use macros to define your own custom Services and custom Characteristics beyond those specified in HAP-R2.  See the [HomeSpan API Reference](https://github.com/HomeSpan/HomeSpan/blob/master/docs/Reference.md) for details and examples demonstrating how to do this.  Note that any new Characteristics you create will be *completely ignored* by the Home App; and any new Services you create will be shown in the Home App on a tile labeled "Not Supported".  Apple ***does not*** provide any mechanism to extend the functionality of the Home App itself.  However, where custom Services and Characteristics are used is in 3rd party applications designed for these extra features.  For example, the *Eve for HomeKit* App properly handles all the Services and Characteristics defined in HAP-R2, *plus* a variety of additional Services and Characteristics designed explictly for use with Eve products.  If you know the UUID codes for these extra Services and Characteristics you can add them to HomeKit and use them within the Eve App just as if they were HAP-R2 Services and Characteristics.
 
 ---
 
