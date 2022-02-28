@@ -113,7 +113,10 @@ struct Span{
   nvs_handle charNVS;                           // handle for non-volatile-storage of Characteristics data
   nvs_handle wifiNVS=0;                         // handle for non-volatile-storage of WiFi data
   char pairingCodeCommand[12]="";               // user-specified Pairing Code - only needed if Pairing Setup Code is specified in sketch using setPairingCode()
-
+  const char *timeZone=NULL;                    // optional time-zone specification
+  const char *timeServer=NULL;                  // optional time server to use for acquiring clock time
+  struct tm timeinfo;                           // optional time info structure
+  
   boolean connected=false;                      // WiFi connection status
   unsigned long waitTime=60000;                 // time to wait (in milliseconds) between WiFi connection attempts
   unsigned long alarmConnect=0;                 // time after which WiFi connection attempt should be tried again
@@ -191,16 +194,16 @@ struct Span{
   const char *getSketchVersion(){return sketchVersion;}                   // get sketch version number
   void setWifiCallback(void (*f)()){wifiCallback=f;}                      // sets an optional user-defined function to call once WiFi connectivity is established
   void setPairCallback(void (*f)(boolean isPaired)){pairCallback=f;}      // sets an optional user-defined function to call when Pairing is established (true) or lost (false)
-  void setApFunction(void (*f)()){apFunction=f;}                          // sets an optional user-defined function to call when activating the WiFi Access Point
-
+  void setApFunction(void (*f)()){apFunction=f;}                          // sets an optional user-defined function to call when activating the WiFi Access Point  
   void enableAutoStartAP(){autoStartAPEnabled=true;}                      // enables auto start-up of Access Point when WiFi Credentials not found
   void setWifiCredentials(const char *ssid, const char *pwd);             // sets WiFi Credentials
 
   void setPairingCode(const char *s){sprintf(pairingCodeCommand,"S %9s",s);}    // sets the Pairing Code - use is NOT recommended.  Use 'S' from CLI instead
   void deleteStoredValues(){processSerialCommand("V");}                         // deletes stored Characteristic values from NVS  
 
-  void enableOTA(boolean auth=true){otaEnabled=true;otaAuth=auth;reserveSocketConnections(1);}        // enables Over-the-Air updates, with (auth=true) or without (auth=false) authorization password
-
+  void enableOTA(boolean auth=true){otaEnabled=true;otaAuth=auth;reserveSocketConnections(1);}                        // enables Over-the-Air updates, with (auth=true) or without (auth=false) authorization password  
+  void setTimeServer(const char *serv, const char *tz){timeServer=serv;timeZone=tz;reserveSocketConnections(1);}      // sets optional time server and time zone
+  
   [[deprecated("Please use reserveSocketConnections(n) method instead.")]]
   void setMaxConnections(uint8_t n){requestedMaxCon=n;}                   // sets maximum number of simultaneous HAP connections
 

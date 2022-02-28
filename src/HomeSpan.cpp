@@ -559,6 +559,15 @@ void Span::checkConnect(){
     }
   }
 
+  if(timeServer){
+    Serial.printf("Acquiring Time from %s... ",timeServer,timeZone);
+    configTzTime(timeZone,timeServer);
+    getLocalTime(&timeinfo);
+    char c[65];
+    strftime(c,64,"%a %b %e %Y %I:%M:%S %p",&timeinfo);
+    Serial.printf("%s (%s)\n\n",c,timeZone);
+  }
+  
   Serial.printf("Starting HAP Server on port %d supporting %d simultaneous HomeKit Controller Connections...\n",tcpPortNum,maxConnections);
 
   hapServer->begin();
@@ -571,7 +580,7 @@ void Span::checkConnect(){
   } else {
     statusLED.on();
   }
-
+  
   if(wifiCallback)
     wifiCallback();
   
