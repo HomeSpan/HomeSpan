@@ -342,6 +342,11 @@ void HAPClient::processRequest(){
       return;
     }
 
+    if(!strncmp(body,"GET /status ",12)){       // GET STATUS - AN OPTIONAL, NON-HAP-R2 FEATURE
+      getStatusURL();
+      return;
+    }    
+
     notFoundError();
     Serial.print("\n*** ERROR:  Bad GET request - URL not found\n\n");
     return;                  
@@ -1249,6 +1254,52 @@ int HAPClient::putPrepareURL(char *json){
 
 //////////////////////////////////////
 
+int HAPClient::getStatusURL(){
+
+  char uptime[16];
+  int seconds=esp_timer_get_time()/1e6;
+  int secs=seconds%60;
+  int mins=(seconds/=60)%60;
+  int hours=(seconds/=60)%24;
+  int days=(seconds/=24);
+    
+  sprintf(uptime,"%d:%02d:%02d:%02d",days,hours,mins,secs);
+
+  String response="HTTP/1.1 200 OK\r\nContent-type: text/html\r\n\r\n";
+
+  response+="<html><head><title>HomeSpan Status</title>\n";
+  response+="<style>td {padding-right: 40px;}";
+  response+="</style></head>\n";
+  response+="<body style=\"background-color:lightblue;\">\n";
+  response+="<p><b>" + String(homeSpan.displayName) + "</b></p>\n";
+  
+  response+="<table>\n";
+  response+="<tr><td>Uptime:</td><td>" + String(uptime) + "</td></tr>\n";
+  response+="<tr><td>ESP32 Board:</td><td>" + String(ARDUINO_BOARD) + "</td></tr>\n";
+  response+="<tr><td>Arduino-ESP Version:</td><td>" + String(ARDUINO_ESP_VERSION) + "</td></tr>\n";
+  response+="<tr><td>ESP-IDF Version:</td><td>" + String(ESP_IDF_VERSION_MAJOR) + "." + String(ESP_IDF_VERSION_MINOR) + "." + String(ESP_IDF_VERSION_PATCH) + "</td></tr>\n";
+  response+="<tr><td>HomeSpan Version:</td><td>" + String(HOMESPAN_VERSION) + "</td></tr>\n";
+  response+="<tr><td>Sketch Version:</td><td>" + String(homeSpan.getSketchVersion()) + "</td></tr>\n"; 
+  response+="</table>\n";
+    
+  response+="</body></html>";
+
+  LOG2("\n>>>>>>>>>> ");
+  LOG2(client.remoteIP());
+  LOG2(" >>>>>>>>>>\n");
+  LOG2(response);
+  LOG2("\n");
+  client.print(response);
+  LOG2("------------ SENT! --------------\n");
+  
+  delay(1);
+  client.stop();
+  
+  return(1);
+}
+
+//////////////////////////////////////
+
 void HAPClient::callServiceLoops(){
 
   homeSpan.snapTime=millis();                     // snap the current time for use in ALL loop routines
@@ -1303,7 +1354,6 @@ void  HAPClient::checkTimedWrites(){
 }
 
 //////////////////////////////////////
-
 
 void HAPClient::eventNotify(SpanBuf *pObj, int nObj, int ignoreClient){
   
