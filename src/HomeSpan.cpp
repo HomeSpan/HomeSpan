@@ -34,6 +34,7 @@
 #include <driver/ledc.h>
 #include <mbedtls/version.h>
 #include <esp_task_wdt.h>
+#include <esp_sntp.h>
 
 #include "HomeSpan.h"
 #include "HAP.h"
@@ -562,10 +563,14 @@ void Span::checkConnect(){
   if(timeServer){
     Serial.printf("Acquiring Time from %s... ",timeServer,timeZone);
     configTzTime(timeZone,timeServer);
-    getLocalTime(&timeinfo);
-    char c[65];
-    strftime(c,64,"%a %b %e %Y %I:%M:%S %p",&timeinfo);
-    Serial.printf("%s (%s)\n\n",c,timeZone);
+    if(getLocalTime(&timeinfo)){
+      char c[65];
+      strftime(c,64,"%a %b %e %Y %I:%M:%S %p",&timeinfo);
+      Serial.printf("%s (%s)\n\n",c,timeZone);
+    } else {
+      Serial.printf("Can't access Time Server - time-keeping disabled!\n\n");
+      timeServer=NULL;
+    }
   }
   
   Serial.printf("Starting HAP Server on port %d supporting %d simultaneous HomeKit Controller Connections...\n",tcpPortNum,maxConnections);
