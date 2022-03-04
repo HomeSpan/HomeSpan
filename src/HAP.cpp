@@ -1274,7 +1274,8 @@ int HAPClient::getStatusURL(){
   response+="<p><b>" + String(homeSpan.displayName) + "</b></p>\n";
   
   response+="<table>\n";
-  response+="<tr><td>Uptime:</td><td>" + String(uptime) + "</td></tr>\n";
+  response+="<tr><td>Up Time:</td><td>" + String(uptime) + "</td></tr>\n";
+  response+="<tr><td>Boot Time:</td><td>" + String(homeSpan.bootTime) + "</td></tr>\n";
   response+="<tr><td>ESP32 Board:</td><td>" + String(ARDUINO_BOARD) + "</td></tr>\n";
   response+="<tr><td>Arduino-ESP Version:</td><td>" + String(ARDUINO_ESP_VERSION) + "</td></tr>\n";
   response+="<tr><td>ESP-IDF Version:</td><td>" + String(ESP_IDF_VERSION_MAJOR) + "." + String(ESP_IDF_VERSION_MINOR) + "." + String(ESP_IDF_VERSION_PATCH) + "</td></tr>\n";

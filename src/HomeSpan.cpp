@@ -563,10 +563,10 @@ void Span::checkConnect(){
   if(timeServer){
     Serial.printf("Acquiring Time from %s... ",timeServer,timeZone);
     configTzTime(timeZone,timeServer);
+    struct tm timeinfo;
     if(getLocalTime(&timeinfo)){
-      char c[65];
-      strftime(c,64,"%a %b %e %Y %I:%M:%S %p",&timeinfo);
-      Serial.printf("%s (%s)\n\n",c,timeZone);
+      strftime(bootTime,sizeof(bootTime),"%c",&timeinfo);
+      Serial.printf("%s\n\n",bootTime);
     } else {
       Serial.printf("Can't access Time Server - time-keeping disabled!\n\n");
       timeServer=NULL;

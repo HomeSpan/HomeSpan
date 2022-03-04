@@ -94,6 +94,14 @@ struct SpanBuf{                               // temporary storage buffer for us
   
 ///////////////////////////////
 
+struct SpanWebLog{                            // optional web status/log data
+  int maxEntries=-1;                          // max number of log entries; -1 = do not create log or status; 0 = create status but no log; 1..N = create status and log with N entries
+  int nEntries=0;                             // current number of log entries
+  char **entry;                               // pointers to log entries of arbitrary size
+};
+
+///////////////////////////////
+
 struct Span{
 
   const char *displayName;                      // display name for this device - broadcast as part of Bonjour MDNS
@@ -115,7 +123,8 @@ struct Span{
   char pairingCodeCommand[12]="";               // user-specified Pairing Code - only needed if Pairing Setup Code is specified in sketch using setPairingCode()
   const char *timeZone=NULL;                    // optional time-zone specification
   const char *timeServer=NULL;                  // optional time server to use for acquiring clock time
-  struct tm timeinfo;                           // optional time info structure
+  char bootTime[33]="Unknown";                  // boot time
+  SpanWebLog webLog;                            // optional web status/log
   
   boolean connected=false;                      // WiFi connection status
   unsigned long waitTime=60000;                 // time to wait (in milliseconds) between WiFi connection attempts
