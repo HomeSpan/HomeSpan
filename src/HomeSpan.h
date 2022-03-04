@@ -71,6 +71,7 @@ struct SpanRange;
 struct SpanBuf;
 struct SpanButton;
 struct SpanUserCommand;
+struct SpanWebLog;
 
 extern Span homeSpan;
 
@@ -92,14 +93,6 @@ struct SpanBuf{                               // temporary storage buffer for us
   SpanCharacteristic *characteristic=NULL;    // Characteristic to update (NULL if not found)
 };
   
-///////////////////////////////
-
-struct SpanWebLog{                            // optional web status/log data
-  int maxEntries=-1;                          // max number of log entries; -1 = do not create log or status; 0 = create status but no log; 1..N = create status and log with N entries
-  int nEntries=0;                             // current number of log entries
-  char **entry;                               // pointers to log entries of arbitrary size
-};
-
 ///////////////////////////////
 
 struct Span{
@@ -124,7 +117,7 @@ struct Span{
   const char *timeZone=NULL;                    // optional time-zone specification
   const char *timeServer=NULL;                  // optional time server to use for acquiring clock time
   char bootTime[33]="Unknown";                  // boot time
-  SpanWebLog webLog;                            // optional web status/log
+  SpanWebLog *webLog=NULL;                      // optional web status/log
   
   boolean connected=false;                      // WiFi connection status
   unsigned long waitTime=60000;                 // time to wait (in milliseconds) between WiFi connection attempts
@@ -684,6 +677,20 @@ struct SpanUserCommand {
 
   SpanUserCommand(char c, const char *s, void (*f)(const char *));  
   SpanUserCommand(char c, const char *s, void (*f)(const char *, void *), void *arg);  
+};
+
+///////////////////////////////
+
+struct SpanWebLog{                            // optional web status/log data
+  int maxEntries;                             // max number of log entries; -1 = do not create log or status; 0 = create status but no log; 1..N = create status and log with N entries
+  int nEntries=0;                             // current number of log entries
+  
+  struct log_t {                              // log entry type
+    uint32_t upTime;                          // number of seconds since booting
+    struct tm clockTime;                      // clock time
+    char *message;                            // pointers to log entries of arbitrary size
+  } *log=NULL;                                // array of log entries    
+  
 };
 
 /////////////////////////////////////////////////
