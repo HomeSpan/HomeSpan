@@ -1256,6 +1256,16 @@ int HAPClient::putPrepareURL(char *json){
 
 int HAPClient::getStatusURL(){
 
+  char clocktime[33];
+
+  if(homeSpan.webLog->timeInit){
+    struct tm timeinfo;
+    getLocalTime(&timeinfo,10);
+    strftime(clocktime,sizeof(clocktime),"%c",&timeinfo);
+  } else {
+    sprintf(clocktime,"Unknown");        
+  }
+
   char uptime[16];
   int seconds=esp_timer_get_time()/1e6;
   int secs=seconds%60;
@@ -1268,13 +1278,14 @@ int HAPClient::getStatusURL(){
   String response="HTTP/1.1 200 OK\r\nContent-type: text/html\r\n\r\n";
 
   response+="<html><head><title>HomeSpan Status</title>\n";
-  response+="<style>th, td {padding-right: 10px; border:1px solid black;}";
+  response+="<style>th, td {padding-right: 10px; padding-left: 10px; border:1px solid black;}";
   response+="</style></head>\n";
   response+="<body style=\"background-color:lightblue;\">\n";
   response+="<p><b>" + String(homeSpan.displayName) + "</b></p>\n";
   
   response+="<table>\n";
   response+="<tr><td>Up Time:</td><td>" + String(uptime) + "</td></tr>\n";
+  response+="<tr><td>Current Time:</td><td>" + String(clocktime) + "</td></tr>\n";
   response+="<tr><td>Boot Time:</td><td>" + String(homeSpan.webLog->bootTime) + "</td></tr>\n";
   response+="<tr><td>ESP32 Board:</td><td>" + String(ARDUINO_BOARD) + "</td></tr>\n";
   response+="<tr><td>Arduino-ESP Version:</td><td>" + String(ARDUINO_ESP_VERSION) + "</td></tr>\n";
@@ -1292,9 +1303,21 @@ int HAPClient::getStatusURL(){
       lastIndex=0;
     
     for(int i=homeSpan.webLog->nEntries-1;i>=lastIndex;i--){
-      response+="<tr><td>" + String(i+1) + "</td><td>" + "TBD1" "</td><td>" + "TBD2" + "</td><td>" + String(homeSpan.webLog->log[i%homeSpan.webLog->maxEntries].message) + "</td/tr>";
+      int index=i%homeSpan.webLog->maxEntries;
+      seconds=homeSpan.webLog->log[index].upTime/1e6;
+      secs=seconds%60;
+      mins=(seconds/=60)%60;
+      hours=(seconds/=60)%24;
+      days=(seconds/=24);   
+      sprintf(uptime,"%d:%02d:%02d:%02d",days,hours,mins,secs);
+
+      if(homeSpan.webLog->log[index].clockTime.tm_year>0)
+        strftime(clocktime,sizeof(clocktime),"%c",&homeSpan.webLog->log[index].clockTime);
+      else
+        sprintf(clocktime,"Unknown");        
+      
+      response+="<tr><td>" + String(i+1) + "</td><td>" + String(uptime) + "</td><td>" + String(clocktime) + "</td><td>" + String(homeSpan.webLog->log[index].message) + "</td/tr>";
     }
-  
     response+="</table>\n";
   }
   

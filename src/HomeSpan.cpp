@@ -1965,9 +1965,9 @@ void SpanWebLog::addLog(const char *m){
 
   int index=nEntries%maxEntries;
 
-  log[index].upTime=esp_timer_get_time()/1e6;
+  log[index].upTime=esp_timer_get_time();
   if(timeInit)
-    getLocalTime(&log[index].clockTime);
+    getLocalTime(&log[index].clockTime,10);
   else
     log[index].clockTime.tm_year=0;
   log[index].message=m;

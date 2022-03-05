@@ -105,7 +105,7 @@ struct SpanWebLog{                            // optional web status/log data
   String statusURL;                           // URL of status log
     
   struct log_t {                              // log entry type
-    uint32_t upTime;                          // number of seconds since booting
+    uint64_t upTime;                          // number of seconds since booting
     struct tm clockTime;                      // clock time
     const char *message;                            // pointers to log entries of arbitrary size
   } *log=NULL;                                // array of log entries 
