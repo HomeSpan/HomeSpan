@@ -96,6 +96,7 @@ struct SpanBuf{                               // temporary storage buffer for us
 ///////////////////////////////
 
 struct SpanWebLog{                            // optional web status/log data
+  boolean isEnabled=false;                    // flag to inidicate WebLog has been enabled
   uint16_t maxEntries;                        // max number of log entries;
   int nEntries=0;                             // total cumulative number of log entries
   const char *timeServer;                     // optional time server to use for acquiring clock time
@@ -110,7 +111,7 @@ struct SpanWebLog{                            // optional web status/log data
     const char *message;                            // pointers to log entries of arbitrary size
   } *log=NULL;                                // array of log entries 
 
-  SpanWebLog(uint16_t maxEntries, const char *serv, const char *tz, const char *url);
+  void init(uint16_t maxEntries, const char *serv, const char *tz, const char *url);
   void initTime();  
   void addLog(const char *m);
 };
@@ -163,7 +164,7 @@ struct Span{
   Blinker statusLED;                                // indicates HomeSpan status
   PushButton controlButton;                         // controls HomeSpan configuration and resets
   Network network;                                  // configures WiFi and Setup Code via either serial monitor or temporary Access Point
-  SpanWebLog *webLog=NULL;                          // optional web status/log
+  SpanWebLog webLog;                                // optional web status/log
     
   SpanConfig hapConfig;                             // track configuration changes to the HAP Accessory database; used to increment the configuration number (c#) when changes found
   vector<SpanAccessory *> Accessories;              // vector of pointers to all Accessories
@@ -225,7 +226,7 @@ struct Span{
   void enableOTA(boolean auth=true){otaEnabled=true;otaAuth=auth;reserveSocketConnections(1);}                        // enables Over-the-Air updates, with (auth=true) or without (auth=false) authorization password  
 
   void enableWebLog(uint16_t maxEntries=0, const char *serv=NULL, const char *tz="UTC", const char *url=DEFAULT_WEBLOG_URL){     // enable Web Logging
-    webLog=new SpanWebLog(maxEntries, serv, tz, url);
+    webLog.init(maxEntries, serv, tz, url);
   }
   
   [[deprecated("Please use reserveSocketConnections(n) method instead.")]]

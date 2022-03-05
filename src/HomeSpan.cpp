@@ -560,9 +560,9 @@ void Span::checkConnect(){
     }
   }
 
-  if(webLog){
-    Serial.printf("Web Logging enabled at http://%s.local:%d%swith max number of entries=%d\n\n",hostName,tcpPortNum,webLog->statusURL.c_str()+4,webLog->maxEntries);
-    webLog->initTime();
+  if(webLog.isEnabled){
+    Serial.printf("Web Logging enabled at http://%s.local:%d%swith max number of entries=%d\n\n",hostName,tcpPortNum,webLog.statusURL.c_str()+4,webLog.maxEntries);
+    webLog.initTime();
   }
   
   Serial.printf("Starting HAP Server on port %d supporting %d simultaneous HomeKit Controller Connections...\n",tcpPortNum,maxConnections);
@@ -1930,7 +1930,8 @@ SpanUserCommand::SpanUserCommand(char c, const char *s, void (*f)(const char *, 
 //        SpanWebLog         //
 ///////////////////////////////
 
-SpanWebLog::SpanWebLog(uint16_t maxEntries, const char *serv, const char *tz, const char *url){
+void SpanWebLog::init(uint16_t maxEntries, const char *serv, const char *tz, const char *url){
+  isEnabled=true;
   this->maxEntries=maxEntries;
   timeServer=serv;
   timeZone=tz;

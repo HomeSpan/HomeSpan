@@ -342,7 +342,7 @@ void HAPClient::processRequest(){
       return;
     }
 
-    if(homeSpan.webLog && !strncmp(body,homeSpan.webLog->statusURL.c_str(),homeSpan.webLog->statusURL.length())){       // GET STATUS - AN OPTIONAL, NON-HAP-R2 FEATURE
+    if(homeSpan.webLog.isEnabled && !strncmp(body,homeSpan.webLog.statusURL.c_str(),homeSpan.webLog.statusURL.length())){       // GET STATUS - AN OPTIONAL, NON-HAP-R2 FEATURE
       getStatusURL();
       return;
     }    
@@ -1258,7 +1258,7 @@ int HAPClient::getStatusURL(){
 
   char clocktime[33];
 
-  if(homeSpan.webLog->timeInit){
+  if(homeSpan.webLog.timeInit){
     struct tm timeinfo;
     getLocalTime(&timeinfo,10);
     strftime(clocktime,sizeof(clocktime),"%c",&timeinfo);
@@ -1286,37 +1286,37 @@ int HAPClient::getStatusURL(){
   response+="<table>\n";
   response+="<tr><td>Up Time:</td><td>" + String(uptime) + "</td></tr>\n";
   response+="<tr><td>Current Time:</td><td>" + String(clocktime) + "</td></tr>\n";
-  response+="<tr><td>Boot Time:</td><td>" + String(homeSpan.webLog->bootTime) + "</td></tr>\n";
+  response+="<tr><td>Boot Time:</td><td>" + String(homeSpan.webLog.bootTime) + "</td></tr>\n";
   response+="<tr><td>ESP32 Board:</td><td>" + String(ARDUINO_BOARD) + "</td></tr>\n";
   response+="<tr><td>Arduino-ESP Version:</td><td>" + String(ARDUINO_ESP_VERSION) + "</td></tr>\n";
   response+="<tr><td>ESP-IDF Version:</td><td>" + String(ESP_IDF_VERSION_MAJOR) + "." + String(ESP_IDF_VERSION_MINOR) + "." + String(ESP_IDF_VERSION_PATCH) + "</td></tr>\n";
   response+="<tr><td>HomeSpan Version:</td><td>" + String(HOMESPAN_VERSION) + "</td></tr>\n";
   response+="<tr><td>Sketch Version:</td><td>" + String(homeSpan.getSketchVersion()) + "</td></tr>\n"; 
-  response+="<tr><td>Max Log Entries:</td><td>" + String(homeSpan.webLog->maxEntries) + "</td></tr>\n"; 
+  response+="<tr><td>Max Log Entries:</td><td>" + String(homeSpan.webLog.maxEntries) + "</td></tr>\n"; 
   response+="</table>\n";
   response+="<p></p>";
 
-  if(homeSpan.webLog->maxEntries>0){
+  if(homeSpan.webLog.maxEntries>0){
     response+="<table><tr><th>Entry</th><th>Up Time</th><th>Log Time</th><th>Message</th></tr>\n";
-    int lastIndex=homeSpan.webLog->nEntries-homeSpan.webLog->maxEntries;
+    int lastIndex=homeSpan.webLog.nEntries-homeSpan.webLog.maxEntries;
     if(lastIndex<0)
       lastIndex=0;
     
-    for(int i=homeSpan.webLog->nEntries-1;i>=lastIndex;i--){
-      int index=i%homeSpan.webLog->maxEntries;
-      seconds=homeSpan.webLog->log[index].upTime/1e6;
+    for(int i=homeSpan.webLog.nEntries-1;i>=lastIndex;i--){
+      int index=i%homeSpan.webLog.maxEntries;
+      seconds=homeSpan.webLog.log[index].upTime/1e6;
       secs=seconds%60;
       mins=(seconds/=60)%60;
       hours=(seconds/=60)%24;
       days=(seconds/=24);   
       sprintf(uptime,"%d:%02d:%02d:%02d",days,hours,mins,secs);
 
-      if(homeSpan.webLog->log[index].clockTime.tm_year>0)
-        strftime(clocktime,sizeof(clocktime),"%c",&homeSpan.webLog->log[index].clockTime);
+      if(homeSpan.webLog.log[index].clockTime.tm_year>0)
+        strftime(clocktime,sizeof(clocktime),"%c",&homeSpan.webLog.log[index].clockTime);
       else
         sprintf(clocktime,"Unknown");        
       
-      response+="<tr><td>" + String(i+1) + "</td><td>" + String(uptime) + "</td><td>" + String(clocktime) + "</td><td>" + String(homeSpan.webLog->log[index].message) + "</td/tr>";
+      response+="<tr><td>" + String(i+1) + "</td><td>" + String(uptime) + "</td><td>" + String(clocktime) + "</td><td>" + String(homeSpan.webLog.log[index].message) + "</td/tr>";
     }
     response+="</table>\n";
   }
