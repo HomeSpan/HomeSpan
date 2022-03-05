@@ -81,6 +81,8 @@
 
 #define     DEFAULT_TCP_PORT          80                  // change with homeSpan.setPort(port);
 
+#define     DEFAULT_WEBLOG_URL        "status"            // change with optional fourth argument in homeSpan.enableWebLog()
+
 /////////////////////////////////////////////////////
 //              STATUS LED SETTINGS                //
 

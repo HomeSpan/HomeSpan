@@ -95,6 +95,28 @@ struct SpanBuf{                               // temporary storage buffer for us
   
 ///////////////////////////////
 
+struct SpanWebLog{                            // optional web status/log data
+  uint16_t maxEntries;                        // max number of log entries;
+  int nEntries=0;                             // total cumulative number of log entries
+  const char *timeServer;                     // optional time server to use for acquiring clock time
+  const char *timeZone;                       // optional time-zone specification
+  boolean timeInit=false;                     // flag to indicate time has been initialized
+  char bootTime[33]="Unknown";                // boot time
+  String statusURL;                           // URL of status log
+    
+  struct log_t {                              // log entry type
+    uint32_t upTime;                          // number of seconds since booting
+    struct tm clockTime;                      // clock time
+    const char *message;                            // pointers to log entries of arbitrary size
+  } *log=NULL;                                // array of log entries 
+
+  SpanWebLog(uint16_t maxEntries, const char *serv, const char *tz, const char *url);
+  void initTime();  
+  void addLog(const char *m);
+};
+
+///////////////////////////////
+
 struct Span{
 
   const char *displayName;                      // display name for this device - broadcast as part of Bonjour MDNS
@@ -114,10 +136,6 @@ struct Span{
   nvs_handle charNVS;                           // handle for non-volatile-storage of Characteristics data
   nvs_handle wifiNVS=0;                         // handle for non-volatile-storage of WiFi data
   char pairingCodeCommand[12]="";               // user-specified Pairing Code - only needed if Pairing Setup Code is specified in sketch using setPairingCode()
-  const char *timeZone=NULL;                    // optional time-zone specification
-  const char *timeServer=NULL;                  // optional time server to use for acquiring clock time
-  char bootTime[33]="Unknown";                  // boot time
-  SpanWebLog *webLog=NULL;                      // optional web status/log
   
   boolean connected=false;                      // WiFi connection status
   unsigned long waitTime=60000;                 // time to wait (in milliseconds) between WiFi connection attempts
@@ -145,6 +163,7 @@ struct Span{
   Blinker statusLED;                                // indicates HomeSpan status
   PushButton controlButton;                         // controls HomeSpan configuration and resets
   Network network;                                  // configures WiFi and Setup Code via either serial monitor or temporary Access Point
+  SpanWebLog *webLog=NULL;                          // optional web status/log
     
   SpanConfig hapConfig;                             // track configuration changes to the HAP Accessory database; used to increment the configuration number (c#) when changes found
   vector<SpanAccessory *> Accessories;              // vector of pointers to all Accessories
@@ -204,7 +223,10 @@ struct Span{
   void deleteStoredValues(){processSerialCommand("V");}                         // deletes stored Characteristic values from NVS  
 
   void enableOTA(boolean auth=true){otaEnabled=true;otaAuth=auth;reserveSocketConnections(1);}                        // enables Over-the-Air updates, with (auth=true) or without (auth=false) authorization password  
-  void setTimeServer(const char *serv, const char *tz){timeServer=serv;timeZone=tz;reserveSocketConnections(1);}      // sets optional time server and time zone
+
+  void enableWebLog(uint16_t maxEntries=0, const char *serv=NULL, const char *tz="UTC", const char *url=DEFAULT_WEBLOG_URL){     // enable Web Logging
+    webLog=new SpanWebLog(maxEntries, serv, tz, url);
+  }
   
   [[deprecated("Please use reserveSocketConnections(n) method instead.")]]
   void setMaxConnections(uint8_t n){requestedMaxCon=n;}                   // sets maximum number of simultaneous HAP connections
@@ -677,20 +699,6 @@ struct SpanUserCommand {
 
   SpanUserCommand(char c, const char *s, void (*f)(const char *));  
   SpanUserCommand(char c, const char *s, void (*f)(const char *, void *), void *arg);  
-};
-
-///////////////////////////////
-
-struct SpanWebLog{                            // optional web status/log data
-  int maxEntries;                             // max number of log entries; -1 = do not create log or status; 0 = create status but no log; 1..N = create status and log with N entries
-  int nEntries=0;                             // current number of log entries
-  
-  struct log_t {                              // log entry type
-    uint32_t upTime;                          // number of seconds since booting
-    struct tm clockTime;                      // clock time
-    char *message;                            // pointers to log entries of arbitrary size
-  } *log=NULL;                                // array of log entries    
-  
 };
 
 /////////////////////////////////////////////////

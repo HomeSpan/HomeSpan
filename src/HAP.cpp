@@ -342,7 +342,7 @@ void HAPClient::processRequest(){
       return;
     }
 
-    if(!strncmp(body,"GET /status ",12)){       // GET STATUS - AN OPTIONAL, NON-HAP-R2 FEATURE
+    if(homeSpan.webLog && !strncmp(body,homeSpan.webLog->statusURL.c_str(),homeSpan.webLog->statusURL.length())){       // GET STATUS - AN OPTIONAL, NON-HAP-R2 FEATURE
       getStatusURL();
       return;
     }    
@@ -1268,21 +1268,36 @@ int HAPClient::getStatusURL(){
   String response="HTTP/1.1 200 OK\r\nContent-type: text/html\r\n\r\n";
 
   response+="<html><head><title>HomeSpan Status</title>\n";
-  response+="<style>td {padding-right: 40px;}";
+  response+="<style>th, td {padding-right: 10px; border:1px solid black;}";
   response+="</style></head>\n";
   response+="<body style=\"background-color:lightblue;\">\n";
   response+="<p><b>" + String(homeSpan.displayName) + "</b></p>\n";
   
   response+="<table>\n";
   response+="<tr><td>Up Time:</td><td>" + String(uptime) + "</td></tr>\n";
-  response+="<tr><td>Boot Time:</td><td>" + String(homeSpan.bootTime) + "</td></tr>\n";
+  response+="<tr><td>Boot Time:</td><td>" + String(homeSpan.webLog->bootTime) + "</td></tr>\n";
   response+="<tr><td>ESP32 Board:</td><td>" + String(ARDUINO_BOARD) + "</td></tr>\n";
   response+="<tr><td>Arduino-ESP Version:</td><td>" + String(ARDUINO_ESP_VERSION) + "</td></tr>\n";
   response+="<tr><td>ESP-IDF Version:</td><td>" + String(ESP_IDF_VERSION_MAJOR) + "." + String(ESP_IDF_VERSION_MINOR) + "." + String(ESP_IDF_VERSION_PATCH) + "</td></tr>\n";
   response+="<tr><td>HomeSpan Version:</td><td>" + String(HOMESPAN_VERSION) + "</td></tr>\n";
   response+="<tr><td>Sketch Version:</td><td>" + String(homeSpan.getSketchVersion()) + "</td></tr>\n"; 
+  response+="<tr><td>Max Log Entries:</td><td>" + String(homeSpan.webLog->maxEntries) + "</td></tr>\n"; 
   response+="</table>\n";
+  response+="<p></p>";
+
+  if(homeSpan.webLog->maxEntries>0){
+    response+="<table><tr><th>Entry</th><th>Up Time</th><th>Log Time</th><th>Message</th></tr>\n";
+    int lastIndex=homeSpan.webLog->nEntries-homeSpan.webLog->maxEntries;
+    if(lastIndex<0)
+      lastIndex=0;
     
+    for(int i=homeSpan.webLog->nEntries-1;i>=lastIndex;i--){
+      response+="<tr><td>" + String(i+1) + "</td><td>" + "TBD1" "</td><td>" + "TBD2" + "</td><td>" + String(homeSpan.webLog->log[i%homeSpan.webLog->maxEntries].message) + "</td/tr>";
+    }
+  
+    response+="</table>\n";
+  }
+  
   response+="</body></html>";
 
   LOG2("\n>>>>>>>>>> ");

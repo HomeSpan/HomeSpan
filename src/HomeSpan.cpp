@@ -560,17 +560,9 @@ void Span::checkConnect(){
     }
   }
 
-  if(timeServer){
-    Serial.printf("Acquiring Time from %s... ",timeServer,timeZone);
-    configTzTime(timeZone,timeServer);
-    struct tm timeinfo;
-    if(getLocalTime(&timeinfo)){
-      strftime(bootTime,sizeof(bootTime),"%c",&timeinfo);
-      Serial.printf("%s\n\n",bootTime);
-    } else {
-      Serial.printf("Can't access Time Server - time-keeping disabled!\n\n");
-      timeServer=NULL;
-    }
+  if(webLog){
+    Serial.printf("Web Logging enabled at http://%s.local:%d%swith max number of entries=%d\n\n",hostName,tcpPortNum,webLog->statusURL.c_str()+4,webLog->maxEntries);
+    webLog->initTime();
   }
   
   Serial.printf("Starting HAP Server on port %d supporting %d simultaneous HomeKit Controller Connections...\n",tcpPortNum,maxConnections);
@@ -1932,4 +1924,53 @@ SpanUserCommand::SpanUserCommand(char c, const char *s, void (*f)(const char *, 
   userArg=arg;
    
   homeSpan.UserCommands[c]=this;
+}
+
+///////////////////////////////
+//        SpanWebLog         //
+///////////////////////////////
+
+SpanWebLog::SpanWebLog(uint16_t maxEntries, const char *serv, const char *tz, const char *url){
+  this->maxEntries=maxEntries;
+  timeServer=serv;
+  timeZone=tz;
+  statusURL="GET /" + String(url) + " ";
+  log = (log_t *)calloc(maxEntries,sizeof(log_t));
+}
+
+///////////////////////////////
+
+void SpanWebLog::initTime(){
+  if(!timeServer)
+    return;
+
+  Serial.printf("Acquiring Time from %s (%s)... ",timeServer,timeZone);
+  configTzTime(timeZone,timeServer);
+  struct tm timeinfo;
+  if(getLocalTime(&timeinfo)){
+    strftime(bootTime,sizeof(bootTime),"%c",&timeinfo);
+    Serial.printf("%s\n\n",bootTime);
+    homeSpan.reserveSocketConnections(1);
+    timeInit=true;
+  } else {
+    Serial.printf("Can't access Time Server (or Time Zone improperly specified) - time-keeping not initialized!\n\n");
+  }
+}
+
+///////////////////////////////
+
+void SpanWebLog::addLog(const char *m){
+  if(maxEntries==0)
+    return;
+
+  int index=nEntries%maxEntries;
+
+  log[index].upTime=esp_timer_get_time()/1e6;
+  if(timeInit)
+    getLocalTime(&log[index].clockTime);
+  else
+    log[index].clockTime.tm_year=0;
+  log[index].message=m;
+
+  nEntries++;
 }
