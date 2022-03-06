@@ -28,6 +28,8 @@ struct DEV_LED : Service::LightBulb {               // First we create a derived
 
     digitalWrite(ledPin,power->getNewVal());        // use a standard Arduino function to turn on/off ledPin based on the return of a call to power->getNewVal() (see below for more info)
     WEBLOG("LED on Pin %d: %s",ledPin,power->getNewVal()?"ON":"OFF");
+    LOG1("LOG1: LED on Pin %d: %s",ledPin,power->getNewVal()?"ON":"OFF");
+    LOG2("LOG2: LED on Pin %d: %s",ledPin,power->getNewVal()?"ON":"OFF");
    
     return(true);                                   // return true to indicate the update was successful (otherwise create code to return false if some reason you could not turn on the LED)
   
