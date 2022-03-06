@@ -1945,16 +1945,16 @@ void SpanWebLog::initTime(){
   if(!timeServer)
     return;
 
-  Serial.printf("Acquiring Time from %s (%s)... ",timeServer,timeZone);
+  Serial.printf("Acquiring Time from %s (%s).  Waiting %d second(s) for response... ",timeServer,timeZone,waitTime/1000);
   configTzTime(timeZone,timeServer);
   struct tm timeinfo;
-  if(getLocalTime(&timeinfo,10000)){
+  if(getLocalTime(&timeinfo,waitTime)){
     strftime(bootTime,sizeof(bootTime),"%c",&timeinfo);
     Serial.printf("%s\n\n",bootTime);
     homeSpan.reserveSocketConnections(1);
     timeInit=true;
   } else {
-    Serial.printf("Can't access Time Server (or Time Zone improperly specified) - time-keeping not initialized!\n\n");
+    Serial.printf("Can't access Time Server - time-keeping not initialized!\n\n");
   }
 }
 

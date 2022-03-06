@@ -104,6 +104,7 @@ struct SpanWebLog{                            // optional web status/log data
   boolean timeInit=false;                     // flag to indicate time has been initialized
   char bootTime[33]="Unknown";                // boot time
   String statusURL;                           // URL of status log
+  uint32_t waitTime=10000;                    // number of milliseconds to wait for initial connection to time server
     
   struct log_t {                              // log entry type
     uint64_t upTime;                          // number of seconds since booting
@@ -228,6 +229,8 @@ struct Span{
   void enableWebLog(uint16_t maxEntries=0, const char *serv=NULL, const char *tz="UTC", const char *url=DEFAULT_WEBLOG_URL){     // enable Web Logging
     webLog.init(maxEntries, serv, tz, url);
   }
+
+  void setTimeServerTimeout(uint32_t tSec){webLog.waitTime=tSec*1000;}    // sets wait time (in seconds) for optional web log time server to connect
   
   [[deprecated("Please use reserveSocketConnections(n) method instead.")]]
   void setMaxConnections(uint8_t n){requestedMaxCon=n;}                   // sets maximum number of simultaneous HAP connections
