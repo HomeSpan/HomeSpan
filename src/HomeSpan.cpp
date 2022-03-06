@@ -563,6 +563,8 @@ void Span::checkConnect(){
   }
 
   if(webLog.isEnabled){
+    mdns_service_txt_item_set("_hap","_tcp","logURL",webLog.statusURL.c_str()+4);           // Web Log Enabled (info only - NOT used by HAP)
+    
     Serial.printf("Web Logging enabled at http://%s.local:%d%swith max number of entries=%d\n\n",hostName,tcpPortNum,webLog.statusURL.c_str()+4,webLog.maxEntries);
     webLog.initTime();
   }
