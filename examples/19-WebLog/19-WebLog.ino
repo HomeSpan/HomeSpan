@@ -30,46 +30,31 @@
 //    HomeSpan: A HomeKit implementation for the ESP32    //
 //    ------------------------------------------------    //
 //                                                        //
-// Example 5: Two working on/off LEDs based on the           //
-//            LightBulb Service                           //
+// Example 19: Web Logging                                //
 //                                                        //
 ////////////////////////////////////////////////////////////
 
 
 #include "HomeSpan.h" 
-#include "DEV_LED.h"          // NEW! Include this new file, DEV_LED.h, which will be fully explained below
+#include "DEV_LED.h"
 
 void setup() {
 
-  // First light! Control an LED from HomeKit!
-  
-  // Example 5 expands on Example 2 by adding in the code needed to actually control LEDs connected to the ESP32 from HomeKit.
-  // In Example 2 we built out all the functionality to create a "Tile" Acessories inside HomeKit that displayed an on/off light, but
-  // these control did not actually operate anything on the ESP32.  To operate actual devices HomeSpan needs to be programmed to
-  // respond to "update" requests from HomeKit by performing some form of operation.
-  
-  // Though HomeKit itself sends "update" requests to individual Characteristics, this is not intuitive and leads to complex coding requirements
-  // when a Service has more than one Characteristic, such as both "On" and "Brightness."  To make this MUCH easier for the user, HomeSpan
-  // uses a framework in which Services are updated instead of individual Characteristics.  It does so by calling the update() method of
-  // each Service with flags indicating all the Characteristics in that Service that HomeKit requested to update.  The user simply
-  // implements code to perform the actual operation, and returns either true or false if the update was successful.  HomeSpan takes care of all
-  // the underlying nuts and bolts.
-
-  // Every Service defined in HomeKit, such as Service:LightBulb and Service:Fan (and even Service::AccessoryInformation) implements an update()
-  // method that, as a default, does nothing but returns a value of true.  To actually operate real devices you need to over-ride this default update()
-  // method with your own code.  The easiest way to do this is by creating a DERIVED class based on one of the built-in HomeSpan Services.
-  // Within this derived class you can perform initial set-up routines (if needed), over-ride the update() method with your own code, and even create
-  // any other methods or class-specific variables you need to fully operate complex devices.  Most importantly, the derived class can take arguments
-  // so that you can make them more generic, re-use them multiple times (as will be seen below), and convert them to standalone modules (also shown below).
-
-  // All of the HomeKit Services implemented by HomeSpan can be found in the Services.h file.  Any can be used as the parent for a derived Service.
-
-  // We begin by repeating nearly the same code from Example 2, but with a few key changes. For ease of reading, all prior comments have been removed
-  // from lines that simply repeat Example 2, and new comments have been added to explictly show the new code.
+// This is a duplicate of Example 5 (Two Working LEDs) with the addition of HomesSpan Web Logging
 
   Serial.begin(115200);
 
-  homeSpan.enableWebLog(10,"pool.ntp.org","CST6CDT");
+// Below we enable Web Logging.  The first parameter sets the maximum number of log messages to save (as the
+// log fills with messages, older ones are replaced by newer ones).  The second parameter specifies a Timer Server
+// that HomeSpan calls to set its clock.  Setting the clock in this fashion is optional, and you can leave this
+// argument blank (or set to NULL) if you don't care about setting the absolute time of the device.  The third
+// argument defines the Time Zone used for setting the device clock.  See the HomeSpan API Reference for complete details
+// and more options related to this function call.
+
+  homeSpan.enableWebLog(10,"pool.ntp.org","UTC");
+
+// The rest of the sketch below is identical to Example 5.  All of the Web Logging occurs in DEV_LED.h  
+  
   homeSpan.begin(Category::Lighting,"HomeSpan LEDs");
   
   new SpanAccessory(); 
