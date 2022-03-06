@@ -1979,6 +1979,7 @@ void SpanWebLog::addLog(const char *fmt, ...){
   va_start(ap,fmt);
   vasprintf(&log[index].message,fmt,ap);
   va_end(ap);
-  
+
+  log[index].clientIP=homeSpan.lastClientIP;  
   nEntries++;
 }

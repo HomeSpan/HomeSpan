@@ -18,6 +18,7 @@ struct DEV_LED : Service::LightBulb {               // First we create a derived
     power=new Characteristic::On();                 // this is where we create the On Characterstic we had previously defined in setup().  Save this in the pointer created above, for use below
     this->ledPin=ledPin;                            // don't forget to store ledPin...
     pinMode(ledPin,OUTPUT);                         // ...and set the mode for ledPin to be an OUTPUT (standard Arduino function)
+    WEBLOG("Configuring LED on Pin %d",ledPin);
     
   } // end constructor
 
@@ -26,7 +27,7 @@ struct DEV_LED : Service::LightBulb {               // First we create a derived
   boolean update(){            
 
     digitalWrite(ledPin,power->getNewVal());        // use a standard Arduino function to turn on/off ledPin based on the return of a call to power->getNewVal() (see below for more info)
-    WEBLOG("LED on Pin %d: %s (%s)",ledPin,power->getNewVal()?"ON":"OFF",homeSpan.getClientIP());
+    WEBLOG("LED on Pin %d: %s",ledPin,power->getNewVal()?"ON":"OFF");
    
     return(true);                                   // return true to indicate the update was successful (otherwise create code to return false if some reason you could not turn on the LED)
   

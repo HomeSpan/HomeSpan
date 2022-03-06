@@ -110,6 +110,7 @@ struct SpanWebLog{                            // optional web status/log data
     uint64_t upTime;                          // number of seconds since booting
     struct tm clockTime;                      // clock time
     char *message;                            // pointers to log entries of arbitrary size
+    String clientIP;                          // IP address of client making request (or "0.0.0.0" if not applicable)
   } *log=NULL;                                // array of log entries 
 
   void init(uint16_t maxEntries, const char *serv, const char *tz, const char *url);
@@ -221,7 +222,6 @@ struct Span{
   void setApFunction(void (*f)()){apFunction=f;}                          // sets an optional user-defined function to call when activating the WiFi Access Point  
   void enableAutoStartAP(){autoStartAPEnabled=true;}                      // enables auto start-up of Access Point when WiFi Credentials not found
   void setWifiCredentials(const char *ssid, const char *pwd);             // sets WiFi Credentials
-  const char *getClientIP(){return(lastClientIP.c_str());}                // get IP address of last client to send an encrypted request - to be used only in update() commands
 
   void setPairingCode(const char *s){sprintf(pairingCodeCommand,"S %9s",s);}    // sets the Pairing Code - use is NOT recommended.  Use 'S' from CLI instead
   void deleteStoredValues(){processSerialCommand("V");}                         // deletes stored Characteristic values from NVS  
