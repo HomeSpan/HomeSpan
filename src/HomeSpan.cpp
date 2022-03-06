@@ -257,8 +257,10 @@ void Span::poll() {
     
     if(hap[i]->client && hap[i]->client.available()){       // if connection exists and data is available
 
-      HAPClient::conNum=i;                                // set connection number
-      hap[i]->processRequest();                           // process HAP request
+      HAPClient::conNum=i;                                          // set connection number
+      homeSpan.lastClientIP=hap[i]->client.remoteIP().toString();   // store IP Address for web logging
+      hap[i]->processRequest();                                     // process HAP request
+      homeSpan.lastClientIP="0.0.0.0";                              // reset stored IP address to show "0.0.0.0" if homeSpan.getClientIP() is used in any other context
       
       if(!hap[i]->client){                                 // client disconnected by server
         LOG1("** Disconnecting Client #");
