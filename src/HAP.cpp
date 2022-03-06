@@ -1316,7 +1316,7 @@ int HAPClient::getStatusURL(){
       else
         sprintf(clocktime,"Unknown");        
       
-      response+="<tr><td>" + String(i+1) + "</td><td>" + String(uptime) + "</td><td>" + String(clocktime) + "</td><td>" + String(homeSpan.webLog.log[index].message) + "</td/tr>";
+      response+="<tr><td>" + String(i+1) + "</td><td>" + String(uptime) + "</td><td>" + String(clocktime) + "</td><td>" + String(homeSpan.webLog.log[index].message) + "</td/tr>\n";
     }
     response+="</table>\n";
   }

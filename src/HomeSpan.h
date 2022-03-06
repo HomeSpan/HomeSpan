@@ -108,12 +108,12 @@ struct SpanWebLog{                            // optional web status/log data
   struct log_t {                              // log entry type
     uint64_t upTime;                          // number of seconds since booting
     struct tm clockTime;                      // clock time
-    const char *message;                            // pointers to log entries of arbitrary size
+    char *message;                            // pointers to log entries of arbitrary size
   } *log=NULL;                                // array of log entries 
 
   void init(uint16_t maxEntries, const char *serv, const char *tz, const char *url);
   void initTime();  
-  void addLog(const char *m);
+  void addLog(const char *fmr, ...);
 };
 
 ///////////////////////////////

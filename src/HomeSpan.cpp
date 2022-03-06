@@ -1948,7 +1948,7 @@ void SpanWebLog::initTime(){
   Serial.printf("Acquiring Time from %s (%s)... ",timeServer,timeZone);
   configTzTime(timeZone,timeServer);
   struct tm timeinfo;
-  if(getLocalTime(&timeinfo)){
+  if(getLocalTime(&timeinfo,10000)){
     strftime(bootTime,sizeof(bootTime),"%c",&timeinfo);
     Serial.printf("%s\n\n",bootTime);
     homeSpan.reserveSocketConnections(1);
@@ -1960,7 +1960,7 @@ void SpanWebLog::initTime(){
 
 ///////////////////////////////
 
-void SpanWebLog::addLog(const char *m){
+void SpanWebLog::addLog(const char *fmt, ...){
   if(maxEntries==0)
     return;
 
@@ -1971,7 +1971,12 @@ void SpanWebLog::addLog(const char *m){
     getLocalTime(&log[index].clockTime,10);
   else
     log[index].clockTime.tm_year=0;
-  log[index].message=m;
 
+  free(log[index].message);  
+  va_list ap;
+  va_start(ap,fmt);
+  vasprintf(&log[index].message,fmt,ap);
+  va_end(ap);
+  
   nEntries++;
 }
