@@ -1984,4 +1984,7 @@ void SpanWebLog::addLog(const char *fmt, ...){
 
   log[index].clientIP=homeSpan.lastClientIP;  
   nEntries++;
+
+  if(homeSpan.logLevel>0)
+    Serial.printf("WEBLOG: %s\n",log[index].message);
 }
