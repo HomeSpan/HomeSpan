@@ -22,7 +22,7 @@ void setup() {
 //  homeSpan.setMaxConnections(6);
 //  homeSpan.setQRID("One1");
 //  homeSpan.enableOTA();
-  homeSpan.setSketchVersion("Test 1.3.1");
+  homeSpan.setSketchVersion("OTA Test 5");
   homeSpan.setWifiCallback(wifiEstablished);
 
   new SpanUserCommand('d',"- My Description",userCom1);

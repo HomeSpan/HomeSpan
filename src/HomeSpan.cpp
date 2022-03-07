@@ -44,6 +44,7 @@ using namespace Utils;
 HAPClient **hap;                    // HAP Client structure containing HTTP client connections, parsing routines, and state variables (global-scoped variable)
 Span homeSpan;                      // HAP Attributes database and all related control functions for this Accessory (global-scoped variable)
 HapCharacteristics hapChars;        // Instantiation of all HAP Characteristics (used to create SpanCharacteristics)
+int otaPercent;
 
 ///////////////////////////////
 //         Span              //
@@ -134,7 +135,9 @@ void Span::begin(Category catID, const char *displayName, const char *hostNameBa
   Serial.print(__DATE__);
   Serial.print(" ");
   Serial.print(__TIME__);
-
+  
+  Serial.printf("\nOTA Partition:    %s",otaEnabled?esp_ota_get_running_partition()->label:"N/A");
+    
   Serial.print("\n\nDevice Name:      ");
   Serial.print(displayName);  
   Serial.print("\n\n");
@@ -526,20 +529,21 @@ void Span::checkConnect(){
     
       ArduinoOTA
         .onStart([]() {
-          String type;
-          if (ArduinoOTA.getCommand() == U_FLASH)
-            type = "sketch";
-          else // U_SPIFFS
-            type = "filesystem";
-          Serial.println("\n*** OTA Starting:" + type);
+          Serial.printf("\n*** Current Partition: %s\n*** New Partition: %s\n*** OTA Starting..",
+            esp_ota_get_running_partition()->label,esp_ota_get_next_update_partition(NULL)->label);
+          otaPercent=-10;
           homeSpan.statusLED.start(LED_OTA_STARTED);
         })
         .onEnd([]() {
-          Serial.println("\n*** OTA Completed.  Rebooting...");
+          Serial.printf(" DONE!  Rebooting...\n");
           homeSpan.statusLED.off();
         })
         .onProgress([](unsigned int progress, unsigned int total) {
-          Serial.printf("*** Progress: %u%%\r", (progress / (total / 100)));
+          int percent=progress*100/total;
+          if(percent/10 != otaPercent/10){
+            otaPercent=percent;
+            Serial.printf("%d%%..",progress*100/total);
+          }
         })
         .onError([](ota_error_t error) {
           Serial.printf("*** OTA Error[%u]: ", error);
