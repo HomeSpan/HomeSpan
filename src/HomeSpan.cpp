@@ -44,7 +44,7 @@ using namespace Utils;
 HAPClient **hap;                    // HAP Client structure containing HTTP client connections, parsing routines, and state variables (global-scoped variable)
 Span homeSpan;                      // HAP Attributes database and all related control functions for this Accessory (global-scoped variable)
 HapCharacteristics hapChars;        // Instantiation of all HAP Characteristics (used to create SpanCharacteristics)
-int otaPercent;
+int otaPercent;                     // local variable to keep track of %progress when OTA is loading new sketch
 
 ///////////////////////////////
 //         Span              //
@@ -135,13 +135,11 @@ void Span::begin(Category catID, const char *displayName, const char *hostNameBa
   Serial.print(__DATE__);
   Serial.print(" ");
   Serial.print(__TIME__);
-  
-  Serial.printf("\nOTA Partition:    %s",otaEnabled?esp_ota_get_running_partition()->label:"N/A");
-    
+   
   Serial.print("\n\nDevice Name:      ");
   Serial.print(displayName);  
   Serial.print("\n\n");
-      
+ 
 }  // begin
 
 ///////////////////////////////
@@ -559,15 +557,21 @@ void Span::checkConnect(){
       Serial.print(displayName);
       Serial.print(" at ");
       Serial.print(WiFi.localIP());
+      esp_ota_img_states_t otaState;
+      esp_ota_get_state_partition(esp_ota_get_running_partition(),&otaState);
+//      Serial.printf("\nPartition: %s   State: %X",esp_ota_get_running_partition()->label,otaState);
       Serial.print("\nAuthorization Password: ");
       Serial.print(otaAuth?"Enabled\n\n":"DISABLED!\n\n");
     } else {
       Serial.print("\n*** WARNING: Can't start OTA Server - Partition table used to compile this sketch is not configured for OTA.\n\n");
+      otaEnabled=false;
     }
   }
+  
+  mdns_service_txt_item_set("_hap","_tcp","ota",otaEnabled?"yes":"no");                     // OTA status (info only - NOT used by HAP)
 
   if(webLog.isEnabled){
-    mdns_service_txt_item_set("_hap","_tcp","logURL",webLog.statusURL.c_str()+4);           // Web Log Enabled (info only - NOT used by HAP)
+    mdns_service_txt_item_set("_hap","_tcp","logURL",webLog.statusURL.c_str()+4);           // Web Log status (info only - NOT used by HAP)
     
     Serial.printf("Web Logging enabled at http://%s.local:%d%swith max number of entries=%d\n\n",hostName,tcpPortNum,webLog.statusURL.c_str()+4,webLog.maxEntries);
     webLog.initTime();
