@@ -44,13 +44,13 @@ void HAPClient::init(){
   nvs_open("STATE",NVS_READWRITE,&stateNVS);    // open STATE data namespace in NVS
 
   if(!nvs_get_str(otaNVS,"OTADATA",NULL,&len)){                     // if found OTA data in NVS
-    nvs_get_str(otaNVS,"OTADATA",homeSpan.otaPwd,&len);              // retrieve data  
+    nvs_get_str(otaNVS,"OTADATA",homeSpan.spanOTA.otaPwd,&len);       // retrieve data  
   } else {
     MD5Builder otaPwdHash;
     otaPwdHash.begin();
     otaPwdHash.add(DEFAULT_OTA_PASSWORD);
     otaPwdHash.calculate();
-    otaPwdHash.getChars(homeSpan.otaPwd);
+    otaPwdHash.getChars(homeSpan.spanOTA.otaPwd);
   }
 
   if(strlen(homeSpan.pairingCodeCommand)){                          // load verification setup code if provided

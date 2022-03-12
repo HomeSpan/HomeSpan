@@ -128,10 +128,11 @@ struct SpanWebLog{                            // optional web status/log data
 ///////////////////////////////
 
 struct SpanOTA{                               // manages OTA process
-  boolean enabled=false;
-  boolean auth;
+  boolean enabled=false;                      // enables OTA - default if not enabled
+  boolean auth;                               // indicates whether OTA password is required
+  char otaPwd[33];                            // MD5 Hash of OTA password, represented as a string of hexidecimal characters
   static int otaPercent;
-  static boolean safeLoad;
+  static boolean safeLoad;                    // indicates whether OTA update should reject any application update that is not another HomeSpan sketch
   void init(boolean auth, boolean safeLoad);
   static void start();
   static void end();
@@ -176,8 +177,6 @@ struct Span{
   unsigned long comModeLife=DEFAULT_COMMAND_TIMEOUT*1000;     // length of time (in milliseconds) to keep Command Mode alive before resuming normal operations
   uint16_t tcpPortNum=DEFAULT_TCP_PORT;                       // port for TCP communications between HomeKit and HomeSpan
   char qrID[5]="";                                            // Setup ID used for pairing with QR Code
-  char otaPwd[33];                                            // MD5 Hash of OTA password, represented as a string of hexidecimal characters
-  boolean otaAuth;                                            // OTA requires password when set to true
   void (*wifiCallback)()=NULL;                                // optional callback function to invoke once WiFi connectivity is established
   void (*pairCallback)(boolean isPaired)=NULL;                // optional callback function to invoke when pairing is established (true) or lost (false)
   boolean autoStartAPEnabled=false;                           // enables auto start-up of Access Point when WiFi Credentials not found

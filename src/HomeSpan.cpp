@@ -525,8 +525,8 @@ void Span::checkConnect(){
     if(esp_ota_get_running_partition()!=esp_ota_get_next_update_partition(NULL)){
       ArduinoOTA.setHostname(hostName);
 
-      if(otaAuth)
-        ArduinoOTA.setPasswordHash(otaPwd);
+      if(spanOTA.auth)
+        ArduinoOTA.setPasswordHash(spanOTA.otaPwd);
 
       ArduinoOTA.onStart(spanOTA.start).onEnd(spanOTA.end).onProgress(spanOTA.progress).onError(spanOTA.error);  
       
@@ -536,7 +536,7 @@ void Span::checkConnect(){
       Serial.print(" at ");
       Serial.print(WiFi.localIP());
       Serial.print("\nAuthorization Password: ");
-      Serial.print(otaAuth?"Enabled\n\n":"DISABLED!\n\n");
+      Serial.print(spanOTA.auth?"Enabled\n\n":"DISABLED!\n\n");
     } else {
       Serial.print("\n*** WARNING: Can't start OTA Server - Partition table used to compile this sketch is not configured for OTA.\n\n");
       spanOTA.enabled=false;
@@ -695,8 +695,8 @@ void Span::processSerialCommand(const char *c){
       otaPwdHash.begin();
       otaPwdHash.add(textPwd);
       otaPwdHash.calculate();
-      otaPwdHash.getChars(otaPwd);
-      nvs_set_str(HAPClient::otaNVS,"OTADATA",otaPwd);                 // update data
+      otaPwdHash.getChars(spanOTA.otaPwd);
+      nvs_set_str(HAPClient::otaNVS,"OTADATA",spanOTA.otaPwd);                 // update data
       nvs_commit(HAPClient::otaNVS);          
       
       Serial.print("... Accepted! Password change will take effect after next restart.\n");
@@ -1983,6 +1983,8 @@ void SpanOTA::init(boolean auth, boolean safeLoad){
   homeSpan.reserveSocketConnections(1);
 }
 
+///////////////////////////////
+
 void SpanOTA::start(){
   Serial.printf("\n*** Current Partition: %s\n*** New Partition: %s\n*** OTA Starting..",
       esp_ota_get_running_partition()->label,esp_ota_get_next_update_partition(NULL)->label);
@@ -2030,6 +2032,5 @@ void SpanOTA::error(ota_error_t err){
 
 int SpanOTA::otaPercent;
 boolean SpanOTA::safeLoad;
-
 
  
