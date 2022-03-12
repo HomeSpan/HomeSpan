@@ -29,22 +29,22 @@
 #include <nvs_flash.h>
 #include <sodium.h>
 #include <WiFi.h>
-#include <ArduinoOTA.h>
-#include <esp_ota_ops.h>
 #include <driver/ledc.h>
 #include <mbedtls/version.h>
 #include <esp_task_wdt.h>
 #include <esp_sntp.h>
+#include <esp_ota_ops.h>
 
 #include "HomeSpan.h"
 #include "HAP.h"
+
+const __attribute__((section(".rodata_custom_desc"))) SpanPartition spanPartition = {HOMESPAN_MAGIC_COOKIE};
 
 using namespace Utils;
 
 HAPClient **hap;                    // HAP Client structure containing HTTP client connections, parsing routines, and state variables (global-scoped variable)
 Span homeSpan;                      // HAP Attributes database and all related control functions for this Accessory (global-scoped variable)
 HapCharacteristics hapChars;        // Instantiation of all HAP Characteristics (used to create SpanCharacteristics)
-int otaPercent;                     // local variable to keep track of %progress when OTA is loading new sketch
 
 ///////////////////////////////
 //         Span              //
@@ -135,11 +135,35 @@ void Span::begin(Category catID, const char *displayName, const char *hostNameBa
   Serial.print(__DATE__);
   Serial.print(" ");
   Serial.print(__TIME__);
-   
+
+  esp_ota_img_states_t otaState;
+  esp_ota_get_state_partition(esp_ota_get_running_partition(),&otaState);
+  Serial.printf("\nPartition:        %s (%X)",esp_ota_get_running_partition()->label,otaState);
+  Serial.printf("\nMagic Cookie:     %s",spanPartition.magicCookie);
+
+  esp_app_desc_t appDesc;
+  esp_ota_get_partition_description(esp_ota_get_running_partition(),&appDesc);
+
+  char newDesc[256];
+  esp_partition_read(esp_ota_get_running_partition(), sizeof(esp_image_header_t) + sizeof(esp_image_segment_header_t) + sizeof(esp_app_desc_t), newDesc, sizeof(newDesc));
+  
+  Serial.println();
+  Serial.println(appDesc.version);
+  Serial.println(appDesc.project_name);
+  Serial.println(appDesc.time);
+  Serial.println(appDesc.date);
+  Serial.println(appDesc.idf_ver);
+  if(strlen(spanPartition.magicCookie))
+  {Serial.println("HI\n");
+  }
+  Serial.println(newDesc);
+
+
   Serial.print("\n\nDevice Name:      ");
   Serial.print(displayName);  
   Serial.print("\n\n");
- 
+
+  
 }  // begin
 
 ///////////////////////////////
@@ -524,42 +548,48 @@ void Span::checkConnect(){
 
       if(otaAuth)
         ArduinoOTA.setPasswordHash(otaPwd);
+
+      ArduinoOTA.onStart(spanOTA.start).onEnd(spanOTA.end).onProgress(spanOTA.progress).onError(spanOTA.error);
     
-      ArduinoOTA
-        .onStart([]() {
-          Serial.printf("\n*** Current Partition: %s\n*** New Partition: %s\n*** OTA Starting..",
-            esp_ota_get_running_partition()->label,esp_ota_get_next_update_partition(NULL)->label);
-          otaPercent=-10;
-          homeSpan.statusLED.start(LED_OTA_STARTED);
-        })
-        .onEnd([]() {
-          Serial.printf(" DONE!  Rebooting...\n");
-          homeSpan.statusLED.off();
-        })
-        .onProgress([](unsigned int progress, unsigned int total) {
-          int percent=progress*100/total;
-          if(percent/10 != otaPercent/10){
-            otaPercent=percent;
-            Serial.printf("%d%%..",progress*100/total);
-          }
-        })
-        .onError([](ota_error_t error) {
-          Serial.printf("*** OTA Error[%u]: ", error);
-          if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed\n");
-          else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed\n");
-          else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed\n");
-          else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed\n");
-          else if (error == OTA_END_ERROR) Serial.println("End Failed\n");
-        });    
+//      ArduinoOTA
+//        .onStart([]() {
+//          Serial.printf("\n*** Current Partition: %s\n*** New Partition: %s\n*** OTA Starting..",
+//            esp_ota_get_running_partition()->label,esp_ota_get_next_update_partition(NULL)->label);
+//          otaPercent=-10;
+//          homeSpan.statusLED.start(LED_OTA_STARTED);
+//        })
+//        .onEnd([]() {
+//          Serial.printf(" DONE!  Rebooting...\n");
+//          char newDesc[256];
+//          esp_partition_read(esp_ota_get_next_update_partition(NULL), sizeof(esp_image_header_t) + sizeof(esp_image_segment_header_t) + sizeof(esp_app_desc_t), newDesc, sizeof(newDesc));
+//          Serial.printf("Found: %s\n",newDesc);
+//          homeSpan.statusLED.off();
+//        })
+//        .onProgress([](unsigned int progress, unsigned int total) {
+//          int percent=progress*100/total;
+//          if(percent/10 != otaPercent/10){
+//            otaPercent=percent;
+//            Serial.printf("%d%%..",progress*100/total);
+//            if(progress*100/total>20){
+//              Serial.println("BAD!!\n");
+//              Update.abort();
+//            }
+//          }
+//        })
+//        .onError([](ota_error_t error) {
+//          Serial.printf("*** OTA Error[%u]: ", error);
+//          if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed\n");
+//          else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed\n");
+//          else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed\n");
+//          else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed\n");
+//          else if (error == OTA_END_ERROR) Serial.println("End Failed\n");
+//        });    
       
       ArduinoOTA.begin();
       Serial.print("Starting OTA Server: ");
       Serial.print(displayName);
       Serial.print(" at ");
       Serial.print(WiFi.localIP());
-      esp_ota_img_states_t otaState;
-      esp_ota_get_state_partition(esp_ota_get_running_partition(),&otaState);
-//      Serial.printf("\nPartition: %s   State: %X",esp_ota_get_running_partition()->label,otaState);
       Serial.print("\nAuthorization Password: ");
       Serial.print(otaAuth?"Enabled\n\n":"DISABLED!\n\n");
     } else {
@@ -1996,3 +2026,58 @@ void SpanWebLog::addLog(const char *fmt, ...){
   if(homeSpan.logLevel>0)
     Serial.printf("WEBLOG: %s\n",log[index].message);
 }
+
+///////////////////////////////
+//         SpanOTA           //
+///////////////////////////////
+
+void SpanOTA::start(){
+  Serial.printf("\n*** Current Partition: %s\n*** New Partition: %s\n*** OTA Starting..",
+      esp_ota_get_running_partition()->label,esp_ota_get_next_update_partition(NULL)->label);
+  otaPercent=0;
+  homeSpan.statusLED.start(LED_OTA_STARTED);
+}
+
+///////////////////////////////
+
+void SpanOTA::end(){
+  Serial.printf(" DONE!  Rebooting...\n");
+//  char newDesc[256];
+  SpanPartition newSpanPartition;
+  esp_partition_read(esp_ota_get_next_update_partition(NULL), sizeof(esp_image_header_t) + sizeof(esp_image_segment_header_t) + sizeof(esp_app_desc_t), &newSpanPartition, sizeof(newSpanPartition));
+  Serial.printf("Found: %s\n",newSpanPartition.magicCookie);
+  homeSpan.statusLED.off();
+}
+
+///////////////////////////////
+
+void SpanOTA::progress(uint32_t progress, uint32_t total){
+  int percent=progress*100/total;
+  if(percent/10 != otaPercent/10){
+    otaPercent=percent;
+    Serial.printf("%d%%..",progress*100/total);
+    if(progress*100/total>20){
+      Serial.println("BAD!!\n");
+//      Update.abort();
+    }
+  }
+}
+
+///////////////////////////////
+
+void SpanOTA::error(ota_error_t err){
+  Serial.printf("*** OTA Error[%u]: ", err);
+  if (err == OTA_AUTH_ERROR) Serial.println("Auth Failed\n");
+    else if (err == OTA_BEGIN_ERROR) Serial.println("Begin Failed\n");
+    else if (err == OTA_CONNECT_ERROR) Serial.println("Connect Failed\n");
+    else if (err == OTA_RECEIVE_ERROR) Serial.println("Receive Failed\n");
+    else if (err == OTA_END_ERROR) Serial.println("End Failed\n");
+}
+
+///////////////////////////////
+
+int SpanOTA::otaPercent;
+boolean SpanOTA::verified;
+
+
+ 

@@ -37,6 +37,7 @@
 #include <unordered_map>
 #include <vector>
 #include <nvs.h>
+#include <ArduinoOTA.h>
 
 #include "Settings.h"
 #include "Utils.h"
@@ -71,13 +72,19 @@ struct SpanRange;
 struct SpanBuf;
 struct SpanButton;
 struct SpanUserCommand;
-struct SpanWebLog;
 
 extern Span homeSpan;
 
 ///////////////////////////////
 
-struct SpanConfig {                         
+struct SpanPartition{
+  char magicCookie[32];
+  uint8_t reserved[224];
+};
+
+///////////////////////////////
+
+struct SpanConfig{                         
   int configNumber=0;                         // configuration number - broadcast as Bonjour "c#" (computed automatically)
   uint8_t hashCode[48]={0};                   // SHA-384 hash of Span Database stored as a form of unique "signature" to know when to update the config number upon changes
 };
@@ -120,6 +127,17 @@ struct SpanWebLog{                            // optional web status/log data
 
 ///////////////////////////////
 
+struct SpanOTA{                               // manages OTA process
+  static int otaPercent;
+  static boolean verified;
+  static void start();
+  static void end();
+  static void progress(uint32_t progress, uint32_t total);
+  static void error(ota_error_t err);
+};
+
+///////////////////////////////
+
 struct Span{
 
   const char *displayName;                      // display name for this device - broadcast as part of Bonjour MDNS
@@ -158,6 +176,7 @@ struct Span{
   boolean otaEnabled=false;                                   // enables Over-the-Air ("OTA") updates
   char otaPwd[33];                                            // MD5 Hash of OTA password, represented as a string of hexidecimal characters
   boolean otaAuth;                                            // OTA requires password when set to true
+  boolean otaDownload=false;                                  // set to true in NVS if last download was via OTA
   void (*wifiCallback)()=NULL;                                // optional callback function to invoke once WiFi connectivity is established
   void (*pairCallback)(boolean isPaired)=NULL;                // optional callback function to invoke when pairing is established (true) or lost (false)
   boolean autoStartAPEnabled=false;                           // enables auto start-up of Access Point when WiFi Credentials not found
@@ -169,6 +188,7 @@ struct Span{
   Network network;                                  // configures WiFi and Setup Code via either serial monitor or temporary Access Point
   SpanWebLog webLog;                                // optional web status/log
     
+  SpanOTA spanOTA;                                  // manages OTA process
   SpanConfig hapConfig;                             // track configuration changes to the HAP Accessory database; used to increment the configuration number (c#) when changes found
   vector<SpanAccessory *> Accessories;              // vector of pointers to all Accessories
   vector<SpanService *> Loops;                      // vector of pointer to all Services that have over-ridden loop() methods

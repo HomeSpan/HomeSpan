@@ -84,6 +84,11 @@
 #define     DEFAULT_WEBLOG_URL        "status"            // change with optional fourth argument in homeSpan.enableWebLog()
 
 /////////////////////////////////////////////////////
+//              OTA PARTITION INFO                 //
+
+#define     HOMESPAN_MAGIC_COOKIE     "HomeSpanMagicCookie"
+
+/////////////////////////////////////////////////////
 //              STATUS LED SETTINGS                //
 
 #define     LED_WIFI_NEEDED       300,0.5,1,2700      // slow single-blink
