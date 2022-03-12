@@ -128,8 +128,11 @@ struct SpanWebLog{                            // optional web status/log data
 ///////////////////////////////
 
 struct SpanOTA{                               // manages OTA process
+  boolean enabled=false;
+  boolean auth;
   static int otaPercent;
-  static boolean verified;
+  static boolean safeLoad;
+  void init(boolean auth, boolean safeLoad);
   static void start();
   static void end();
   static void progress(uint32_t progress, uint32_t total);
@@ -173,10 +176,8 @@ struct Span{
   unsigned long comModeLife=DEFAULT_COMMAND_TIMEOUT*1000;     // length of time (in milliseconds) to keep Command Mode alive before resuming normal operations
   uint16_t tcpPortNum=DEFAULT_TCP_PORT;                       // port for TCP communications between HomeKit and HomeSpan
   char qrID[5]="";                                            // Setup ID used for pairing with QR Code
-  boolean otaEnabled=false;                                   // enables Over-the-Air ("OTA") updates
   char otaPwd[33];                                            // MD5 Hash of OTA password, represented as a string of hexidecimal characters
   boolean otaAuth;                                            // OTA requires password when set to true
-  boolean otaDownload=false;                                  // set to true in NVS if last download was via OTA
   void (*wifiCallback)()=NULL;                                // optional callback function to invoke once WiFi connectivity is established
   void (*pairCallback)(boolean isPaired)=NULL;                // optional callback function to invoke when pairing is established (true) or lost (false)
   boolean autoStartAPEnabled=false;                           // enables auto start-up of Access Point when WiFi Credentials not found
@@ -246,7 +247,7 @@ struct Span{
   void setPairingCode(const char *s){sprintf(pairingCodeCommand,"S %9s",s);}    // sets the Pairing Code - use is NOT recommended.  Use 'S' from CLI instead
   void deleteStoredValues(){processSerialCommand("V");}                         // deletes stored Characteristic values from NVS  
 
-  void enableOTA(boolean auth=true){otaEnabled=true;otaAuth=auth;reserveSocketConnections(1);}                        // enables Over-the-Air updates, with (auth=true) or without (auth=false) authorization password  
+  void enableOTA(boolean auth=true, boolean safeLoad=true){spanOTA.init(auth, safeLoad);}   // enables Over-the-Air updates, with (auth=true) or without (auth=false) authorization password  
 
   void enableWebLog(uint16_t maxEntries=0, const char *serv=NULL, const char *tz="UTC", const char *url=DEFAULT_WEBLOG_URL){     // enable Web Logging
     webLog.init(maxEntries, serv, tz, url);

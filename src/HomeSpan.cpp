@@ -139,31 +139,11 @@ void Span::begin(Category catID, const char *displayName, const char *hostNameBa
   esp_ota_img_states_t otaState;
   esp_ota_get_state_partition(esp_ota_get_running_partition(),&otaState);
   Serial.printf("\nPartition:        %s (%X)",esp_ota_get_running_partition()->label,otaState);
-  Serial.printf("\nMagic Cookie:     %s",spanPartition.magicCookie);
-
-  esp_app_desc_t appDesc;
-  esp_ota_get_partition_description(esp_ota_get_running_partition(),&appDesc);
-
-  char newDesc[256];
-  esp_partition_read(esp_ota_get_running_partition(), sizeof(esp_image_header_t) + sizeof(esp_image_segment_header_t) + sizeof(esp_app_desc_t), newDesc, sizeof(newDesc));
-  
-  Serial.println();
-  Serial.println(appDesc.version);
-  Serial.println(appDesc.project_name);
-  Serial.println(appDesc.time);
-  Serial.println(appDesc.date);
-  Serial.println(appDesc.idf_ver);
-  if(strlen(spanPartition.magicCookie))
-  {Serial.println("HI\n");
-  }
-  Serial.println(newDesc);
-
 
   Serial.print("\n\nDevice Name:      ");
   Serial.print(displayName);  
   Serial.print("\n\n");
 
-  
 }  // begin
 
 ///////////////////////////////
@@ -305,7 +285,7 @@ void Span::poll() {
   HAPClient::checkNotifications();  
   HAPClient::checkTimedWrites();
 
-  if(otaEnabled)
+  if(spanOTA.enabled)
     ArduinoOTA.handle();
 
   if(controlButton.primed()){
@@ -525,11 +505,10 @@ void Span::checkConnect(){
   else
     mdns_service_txt_item_set("_hap","_tcp","sf","0");           // set Status Flag = 0
 
-  mdns_service_txt_item_set("_hap","_tcp","hspn",HOMESPAN_VERSION);           // HomeSpan Version Number (info only - NOT used by HAP)
-  mdns_service_txt_item_set("_hap","_tcp","ard-esp32",ARDUINO_ESP_VERSION);   // Arduino-ESP32 Version Number (info only - NOT used by HAP)
-  mdns_service_txt_item_set("_hap","_tcp","board",ARDUINO_VARIANT);           // Board Name (info only - NOT used by HAP)
-  mdns_service_txt_item_set("_hap","_tcp","sketch",sketchVersion);            // Sketch Version (info only - NOT used by HAP)
-  mdns_service_txt_item_set("_hap","_tcp","ota",otaEnabled?"yes":"no");       // OTA Enabled (info only - NOT used by HAP)
+  mdns_service_txt_item_set("_hap","_tcp","hspn",HOMESPAN_VERSION);             // HomeSpan Version Number (info only - NOT used by HAP)
+  mdns_service_txt_item_set("_hap","_tcp","ard-esp32",ARDUINO_ESP_VERSION);     // Arduino-ESP32 Version Number (info only - NOT used by HAP)
+  mdns_service_txt_item_set("_hap","_tcp","board",ARDUINO_VARIANT);             // Board Name (info only - NOT used by HAP)
+  mdns_service_txt_item_set("_hap","_tcp","sketch",sketchVersion);              // Sketch Version (info only - NOT used by HAP)
 
   uint8_t hashInput[22];
   uint8_t hashOutput[64];
@@ -542,48 +521,14 @@ void Span::checkConnect(){
   mbedtls_base64_encode((uint8_t *)setupHash,9,&len,hashOutput,4);    // Step 3: Encode the first 4 bytes of hashOutput in base64, which results in an 8-character, null-terminated, setupHash
   mdns_service_txt_item_set("_hap","_tcp","sh",setupHash);            // Step 4: broadcast the resulting Setup Hash
 
-  if(otaEnabled){
+  if(spanOTA.enabled){
     if(esp_ota_get_running_partition()!=esp_ota_get_next_update_partition(NULL)){
       ArduinoOTA.setHostname(hostName);
 
       if(otaAuth)
         ArduinoOTA.setPasswordHash(otaPwd);
 
-      ArduinoOTA.onStart(spanOTA.start).onEnd(spanOTA.end).onProgress(spanOTA.progress).onError(spanOTA.error);
-    
-//      ArduinoOTA
-//        .onStart([]() {
-//          Serial.printf("\n*** Current Partition: %s\n*** New Partition: %s\n*** OTA Starting..",
-//            esp_ota_get_running_partition()->label,esp_ota_get_next_update_partition(NULL)->label);
-//          otaPercent=-10;
-//          homeSpan.statusLED.start(LED_OTA_STARTED);
-//        })
-//        .onEnd([]() {
-//          Serial.printf(" DONE!  Rebooting...\n");
-//          char newDesc[256];
-//          esp_partition_read(esp_ota_get_next_update_partition(NULL), sizeof(esp_image_header_t) + sizeof(esp_image_segment_header_t) + sizeof(esp_app_desc_t), newDesc, sizeof(newDesc));
-//          Serial.printf("Found: %s\n",newDesc);
-//          homeSpan.statusLED.off();
-//        })
-//        .onProgress([](unsigned int progress, unsigned int total) {
-//          int percent=progress*100/total;
-//          if(percent/10 != otaPercent/10){
-//            otaPercent=percent;
-//            Serial.printf("%d%%..",progress*100/total);
-//            if(progress*100/total>20){
-//              Serial.println("BAD!!\n");
-//              Update.abort();
-//            }
-//          }
-//        })
-//        .onError([](ota_error_t error) {
-//          Serial.printf("*** OTA Error[%u]: ", error);
-//          if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed\n");
-//          else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed\n");
-//          else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed\n");
-//          else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed\n");
-//          else if (error == OTA_END_ERROR) Serial.println("End Failed\n");
-//        });    
+      ArduinoOTA.onStart(spanOTA.start).onEnd(spanOTA.end).onProgress(spanOTA.progress).onError(spanOTA.error);  
       
       ArduinoOTA.begin();
       Serial.print("Starting OTA Server: ");
@@ -594,11 +539,11 @@ void Span::checkConnect(){
       Serial.print(otaAuth?"Enabled\n\n":"DISABLED!\n\n");
     } else {
       Serial.print("\n*** WARNING: Can't start OTA Server - Partition table used to compile this sketch is not configured for OTA.\n\n");
-      otaEnabled=false;
+      spanOTA.enabled=false;
     }
   }
   
-  mdns_service_txt_item_set("_hap","_tcp","ota",otaEnabled?"yes":"no");                     // OTA status (info only - NOT used by HAP)
+  mdns_service_txt_item_set("_hap","_tcp","ota",spanOTA.enabled?"yes":"no");                     // OTA status (info only - NOT used by HAP)
 
   if(webLog.isEnabled){
     mdns_service_txt_item_set("_hap","_tcp","logURL",webLog.statusURL.c_str()+4);           // Web Log status (info only - NOT used by HAP)
@@ -755,7 +700,7 @@ void Span::processSerialCommand(const char *c){
       nvs_commit(HAPClient::otaNVS);          
       
       Serial.print("... Accepted! Password change will take effect after next restart.\n");
-      if(!otaEnabled)
+      if(!spanOTA.enabled)
         Serial.print("... Note: OTA has not been enabled in this sketch.\n");
       Serial.print("\n");
     }
@@ -2031,6 +1976,13 @@ void SpanWebLog::addLog(const char *fmt, ...){
 //         SpanOTA           //
 ///////////////////////////////
 
+void SpanOTA::init(boolean auth, boolean safeLoad){
+  enabled=true;
+  safeLoad=safeLoad;
+  this->auth=auth;
+  homeSpan.reserveSocketConnections(1);
+}
+
 void SpanOTA::start(){
   Serial.printf("\n*** Current Partition: %s\n*** New Partition: %s\n*** OTA Starting..",
       esp_ota_get_running_partition()->label,esp_ota_get_next_update_partition(NULL)->label);
@@ -2042,10 +1994,6 @@ void SpanOTA::start(){
 
 void SpanOTA::end(){
   Serial.printf(" DONE!  Rebooting...\n");
-//  char newDesc[256];
-  SpanPartition newSpanPartition;
-  esp_partition_read(esp_ota_get_next_update_partition(NULL), sizeof(esp_image_header_t) + sizeof(esp_image_segment_header_t) + sizeof(esp_app_desc_t), &newSpanPartition, sizeof(newSpanPartition));
-  Serial.printf("Found: %s\n",newSpanPartition.magicCookie);
   homeSpan.statusLED.off();
 }
 
@@ -2056,10 +2004,14 @@ void SpanOTA::progress(uint32_t progress, uint32_t total){
   if(percent/10 != otaPercent/10){
     otaPercent=percent;
     Serial.printf("%d%%..",progress*100/total);
-    if(progress*100/total>20){
-      Serial.println("BAD!!\n");
-//      Update.abort();
-    }
+  }
+
+  if(safeLoad && progress==total){
+    SpanPartition newSpanPartition;   
+    esp_partition_read(esp_ota_get_next_update_partition(NULL), sizeof(esp_image_header_t) + sizeof(esp_image_segment_header_t) + sizeof(esp_app_desc_t), &newSpanPartition, sizeof(newSpanPartition));
+    Serial.printf("Checking for HomeSpan Magic Cookie: %s..",newSpanPartition.magicCookie);
+    if(strcmp(newSpanPartition.magicCookie,spanPartition.magicCookie))
+      Update.abort();
   }
 }
 
@@ -2077,7 +2029,7 @@ void SpanOTA::error(ota_error_t err){
 ///////////////////////////////
 
 int SpanOTA::otaPercent;
-boolean SpanOTA::verified;
+boolean SpanOTA::safeLoad;
 
 
  

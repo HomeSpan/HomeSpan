@@ -86,7 +86,7 @@
 /////////////////////////////////////////////////////
 //              OTA PARTITION INFO                 //
 
-#define     HOMESPAN_MAGIC_COOKIE     "HomeSpanMagicCookie"
+#define     HOMESPAN_MAGIC_COOKIE     "HomeSpanMagicCookie##2022"
 
 /////////////////////////////////////////////////////
 //              STATUS LED SETTINGS                //
