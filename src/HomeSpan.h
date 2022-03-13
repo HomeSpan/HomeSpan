@@ -128,6 +128,12 @@ struct SpanWebLog{                            // optional web status/log data
 ///////////////////////////////
 
 struct SpanOTA{                               // manages OTA process
+  enum {                                      // keep track of whether OTA need to be required based on prior download
+    OTA_OPTIONAL,
+    OTA_MAINTAIN,
+    OTA_REQUIRED
+  };
+  
   boolean enabled=false;                      // enables OTA - default if not enabled
   boolean auth;                               // indicates whether OTA password is required
   char otaPwd[33];                            // MD5 Hash of OTA password, represented as a string of hexidecimal characters
@@ -160,8 +166,10 @@ struct Span{
   const char *sketchVersion="n/a";              // version of the sketch
   nvs_handle charNVS;                           // handle for non-volatile-storage of Characteristics data
   nvs_handle wifiNVS=0;                         // handle for non-volatile-storage of WiFi data
+  nvs_handle otaNVS;                            // handle for non-volatile storaget of OTA data
   char pairingCodeCommand[12]="";               // user-specified Pairing Code - only needed if Pairing Setup Code is specified in sketch using setPairingCode()
   String lastClientIP="0.0.0.0";                // IP address of last client accessing device through encrypted channel
+  boolean newCode;                              // flag indicating new application code has been loaded (based on keeping track of app SHA256)
   
   boolean connected=false;                      // WiFi connection status
   unsigned long waitTime=60000;                 // time to wait (in milliseconds) between WiFi connection attempts

@@ -40,11 +40,9 @@ void HAPClient::init(){
 
   nvs_open("SRP",NVS_READWRITE,&srpNVS);        // open SRP data namespace in NVS 
   nvs_open("HAP",NVS_READWRITE,&hapNVS);        // open HAP data namespace in NVS
-  nvs_open("OTA",NVS_READWRITE,&otaNVS);        // open OTA data namespace in NVS
-  nvs_open("STATE",NVS_READWRITE,&stateNVS);    // open STATE data namespace in NVS
 
-  if(!nvs_get_str(otaNVS,"OTADATA",NULL,&len)){                     // if found OTA data in NVS
-    nvs_get_str(otaNVS,"OTADATA",homeSpan.spanOTA.otaPwd,&len);       // retrieve data  
+  if(!nvs_get_str(homeSpan.otaNVS,"OTADATA",NULL,&len)){                     // if found OTA data in NVS
+    nvs_get_str(homeSpan.otaNVS,"OTADATA",homeSpan.spanOTA.otaPwd,&len);       // retrieve data  
   } else {
     MD5Builder otaPwdHash;
     otaPwdHash.begin();
@@ -1750,8 +1748,6 @@ void Nonce::inc(){
 TLV<kTLVType,10> HAPClient::tlv8;
 nvs_handle HAPClient::hapNVS;
 nvs_handle HAPClient::srpNVS;
-nvs_handle HAPClient::otaNVS;
-nvs_handle HAPClient::stateNVS;
 uint8_t HAPClient::httpBuf[MAX_HTTP+1];                 
 HKDF HAPClient::hkdf;                                   
 pairState HAPClient::pairStatus;                        

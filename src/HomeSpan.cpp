@@ -74,6 +74,7 @@ void Span::begin(Category catID, const char *displayName, const char *hostNameBa
   nvs_flash_init();                             // initialize non-volatile-storage partition in flash  
   nvs_open("CHAR",NVS_READWRITE,&charNVS);      // open Characteristic data namespace in NVS
   nvs_open("WIFI",NVS_READWRITE,&wifiNVS);      // open WIFI data namespace in NVS
+  nvs_open("OTA",NVS_READWRITE,&otaNVS);        // open OTA data namespace in NVS
 
   size_t len;
 
@@ -136,9 +137,18 @@ void Span::begin(Category catID, const char *displayName, const char *hostNameBa
   Serial.print(" ");
   Serial.print(__TIME__);
 
+  uint8_t prevSHA[32]={0};                                            
+  uint8_t sha256[32];
+  if(!nvs_get_blob(otaNVS,"SHA256",NULL,&len))                        // get previous app SHA256 (if it exists)
+    nvs_get_blob(otaNVS,"SHA256",prevSHA,&len);                       
+  esp_partition_get_sha256(esp_ota_get_running_partition(),sha256);   // get current app SHA256
+  newCode=(memcmp(prevSHA,sha256,32)!=0);                             // set newCode flag based on comparison of previous and current SHA256 values
+  nvs_set_blob(otaNVS,"SHA256",sha256,sizeof(sha256));                // save current SHA256
+  nvs_commit(otaNVS);
+
   esp_ota_img_states_t otaState;
   esp_ota_get_state_partition(esp_ota_get_running_partition(),&otaState);
-  Serial.printf("\nPartition:        %s (%X)",esp_ota_get_running_partition()->label,otaState);
+  Serial.printf("\nPartition:        %s (%s-0x%0X)",esp_ota_get_running_partition()->label,newCode?"NEW":"REBOOTED",otaState);
 
   Serial.print("\n\nDevice Name:      ");
   Serial.print(displayName);  
@@ -521,6 +531,45 @@ void Span::checkConnect(){
   mbedtls_base64_encode((uint8_t *)setupHash,9,&len,hashOutput,4);    // Step 3: Encode the first 4 bytes of hashOutput in base64, which results in an 8-character, null-terminated, setupHash
   mdns_service_txt_item_set("_hap","_tcp","sh",setupHash);            // Step 4: broadcast the resulting Setup Hash
 
+  int otaStatus=SpanOTA::OTA_OPTIONAL;
+  nvs_get_i32(otaNVS,"OTASTATUS",&otaStatus);
+
+  Serial.printf("*** OTA STATUS: %d ***\n\r",otaStatus);
+
+  if(otaStatus==SpanOTA::OTA_REQUIRED){                     // most recent reboot was a result of new code being downloaded via OTA
+    spanOTA.enabled=true;                                   // must enable OTA even if it is not set
+  Serial.printf("AUTO-ENABLING OTA-1\n\r");
+    nvs_set_i32(otaNVS,"OTASTATUS",SpanOTA::OTA_MAINTAIN);     // reset flag to OTA_MAINTAIN    
+    
+  } // OTA_REQUIRED
+  
+  else if(otaStatus==SpanOTA::OTA_MAINTAIN){                // most recent reboot was NOT a direct result of new code being downloaded via OTA     
+    if(!newCode){                                             // codebase has not changed - this is just a reboot of code previously downloaded via OTA
+      spanOTA.enabled=true;                                   // must enable OTA even if it is not set     
+  Serial.printf("AUTO-ENABLING OTA-2\n\r");
+    } else {                                                // codebase has changed, but was NOT a result of an OTA update (must be serial download)
+  Serial.printf("SKIPPING OTA\n\r");
+      nvs_set_i32(otaNVS,"OTASTATUS",SpanOTA::OTA_OPTIONAL);     // reset flag to OTA_OPTIONAL             
+    } 
+  } // OTA_MAINTAIN
+  
+  nvs_commit(otaNVS);
+
+  Serial.printf("\n\rRESET REASON=%d\n\r",esp_reset_reason());
+    
+//  for(int i=0;i<32;i++)
+//    Serial.printf("%02X",prevSHA[i]);
+//  Serial.printf("\n");
+//
+//  for(int i=0;i<32;i++)
+//    Serial.printf("%02X",sha256[i]);
+//  Serial.printf("\n");
+//
+//  if(memcmp(prevSHA,sha256,32))
+//    Serial.printf("SHAs are DIFFERENT\n");
+//  else
+//    Serial.printf("SHAs do MATCH\n");
+
   if(spanOTA.enabled){
     if(esp_ota_get_running_partition()!=esp_ota_get_next_update_partition(NULL)){
       ArduinoOTA.setHostname(hostName);
@@ -696,8 +745,8 @@ void Span::processSerialCommand(const char *c){
       otaPwdHash.add(textPwd);
       otaPwdHash.calculate();
       otaPwdHash.getChars(spanOTA.otaPwd);
-      nvs_set_str(HAPClient::otaNVS,"OTADATA",spanOTA.otaPwd);                 // update data
-      nvs_commit(HAPClient::otaNVS);          
+      nvs_set_str(otaNVS,"OTADATA",spanOTA.otaPwd);                 // update data
+      nvs_commit(otaNVS);          
       
       Serial.print("... Accepted! Password change will take effect after next restart.\n");
       if(!spanOTA.enabled)
@@ -865,7 +914,9 @@ void Span::processSerialCommand(const char *c){
       nvs_erase_all(wifiNVS);
       nvs_commit(wifiNVS);   
       nvs_erase_all(charNVS);
-      nvs_commit(charNVS);   
+      nvs_commit(charNVS);
+      nvs_erase_all(otaNVS);
+      nvs_commit(otaNVS);       
       Serial.print("\n*** FACTORY RESET!  Restarting...\n\n");
       delay(1000);
       ESP.restart();
@@ -1995,8 +2046,11 @@ void SpanOTA::start(){
 ///////////////////////////////
 
 void SpanOTA::end(){
+  nvs_set_i32(homeSpan.otaNVS,"OTASTATUS",OTA_REQUIRED);
+  nvs_commit(homeSpan.otaNVS);
   Serial.printf(" DONE!  Rebooting...\n");
   homeSpan.statusLED.off();
+  delay(100);                       // make sure commit it finished before reboot
 }
 
 ///////////////////////////////
