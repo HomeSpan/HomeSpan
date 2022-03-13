@@ -531,44 +531,35 @@ void Span::checkConnect(){
   mbedtls_base64_encode((uint8_t *)setupHash,9,&len,hashOutput,4);    // Step 3: Encode the first 4 bytes of hashOutput in base64, which results in an 8-character, null-terminated, setupHash
   mdns_service_txt_item_set("_hap","_tcp","sh",setupHash);            // Step 4: broadcast the resulting Setup Hash
 
-  int otaStatus=SpanOTA::OTA_OPTIONAL;
-  nvs_get_i32(otaNVS,"OTASTATUS",&otaStatus);
+  boolean autoEnable=false;
+  uint32_t otaStatus=0;
+  nvs_get_u32(otaNVS,"OTASTATUS",&otaStatus);
 
   Serial.printf("*** OTA STATUS: %d ***\n\r",otaStatus);
 
-  if(otaStatus==SpanOTA::OTA_REQUIRED){                     // most recent reboot was a result of new code being downloaded via OTA
-    spanOTA.enabled=true;                                   // must enable OTA even if it is not set
-  Serial.printf("AUTO-ENABLING OTA-1\n\r");
-    nvs_set_i32(otaNVS,"OTASTATUS",SpanOTA::OTA_MAINTAIN);     // reset flag to OTA_MAINTAIN    
-    
-  } // OTA_REQUIRED
-  
-  else if(otaStatus==SpanOTA::OTA_MAINTAIN){                // most recent reboot was NOT a direct result of new code being downloaded via OTA     
-    if(!newCode){                                             // codebase has not changed - this is just a reboot of code previously downloaded via OTA
-      spanOTA.enabled=true;                                   // must enable OTA even if it is not set     
-  Serial.printf("AUTO-ENABLING OTA-2\n\r");
-    } else {                                                // codebase has changed, but was NOT a result of an OTA update (must be serial download)
-  Serial.printf("SKIPPING OTA\n\r");
-      nvs_set_i32(otaNVS,"OTASTATUS",SpanOTA::OTA_OPTIONAL);     // reset flag to OTA_OPTIONAL             
-    } 
-  } // OTA_MAINTAIN
-  
+  if(otaStatus&SpanOTA::OTA_DOWNLOADED ){                         // if OTA was used for last download
+    otaStatus^=SpanOTA::OTA_DOWNLOADED;                             // turn off OTA_DOWNLOADED flag    
+    if(!spanOTA.enabled && (otaStatus&SpanOTA::OTA_SAFEMODE))       // if OTA is not enabled, but it was last enabled in safe mode
+      autoEnable=true;                                                // activate auto-enable
+ 
+  } else if(otaStatus&SpanOTA::OTA_BOOTED ){                      // if OTA was present in last boot, but not used for download
+    if(!newCode){                                                   // if code has NOT changed
+      if(!spanOTA.enabled && (otaStatus&SpanOTA::OTA_SAFEMODE))       // if OTA is not enabled, but it was last enabled in safe mode
+        autoEnable=true;                                                // activate auto-enable
+    } else {                                                        // code has changed - do not activate auto-enable
+      otaStatus^=SpanOTA::OTA_BOOTED;                             // turn off OTA_DOWNLOADED flag    
+    }
+  }
+      
+  nvs_set_u32(otaNVS,"OTASTATUS",otaStatus);
   nvs_commit(otaNVS);
 
-  Serial.printf("\n\rRESET REASON=%d\n\r",esp_reset_reason());
-    
-//  for(int i=0;i<32;i++)
-//    Serial.printf("%02X",prevSHA[i]);
-//  Serial.printf("\n");
-//
-//  for(int i=0;i<32;i++)
-//    Serial.printf("%02X",sha256[i]);
-//  Serial.printf("\n");
-//
-//  if(memcmp(prevSHA,sha256,32))
-//    Serial.printf("SHAs are DIFFERENT\n");
-//  else
-//    Serial.printf("SHAs do MATCH\n");
+  if(autoEnable){
+    spanOTA.enabled=true;
+    spanOTA.auth=otaStatus&SpanOTA::OTA_AUTHORIZED;
+    spanOTA.safeLoad=true;
+    Serial.printf("OTA Safe Mode: OTA Auto-Enabled\n");
+  }
 
   if(spanOTA.enabled){
     if(esp_ota_get_running_partition()!=esp_ota_get_next_update_partition(NULL)){
@@ -580,6 +571,7 @@ void Span::checkConnect(){
       ArduinoOTA.onStart(spanOTA.start).onEnd(spanOTA.end).onProgress(spanOTA.progress).onError(spanOTA.error);  
       
       ArduinoOTA.begin();
+      reserveSocketConnections(1);
       Serial.print("Starting OTA Server: ");
       Serial.print(displayName);
       Serial.print(" at ");
@@ -2027,11 +2019,10 @@ void SpanWebLog::addLog(const char *fmt, ...){
 //         SpanOTA           //
 ///////////////////////////////
 
-void SpanOTA::init(boolean auth, boolean safeLoad){
+void SpanOTA::init(boolean _auth, boolean _safeLoad){
   enabled=true;
-  safeLoad=safeLoad;
-  this->auth=auth;
-  homeSpan.reserveSocketConnections(1);
+  safeLoad=_safeLoad;
+  auth=_auth;
 }
 
 ///////////////////////////////
@@ -2046,7 +2037,7 @@ void SpanOTA::start(){
 ///////////////////////////////
 
 void SpanOTA::end(){
-  nvs_set_i32(homeSpan.otaNVS,"OTASTATUS",OTA_REQUIRED);
+  nvs_set_u32(homeSpan.otaNVS, "OTASTATUS", OTA_DOWNLOADED | OTA_BOOTED | (auth?OTA_AUTHORIZED:0) | (safeLoad?OTA_SAFEMODE:0));
   nvs_commit(homeSpan.otaNVS);
   Serial.printf(" DONE!  Rebooting...\n");
   homeSpan.statusLED.off();
@@ -2086,5 +2077,7 @@ void SpanOTA::error(ota_error_t err){
 
 int SpanOTA::otaPercent;
 boolean SpanOTA::safeLoad;
+boolean SpanOTA::enabled=false;
+boolean SpanOTA::auth;
 
  

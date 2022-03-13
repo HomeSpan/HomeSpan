@@ -128,17 +128,20 @@ struct SpanWebLog{                            // optional web status/log data
 ///////////////////////////////
 
 struct SpanOTA{                               // manages OTA process
-  enum {                                      // keep track of whether OTA need to be required based on prior download
-    OTA_OPTIONAL,
-    OTA_MAINTAIN,
-    OTA_REQUIRED
+  enum {                                      // flag to keep track of OTA status between reboots
+    OTA_BOOTED=1,
+    OTA_DOWNLOADED=2,
+    OTA_AUTHORIZED=4,
+    OTA_SAFEMODE=8
   };
   
-  boolean enabled=false;                      // enables OTA - default if not enabled
-  boolean auth;                               // indicates whether OTA password is required
   char otaPwd[33];                            // MD5 Hash of OTA password, represented as a string of hexidecimal characters
+
+  static boolean enabled;                     // enables OTA - default if not enabled
+  static boolean auth;                        // indicates whether OTA password is required
   static int otaPercent;
   static boolean safeLoad;                    // indicates whether OTA update should reject any application update that is not another HomeSpan sketch
+  
   void init(boolean auth, boolean safeLoad);
   static void start();
   static void end();
