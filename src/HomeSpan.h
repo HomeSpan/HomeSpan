@@ -128,12 +128,6 @@ struct SpanWebLog{                            // optional web status/log data
 ///////////////////////////////
 
 struct SpanOTA{                               // manages OTA process
-  enum {                                      // flag to keep track of OTA status between reboots
-    OTA_BOOTED=1,
-    OTA_DOWNLOADED=2,
-    OTA_AUTHORIZED=4,
-    OTA_SAFEMODE=8
-  };
   
   char otaPwd[33];                            // MD5 Hash of OTA password, represented as a string of hexidecimal characters
 

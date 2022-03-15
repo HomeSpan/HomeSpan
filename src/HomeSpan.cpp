@@ -137,18 +137,7 @@ void Span::begin(Category catID, const char *displayName, const char *hostNameBa
   Serial.print(" ");
   Serial.print(__TIME__);
 
-  uint8_t prevSHA[32]={0};                                            
-  uint8_t sha256[32];
-  if(!nvs_get_blob(otaNVS,"SHA256",NULL,&len))                        // get previous app SHA256 (if it exists)
-    nvs_get_blob(otaNVS,"SHA256",prevSHA,&len);                       
-  esp_partition_get_sha256(esp_ota_get_running_partition(),sha256);   // get current app SHA256
-  newCode=(memcmp(prevSHA,sha256,32)!=0);                             // set newCode flag based on comparison of previous and current SHA256 values
-  nvs_set_blob(otaNVS,"SHA256",sha256,sizeof(sha256));                // save current SHA256
-  nvs_commit(otaNVS);
-
-  esp_ota_img_states_t otaState;
-  esp_ota_get_state_partition(esp_ota_get_running_partition(),&otaState);
-  Serial.printf("\nPartition:        %s (%s-0x%0X)",esp_ota_get_running_partition()->label,newCode?"NEW":"REBOOTED",otaState);
+  Serial.printf("\nPartition:        %s",esp_ota_get_running_partition()->label);
 
   Serial.print("\n\nDevice Name:      ");
   Serial.print(displayName);  
@@ -540,36 +529,6 @@ void Span::checkConnect(){
   mbedtls_sha512_ret(hashInput,21,hashOutput,0);                      // Step 2: Perform SHA-512 hash on combined 21-byte hashInput to create 64-byte hashOutput
   mbedtls_base64_encode((uint8_t *)setupHash,9,&len,hashOutput,4);    // Step 3: Encode the first 4 bytes of hashOutput in base64, which results in an 8-character, null-terminated, setupHash
   mdns_service_txt_item_set("_hap","_tcp","sh",setupHash);            // Step 4: broadcast the resulting Setup Hash
-
-//  boolean autoEnable=false;
-//  uint32_t otaStatus=0;
-//  nvs_get_u32(otaNVS,"OTASTATUS",&otaStatus);
-//
-//  Serial.printf("*** OTA STATUS: %d ***\n\r",otaStatus);
-//
-//  if(otaStatus&SpanOTA::OTA_DOWNLOADED ){                         // if OTA was used for last download
-//    otaStatus^=SpanOTA::OTA_DOWNLOADED;                             // turn off OTA_DOWNLOADED flag    
-//    if(!spanOTA.enabled && (otaStatus&SpanOTA::OTA_SAFEMODE))       // if OTA is not enabled, but it was last enabled in safe mode
-//      autoEnable=true;                                                // activate auto-enable
-// 
-//  } else if(otaStatus&SpanOTA::OTA_BOOTED ){                      // if OTA was present in last boot, but not used for download
-//    if(!newCode){                                                   // if code has NOT changed
-//      if(!spanOTA.enabled && (otaStatus&SpanOTA::OTA_SAFEMODE))       // if OTA is not enabled, but it was last enabled in safe mode
-//        autoEnable=true;                                                // activate auto-enable
-//    } else {                                                        // code has changed - do not activate auto-enable
-//      otaStatus^=SpanOTA::OTA_BOOTED;                             // turn off OTA_DOWNLOADED flag    
-//    }
-//  }
-//      
-//  nvs_set_u32(otaNVS,"OTASTATUS",otaStatus);
-//  nvs_commit(otaNVS);
-//
-//  if(autoEnable){
-//    spanOTA.enabled=true;
-//    spanOTA.auth=otaStatus&SpanOTA::OTA_AUTHORIZED;
-//    spanOTA.safeLoad=true;
-//    Serial.printf("OTA Safe Mode: OTA Auto-Enabled\n");
-//  }
 
   if(spanOTA.enabled){
     if(esp_ota_get_running_partition()!=esp_ota_get_next_update_partition(NULL)){
@@ -2047,7 +2006,6 @@ void SpanOTA::start(){
 ///////////////////////////////
 
 void SpanOTA::end(){
-//  nvs_set_u32(homeSpan.otaNVS, "OTASTATUS", OTA_DOWNLOADED | OTA_BOOTED | (auth?OTA_AUTHORIZED:0) | (safeLoad?OTA_SAFEMODE:0));
   nvs_set_u8(homeSpan.otaNVS,"OTA_REQUIRED",safeLoad);
   nvs_commit(homeSpan.otaNVS);
   Serial.printf(" DONE!  Rebooting...\n");
