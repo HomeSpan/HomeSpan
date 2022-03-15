@@ -154,6 +154,16 @@ void Span::begin(Category catID, const char *displayName, const char *hostNameBa
   Serial.print(displayName);  
   Serial.print("\n\n");
 
+  uint8_t otaRequired=0;
+  nvs_get_u8(otaNVS,"OTA_REQUIRED",&otaRequired);
+  nvs_set_u8(otaNVS,"OTA_REQUIRED",0);
+  nvs_commit(otaNVS);
+  if(otaRequired && !spanOTA.enabled){
+    Serial.printf("\n\n*** OTA SAFE MODE ALERT:  OTA REQUIRED BUT NOT ENABLED.  ROLLING BACK TO PREVIOUS APPLICATION ***\n\n");
+    delay(100);
+    esp_ota_mark_app_invalid_rollback_and_reboot();
+  }
+
 }  // begin
 
 ///////////////////////////////
@@ -531,35 +541,35 @@ void Span::checkConnect(){
   mbedtls_base64_encode((uint8_t *)setupHash,9,&len,hashOutput,4);    // Step 3: Encode the first 4 bytes of hashOutput in base64, which results in an 8-character, null-terminated, setupHash
   mdns_service_txt_item_set("_hap","_tcp","sh",setupHash);            // Step 4: broadcast the resulting Setup Hash
 
-  boolean autoEnable=false;
-  uint32_t otaStatus=0;
-  nvs_get_u32(otaNVS,"OTASTATUS",&otaStatus);
-
-  Serial.printf("*** OTA STATUS: %d ***\n\r",otaStatus);
-
-  if(otaStatus&SpanOTA::OTA_DOWNLOADED ){                         // if OTA was used for last download
-    otaStatus^=SpanOTA::OTA_DOWNLOADED;                             // turn off OTA_DOWNLOADED flag    
-    if(!spanOTA.enabled && (otaStatus&SpanOTA::OTA_SAFEMODE))       // if OTA is not enabled, but it was last enabled in safe mode
-      autoEnable=true;                                                // activate auto-enable
- 
-  } else if(otaStatus&SpanOTA::OTA_BOOTED ){                      // if OTA was present in last boot, but not used for download
-    if(!newCode){                                                   // if code has NOT changed
-      if(!spanOTA.enabled && (otaStatus&SpanOTA::OTA_SAFEMODE))       // if OTA is not enabled, but it was last enabled in safe mode
-        autoEnable=true;                                                // activate auto-enable
-    } else {                                                        // code has changed - do not activate auto-enable
-      otaStatus^=SpanOTA::OTA_BOOTED;                             // turn off OTA_DOWNLOADED flag    
-    }
-  }
-      
-  nvs_set_u32(otaNVS,"OTASTATUS",otaStatus);
-  nvs_commit(otaNVS);
-
-  if(autoEnable){
-    spanOTA.enabled=true;
-    spanOTA.auth=otaStatus&SpanOTA::OTA_AUTHORIZED;
-    spanOTA.safeLoad=true;
-    Serial.printf("OTA Safe Mode: OTA Auto-Enabled\n");
-  }
+//  boolean autoEnable=false;
+//  uint32_t otaStatus=0;
+//  nvs_get_u32(otaNVS,"OTASTATUS",&otaStatus);
+//
+//  Serial.printf("*** OTA STATUS: %d ***\n\r",otaStatus);
+//
+//  if(otaStatus&SpanOTA::OTA_DOWNLOADED ){                         // if OTA was used for last download
+//    otaStatus^=SpanOTA::OTA_DOWNLOADED;                             // turn off OTA_DOWNLOADED flag    
+//    if(!spanOTA.enabled && (otaStatus&SpanOTA::OTA_SAFEMODE))       // if OTA is not enabled, but it was last enabled in safe mode
+//      autoEnable=true;                                                // activate auto-enable
+// 
+//  } else if(otaStatus&SpanOTA::OTA_BOOTED ){                      // if OTA was present in last boot, but not used for download
+//    if(!newCode){                                                   // if code has NOT changed
+//      if(!spanOTA.enabled && (otaStatus&SpanOTA::OTA_SAFEMODE))       // if OTA is not enabled, but it was last enabled in safe mode
+//        autoEnable=true;                                                // activate auto-enable
+//    } else {                                                        // code has changed - do not activate auto-enable
+//      otaStatus^=SpanOTA::OTA_BOOTED;                             // turn off OTA_DOWNLOADED flag    
+//    }
+//  }
+//      
+//  nvs_set_u32(otaNVS,"OTASTATUS",otaStatus);
+//  nvs_commit(otaNVS);
+//
+//  if(autoEnable){
+//    spanOTA.enabled=true;
+//    spanOTA.auth=otaStatus&SpanOTA::OTA_AUTHORIZED;
+//    spanOTA.safeLoad=true;
+//    Serial.printf("OTA Safe Mode: OTA Auto-Enabled\n");
+//  }
 
   if(spanOTA.enabled){
     if(esp_ota_get_running_partition()!=esp_ota_get_next_update_partition(NULL)){
@@ -2037,7 +2047,8 @@ void SpanOTA::start(){
 ///////////////////////////////
 
 void SpanOTA::end(){
-  nvs_set_u32(homeSpan.otaNVS, "OTASTATUS", OTA_DOWNLOADED | OTA_BOOTED | (auth?OTA_AUTHORIZED:0) | (safeLoad?OTA_SAFEMODE:0));
+//  nvs_set_u32(homeSpan.otaNVS, "OTASTATUS", OTA_DOWNLOADED | OTA_BOOTED | (auth?OTA_AUTHORIZED:0) | (safeLoad?OTA_SAFEMODE:0));
+  nvs_set_u8(homeSpan.otaNVS,"OTA_REQUIRED",safeLoad);
   nvs_commit(homeSpan.otaNVS);
   Serial.printf(" DONE!  Rebooting...\n");
   homeSpan.statusLED.off();
