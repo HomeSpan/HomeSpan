@@ -313,15 +313,32 @@ HomeSpan automatically calls the `button(int pin, int pressType)` method of a Se
   
 HomeSpan will report a warning, but not an error, during initialization if the user had not overridden the virtual button() method for a Service contaning one or more Buttons; triggers of those Buttons will simply ignored.
 
-## *SpanUserCommand(char c, const char \*s, void (\*f)(const char \*v))*
+### *SpanUserCommand(char c, const char \*desc, void (\*f)(const char \*buf [,void \*obj]) [,void \*userObject])*
 
 Creating an instance of this **class** adds a user-defined command to the HomeSpan Command-Line Interface (CLI), where:
 
   * *c* is the single-letter name of the user-defined command
-  * *s* is a description of the user-defined command that is displayed when the user types '?' into the CLI
-  * *f* is a pointer to a user-defined function that is called when the command is invoked.  This function must be of the form `void f(const char *v)`, where *v* points to all characters typed into the CLI, beginning with the single-letter command name *c*.
+  * *desc* is a description of the user-defined command that is displayed when the user types '?' into the CLI
+  * *f* is a pointer to a user-defined function that is called when the command is invoked.  Allowable forms for *f* are:
+    1. `void f(const char *buf)`, or
+    1. `void f(const char *buf, void *obj)`
+  * *userObject* is a pointer to an arbitrary object HomeSpan passes to the function *f* as the second argument when the second form of *f* is used.  Note it is an error to include *userObject* when the first form of *f* is used, and it is similarly an error to exclude *userObject* when the second form of *f* is used
 
-To invoke this command from the CLI, preface the single-letter name *c* with '@'.  This allows HomeSpan to distinguish user-defined commands from its built-in commands.  For example, `new SpanUserCommand('s', "save current configuration",saveConfig)` would add a new command '@s' to the CLI with description "save current configuration" that will call the user-defined function `void saveConfig(const char *v)` when invoked.  The argument *v* points to an array of all characters typed into the CLI after the '@'.  This allows the user to pass arguments from the CLI to the user-defined function.  For example, typing '@s123' into the CLI sets *v* to "s123" when saveConfig is called. 
+To invoke your custom command from the CLI, preface the single-letter name *c* with '@'.  This allows HomeSpan to distinguish user-defined commands from its built-in commands.  For example,
+
+```C++
+new SpanUserCommand('s', "save current configuration", saveConfig)
+```
+
+would add a new command '@s' to the CLI with description "save current configuration" that will call the user-defined function `void saveConfig(const char *buf)` when invoked.  The argument *buf* points to an array of all characters typed into the CLI after the '@'.  This allows the user to pass arguments from the CLI to the user-defined function.  For example, typing '@s123' into the CLI sets *buf* to "s123" when saveConfig is called.
+
+In the second form of the argument, HomeSpan will pass an additional object to your function *f*.  For example,
+
+```C++
+new SpanUserCommand('s', "save current configuration", saveConfig, &myArray)
+```
+
+might be used to save all the elements in *myArray* when called with just the '@s' command, and perhaps save only one element based on an index added to the command, such as '@s34' to save element 34 in *myArray*.  It is up to the user to create all necessary logic within the function *f* to parse and process the full command text passed in *buf*.
 
 To create more than one user-defined command, simply create multiple instances of SpanUserCommand, each with its own single-letter name.  Note that re-using the same single-letter name in an instance of SpanUserCommand over-rides any previous instances using that same letter.
 
