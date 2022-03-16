@@ -327,7 +327,9 @@ Creating an instance of this **class** adds a user-defined command to the HomeSp
 To invoke your custom command from the CLI, preface the single-letter name *c* with '@'.  This allows HomeSpan to distinguish user-defined commands from its built-in commands.  For example,
 
 ```C++
-new SpanUserCommand('s', "save current configuration", saveConfig)
+new SpanUserCommand('s', "save current configuration", saveConfig);
+...
+void saveConfig(const char *buf){ ... };
 ```
 
 would add a new command '@s' to the CLI with description "save current configuration" that will call the user-defined function `void saveConfig(const char *buf)` when invoked.  The argument *buf* points to an array of all characters typed into the CLI after the '@'.  This allows the user to pass arguments from the CLI to the user-defined function.  For example, typing '@s123' into the CLI sets *buf* to "s123" when saveConfig is called.
@@ -335,10 +337,13 @@ would add a new command '@s' to the CLI with description "save current configura
 In the second form of the argument, HomeSpan will pass an additional object to your function *f*.  For example,
 
 ```C++
-new SpanUserCommand('s', "save current configuration", saveConfig, &myArray)
+struct myConfigurations[10];
+new SpanUserCommand('s', "<n> save current configuration for specified index, n", saveConfig, myConfigurations);
+...
+void saveConfig(const char *buf, void *obj){ ... do something with myConfigurations ... };
 ```
 
-might be used to save all the elements in *myArray* when called with just the '@s' command, and perhaps save only one element based on an index added to the command, such as '@s34' to save element 34 in *myArray*.  It is up to the user to create all necessary logic within the function *f* to parse and process the full command text passed in *buf*.
+might be used to save all the elements in *myArray* when called with just the '@s' command, and perhaps save only one element based on an index added to the command, such as '@s34' to save element 34 in *myArray*.  It is up to the user to create all necessary logic within the function *f* to parse and process the full command text passed in *buf*, as well as act on whatever is being passed via *obj.
 
 To create more than one user-defined command, simply create multiple instances of SpanUserCommand, each with its own single-letter name.  Note that re-using the same single-letter name in an instance of SpanUserCommand over-rides any previous instances using that same letter.
 
