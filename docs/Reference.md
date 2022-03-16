@@ -371,7 +371,7 @@ Note that Custom Characteristics must be created prior to calling `homeSpan.begi
 
 Creates a custom Service for use with third-party applications (such as *Eve for HomeKit*).  Custom Services will be displayed in the native Apple Home App with a Tile labeled "Not Supported", but otherwise the Service will be safely ignored by the Home App.  Parameters are as follows (note that quotes should NOT be used in either of the macro parameters):
 
-* *name* - the name of the custom Service.  This will be added to the Service namespace so that it is accessed the same as any HomeSpan Service
+* *name* - the name of the custom Service.  This will be added to the Service namespace so that it is accessed the same as any HomeSpan Service.  For example, if *name*="Vent", HomeSpan would recognize `Service::Vent` as a new service class
 * *uuid* - the UUID of the Service as defined by the manufacturer.  Must be *exactly* 36 characters in the form XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX, where *X* represent a valid hexidecimal digit.  Leading zeros are required if needed as described more fully in HAP-R2 Section 6.6.1
 
 Custom Services may contain a mix of both Custom Characteristics and standard HAP Characteristics, though since the Service itself is custom, the Home App will ignore the entire Service even if it contains some standard HAP Characterstics.  Note that Custom Services must be created prior to calling `homeSpan.begin()`
