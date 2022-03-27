@@ -59,7 +59,7 @@ The following **optional** `homeSpan` methods override various HomeSpan initiali
     * 0 = top-level HomeSpan status messages, and any messages output by the user using `Serial.print()` or `Serial.printf()` (default)
     * 1 = all HomeSpan status messages, and any `LOG1()` messages specified in the sketch by the user
     * 2 = all HomeSpan status messages plus all HAP communication packets to and from the HomeSpan device, as well as all `LOG1()` and `LOG2()` messages specified in the sketch by the user
-  * see [Logging]() below for more details
+  * see [Message Logging Macros](#message-logging-macros) below for more details
   * the log level can also be changed at runtime with the 'L' command via the [HomeSpan CLI](CLI.md)
   
 * `void reserveSocketConnections(uint8_t nSockets)`
@@ -157,7 +157,7 @@ The following **optional** `homeSpan` methods enable additional features and pro
     * *logURL* - the URL of the log page for this device.  If unspecified, defaults to "status"
   * example: `homeSpan.enableWebLog(50,"pool.ntp.org","UTC-1:00","myLog");` creates a web log at the URL *http<nolink>://HomeSpan-\[DEVICE-ID\].local:\[TCP-PORT\]/myLog* that will display the 50 most-recent log messages produced with the WEBLOG() macro.  Upon start-up (after a WiFi connection has been established) HomeSpan will attempt to set the device clock by calling the server "pool.ntp.org" and adjusting the time to be 1 hour ahead of UTC.
   * When attemping to connect to *timeServerURL*, HomeSpan waits 10 seconds for a response.  If no response is received after the 10-second timeout period, HomeSpan assumes the server is unreachable and skips the clock-setting procedure.  Use `setTimeServerTimeout()` to re-configure the 10-second timeout period to another value
-  * See [Logging]() below for more details
+  * see [Message Logging Macros](#message-logging-macros) below for more details
 
 * `void setTimeServerTimeout(uint32_t tSec)`
   * changes the default 10-second timeout period HomeSpan uses when `enableWebLog()` tries set the device clock from an internet time server to *tSec* seconds
@@ -378,12 +378,13 @@ To create more than one user-defined command, simply create multiple instances o
 ## Message Logging Macros
 
 ### *LOG1(X)* and *LOG2(X)*
-### *LOG1(const char \*fmt, ...) and *LOG2(const char \*fmt, ...)*
+### *LOG1(const char \*fmt, ...)* and *LOG2(const char \*fmt, ...)*
 
 Displays user-defined log messages on the Arduino Serial Monitor according to the log level specified with `setLogLevel()`, or as specified at runtime with the 'L' command via the [HomeSpan CLI](CLI.md).  `LOG1()` messages will be output only if the log level is set to 1 or greater.  `LOG2()` messages will be output only if the log level is set to 2.
  
 * In the first form (e.g. `LOG1(X)`), the macro calls `Serial.print(X)`.  The argument *X* can be any variable recognized by the Arduino `Serial.print()` function.  For example, `int val=255; LOG1(val);` outputs "255" to the Serial Monitor
 * In the second form (e.g. `LOG1(const char *fmt, ...)`), the macro calls `Serial.printf(fmt, ...)` enabling you to create printf-style formatted output.  For example, `int val=255; LOG1("The value is: %X",val);` outputs the "The value is: FF" to the Serial Monitor 
+* See [Example 9 - Message Logging](https://github.com/HomeSpan/HomeSpan/blob/master/docs/Tutorials.md#example-9---messagelogging) for a tutorial sketch demonstrating these functions
  
 ### WEBLOG(const char *fmt, ...) 
 
