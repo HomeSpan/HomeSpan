@@ -88,12 +88,13 @@ The following **optional** `homeSpan` methods override various HomeSpan initiali
 
 The following **optional** `homeSpan` methods enable additional features and provide for further customization of the HomeSpan environment.  Unless otherwise noted, calls **should** be made before `begin()` to take effect:
 
-* `void enableOTA(boolean auth=true)`
+* `void enableOTA(boolean auth=true, boolean safeMode=true)`
   * enables [Over-the-Air (OTA) Updating](OTA.md) of a HomeSpan device, which is otherwise disabled
   * HomeSpan OTA requires an authorizing password unless *auth* is specified and set to *false*
   * the default OTA password for new HomeSpan devices is "homespan-ota"
   * this can be changed via the [HomeSpan CLI](CLI.md) using the 'O' command
   * note enabling OTA reduces the number of HAP Controller Connections by 1
+  * OTA Safe Mode will be enabled by default unless the second argument is specified and set to *false*.  HomeSpan OTA Safe Mode checks to ensure that sketches uploaded to an existing HomeSpan device are themselves HomeSpan sketches, and that they also have OTA enabled.  See [HomeSpan OTA](../OTA.md) for details
 
 * `void enableAutoStartAP()`
   * enables automatic start-up of WiFi Access Point if WiFi Credentials are **not** found at boot time
