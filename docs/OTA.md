@@ -12,9 +12,17 @@ You can change the password for a HomeSpan device from the [HomeSpan CLI](CLI.md
 
 Note that in in order for OTA to properly operate, your sketch must be compiled with a partition scheme that includes OTA partitions.  Partition schemes are found under the *Tools → Partition Scheme* menu of the Arduino IDE.  Select a scheme that indicates it supports OTA.  Note that schemes labeled "default" usually include OTA partitions.  If unsure, try it out.  HomeSpan will let you know if it does or does not.
 
-This is because HomeSpan checks that a sketch has been compiled with OTA partitions if OTA has been enabled for that sketch.  If OTA has been enabled but HomeSpan does not find any OTA partitioms, it will indicate it cannot start the OTA Server via a warning message sent to the Serial Monitor immediately after WiFi connectivity has been established.  Otherwise it will output a confirmation message indicating the OTA Server has sucessfully started.
+This is because HomeSpan checks that a sketch has been compiled with OTA partitions if OTA has been enabled for that sketch.  If OTA has been enabled but HomeSpan does not find any OTA partitions, it will indicate it cannot start the OTA Server via a warning message sent to the Serial Monitor immediately after WiFi connectivity has been established.  Otherwise it will output a confirmation message indicating the OTA Server has sucessfully started.
 
 ### HomeSpan Safe Load Mode
+
+HomeSpan includes two additional safety checks when using OTA to upload a sketch:
+
+1. HomeSpan checks to make sure the new sketch being uploaded is also another HomeSpan sketch. If not, HomeSpan will reject the new sketch and report an OTA error back to the Arduino IDE after the new sketch is uploaded, but before the device reboots.  Instead, HomeSpan will close the OTA connection and resume normal operations based on the existing sketch without rebooting.  The purpose of this safety check is to prevent you from accidentally uploading a non-HomeSpan sketch onto a remote device, making it impossible for you to re-upload the correct sketch without retreiving the remote device and connecting to you computer via the serial port.
+
+1. After a successful upload of a new HomeSpan sketch via OTA, HomeSpan will check that the new HomeSpan sketch just loaded *also* has OTA enabled.  This check occurs after HomeSpan is rebooted with the new sketch.  If HomeSpan does not find OTA enabled, it will mark the current partition as invalid and reboot the device, causing the device to "roll back" to the previous version of the sketch that had OTA enabled.  The purpose of this safety check is to ensure you do not use OTA to upload a new HomeSpan sketch to a remote device, but failed to enable OTA in the new HomeSpan sketch.  If you did this you would be locked out of making any further updated via OTA and would instead need to retreive the remote device and connect it to your computer via the serial port.
+
+Note that these check are *only* applicable when uploading sketches via OTA.  They are ignored whenever sketches are uploaded via the serial port.  Also, though these safty checks are turned on by default, they can be disabled when you first enable OTA by setting the second (optional) argument of `homeSpan.enableOTA()` to *false*.  See the API for details.
 
 ### OTA Tips and Tricks
 
@@ -24,7 +32,7 @@ This is because HomeSpan checks that a sketch has been compiled with OTA partiti
 
 * If a sketch you've uploaded with OTA does not operate as expected, you can continue making modifications to the code and re-upload again.  Or, you can upload a prior version that was working properly.  However, the Safe Load features described above cannot protect against a HomeSpan sketch that has major run-time problems, such as causing a kernel panic that leads to an endless cycle of device reboots.  If this happens, HomeSpan won't be able to run the OTA Server code, and further OTA updates will *not* be possible.  Instead, you'll have to connect the device through a serial port to upload a new, working sketch.  **For this reason you should always fully test out a new sketch on a local device connected to your computer *before* uploading it to a remote, hard-to-access device via OTA.**
 
-* The ESP IDF supports "automated" rollbacks that are designed to solve the problem of endless reboots after a bad upload by automatically rolling back the device to a previously-working sketch if the latest sketch causes a reboot before being able to set a self-test flag verifying the code is operating correctly.  However, this feature is *not* enabled in the latest version of the Arudino-ESP32 library (2.0.2 at the time of this posting), and cannot be accessed without recompiling a custom version of the board manager.
+* Note that though the ESP IDF supports "automated" rollbacks that are designed to solve the problem of endless reboots after a bad upload, this feature is *not* enabled in the latest version of the Arudino-ESP32 library (2.0.2 at the time of this posting).
 
 ---
 
