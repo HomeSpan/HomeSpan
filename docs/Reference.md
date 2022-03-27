@@ -384,7 +384,7 @@ Displays user-defined log messages on the Arduino Serial Monitor according to th
  
 * In the first form (e.g. `LOG1(X)`), the macro calls `Serial.print(X)`.  The argument *X* can be any variable recognized by the Arduino `Serial.print()` function.  For example, `int val=255; LOG1(val);` outputs "255" to the Serial Monitor
 * In the second form (e.g. `LOG1(const char *fmt, ...)`), the macro calls `Serial.printf(fmt, ...)` enabling you to create printf-style formatted output.  For example, `int val=255; LOG1("The value is: %X",val);` outputs the "The value is: FF" to the Serial Monitor 
-* See [Example 9 - Message Logging](https://github.com/HomeSpan/HomeSpan/blob/master/docs/Tutorials.md#example-9---messagelogging) for a tutorial sketch demonstrating these functions
+* See [Example 9 - MessageLogging](https://github.com/HomeSpan/HomeSpan/blob/master/docs/Tutorials.md#example-9---messagelogging) for a tutorial sketch demonstrating these functions
  
 ### WEBLOG(const char *fmt, ...) 
 
