@@ -149,7 +149,7 @@ The following **optional** `homeSpan` methods enable additional features and pro
   * can by called from anywhere in a sketch
 
 * `void enableWebLog(uint16_t maxEntries, const char *timeServerURL, const char *timeZone, const char *logURL)`
-  * enables a rolling web log that displays the most recent *maxEntries* entries created with the [WEBLOG\(\) macro](./#weblog).  Parameters, and their default values if unspecified, are as follows:
+  * enables a rolling web log that displays the most recent *maxEntries* entries created with the [WEBLOG\(\) macro](./#user-macros).  Parameters, and their default values if unspecified, are as follows:
     * *maxEntries* - maximum number of (most recent) entries to save.  If unspecified, defaults to 0, in which case the web log will only display status without any log entries
     * *timeServerURL* - the URL of a time server that HomeSpan will use to set its clock upon startup after a WiFi connection has been established.  If unspecified, default to NULL, in which case HomeSpan skips setting the device clock
     * *timeZone* - specifies the time zone to use for setting the clock.  Uses standard Unix timezone formatting as interpreted by Espressif IDF.  Note the IDF uses a somewhat non-intuitive convention such that a timezone of "UTC+5:00" *subtracts* 5 hours from UTC time, and "UTC-5:00" *adds* 5 hours to UTC time.  If *serverURL=NULL* this field is ignored; if *serverURL!=NULL* this field is required
@@ -375,6 +375,8 @@ might be used to save all the elements in *myArray* when called with just the '@
 To create more than one user-defined command, simply create multiple instances of SpanUserCommand, each with its own single-letter name.  Note that re-using the same single-letter name in an instance of SpanUserCommand over-rides any previous instances using that same letter.
 
 ## User Macros
+ 
+### LOG1(x), LOG1(const char *fmt, ...), LOG2(x), LOG2(const char *fmt, ...), WEBLOG(const char *fmt, ...) 
 
 ### *#define REQUIRED VERSION(major,minor,patch)*
 
