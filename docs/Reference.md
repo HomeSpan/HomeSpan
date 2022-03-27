@@ -56,10 +56,11 @@ The following **optional** `homeSpan` methods override various HomeSpan initiali
   
 * `void setLogLevel(uint8_t level)`
   * sets the logging level for diagnostic messages, where:
-    * 0 = top-level status messages only (default),
-    * 1 = all status messages, and
-    * 2 = all status messages plus all HAP communication packets to and from the HomeSpan device
-  * this parameter can also be changed at runtime via the [HomeSpan CLI](CLI.md)
+    * 0 = top-level HomeSpan status messages, and any messages output by the user using `Serial.print()` or `Serial.printf()` (default)
+    * 1 = all HomeSpan status messages, and any `LOG1()` messages specified in the sketch by the user
+    * 2 = all HomeSpan status messages plus all HAP communication packets to and from the HomeSpan device, as well as all `LOG1()` and `LOG2()` messages specified in the sketch by the user
+  * see [Logging]() below for more details
+  * the log level can also be changed at runtime with the 'L' command via the [HomeSpan CLI](CLI.md)
   
 * `void reserveSocketConnections(uint8_t nSockets)`
   * reserves *nSockets* network sockets for uses **other than** by the HomeSpan HAP Server for HomeKit Controller Connections
@@ -149,14 +150,14 @@ The following **optional** `homeSpan` methods enable additional features and pro
   * can by called from anywhere in a sketch
 
 * `void enableWebLog(uint16_t maxEntries, const char *timeServerURL, const char *timeZone, const char *logURL)`
-  * enables a rolling web log that displays the most recent *maxEntries* entries created with the [WEBLOG\(\) macro](#user-macros).  Parameters, and their default values if unspecified, are as follows:
+  * enables a rolling web log that displays the most recent *maxEntries* entries created by the user with the `WEBLOG()` macro.  Parameters, and their default values if unspecified, are as follows:
     * *maxEntries* - maximum number of (most recent) entries to save.  If unspecified, defaults to 0, in which case the web log will only display status without any log entries
     * *timeServerURL* - the URL of a time server that HomeSpan will use to set its clock upon startup after a WiFi connection has been established.  If unspecified, default to NULL, in which case HomeSpan skips setting the device clock
     * *timeZone* - specifies the time zone to use for setting the clock.  Uses standard Unix timezone formatting as interpreted by Espressif IDF.  Note the IDF uses a somewhat non-intuitive convention such that a timezone of "UTC+5:00" *subtracts* 5 hours from UTC time, and "UTC-5:00" *adds* 5 hours to UTC time.  If *serverURL=NULL* this field is ignored; if *serverURL!=NULL* this field is required
     * *logURL* - the URL of the log page for this device.  If unspecified, defaults to "status"
   * example: `homeSpan.enableWebLog(50,"pool.ntp.org","UTC-1:00","myLog");` creates a web log at the URL *http<nolink>://HomeSpan-\[DEVICE-ID\].local:\[TCP-PORT\]/myLog* that will display the 50 most-recent log messages produced with the WEBLOG() macro.  Upon start-up (after a WiFi connection has been established) HomeSpan will attempt to set the device clock by calling the server "pool.ntp.org" and adjusting the time to be 1 hour ahead of UTC.
   * When attemping to connect to *timeServerURL*, HomeSpan waits 10 seconds for a response.  If no response is received after the 10-second timeout period, HomeSpan assumes the server is unreachable and skips the clock-setting procedure.  Use `setTimeServerTimeout()` to re-configure the 10-second timeout period to another value
-  * See [HomeSpan Logging](Logging.md) for complete details
+  * See [Logging]() below for more details
 
 * `void setTimeServerTimeout(uint32_t tSec)`
   * changes the default 10-second timeout period HomeSpan uses when `enableWebLog()` tries set the device clock from an internet time server to *tSec* seconds
@@ -374,20 +375,22 @@ might be used to save all the elements in *myArray* when called with just the '@
 
 To create more than one user-defined command, simply create multiple instances of SpanUserCommand, each with its own single-letter name.  Note that re-using the same single-letter name in an instance of SpanUserCommand over-rides any previous instances using that same letter.
 
-## User Macros
+## Message Logging Macros
+
+### *LOG1(X)* and *LOG2(X)*
+### *LOG1(const char \*fmt, ...) and *LOG2(const char \*fmt, ...)*
+
+Displays user-defined log messages on the Arduino Serial Monitor according to the log level specified with `setLogLevel()`, or as specified at runtime with the 'L' command via the [HomeSpan CLI](CLI.md).  `LOG1()` messages will be output only if the log level is set to 1 or greater.  `LOG2()` messages will be output only if the log level is set to 2.
  
-### LOG1(x), LOG1(const char *fmt, ...), LOG2(x), LOG2(const char *fmt, ...), WEBLOG(const char *fmt, ...) 
+* In the first form (e.g. `LOG1(X)`), the macro calls `Serial.print(X)`.  The argument *X* can be any variable recognized by the Arduino `Serial.print()` function.  For example, `int val=255; LOG1(val);` outputs "255" to the Serial Monitor
+* In the second form (e.g. `LOG1(const char *fmt, ...)`), the macro calls `Serial.printf(fmt, ...)` enabling you to create printf-style formatted output.  For example, `int val=255; LOG1("The value is: %X",val);` outputs the "The value is: FF" to the Serial Monitor 
+ 
+### WEBLOG(const char *fmt, ...) 
 
-### *#define REQUIRED VERSION(major,minor,patch)*
+## Custom Characteristics and Custom Services Macros
 
-If REQUIRED is defined in the main sketch *prior* to including the HomeSpan library with `#include "HomeSpan.h"`, HomeSpan will throw a compile-time error unless the version of the library included is equal to, or later than, the version specified using the VERSION macro.  Example:
-
-```C++
-#define REQUIRED VERSION(1,3,0)   // throws a compile-time error unless HomeSpan library used is version 1.3.0 or later
-#include "HomeSpan.h"
-```
-### *#define CUSTOM_CHAR(name,uuid,perms,format,defaultValue,minValue,maxValue,staticRange)*
-### *#define CUSTOM_CHAR_STRING(name,uuid,perms,defaultValue)*
+### *CUSTOM_CHAR(name,uuid,perms,format,defaultValue,minValue,maxValue,staticRange)*
+### *CUSTOM_CHAR_STRING(name,uuid,perms,defaultValue)*
 
 Creates a custom Characteristic that can be added to any Service.  Custom Characteristics are generally ignored by the Home App but may be used by other third-party applications (such as *Eve for HomeKit*).  The first form should be used create numerical Characterstics (e.g., UINT8, BOOL...). The second form is used to String-based Characteristics. Parameters are as follows (note that quotes should NOT be used in any of the macro parameters, except for defaultValue):
 
@@ -418,7 +421,7 @@ Note that Custom Characteristics must be created prior to calling `homeSpan.begi
 
 > Advanced Tip: When presented with an unrecognized Custom Characteristic, *Eve for HomeKit* helpfully displays a *generic control* allowing you to interact with any Custom Characteristic you create in HomeSpan.  However, since Eve does not recognize the Characteristic, it will only render the generic control if the Characteristic includes a **description** field, which you can add to any Characteristic using the `setDescription()` method described above.  You may also want to use `setUnit()` and `setRange()` so that the Eve App displays a control with appropriate ranges for your Custom Characteristic.
 
-### *#define CUSTOM_SERV(name,uuid)*
+### *CUSTOM_SERV(name,uuid)*
 
 Creates a custom Service for use with third-party applications (such as *Eve for HomeKit*).  Custom Services will be displayed in the native Apple Home App with a Tile labeled "Not Supported", but otherwise the Service will be safely ignored by the Home App.  Parameters are as follows (note that quotes should NOT be used in either of the macro parameters):
 
@@ -429,7 +432,18 @@ Custom Services may contain a mix of both Custom Characteristics and standard HA
 
 A fully worked example showing how to use both the ***CUSTOM_SERV()*** and ***CUSTOM_CHAR()*** macros to create a Pressure Sensor Accessory that is recognized by *Eve for HomeKit* can be found in the Arduino IDE under [*File → Examples → HomeSpan → Other Examples → CustomService*](../Other%20Examples/CustomService).
 
----
+## User-Definable Macros
+ 
+### *#define REQUIRED VERSION(major,minor,patch)*
+
+If REQUIRED is defined in the main sketch *prior* to including the HomeSpan library with `#include "HomeSpan.h"`, HomeSpan will throw a compile-time error unless the version of the library included is equal to, or later than, the version specified using the VERSION macro.  Example:
+
+```C++
+#define REQUIRED VERSION(1,3,0)   // throws a compile-time error unless HomeSpan library used is version 1.3.0 or later
+#include "HomeSpan.h"
+```
+
+ ---
 
 #### Deprecated functions (available for backwards compatibility with older sketches):
 
