@@ -14,7 +14,7 @@ Note that in in order for OTA to properly operate, your sketch must be compiled 
 
 This is because HomeSpan checks that a sketch has been compiled with OTA partitions if OTA has been enabled for that sketch.  If OTA has been enabled but HomeSpan does not find any OTA partitions, it will indicate it cannot start the OTA Server via a warning message sent to the Serial Monitor immediately after WiFi connectivity has been established.  Otherwise it will output a confirmation message indicating the OTA Server has sucessfully started.
 
-### HomeSpan Safe Load Mode
+### OTA Safe Load
 
 HomeSpan includes two additional safety checks when using OTA to upload a sketch:
 
@@ -22,7 +22,7 @@ HomeSpan includes two additional safety checks when using OTA to upload a sketch
 
 1. After a successful upload of a new HomeSpan sketch via OTA, HomeSpan will check that the new HomeSpan sketch just loaded *also* has OTA enabled.  This check occurs after HomeSpan is rebooted with the new sketch.  If HomeSpan does not find OTA enabled, it will mark the current partition as invalid and reboot the device, causing the device to "roll back" to the previous version of the sketch that had OTA enabled.  The purpose of this safety check is to ensure you do not use OTA to upload a new HomeSpan sketch to a remote device, but failed to enable OTA in the new HomeSpan sketch.  If you did this you would be locked out of making any further updated via OTA and would instead need to retreive the remote device and connect it to your computer via the serial port.
 
-Note that these check are *only* applicable when uploading sketches via OTA.  They are ignored whenever sketches are uploaded via the serial port.  Also, though these safty checks are turned on by default, they can be disabled when you first enable OTA by setting the second (optional) argument of `homeSpan.enableOTA()` to *false*.  See the API for details.
+Note that these check are *only* applicable when uploading sketches via OTA.  They are ignored whenever sketches are uploaded via the serial port.  Also, though these safety checks are enabled by default, they can be disabled when you first enable OTA by setting the second (optional) argument to *false* as such: `homeSpan.enableOTA(..., false)`.  See the API for details.
 
 ### OTA Tips and Tricks
 
