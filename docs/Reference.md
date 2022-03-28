@@ -59,8 +59,8 @@ The following **optional** `homeSpan` methods override various HomeSpan initiali
     * 0 = top-level HomeSpan status messages, and any messages output by the user using `Serial.print()` or `Serial.printf()` (default)
     * 1 = all HomeSpan status messages, and any `LOG1()` messages specified in the sketch by the user
     * 2 = all HomeSpan status messages plus all HAP communication packets to and from the HomeSpan device, as well as all `LOG1()` and `LOG2()` messages specified in the sketch by the user
-  * see [Message Logging Macros](#message-logging-macros) below for more details
-  * the log level can also be changed at runtime with the 'L' command via the [HomeSpan CLI](CLI.md)
+  * note the log level can also be changed at runtime with the 'L' command via the [HomeSpan CLI](CLI.md)
+  * see [Message Logging](Logging.md) for complete details
   
 * `void reserveSocketConnections(uint8_t nSockets)`
   * reserves *nSockets* network sockets for uses **other than** by the HomeSpan HAP Server for HomeKit Controller Connections
@@ -156,8 +156,8 @@ The following **optional** `homeSpan` methods enable additional features and pro
     * *timeZone* - specifies the time zone to use for setting the clock.  Uses standard Unix timezone formatting as interpreted by Espressif IDF.  Note the IDF uses a somewhat non-intuitive convention such that a timezone of "UTC+5:00" *subtracts* 5 hours from UTC time, and "UTC-5:00" *adds* 5 hours to UTC time.  If *serverURL=NULL* this field is ignored; if *serverURL!=NULL* this field is required
     * *logURL* - the URL of the log page for this device.  If unspecified, defaults to "status"
   * example: `homeSpan.enableWebLog(50,"pool.ntp.org","UTC-1:00","myLog");` creates a web log at the URL *http<nolink>://HomeSpan-\[DEVICE-ID\].local:\[TCP-PORT\]/myLog* that will display the 50 most-recent log messages produced with the WEBLOG() macro.  Upon start-up (after a WiFi connection has been established) HomeSpan will attempt to set the device clock by calling the server "pool.ntp.org" and adjusting the time to be 1 hour ahead of UTC.
-  * When attemping to connect to *timeServerURL*, HomeSpan waits 10 seconds for a response.  If no response is received after the 10-second timeout period, HomeSpan assumes the server is unreachable and skips the clock-setting procedure.  Use `setTimeServerTimeout()` to re-configure the 10-second timeout period to another value
-  * see [Message Logging Macros](#message-logging-macros) below for more details
+  * when attemping to connect to *timeServerURL*, HomeSpan waits 10 seconds for a response.  If no response is received after the 10-second timeout period, HomeSpan assumes the server is unreachable and skips the clock-setting procedure.  Use `setTimeServerTimeout()` to re-configure the 10-second timeout period to another value
+  * see [Message Logging](Logging.md) for complete details
 
 * `void setTimeServerTimeout(uint32_t tSec)`
   * changes the default 10-second timeout period HomeSpan uses when `enableWebLog()` tries set the device clock from an internet time server to *tSec* seconds
