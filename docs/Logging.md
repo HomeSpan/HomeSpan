@@ -1,4 +1,4 @@
-# Over-the-Air (OTA) Updates
+# Message Logging
 
 HomeSpan supports Over-the-Air (OTA) updates, which allows you to *wirelessly* upload sketches directly from the Arduino IDE - no serial connection needed.  To activate this feature for your sketch, simply call the method `homeSpan.enableOTA()` prior to calling `homeSpan.begin()`.
 
