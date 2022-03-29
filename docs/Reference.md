@@ -385,7 +385,7 @@ Creates a custom Characteristic that can be added to any Service.  Custom Charac
 * *name* - the name of the custom Characteristic.  This will be added to the Characteristic namespace so that it is accessed the same as any HomeSpan Characteristic
 * *uuid* - the UUID of the Characteristic as defined by the manufacturer.  Must be *exactly* 36 characters in the form XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX, where *X* represent a valid hexidecimal digit.  Leading zeros are required if needed as described more fully in HAP-R2 Section 6.6.1
 * *perms* - additive list of permissions as described in HAP-R2 Table 6-4.  Valid values are PR, PW, EV, AA, TW, HD, and WR
-* *format* - specifies the format of the Characteristic value, as described in HAP-R2 Table 6-5.  Valid value are BOOL, UINT8, UINT16, UNIT32, UINT64, INT, and FLOAT. Note that the HomeSpan does not presently support the TLV8 or DATA formats.  Not applicable for Strings-based Characteristics
+* *format* - specifies the format of the Characteristic value, as described in HAP-R2 Table 6-5.  Valid value are BOOL, UINT8, UINT16, UNIT32, UINT64, INT, and FLOAT (note that the HomeSpan does not presently support the TLV8 or DATA formats).  Not applicable for Strings-based Characteristics
 * *defaultValue* - specifies the default value of the Characteristic if not defined during instantiation
 * *minValue* - specifies the default minimum range for a valid value, which may be able to be overriden by a call to `setRange()`.  Not applicable for Strings-based Characteristics
 * *minValue* - specifies the default minimum range for a valid value, which may be able to be overriden by a call to `setRange()`. Not applicable for Strings-based Characteristics
