@@ -1,8 +1,10 @@
 # Message Logging
 
-HomeSpan includes three types of message logging:
+HomeSpan includes a variety of message logs and message logging functions as described below.
 
-* **HomeSpan Log Messages** - these are messages produced by HomeSpan and output to the Arduino Serial Monitor.  The messages are categorized according to 3 levels of detail
+### HomeSpan Log Messages
+
+HomeSpan these are messages produced by HomeSpan and output to the Arduino Serial Monitor.  The messages are categorized according to 3 levels of detail
 
   * Level-0 messages contain all HomeSpan configuration data and some basic status information
   * Level-1 adds in a more verbose set of status messages
