@@ -1,38 +1,30 @@
 # Message Logging
 
-HomeSpan includes a variety of message logs and message logging functions as described below.
+HomeSpan includes a variety of message logs with different levels of verbosity, as well built-in methods to create your own log messages and web logs.
 
-### HomeSpan Log Messages
+## HomeSpan Log Messages
 
-HomeSpan these are messages produced by HomeSpan and output to the Arduino Serial Monitor.  The messages are categorized according to 3 levels of detail
+HomeSpan log messages are typically output directly to the Arduino Serial Monitor with three possible levels of verbosity:
 
-  * Level-0 messages contain all HomeSpan configuration data and some basic status information
-  * Level-1 adds in a more verbose set of status messages
-  * Level-2 further includes all HAP communication packages to and from the HomeSpan device.
-  * Users can programmatically control which log messages are output to the Serial Monitor by setting the log level using the homeSpan method `setLogLevel(uint8_t level)` as described in the [HomeSpan API Reference](API.md).  Level-0 messages are always output.  Level-1 messages are only output if the log level is set to 1 or greater.  Level-2 messages are only output if the log level is set to to 2
-  * The log level can also be changed dynamically via the Serial Monitor at any time via the 'L' as described in the [HomeSpan CLI](CLI.md).
+|Log Level|Output|
+|---------|------|
+|Level 0|HomeSpan configuration data and some basic status information|
+|Level 1|Eveything in Level 0 plus additional and more verbose status messages|
+|Level 2|Everything im Level 1 plus all HAP communication packages sent to and from the HomeSpan device|
 
-1. **User Log Messages** - these are messages produced by the user and output to the Arduino Serial.  User can output messages using either the Arduino standard Serial.print(x) method, or the    
+You can set the *Log Level* in your sketch using the method `homeSpan.setLogLevel(uint8_t level)` as described in the [HomeSpan API Reference](API.md).  Level 0 messages are always output; Level 1 messages are only output if the *Log Level* is set to 1 or greater; and Level 2 messages are only output if the *Log Level* is set to to 2.  The *Log Level* can also be changed dynamically via the Serial Monitor at any time by typing either the 'L0', 'L1', or 'L2' as described in the [HomeSpan CLI](CLI.md).
 
+## User-Defined Log Messages
 
+You can add your own log messages to any sketch using HomeSpan's **LOG0()**, **LOG1()**, and **LOG2()** macros.  Messages created with these macros will be output to the Arduino Serial Monitor according the *Log Level* setting described above.  Each **LOGn()** macro (where n=\[0,2\]) is available in two flavors depending on the number of arguments specified:
 
-= top-level HomeSpan status messages, and any messages output by the user using Serial.print() or Serial.printf() (default)
-1 = all HomeSpan status messages, and any LOG1() messages specified in the sketch by the user
-2 = all HomeSpan status messages plus all HAP communication packets to and from the HomeSpan device, as well as all LOG1() and LOG2() messages specified in the sketch by the user
+* `LOGn(val)` - when only one argument is specified, HomeSpan outputs *val* using the standard Arduino `Serial.print(val)` method, which means *val* can be nearly any timvariable type.  The downside is you have no control over the format.  For example, `int n=255; LOG1(n);` outputs the number "255" to the Arduino Serial Monitor, provided that the *Log Level* is set to 1 or greater.
 
+* `LOGn(const char *fmt, ...)` - when more than one argument is specified, HomeSpan outputs the message using the ESP32 `Serial.printf(fmt, ...)` method, which allows you to format messages with a variable number of arguments using standard C++ *printf* conventions.  For example, `int n=255; LOG2("The value is 0x%X",n);` outputs the message "The value is 0xFF" to the Arduino Serial Monitor, provided that the *Log Level* is set to 2.
 
-
-
-### *LOG1(X)* and *LOG2(X)*
-### *LOG1(const char \*fmt, ...)* and *LOG2(const char \*fmt, ...)*
-
-Displays user-defined log messages on the Arduino Serial Monitor according to the log level specified with `setLogLevel()`, or as specified at runtime with the 'L' command via the [HomeSpan CLI](CLI.md).  `LOG1()` messages will be output only if the log level is set to 1 or greater.  `LOG2()` messages will be output only if the log level is set to 2.
+See [Example 9 - MessageLogging](https://github.com/HomeSpan/HomeSpan/blob/master/docs/Tutorials.md#example-9---messagelogging) for a tutorial sketch demonstrating these macros.
  
-* In the first form (e.g. `LOG1(X)`), the macro calls `Serial.print(X)`.  The argument *X* can be any variable recognized by the Arduino `Serial.print()` function.  For example, `int val=255; LOG1(val);` outputs "255" to the Serial Monitor
-* In the second form (e.g. `LOG1(const char *fmt, ...)`), the macro calls `Serial.printf(fmt, ...)` enabling you to create printf-style formatted output.  For example, `int val=255; LOG1("The value is: %X",val);` outputs the "The value is: FF" to the Serial Monitor 
-* See [Example 9 - MessageLogging](https://github.com/HomeSpan/HomeSpan/blob/master/docs/Tutorials.md#example-9---messagelogging) for a tutorial sketch demonstrating these functions
- 
-### WEBLOG(const char *fmt, ...) 
+## Web Logging 
 
 ---
 
