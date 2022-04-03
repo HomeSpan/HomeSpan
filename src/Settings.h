@@ -103,6 +103,7 @@
 //      Message Log Level Control Macros           //
 //       0=Minimal, 1=Informative, 2=All           //
 
+#define LOG0(format,...) Serial.print ##__VA_OPT__(f)(format __VA_OPT__(,) __VA_ARGS__)
 #define LOG1(format,...) if(homeSpan.logLevel>0)Serial.print ##__VA_OPT__(f)(format __VA_OPT__(,) __VA_ARGS__)
 #define LOG2(format,...) if(homeSpan.logLevel>1)Serial.print ##__VA_OPT__(f)(format __VA_OPT__(,) __VA_ARGS__)
 
