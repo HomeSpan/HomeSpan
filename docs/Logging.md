@@ -22,7 +22,7 @@ You can add your own log messages to any sketch using HomeSpan's **LOG0()**, **L
 
 * `LOGn(const char *fmt, ...)` - when more than one argument is specified, HomeSpan outputs the message using the ESP32 `Serial.printf(fmt, ...)` method, which allows you to format messages with a variable number of arguments using standard C++ *printf* conventions.  For example, `int n=255; LOG2("The value is 0x%X",n);` outputs the message "The value is 0xFF" to the Arduino Serial Monitor, provided that the *Log Level* is set to 2.
 
-See [Example 9 - MessageLogging](https://github.com/HomeSpan/HomeSpan/blob/master/docs/Tutorials.md#example-9---messagelogging) for a tutorial sketch demonstrating these macros.
+See [Example 9 - MessageLogging](Tutorials.md#example-9---messagelogging) for a tutorial sketch demonstrating these macros.
  
 ## Web Logging 
 
