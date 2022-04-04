@@ -49,12 +49,7 @@ void setup() {
 
   new SpanAccessory();                            
   
-    new Service::AccessoryInformation();            
-      new Characteristic::Name("My Ceiling Fan");     
-      new Characteristic::Manufacturer("HomeSpan");   
-      new Characteristic::SerialNumber("123-ABC");    
-      new Characteristic::Model("120-Volt Lamp");     
-      new Characteristic::FirmwareRevision("0.9");    
+    new Service::AccessoryInformation();                
       new Characteristic::Identify();                 
       
     new Service::HAPProtocolInformation();         

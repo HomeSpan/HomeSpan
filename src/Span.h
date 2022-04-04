@@ -37,12 +37,12 @@
 namespace Service {
 
   struct AccessoryInformation : SpanService { AccessoryInformation() : SpanService{"3E","AccessoryInformation"}{
-    REQ(FirmwareRevision);
     REQ(Identify);
-    REQ(Manufacturer);
-    REQ(Model);
-    REQ(Name);
-    REQ(SerialNumber);
+    OPT(FirmwareRevision);
+    OPT(Manufacturer);
+    OPT(Model);
+    OPT(Name);
+    OPT(SerialNumber);
     OPT(HardwareRevision);    
   }};
 

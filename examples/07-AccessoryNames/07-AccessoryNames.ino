@@ -30,9 +30,7 @@
 //    HomeSpan: A HomeKit implementation for the ESP32    //
 //    ------------------------------------------------    //
 //                                                        //
-// Example 6: One working on/off LED and one working     //
-//            dimmable LED, both based on the LightBulb   //
-//            Service                                     //
+// Example 7: Changing an Accessory's default name        //
 //                                                        //
 ////////////////////////////////////////////////////////////
 
@@ -42,29 +40,30 @@
 
 void setup() {
 
-  // Example 6 changes Example 5 so that LED #2 is now dimmable, instead of just on/off.  This requires us to create a new
-  // derived Service we will name "DEV_DimmableLED"  Instead of creating a new file to store this definition, we will simply
-  // tack it on to the end of the DEV_LED.h file that includes the code we created in Example 5 to control an on/off LED.
-  // Grouping similar-style Services in one ".h" file makes it easier to organize your custom devices.
+  // As discusses in previous examples, the Home App automatically generate default names for each Accessory Tile
+  // based on the Name provided in the second argument of homeSpan.begin().  And though you can change these names
+  // both during, and anytime after, pairing, HAP also allows you to customize the default names themselves, so
+  // something more intuitive is presented to the user when the device is first paired.
 
-  // As usual, all previous comments have been deleted and only new changes from the previous example are shown.
+  // Changing the default name for an Accessory is done by adding the optional Characteristic Name(char *tileName) to the
+  // Accessory Information Service.  This causes the Home App to use "tileName" as the default name for an Accessory
+  // Tile instead of generating one from the name used in homeSpan.begin().  Howevever, there is one caveat:  The Name()
+  // Characteristic has no affect when used in the first Accessory of a device.  The default name of the first Accessory
+  // Tile will always be showsn by the Home App as the name specified in homeSpan.begin() regardless of whether or not
+  // the Name() Characteristic has been added to the Accessory Information Service.
 
-  // NOTE: The Arduino/ESP32 code base does not include the function analogWrite() which is typically used to create a PWM
-  // output to drive the brightness of an LED.  The ESP32 code base itself includes a set of functions to create PWM output
-  // and the ESP32 chip has built-in PWM functionality specifically for this purpose.  There are numerous libraries
-  // you can download that mimics or reproduces analogWrite() in some form or another.  HomeSpan conveniently comes with
-  // it own version of a wrapper around the ESP32 PWM classes that make it very easy to define PWM "channel," attach a pin,
-  // and set the PWM level (or duty cycle) from 0-100%.  These functions are encapsualted in the LedPin class, as defined in
-  // extras/PwmPin.h.  We will include this file in our updated DEV_LED.h for use with DEV_DimmableLED.
+  // Below is a replay of Example 6 showing how the Name Characteristic can be used to change the default names of the second,
+  // but not the first, Accessory.
   
   Serial.begin(115200);
 
-  homeSpan.begin(Category::Lighting,"HomeSpan LED");
+  homeSpan.begin(Category::Lighting,"HomeSpan LED");    // Note this results in the default name of "HomeSpan LED", "HomeSpan LED 2", etc. for each Accessory Tile
   
   new SpanAccessory(); 
   
-    new Service::AccessoryInformation(); 
+    new Service::AccessoryInformation();
       new Characteristic::Identify();            
+      new Characteristic::Name("Simply LED");     // This use of Name() will be ignored by the Home App.  The default name for the Accessory will continue to be shown as "HomeSpan LED"
       
     new Service::HAPProtocolInformation();      
       new Characteristic::Version("1.1.0");     
@@ -75,11 +74,12 @@ void setup() {
   
     new Service::AccessoryInformation();    
       new Characteristic::Identify();               
+      new Characteristic::Name("Dimmable LED");   // This DOES change the default name for the Accessory from "HomeSpan LED 2" to "Dimmable LED"
       
     new Service::HAPProtocolInformation();          
       new Characteristic::Version("1.1.0");         
   
-    new DEV_DimmableLED(17);        // NEW! create a dimmable (PWM-driven) LED attached to pin 17.  See new code at end of DEV_LED.h
+    new DEV_DimmableLED(17);
 
 } // end of setup()
 

@@ -69,16 +69,11 @@ void setup() {
 
   Serial.begin(115200);
 
-  homeSpan.begin(Category::Lighting,"HomeSpan LEDs");
+  homeSpan.begin(Category::Lighting,"HomeSpan LED");
   
   new SpanAccessory(); 
   
     new Service::AccessoryInformation(); 
-      new Characteristic::Name("LED #1"); 
-      new Characteristic::Manufacturer("HomeSpan"); 
-      new Characteristic::SerialNumber("123-ABC"); 
-      new Characteristic::Model("20mA LED"); 
-      new Characteristic::FirmwareRevision("0.9"); 
       new Characteristic::Identify();            
       
     new Service::HAPProtocolInformation();      
@@ -102,11 +97,6 @@ void setup() {
   new SpanAccessory(); 
   
     new Service::AccessoryInformation();    
-      new Characteristic::Name("LED #2");    
-      new Characteristic::Manufacturer("HomeSpan"); 
-      new Characteristic::SerialNumber("123-ABC");  
-      new Characteristic::Model("20mA LED");   
-      new Characteristic::FirmwareRevision("0.9");  
       new Characteristic::Identify();               
       
     new Service::HAPProtocolInformation();          
