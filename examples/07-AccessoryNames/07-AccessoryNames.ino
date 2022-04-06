@@ -31,6 +31,7 @@
 //    ------------------------------------------------    //
 //                                                        //
 // Example 7: Changing an Accessory's default name        //
+//            to distinguish On/Off from Dimmable LEDs    //
 //                                                        //
 ////////////////////////////////////////////////////////////
 
@@ -45,15 +46,16 @@ void setup() {
   // both during, and anytime after, pairing, HAP also allows you to customize the default names themselves, so
   // something more intuitive is presented to the user when the device is first paired.
 
-  // Changing the default name for an Accessory is done by adding the optional Characteristic Name(char *tileName) to the
-  // Accessory Information Service.  This causes the Home App to use "tileName" as the default name for an Accessory
-  // Tile instead of generating one from the name used in homeSpan.begin().  Howevever, there is one caveat:  The Name()
-  // Characteristic has no affect when used in the first Accessory of a device.  The default name of the first Accessory
-  // Tile will always be showsn by the Home App as the name specified in homeSpan.begin() regardless of whether or not
-  // the Name() Characteristic has been added to the Accessory Information Service.
+  // Changing the default name for an Accessory is done by adding an optional Name Characteristic to the
+  // Accessory Information Service.  This causes the Home App to use the value of that Characteristic as the default name
+  // for an Accessory Tile, instead of generating one from the name used in homeSpan.begin().
+  
+  // Howevever, there is one caveat:  The Name Characteristic has no affect when used in the first Accessory of a device.
+  // Rather, the default name of the first Accessory Tile will always be shown by the Home App as the name specified in
+  // homeSpan.begin() regardless of whether or not the Name Characteristic has been added to the Accessory Information Service.
 
   // Below is a replay of Example 6 showing how the Name Characteristic can be used to change the default names of the second,
-  // but not the first, Accessory.
+  // but not the first, Accessory Tile.
   
   Serial.begin(115200);
 
