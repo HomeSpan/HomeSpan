@@ -1448,14 +1448,11 @@ SpanAccessory::SpanAccessory(uint32_t aid){
 void SpanAccessory::validate(){
 
   boolean foundInfo=false;
-  boolean foundProtocol=false;
   
   for(int i=0;i<Services.size();i++){
     if(!strcmp(Services[i]->type,"3E"))
       foundInfo=true;
-    else if(!strcmp(Services[i]->type,"A2"))
-      foundProtocol=true;
-    else if(aid==1)                             // this is an Accessory with aid=1, but it has more than just AccessoryInfo and HAPProtocolInformation.  So...
+    else if(aid==1)                             // this is an Accessory with aid=1, but it has more than just AccessoryInfo.  So...
       homeSpan.isBridge=false;                  // ...this is not a bridge device
   }
 
@@ -1464,12 +1461,7 @@ void SpanAccessory::validate(){
     homeSpan.configLog+=" *** ERROR!  Required Service for this Accessory not found. ***\n";
     homeSpan.nFatalErrors++;
   }    
-
-  if(!foundProtocol && (aid==1 || !homeSpan.isBridge)){           // HAPProtocolInformation must always be present in Accessory if aid=1, and any other Accessory if the device is not a bridge)
-    homeSpan.configLog+="   \u2718 Service HAPProtocolInformation";
-    homeSpan.configLog+=" *** ERROR!  Required Service for this Accessory not found. ***\n";
-//    homeSpan.nFatalErrors++;
-  }    
+   
 }
 
 ///////////////////////////////
