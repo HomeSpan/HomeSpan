@@ -1,7 +1,7 @@
 /*********************************************************************************
  *  MIT License
  *  
- *  Copyright (c) 2020 Gregg E. Berman
+ *  Copyright (c) 2020-2022 Gregg E. Berman
  *  
  *  https://github.com/HomeSpan/HomeSpan
  *  
@@ -52,9 +52,6 @@ void setup() {
   
     new Service::AccessoryInformation();            // HAP requires every Accessory to implement an AccessoryInformation Service, with the required Identify Characteristic
       new Characteristic::Identify();                 // Create the required Identify  
-      
-    new Service::HAPProtocolInformation();          // Create the HAP Protcol Information Service  
-      new Characteristic::Version("1.1.0");           // Set the Version Characteristicto "1.1.0" as required by HAP
 
     new Service::LightBulb();                       // Create the Light Bulb Service
       new Characteristic::On();                       // This Service requires the "On" Characterstic to turn the light on and off
@@ -65,9 +62,6 @@ void setup() {
   
     new Service::AccessoryInformation();            // HAP requires every Accessory to implement an AccessoryInformation Service, with the required Identify Characteristic
       new Characteristic::Identify();                 // Create the required Identify  
-      
-    new Service::HAPProtocolInformation();          // Create the HAP Protcol Information Service  
-      new Characteristic::Version("1.1.0");           // Set the Version Characteristicto "1.1.0" as required by HAP
 
     new Service::LightBulb();                       // Create the Light Bulb Service
       new Characteristic::On();                       // This Service requires the "On" Characterstic to turn the light on and off

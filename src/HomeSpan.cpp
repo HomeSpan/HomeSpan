@@ -1468,7 +1468,7 @@ void SpanAccessory::validate(){
   if(!foundProtocol && (aid==1 || !homeSpan.isBridge)){           // HAPProtocolInformation must always be present in Accessory if aid=1, and any other Accessory if the device is not a bridge)
     homeSpan.configLog+="   \u2718 Service HAPProtocolInformation";
     homeSpan.configLog+=" *** ERROR!  Required Service for this Accessory not found. ***\n";
-    homeSpan.nFatalErrors++;
+//    homeSpan.nFatalErrors++;
   }    
 }
 

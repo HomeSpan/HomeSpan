@@ -1,7 +1,7 @@
 /*********************************************************************************
  *  MIT License
  *  
- *  Copyright (c) 2020 Gregg E. Berman
+ *  Copyright (c) 2020-2022 Gregg E. Berman
  *  
  *  https://github.com/HomeSpan/HomeSpan
  *  
@@ -50,10 +50,7 @@ void setup() {
   new SpanAccessory();                            
   
     new Service::AccessoryInformation();                
-      new Characteristic::Identify();                 
-      
-    new Service::HAPProtocolInformation();         
-      new Characteristic::Version("1.1.0");        
+      new Characteristic::Identify();                        
 
     new Service::LightBulb();                      
       new Characteristic::On(true);            // NEW: Providing an argument sets its initial value.  In this case it means the LightBulb will be turned on at start-up

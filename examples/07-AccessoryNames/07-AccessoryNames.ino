@@ -1,7 +1,7 @@
 /*********************************************************************************
  *  MIT License
  *  
- *  Copyright (c) 2020 Gregg E. Berman
+ *  Copyright (c) 2020-2022 Gregg E. Berman
  *  
  *  https://github.com/HomeSpan/HomeSpan
  *  
@@ -65,21 +65,15 @@ void setup() {
   
     new Service::AccessoryInformation();
       new Characteristic::Identify();            
-      new Characteristic::Name("Simply LED");     // This use of Name() will be ignored by the Home App.  The default name for the Accessory will continue to be shown as "HomeSpan LED"
-      
-    new Service::HAPProtocolInformation();      
-      new Characteristic::Version("1.1.0");     
+      new Characteristic::Name("Simple LED");     // This use of Name() will be ignored by the Home App.  The default name for the Accessory will continue to be shown as "HomeSpan LED" 
 
-    new DEV_LED(16);                // create an on/off LED attached to pin 16 (same as in Example 5)
+    new DEV_LED(16);
 
   new SpanAccessory(); 
   
     new Service::AccessoryInformation();    
       new Characteristic::Identify();               
-      new Characteristic::Name("Dimmable LED");   // This DOES change the default name for the Accessory from "HomeSpan LED 2" to "Dimmable LED"
-      
-    new Service::HAPProtocolInformation();          
-      new Characteristic::Version("1.1.0");         
+      new Characteristic::Name("Dimmable LED");   // This DOES change the default name for the Accessory from "HomeSpan LED 2" to "Dimmable LED"      
   
     new DEV_DimmableLED(17);
 

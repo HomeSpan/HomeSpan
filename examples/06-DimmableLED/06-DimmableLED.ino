@@ -1,7 +1,7 @@
 /*********************************************************************************
  *  MIT License
  *  
- *  Copyright (c) 2020 Gregg E. Berman
+ *  Copyright (c) 2020-2022 Gregg E. Berman
  *  
  *  https://github.com/HomeSpan/HomeSpan
  *  
@@ -64,20 +64,14 @@ void setup() {
   new SpanAccessory(); 
   
     new Service::AccessoryInformation(); 
-      new Characteristic::Identify();            
-      
-    new Service::HAPProtocolInformation();      
-      new Characteristic::Version("1.1.0");     
+      new Characteristic::Identify();                
 
     new DEV_LED(16);                // create an on/off LED attached to pin 16 (same as in Example 5)
 
   new SpanAccessory(); 
   
     new Service::AccessoryInformation();    
-      new Characteristic::Identify();               
-      
-    new Service::HAPProtocolInformation();          
-      new Characteristic::Version("1.1.0");         
+      new Characteristic::Identify();                       
   
     new DEV_DimmableLED(17);        // NEW! create a dimmable (PWM-driven) LED attached to pin 17.  See new code at end of DEV_LED.h
 

@@ -1,7 +1,7 @@
 /*********************************************************************************
  *  MIT License
  *  
- *  Copyright (c) 2020 Gregg E. Berman
+ *  Copyright (c) 2020-2022 Gregg E. Berman
  *  
  *  https://github.com/HomeSpan/HomeSpan
  *  
@@ -98,14 +98,7 @@ void setup() {                // Your HomeSpan code should be placed within the 
 //      new Characteristic::Model("120-Volt Lamp");     // Model of the Accessory (arbitrary text string, and can be the same for every Accessory)
 //      new Characteristic::FirmwareRevision("0.9");    // Firmware of the Accessory (arbitrary text string, and can be the same for every Accessory)
 
-  // *NOTE* HAP requires that the AccessoryInformation Service always be instantiated BEFORE any other Services, which is why we created it first.
-
-  // HAP also requires every Accessory (with the exception of those in Bridges, as we will see later) to implement the HAP Protocol Information Service.
-  // This Service supports a single required Characteristic that defines the version number of HAP used by the device.
-  // HAP Release R2 requires this version to be set to "1.1.0" 
-  
-    new Service::HAPProtocolInformation();          // Create the HAP Protcol Information Service  
-      new Characteristic::Version("1.1.0");           // Set the Version Characteristicto "1.1.0" as required by HAP
+  // *NOTE* HAP requires that the Accessory Information Service always be instantiated BEFORE any other Services, which is why we created it first.
 
   // Now that the required "informational" Services have been defined, we can finally create our Light Bulb Service
 
