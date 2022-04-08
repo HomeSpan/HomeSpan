@@ -1,7 +1,7 @@
 /*********************************************************************************
  *  MIT License
  *  
- *  Copyright (c) 2020 Gregg E. Berman
+ *  Copyright (c) 2020-2022 Gregg E. Berman
  *  
  *  https://github.com/HomeSpan/HomeSpan
  *  
@@ -37,7 +37,6 @@
 
 #include "HomeSpan.h" 
 #include "DEV_LED.h"     
-#include "DEV_Identify.h"       
 
 void setup() {
 
@@ -81,24 +80,21 @@ void setup() {
 
   homeSpan.begin(Category::Bridges,"HomeSpan Bridge");
   
-  // Defines the Bridge Accessory
-
-  new SpanAccessory();  
-    new DEV_Identify("Bridge #1","HomeSpan","123-ABC","HS Bridge","0.9",3);
-    new Service::HAPProtocolInformation();
-      new Characteristic::Version("1.1.0");
-  
-  // Defines an ON/OFF LED Accessory attached to pin 16
-
-  new SpanAccessory();                                                          
-    new DEV_Identify("On-Off LED","HomeSpan","123-ABC","20mA LED","0.9",0);
+  new SpanAccessory();
+    new Service::AccessoryInformation();
+      new Characteristic::Identify();            
+ 
+  new SpanAccessory();
+    new Service::AccessoryInformation();
+      new Characteristic::Identify();            
+      new Characteristic::Name("Simple LED");
     new DEV_LED(16);
 
-  // Defines a Dimmable (PWM-driven) LED Accessory attached to pin 17
-  
-  new SpanAccessory();                                                        
-    new DEV_Identify("Dimmable LED","HomeSpan","123-ABC","20mA LED","0.9",0);       
-    new DEV_DimmableLED(17);                                                                                      
+  new SpanAccessory();
+    new Service::AccessoryInformation();    
+      new Characteristic::Identify();               
+      new Characteristic::Name("Dimmable LED");  
+    new DEV_DimmableLED(17);                                                                                     
 
 } // end of setup()
 
