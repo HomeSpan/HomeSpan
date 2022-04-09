@@ -62,9 +62,8 @@ void setup() {
   Serial.begin(115200);
 
   // Below we replace Category::Lighting with Category::Bridges. This changes the icon of the device shown when pairing
-  // with the Home App. It does NOT change any of the icons for an Accessory Tile (these are determined by the types of
-  // Services implemented in each Accessory - see Example 9). Note you can choose any Category you like - for instance,
-  // we could have continued to use Category::Lighting, even though we are configuring the device as a Bridge.
+  // with the Home App, but does NOT change the icons of the Accessory Tiles.  You can choose any Category you like.
+  // For instance, we could have continued to use Category::Lighting, even though we are configuring the device as a Bridge.
 
   homeSpan.begin(Category::Bridges,"HomeSpan Bridge");
   
@@ -75,7 +74,7 @@ void setup() {
   new SpanAccessory();                            // This second Accessory is the same as the first Accessory in Example 7, with the exception that Characteristic::Name() now does something
     new Service::AccessoryInformation();
       new Characteristic::Identify();            
-      new Characteristic::Name("Simple LED");     // Note that unlike in Example 7, this use of Name() is properly implented by the Home App since it is not the first Accessory (the Bridge above is the first)
+      new Characteristic::Name("Simple LED");     // Note that unlike in Example 7, this use of Name() is now utilized by the Home App since it is not the first Accessory (the Bridge above is the first)
     new DEV_LED(16);
 
   new SpanAccessory();                            // This third Accessory is the same as the second Accessory in Example 7

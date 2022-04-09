@@ -41,7 +41,7 @@
 
 void setup() {
 
-  // As discusses in previous examples, the Home App automatically generate default names for each Accessory Tile
+  // As discusses in previous examples, the Home App automatically generates default names for each Accessory Tile
   // based on the Name provided in the second argument of homeSpan.begin().  And though you can change these names
   // both during, and anytime after, pairing, HAP also allows you to customize the default names themselves, so
   // something more intuitive is presented to the user when the device is first paired.

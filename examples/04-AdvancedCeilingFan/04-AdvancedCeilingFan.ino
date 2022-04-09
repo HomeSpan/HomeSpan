@@ -40,7 +40,7 @@
 
 void setup() {
 
-  // Example 4 expands on Example 3 by adding Characteristics to set FAN SPEED, FAN DIRECTION, and LIGHT BRIGHTNESS.
+  // Example 4 expands on the first Accessory in Example 3 by adding Characteristics to set FAN SPEED, FAN DIRECTION, and LIGHT BRIGHTNESS.
   // For ease of reading, all prior comments have been removed and new comments added to show explicit changes from the previous example.
  
   Serial.begin(115200); 

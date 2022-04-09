@@ -76,6 +76,8 @@ void setup() {
   // can also change the name of any Accessory Tile, even after pairing, directly from the Home App by opening the settings page
   // for any given Tile.
 
+  // In Example 7 we will demonstrate how the default names can be changed from within a HomeSpan sketch.
+
   // IMPORTANT: You should NOT have to re-pair your device with HomeKit when moving from Example 1 to Example 2.  HomeSpan will note
   // that the Attribute Database has been updated, and will broadcast a new configuration number when the program restarts.  This should
   // cause all iOS and MacOS HomeKit Controllers to automatically update and reflect the new configuration above.
