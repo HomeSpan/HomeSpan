@@ -36,7 +36,6 @@
 
 #include "HomeSpan.h" 
 #include "DEV_Blinker.h"     
-#include "DEV_Identify.h"       
 
 void setup() {
 
@@ -82,15 +81,16 @@ void setup() {
   // Defines the Bridge Accessory
  
   new SpanAccessory();  
-    new DEV_Identify("Bridge #1","HomeSpan","123-ABC","HS Bridge","0.9",3);
-    new Service::HAPProtocolInformation();
-      new Characteristic::Version("1.1.0");
+    new Service::AccessoryInformation();
+      new Characteristic::Identify(); 
   
   // *** NEW *** defines an LED Blinker Accessory attached to pin 16 which blinks 3 times
 
   new SpanAccessory();                                                          
-    new DEV_Identify("LED Blinker","HomeSpan","123-ABC","20mA LED","0.9",0);
-    new DEV_Blinker(16,3);                                                      // DEV_Blinker takes two arguments - pin, and number of times to blink
+    new Service::AccessoryInformation();
+      new Characteristic::Identify(); 
+      new Characteristic::Name("LED Blinker");
+    new DEV_Blinker(13,3);                                                      // DEV_Blinker takes two arguments - pin, and number of times to blink
 
 } // end of setup()
 

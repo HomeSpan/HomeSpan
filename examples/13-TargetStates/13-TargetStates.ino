@@ -1,7 +1,7 @@
 /*********************************************************************************
  *  MIT License
  *  
- *  Copyright (c) 2020 Gregg E. Berman
+ *  Copyright (c) 2020-2022 Gregg E. Berman
  *  
  *  https://github.com/HomeSpan/HomeSpan
  *  
@@ -37,7 +37,6 @@
 ////////////////////////////////////////////////////////////
 
 #include "HomeSpan.h" 
-#include "DEV_Identify.h"      
 #include "DEV_DoorsWindows.h" 
 
 void setup() {
@@ -78,18 +77,20 @@ void setup() {
 
   homeSpan.begin(Category::Bridges,"HomeSpan Bridge");
 
-
   new SpanAccessory();  
-    new DEV_Identify("Bridge #1","HomeSpan","123-ABC","HS Bridge","0.9",3);
-    new Service::HAPProtocolInformation();
-      new Characteristic::Version("1.1.0");
+    new Service::AccessoryInformation();
+      new Characteristic::Identify(); 
       
   new SpanAccessory();                                                          
-    new DEV_Identify("Garage Door","HomeSpan","123-ABC","Door","0.9",0);
+    new Service::AccessoryInformation();
+      new Characteristic::Identify(); 
+      new Characteristic::Name("Garage Door");
     new DEV_GarageDoor();                                                               // Create a Garage Door Opener (see DEV_DoorsWindows.h for definition)
 
   new SpanAccessory();                                                          
-    new DEV_Identify("Window Shade","HomeSpan","123-ABC","Shade","0.9",0);
+    new Service::AccessoryInformation();
+      new Characteristic::Identify(); 
+      new Characteristic::Name("Window Shade");
     new DEV_WindowShade();                                                              // Create a motorized Window Shade (see DEV_DoorsWindows.h for definition)
 
 } // end of setup()
