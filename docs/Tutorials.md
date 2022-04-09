@@ -57,10 +57,8 @@ Example 10 illustrates how to control an RGB LED to set any color and brightness
 * converting HomeKit Hue/Saturation/Brightness levels to Red/Green/Blue levels using `PwmPin::HSVtoRGB()`
 * using the optional template functionality of `getVal()`, such as `getVal<float>()`
 
-### [Example 11 - ServiceOptions](../examples/11-ServiceOptions)
-This example explores how the Name Characteristic can be used to create different naming schemes for multi-Service Accessories, and how these appear in the Home App depending on how you display the Accessory tile.  New HomeSpan API topics covered in this example include:
-
-* setting the primary Service for an Accessory with the `setPrimary()` method
+### [Example 11 - ServiceNames](../examples/11-ServiceNames)
+This example explores how the Name Characteristic can be used to create different naming schemes for multi-Service Accessories, and how icons are chosen by the Home App for a Bridge device based on the order of the Services implemented within an Accessory.
 
 ### [Example 12 - ServiceLoops](../examples/12-ServiceLoops)
 Example 12 introduces HomeKit *Event Notifications* to implement two new accessories - a Temperature Sensor and an Air Quality Sensor.  Of course we won't actually have these physical devices attached to the ESP32 for the purpose of this example, but we will simulate "reading" their properties on a periodic basis, and notify HomeKit of any changed values.  New HomeSpan API topics covered in this example include:
