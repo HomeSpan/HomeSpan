@@ -1,7 +1,7 @@
 /*********************************************************************************
  *  MIT License
  *  
- *  Copyright (c) 2020 Gregg E. Berman
+ *  Copyright (c) 2020-2022 Gregg E. Berman
  *  
  *  https://github.com/HomeSpan/HomeSpan
  *  
@@ -90,7 +90,7 @@ void setup() {
     new Service::AccessoryInformation();
       new Characteristic::Identify(); 
       new Characteristic::Name("LED Blinker");
-    new DEV_Blinker(13,3);                                                      // DEV_Blinker takes two arguments - pin, and number of times to blink
+    new DEV_Blinker(16,3);                                                      // DEV_Blinker takes two arguments - pin, and number of times to blink
 
 } // end of setup()
 

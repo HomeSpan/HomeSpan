@@ -1,7 +1,7 @@
 /*********************************************************************************
  *  MIT License
  *  
- *  Copyright (c) 2020 Gregg E. Berman
+ *  Copyright (c) 2020-2022 Gregg E. Berman
  *  
  *  https://github.com/HomeSpan/HomeSpan
  *  
@@ -36,7 +36,6 @@
 
 #include "HomeSpan.h" 
 #include "DEV_ProgButton.h"     
-#include "DEV_Identify.h"       
 
 void setup() {
 
@@ -66,12 +65,13 @@ void setup() {
   homeSpan.begin(Category::Bridges,"HomeSpan Bridge");
 
   new SpanAccessory();  
-    new DEV_Identify("Bridge #1","HomeSpan","123-ABC","HS Bridge","0.9",3);
-    new Service::HAPProtocolInformation();
-      new Characteristic::Version("1.1.0");
+    new Service::AccessoryInformation();
+      new Characteristic::Identify();
 
   new SpanAccessory();                                                          
-    new DEV_Identify("PushButton Switches","HomeSpan","123-ABC","Prog Switches","0.9",0);
+    new Service::AccessoryInformation();
+      new Characteristic::Identify(); 
+      new Characteristic::Name("PushButton Switches");
 
     // We've written DEV_ProgButton to take two arguments.  The first is a pin number that DEV_ProgButton.h uses to create a SpanButton.  The second is an index number
     // that HomeKit uses as a label when you program the actions of each button in the Home App.  The numbers do not have to be sequential, nor start with 1.  They just need
