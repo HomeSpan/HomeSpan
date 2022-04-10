@@ -190,12 +190,14 @@ This is a **base class** from which all HomeSpan Services are derived, and shoul
 The following methods are supported:
 
 * `SpanService *setPrimary()`
-  * specifies that this is the primary Service for the Accessory.  Returns a pointer to the Service itself so that the method can be chained during instantiation. 
+  * specifies that this is the primary Service for the Accessory.  Returns a pointer to the Service itself so that the method can be chained during instantiation 
   * example: `(new Service::Fan)->setPrimary();`
+  * note though this functionality is defined by Apple in HAP-R2, it seems to have been deprecated and no longer serves any purpose or has any affect on the Home App
   
 * `SpanService *setHidden()`
   * specifies that this is hidden Service for the Accessory.  Returns a pointer to the Service itself so that the method can be chained during instantiation.
-  * note this does not seem to have any affect on the Home App.  Services marked as hidden still appear as normal
+  * example: `(new Service::Fan)->setHidden();`
+  * note though this functionality is defined by Apple in HAP-R2, it seems to have been deprecated and no longer serves any purpose or has any affect on the Home App
   
 * `SpanService *addLink(SpanService *svc)`
   * adds *svc* as a Linked Service.  Returns a pointer to the calling Service itself so that the method can be chained during instantiation.
