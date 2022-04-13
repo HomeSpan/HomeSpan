@@ -119,8 +119,6 @@ struct Shower : Service::Faucet {                 // this is our Shower structur
     WaterValve(Shower *s, int i){                             // this is constructor for WaterValve.  It takes a single argument that points to the "controlling" Shower Service
       shower=s;                                                   // store the pointer to the Shower Service
       new Characteristic::ValveType(2);                           // specify the Value Type (2=Shower Head; see HAP R2 for other choices)
-      new Characteristic::ServiceLabelIndex(i);
-      new Characteristic::IsConfigured(1);              // Source included in the Settings Screen...
     }
     
     boolean update() override {                                   // HomeSpan calls this whenever the Home App requests a change in a Valve's Active Characteristic
@@ -152,9 +150,6 @@ void setup() {
       new Characteristic::Identify();                    
     
     new Shower(4);                                          // Create a Spa Shower with 4 spray heads
-
-    new Service::ServiceLabel();
-      new Characteristic::ServiceLabelNamespace(1);
 
 } // end of setup()
 
