@@ -35,6 +35,12 @@
 //                                                        //
 ////////////////////////////////////////////////////////////
 
+// WARNING:  THIS EXAMPLE STOPPED WORKING CORRECTLY SOMEWHERE AROUND THE IOS 15.2 OR IOS 15.3 UPDATE
+// AND DOES NOT WORK AS OF IOS 15.4.1
+//
+// THE PROBLEM APPEARS TO BE IN THE RENDERING OF INDIVIDUAL VALVES IN THE HOME APP INTERFACE.  THEY
+// APPEAR IN THE EVE HOMEKIT APPLICATION, BUT NOT APPLE'S HOME APP.
+
 #include "HomeSpan.h" 
 
   // HAP normally treats multiple Services created within the same Accessory as independent of one another.  However, certain HAP Services are designed to represent a central point

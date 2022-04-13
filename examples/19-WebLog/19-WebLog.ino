@@ -60,36 +60,22 @@ void setup() {
 
 // Note the rest of the sketch below is identical to Example 5.  All of the Web Logging occurs in DEV_LED.h  
   
-  homeSpan.begin(Category::Lighting,"HomeSpan LEDs");
+  homeSpan.begin(Category::Lighting,"HomeSpan LEDs");           // Note we can set Category to Lighting even if device is configured as a Bridge
   
   new SpanAccessory(); 
-  
     new Service::AccessoryInformation(); 
-      new Characteristic::Name("LED #1"); 
-      new Characteristic::Manufacturer("HomeSpan"); 
-      new Characteristic::SerialNumber("123-ABC"); 
-      new Characteristic::Model("20mA LED"); 
-      new Characteristic::FirmwareRevision("0.9"); 
-      new Characteristic::Identify();            
-      
-    new Service::HAPProtocolInformation();      
-      new Characteristic::Version("1.1.0");  
+      new Characteristic::Identify();               
 
+  new SpanAccessory(); 
+    new Service::AccessoryInformation(); 
+      new Characteristic::Identify();               
+      new Characteristic::Name("LED #1"); 
     new DEV_LED(16);
 
-  new SpanAccessory(); 
-  
+  new SpanAccessory();   
     new Service::AccessoryInformation();    
-      new Characteristic::Name("LED #2");    
-      new Characteristic::Manufacturer("HomeSpan"); 
-      new Characteristic::SerialNumber("123-ABC");  
-      new Characteristic::Model("20mA LED");   
-      new Characteristic::FirmwareRevision("0.9");  
-      new Characteristic::Identify();               
-      
-    new Service::HAPProtocolInformation();          
-      new Characteristic::Version("1.1.0");         
-  
+      new Characteristic::Identify();                       
+      new Characteristic::Name("LED #2");      
     new DEV_LED(17);
 
 } // end of setup()
