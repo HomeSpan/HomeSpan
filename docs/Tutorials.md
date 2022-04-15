@@ -89,10 +89,16 @@ Example 17 introduces the HAP concept of Linked Services and demonstrates how th
 * creating Linked Services using the `addLink()` method
 
 ### [Example 18 - SavingStatus](../examples/18-SavingStatus)
-Example 18 demonstrates, through the implementaton of two Dimmable LEDs, how the values of Characteristics can be automatically saved in the device's non-volatile storage (NVS) for restoration upon start-up if the device is loses power.   New HomeSpan API topics covered in this example include:
+Example 18 demonstrates, through the implementation of two Dimmable LEDs, how the values of Characteristics can be automatically saved in the device's non-volatile storage (NVS) for restoration upon start-up if the device is loses power.   New HomeSpan API topics covered in this example include:
 
 * instructing HomeSpan to store the value of a Characteristic in NVS by setting the second parameter of the constuctor to `true`
 
+### [Example 19 - WebLog](../examples/19-WebLog)
+Example 19 illustrates, through the implementation of two On/Off LEDs, how to add a Web Log to your HomeSpan sketch, how to syncronize the internal clock of your device using an NTP time server, and how to create your own Web Log messages.  New HomeSpan API topics covered in this example include:
+
+* enabling the HomeSpan Web Log and specifying an optional NTP time server with the `homeSpan.enableWebLog()` method
+* using the `WEBLOG()` macro to create Web Log messages
+ 
 ---
 
 [↩️](README.md) Back to the Welcome page
