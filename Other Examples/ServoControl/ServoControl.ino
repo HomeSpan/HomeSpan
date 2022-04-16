@@ -1,7 +1,7 @@
 /*********************************************************************************
  *  MIT License
  *  
- *  Copyright (c) 2020 Gregg E. Berman
+ *  Copyright (c) 2020-2022 Gregg E. Berman
  *  
  *  https://github.com/HomeSpan/HomeSpan
  *  
@@ -31,7 +31,6 @@
 // is controlled by a Servo connected to the ESP32.
 
 #include "HomeSpan.h" 
-#include "DEV_Identify.h"      
 #include "DEV_DoorsWindows.h" 
 
 void setup() {
@@ -41,12 +40,13 @@ void setup() {
   homeSpan.begin(Category::Bridges,"HomeSpan Bridge");
 
   new SpanAccessory();  
-    new DEV_Identify("Bridge #1","HomeSpan","123-ABC","HS Bridge","0.9",3);
-    new Service::HAPProtocolInformation();
-      new Characteristic::Version("1.1.0");
+    new Service::AccessoryInformation();
+      new Characteristic::Identify();
       
   new SpanAccessory();                                                          
-    new DEV_Identify("Window Shade","HomeSpan","123-ABC","Shade","0.9",0);
+    new Service::AccessoryInformation();
+      new Characteristic::Identify(); 
+      new Characteristic::Name("Window Shade");
     new DEV_WindowShade(18);                                                            // Create a motorized Window Shade with a Servo attached to Pin 18 that controls the Horizontal Tilt of the Shade
 
 } // end of setup()

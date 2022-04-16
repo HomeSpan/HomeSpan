@@ -59,7 +59,7 @@
   #define DEVICE_SUFFIX          "-C3"
 
 #endif
-  
+ 
 #include "HomeSpan.h"
 #include "extras/Pixel.h"                       // include the HomeSpan Pixel class
 
@@ -182,56 +182,16 @@ void setup() {
  
   homeSpan.begin(Category::Lighting,"Pixel LEDS" DEVICE_SUFFIX);
 
-  new SpanAccessory();                                          // create Bridge
-    new Service::AccessoryInformation();
-      new Characteristic::Name("Pixel LEDS" DEVICE_SUFFIX);
-      new Characteristic::Manufacturer("HomeSpan");
-      new Characteristic::SerialNumber("123-ABC");
-      new Characteristic::Model("Neo/Dot Pixels");
-      new Characteristic::FirmwareRevision("1.0");
-      new Characteristic::Identify();
+  SPAN_ACCESSORY();                                             // create Bridge (note this sketch uses the SPAN_ACCESSORY() macro, introduced in v1.5.1 --- see the HomeSpan API Reference for details on this convenience macro)
 
-    new Service::HAPProtocolInformation();
-      new Characteristic::Version("1.1.0");
-
-/////////
-
-  new SpanAccessory();
-    new Service::AccessoryInformation();
-      new Characteristic::Name("Neo RGB");
-      new Characteristic::Manufacturer("HomeSpan");
-      new Characteristic::SerialNumber("123-ABC");
-      new Characteristic::Model("8-LED Strand");
-      new Characteristic::FirmwareRevision("1.0");
-      new Characteristic::Identify();
-    
+  SPAN_ACCESSORY("Neo RGB");
     new NeoPixel_RGB(NEOPIXEL_RGB_PIN,8);                       // create 8-LED NeoPixel RGB Strand with full color control
 
-/////////
+  SPAN_ACCESSORY("Neo RGBW");
+    new NeoPixel_RGBW(NEOPIXEL_RGBW_PIN,60);                    // create 60-LED NeoPixel RGBW Strand  with simulated color temperature control 
 
-  new SpanAccessory();
-    new Service::AccessoryInformation();
-      new Characteristic::Name("Neo RGBW");
-      new Characteristic::Manufacturer("HomeSpan");
-      new Characteristic::SerialNumber("123-ABC");
-      new Characteristic::Model("60-LED Strand");
-      new Characteristic::FirmwareRevision("1.0");
-      new Characteristic::Identify();
-
-  new NeoPixel_RGBW(NEOPIXEL_RGBW_PIN,60);                      // create 60-LED NeoPixel RGBW Strand  with simulated color temperature control 
-
-/////////
-
-  new SpanAccessory();
-    new Service::AccessoryInformation();
-      new Characteristic::Name("Dot RGB");
-      new Characteristic::Manufacturer("HomeSpan");
-      new Characteristic::SerialNumber("123-ABC");
-      new Characteristic::Model("30-LED Strand");
-      new Characteristic::FirmwareRevision("1.0");
-      new Characteristic::Identify();
-
-  new DotStar_RGB(DOTSTAR_DATA_PIN,DOTSTAR_CLOCK_PIN,30);       // create 30-LED DotStar RGB Strand displaying a spectrum of colors and using the current-limiting feature of DotStars to create flicker-free dimming
+  SPAN_ACCESSORY("Dot RGB");
+    new DotStar_RGB(DOTSTAR_DATA_PIN,DOTSTAR_CLOCK_PIN,30);     // create 30-LED DotStar RGB Strand displaying a spectrum of colors and using the current-limiting feature of DotStars to create flicker-free dimming
 
 }
 

@@ -97,19 +97,7 @@ void setup() {
 
   homeSpan.begin(Category::Sensors,"Eve Air Pressure");
 
-  new SpanAccessory();
-  
-    new Service::AccessoryInformation();
-      new Characteristic::Name("Air Pressure");
-      new Characteristic::Manufacturer("HomeSpan");
-      new Characteristic::SerialNumber("123-ABC");
-      new Characteristic::Model("Simulated Sensor");
-      new Characteristic::FirmwareRevision("1.0");
-      new Characteristic::Identify();
-      
-    new Service::HAPProtocolInformation();
-      new Characteristic::Version("1.1.0");
-
+  SPAN_ACCESSORY();  
     new PressureSensor();      
 
 }

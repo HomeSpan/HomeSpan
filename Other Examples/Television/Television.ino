@@ -125,17 +125,7 @@ void setup() {
  
   homeSpan.begin(Category::Television,"HomeSpan Television");
 
-  new SpanAccessory();
-    new Service::AccessoryInformation();
-      new Characteristic::Name("HomeSpan TV");
-      new Characteristic::Manufacturer("HomeSpan");
-      new Characteristic::SerialNumber("123-ABC");
-      new Characteristic::Model("HomeSpan");
-      new Characteristic::FirmwareRevision("0.1");
-      new Characteristic::Identify();
-
-  new Service::HAPProtocolInformation();
-    new Characteristic::Version("1.1.0");
+  SPAN_ACCESSORY();
 
   // Below we define 10 different InputSource Services using different combinations
   // of Characteristics to demonstrate how they interact and appear to the user in the Home App
