@@ -42,14 +42,14 @@ The Web Log page posts WEBLOG() messages in reverse-chronological order and supp
 * *Client* - the IP Address of the Client connected to HomeSpan at the time the WEBLOG() message was created.  Only applicable for messages produce in the `update()` method of a Service.  Client is set to '0.0.0.0' in all other instances
 * Message* - the message specified in the WEBLOG() macro.  For example, `WEBLOG("Request to turn LED %d OFF",ledNumber);` could produce the message *Request to turn LED 5 OFF*.  Note there is no need to add a trailing newline character to WEBLOG() messages.
 
-To enable Web Logging (it's turned off by default), call the `homeSpan.enableWebLog()` method near the top of your sketch.  This method allows you to set:
+To enable Web Logging (it's turned off by default), call the `homeSpan.enableWebLog()` method (as fully described in [HomeSpan API Reference](Reference.md)) near the top of your sketch.  This method allows you to set:
 
 * the total number of WEBLOG() messages to be stored - older messages are discarded in favor of newer ones once the limit you set is reached
 * the URL of an NTP time server - this is optional and only needed if you want to set the clock of the device at start-up
 * the time zone for the device - this is only needed if an NTP time server has been specified
 * the URL of the Web Log page - if unspecified, HomeSpan will serve the Web Log at a page named "status"
 
-Please see the [HomeSpan API Reference](Reference.md) for full details on `enableWebLog()`, and [Example 19 - WebLog](Tutorials.md#example-19---weblog) for a tutorial sketch demonstrating everything described above.
+See [Example 19 - WebLog](Tutorials.md#example-19---weblog) for a tutorial sketch demonstrating everything described above.
 
 ---
 
