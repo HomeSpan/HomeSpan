@@ -55,7 +55,6 @@
 #### Can you add a Web Server to HomeSpan?
 
 * Yes, provided you implement your Web Server using standard ESP32-Arduino libraries, such as `WebServer.h`. See [ProgrammableHub](https://github.com/HomeSpan/ProgrammableHub) for an illustrative example of how to easily integrate a Web Server into HomeSpan.  This project also covers various other advanced topics, including TCP slot management, dynamic creation of Accessories, and saving arbitrary data in the ESP32's NVS.
-* Note *ESP32AsyncWebServer* cannot be used since it requires a TCP stack that is unfortunately incompatible with HomeSpan.
 
 #### Can you add *custom* Services and Characteristics to HomeSpan?
 
@@ -63,7 +62,7 @@
 
 #### Can HomeSpan be used for commercial devices?
 
-* No, a MFi license is needed to create commercial devices. HomeSpan was developed using Apple's HAP-R2 specs, which Apple provides for [non-commercial devices that won't be distributed or sold](https://developers.apple.com/homekit/faq/).  Though I believe the commercial specifications are functionally the same, there is a slight, but critical, difference in the pairing protocol between HAP-R2 and MFi. Note that when you pair a HomeSpan device (or any device that is based on HAP-R2, such as Apple's HAP-R2 ADK, Espressif's non-commercial ADK, HomeBridge, etc.) the Home App on your iPhone will flag the device as uncertified and require you to grant it permission to proceed with pairing. This warning message about the device being uncertified does not appear on commercial devices, presumably because Apply provides the licensee with a custom MFi authorization code that is recognized by the iPhone.
+* No, a MFi license is needed to create commercial devices. HomeSpan was developed using Apple's HAP-R2 specs, which Apple provides for [non-commercial devices that won't be distributed or sold](https://developers.apple.com/homekit/faq/).  Though I believe the commercial specifications are functionally the same, there is a slight, but critical, difference in the pairing protocol between HAP-R2 and MFi. Note that when you pair a HomeSpan device (or any device that is based on HAP-R2, such as Apple's HAP-R2 ADK, Espressif's non-commercial ADK, HomeBridge, etc.) the Home App on your iPhone will flag the device as uncertified and require you to grant it permission to proceed with pairing. This warning message about the device being uncertified does not appear on commercial devices, presumably because Apple provides the licensee with a custom MFi authorization code that is recognized by the iPhone.
 
 ---
 
