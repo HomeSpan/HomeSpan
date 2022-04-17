@@ -30,48 +30,53 @@
 //    HomeSpan: A HomeKit implementation for the ESP32    //
 //    ------------------------------------------------    //
 //                                                        //
-// Example 10: Controlling a full-color RGB LED           //
-//                                                        //
+// Example 7: Changing an Accessory's default name        //
+//            to distinguish On/Off from Dimmable LEDs    //
 //                                                        //
 ////////////////////////////////////////////////////////////
 
+
 #include "HomeSpan.h" 
-#include "DEV_LED.h"     
+#include "DEV_LED.h"          
 
 void setup() {
 
-  // Example 10 illustrates how to control an RGB LED to set any color and brightness.
-  // The configuration below should look familiar by now.  We've created a new derived Service,
-  // called DEV_RgbLED to house all the required logic.  You'll find all the code in DEV_LED.h.
-  // For completeness, this configuration also contains an on/off LED and a dimmable LED as shown
-  // in prior examples.
+  // As discusses in previous examples, the Home App automatically generates default names for each Accessory Tile
+  // based on the Name provided in the second argument of homeSpan.begin().  And though you can change these names
+  // both during, and anytime after, pairing, HAP also allows you to customize the default names themselves, so
+  // something more intuitive is presented to the user when the device is first paired.
+
+  // Changing the default name for an Accessory is done by adding an optional Name Characteristic to the
+  // Accessory Information Service.  This causes the Home App to use the value of that Characteristic as the default name
+  // for an Accessory Tile, instead of generating one from the name used in homeSpan.begin().
+  
+  // Howevever, there is one caveat:  The Name Characteristic has no affect when used in the first Accessory of a device.
+  // Rather, the default name of the first Accessory Tile will always be shown by the Home App as the name specified in
+  // homeSpan.begin() regardless of whether or not the Name Characteristic has been added to the Accessory Information Service.
+
+  // Below is a replay of Example 6 showing how the Name Characteristic can be used to change the default names of the second,
+  // but not the first, Accessory Tile.
   
   Serial.begin(115200);
 
-  homeSpan.begin(Category::Bridges,"HomeSpan Bridge");
-
-  new SpanAccessory();  
-    new Service::AccessoryInformation();
-      new Characteristic::Identify();
-
-  new SpanAccessory();                                                          
+  homeSpan.begin(Category::Lighting,"HomeSpan LED");    // Note this results in the default name of "HomeSpan LED", "HomeSpan LED 2", etc. for each Accessory Tile
+  
+  new SpanAccessory(); 
+  
     new Service::AccessoryInformation();
       new Characteristic::Identify();            
-      new Characteristic::Name("Simple LED");
-    new DEV_LED(16);                                                               // Create an On/Off LED attached to pin 16
+      new Characteristic::Name("Simple LED");     // This use of Name() will be ignored by the Home App.  The default name for the Accessory will continue to be shown as "HomeSpan LED" 
 
-  new SpanAccessory();                                                          
+    new DEV_LED(16);
+
+  new SpanAccessory(); 
+  
     new Service::AccessoryInformation();    
       new Characteristic::Identify();               
-      new Characteristic::Name("Dimmable LED"); 
-    new DEV_DimmableLED(17);                                                       // Create a Dimmable (PWM-driven) LED using attached to pin 17
+      new Characteristic::Name("Dimmable LED");   // This DOES change the default name for the Accessory from "HomeSpan LED 2" to "Dimmable LED"      
+  
+    new DEV_DimmableLED(17);
 
-  new SpanAccessory();                                                          
-    new Service::AccessoryInformation();    
-      new Characteristic::Identify();               
-      new Characteristic::Name("RGB LED"); 
-    new DEV_RgbLED(32,22,23);                                                      // Create an RGB LED attached to pins 32,22,23 (for R, G, and B LED anodes)
-      
 } // end of setup()
 
 //////////////////////////////////////

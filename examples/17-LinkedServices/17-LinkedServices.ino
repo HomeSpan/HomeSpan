@@ -1,7 +1,7 @@
 /*********************************************************************************
  *  MIT License
  *  
- *  Copyright (c) 2020-2021 Gregg E. Berman
+ *  Copyright (c) 2020-2022 Gregg E. Berman
  *  
  *  https://github.com/HomeSpan/HomeSpan
  *  
@@ -34,6 +34,12 @@
 //             * implementing a multi-head Spa Shower     //
 //                                                        //
 ////////////////////////////////////////////////////////////
+
+// WARNING:  THIS EXAMPLE STOPPED WORKING CORRECTLY SOMEWHERE AROUND THE IOS 15.2 OR IOS 15.3 UPDATE
+// AND DOES NOT WORK AS OF IOS 15.4.1
+//
+// THE PROBLEM APPEARS TO BE IN THE RENDERING OF INDIVIDUAL VALVES IN THE HOME APP INTERFACE.  THEY
+// APPEAR IN THE EVE HOMEKIT APPLICATION, BUT NOT APPLE'S HOME APP.
 
 #include "HomeSpan.h" 
 
@@ -102,21 +108,21 @@
   // Note that the Shower Service only monitors the InUse Characteristics of its Linked Valves. It does not monitor the Active Characteristics of the Linked Valves.  Also, turning
   // on and off the Shower Switch should NOT change the Active Characteristic of any Valve.  Below is the code that implements all of this HAP-required logic:
   
-struct Shower:Service::Faucet{                 // this is our Shower structure, which we define as a child class of the HomeSpan Faucet structure
+struct Shower : Service::Faucet {                 // this is our Shower structure, which we define as a child class of the HomeSpan Faucet structure
 
   SpanCharacteristic *active=new Characteristic::Active();      // our implementation only requires the Active Characteristic
 
   Shower(int nHeads){                  // this is the constructor for Shower.  It takes a single argument that specifies the number of spray heads (WaterValves)
     for(int i=0;i<nHeads;i++)             // for each spray head needed ---
-      addLink(new WaterValve(this));      // --- instantiate a new WaterValve AND link it to the Shower.  Also, pass the Shower object's pointer to WaterValve constructor.  We'll see why below.
+      addLink(new WaterValve(this,i+1));  // --- instantiate a new WaterValve AND link it to the Shower.  Also, pass the Shower object's pointer to WaterValve constructor.  We'll see why below.
   }
   
-  struct WaterValve:Service::Valve{                               // here we define our WaterValve structure as a child class of the HomeSpan Valve Service
-    SpanCharacteristic *active=new Characteristic::Active();;     // the Active Characteristic is used to specify whether the Valve is Active (open) or Inactive (closed)
+  struct WaterValve : Service::Valve {                            // here we define our WaterValve structure as a child class of the HomeSpan Valve Service
+    SpanCharacteristic *active=new Characteristic::Active(1);;     // the Active Characteristic is used to specify whether the Valve is Active (open) or Inactive (closed)
     SpanCharacteristic *inUse=new Characteristic::InUse();        // the InUser Characteristic is used to specify whether water is actually flowing through value
     Shower *shower;                                               // storage for the pointer to the "controlling" Shower Service
     
-    WaterValve(Shower *s){                                        // this is constructor for WaterValve.  It takes a single argument that points to the "controlling" Shower Service
+    WaterValve(Shower *s, int i){                             // this is constructor for WaterValve.  It takes a single argument that points to the "controlling" Shower Service
       shower=s;                                                   // store the pointer to the Shower Service
       new Characteristic::ValveType(2);                           // specify the Value Type (2=Shower Head; see HAP R2 for other choices)
     }
@@ -145,19 +151,10 @@ void setup() {
   
   homeSpan.begin(Category::ShowerSystems,"HomeSpan Shower");
 
-  new SpanAccessory();                                  
-
-    new Service::AccessoryInformation();                    // HAP requires every Accessory to implement an AccessoryInformation Service, which has 6 required Characteristics
-      new Characteristic::Name("Spa Shower");                   
-      new Characteristic::Manufacturer("HomeSpan");             
-      new Characteristic::SerialNumber("HSL-123");              
-      new Characteristic::Model("HSL Test");                    
-      new Characteristic::FirmwareRevision(HOMESPAN_VERSION);   
-      new Characteristic::Identify();                           
-  
-    new Service::HAPProtocolInformation();                  // Create the HAP Protcol Information Service  
-      new Characteristic::Version("1.1.0");                     
-  
+  new SpanAccessory();  
+    new Service::AccessoryInformation();
+      new Characteristic::Identify();                    
+    
     new Shower(4);                                          // Create a Spa Shower with 4 spray heads
 
 } // end of setup()

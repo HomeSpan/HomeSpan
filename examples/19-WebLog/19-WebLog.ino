@@ -1,7 +1,7 @@
 /*********************************************************************************
  *  MIT License
  *  
- *  Copyright (c) 2020-2022 Gregg E. Berman
+ *  Copyright (c) 2022 Gregg E. Berman
  *  
  *  https://github.com/HomeSpan/HomeSpan
  *  
@@ -30,48 +30,54 @@
 //    HomeSpan: A HomeKit implementation for the ESP32    //
 //    ------------------------------------------------    //
 //                                                        //
-// Example 10: Controlling a full-color RGB LED           //
-//                                                        //
+// Example 19: Web Logging with time-keeping              //
 //                                                        //
 ////////////////////////////////////////////////////////////
 
+
 #include "HomeSpan.h" 
-#include "DEV_LED.h"     
+#include "DEV_LED.h"
 
 void setup() {
 
-  // Example 10 illustrates how to control an RGB LED to set any color and brightness.
-  // The configuration below should look familiar by now.  We've created a new derived Service,
-  // called DEV_RgbLED to house all the required logic.  You'll find all the code in DEV_LED.h.
-  // For completeness, this configuration also contains an on/off LED and a dimmable LED as shown
-  // in prior examples.
-  
+// This is a duplicate of Example 5 (Two Working LEDs) with the addition of HomeSpan Web Logging
+
   Serial.begin(115200);
 
-  homeSpan.begin(Category::Bridges,"HomeSpan Bridge");
+// Below we enable Web Logging.  The first parameter sets the maximum number of log messages to save.  As the
+// log fills with messages, older ones are replaced by newer ones.  The second parameter specifies a Timer Server
+// that HomeSpan calls to set the device clock.  Setting the clock is optional, and you can leave this
+// argument blank (or set to NULL) if you don't care about setting the absolute time of the device.  The third
+// argument defines the Time Zone used for setting the device clock.  The fourth argument specifies the URL page
+// of the Web Log.  See the HomeSpan API Reference for complete details, as well as additional options, related
+// to this function call.
 
-  new SpanAccessory();  
-    new Service::AccessoryInformation();
-      new Characteristic::Identify();
+  homeSpan.enableWebLog(10,"pool.ntp.org","UTC","myLog");           // creates a web log on the URL /HomeSpan-[DEVICE-ID].local:[TCP-PORT]/myLog
 
-  new SpanAccessory();                                                          
-    new Service::AccessoryInformation();
-      new Characteristic::Identify();            
-      new Characteristic::Name("Simple LED");
-    new DEV_LED(16);                                                               // Create an On/Off LED attached to pin 16
+// The full URL of the Web Log will be shown in the Serial Monitor at boot time for reference.
+// The Web Log output displays a variety of device parameters, plus any log messages you choose
+// to provide with the WEBLOG() macro (see DEV_LED.h)
 
-  new SpanAccessory();                                                          
-    new Service::AccessoryInformation();    
+// Note the rest of the sketch below is identical to Example 5.  All of the Web Logging occurs in DEV_LED.h  
+  
+  homeSpan.begin(Category::Lighting,"HomeSpan LEDs");           // Note we can set Category to Lighting even if device is configured as a Bridge
+  
+  new SpanAccessory(); 
+    new Service::AccessoryInformation(); 
       new Characteristic::Identify();               
-      new Characteristic::Name("Dimmable LED"); 
-    new DEV_DimmableLED(17);                                                       // Create a Dimmable (PWM-driven) LED using attached to pin 17
 
-  new SpanAccessory();                                                          
-    new Service::AccessoryInformation();    
+  new SpanAccessory(); 
+    new Service::AccessoryInformation(); 
       new Characteristic::Identify();               
-      new Characteristic::Name("RGB LED"); 
-    new DEV_RgbLED(32,22,23);                                                      // Create an RGB LED attached to pins 32,22,23 (for R, G, and B LED anodes)
-      
+      new Characteristic::Name("LED #1"); 
+    new DEV_LED(16);
+
+  new SpanAccessory();   
+    new Service::AccessoryInformation();    
+      new Characteristic::Identify();                       
+      new Characteristic::Name("LED #2");      
+    new DEV_LED(17);
+
 } // end of setup()
 
 //////////////////////////////////////

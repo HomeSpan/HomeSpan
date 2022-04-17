@@ -36,7 +36,7 @@
 
 #define     HS_MAJOR  1
 #define     HS_MINOR  5
-#define     HS_PATCH  0
+#define     HS_PATCH  1
 
 #define     STRINGIFY(x) _STR(x)
 #define     _STR(x) #x
@@ -81,6 +81,13 @@
 
 #define     DEFAULT_TCP_PORT          80                  // change with homeSpan.setPort(port);
 
+#define     DEFAULT_WEBLOG_URL        "status"            // change with optional fourth argument in homeSpan.enableWebLog()
+
+/////////////////////////////////////////////////////
+//              OTA PARTITION INFO                 //
+
+#define     HOMESPAN_MAGIC_COOKIE     "HomeSpanMagicCookie##2022"
+
 /////////////////////////////////////////////////////
 //              STATUS LED SETTINGS                //
 
@@ -96,10 +103,12 @@
 //      Message Log Level Control Macros           //
 //       0=Minimal, 1=Informative, 2=All           //
 
-#define LOG1(x) if(homeSpan.logLevel>0)Serial.print(x)
-#define LOG2(x) if(homeSpan.logLevel>1)Serial.print(x)
-   
+#define LOG0(format,...) Serial.print ##__VA_OPT__(f)(format __VA_OPT__(,) __VA_ARGS__)
+#define LOG1(format,...) if(homeSpan.logLevel>0)Serial.print ##__VA_OPT__(f)(format __VA_OPT__(,) __VA_ARGS__)
+#define LOG2(format,...) if(homeSpan.logLevel>1)Serial.print ##__VA_OPT__(f)(format __VA_OPT__(,) __VA_ARGS__)
 
+#define WEBLOG(format,...) homeSpan.webLog.addLog(format __VA_OPT__(,) __VA_ARGS__)
+   
 //////////////////////////////////////////////////////
 //   Types of Accessory Categories                  //
 //   Reference: HAP Section 13                      //

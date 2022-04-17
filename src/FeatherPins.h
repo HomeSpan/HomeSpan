@@ -24,37 +24,22 @@
  *  SOFTWARE.
  *  
  ********************************************************************************/
- 
-// This example demonstrates how to control a real-world Servo Motor using HomeSpan's
-// ServoPin Class, as included in "extras/PwmPin.h"  The code builds upon the
-// WindowShade Accessory from Example 13 by adding a Horizontal Tilt Characteristic that
-// is controlled by a Servo connected to the ESP32.
 
-#include "HomeSpan.h" 
-#include "DEV_DoorsWindows.h" 
+// For developer use and testing only - provides a common set of pin numbers mapped to the Adafruit Feather Board
+// Facilitates the testing of identical code on an ESP32, ESP32-S2, and ESP32-C3 using a common jig without rewiring
 
-void setup() {
+#pragma once
 
-  Serial.begin(115200);
+#if defined(CONFIG_IDF_TARGET_ESP32)
+  enum {F13=13,F12=12,F27=27,F33=33,F15=15,F32=32,F14=14,F22=22,F23=23,F26=26,F25=25,F34=34,F39=39,F36=36,F4=4,F5=5,F18=18,F19=19,F16=16,F17=17,F21=21};
+  #define DEVICE_SUFFIX ""
 
-  homeSpan.begin(Category::Bridges,"HomeSpan Bridge");
+#elif defined(CONFIG_IDF_TARGET_ESP32S2)
+  enum {F13=11,F12=10,F27=7,F33=3,F15=1,F32=38,F14=33,F22=9,F23=8,F26=17,F25=18,F34=14,F39=12,F36=6,F4=5,F5=36,F18=35,F19=37,F16=44,F17=43};
+  #define DEVICE_SUFFIX "-S2"
 
-  new SpanAccessory();  
-    new Service::AccessoryInformation();
-      new Characteristic::Identify();
-      
-  new SpanAccessory();                                                          
-    new Service::AccessoryInformation();
-      new Characteristic::Identify(); 
-      new Characteristic::Name("Window Shade");
-    new DEV_WindowShade(18);                                                            // Create a motorized Window Shade with a Servo attached to Pin 18 that controls the Horizontal Tilt of the Shade
+#elif defined(CONFIG_IDF_TARGET_ESP32C3)
+  enum {F27=2,F33=7,F32=3,F14=10,F22=9,F23=8,F26=0,F25=1,F4=18,F5=4,F18=6,F19=5,F16=20,F17=21,F21=19};
+  #define DEVICE_SUFFIX "-C3"
 
-} // end of setup()
-
-//////////////////////////////////////
-
-void loop(){
-  
-  homeSpan.poll();
-  
-} // end of loop()
+#endif

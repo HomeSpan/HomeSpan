@@ -1,7 +1,7 @@
 /*********************************************************************************
  *  MIT License
  *  
- *  Copyright (c) 2020 Gregg E. Berman
+ *  Copyright (c) 2020-2022 Gregg E. Berman
  *  
  *  https://github.com/HomeSpan/HomeSpan
  *  
@@ -69,20 +69,12 @@ void setup() {
 
   Serial.begin(115200);
 
-  homeSpan.begin(Category::Lighting,"HomeSpan LEDs");
+  homeSpan.begin(Category::Lighting,"HomeSpan LED");
   
   new SpanAccessory(); 
   
     new Service::AccessoryInformation(); 
-      new Characteristic::Name("LED #1"); 
-      new Characteristic::Manufacturer("HomeSpan"); 
-      new Characteristic::SerialNumber("123-ABC"); 
-      new Characteristic::Model("20mA LED"); 
-      new Characteristic::FirmwareRevision("0.9"); 
-      new Characteristic::Identify();            
-      
-    new Service::HAPProtocolInformation();      
-      new Characteristic::Version("1.1.0");     
+      new Characteristic::Identify();                
 
   //  In Example 2 we instantiated a LightBulb Service and its "On" Characteristic here.  We are now going to replace these two lines (by commenting them out)...
 
@@ -102,15 +94,7 @@ void setup() {
   new SpanAccessory(); 
   
     new Service::AccessoryInformation();    
-      new Characteristic::Name("LED #2");    
-      new Characteristic::Manufacturer("HomeSpan"); 
-      new Characteristic::SerialNumber("123-ABC");  
-      new Characteristic::Model("20mA LED");   
-      new Characteristic::FirmwareRevision("0.9");  
-      new Characteristic::Identify();               
-      
-    new Service::HAPProtocolInformation();          
-      new Characteristic::Version("1.1.0");         
+      new Characteristic::Identify();                       
 
   //  new Service::LightBulb();                       // Same as above, this line is deleted...
   //    new Characteristic::On();                     // This line is also deleted...

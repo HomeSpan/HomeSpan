@@ -1,7 +1,7 @@
 /*********************************************************************************
  *  MIT License
  *  
- *  Copyright (c) 2020 Gregg E. Berman
+ *  Copyright (c) 2020-2022 Gregg E. Berman
  *  
  *  https://github.com/HomeSpan/HomeSpan
  *  
@@ -40,7 +40,7 @@
 
 void setup() {
 
-  // Example 4 expands on Example 3 by adding Characteristics to set FAN SPEED, FAN DIRECTION, and LIGHT BRIGHTNESS.
+  // Example 4 expands on the first Accessory in Example 3 by adding Characteristics to set FAN SPEED, FAN DIRECTION, and LIGHT BRIGHTNESS.
   // For ease of reading, all prior comments have been removed and new comments added to show explicit changes from the previous example.
  
   Serial.begin(115200); 
@@ -49,16 +49,8 @@ void setup() {
 
   new SpanAccessory();                            
   
-    new Service::AccessoryInformation();            
-      new Characteristic::Name("My Ceiling Fan");     
-      new Characteristic::Manufacturer("HomeSpan");   
-      new Characteristic::SerialNumber("123-ABC");    
-      new Characteristic::Model("120-Volt Lamp");     
-      new Characteristic::FirmwareRevision("0.9");    
-      new Characteristic::Identify();                 
-      
-    new Service::HAPProtocolInformation();         
-      new Characteristic::Version("1.1.0");        
+    new Service::AccessoryInformation();                
+      new Characteristic::Identify();                        
 
     new Service::LightBulb();                      
       new Characteristic::On(true);            // NEW: Providing an argument sets its initial value.  In this case it means the LightBulb will be turned on at start-up

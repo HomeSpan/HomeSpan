@@ -80,7 +80,6 @@ struct HAPClient {
   static TLV<kTLVType,10> tlv8;                       // TLV8 structure (HAP Section 14.1) with space for 10 TLV records of type kTLVType (HAP Table 5-6)
   static nvs_handle hapNVS;                           // handle for non-volatile-storage of HAP data
   static nvs_handle srpNVS;                           // handle for non-volatile-storage of SRP data
-  static nvs_handle otaNVS;                           // handle for non-volatile-storage of OTA data
   static uint8_t httpBuf[MAX_HTTP+1];                 // buffer to store HTTP messages (+1 to leave room for storing an extra 'overflow' character)
   static HKDF hkdf;                                   // generates (and stores) HKDF-SHA-512 32-byte keys derived from an inputKey of arbitrary length, a salt string, and an info string
   static pairState pairStatus;                        // tracks pair-setup status
@@ -118,6 +117,7 @@ struct HAPClient {
   int getCharacteristicsURL(char *urlBuf);     // GET /characteristics (HAP Section 6.7.4)  
   int putCharacteristicsURL(char *json);       // PUT /characteristics (HAP Section 6.7.2)
   int putPrepareURL(char *json);               // PUT /prepare (HAP Section 6.7.2.4)
+  int getStatusURL();                          // GET / status (an optional, non-HAP feature)
 
   void tlvRespond();                                                // respond to client with HTTP OK header and all defined TLV data records (those with length>0)
   void sendEncrypted(char *body, uint8_t *dataBuf, int dataLen);    // send client complete ChaCha20-Poly1305 encrypted HTTP mesage comprising a null-terminated 'body' and 'dataBuf' with 'dataLen' bytes

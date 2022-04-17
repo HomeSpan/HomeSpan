@@ -37,13 +37,13 @@
 namespace Service {
 
   struct AccessoryInformation : SpanService { AccessoryInformation() : SpanService{"3E","AccessoryInformation"}{
-    REQ(FirmwareRevision);
     REQ(Identify);
-    REQ(Manufacturer);
-    REQ(Model);
-    REQ(Name);
-    REQ(SerialNumber);
-    OPT(HardwareRevision);      
+    OPT(FirmwareRevision);
+    OPT(Manufacturer);
+    OPT(Model);
+    OPT(Name);
+    OPT(SerialNumber);
+    OPT(HardwareRevision);    
   }};
 
   struct AirPurifier : SpanService { AirPurifier() : SpanService{"BB","AirPurifier"}{
@@ -521,14 +521,28 @@ namespace Characteristic {
 
 }
 
-//////////////////////////////////////////
-// MACRO TO ADD CUSTOM CHARACTERISTICS  //
-//////////////////////////////////////////
+////////////////////////////////////////////////////////
+// MACROS TO ADD CUSTOM SERVICES AND CHARACTERISTICS  //
+////////////////////////////////////////////////////////
 
 #define CUSTOM_CHAR(NAME,UUID,PERMISISONS,FORMAT,DEFVAL,MINVAL,MAXVAL,STATIC_RANGE) \
   HapChar _CUSTOM_##NAME {#UUID,#NAME,(PERMS)(PERMISISONS),FORMAT,STATIC_RANGE}; \
-  namespace Characteristic { struct NAME : SpanCharacteristic { NAME(FORMAT##_t val=DEFVAL, boolean nvsStore=false) : SpanCharacteristic {&_CUSTOM_##NAME} { init(val,nvsStore,(FORMAT##_t)MINVAL,(FORMAT##_t)MAXVAL); } }; }
+  namespace Characteristic { struct NAME : SpanCharacteristic { NAME(FORMAT##_t val=DEFVAL, boolean nvsStore=false) : SpanCharacteristic {&_CUSTOM_##NAME,true} { init(val,nvsStore,(FORMAT##_t)MINVAL,(FORMAT##_t)MAXVAL); } }; }
 
 #define CUSTOM_CHAR_STRING(NAME,UUID,PERMISISONS,DEFVAL) \
   HapChar _CUSTOM_##NAME {#UUID,#NAME,(PERMS)(PERMISISONS),STRING,true}; \
-  namespace Characteristic { struct NAME : SpanCharacteristic { NAME(const char * val=DEFVAL, boolean nvsStore=false) : SpanCharacteristic {&_CUSTOM_##NAME} { init(val,nvsStore); } }; }
+  namespace Characteristic { struct NAME : SpanCharacteristic { NAME(const char * val=DEFVAL, boolean nvsStore=false) : SpanCharacteristic {&_CUSTOM_##NAME,true} { init(val,nvsStore); } }; }
+
+#define CUSTOM_SERV(NAME,UUID) \
+  namespace Service { struct NAME : SpanService { NAME() : SpanService{#UUID,#NAME,true}{} }; }
+
+////////////////////////////////////////////////////////
+// MACROS TO ADD A NEW ACCESSORT WITH OPTIONAL NAME   //
+////////////////////////////////////////////////////////
+
+#define SPAN_ACCESSORY(...)    new SpanAccessory();  new Service::AccessoryInformation(); new Characteristic::Identify(); __VA_OPT__(new Characteristic::Name(__VA_ARGS__));
+
+
+
+
+  

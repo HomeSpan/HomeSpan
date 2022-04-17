@@ -176,6 +176,22 @@ Additionally, when first starting up, HomeSpan begins by validating the device's
 |Volume|uint8_t|0|
 |WaterLevel|double|0|
 
+
+### HAP Format Codes (HAP-R2 Table 6-5)
+
+|HAP-R2 Format Code|HomeSpan C++ Type|
+|------------------|-----------------|
+|BOOL|boolean|
+|UINT8|uint8_t|
+|UINT16|uint16_t|
+|UINT32|uint32_t|
+|UINT64|uint64_t|
+|INT|int|
+|FLOAT|double|
+|STRING|char \*|
+|TLV8|(not implemented)|
+|DATA|(not implemented)|
+
 ---
 
 [↩️](README.md) Back to the Welcome page

@@ -29,6 +29,7 @@ HomeSpan is fully compatible with both Versions 1 and 2 of the [Arduino-ESP32 Bo
 * Integrated Push Button functionality supporting single, double, and long presses 
 * Integrated access to the ESP32's on-chip Remote Control peripheral for easy generation of IR and RF signals
 * Dedicated classes to control one- and two-wire addressable RGB and RGBW LEDs and LED strips
+* Integrated Web Log for user-defined log messages
 * Extensively-commented Tutorial Sketches taking you from the very basics of HomeSpan through advanced HomeKit topics
 * Additional examples and projects showcasing real-world implementations of HomeSpan
 * A complete set of documentation explaining every aspect of the HomeSpan API
@@ -44,24 +45,34 @@ HomeSpan is fully compatible with both Versions 1 and 2 of the [Arduino-ESP32 Bo
   * Launch the WiFi Access Point
 * A standalone, detailed End-User Guide
 
-## ❗Latest Update - HomeSpan 1.5.0 (2/20/2022)
+## ❗Latest Update - HomeSpan 1.5.1 (4/17/2022)
 
-* **New integrated library to control one- and two-wire Addressable RGB and RGBW LEDs and LED strips!**
-  * Adds two new class:
-    * **Pixel()** for control of one-wire RGB and RGBW LEDs and LED strips, such as this [NeoPixel RGBW LED](https://www.adafruit.com/product/2759)
-    * **Dot()** for control of two-wire RGB LEDs and LED strips, such as this [DotStar RGB Strip](https://www.adafruit.com/product/2241)
-    
-  * See [HomeSpan Pixels](https://github.com/HomeSpan/HomeSpan/blob/master/docs/Pixel.md) for full details, including a detailed tutorial sketch demonstrating different ways of using the **Pixel()** and **Dot()** classes, as well an advanced HomeSpan "HolidayLights" Project that shows how to develop custom special effects!
+* **New Web Logging functionality**
+  * HomeSpan can now host a Web Log page for message logging
+  * New WEBLOG() macro makes is easy to create user-defined log messages
+  * Provides for the optional use of an NTP Time Server to set the device clock so all messages can be properly timestamped
+  * See [HomeSpan Message Logging](https://github.com/HomeSpan/HomeSpan/blob/master/docs/Logging.md) for full details
 
-* **Increased the maximum number of simultaneous Controller connections from 8 to 14 (for Arduino-ESP32 version 2.0.1 and later)**
-  * Added new method `reserveSocketConnection(uint8_t nSockets)` to the global homeSpan object that allows for better management of custom connections
-  * Deprecated older `setMaxConnections(uint8_t nCon)` method
+* **New *printf*-style formatting for LOG() macros**
+  * Adds variadic forms of the LOG0(), LOG1(), and LOG2() macros so they can be used in the same manner as a standard C printf function
+  * Greatly simplifies the creation of log messages 
+  * See [HomeSpan Message Logging](https://github.com/HomeSpan/HomeSpan/blob/master/docs/Logging.md) for full details
 
+* **New CUSTOM_SERV() macro**
+  * Allows for the creation of Custom Services
+  * Can be used in conjunction with the existing CUSTOM_CHAR() macro to produce Services beyond those provided in HAP-R2
+  * Includes a fully worked example of a custom [Pressure Sensor Accessory](https://github.com/HomeSpan/HomeSpan/blob/master/Other%20Examples/CustomService) that is recognized by *Eve for HomeKit*
+  * See [HomeSpan API Reference](https://github.com/HomeSpan/HomeSpan/blob/master/docs/Reference.md) for details
+
+* **New "Safe-Load" mode for OTA updates**
+  * HomeSpan can check to make sure the new sketch being uploaded via OTA is another HomeSpan sketch.  If not, the upload fails
+  * Upon rebooting after an OTA update, HomeSpan checks to ensure that OTA is enabled in the updated sketch.  If not, HomeSpan rolls back to the previous version of the sketch
+  * See [HomeSpan OTA](https://github.com/HomeSpan/HomeSpan/blob/master/docs/OTA.md) for full details
+  
 * **Additional updates include:**
-  * Added new methods `setDescription(const char *desc)` and `setUnit(const char *unit)` to SpanCharacteristic.  Useful when creating and working with Custom Characteristics
-  * Added new method `setStatusAutoOff(uint16_t duration)` to the global homeSpan object.  Causes the Status LED (if used) to automatically turn off after *duration* seconds.  Very handy for devices located in bedrooms or TV rooms!
-  * Added new method `setPairCallback(func)` to the global homeSpan object.  Allows you to create custom actions whenever HomeSpan pairs or subsequently unpairs the device to the Home App
-  * Added new method `deleteStoredValues()` to the global homeSpan object. Provides a programmatic way of deleting the value settings of all Characteristics stored in the NVS
+  * a new (optional) argument to `SpanUserCommand()` that allows for passing a pointer to any arbitrary data structure
+  * a new SPAN_ACCESSORY() macro that expands to a common snippet of code often used when creating Accessories 
+  * refreshed and streamlined example Tutorials, and fully reworked Examples 7 and 11, to best conform with Home App behavior under iOS 15.4
 
 See [Releases](https://github.com/HomeSpan/HomeSpan/releases) for details on all changes and bug fixes included in this update.
 
@@ -83,6 +94,7 @@ HomeSpan includes the following documentation:
 * [HomeSpan RFControl](https://github.com/HomeSpan/HomeSpan/blob/master/docs/RMT.md) - easy generation of RF and IR Remote Control signals using the ESP32's on-chip RMT peripheral
 * [HomeSpan Pixels](https://github.com/HomeSpan/HomeSpan/blob/master/docs/Pixels.md) - integrated control of addressable one- and two-wire RGB and RGBW LEDs and LED strips
 * [HomeSpan Television Services](https://github.com/HomeSpan/HomeSpan/blob/master/docs/TVServices.md) - how to use HomeKit's undocumented Television Services and Characteristics
+* [HomeSpan Message Logging](https://github.com/HomeSpan/HomeSpan/blob/master/docs/Logging.md) - how to generate log messages for display on the Arduino Serial Monitor as well as optionally posted to an integrated Web Log page
 * [HomeSpan Projects](https://github.com/topics/homespan) - real-world applications of the HomeSpan Library
 * [HomeSpan FAQ](https://github.com/HomeSpan/HomeSpan/blob/master/docs/FAQ.md) - answers to frequently-asked questions
 

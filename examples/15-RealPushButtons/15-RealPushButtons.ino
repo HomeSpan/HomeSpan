@@ -1,7 +1,7 @@
 /*********************************************************************************
  *  MIT License
  *  
- *  Copyright (c) 2020 Gregg E. Berman
+ *  Copyright (c) 2020-2022 Gregg E. Berman
  *  
  *  https://github.com/HomeSpan/HomeSpan
  *  
@@ -38,7 +38,6 @@
 
 #include "HomeSpan.h" 
 #include "DEV_LED.h"     
-#include "DEV_Identify.h"       
 
 void setup() {
 
@@ -132,12 +131,13 @@ void setup() {
   homeSpan.begin(Category::Bridges,"HomeSpan Bridge");
 
   new SpanAccessory();  
-    new DEV_Identify("Bridge #1","HomeSpan","123-ABC","HS Bridge","0.9",3);
-    new Service::HAPProtocolInformation();
-      new Characteristic::Version("1.1.0");
+    new Service::AccessoryInformation();
+      new Characteristic::Identify(); 
 
   new SpanAccessory();                                                          
-    new DEV_Identify("PushButton LED","HomeSpan","123-ABC","20mA LED","0.9",0);
+    new Service::AccessoryInformation();
+      new Characteristic::Identify(); 
+      new Characteristic::Name("PushButton LED");
     
     new DEV_DimmableLED(17,23,5,18);          // NEW! added three extra arguments to specify the pin numbers for three SpanButtons() - see DEV_LED.h
  

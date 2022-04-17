@@ -1,4 +1,29 @@
-/* HomeSpan Table Lamp Example */
+/*********************************************************************************
+ *  MIT License
+ *  
+ *  Copyright (c) 2020-2022 Gregg E. Berman
+ *  
+ *  https://github.com/HomeSpan/HomeSpan
+ *  
+ *  Permission is hereby granted, free of charge, to any person obtaining a copy
+ *  of this software and associated documentation files (the "Software"), to deal
+ *  in the Software without restriction, including without limitation the rights
+ *  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *  copies of the Software, and to permit persons to whom the Software is
+ *  furnished to do so, subject to the following conditions:
+ *  
+ *  The above copyright notice and this permission notice shall be included in all
+ *  copies or substantial portions of the Software.
+ *  
+ *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ *  SOFTWARE.
+ *  
+ ********************************************************************************/
 
 #include "HomeSpan.h"         // include the HomeSpan library
 
@@ -33,18 +58,10 @@ void setup() {
 
   new SpanAccessory();           // Table Lamp Accessory
   
-    new Service::AccessoryInformation();            // HAP requires every Accessory to implement an AccessoryInformation Service, with 6 *required* Characteristics
-      new Characteristic::Name("My Table Lamp");      // Name of the Accessory, which shows up on the HomeKit "tiles", and should be unique across Accessories                                                    
-      new Characteristic::Manufacturer("HomeSpan");   // Manufacturer of the Accessory (arbitrary text string, and can be the same for every Accessory)
-      new Characteristic::SerialNumber("123-ABC");    // Serial Number of the Accessory (arbitrary text string, and can be the same for every Accessory)
-      new Characteristic::Model("120-Volt Lamp");     // Model of the Accessory (arbitrary text string, and can be the same for every Accessory)
-      new Characteristic::FirmwareRevision("0.9");    // Firmware of the Accessory (arbitrary text string, and can be the same for every Accessory)  
-      new Characteristic::Identify();                 // Provides a hook that allows a HomeKit Client to identify the device
-  
-    new Service::HAPProtocolInformation();          // HAP requires every Accessory (except those in a bridge) to implement a Protcol Information Service  
-      new Characteristic::Version("1.1.0");           // Set the Version Characteristic to "1.1.0," which is required by HAP
-      
-   new TableLamp(17);                               // instantiate the TableLamp Service (defined below) with lampPin set to 17
+    new Service::AccessoryInformation();            // HAP requires every Accessory to implement an AccessoryInformation Service  
+      new Characteristic::Identify();               // HAP requires the Accessory Information Service to include the Identify Characteristic
+        
+    new TableLamp(17);                              // instantiate the TableLamp Service (defined below) with lampPin set to 17
   
 } // end of setup()
 

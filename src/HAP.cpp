@@ -40,16 +40,15 @@ void HAPClient::init(){
 
   nvs_open("SRP",NVS_READWRITE,&srpNVS);        // open SRP data namespace in NVS 
   nvs_open("HAP",NVS_READWRITE,&hapNVS);        // open HAP data namespace in NVS
-  nvs_open("OTA",NVS_READWRITE,&otaNVS);        // open OTA data namespace in NVS
 
-  if(!nvs_get_str(otaNVS,"OTADATA",NULL,&len)){                     // if found OTA data in NVS
-    nvs_get_str(otaNVS,"OTADATA",homeSpan.otaPwd,&len);              // retrieve data  
+  if(!nvs_get_str(homeSpan.otaNVS,"OTADATA",NULL,&len)){                     // if found OTA data in NVS
+    nvs_get_str(homeSpan.otaNVS,"OTADATA",homeSpan.spanOTA.otaPwd,&len);       // retrieve data  
   } else {
     MD5Builder otaPwdHash;
     otaPwdHash.begin();
     otaPwdHash.add(DEFAULT_OTA_PASSWORD);
     otaPwdHash.calculate();
-    otaPwdHash.getChars(homeSpan.otaPwd);
+    otaPwdHash.getChars(homeSpan.spanOTA.otaPwd);
   }
 
   if(strlen(homeSpan.pairingCodeCommand)){                          // load verification setup code if provided
@@ -341,6 +340,11 @@ void HAPClient::processRequest(){
       getCharacteristicsURL(body+21);
       return;
     }
+
+    if(homeSpan.webLog.isEnabled && !strncmp(body,homeSpan.webLog.statusURL.c_str(),homeSpan.webLog.statusURL.length())){       // GET STATUS - AN OPTIONAL, NON-HAP-R2 FEATURE
+      getStatusURL();
+      return;
+    }    
 
     notFoundError();
     Serial.print("\n*** ERROR:  Bad GET request - URL not found\n\n");
@@ -1249,6 +1253,91 @@ int HAPClient::putPrepareURL(char *json){
 
 //////////////////////////////////////
 
+int HAPClient::getStatusURL(){
+
+  char clocktime[33];
+
+  if(homeSpan.webLog.timeInit){
+    struct tm timeinfo;
+    getLocalTime(&timeinfo,10);
+    strftime(clocktime,sizeof(clocktime),"%c",&timeinfo);
+  } else {
+    sprintf(clocktime,"Unknown");        
+  }
+
+  char uptime[16];
+  int seconds=esp_timer_get_time()/1e6;
+  int secs=seconds%60;
+  int mins=(seconds/=60)%60;
+  int hours=(seconds/=60)%24;
+  int days=(seconds/=24);
+    
+  sprintf(uptime,"%d:%02d:%02d:%02d",days,hours,mins,secs);
+
+  String response="HTTP/1.1 200 OK\r\nContent-type: text/html\r\n\r\n";
+
+  response+="<html><head><title>HomeSpan Status</title>\n";
+  response+="<style>th, td {padding-right: 10px; padding-left: 10px; border:1px solid black;}";
+  response+="</style></head>\n";
+  response+="<body style=\"background-color:lightblue;\">\n";
+  response+="<p><b>" + String(homeSpan.displayName) + "</b></p>\n";
+  
+  response+="<table>\n";
+  response+="<tr><td>Up Time:</td><td>" + String(uptime) + "</td></tr>\n";
+  response+="<tr><td>Current Time:</td><td>" + String(clocktime) + "</td></tr>\n";
+  response+="<tr><td>Boot Time:</td><td>" + String(homeSpan.webLog.bootTime) + "</td></tr>\n";
+  response+="<tr><td>ESP32 Board:</td><td>" + String(ARDUINO_BOARD) + "</td></tr>\n";
+  response+="<tr><td>Arduino-ESP Version:</td><td>" + String(ARDUINO_ESP_VERSION) + "</td></tr>\n";
+  response+="<tr><td>ESP-IDF Version:</td><td>" + String(ESP_IDF_VERSION_MAJOR) + "." + String(ESP_IDF_VERSION_MINOR) + "." + String(ESP_IDF_VERSION_PATCH) + "</td></tr>\n";
+  response+="<tr><td>HomeSpan Version:</td><td>" + String(HOMESPAN_VERSION) + "</td></tr>\n";
+  response+="<tr><td>Sketch Version:</td><td>" + String(homeSpan.getSketchVersion()) + "</td></tr>\n"; 
+  response+="<tr><td>Max Log Entries:</td><td>" + String(homeSpan.webLog.maxEntries) + "</td></tr>\n"; 
+  response+="</table>\n";
+  response+="<p></p>";
+
+  if(homeSpan.webLog.maxEntries>0){
+    response+="<table><tr><th>Entry</th><th>Up Time</th><th>Log Time</th><th>Client</th><th>Message</th></tr>\n";
+    int lastIndex=homeSpan.webLog.nEntries-homeSpan.webLog.maxEntries;
+    if(lastIndex<0)
+      lastIndex=0;
+    
+    for(int i=homeSpan.webLog.nEntries-1;i>=lastIndex;i--){
+      int index=i%homeSpan.webLog.maxEntries;
+      seconds=homeSpan.webLog.log[index].upTime/1e6;
+      secs=seconds%60;
+      mins=(seconds/=60)%60;
+      hours=(seconds/=60)%24;
+      days=(seconds/=24);   
+      sprintf(uptime,"%d:%02d:%02d:%02d",days,hours,mins,secs);
+
+      if(homeSpan.webLog.log[index].clockTime.tm_year>0)
+        strftime(clocktime,sizeof(clocktime),"%c",&homeSpan.webLog.log[index].clockTime);
+      else
+        sprintf(clocktime,"Unknown");        
+      
+      response+="<tr><td>" + String(i+1) + "</td><td>" + String(uptime) + "</td><td>" + String(clocktime) + "</td><td>" + homeSpan.webLog.log[index].clientIP + "</td><td>" + String(homeSpan.webLog.log[index].message) + "</td/tr>\n";
+    }
+    response+="</table>\n";
+  }
+  
+  response+="</body></html>";
+
+  LOG2("\n>>>>>>>>>> ");
+  LOG2(client.remoteIP());
+  LOG2(" >>>>>>>>>>\n");
+  LOG2(response);
+  LOG2("\n");
+  client.print(response);
+  LOG2("------------ SENT! --------------\n");
+  
+  delay(1);
+  client.stop();
+  
+  return(1);
+}
+
+//////////////////////////////////////
+
 void HAPClient::callServiceLoops(){
 
   homeSpan.snapTime=millis();                     // snap the current time for use in ALL loop routines
@@ -1303,7 +1392,6 @@ void  HAPClient::checkTimedWrites(){
 }
 
 //////////////////////////////////////
-
 
 void HAPClient::eventNotify(SpanBuf *pObj, int nObj, int ignoreClient){
   
@@ -1660,7 +1748,6 @@ void Nonce::inc(){
 TLV<kTLVType,10> HAPClient::tlv8;
 nvs_handle HAPClient::hapNVS;
 nvs_handle HAPClient::srpNVS;
-nvs_handle HAPClient::otaNVS;
 uint8_t HAPClient::httpBuf[MAX_HTTP+1];                 
 HKDF HAPClient::hkdf;                                   
 pairState HAPClient::pairStatus;                        

@@ -37,6 +37,7 @@
 #include <unordered_map>
 #include <vector>
 #include <nvs.h>
+#include <ArduinoOTA.h>
 
 #include "Settings.h"
 #include "Utils.h"
@@ -76,7 +77,14 @@ extern Span homeSpan;
 
 ///////////////////////////////
 
-struct SpanConfig {                         
+struct SpanPartition{
+  char magicCookie[32];
+  uint8_t reserved[224];
+};
+
+///////////////////////////////
+
+struct SpanConfig{                         
   int configNumber=0;                         // configuration number - broadcast as Bonjour "c#" (computed automatically)
   uint8_t hashCode[48]={0};                   // SHA-384 hash of Span Database stored as a form of unique "signature" to know when to update the config number upon changes
 };
@@ -92,6 +100,49 @@ struct SpanBuf{                               // temporary storage buffer for us
   SpanCharacteristic *characteristic=NULL;    // Characteristic to update (NULL if not found)
 };
   
+///////////////////////////////
+
+struct SpanWebLog{                            // optional web status/log data
+  boolean isEnabled=false;                    // flag to inidicate WebLog has been enabled
+  uint16_t maxEntries;                        // max number of log entries;
+  int nEntries=0;                             // total cumulative number of log entries
+  const char *timeServer;                     // optional time server to use for acquiring clock time
+  const char *timeZone;                       // optional time-zone specification
+  boolean timeInit=false;                     // flag to indicate time has been initialized
+  char bootTime[33]="Unknown";                // boot time
+  String statusURL;                           // URL of status log
+  uint32_t waitTime=10000;                    // number of milliseconds to wait for initial connection to time server
+    
+  struct log_t {                              // log entry type
+    uint64_t upTime;                          // number of seconds since booting
+    struct tm clockTime;                      // clock time
+    char *message;                            // pointers to log entries of arbitrary size
+    String clientIP;                          // IP address of client making request (or "0.0.0.0" if not applicable)
+  } *log=NULL;                                // array of log entries 
+
+  void init(uint16_t maxEntries, const char *serv, const char *tz, const char *url);
+  void initTime();  
+  void addLog(const char *fmr, ...);
+};
+
+///////////////////////////////
+
+struct SpanOTA{                               // manages OTA process
+  
+  char otaPwd[33];                            // MD5 Hash of OTA password, represented as a string of hexidecimal characters
+
+  static boolean enabled;                     // enables OTA - default if not enabled
+  static boolean auth;                        // indicates whether OTA password is required
+  static int otaPercent;
+  static boolean safeLoad;                    // indicates whether OTA update should reject any application update that is not another HomeSpan sketch
+  
+  void init(boolean auth, boolean safeLoad);
+  static void start();
+  static void end();
+  static void progress(uint32_t progress, uint32_t total);
+  static void error(ota_error_t err);
+};
+
 ///////////////////////////////
 
 struct Span{
@@ -112,8 +163,11 @@ struct Span{
   const char *sketchVersion="n/a";              // version of the sketch
   nvs_handle charNVS;                           // handle for non-volatile-storage of Characteristics data
   nvs_handle wifiNVS=0;                         // handle for non-volatile-storage of WiFi data
+  nvs_handle otaNVS;                            // handle for non-volatile storaget of OTA data
   char pairingCodeCommand[12]="";               // user-specified Pairing Code - only needed if Pairing Setup Code is specified in sketch using setPairingCode()
-
+  String lastClientIP="0.0.0.0";                // IP address of last client accessing device through encrypted channel
+  boolean newCode;                              // flag indicating new application code has been loaded (based on keeping track of app SHA256)
+  
   boolean connected=false;                      // WiFi connection status
   unsigned long waitTime=60000;                 // time to wait (in milliseconds) between WiFi connection attempts
   unsigned long alarmConnect=0;                 // time after which WiFi connection attempt should be tried again
@@ -128,9 +182,6 @@ struct Span{
   unsigned long comModeLife=DEFAULT_COMMAND_TIMEOUT*1000;     // length of time (in milliseconds) to keep Command Mode alive before resuming normal operations
   uint16_t tcpPortNum=DEFAULT_TCP_PORT;                       // port for TCP communications between HomeKit and HomeSpan
   char qrID[5]="";                                            // Setup ID used for pairing with QR Code
-  boolean otaEnabled=false;                                   // enables Over-the-Air ("OTA") updates
-  char otaPwd[33];                                            // MD5 Hash of OTA password, represented as a string of hexidecimal characters
-  boolean otaAuth;                                            // OTA requires password when set to true
   void (*wifiCallback)()=NULL;                                // optional callback function to invoke once WiFi connectivity is established
   void (*pairCallback)(boolean isPaired)=NULL;                // optional callback function to invoke when pairing is established (true) or lost (false)
   boolean autoStartAPEnabled=false;                           // enables auto start-up of Access Point when WiFi Credentials not found
@@ -140,7 +191,9 @@ struct Span{
   Blinker statusLED;                                // indicates HomeSpan status
   PushButton controlButton;                         // controls HomeSpan configuration and resets
   Network network;                                  // configures WiFi and Setup Code via either serial monitor or temporary Access Point
+  SpanWebLog webLog;                                // optional web status/log
     
+  SpanOTA spanOTA;                                  // manages OTA process
   SpanConfig hapConfig;                             // track configuration changes to the HAP Accessory database; used to increment the configuration number (c#) when changes found
   vector<SpanAccessory *> Accessories;              // vector of pointers to all Accessories
   vector<SpanService *> Loops;                      // vector of pointer to all Services that have over-ridden loop() methods
@@ -191,18 +244,29 @@ struct Span{
   const char *getSketchVersion(){return sketchVersion;}                   // get sketch version number
   void setWifiCallback(void (*f)()){wifiCallback=f;}                      // sets an optional user-defined function to call once WiFi connectivity is established
   void setPairCallback(void (*f)(boolean isPaired)){pairCallback=f;}      // sets an optional user-defined function to call when Pairing is established (true) or lost (false)
-  void setApFunction(void (*f)()){apFunction=f;}                          // sets an optional user-defined function to call when activating the WiFi Access Point
-
+  void setApFunction(void (*f)()){apFunction=f;}                          // sets an optional user-defined function to call when activating the WiFi Access Point  
   void enableAutoStartAP(){autoStartAPEnabled=true;}                      // enables auto start-up of Access Point when WiFi Credentials not found
   void setWifiCredentials(const char *ssid, const char *pwd);             // sets WiFi Credentials
 
   void setPairingCode(const char *s){sprintf(pairingCodeCommand,"S %9s",s);}    // sets the Pairing Code - use is NOT recommended.  Use 'S' from CLI instead
   void deleteStoredValues(){processSerialCommand("V");}                         // deletes stored Characteristic values from NVS  
 
-  void enableOTA(boolean auth=true){otaEnabled=true;otaAuth=auth;reserveSocketConnections(1);}        // enables Over-the-Air updates, with (auth=true) or without (auth=false) authorization password
+  void enableOTA(boolean auth=true, boolean safeLoad=true){spanOTA.init(auth, safeLoad);}   // enables Over-the-Air updates, with (auth=true) or without (auth=false) authorization password  
 
+  void enableWebLog(uint16_t maxEntries=0, const char *serv=NULL, const char *tz="UTC", const char *url=DEFAULT_WEBLOG_URL){     // enable Web Logging
+    webLog.init(maxEntries, serv, tz, url);
+  }
+
+  void setTimeServerTimeout(uint32_t tSec){webLog.waitTime=tSec*1000;}    // sets wait time (in seconds) for optional web log time server to connect
+  
   [[deprecated("Please use reserveSocketConnections(n) method instead.")]]
-  void setMaxConnections(uint8_t n){requestedMaxCon=n;}                   // sets maximum number of simultaneous HAP connections 
+  void setMaxConnections(uint8_t n){requestedMaxCon=n;}                   // sets maximum number of simultaneous HAP connections
+
+  static boolean invalidUUID(const char *uuid, boolean isCustom){
+    int x=0;
+    sscanf(uuid,"%*8[0-9a-fA-F]-%*4[0-9a-fA-F]-%*4[0-9a-fA-F]-%*4[0-9a-fA-F]-%*12[0-9a-fA-F]%n",&x);
+    return(isCustom && (strlen(uuid)!=36 || x!=36));    
+  }
 
 };
 
@@ -233,8 +297,9 @@ struct SpanService{
   vector<HapChar *> req;                                  // vector of pointers to all required HAP Characteristic Types for this Service
   vector<HapChar *> opt;                                  // vector of pointers to all optional HAP Characteristic Types for this Service
   vector<SpanService *> linkedServices;                   // vector of pointers to any optional linked Services
+  boolean isCustom;                                       // flag to indicate this is a Custom Service
   
-  SpanService(const char *type, const char *hapName);
+  SpanService(const char *type, const char *hapName, boolean isCustom=false);     // constructor
 
   SpanService *setPrimary();                              // sets the Service Type to be primary and returns pointer to self
   SpanService *setHidden();                               // sets the Service Type to be hidden and returns pointer to self
@@ -280,6 +345,7 @@ struct SpanCharacteristic{
   const char *validValues=NULL;            // Optional JSON array of valid values.  Applicable only to uint8 Characteristics
   boolean *ev;                             // Characteristic Event Notify Enable (per-connection)
   char *nvsKey=NULL;                       // key for NVS storage of Characteristic value
+  boolean isCustom;                        // flag to indicate this is a Custom Characteristic
   
   uint32_t aid=0;                          // Accessory ID - passed through from Service containing this Characteristic
   boolean isUpdated=false;                 // set to true when new value has been requested by PUT /characteristic
@@ -287,7 +353,7 @@ struct SpanCharacteristic{
   UVal newValue;                           // the updated value requested by PUT /characteristic
   SpanService *service=NULL;               // pointer to Service containing this Characteristic
       
-  SpanCharacteristic(HapChar *hapChar);           // contructor
+  SpanCharacteristic(HapChar *hapChar, boolean isCustom=false);           // contructor
   
   int sprintfAttributes(char *cBuf, int flags);   // prints Characteristic JSON records into buf, according to flags mask; return number of characters printed, excluding null terminator  
   StatusCode loadUpdate(char *val, char *ev);     // load updated val/ev from PUT /characteristic JSON request.  Return intiial HAP status code (checks to see if characteristic is found, is writable, etc.)
@@ -457,11 +523,6 @@ struct SpanCharacteristic{
         uvSet(stepValue,0);
     }
 
-    int x=0;
-    sscanf(type,"%*8[0-9a-fA-F]-%*4[0-9a-fA-F]-%*4[0-9a-fA-F]-%*4[0-9a-fA-F]-%*12[0-9a-fA-F]%n",&x);
-    
-    boolean isCustom=(strlen(type)==36 && x==36);
-
     homeSpan.configLog+="(" + uvPrint(value) + ")" + ":  IID=" + String(iid) + ", " + (isCustom?"Custom-":"") + "UUID=\"" + String(type) + "\"";
     if(format!=FORMAT::STRING && format!=FORMAT::BOOL)
       homeSpan.configLog+= ", Range=[" + String(uvPrint(minValue)) + "," + String(uvPrint(maxValue)) + "]";
@@ -471,7 +532,12 @@ struct SpanCharacteristic{
     else if(nvsFlag==1)
       homeSpan.configLog+=" (storing)";
 
-    boolean valid=isCustom;
+    if(Span::invalidUUID(type,isCustom)){
+      homeSpan.configLog+=" *** ERROR!  Format of UUID is invalid. ***";
+      homeSpan.nFatalErrors++;    
+    }   
+
+    boolean valid=isCustom|service->isCustom;         // automatically set valid if either Characteristic or containing Service is Custom
   
     for(int i=0; !valid && i<homeSpan.Accessories.back()->Services.back()->req.size(); i++)
       valid=!strcmp(type,homeSpan.Accessories.back()->Services.back()->req[i]->type);
@@ -657,10 +723,13 @@ struct SpanButton{
 ///////////////////////////////
 
 struct SpanUserCommand {
-  const char *s;                              // description of command
-  void (*userFunction)(const char *v);              // user-defined function to call
+  const char *s;                                            // description of command
+  void (*userFunction1)(const char *v)=NULL;                // user-defined function to call
+  void (*userFunction2)(const char *v, void *arg)=NULL;     // user-defined function to call with user-defined arg
+  void *userArg;
 
-  SpanUserCommand(char c, const char *s, void (*f)(const char *v));  
+  SpanUserCommand(char c, const char *s, void (*f)(const char *));  
+  SpanUserCommand(char c, const char *s, void (*f)(const char *, void *), void *arg);  
 };
 
 /////////////////////////////////////////////////

@@ -1,7 +1,7 @@
 /*********************************************************************************
  *  MIT License
  *  
- *  Copyright (c) 2020 Gregg E. Berman
+ *  Copyright (c) 2020-2022 Gregg E. Berman
  *  
  *  https://github.com/HomeSpan/HomeSpan
  *  
@@ -31,33 +31,29 @@
 //    ------------------------------------------------    //
 //                                                        //
 // Example 8: HomeKit Bridges and Bridge Accessories      //
-//            ** the preferred method for HomeSpan **     //
 //                                                        //
 ////////////////////////////////////////////////////////////
 
 #include "HomeSpan.h" 
 #include "DEV_LED.h"     
-#include "DEV_Identify.h"       
 
 void setup() {
 
-  // Though we've seen in prior examples that one device can support multiple Accessories, HomeKit provides a more
-  // general multi-Accessory framework that is somewhat more robust and easier to use: HomeKit Bridges.
-  // A Bridge is a device that includes multiple Accessories, except that the FIRST defined Accessory contains
-  // nothing but the AccessoryInformation Service and the HAPProtcolInformation Service.  When such a device is paired
-  // to HomeKit, it is automatically recognized as a Bridge.  All of the other Accessories defined in the device are
-  // associated with this Bridge.  If you unpair the Bridge from HomeKit, all associated Accessories are automatically
-  // removed.
-  //
-  // Adding, editing, and deleting the other Accessories occurs in the same manner as before, but because the device
-  // is paired as a Bridge, changes to the other Accessories is less likely to require you to un-pair and re-pair
-  // the device.  HomeKit seems to be able to better process changes when they are done within a Bridge framework.
-  //
-  // One added bonus is that the HAPProtcolInformation Service only needs to be defined for the Bridge Accessory, and
-  // does not need to be repeated for other Accessories.
-  //
-  // Example 8 is functionally identical to Example 7, except that instead of defining two Accessories (one for the on/off
-  // LED and one for the dimmable LED), we define three Accessories, where the first acts as the Bridge.
+  // If the only Service defined in the FIRST Accessory of a mult-Accessory device is the required Accessory Information Service,
+  // the device is said to be configured as a "Bridge".  Historically there may have been a number of functional differences between bridge
+  // devices and non-bridge devices, but since iOS 15, it's not obvious there are any differences in functionality, with two exceptions:
+  
+  //  1. Recall from Example 7 that the use of Characteristic::Name() to change the default name of an Accessory Tile
+  //     does not work for the first Accessory defined.  The Home App always displays the default name of the first Accessory Tile
+  //     as the name of the device specified in homeSpan.begin().  However, this is not an issue when implementing a device
+  //     as a Bridge, since the first Accessory is nothing but the Bridge itself - having the default name match the name
+  //     of the device in this case makes much more sense.  More importantly, you can now use Characteristic::Name() to change the 
+  //     default name of BOTH the LED Accessory Tiles.
+
+  //  2. Devices configured as a Bridge appear in the Home App under the main settings page that displays all Hubs and Bridges.
+
+  // The sketch below is functionally identical to Example 7, except that instead of defining two Accessories (one for the Simple On/Off
+  // LED and one for the Dimmable LED), we define three Accessories, where the first acts as the Bridge.
   
   // As usual, all previous comments have been deleted and only new changes from the previous example are shown.
 
@@ -65,40 +61,27 @@ void setup() {
   
   Serial.begin(115200);
 
-  homeSpan.begin(Category::Bridges,"HomeSpan Bridge");       // CHANGED!  Note that we replaced Category::Lighting with Bridges (this changes the icon when pairing)
+  // Below we replace Category::Lighting with Category::Bridges. This changes the icon of the device shown when pairing
+  // with the Home App, but does NOT change the icons of the Accessory Tiles.  You can choose any Category you like.
+  // For instance, we could have continued to use Category::Lighting, even though we are configuring the device as a Bridge.
 
-  // We begin by creating a Bridge Accessory, which look just like any other Accessory,
-  // except that is only contains DEV_Identify (which is derived from AccessoryInformation)
-  // and HAPProtcolInformation (required).  Note that HomeKit will still call the identify
-  // update() routine upon pairing, so we specify the number of blinks to be 3.
+  homeSpan.begin(Category::Bridges,"HomeSpan Bridge");
   
-  new SpanAccessory();  
-    new DEV_Identify("Bridge #1","HomeSpan","123-ABC","HS Bridge","0.9",3);
-    new Service::HAPProtocolInformation();
-      new Characteristic::Version("1.1.0");
+  new SpanAccessory();                            // This first Accessory is the new "Bridge" Accessory.  It contains no functional Services, just the Accessory Information Service
+    new Service::AccessoryInformation();
+      new Characteristic::Identify();            
+ 
+  new SpanAccessory();                            // This second Accessory is the same as the first Accessory in Example 7, with the exception that Characteristic::Name() now does something
+    new Service::AccessoryInformation();
+      new Characteristic::Identify();            
+      new Characteristic::Name("Simple LED");     // Note that unlike in Example 7, this use of Name() is now utilized by the Home App since it is not the first Accessory (the Bridge above is the first)
+    new DEV_LED(16);
 
-  // Now we simply repeat the definitions of the previous LED Accessories, as per Example 7, with two exceptions:
-  // 1) We no longer need to include the HAPProtocolInformation Service.
-  // 2) We will set the number of blinks to zero, so that only the bridge accessory will cause the Built-In
-  //    LED to blink. This becomes especially important if you had 20 Accessories defined and needed to wait a
-  //    minute or more for all the blinking to finish while pairing.
-  
-  new SpanAccessory(); 
-    new DEV_Identify("On/Off LED","HomeSpan","123-ABC","20mA LED","0.9",0);    // CHANGED! The number of blinks is now set to zero
-
-  //  new Service::HAPProtocolInformation();      - DELETED - NO LONGER NEEDED
-  //    new Characteristic::Version("1.1.0");     - DELETED - NO LONGER NEEDED
-
-    new DEV_LED(16);                // create an on/off LED attached to pin 16
-
-  new SpanAccessory(); 
-
-    new DEV_Identify("Dimmable LED","HomeSpan","123-ABC","20mA LED","0.9",0);    // CHANGED! The number of blinks is now set to zero
-      
-  //  new Service::HAPProtocolInformation();      - DELETED - NO LONGER NEEDED
-  //    new Characteristic::Version("1.1.0");     - DELETED - NO LONGER NEEDED
-  
-    new DEV_DimmableLED(17);        // create a dimmable (PWM-driven) LED attached to pin 17
+  new SpanAccessory();                            // This third Accessory is the same as the second Accessory in Example 7
+    new Service::AccessoryInformation();    
+      new Characteristic::Identify();               
+      new Characteristic::Name("Dimmable LED");  
+    new DEV_DimmableLED(17);
 
 } // end of setup()
 

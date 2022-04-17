@@ -1,7 +1,7 @@
 /*********************************************************************************
  *  MIT License
  *  
- *  Copyright (c) 2020 Gregg E. Berman
+ *  Copyright (c) 2020-2022 Gregg E. Berman
  *  
  *  https://github.com/HomeSpan/HomeSpan
  *  
@@ -37,7 +37,6 @@
 ////////////////////////////////////////////////////////////
 
 #include "HomeSpan.h" 
-#include "DEV_Identify.h"      
 #include "DEV_Sensors.h" 
 
 void setup() {
@@ -91,16 +90,19 @@ void setup() {
   homeSpan.begin(Category::Bridges,"HomeSpan Bridge");
 
   new SpanAccessory();  
-    new DEV_Identify("Bridge #1","HomeSpan","123-ABC","HS Bridge","0.9",3);
-    new Service::HAPProtocolInformation();
-      new Characteristic::Version("1.1.0");
+    new Service::AccessoryInformation();
+      new Characteristic::Identify(); 
       
-  new SpanAccessory();                                                          
-    new DEV_Identify("Temp Sensor","HomeSpan","123-ABC","Sensor","0.9",0);
+  new SpanAccessory();
+    new Service::AccessoryInformation();
+      new Characteristic::Identify(); 
+      new Characteristic::Name("Temp Sensor");
     new DEV_TempSensor();                                                                // Create a Temperature Sensor (see DEV_Sensors.h for definition)
 
-  new SpanAccessory();                                                          
-    new DEV_Identify("Air Quality","HomeSpan","123-ABC","Sensor","0.9",0);
+  new SpanAccessory();
+    new Service::AccessoryInformation();
+      new Characteristic::Identify(); 
+      new Characteristic::Name("Air Quality");  
     new DEV_AirQualitySensor();                                                          // Create an Air Quality Sensor (see DEV_Sensors.h for definition)
 
 } // end of setup()
@@ -114,34 +116,3 @@ void loop(){
 } // end of loop()
 
 //////////////////////////////////////
-
-
-// Additional Technical Notes about Event Notifications in HomeKit
-// ---------------------------------------------------------------
-
-// HomeKit is designed for two-way communication: HomeSpan devices not only receive and act on operational instructions from HomeKit Controllers, but
-// HomeSpan can also send HomeKit unsolicited messages regarding changes to the state of the device.  Though it may not be apparent, this has already been
-// ocurring in the background in all prior examples.  This is because when a HomeKit Controller sends an operational request to any HomeKit device, it expects
-// to receive a status message back indicating whether the request was successful or not.  This is the purpose of returning StatusCode:OK in custom update()
-// methods.  With this information returned, HomeKit can update its own status and properly reflect a change in the device, such as by showing a light is now
-// turned on instead of off.  However, HomeKit unfortunately does NOT inform any other HomeKit Controllers of this new information.  So if you have two iPhones
-// and use one to turn on a light, this iPhone does not relay a message to the second iPhone that a light has been turned on.  This is the case even
-// if you are using an AppleTV or HomePod as a central hub for HomeKit.
-
-// Normally this does not matter much, since the second iPhone will automatically update itself as to the status of all HomeKit devices as soon as the HomeKit
-// application is launched on that iPhone.  It does this by sending every HomeKit device a message asking for a status update.  In this fashion the second
-// iPhone quickly synchronizes itself as soon as its HomeKit app is opened, but ONLY when it is first opened (or re-opened if you first close it).  However, if you
-// have two iPhones BOTH opened to the HomeKit app (or one iPhone and one Mac opened to the HomeKit app) and you use one Controller app to turn on a light, the
-// resulting change in status of that light will NOT be reflected in the second Controller app, unless you close tha app and re-open (at which point it goes
-// through the request procedure discussed above).  This can be very annoying and counterintuitive.
-
-// Fortunately, HomeKit provides a solution to this in the form of an Event Notification protcol.  This protcol allows a device to send unsoliciated messages
-// to all Controllers that have previously registered themselves with the device indicating the Characteristics for which they would like to receive an event
-// message from the device whenever there is a change in the status of one or more of those Characteristics.
-
-// HomeSpan takes care of this automatically, and has being doing so in the background in all prior examples.  To see this for yourself, use two iPhones
-// (or an iPhone and Mac) with any of the previous examples and open the HomeKit app on both.  Any changes you make to the device using one of the Controllers,
-// such as turning on an LED, is immediately reflected in the other Controller.  Not quite magic, but close.
-
-// As described above, and fully explored in this example, HomeSpan automatically generates Event Notification messages and transmits them to all registered
-// Controllers every time you change the value of a Characteristic using the setVal() function from within a derived Service's loop() method.

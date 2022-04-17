@@ -51,14 +51,15 @@
 
 #elif defined(CONFIG_IDF_TARGET_ESP32C3)
 
-  #define NEOPIXEL_RGB_PIN       8
-  #define NEOPIXEL_RGBW_PIN      2
-  #define DOTSTAR_DATA_PIN       0
-  #define DOTSTAR_CLOCK_PIN      1
+  #define NEOPIXEL_RGB_PIN       0
+  #define NEOPIXEL_RGBW_PIN      3
+  #define DOTSTAR_DATA_PIN       7
+  #define DOTSTAR_CLOCK_PIN      2
+
   #define DEVICE_SUFFIX          "-C3"
 
 #endif
-  
+ 
 #include "HomeSpan.h"
 #include "extras/Pixel.h"                       // include the HomeSpan Pixel class
 
@@ -149,6 +150,7 @@ struct DotStar_RGB : Service::LightBulb {      // Addressable two-wire RGB LED S
     pixel=new Dot(dataPin,clockPin);          // creates Dot LED on specified pins
     this->nPixels=nPixels;                    // save number of Pixels in this LED Strand
     update();                                 // manually call update() to set pixel with restored initial values
+    update();                                 // call second update() a second time - DotStar seems to need to be "refreshed" upon start-up
   }
 
   boolean update() override {
@@ -164,8 +166,8 @@ struct DotStar_RGB : Service::LightBulb {      // Addressable two-wire RGB LED S
     float hueStep=360.0/nPixels;        // step size for change in hue from one pixel to the next
 
     for(int i=0;i<nPixels;i++)
-      color[i].HSV(h+i*hueStep*p,s*p,100,v*p);   // create spectrum of all hues starting with specified Hue; use current-limiting parameter (4th argument) to control overall brightness, instead of PWM
-
+      color[i].HSV(h+i*hueStep,s,100,v*p);   // create spectrum of all hues starting with specified Hue; use current-limiting parameter (4th argument) to control overall brightness, instead of PWM
+      
     pixel->set(color,nPixels);          // set the colors according to the array
           
     return(true);  
@@ -180,56 +182,16 @@ void setup() {
  
   homeSpan.begin(Category::Lighting,"Pixel LEDS" DEVICE_SUFFIX);
 
-  new SpanAccessory();                                          // create Bridge
-    new Service::AccessoryInformation();
-      new Characteristic::Name("Pixel LEDS" DEVICE_SUFFIX);
-      new Characteristic::Manufacturer("HomeSpan");
-      new Characteristic::SerialNumber("123-ABC");
-      new Characteristic::Model("Neo/Dot Pixels");
-      new Characteristic::FirmwareRevision("1.0");
-      new Characteristic::Identify();
+  SPAN_ACCESSORY();                                             // create Bridge (note this sketch uses the SPAN_ACCESSORY() macro, introduced in v1.5.1 --- see the HomeSpan API Reference for details on this convenience macro)
 
-    new Service::HAPProtocolInformation();
-      new Characteristic::Version("1.1.0");
-
-/////////
-
-  new SpanAccessory();
-    new Service::AccessoryInformation();
-      new Characteristic::Name("Neo RGB");
-      new Characteristic::Manufacturer("HomeSpan");
-      new Characteristic::SerialNumber("123-ABC");
-      new Characteristic::Model("8-LED Strand");
-      new Characteristic::FirmwareRevision("1.0");
-      new Characteristic::Identify();
-    
+  SPAN_ACCESSORY("Neo RGB");
     new NeoPixel_RGB(NEOPIXEL_RGB_PIN,8);                       // create 8-LED NeoPixel RGB Strand with full color control
 
-/////////
+  SPAN_ACCESSORY("Neo RGBW");
+    new NeoPixel_RGBW(NEOPIXEL_RGBW_PIN,60);                    // create 60-LED NeoPixel RGBW Strand  with simulated color temperature control 
 
-  new SpanAccessory();
-    new Service::AccessoryInformation();
-      new Characteristic::Name("Neo RGBW");
-      new Characteristic::Manufacturer("HomeSpan");
-      new Characteristic::SerialNumber("123-ABC");
-      new Characteristic::Model("60-LED Strand");
-      new Characteristic::FirmwareRevision("1.0");
-      new Characteristic::Identify();
-
-  new NeoPixel_RGBW(NEOPIXEL_RGBW_PIN,60);                      // create 60-LED NeoPixel RGBW Strand  with simulated color temperature control 
-
-/////////
-
-  new SpanAccessory();
-    new Service::AccessoryInformation();
-      new Characteristic::Name("Dot RGB");
-      new Characteristic::Manufacturer("HomeSpan");
-      new Characteristic::SerialNumber("123-ABC");
-      new Characteristic::Model("30-LED Strand");
-      new Characteristic::FirmwareRevision("1.0");
-      new Characteristic::Identify();
-
-  new DotStar_RGB(DOTSTAR_DATA_PIN,DOTSTAR_CLOCK_PIN,30);       // create 30-LED DotStar RGB Strand displaying a spectrum of colors and using the current-limiting feature of DotStars to create flicker-free dimming
+  SPAN_ACCESSORY("Dot RGB");
+    new DotStar_RGB(DOTSTAR_DATA_PIN,DOTSTAR_CLOCK_PIN,30);     // create 30-LED DotStar RGB Strand displaying a spectrum of colors and using the current-limiting feature of DotStars to create flicker-free dimming
 
 }
 

@@ -29,14 +29,16 @@
 #include <nvs_flash.h>
 #include <sodium.h>
 #include <WiFi.h>
-#include <ArduinoOTA.h>
-#include <esp_ota_ops.h>
 #include <driver/ledc.h>
 #include <mbedtls/version.h>
 #include <esp_task_wdt.h>
+#include <esp_sntp.h>
+#include <esp_ota_ops.h>
 
 #include "HomeSpan.h"
 #include "HAP.h"
+
+const __attribute__((section(".rodata_custom_desc"))) SpanPartition spanPartition = {HOMESPAN_MAGIC_COOKIE};
 
 using namespace Utils;
 
@@ -72,6 +74,7 @@ void Span::begin(Category catID, const char *displayName, const char *hostNameBa
   nvs_flash_init();                             // initialize non-volatile-storage partition in flash  
   nvs_open("CHAR",NVS_READWRITE,&charNVS);      // open Characteristic data namespace in NVS
   nvs_open("WIFI",NVS_READWRITE,&wifiNVS);      // open WIFI data namespace in NVS
+  nvs_open("OTA",NVS_READWRITE,&otaNVS);        // open OTA data namespace in NVS
 
   size_t len;
 
@@ -134,10 +137,22 @@ void Span::begin(Category catID, const char *displayName, const char *hostNameBa
   Serial.print(" ");
   Serial.print(__TIME__);
 
+  Serial.printf("\nPartition:        %s",esp_ota_get_running_partition()->label);
+
   Serial.print("\n\nDevice Name:      ");
   Serial.print(displayName);  
   Serial.print("\n\n");
-      
+
+  uint8_t otaRequired=0;
+  nvs_get_u8(otaNVS,"OTA_REQUIRED",&otaRequired);
+  nvs_set_u8(otaNVS,"OTA_REQUIRED",0);
+  nvs_commit(otaNVS);
+  if(otaRequired && !spanOTA.enabled){
+    Serial.printf("\n\n*** OTA SAFE MODE ALERT:  OTA REQUIRED BUT NOT ENABLED.  ROLLING BACK TO PREVIOUS APPLICATION ***\n\n");
+    delay(100);
+    esp_ota_mark_app_invalid_rollback_and_reboot();
+  }
+
 }  // begin
 
 ///////////////////////////////
@@ -256,8 +271,10 @@ void Span::poll() {
     
     if(hap[i]->client && hap[i]->client.available()){       // if connection exists and data is available
 
-      HAPClient::conNum=i;                                // set connection number
-      hap[i]->processRequest();                           // process HAP request
+      HAPClient::conNum=i;                                          // set connection number
+      homeSpan.lastClientIP=hap[i]->client.remoteIP().toString();   // store IP Address for web logging
+      hap[i]->processRequest();                                     // process HAP request
+      homeSpan.lastClientIP="0.0.0.0";                              // reset stored IP address to show "0.0.0.0" if homeSpan.getClientIP() is used in any other context
       
       if(!hap[i]->client){                                 // client disconnected by server
         LOG1("** Disconnecting Client #");
@@ -277,7 +294,7 @@ void Span::poll() {
   HAPClient::checkNotifications();  
   HAPClient::checkTimedWrites();
 
-  if(otaEnabled)
+  if(spanOTA.enabled)
     ArduinoOTA.handle();
 
   if(controlButton.primed()){
@@ -497,11 +514,10 @@ void Span::checkConnect(){
   else
     mdns_service_txt_item_set("_hap","_tcp","sf","0");           // set Status Flag = 0
 
-  mdns_service_txt_item_set("_hap","_tcp","hspn",HOMESPAN_VERSION);           // HomeSpan Version Number (info only - NOT used by HAP)
-  mdns_service_txt_item_set("_hap","_tcp","ard-esp32",ARDUINO_ESP_VERSION);   // Arduino-ESP32 Version Number (info only - NOT used by HAP)
-  mdns_service_txt_item_set("_hap","_tcp","board",ARDUINO_VARIANT);           // Board Name (info only - NOT used by HAP)
-  mdns_service_txt_item_set("_hap","_tcp","sketch",sketchVersion);            // Sketch Version (info only - NOT used by HAP)
-  mdns_service_txt_item_set("_hap","_tcp","ota",otaEnabled?"yes":"no");       // OTA Enabled (info only - NOT used by HAP)
+  mdns_service_txt_item_set("_hap","_tcp","hspn",HOMESPAN_VERSION);             // HomeSpan Version Number (info only - NOT used by HAP)
+  mdns_service_txt_item_set("_hap","_tcp","ard-esp32",ARDUINO_ESP_VERSION);     // Arduino-ESP32 Version Number (info only - NOT used by HAP)
+  mdns_service_txt_item_set("_hap","_tcp","board",ARDUINO_VARIANT);             // Board Name (info only - NOT used by HAP)
+  mdns_service_txt_item_set("_hap","_tcp","sketch",sketchVersion);              // Sketch Version (info only - NOT used by HAP)
 
   uint8_t hashInput[22];
   uint8_t hashOutput[64];
@@ -514,51 +530,38 @@ void Span::checkConnect(){
   mbedtls_base64_encode((uint8_t *)setupHash,9,&len,hashOutput,4);    // Step 3: Encode the first 4 bytes of hashOutput in base64, which results in an 8-character, null-terminated, setupHash
   mdns_service_txt_item_set("_hap","_tcp","sh",setupHash);            // Step 4: broadcast the resulting Setup Hash
 
-  if(otaEnabled){
+  if(spanOTA.enabled){
     if(esp_ota_get_running_partition()!=esp_ota_get_next_update_partition(NULL)){
       ArduinoOTA.setHostname(hostName);
 
-      if(otaAuth)
-        ArduinoOTA.setPasswordHash(otaPwd);
-    
-      ArduinoOTA
-        .onStart([]() {
-          String type;
-          if (ArduinoOTA.getCommand() == U_FLASH)
-            type = "sketch";
-          else // U_SPIFFS
-            type = "filesystem";
-          Serial.println("\n*** OTA Starting:" + type);
-          homeSpan.statusLED.start(LED_OTA_STARTED);
-        })
-        .onEnd([]() {
-          Serial.println("\n*** OTA Completed.  Rebooting...");
-          homeSpan.statusLED.off();
-        })
-        .onProgress([](unsigned int progress, unsigned int total) {
-          Serial.printf("*** Progress: %u%%\r", (progress / (total / 100)));
-        })
-        .onError([](ota_error_t error) {
-          Serial.printf("*** OTA Error[%u]: ", error);
-          if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed\n");
-          else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed\n");
-          else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed\n");
-          else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed\n");
-          else if (error == OTA_END_ERROR) Serial.println("End Failed\n");
-        });    
+      if(spanOTA.auth)
+        ArduinoOTA.setPasswordHash(spanOTA.otaPwd);
+
+      ArduinoOTA.onStart(spanOTA.start).onEnd(spanOTA.end).onProgress(spanOTA.progress).onError(spanOTA.error);  
       
       ArduinoOTA.begin();
+      reserveSocketConnections(1);
       Serial.print("Starting OTA Server: ");
       Serial.print(displayName);
       Serial.print(" at ");
       Serial.print(WiFi.localIP());
       Serial.print("\nAuthorization Password: ");
-      Serial.print(otaAuth?"Enabled\n\n":"DISABLED!\n\n");
+      Serial.print(spanOTA.auth?"Enabled\n\n":"DISABLED!\n\n");
     } else {
       Serial.print("\n*** WARNING: Can't start OTA Server - Partition table used to compile this sketch is not configured for OTA.\n\n");
+      spanOTA.enabled=false;
     }
   }
+  
+  mdns_service_txt_item_set("_hap","_tcp","ota",spanOTA.enabled?"yes":"no");                     // OTA status (info only - NOT used by HAP)
 
+  if(webLog.isEnabled){
+    mdns_service_txt_item_set("_hap","_tcp","logURL",webLog.statusURL.c_str()+4);           // Web Log status (info only - NOT used by HAP)
+    
+    Serial.printf("Web Logging enabled at http://%s.local:%d%swith max number of entries=%d\n\n",hostName,tcpPortNum,webLog.statusURL.c_str()+4,webLog.maxEntries);
+    webLog.initTime();
+  }
+  
   Serial.printf("Starting HAP Server on port %d supporting %d simultaneous HomeKit Controller Connections...\n",tcpPortNum,maxConnections);
 
   hapServer->begin();
@@ -571,7 +574,7 @@ void Span::checkConnect(){
   } else {
     statusLED.on();
   }
-
+  
   if(wifiCallback)
     wifiCallback();
   
@@ -702,12 +705,12 @@ void Span::processSerialCommand(const char *c){
       otaPwdHash.begin();
       otaPwdHash.add(textPwd);
       otaPwdHash.calculate();
-      otaPwdHash.getChars(otaPwd);
-      nvs_set_str(HAPClient::otaNVS,"OTADATA",otaPwd);                 // update data
-      nvs_commit(HAPClient::otaNVS);          
+      otaPwdHash.getChars(spanOTA.otaPwd);
+      nvs_set_str(otaNVS,"OTADATA",spanOTA.otaPwd);                 // update data
+      nvs_commit(otaNVS);          
       
       Serial.print("... Accepted! Password change will take effect after next restart.\n");
-      if(!otaEnabled)
+      if(!spanOTA.enabled)
         Serial.print("... Note: OTA has not been enabled in this sketch.\n");
       Serial.print("\n");
     }
@@ -872,7 +875,9 @@ void Span::processSerialCommand(const char *c){
       nvs_erase_all(wifiNVS);
       nvs_commit(wifiNVS);   
       nvs_erase_all(charNVS);
-      nvs_commit(charNVS);   
+      nvs_commit(charNVS);
+      nvs_erase_all(otaNVS);
+      nvs_commit(otaNVS);       
       Serial.print("\n*** FACTORY RESET!  Restarting...\n\n");
       delay(1000);
       ESP.restart();
@@ -917,12 +922,12 @@ void Span::processSerialCommand(const char *c){
       Serial.print("\n\n");
 
       char d[]="------------------------------";
-      Serial.printf("%-30s  %s  %10s  %s  %s  %s  %s  %s\n","Service","UUID","AID","IID","Update","Loop","Button","Linked Services");
-      Serial.printf("%.30s  %.4s  %.10s  %.3s  %.6s  %.4s  %.6s  %.15s\n",d,d,d,d,d,d,d,d);
+      Serial.printf("%-30s  %8s  %10s  %s  %s  %s  %s  %s\n","Service","UUID","AID","IID","Update","Loop","Button","Linked Services");
+      Serial.printf("%.30s  %.8s  %.10s  %.3s  %.6s  %.4s  %.6s  %.15s\n",d,d,d,d,d,d,d,d);
       for(int i=0;i<Accessories.size();i++){                             // identify all services with over-ridden loop() methods
         for(int j=0;j<Accessories[i]->Services.size();j++){
           SpanService *s=Accessories[i]->Services[j];
-          Serial.printf("%-30s  %4s  %10u  %3d  %6s  %4s  %6s  ",s->hapName,s->type,Accessories[i]->aid,s->iid, 
+          Serial.printf("%-30s  %8.8s  %10u  %3d  %6s  %4s  %6s  ",s->hapName,s->type,Accessories[i]->aid,s->iid, 
                  (void(*)())(s->*(&SpanService::update))!=(void(*)())(&SpanService::update)?"YES":"NO",
                  (void(*)())(s->*(&SpanService::loop))!=(void(*)())(&SpanService::loop)?"YES":"NO",
                  (void(*)(int,boolean))(s->*(&SpanService::button))!=(void(*)(int,boolean))(&SpanService::button)?"YES":"NO"
@@ -982,7 +987,10 @@ void Span::processSerialCommand(const char *c){
       auto uCom=UserCommands.find(c[1]);
 
       if(uCom!=UserCommands.end()){
-        uCom->second->userFunction(c+1);
+        if(uCom->second->userFunction1)        
+          uCom->second->userFunction1(c+1);
+        else
+          uCom->second->userFunction2(c+1,uCom->second->userArg);
         break;
       }
     }
@@ -1440,14 +1448,11 @@ SpanAccessory::SpanAccessory(uint32_t aid){
 void SpanAccessory::validate(){
 
   boolean foundInfo=false;
-  boolean foundProtocol=false;
   
   for(int i=0;i<Services.size();i++){
     if(!strcmp(Services[i]->type,"3E"))
       foundInfo=true;
-    else if(!strcmp(Services[i]->type,"A2"))
-      foundProtocol=true;
-    else if(aid==1)                             // this is an Accessory with aid=1, but it has more than just AccessoryInfo and HAPProtocolInformation.  So...
+    else if(aid==1)                             // this is an Accessory with aid=1, but it has more than just AccessoryInfo.  So...
       homeSpan.isBridge=false;                  // ...this is not a bridge device
   }
 
@@ -1456,12 +1461,7 @@ void SpanAccessory::validate(){
     homeSpan.configLog+=" *** ERROR!  Required Service for this Accessory not found. ***\n";
     homeSpan.nFatalErrors++;
   }    
-
-  if(!foundProtocol && (aid==1 || !homeSpan.isBridge)){           // HAPProtocolInformation must always be present in Accessory if aid=1, and any other Accessory if the device is not a bridge)
-    homeSpan.configLog+="   \u2718 Service HAPProtocolInformation";
-    homeSpan.configLog+=" *** ERROR!  Required Service for this Accessory not found. ***\n";
-    homeSpan.nFatalErrors++;
-  }    
+   
 }
 
 ///////////////////////////////
@@ -1486,13 +1486,14 @@ int SpanAccessory::sprintfAttributes(char *cBuf){
 //       SpanService         //
 ///////////////////////////////
 
-SpanService::SpanService(const char *type, const char *hapName){
+SpanService::SpanService(const char *type, const char *hapName, boolean isCustom){
 
   if(!homeSpan.Accessories.empty() && !homeSpan.Accessories.back()->Services.empty())      // this is not the first Service to be defined for this Accessory
     homeSpan.Accessories.back()->Services.back()->validate();    
 
   this->type=type;
   this->hapName=hapName;
+  this->isCustom=isCustom;
 
   homeSpan.configLog+="   \u279f Service " + String(hapName);
   
@@ -1505,7 +1506,12 @@ SpanService::SpanService(const char *type, const char *hapName){
   homeSpan.Accessories.back()->Services.push_back(this);  
   iid=++(homeSpan.Accessories.back()->iidCount);  
 
-  homeSpan.configLog+=":  IID=" + String(iid) + ", UUID=\"" + String(type) + "\"";
+  homeSpan.configLog+=":  IID=" + String(iid) + ", " + (isCustom?"Custom-":"") + "UUID=\"" + String(type) + "\"";
+
+  if(Span::invalidUUID(type,isCustom)){
+    homeSpan.configLog+=" *** ERROR!  Format of UUID is invalid. ***";
+    homeSpan.nFatalErrors++;    
+  }
 
   if(!strcmp(this->type,"3E") && iid!=1){
     homeSpan.configLog+=" *** ERROR!  The AccessoryInformation Service must be defined before any other Services in an Accessory. ***";
@@ -1597,12 +1603,13 @@ void SpanService::validate(){
 //    SpanCharacteristic     //
 ///////////////////////////////
 
-SpanCharacteristic::SpanCharacteristic(HapChar *hapChar){
+SpanCharacteristic::SpanCharacteristic(HapChar *hapChar, boolean isCustom){
   type=hapChar->type;
   perms=hapChar->perms;
   hapName=hapChar->hapName;
   format=hapChar->format;
   staticRange=hapChar->staticRange;
+  this->isCustom=isCustom;
 
   homeSpan.configLog+="      \u21e8 Characteristic " + String(hapName);
 
@@ -1893,9 +1900,145 @@ SpanButton::SpanButton(int pin, uint16_t longTime, uint16_t singleTime, uint16_t
 //     SpanUserCommand       //
 ///////////////////////////////
 
-SpanUserCommand::SpanUserCommand(char c, const char *s, void (*f)(const char *v)){
+SpanUserCommand::SpanUserCommand(char c, const char *s, void (*f)(const char *)){
   this->s=s;
-  userFunction=f;
+  userFunction1=f;
    
   homeSpan.UserCommands[c]=this;
 }
+
+///////////////////////////////
+
+SpanUserCommand::SpanUserCommand(char c, const char *s, void (*f)(const char *, void *), void *arg){
+  this->s=s;
+  userFunction2=f;
+  userArg=arg;
+   
+  homeSpan.UserCommands[c]=this;
+}
+
+///////////////////////////////
+//        SpanWebLog         //
+///////////////////////////////
+
+void SpanWebLog::init(uint16_t maxEntries, const char *serv, const char *tz, const char *url){
+  isEnabled=true;
+  this->maxEntries=maxEntries;
+  timeServer=serv;
+  timeZone=tz;
+  statusURL="GET /" + String(url) + " ";
+  log = (log_t *)calloc(maxEntries,sizeof(log_t));
+}
+
+///////////////////////////////
+
+void SpanWebLog::initTime(){
+  if(!timeServer)
+    return;
+
+  Serial.printf("Acquiring Time from %s (%s).  Waiting %d second(s) for response... ",timeServer,timeZone,waitTime/1000);
+  configTzTime(timeZone,timeServer);
+  struct tm timeinfo;
+  if(getLocalTime(&timeinfo,waitTime)){
+    strftime(bootTime,sizeof(bootTime),"%c",&timeinfo);
+    Serial.printf("%s\n\n",bootTime);
+    homeSpan.reserveSocketConnections(1);
+    timeInit=true;
+  } else {
+    Serial.printf("Can't access Time Server - time-keeping not initialized!\n\n");
+  }
+}
+
+///////////////////////////////
+
+void SpanWebLog::addLog(const char *fmt, ...){
+  if(maxEntries==0)
+    return;
+
+  int index=nEntries%maxEntries;
+
+  log[index].upTime=esp_timer_get_time();
+  if(timeInit)
+    getLocalTime(&log[index].clockTime,10);
+  else
+    log[index].clockTime.tm_year=0;
+
+  free(log[index].message);  
+  va_list ap;
+  va_start(ap,fmt);
+  vasprintf(&log[index].message,fmt,ap);
+  va_end(ap);
+
+  log[index].clientIP=homeSpan.lastClientIP;  
+  nEntries++;
+
+  if(homeSpan.logLevel>0)
+    Serial.printf("WEBLOG: %s\n",log[index].message);
+}
+
+///////////////////////////////
+//         SpanOTA           //
+///////////////////////////////
+
+void SpanOTA::init(boolean _auth, boolean _safeLoad){
+  enabled=true;
+  safeLoad=_safeLoad;
+  auth=_auth;
+}
+
+///////////////////////////////
+
+void SpanOTA::start(){
+  Serial.printf("\n*** Current Partition: %s\n*** New Partition: %s\n*** OTA Starting..",
+      esp_ota_get_running_partition()->label,esp_ota_get_next_update_partition(NULL)->label);
+  otaPercent=0;
+  homeSpan.statusLED.start(LED_OTA_STARTED);
+}
+
+///////////////////////////////
+
+void SpanOTA::end(){
+  nvs_set_u8(homeSpan.otaNVS,"OTA_REQUIRED",safeLoad);
+  nvs_commit(homeSpan.otaNVS);
+  Serial.printf(" DONE!  Rebooting...\n");
+  homeSpan.statusLED.off();
+  delay(100);                       // make sure commit it finished before reboot
+}
+
+///////////////////////////////
+
+void SpanOTA::progress(uint32_t progress, uint32_t total){
+  int percent=progress*100/total;
+  if(percent/10 != otaPercent/10){
+    otaPercent=percent;
+    Serial.printf("%d%%..",progress*100/total);
+  }
+
+  if(safeLoad && progress==total){
+    SpanPartition newSpanPartition;   
+    esp_partition_read(esp_ota_get_next_update_partition(NULL), sizeof(esp_image_header_t) + sizeof(esp_image_segment_header_t) + sizeof(esp_app_desc_t), &newSpanPartition, sizeof(newSpanPartition));
+    Serial.printf("Checking for HomeSpan Magic Cookie: %s..",newSpanPartition.magicCookie);
+    if(strcmp(newSpanPartition.magicCookie,spanPartition.magicCookie))
+      Update.abort();
+  }
+}
+
+///////////////////////////////
+
+void SpanOTA::error(ota_error_t err){
+  Serial.printf("*** OTA Error[%u]: ", err);
+  if (err == OTA_AUTH_ERROR) Serial.println("Auth Failed\n");
+    else if (err == OTA_BEGIN_ERROR) Serial.println("Begin Failed\n");
+    else if (err == OTA_CONNECT_ERROR) Serial.println("Connect Failed\n");
+    else if (err == OTA_RECEIVE_ERROR) Serial.println("Receive Failed\n");
+    else if (err == OTA_END_ERROR) Serial.println("End Failed\n");
+}
+
+///////////////////////////////
+
+int SpanOTA::otaPercent;
+boolean SpanOTA::safeLoad;
+boolean SpanOTA::enabled=false;
+boolean SpanOTA::auth;
+
+ 
