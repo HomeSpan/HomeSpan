@@ -426,7 +426,7 @@ A fully worked example showing how to use both the ***CUSTOM_SERV()*** and ***CU
 
 ### *SPAN_ACCESSORY()* and *SPAN_ACCESSORY(NAME)*
  
-A "convenience" macro that implements the following very common code snippet used when creating Accessories.  The last line is only included if *NAME* (a c-style string) has been included as an argument to the macro:
+A "convenience" macro that implements the following very common code snippet used when creating Accessories.  The last line is only included if *NAME* (a C-style string) has been included as an argument to the macro:
 
 ```C++
 new SpanAccessory();
