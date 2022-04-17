@@ -55,7 +55,6 @@
 #### Can you add a Web Server to HomeSpan?
 
 * Yes, provided you implement your Web Server using standard ESP32-Arduino libraries, such as `WebServer.h`. See [ProgrammableHub](https://github.com/HomeSpan/ProgrammableHub) for an illustrative example of how to easily integrate a Web Server into HomeSpan.  This project also covers various other advanced topics, including TCP slot management, dynamic creation of Accessories, and saving arbitrary data in the ESP32's NVS.
-* Note *ESP32AsyncWebServer* cannot be used since it requires a TCP stack that is unfortunately incompatible with HomeSpan.
 
 #### Can you add *custom* Services and Characteristics to HomeSpan?
 
