@@ -26,31 +26,38 @@ See [Example 9 - MessageLogging](Tutorials.md#example-9---messagelogging) for a 
  
 ## Web Logging 
 
-In addition to logging messages to the Arduino Serial Monitor, HomeSpan can optionally serve a HomeSpan Web Log at any page address you choose.  Since the Web Log is hosted as part of HomeSpan's HAP Server, its base address and port will be the same as that of your device.  For example, if your device name is *http<nolink>://homespan-4e8eb8504e59.local* (assuming port 80) and you choose "myLog" as the Web Log page address, it will be hosted at *http<nolink>://homespan-4e8eb8504e59.local/myLog*.
+In addition to logging messages to the Arduino Serial Monitor, HomeSpan can optionally serve a Web Log page at any page address you choose.  Since the Web Log is hosted as part of HomeSpan's HAP Server, its base address and port will be the same as that of your device.  For example, if your device name is *http<nolink>://homespan-4e8eb8504e59.local* (assuming port 80) and you choose "myLog" as the Web Log page address, it will be hosted at *http<nolink>://homespan-4e8eb8504e59.local/myLog*.
 
-Also embedded in the HomeSpan's Web Log functionality is the ability to call an NTP time server to set the device clock.  This optional feature allows HomeSpan to create clock-based timestamps (e.g. *Sat Apr 16 19:48:41 2022*) as well as relative (e.g. *18:06:50:49* since start-up) timestamps.
+Also embedded in the HomeSpan's Web Log functionality is the ability to call an NTP time server to set the device clock.  This optional feature allows HomeSpan to create clock-based timestamps (e.g. *Sat Apr 16 19:48:41 2022*).
 
-The HomeSpan Web Log page itself comprises two parts.  The top of the page provides HomeSpan-generated status information, such as the name of the device, total uptime since last reboot, and version numbers of the various software components.
+The HomeSpan Web Log page itself comprises two parts:
+ 
+  * the top of the page provides HomeSpan-generated status information, such as the name of the device, total uptime since last reboot, and version numbers of the various software components
+ 
+  * the bottom of the page posts messages you create using the **WEBLOG()** macro.  This macro comes only in the *printf*-style form `WEBLOG(const char *fmt, ...)`, similar to the second version of the LOG() macros described above.
+ 
+Messages produced with WEBLOG() are *also* echoed to the Arduino Serial Monitor with the same priority as LOG1() messages, meaning they will be output to the Serial Monitor if the *Log Level* is set to 1 or greater.  The Web Log page displays messages in reverse-chronological order, supplemented with the following additional items:
 
-The bottom of the page posts messages you create using the **WEBLOG()** macro.  This macro comes only in the *printf*-style form `WEBLOG(const char *fmt, ...)`, similar to the second version of the LOG() macros described above.  Web Log messages produced with the WEBLOG() are also echoed to the Arduino Serial Monitor with the same priority as LOG1() messages, meaning they will be displayed if the *Log Level* is set to 1 or greater.
+* *Entry Number* - HomeSpan numbers each message, starting with 1 for the first message after rebooting
+* *Up Time* - relative message time, in the form DDD:HH:MM:SS, starting at 000:00:00:00 after rebooting
+* *Log Time* - absolute message time, in standard UNIX format, provided that Web Logging has been enabled with an NTP Time Server (see below)
+* *Client* - the IP Address of the Client connected to HomeSpan at the time the WEBLOG() message was created.  Only applicable for messages produced within the `update()` method of a Service.  Client is otherwise set to '0.0.0.0' in all other instances
+* *Message* - the text of the formatted message.  For example, `int ledNumber=5; WEBLOG("Request to turn LED %d OFF\n",ledNumber);` would produce the message "Request to turn LED 5 OFF"
 
-The Web Log page posts WEBLOG() messages in reverse-chronological order and supplements each message with the following additional items:
-
-* *Entry* - a cumulative message number (starting at 1 for the first message posted after boot up)
-* *Up Time* - message time, relative to boot up, in the form DDD:HH:MM:SS
-* *Log Time* - message timestamp, in standard UNIX format, provided that Web Logging has been enabled with an NTP Time Server (see below)
-* *Client* - the IP Address of the Client connected to HomeSpan at the time the WEBLOG() message was created.  Only applicable for messages produce in the `update()` method of a Service.  Client is set to '0.0.0.0' in all other instances
-* Message* - the message specified in the WEBLOG() macro.  For example, `WEBLOG("Request to turn LED %d OFF",ledNumber);` could produce the message *Request to turn LED 5 OFF*.  Note there is no need to add a trailing newline character to WEBLOG() messages.
-
-To enable Web Logging (it's turned off by default), call the `homeSpan.enableWebLog()` method (as fully described in [HomeSpan API Reference](Reference.md)) near the top of your sketch.  This method allows you to set:
+To enable Web Logging (it's turned off by default), call the method `homeSpan.enableWebLog()`, as more fully described in the [HomeSpan API Reference](Reference.md), near the top of your sketch.  This method allows you to set:
 
 * the total number of WEBLOG() messages to be stored - older messages are discarded in favor of newer ones once the limit you set is reached
 * the URL of an NTP time server - this is optional and only needed if you want to set the clock of the device at start-up
 * the time zone for the device - this is only needed if an NTP time server has been specified
 * the URL of the Web Log page - if unspecified, HomeSpan will serve the Web Log at a page named "status"
-
-See [Example 19 - WebLog](Tutorials.md#example-19---weblog) for a tutorial sketch demonstrating everything described above.
-
+ 
+Additional notes:
+ 
+  * it is okay to include WEBLOG() messages in your sketch even if Web Logging is *not* enabled.  In such cases HomeSpan will not serve a Web Log page, but WEBLOG() messages will still be output to the Arduino Serial Monitor if the *Log Level* is set to 1 or greater
+  * messages are **not** stored in NVS and are thus **not** saved between reboots
+ 
+See [Example 19 - WebLog](Tutorials.md#example-19---weblog) for a tutorial sketch demonstrating the use of `homeSpan.enableWebLog()` and the WEBLOG() macro.
+ 
 ---
 
 [↩️](README.md) Back to the Welcome page
