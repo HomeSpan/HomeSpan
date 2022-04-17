@@ -26,7 +26,7 @@ See [Example 9 - MessageLogging](Tutorials.md#example-9---messagelogging) for a 
  
 ## Web Logging 
 
-In addition to logging messages to the Arduino Serial Monitor, HomeSpan can optionally serve a HomeSpan Web Log at any page address you choose.  Since the Web Log is hosted as part of HomeSpan's HAP Server, its base address and port will be the same as that of your device.  For example, if your device name is *http://homespan-4e8eb8504e59.local* (assuming port 80) and you choose "myLog" as the Web Log page address, it will be hosted at *http://homespan-4e8eb8504e59.local/myLog*.
+In addition to logging messages to the Arduino Serial Monitor, HomeSpan can optionally serve a HomeSpan Web Log at any page address you choose.  Since the Web Log is hosted as part of HomeSpan's HAP Server, its base address and port will be the same as that of your device.  For example, if your device name is *http<nolink>://homespan-4e8eb8504e59.local* (assuming port 80) and you choose "myLog" as the Web Log page address, it will be hosted at *<nolink>http://homespan-4e8eb8504e59.local/myLog*.
 
 Also embedded in the HomeSpan's Web Log functionality is the ability to call an NTP time server to set the device clock.  This optional feature allows HomeSpan to create clock-based timestamps (e.g. *Sat Apr 16 19:48:41 2022*) as well as relative (e.g. *18:06:50:49* since start-up) timestamps.
 
