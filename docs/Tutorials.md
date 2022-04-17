@@ -119,7 +119,7 @@ An example of HomeKit's *undocumented* Television Service showing how different 
 Demonstrates how to use HomeSpan's *Pixel* and *Dot* classes to control one- and two-wire Addressable RGB and RGBW LEDs.  See the [Addressable RGB LEDs](Pixels.md) page for full details
 
 ### [CustomService](../Other%20Examples/CustomService)
-Demonstrates how to create Custom Services and Custom Characteristics in HomeSpan to implement an Atmospheric Pressure Sensor recognized by the *Eve for HomeKit* app.  See the [Custom Characteristics and Custom Services Macros](Reference.md#custom-characteristics-and-custom-services-macros) page for full details
+Demonstrates how to create Custom Services and Custom Characteristics in HomeSpan to implement an Atmospheric Pressure Sensor recognized by the *Eve for HomeKit* app.  See [Custom Characteristics and Custom Services Macros](Reference.md#custom-characteristics-and-custom-services-macros) for full details
  
 ---
 
