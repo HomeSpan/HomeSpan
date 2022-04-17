@@ -115,7 +115,7 @@ An implementation of a Window Shade that uses HomeSpan's *ServoPin* class to con
 ### [Television](../Other%20Examples/Television)
 An example of HomeKit's *undocumented* Television Service showing how different Characteristics can be used to control a TV's power, input sources, and a few other functions.  See the [Television Services and Characteristics](TVServices.md) page for full details
 
-### [Pixels](../Other%20Examples/Pixels)
+### [Pixel](../Other%20Examples/Pixel)
 Demonstrates how to use HomeSpan's *Pixel* and *Dot* classes to control one- and two-wire Addressable RGB and RGBW LEDs.  See the [Addressable RGB LEDs](Pixels.md) page for full details
 
 ### [CustomService](../Other%20Examples/CustomService)
