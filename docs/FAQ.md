@@ -61,6 +61,10 @@
 
 * Yes, HomeSpan includes two easy-to-use macros to define your own custom Services and custom Characteristics beyond those specified in HAP-R2.  See the [HomeSpan API Reference](https://github.com/HomeSpan/HomeSpan/blob/master/docs/Reference.md) for details and examples demonstrating how to do this.  Note that any new Characteristics you create will be *completely ignored* by the Home App.  Similarly, any new Services you create will be shown in the Home App on a tile labeled "Not Supported".  Apple ***does not*** provide any mechanism to extend the functionality of the Home App itself.  However, the place where custom Services and Characteristics can be used is in third-party applications designed for these extra features.  For example, the *Eve for HomeKit* App properly handles all the Services and Characteristics defined in HAP-R2, *plus* a variety of additional Services and Characteristics designed explictly for use with Eve products.  If you know the UUID codes for these extra Services and Characteristics you can add them to HomeKit and use them within the Eve App just as if they were HAP-R2 Services and Characteristics.
 
+#### Can HomeSpan be used for commercial devices?
+
+* No, a MFi license is needed to create commercial devices. HomeSpan was developed using Apple's HAP-R2 specs, which Apple provides for [non-commercial devices that won't be distributed or sold](https://developers.apple.com/homekit/faq/).  Though I believe the commercial specifications are functionally the same, there is a slight, but critical, difference in the pairing protocol between HAP-R2 and MFi. Note that when you pair a HomeSpan device (or any device that is based on HAP-R2, such as Apple's HAP-R2 ADK, Espressif's non-commercial ADK, HomeBridge, etc.) the Home App on your iPhone will flag the device as uncertified and require you to grant it permission to proceed with pairing. This warning message about the device being uncertified does not appear on commercial devices, presumably because Apply provides the licensee with a custom MFi authorization code that is recognized by the iPhone.
+
 ---
 
 [↩️](README.md) Back to the Welcome page
