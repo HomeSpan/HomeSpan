@@ -103,8 +103,23 @@ Example 19 illustrates, through the implementation of two On/Off LEDs, how to ad
 
 The following examples showcase a variety of HomeSpan and HomeKit functionality as referenced in different sections of the HomeSpan documentation.  The sketches can be found in the Arduino IDE under *File → Examples → HomeSpan → Other Examples*
 
-### [Table Lamp](../Other%20Examples/TableLamp)
-A basic implementation of a Table Lamp Accessory as fully described in used in the [HomeSpan API Overview](Overview.md)
+### [TableLamp](../Other%20Examples/TableLamp)
+A basic implementation of a Table Lamp Accessory. Used as the tutorial in [HomeSpan API Overview](Overview.md)
+
+### [RemoteControl](../Other%20Examples/RemoteControl)
+A standalone example that shows how to use HomeSpan's *RFControl* class to produce a custom pulse train.  For illustrative purposes the pulse widths are very long and suitable for output to an LED so you can "see" the pulse train. See the [RF/IR Generation](RMT.md) page for full details
+
+### [ServoControl](../Other%20Examples/ServoControl)
+An implementation of a Window Shade that uses HomeSpan's *ServoPin* class to control the horizontal tilt of the slats. See [ServoPin](PWM.md#servopinuint8_t-pin-double-initdegrees-uint16_t-minmicros-uint16_t-maxmicros-double-mindegrees-double-maxdegrees) for full details
+
+### [Television](../Other%20Examples/Television)
+An example of HomeKit's *undocumented* Television Service showing how different Characteristics can be used to control a TV's power, input sources, and a few other functions.  See the [Television Services and Characteristics](TVServices.md) page for full details
+
+### [Pixels](../Other%20Examples/Pixels)
+Demonstrates how to use HomeSpan's *Pixel* and *Dot* classes to control one- and two-wire Addressable RGB and RGBW LEDs.  See the [Addressable RGB LEDs](Pixels.md) page for full details
+
+### [CustomService](../Other%20Examples/CustomService)
+Demonstrates how to create Custom Services and Custom Characteristics in HomeSpan to implement an Atmospheric Pressure Sensor recognized by the *Eve for HomeKit* app.  See the [Custom Characteristics and Custom Services Macros](Reference.md#custom-characteristics-and-custom-services-macros) page for full details
  
 ---
 
