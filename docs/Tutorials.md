@@ -98,6 +98,13 @@ Example 19 illustrates, through the implementation of two On/Off LEDs, how to ad
 
 * enabling the HomeSpan Web Log and specifying an optional NTP time server with the `homeSpan.enableWebLog()` method
 * using the `WEBLOG()` macro to create Web Log messages
+
+## Other Examples
+
+The following examples showcase a variety of HomeSpan and HomeKit functionality as referenced in different sections of the HomeSpan documentation.  The sketches can be found in the Arduino IDE under *File → Examples → HomeSpan → Other Examples*
+
+### [Table Lamp](../Other%20Examples/TableLamp)
+A basic implementation of a Table Lamp Accessory as fully described in used in the [HomeSpan API Overview](Overview.md)
  
 ---
 
