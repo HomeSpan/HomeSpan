@@ -159,8 +159,21 @@ void Span::begin(Category catID, const char *displayName, const char *hostNameBa
 
 void Span::poll() {
 
+  if(pollTaskHandle){
+    Serial.print("\n** FATAL ERROR: Do not call homeSpan.poll() directly if homeSpan.start() is used!\n** PROGRAM HALTED **\n\n");
+    vTaskDelete(pollTaskHandle);
+    while(1);    
+  }
+  
+  pollTask();
+}
+
+///////////////////////////////
+
+void Span::pollTask() {
+
   if(!strlen(category)){
-    Serial.print("\n** FATAL ERROR: Cannot run homeSpan.poll() without an initial call to homeSpan.begin()!\n** PROGRAM HALTED **\n\n");
+    Serial.print("\n** FATAL ERROR: Cannot start homeSpan polling without an initial call to homeSpan.begin()!\n** PROGRAM HALTED **\n\n");
     while(1);    
   }
 

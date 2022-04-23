@@ -192,6 +192,7 @@ struct Span{
   PushButton controlButton;                         // controls HomeSpan configuration and resets
   Network network;                                  // configures WiFi and Setup Code via either serial monitor or temporary Access Point
   SpanWebLog webLog;                                // optional web status/log
+  TaskHandle_t pollTaskHandle = NULL;               // optional task handle to use for poll() function
     
   SpanOTA spanOTA;                                  // manages OTA process
   SpanConfig hapConfig;                             // track configuration changes to the HAP Accessory database; used to increment the configuration number (c#) when changes found
@@ -208,7 +209,8 @@ struct Span{
              const char *hostNameBase=DEFAULT_HOST_NAME,
              const char *modelName=DEFAULT_MODEL_NAME);        
              
-  void poll();                                  // poll HAP Clients and process any new HAP requests
+  void poll();                                  // calls pollTask() with some error checking
+  void pollTask();                              // poll HAP Clients and process any new HAP requests
   int getFreeSlot();                            // returns free HAPClient slot number. HAPClients slot keep track of each active HAPClient connection
   void checkConnect();                          // check WiFi connection; connect if needed
   void commandMode();                           // allows user to control and reset HomeSpan settings with the control button
@@ -256,6 +258,8 @@ struct Span{
   void enableWebLog(uint16_t maxEntries=0, const char *serv=NULL, const char *tz="UTC", const char *url=DEFAULT_WEBLOG_URL){     // enable Web Logging
     webLog.init(maxEntries, serv, tz, url);
   }
+
+  void start(){xTaskCreateUniversal([](void *parms){for(;;)homeSpan.pollTask();}, "pollTask", getArduinoLoopTaskStackSize(), NULL, 1, &pollTaskHandle, 0);}     // start pollTask()
 
   void setTimeServerTimeout(uint32_t tSec){webLog.waitTime=tSec*1000;}    // sets wait time (in seconds) for optional web log time server to connect
   
