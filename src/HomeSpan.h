@@ -259,7 +259,7 @@ struct Span{
     webLog.init(maxEntries, serv, tz, url);
   }
 
-  void start(){xTaskCreateUniversal([](void *parms){for(;;)homeSpan.pollTask();}, "pollTask", getArduinoLoopTaskStackSize(), NULL, 1, &pollTaskHandle, 0);}     // start pollTask()
+  void autoPoll(){xTaskCreateUniversal([](void *parms){for(;;)homeSpan.pollTask();}, "pollTask", getArduinoLoopTaskStackSize(), NULL, 1, &pollTaskHandle, 0);}     // start pollTask()
 
   void setTimeServerTimeout(uint32_t tSec){webLog.waitTime=tSec*1000;}    // sets wait time (in seconds) for optional web log time server to connect
   
