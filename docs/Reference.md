@@ -22,8 +22,14 @@ At runtime HomeSpan will create a global **object** named `homeSpan` that suppor
  
  * `void poll()`
    * checks for HAP requests, local commands, and device activity
-   * **must** be called repeatedly in each sketch and is typically placed at the top of the Arduino `loop()` method
-   
+   * **must** be called repeatedly in each sketch and is typically placed at the top of the Arduino `loop()` method, *unless* `autoPoll()` is used instead
+
+* `void autoPoll()`
+  * an *optional* method to create a task that repeatedly calls `poll()` in the background, which frees up the Ardino `loop()` method for any user-defined code that would otherwise block, or be blocked by, calling `poll()` in the `loop()` method
+  * if used, **must** be placed in a sketch as the last line in the Arduino `setup()` method
+  * HomeSpan will throw and error 
+
+
 ---
 
 The following **optional** `homeSpan` methods override various HomeSpan initialization parameters used in `begin()`, and therefore **should** be called before `begin()` to take effect.  If a method is *not* called, HomeSpan uses the default parameter indicated below:
