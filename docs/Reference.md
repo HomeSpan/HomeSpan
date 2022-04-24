@@ -27,8 +27,8 @@ At runtime HomeSpan will create a global **object** named `homeSpan` that suppor
 * `void autoPoll()`
   * an *optional* method to create a task that repeatedly calls `poll()` in the background, which frees up the Ardino `loop()` method for any user-defined code that would otherwise block, or be blocked by, calling `poll()` in the `loop()` method
   * if used, **must** be placed in a sketch as the last line in the Arduino `setup()` method
-  * HomeSpan will throw and error 
-
+  * HomeSpan will throw and error and halt if both `poll()`and `autoPoll()` are used in the same sketch - either place `poll()` in the Arduino `loop()` method **or** place `autoPoll()` at the the end of the Arduino `setup()` method
+  * can be used with both single-core and dual-core ESP32 boards.  If used with a dual-core board, the polling task is created on the free processor that is typically not running other Arduino functions
 
 ---
 
