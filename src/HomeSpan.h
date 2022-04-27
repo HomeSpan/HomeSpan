@@ -596,7 +596,7 @@ struct SpanCharacteristic{
   void setString(const char *val){
 
     if((perms & EV) == 0){
-      Serial.printf("\n*** WARNING:  Attempt to update Characteristic::%s with setVal() ignored.  No NOTIFICATION permission on this characteristic\n\n",hapName);
+      Serial.printf("\n*** WARNING:  Attempt to update Characteristic::%s with setString() ignored.  No NOTIFICATION permission on this characteristic\n\n",hapName);
       return;
     }
 
