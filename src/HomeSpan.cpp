@@ -461,8 +461,6 @@ void Span::checkConnect(){
   Serial.print(WiFi.localIP());
   Serial.print("\n");
 
-  WiFi.enableIpV6();
-
   char id[18];                              // create string version of Accessory ID for MDNS broadcast
   memcpy(id,HAPClient::accessory.ID,17);    // copy ID bytes
   id[17]='\0';                              // add terminating null
