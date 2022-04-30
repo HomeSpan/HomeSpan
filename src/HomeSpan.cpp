@@ -184,10 +184,7 @@ void Span::pollTask() {
       if(!homeSpan.Accessories.back()->Services.empty())
         homeSpan.Accessories.back()->Services.back()->validate();    
         
-      homeSpan.Accessories.back()->validate();    
     }
-
-    checkRanges();
 
     if(nWarnings>0){
       configLog+="\n*** CAUTION: There " + String((nWarnings>1?"are ":"is ")) + String(nWarnings) + " WARNING" + (nWarnings>1?"S":"") + " associated with this configuration that may lead to the device becoming non-responsive, or operating in an unexpected manner. ***\n";
@@ -931,10 +928,16 @@ void Span::processSerialCommand(const char *c){
 
       for(auto acc=Accessories.begin(); acc!=Accessories.end(); acc++){
         Serial.printf("\u27a4 Accessory:  AID=%d\n",(*acc)->aid);
+        boolean foundInfo=false;
 
         for(auto svc=(*acc)->Services.begin(); svc!=(*acc)->Services.end(); svc++){
           Serial.printf("   \u279f Service %s:  IID=%d, %sUUIS=\"%s\"",(*svc)->hapName,(*svc)->iid,(*svc)->isCustom?"Custom-":"",(*svc)->type);
-          Serial.printf("\n");        
+          Serial.printf("\n");
+
+          if(!strcmp((*svc)->type,"3E"))
+            foundInfo=true;
+          else if((*acc)->aid==1)            // this is an Accessory with aid=1, but it has more than just AccessoryInfo.  So...
+            isBridge=false;                  // ...this is not a bridge device          
           
           for(auto chr=(*svc)->Characteristics.begin(); chr!=(*svc)->Characteristics.end(); chr++){
             Serial.printf("      \u21e8 Characteristic %s(%s):  IID=%d, %sUUID=\"%s\"",(*chr)->hapName,(*chr)->uvPrint((*chr)->value).c_str(),(*chr)->iid,(*chr)->isCustom?"Custom-":"",(*chr)->type);
@@ -951,31 +954,38 @@ void Span::processSerialCommand(const char *c){
             Serial.printf("\n");        
             
             if(!(*chr)->isSupported)
-              Serial.printf("          *** WARNING!  Service does not support this Characteristic. ***\n");
+              Serial.printf("          *** WARNING!  Service does not support this Characteristic ***\n");
             else
             if(invalidUUID((*chr)->type,(*chr)->isCustom))
-              Serial.printf("          *** ERROR!  Format of UUID is invalid. ***\n");
+              Serial.printf("          *** ERROR!  Format of UUID is invalid ***\n");
             else       
             if((*chr)->isRepeated)
-              Serial.printf("          *** ERROR!  Characteristic already defined for this Service. ***\n");
+              Serial.printf("          *** ERROR!  Characteristic already defined for this Service ***\n");
 
             if((*chr)->setRangeError)
-              Serial.printf("          *** WARNING!  Attempt to set Custom Range for this Characteristic ignored. ***\n");
+              Serial.printf("          *** WARNING!  Attempt to set Custom Range for this Characteristic ignored ***\n");
 
-           // 1. RANGE CHECK
+            if((*chr)->format!=STRING && ((*chr)->uvGet<double>((*chr)->value) < (*chr)->uvGet<double>((*chr)->minValue) || (*chr)->uvGet<double>((*chr)->value) > (*chr)->uvGet<double>((*chr)->maxValue)))
+              Serial.printf("          *** WARNING!  Value of %llg is out of range [%llg,%llg] ***\n",(*chr)->uvGet<double>((*chr)->value),(*chr)->uvGet<double>((*chr)->minValue),(*chr)->uvGet<double>((*chr)->maxValue));
+
            // 2. MISSING REQUIRED CHARACTERISTICS
            // 3. AID CHECK
            
-          }
-        }
-      }
+          } // Characteristics
+          
+        } // Services
+        
+        if(!foundInfo)
+          Serial.printf("   *** ERROR!  Required Service::AccessoryInformation() not found ***\n");
+          
+      } // Accessories
       
       Serial.print("\n------------\n\n");
       
       Serial.println(configLog);
       
       Serial.print("\nConfigured as Bridge: ");
-      Serial.print(homeSpan.isBridge?"YES":"NO");
+      Serial.print(isBridge?"YES":"NO");
       Serial.print("\n\n");
 
       char d[]="------------------------------";
@@ -1420,37 +1430,6 @@ int Span::sprintfAttributes(char **ids, int numIDs, int flags, char *cBuf){
 }
 
 ///////////////////////////////
-
-void Span::checkRanges(){
-
-  boolean okay=true;
-  homeSpan.configLog+="\nRange Check:";
-  
-  for(int i=0;i<Accessories.size();i++){
-    for(int j=0;j<Accessories[i]->Services.size();j++){
-      for(int k=0;k<Accessories[i]->Services[j]->Characteristics.size();k++){
-        SpanCharacteristic *chr=Accessories[i]->Services[j]->Characteristics[k];
-
-        if(chr->format!=STRING && (chr->uvGet<double>(chr->value) < chr->uvGet<double>(chr->minValue) || chr->uvGet<double>(chr->value) > chr->uvGet<double>(chr->maxValue))){
-          char c[256];
-          sprintf(c,"\n  \u2718 Characteristic %s with AID=%d, IID=%d: Initial value of %lg is out of range [%llg,%llg]",
-                chr->hapName,chr->aid,chr->iid,chr->uvGet<double>(chr->value),chr->uvGet<double>(chr->minValue),chr->uvGet<double>(chr->maxValue));
-          if(okay)
-            homeSpan.configLog+="\n";
-          homeSpan.configLog+=c;
-          homeSpan.nWarnings++;
-          okay=false;
-        }       
-      }
-    }
-  }
-
-  if(okay)
-    homeSpan.configLog+=" No Warnings";
-  homeSpan.configLog+="\n\n";
-}
-
-///////////////////////////////
 //      SpanAccessory        //
 ///////////////////////////////
 
@@ -1469,8 +1448,7 @@ SpanAccessory::SpanAccessory(uint32_t aid){
     
     if(!homeSpan.Accessories.back()->Services.empty())
       homeSpan.Accessories.back()->Services.back()->validate();    
-      
-    homeSpan.Accessories.back()->validate();    
+            
   } else {
     this->aid=1;
   }
@@ -1498,27 +1476,6 @@ SpanAccessory::SpanAccessory(uint32_t aid){
 
   homeSpan.configLog+="\n";
 
-}
-
-///////////////////////////////
-
-void SpanAccessory::validate(){
-
-  boolean foundInfo=false;
-  
-  for(int i=0;i<Services.size();i++){
-    if(!strcmp(Services[i]->type,"3E"))
-      foundInfo=true;
-    else if(aid==1)                             // this is an Accessory with aid=1, but it has more than just AccessoryInfo.  So...
-      homeSpan.isBridge=false;                  // ...this is not a bridge device
-  }
-
-  if(!foundInfo){
-    homeSpan.configLog+="   \u2718 Service AccessoryInformation";
-    homeSpan.configLog+=" *** ERROR!  Required Service for this Accessory not found. ***\n";
-    homeSpan.nFatalErrors++;
-  }    
-   
 }
 
 ///////////////////////////////
