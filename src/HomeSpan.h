@@ -350,6 +350,9 @@ struct SpanCharacteristic{
   boolean *ev;                             // Characteristic Event Notify Enable (per-connection)
   char *nvsKey=NULL;                       // key for NVS storage of Characteristic value
   boolean isCustom;                        // flag to indicate this is a Custom Characteristic
+  boolean isSupported;                     // flag to indicate this Characteristic is supported by the containing Service (it's either required or optional)
+  boolean isRepeated=false;                // flag to indicate this Characteristic is defined repeated times within the same Service (reports an error)
+  boolean setRangeError=false;             // flag to indicate attempt to set range on Characteristic that does not support changes to range
   
   uint32_t aid=0;                          // Accessory ID - passed through from Service containing this Characteristic
   boolean isUpdated=false;                 // set to true when new value has been requested by PUT /characteristic
@@ -454,30 +457,14 @@ struct SpanCharacteristic{
     
   template <typename A, typename B, typename S=int> SpanCharacteristic *setRange(A min, B max, S step=0){
 
-    char c[256];
-    homeSpan.configLog+=String("         \u2b0c Set Range for ") + String(hapName) + " with AID=" + String(aid) + ", IID=" + String(iid);
-
-    if(customRange){
-      sprintf(c,"  *** ERROR!  Range already set for this Characteristic! ***\n");
-      homeSpan.nFatalErrors++;
-    } else 
-        
-    if(staticRange){     
-      sprintf(c,"  *** ERROR!  Can't change range for this Characteristic! ***\n");
-      homeSpan.nFatalErrors++;
-    } else {
-      
+    if(!staticRange){
       uvSet(minValue,min);
       uvSet(maxValue,max);
       uvSet(stepValue,step);  
       customRange=true; 
+    } else
+      setRangeError=true;
       
-      if(uvGet<double>(stepValue)>0)
-        sprintf(c,": Min=%s, Max=%s, Step=%s\n",uvPrint(minValue),uvPrint(maxValue),uvPrint(stepValue));
-      else
-        sprintf(c,": Min=%s, Max=%s\n",uvPrint(minValue),uvPrint(maxValue));        
-    }
-    homeSpan.configLog+=c;         
     return(this);
     
   } // setRange()
@@ -527,46 +514,18 @@ struct SpanCharacteristic{
         uvSet(stepValue,0);
     }
 
-    homeSpan.configLog+="(" + uvPrint(value) + ")" + ":  IID=" + String(iid) + ", " + (isCustom?"Custom-":"") + "UUID=\"" + String(type) + "\"";
-    if(format!=FORMAT::STRING && format!=FORMAT::BOOL)
-      homeSpan.configLog+= ", Range=[" + String(uvPrint(minValue)) + "," + String(uvPrint(maxValue)) + "]";
-
-    if(nvsFlag==2)
-      homeSpan.configLog+=" (restored)";
-    else if(nvsFlag==1)
-      homeSpan.configLog+=" (storing)";
-
-    if(Span::invalidUUID(type,isCustom)){
-      homeSpan.configLog+=" *** ERROR!  Format of UUID is invalid. ***";
-      homeSpan.nFatalErrors++;    
-    }   
-
-    boolean valid=isCustom|service->isCustom;         // automatically set valid if either Characteristic or containing Service is Custom
+    isSupported=isCustom|service->isCustom;         // automatically set valid if either Characteristic or containing Service is Custom
   
-    for(int i=0; !valid && i<homeSpan.Accessories.back()->Services.back()->req.size(); i++)
-      valid=!strcmp(type,homeSpan.Accessories.back()->Services.back()->req[i]->type);
+    for(int i=0; !isSupported && i<homeSpan.Accessories.back()->Services.back()->req.size(); i++)
+      isSupported=!strcmp(type,homeSpan.Accessories.back()->Services.back()->req[i]->type);
   
-    for(int i=0; !valid && i<homeSpan.Accessories.back()->Services.back()->opt.size(); i++)
-      valid=!strcmp(type,homeSpan.Accessories.back()->Services.back()->opt[i]->type);
-  
-    if(!valid){
-      homeSpan.configLog+=" *** WARNING!  Service does not support this Characteristic. ***";
-      homeSpan.nWarnings++;
-    }
-  
-    boolean repeated=false;
-    
-    for(int i=0; !repeated && i<homeSpan.Accessories.back()->Services.back()->Characteristics.size(); i++)
-      repeated=!strcmp(type,homeSpan.Accessories.back()->Services.back()->Characteristics[i]->type);
-    
-    if(valid && repeated){
-      homeSpan.configLog+=" *** ERROR!  Characteristic already defined for this Service. ***";
-      homeSpan.nFatalErrors++;
-    }
-  
+    for(int i=0; !isSupported && i<homeSpan.Accessories.back()->Services.back()->opt.size(); i++)
+      isSupported=!strcmp(type,homeSpan.Accessories.back()->Services.back()->opt[i]->type);
+   
+    for(int i=0; !isRepeated && i<homeSpan.Accessories.back()->Services.back()->Characteristics.size(); i++)
+      isRepeated=!strcmp(type,homeSpan.Accessories.back()->Services.back()->Characteristics[i]->type);
+      
     homeSpan.Accessories.back()->Services.back()->Characteristics.push_back(this);  
-  
-    homeSpan.configLog+="\n"; 
    
   } // init()
 

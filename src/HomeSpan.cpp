@@ -938,9 +938,34 @@ void Span::processSerialCommand(const char *c){
           
           for(auto chr=(*svc)->Characteristics.begin(); chr!=(*svc)->Characteristics.end(); chr++){
             Serial.printf("      \u21e8 Characteristic %s(%s):  IID=%d, %sUUID=\"%s\"",(*chr)->hapName,(*chr)->uvPrint((*chr)->value).c_str(),(*chr)->iid,(*chr)->isCustom?"Custom-":"",(*chr)->type);
-            if((*chr)->format!=FORMAT::STRING && (*chr)->format!=FORMAT::BOOL)
-              Serial.printf(", Range=[%s,%s]",(*chr)->uvPrint((*chr)->minValue).c_str(),(*chr)->uvPrint((*chr)->maxValue).c_str());
+            
+            if((*chr)->format!=FORMAT::STRING && (*chr)->format!=FORMAT::BOOL){
+              if((*chr)->uvGet<double>((*chr)->stepValue)>0)
+                Serial.printf(", %sRange=[%s,%s,%s]",(*chr)->customRange?"Custom-":"",(*chr)->uvPrint((*chr)->minValue).c_str(),(*chr)->uvPrint((*chr)->maxValue).c_str(),(*chr)->uvPrint((*chr)->stepValue).c_str());
+              else
+                Serial.printf(", %sRange=[%s,%s]",(*chr)->customRange?"Custom-":"",(*chr)->uvPrint((*chr)->minValue).c_str(),(*chr)->uvPrint((*chr)->maxValue).c_str());
+            }
+            
+            if((*chr)->nvsKey)
+              Serial.printf(" (nvs)");
             Serial.printf("\n");        
+            
+            if(!(*chr)->isSupported)
+              Serial.printf("          *** WARNING!  Service does not support this Characteristic. ***\n");
+            else
+            if(invalidUUID((*chr)->type,(*chr)->isCustom))
+              Serial.printf("          *** ERROR!  Format of UUID is invalid. ***\n");
+            else       
+            if((*chr)->isRepeated)
+              Serial.printf("          *** ERROR!  Characteristic already defined for this Service. ***\n");
+
+            if((*chr)->setRangeError)
+              Serial.printf("          *** WARNING!  Attempt to set Custom Range for this Characteristic ignored. ***\n");
+
+           // 1. RANGE CHECK
+           // 2. MISSING REQUIRED CHARACTERISTICS
+           // 3. AID CHECK
+           
           }
         }
       }
