@@ -926,16 +926,29 @@ void Span::processSerialCommand(const char *c){
 
       Serial.print("\n*** HomeSpan Info ***\n\n");
 
+      std::set<uint32_t> aidValues;
+
       for(auto acc=Accessories.begin(); acc!=Accessories.end(); acc++){
         Serial.printf("\u27a4 Accessory:  AID=%d\n",(*acc)->aid);
         boolean foundInfo=false;
+
+        if(acc==Accessories.begin() && (*acc)->aid!=1)
+          Serial.printf("   *** ERROR!  AID of first Accessory must always be 1 ***\n");
+
+        if(aidValues.find((*acc)->aid)!=aidValues.end())
+          Serial.printf("   *** ERROR!  AID already in use for another Accessory ***\n");
+        
+        aidValues.insert((*acc)->aid);
 
         for(auto svc=(*acc)->Services.begin(); svc!=(*acc)->Services.end(); svc++){
           Serial.printf("   \u279f Service %s:  IID=%d, %sUUIS=\"%s\"",(*svc)->hapName,(*svc)->iid,(*svc)->isCustom?"Custom-":"",(*svc)->type);
           Serial.printf("\n");
 
-          if(!strcmp((*svc)->type,"3E"))
+          if(!strcmp((*svc)->type,"3E")){
             foundInfo=true;
+            if((*svc)->iid!=1)
+              Serial.printf("     *** ERROR!  The Accessory Information Service must be defined before any other Services in an Accessory ***\n");
+          }
           else if((*acc)->aid==1)            // this is an Accessory with aid=1, but it has more than just AccessoryInfo.  So...
             isBridge=false;                  // ...this is not a bridge device          
           
@@ -976,7 +989,7 @@ void Span::processSerialCommand(const char *c){
         } // Services
         
         if(!foundInfo)
-          Serial.printf("   *** ERROR!  Required Service::AccessoryInformation() not found ***\n");
+          Serial.printf("   *** ERROR!  Required Accessory Information Service not found ***\n");
           
       } // Accessories
       
@@ -1459,23 +1472,6 @@ SpanAccessory::SpanAccessory(uint32_t aid){
     this->aid=aid;
   }
 
-  homeSpan.configLog+="\u27a4 Accessory:  AID=" + String(this->aid);
-
-  for(int i=0;i<homeSpan.Accessories.size()-1;i++){
-    if(this->aid==homeSpan.Accessories[i]->aid){
-      homeSpan.configLog+=" *** ERROR!  ID already in use for another Accessory. ***";
-      homeSpan.nFatalErrors++;
-      break;
-    }
-  }
-
-  if(homeSpan.Accessories.size()==1 && this->aid!=1){
-    homeSpan.configLog+=" *** ERROR!  ID of first Accessory must always be 1. ***";
-    homeSpan.nFatalErrors++;    
-  }
-
-  homeSpan.configLog+="\n";
-
 }
 
 ///////////////////////////////
@@ -1502,15 +1498,13 @@ int SpanAccessory::sprintfAttributes(char *cBuf){
 
 SpanService::SpanService(const char *type, const char *hapName, boolean isCustom){
 
-  if(!homeSpan.Accessories.empty() && !homeSpan.Accessories.back()->Services.empty())      // this is not the first Service to be defined for this Accessory
-    homeSpan.Accessories.back()->Services.back()->validate();    
+//  if(!homeSpan.Accessories.empty() && !homeSpan.Accessories.back()->Services.empty())      // this is not the first Service to be defined for this Accessory
+//    homeSpan.Accessories.back()->Services.back()->validate();    
 
   this->type=type;
   this->hapName=hapName;
   this->isCustom=isCustom;
 
-  homeSpan.configLog+="   \u279f Service " + String(hapName);
-  
   if(homeSpan.Accessories.empty()){
     homeSpan.configLog+=" *** ERROR!  Can't create new Service without a defined Accessory! ***\n";
     homeSpan.nFatalErrors++;
@@ -1519,20 +1513,6 @@ SpanService::SpanService(const char *type, const char *hapName, boolean isCustom
 
   homeSpan.Accessories.back()->Services.push_back(this);  
   iid=++(homeSpan.Accessories.back()->iidCount);  
-
-  homeSpan.configLog+=":  IID=" + String(iid) + ", " + (isCustom?"Custom-":"") + "UUID=\"" + String(type) + "\"";
-
-  if(Span::invalidUUID(type,isCustom)){
-    homeSpan.configLog+=" *** ERROR!  Format of UUID is invalid. ***";
-    homeSpan.nFatalErrors++;    
-  }
-
-  if(!strcmp(this->type,"3E") && iid!=1){
-    homeSpan.configLog+=" *** ERROR!  The AccessoryInformation Service must be defined before any other Services in an Accessory. ***";
-    homeSpan.nFatalErrors++;
-  }
-
-  homeSpan.configLog+="\n";
 
 }
 

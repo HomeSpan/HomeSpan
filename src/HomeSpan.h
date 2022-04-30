@@ -36,6 +36,7 @@
 #include <Arduino.h>
 #include <unordered_map>
 #include <vector>
+#include <set>
 #include <nvs.h>
 #include <ArduinoOTA.h>
 
