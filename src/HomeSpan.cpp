@@ -929,7 +929,26 @@ void Span::processSerialCommand(const char *c){
 
       Serial.print("\n*** HomeSpan Info ***\n\n");
 
-      Serial.print(configLog);
+      for(auto acc=Accessories.begin(); acc!=Accessories.end(); acc++){
+        Serial.printf("\u27a4 Accessory:  AID=%d\n",(*acc)->aid);
+
+        for(auto svc=(*acc)->Services.begin(); svc!=(*acc)->Services.end(); svc++){
+          Serial.printf("   \u279f Service %s:  IID=%d, %sUUIS=\"%s\"",(*svc)->hapName,(*svc)->iid,(*svc)->isCustom?"Custom-":"",(*svc)->type);
+          Serial.printf("\n");        
+          
+          for(auto chr=(*svc)->Characteristics.begin(); chr!=(*svc)->Characteristics.end(); chr++){
+            Serial.printf("      \u21e8 Characteristic %s(%s):  IID=%d, %sUUID=\"%s\"",(*chr)->hapName,(*chr)->uvPrint((*chr)->value).c_str(),(*chr)->iid,(*chr)->isCustom?"Custom-":"",(*chr)->type);
+            if((*chr)->format!=FORMAT::STRING && (*chr)->format!=FORMAT::BOOL)
+              Serial.printf(", Range=[%s,%s]",(*chr)->uvPrint((*chr)->minValue).c_str(),(*chr)->uvPrint((*chr)->maxValue).c_str());
+            Serial.printf("\n");        
+          }
+        }
+      }
+      
+      Serial.print("\n------------\n\n");
+      
+      Serial.println(configLog);
+      
       Serial.print("\nConfigured as Bridge: ");
       Serial.print(homeSpan.isBridge?"YES":"NO");
       Serial.print("\n\n");
