@@ -159,7 +159,6 @@ struct Span{
   boolean isInitialized=false;                  // flag indicating HomeSpan has been initialized
   int nFatalErrors=0;                           // number of fatal errors in user-defined configuration
   int nWarnings=0;                              // number of warnings errors in user-defined configuration
-  String configLog;                             // log of configuration process, including any errors
   boolean isBridge=true;                        // flag indicating whether device is configured as a bridge (i.e. first Accessory contains nothing but AccessoryInformation and HAPProtocolInformation)
   HapQR qrCode;                                 // optional QR Code to use for pairing
   const char *sketchVersion="n/a";              // version of the sketch
@@ -600,25 +599,9 @@ struct SpanCharacteristic{
   } // setVal()
 
   SpanCharacteristic *setPerms(uint8_t perms){
-    this->perms=perms;
-    homeSpan.configLog+=String("         \u2b0c Change Permissions for ") + String(hapName) + " with AID=" + String(aid) + ", IID=" + String(iid) + ":";
-
-    char pNames[][7]={"PR","PW","EV","AA","TW","HD","WR"};
-    char sep=' ';
-    
-    for(uint8_t i=0;i<7;i++){
-      if(perms & (1<<i)){
-        homeSpan.configLog+=String(sep) + String(pNames[i]);
-        sep='+';
-      }
-    }
-
-   if(perms==0){
-      homeSpan.configLog+="  *** ERROR!  Undefined Permissions! ***";
-      homeSpan.nFatalErrors++;
-    } 
-    
-    homeSpan.configLog+="\n";
+    perms&=0x7F;
+    if(perms>0)
+      this->perms=perms;
     return(this);
   }
 
