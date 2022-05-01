@@ -180,20 +180,8 @@ void Span::pollTask() {
   if(!isInitialized){
   
     processSerialCommand("i");        // print homeSpan configuration info
-   
-    if(nFatalErrors>0){
-      Serial.print("\n*** PROGRAM HALTED DUE TO ");
-      Serial.print(nFatalErrors);
-      Serial.print(" FATAL ERROR");
-      if(nFatalErrors>1)
-        Serial.print("S");
-      Serial.print(" IN CONFIGURATION! ***\n\n");
-      while(1);
-    }    
-
-    Serial.print("\n");
-        
-    HAPClient::init();        // read NVS and load HAP settings  
+           
+    HAPClient::init();                // read NVS and load HAP settings  
 
     if(!strlen(network.wifiData.ssid)){
       Serial.print("*** WIFI CREDENTIALS DATA NOT FOUND.  ");
@@ -1013,8 +1001,8 @@ void Span::processSerialCommand(const char *c){
           
       } // Accessories
       
-      Serial.printf("\nDatabase Validation: Warnings=%d, Errors=%d\n\n",nWarnings,nErrors);            
-      Serial.printf("Configured as Bridge: %s\n\n",isBridge?"YES":"NO");
+      Serial.printf("\nConfigured as Bridge: %s\n\n",isBridge?"YES":"NO");
+      Serial.printf("Database Validation:  Warnings=%d, Errors=%d\n\n",nWarnings,nErrors);            
 
       char d[]="------------------------------";
       Serial.printf("%-30s  %8s  %10s  %s  %s  %s  %s  %s\n","Service","UUID","AID","IID","Update","Loop","Button","Linked Services");

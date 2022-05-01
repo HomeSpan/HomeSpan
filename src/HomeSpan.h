@@ -157,8 +157,6 @@ struct Span{
   char category[3]="";                          // category ID of primary accessory - broadcast as Bonjour field "ci" (HAP Section 13)
   unsigned long snapTime;                       // current time (in millis) snapped before entering Service loops() or updates()
   boolean isInitialized=false;                  // flag indicating HomeSpan has been initialized
-  int nFatalErrors=0;                           // number of fatal errors in user-defined configuration
-  int nWarnings=0;                              // number of warnings errors in user-defined configuration
   boolean isBridge=true;                        // flag indicating whether device is configured as a bridge (i.e. first Accessory contains nothing but AccessoryInformation and HAPProtocolInformation)
   HapQR qrCode;                                 // optional QR Code to use for pairing
   const char *sketchVersion="n/a";              // version of the sketch
