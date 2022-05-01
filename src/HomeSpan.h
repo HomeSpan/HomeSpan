@@ -36,7 +36,7 @@
 #include <Arduino.h>
 #include <unordered_map>
 #include <vector>
-#include <set>
+#include <unordered_set>
 #include <nvs.h>
 #include <ArduinoOTA.h>
 
@@ -49,6 +49,7 @@
 
 using std::vector;
 using std::unordered_map;
+using std::unordered_set;
 
 enum {
   GET_AID=1,
@@ -297,8 +298,8 @@ struct SpanService{
   boolean hidden=false;                                   // optional property indicating service is hidden
   boolean primary=false;                                  // optional property indicating service is primary
   vector<SpanCharacteristic *> Characteristics;           // vector of pointers to all Characteristics in this Service  
-  vector<HapChar *> req;                                  // vector of pointers to all required HAP Characteristic Types for this Service
-  vector<HapChar *> opt;                                  // vector of pointers to all optional HAP Characteristic Types for this Service
+  unordered_set<HapChar *> req;                           // unordered set of pointers to all required HAP Characteristic Types for this Service
+  unordered_set<HapChar *> opt;                           // unordered set of pointers to all optional HAP Characteristic Types for this Service
   vector<SpanService *> linkedServices;                   // vector of pointers to any optional linked Services
   boolean isCustom;                                       // flag to indicate this is a Custom Service
   
@@ -310,7 +311,6 @@ struct SpanService{
   vector<SpanService *> getLinks(){return(linkedServices);}   // returns linkedServices vector for use as range in "for-each" loops
 
   int sprintfAttributes(char *cBuf);                      // prints Service JSON records into buf; return number of characters printed, excluding null terminator
-  void validate();                                        // error-checks Service
   
   virtual boolean update() {return(true);}                // placeholder for code that is called when a Service is updated via a Controller.  Must return true/false depending on success of update
   virtual void loop(){}                                   // loops for each Service - called every cycle and can be over-ridden with user-defined code
@@ -333,6 +333,7 @@ struct SpanCharacteristic{
   };
 
   int iid=0;                               // Instance ID (HAP Table 6-3)
+  HapChar *hapChar;                        // pointer to HAP Characteristic structure
   const char *type;                        // Characteristic Type
   const char *hapName;                     // HAP Name
   UVal value;                              // Characteristic Value
@@ -349,8 +350,6 @@ struct SpanCharacteristic{
   boolean *ev;                             // Characteristic Event Notify Enable (per-connection)
   char *nvsKey=NULL;                       // key for NVS storage of Characteristic value
   boolean isCustom;                        // flag to indicate this is a Custom Characteristic
-  boolean isSupported;                     // flag to indicate this Characteristic is supported by the containing Service (it's either required or optional)
-  boolean isRepeated=false;                // flag to indicate this Characteristic is defined repeated times within the same Service (reports an error)
   boolean setRangeError=false;             // flag to indicate attempt to set range on Characteristic that does not support changes to range
   
   uint32_t aid=0;                          // Accessory ID - passed through from Service containing this Characteristic
@@ -512,18 +511,7 @@ struct SpanCharacteristic{
         uvSet(maxValue,max);
         uvSet(stepValue,0);
     }
-
-    isSupported=isCustom|service->isCustom;         // automatically set valid if either Characteristic or containing Service is Custom
-  
-    for(int i=0; !isSupported && i<homeSpan.Accessories.back()->Services.back()->req.size(); i++)
-      isSupported=!strcmp(type,homeSpan.Accessories.back()->Services.back()->req[i]->type);
-  
-    for(int i=0; !isSupported && i<homeSpan.Accessories.back()->Services.back()->opt.size(); i++)
-      isSupported=!strcmp(type,homeSpan.Accessories.back()->Services.back()->opt[i]->type);
-   
-    for(int i=0; !isRepeated && i<homeSpan.Accessories.back()->Services.back()->Characteristics.size(); i++)
-      isRepeated=!strcmp(type,homeSpan.Accessories.back()->Services.back()->Characteristics[i]->type);
-      
+       
     homeSpan.Accessories.back()->Services.back()->Characteristics.push_back(this);  
    
   } // init()

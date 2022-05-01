@@ -31,8 +31,8 @@
 
 // Macros to define vectors of required and optional characteristics for each Span Service structure
 
-#define REQ(HAPCHAR) req.push_back(&hapChars.HAPCHAR)
-#define OPT(HAPCHAR) opt.push_back(&hapChars.HAPCHAR)
+#define REQ(HAPCHAR) req.insert(&hapChars.HAPCHAR)
+#define OPT(HAPCHAR) opt.insert(&hapChars.HAPCHAR)
 
 namespace Service {
 
