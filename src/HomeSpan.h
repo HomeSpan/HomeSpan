@@ -346,11 +346,12 @@ struct SpanCharacteristic{
   UVal stepValue;                          // Characteristic step size (not applicable for STRING)
   boolean staticRange;                     // Flag that indicates whether Range is static and cannot be changed with setRange()
   boolean customRange=false;               // Flag for custom ranges
-  const char *validValues=NULL;            // Optional JSON array of valid values.  Applicable only to uint8 Characteristics
+  char *validValues=NULL;                  // Optional JSON array of valid values.  Applicable only to uint8 Characteristics
   boolean *ev;                             // Characteristic Event Notify Enable (per-connection)
   char *nvsKey=NULL;                       // key for NVS storage of Characteristic value
   boolean isCustom;                        // flag to indicate this is a Custom Characteristic
-  boolean setRangeError=false;             // flag to indicate attempt to set range on Characteristic that does not support changes to range
+  boolean setRangeError=false;             // flag to indicate attempt to set Range on Characteristic that does not support changes to Range
+  boolean setValidValuesError=false;       // flag to indicate attempt to set Valid Values on Characteristic that does not support changes to Valid Values
   
   uint32_t aid=0;                          // Accessory ID - passed through from Service containing this Characteristic
   boolean isUpdated=false;                 // set to true when new value has been requested by PUT /characteristic

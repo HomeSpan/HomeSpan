@@ -947,7 +947,9 @@ void Span::processSerialCommand(const char *c){
             Serial.printf("      \u21e8 Characteristic %s(%s):  IID=%d, %sUUID=\"%s\"",(*chr)->hapName,(*chr)->uvPrint((*chr)->value).c_str(),(*chr)->iid,(*chr)->isCustom?"Custom-":"",(*chr)->type);
             
             if((*chr)->format!=FORMAT::STRING && (*chr)->format!=FORMAT::BOOL){
-              if((*chr)->uvGet<double>((*chr)->stepValue)>0)
+              if((*chr)->validValues)
+                Serial.printf(", Valid Values=%s",(*chr)->validValues);
+              else if((*chr)->uvGet<double>((*chr)->stepValue)>0)
                 Serial.printf(", %sRange=[%s,%s,%s]",(*chr)->customRange?"Custom-":"",(*chr)->uvPrint((*chr)->minValue).c_str(),(*chr)->uvPrint((*chr)->maxValue).c_str(),(*chr)->uvPrint((*chr)->stepValue).c_str());
               else
                 Serial.printf(", %sRange=[%s,%s]",(*chr)->customRange?"Custom-":"",(*chr)->uvPrint((*chr)->minValue).c_str(),(*chr)->uvPrint((*chr)->maxValue).c_str());
@@ -969,6 +971,9 @@ void Span::processSerialCommand(const char *c){
             if((*chr)->setRangeError)
               Serial.printf("          *** WARNING!  Attempt to set Custom Range for this Characteristic ignored ***\n");
 
+            if((*chr)->setValidValuesError)
+              Serial.printf("          *** WARNING!  Attempt to set Custom Valid Values for this Characteristic ignored ***\n");
+
             if((*chr)->format!=STRING && ((*chr)->uvGet<double>((*chr)->value) < (*chr)->uvGet<double>((*chr)->minValue) || (*chr)->uvGet<double>((*chr)->value) > (*chr)->uvGet<double>((*chr)->maxValue)))
               Serial.printf("          *** WARNING!  Value of %llg is out of range [%llg,%llg] ***\n",(*chr)->uvGet<double>((*chr)->value),(*chr)->uvGet<double>((*chr)->minValue),(*chr)->uvGet<double>((*chr)->maxValue));
 
@@ -979,6 +984,15 @@ void Span::processSerialCommand(const char *c){
           for(auto req=(*svc)->req.begin(); req!=(*svc)->req.end(); req++){
             if(hapChar.find(*req)==hapChar.end())
               Serial.printf("          *** WARNING!  Required '%s' Characteristic for this Service not found ***\n",(*req)->hapName);
+          }
+
+          for(auto button=PushButtons.begin(); button!=PushButtons.end(); button++){
+            if((*button)->service==(*svc)){
+              Serial.printf("      \u25bc SpanButton: Pin=%d, Single=%ums, Double=%ums, Long=%ums\n",(*button)->pin,(*button)->singleTime,(*button)->doubleTime,(*button)->longTime);
+              
+              if((void(*)(int,int))((*svc)->*(&SpanService::button))==(void(*)(int,int))(&SpanService::button))
+                Serial.printf("          *** WARNING!  No button() method defined in this Service ***\n");
+            }
           }
           
         } // Services
@@ -1775,35 +1789,26 @@ unsigned long SpanCharacteristic::timeVal(){
 ///////////////////////////////
 
 SpanCharacteristic *SpanCharacteristic::setValidValues(int n, ...){
-  char c[256];
-  String *s = new String("[");
+
+  if(format!=UINT8){
+    setValidValuesError=true;
+    return(this);
+  }
+ 
+  String s="[";
   va_list vl;
   va_start(vl,n);
   for(int i=0;i<n;i++){
-    *s+=va_arg(vl,int);
+    s+=(uint8_t)va_arg(vl,int);
     if(i!=n-1)
-      *s+=",";
+      s+=",";
   }
   va_end(vl);
-  *s+="]";
+  s+="]";
 
-  homeSpan.configLog+=String("         \u2b0c Set Valid Values for ") + String(hapName) + " with IID=" + String(iid);
+  validValues=(char *)realloc(validValues, strlen(s.c_str()) + 1);
+  strcpy(validValues,s.c_str());
 
-  if(validValues){
-    sprintf(c,"  *** ERROR!  Valid Values already set for this Characteristic! ***\n");
-    homeSpan.nFatalErrors++;
-  } else 
-
-  if(format!=UINT8){
-    sprintf(c,"  *** ERROR!  Can't set Valid Values for this Characteristic! ***\n");
-    homeSpan.nFatalErrors++;      
-  } else {
-    
-    validValues=s->c_str();
-    sprintf(c,":  ValidValues=%s\n",validValues);
-  }
-
-  homeSpan.configLog+=c;
   return(this);
 }
 
@@ -1814,8 +1819,9 @@ SpanCharacteristic *SpanCharacteristic::setValidValues(int n, ...){
 SpanRange::SpanRange(int min, int max, int step){
 
   if(homeSpan.Accessories.empty() || homeSpan.Accessories.back()->Services.empty() || homeSpan.Accessories.back()->Services.back()->Characteristics.empty() ){
-    homeSpan.configLog+="    \u2718 SpanRange: *** ERROR!  Can't create new Range without a defined Characteristic! ***\n";
-    homeSpan.nFatalErrors++;
+    Serial.printf("\nFATAL ERROR!  Can't create new SpanRange(%d,%d,%d) without a defined Characteristic ***\n",min,max,step);
+    Serial.printf("\n=== PROGRAM HALTED ===");
+    while(1);
   } else {
     homeSpan.Accessories.back()->Services.back()->Characteristics.back()->setRange(min,max,step);
   }
@@ -1827,17 +1833,11 @@ SpanRange::SpanRange(int min, int max, int step){
 
 SpanButton::SpanButton(int pin, uint16_t longTime, uint16_t singleTime, uint16_t doubleTime){
 
-  homeSpan.configLog+="      \u25bc SpanButton: Pin=" + String(pin) + ", Single=" + String(singleTime) + "ms, Double=" + String(doubleTime) + "ms, Long=" + String(longTime) + "ms";
-
   if(homeSpan.Accessories.empty() || homeSpan.Accessories.back()->Services.empty()){
-    homeSpan.configLog+=" *** ERROR!  Can't create new PushButton without a defined Service! ***\n";
-    homeSpan.nFatalErrors++;
-    return;
+    Serial.printf("\nFATAL ERROR!  Can't create new SpanButton(%d,%u,%u,%u) without a defined Service ***\n",pin,longTime,singleTime,doubleTime);
+    Serial.printf("\n=== PROGRAM HALTED ===");
+    while(1);
   }
-
-  Serial.print("Configuring PushButton: Pin=");     // initialization message
-  Serial.print(pin);
-  Serial.print("\n");
 
   this->pin=pin;
   this->longTime=longTime;
@@ -1845,14 +1845,7 @@ SpanButton::SpanButton(int pin, uint16_t longTime, uint16_t singleTime, uint16_t
   this->doubleTime=doubleTime;
   service=homeSpan.Accessories.back()->Services.back();
 
-  if((void(*)(int,int))(service->*(&SpanService::button))==(void(*)(int,int))(&SpanService::button)){
-    homeSpan.configLog+=" *** WARNING:  No button() method defined for this PushButton! ***";
-    homeSpan.nWarnings++;
-  }
-
   pushButton=new PushButton(pin);         // create underlying PushButton
-  
-  homeSpan.configLog+="\n";  
   homeSpan.PushButtons.push_back(this);
 }
 
