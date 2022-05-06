@@ -142,34 +142,14 @@ void HAPClient::init(){
     nvs_get_blob(hapNVS,"HAPHASH",&homeSpan.hapConfig,&len);     // retrieve data    
   } else {
     Serial.print("Resetting Accessory Configuration number...\n");
-    nvs_set_blob(hapNVS,"HAPHASH",&homeSpan.hapConfig,sizeof(homeSpan.hapConfig));     // update data
+    nvs_set_blob(hapNVS,"HAPHASH",&homeSpan.hapConfig,sizeof(homeSpan.hapConfig));     // save data (will default to all zero values, which will then be updated below)
     nvs_commit(hapNVS);                                                                // commit to NVS
   }
 
   Serial.print("\n");
 
-  uint8_t tHash[48];
-  TempBuffer <char> tBuf(homeSpan.sprintfAttributes(NULL,GET_META|GET_PERMS|GET_TYPE|GET_DESC)+1);
-  homeSpan.sprintfAttributes(tBuf.buf,GET_META|GET_PERMS|GET_TYPE|GET_DESC);  
-  mbedtls_sha512_ret((uint8_t *)tBuf.buf,tBuf.len(),tHash,1);     // create SHA-384 hash of JSON (can be any hash - just looking for a unique key)
-
-  if(memcmp(tHash,homeSpan.hapConfig.hashCode,48)){           // if hash code of current HAP database does not match stored hash code
-    memcpy(homeSpan.hapConfig.hashCode,tHash,48);             // update stored hash code
-    homeSpan.hapConfig.configNumber++;                        // increment configuration number
-    if(homeSpan.hapConfig.configNumber==65536)                // reached max value
-      homeSpan.hapConfig.configNumber=1;                      // reset to 1
-                   
-    Serial.print("Accessory configuration has changed.  Updating configuration number to ");
-    Serial.print(homeSpan.hapConfig.configNumber);
-    Serial.print("\n\n");
-    nvs_set_blob(hapNVS,"HAPHASH",&homeSpan.hapConfig,sizeof(homeSpan.hapConfig));     // update data
-    nvs_commit(hapNVS);                                                                // commit to NVS
-  } else {
-    Serial.print("Accessory configuration number: ");
-    Serial.print(homeSpan.hapConfig.configNumber);
-    Serial.print("\n\n");    
-  }
-
+  homeSpan.updateConfigNum();
+  
   for(int i=0;i<homeSpan.Accessories.size();i++){                             // identify all services with over-ridden loop() methods
     for(int j=0;j<homeSpan.Accessories[i]->Services.size();j++){
       SpanService *s=homeSpan.Accessories[i]->Services[j];      

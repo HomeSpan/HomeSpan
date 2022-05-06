@@ -899,14 +899,13 @@ void Span::processSerialCommand(const char *c){
     }
     break;
 
-
     case 'C': {
 
-      char cNum[16];
-      sprintf(cNum,"%d",++hapConfig.configNumber);
-      mdns_service_txt_item_set("_hap","_tcp","c#",cNum);            // Accessory Current Configuration Number (updated whenever config of HAP Accessory Attribute Database is updated)      
-
-      Serial.printf("\n*** Configuration number updated to: %d\n\n",hapConfig.configNumber);
+      if(updateConfigNum()){        // if config number changed, update MDNS record
+        char cNum[16];
+        sprintf(cNum,"%d",hapConfig.configNumber);
+        mdns_service_txt_item_set("_hap","_tcp","c#",cNum);
+      }  
     }
     break;    
 
@@ -1055,7 +1054,8 @@ void Span::processSerialCommand(const char *c){
       Serial.print("  S <code> - change the HomeKit Pairing Setup Code to <code>\n");
       Serial.print("  Q <id> - change the HomeKit Setup ID for QR Codes to <id>\n");
       Serial.print("  O - change the OTA password\n");
-      Serial.print("  A - start the HomeSpan Setup Access Point\n");      
+      Serial.print("  A - start the HomeSpan Setup Access Point\n");
+      Serial.print("  C - update database configuration number\n");     
       Serial.print("\n");      
       Serial.print("  V - delete value settings for all saved Characteristics\n");
       Serial.print("  U - unpair device by deleting all Controller data\n");
@@ -1457,6 +1457,38 @@ int Span::sprintfAttributes(char **ids, int numIDs, int flags, char *cBuf){
   nChars+=snprintf(cBuf?(cBuf+nChars):NULL,cBuf?64:0,"]}");
 
   return(nChars);    
+}
+
+///////////////////////////////
+
+boolean Span::updateConfigNum(){
+
+  uint8_t tHash[48];
+  TempBuffer <char> tBuf(sprintfAttributes(NULL,GET_META|GET_PERMS|GET_TYPE|GET_DESC)+1);
+  sprintfAttributes(tBuf.buf,GET_META|GET_PERMS|GET_TYPE|GET_DESC);  
+  mbedtls_sha512_ret((uint8_t *)tBuf.buf,tBuf.len(),tHash,1);     // create SHA-384 hash of JSON (can be any hash - just looking for a unique key)
+
+  boolean changed=false;
+
+  if(memcmp(tHash,hapConfig.hashCode,48)){           // if hash code of current HAP database does not match stored hash code
+    memcpy(hapConfig.hashCode,tHash,48);             // update stored hash code
+    hapConfig.configNumber++;                        // increment configuration number
+    if(hapConfig.configNumber==65536)                // reached max value
+      hapConfig.configNumber=1;                      // reset to 1
+                   
+    Serial.print("Accessory configuration has changed.  Updating configuration number to ");
+    Serial.print(hapConfig.configNumber);
+    Serial.print("\n\n");
+    nvs_set_blob(HAPClient::hapNVS,"HAPHASH",&hapConfig,sizeof(hapConfig));     // update data
+    nvs_commit(HAPClient::hapNVS);                                              // commit to NVS
+    changed=true;
+  } else {
+    Serial.print("Accessory configuration number: ");
+    Serial.print(hapConfig.configNumber);
+    Serial.print("\n\n");    
+  }
+
+  return(changed);
 }
 
 ///////////////////////////////
