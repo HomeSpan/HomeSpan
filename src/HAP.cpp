@@ -149,8 +149,8 @@ void HAPClient::init(){
   Serial.print("\n");
 
   uint8_t tHash[48];
-  TempBuffer <char> tBuf(homeSpan.sprintfAttributes(NULL)+1);
-  homeSpan.sprintfAttributes(tBuf.buf);  
+  TempBuffer <char> tBuf(homeSpan.sprintfAttributes(NULL,GET_META|GET_PERMS|GET_TYPE|GET_DESC)+1);
+  homeSpan.sprintfAttributes(tBuf.buf,GET_META|GET_PERMS|GET_TYPE|GET_DESC);  
   mbedtls_sha512_ret((uint8_t *)tBuf.buf,tBuf.len(),tHash,1);     // create SHA-384 hash of JSON (can be any hash - just looking for a unique key)
 
   if(memcmp(tHash,homeSpan.hapConfig.hashCode,48)){           // if hash code of current HAP database does not match stored hash code
@@ -1071,7 +1071,7 @@ int HAPClient::getCharacteristicsURL(char *urlBuf){
       numIDs++;
   
   char *ids[numIDs];            // reserve space for number of IDs found
-  int flags=GET_AID;            // flags indicating which characteristic fields to include in response (HAP Table 6-13)
+  int flags=GET_VALUE|GET_AID;  // flags indicating which characteristic fields to include in response (HAP Table 6-13)
   numIDs=0;                     // reset number of IDs found
 
   char *lastSpace=strchr(urlBuf,' ');

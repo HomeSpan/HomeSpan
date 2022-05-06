@@ -59,7 +59,7 @@ enum {
   GET_EV=16,
   GET_DESC=32,
   GET_NV=64,
-  GET_ALL=255
+  GET_VALUE=128
 };
 
 ///////////////////////////////
@@ -215,7 +215,8 @@ struct Span{
   void commandMode();                           // allows user to control and reset HomeSpan settings with the control button
   void processSerialCommand(const char *c);     // process command 'c' (typically from readSerial, though can be called with any 'c')
 
-  int sprintfAttributes(char *cBuf);            // prints Attributes JSON database into buf, unless buf=NULL; return number of characters printed, excluding null terminator, even if buf=NULL
+  int sprintfAttributes(char *cBuf, int flags=GET_VALUE|GET_META|GET_PERMS|GET_TYPE|GET_DESC);   // prints Attributes JSON database into buf, unless buf=NULL; return number of characters printed, excluding null terminator
+  
   void prettyPrint(char *buf, int nsp=2);       // print arbitrary JSON from buf to serial monitor, formatted with indentions of 'nsp' spaces
   SpanCharacteristic *find(uint32_t aid, int iid);   // return Characteristic with matching aid and iid (else NULL if not found)
   
@@ -282,7 +283,7 @@ struct SpanAccessory{
 
   SpanAccessory(uint32_t aid=0);
 
-  int sprintfAttributes(char *cBuf);        // prints Accessory JSON database into buf, unless buf=NULL; return number of characters printed, excluding null terminator, even if buf=NULL  
+  int sprintfAttributes(char *cBuf, int flags);        // prints Accessory JSON database into buf, unless buf=NULL; return number of characters printed, excluding null terminator, even if buf=NULL  
 };
 
 ///////////////////////////////
@@ -307,7 +308,7 @@ struct SpanService{
   SpanService *addLink(SpanService *svc);                 // adds svc as a Linked Service and returns pointer to self
   vector<SpanService *> getLinks(){return(linkedServices);}   // returns linkedServices vector for use as range in "for-each" loops
 
-  int sprintfAttributes(char *cBuf);                      // prints Service JSON records into buf; return number of characters printed, excluding null terminator
+  int sprintfAttributes(char *cBuf, int flags);           // prints Service JSON records into buf; return number of characters printed, excluding null terminator
   
   virtual boolean update() {return(true);}                // placeholder for code that is called when a Service is updated via a Controller.  Must return true/false depending on success of update
   virtual void loop(){}                                   // loops for each Service - called every cycle and can be over-ridden with user-defined code

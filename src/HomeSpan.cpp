@@ -899,6 +899,17 @@ void Span::processSerialCommand(const char *c){
     }
     break;
 
+
+    case 'C': {
+
+      char cNum[16];
+      sprintf(cNum,"%d",++hapConfig.configNumber);
+      mdns_service_txt_item_set("_hap","_tcp","c#",cNum);            // Accessory Current Configuration Number (updated whenever config of HAP Accessory Attribute Database is updated)      
+
+      Serial.printf("\n*** Configuration number updated to: %d\n\n",hapConfig.configNumber);
+    }
+    break;    
+
     case 'i':{
 
       Serial.print("\n*** HomeSpan Info ***\n\n");
@@ -1001,8 +1012,11 @@ void Span::processSerialCommand(const char *c){
           
       } // Accessories
       
-      Serial.printf("\nConfigured as Bridge: %s\n\n",isBridge?"YES":"NO");
-      Serial.printf("Database Validation:  Warnings=%d, Errors=%d\n\n",nWarnings,nErrors);            
+      Serial.printf("\nConfigured as Bridge: %s\n",isBridge?"YES":"NO");
+      if(hapConfig.configNumber>0)
+        Serial.printf("Configuration Number: %d\n",hapConfig.configNumber);
+      Serial.printf("\nDatabase Validation:  Warnings=%d, Errors=%d\n\n",nWarnings,nErrors);
+          
 
       char d[]="------------------------------";
       Serial.printf("%-30s  %8s  %10s  %s  %s  %s  %s  %s\n","Service","UUID","AID","IID","Update","Loop","Button","Linked Services");
@@ -1100,14 +1114,14 @@ void Span::setWifiCredentials(const char *ssid, const char *pwd){
 
 ///////////////////////////////
 
-int Span::sprintfAttributes(char *cBuf){
+int Span::sprintfAttributes(char *cBuf, int flags){
 
   int nBytes=0;
 
   nBytes+=snprintf(cBuf,cBuf?64:0,"{\"accessories\":[");
 
   for(int i=0;i<Accessories.size();i++){
-    nBytes+=Accessories[i]->sprintfAttributes(cBuf?(cBuf+nBytes):NULL);    
+    nBytes+=Accessories[i]->sprintfAttributes(cBuf?(cBuf+nBytes):NULL,flags);    
     if(i+1<Accessories.size())
       nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",");
     }
@@ -1358,7 +1372,7 @@ int Span::sprintfNotify(SpanBuf *pObj, int nObj, char *cBuf, int conNum){
         if(notifyFlag)                                                           // already printed at least one other characteristic
           nChars+=snprintf(cBuf?(cBuf+nChars):NULL,cBuf?64:0,",");               // add preceeding comma before printing next characteristic
         
-        nChars+=pObj[i].characteristic->sprintfAttributes(cBuf?(cBuf+nChars):NULL,GET_AID+GET_NV);    // get JSON attributes for characteristic
+        nChars+=pObj[i].characteristic->sprintfAttributes(cBuf?(cBuf+nChars):NULL,GET_VALUE|GET_AID|GET_NV);    // get JSON attributes for characteristic
         notifyFlag=true;
         
       } // notification requested
@@ -1476,13 +1490,13 @@ SpanAccessory::SpanAccessory(uint32_t aid){
 
 ///////////////////////////////
 
-int SpanAccessory::sprintfAttributes(char *cBuf){
+int SpanAccessory::sprintfAttributes(char *cBuf, int flags){
   int nBytes=0;
 
   nBytes+=snprintf(cBuf,cBuf?64:0,"{\"aid\":%u,\"services\":[",aid);
 
   for(int i=0;i<Services.size();i++){
-    nBytes+=Services[i]->sprintfAttributes(cBuf?(cBuf+nBytes):NULL);    
+    nBytes+=Services[i]->sprintfAttributes(cBuf?(cBuf+nBytes):NULL,flags);    
     if(i+1<Services.size())
       nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",");
     }
@@ -1535,7 +1549,7 @@ SpanService *SpanService::addLink(SpanService *svc){
 
 ///////////////////////////////
 
-int SpanService::sprintfAttributes(char *cBuf){
+int SpanService::sprintfAttributes(char *cBuf, int flags){
   int nBytes=0;
 
   nBytes+=snprintf(cBuf,cBuf?64:0,"{\"iid\":%d,\"type\":\"%s\",",iid,type);
@@ -1559,7 +1573,7 @@ int SpanService::sprintfAttributes(char *cBuf){
   nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,"\"characteristics\":[");
   
   for(int i=0;i<Characteristics.size();i++){
-    nBytes+=Characteristics[i]->sprintfAttributes(cBuf?(cBuf+nBytes):NULL,GET_META|GET_PERMS|GET_TYPE|GET_DESC);    
+    nBytes+=Characteristics[i]->sprintfAttributes(cBuf?(cBuf+nBytes):NULL,flags);    
     if(i+1<Characteristics.size())
       nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",");
   }
@@ -1609,7 +1623,7 @@ int SpanCharacteristic::sprintfAttributes(char *cBuf, int flags){
   if(flags&GET_TYPE)  
     nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"type\":\"%s\"",type);
 
-  if(perms&PR){    
+  if((perms&PR) && (flags&GET_VALUE)){    
     if(perms&NV && !(flags&GET_NV))
       nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"value\":null");
     else
