@@ -907,7 +907,12 @@ void Span::processSerialCommand(const char *c){
         mdns_service_txt_item_set("_hap","_tcp","c#",cNum);
       }  
     }
-    break;    
+    break;  
+
+    case 'm': {
+      Serial.printf("Free Memory: %d bytes\n",heap_caps_get_free_size(MALLOC_CAP_DEFAULT));  
+    }
+    break;       
 
     case 'i':{
 
@@ -1014,8 +1019,7 @@ void Span::processSerialCommand(const char *c){
       Serial.printf("\nConfigured as Bridge: %s\n",isBridge?"YES":"NO");
       if(hapConfig.configNumber>0)
         Serial.printf("Configuration Number: %d\n",hapConfig.configNumber);
-      Serial.printf("\nDatabase Validation:  Warnings=%d, Errors=%d\n\n",nWarnings,nErrors);
-          
+      Serial.printf("\nDatabase Validation:  Warnings=%d, Errors=%d\n\n",nWarnings,nErrors);    
 
       char d[]="------------------------------";
       Serial.printf("%-30s  %8s  %10s  %s  %s  %s  %s  %s\n","Service","UUID","AID","IID","Update","Loop","Button","Linked Services");
