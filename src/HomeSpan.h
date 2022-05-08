@@ -282,7 +282,7 @@ struct SpanAccessory{
   int iidCount=0;                           // running count of iid to use for Services and Characteristics associated with this Accessory                                 
   vector<SpanService *> Services;           // vector of pointers to all Services in this Accessory  
 
-  SpanAccessory(uint32_t aid=0);
+  SpanAccessory(uint32_t aid=0);            // constructor
   ~SpanAccessory();
 
   int sprintfAttributes(char *cBuf, int flags);        // prints Accessory JSON database into buf, unless buf=NULL; return number of characters printed, excluding null terminator, even if buf=NULL  
@@ -362,6 +362,7 @@ struct SpanCharacteristic{
   SpanService *service=NULL;               // pointer to Service containing this Characteristic
       
   SpanCharacteristic(HapChar *hapChar, boolean isCustom=false);           // contructor
+  ~SpanCharacteristic();
   
   int sprintfAttributes(char *cBuf, int flags);   // prints Characteristic JSON records into buf, according to flags mask; return number of characters printed, excluding null terminator  
   StatusCode loadUpdate(char *val, char *ev);     // load updated val/ev from PUT /characteristic JSON request.  Return intiial HAP status code (checks to see if characteristic is found, is writable, etc.)

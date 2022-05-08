@@ -1581,13 +1581,17 @@ SpanService::SpanService(const char *type, const char *hapName, boolean isCustom
 
 SpanService::~SpanService(){
   
+  while(Characteristics.rbegin()!=Characteristics.rend())           // delete all Characteristics in this Service
+    delete *Characteristics.rbegin();
+      
   auto svc=accessory->Services.begin();              // find Service in containing Accessory vector and erase entry
   while((*svc)!=this)
     svc++;
   accessory->Services.erase(svc);
 
-  for(svc=homeSpan.Loops.begin(); (*svc)!=this && svc!=homeSpan.Loops.end(); svc++);    // find and erase entry in Loop vector
-  if(svc!=homeSpan.Loops.end()){
+  for(svc=homeSpan.Loops.begin(); svc!=homeSpan.Loops.end() && (*svc)!=this; svc++);    // search for entry in Loop vector...
+
+  if(svc!=homeSpan.Loops.end()){                                                        // ...if it exists, erase it
     homeSpan.Loops.erase(svc);
     Serial.printf("Deleted Loop Entry\n");
   }
@@ -1678,6 +1682,24 @@ SpanCharacteristic::SpanCharacteristic(HapChar *hapChar, boolean isCustom){
   aid=homeSpan.Accessories.back()->aid;
 
   ev=(boolean *)calloc(homeSpan.maxConnections,sizeof(boolean));
+}
+
+///////////////////////////////
+
+SpanCharacteristic::~SpanCharacteristic(){
+
+  auto chr=service->Characteristics.begin();              // find Characteristic in containing Service vector and erase entry
+  while((*chr)!=this)
+    chr++;
+  service->Characteristics.erase(chr);
+
+  free(ev);
+  free(desc);
+  free(unit);
+  free(validValues);
+  free(nvsKey);
+  
+  Serial.printf("Deleted Characteristic AID=%d IID=%d\n",aid,iid);  
 }
 
 ///////////////////////////////
