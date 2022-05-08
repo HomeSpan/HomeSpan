@@ -315,7 +315,7 @@ struct SpanService{
   int sprintfAttributes(char *cBuf, int flags);           // prints Service JSON records into buf; return number of characters printed, excluding null terminator
   
   virtual boolean update() {return(true);}                // placeholder for code that is called when a Service is updated via a Controller.  Must return true/false depending on success of update
-  virtual void loop(){}                                   // loops for each Service - called every cycle and can be over-ridden with user-defined code
+  virtual void loop(){}                                   // loops for each Service - called every cycle if over-ridden with user-defined code
   virtual void button(int pin, int pressType){}           // method called for a Service when a button attached to "pin" has a Single, Double, or Long Press, according to pressType
 };
 

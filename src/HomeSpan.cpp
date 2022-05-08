@@ -1492,6 +1492,15 @@ boolean Span::updateConfigNum(){
     Serial.print("\n\n");    
   }
 
+  Loops.clear();
+
+  for(auto acc=Accessories.begin(); acc!=Accessories.end(); acc++){                        // identify all services with over-ridden loop() methods
+    for(auto svc=(*acc)->Services.begin(); svc!=(*acc)->Services.end(); svc++){
+      if((void(*)())((*svc)->*(&SpanService::loop)) != (void(*)())(&SpanService::loop))    // save pointers to services in Loops vector
+        homeSpan.Loops.push_back((*svc));
+    }
+  }    
+
   return(changed);
 }
 
@@ -1574,7 +1583,7 @@ SpanService::SpanService(const char *type, const char *hapName, boolean isCustom
 
   homeSpan.Accessories.back()->Services.push_back(this);  
   accessory=homeSpan.Accessories.back();
-  iid=++(homeSpan.Accessories.back()->iidCount);  
+  iid=++(homeSpan.Accessories.back()->iidCount);
 }
 
 ///////////////////////////////
@@ -1595,7 +1604,7 @@ SpanService::~SpanService(){
     homeSpan.Loops.erase(svc);
     Serial.printf("Deleted Loop Entry\n");
   }
-    
+   
   Serial.printf("Deleted Service AID=%d IID=%d\n",accessory->aid,iid); 
 }
 
@@ -1698,6 +1707,11 @@ SpanCharacteristic::~SpanCharacteristic(){
   free(unit);
   free(validValues);
   free(nvsKey);
+
+  if(format==FORMAT::STRING){
+    free(value.STRING);
+    free(newValue.STRING);
+  }
   
   Serial.printf("Deleted Characteristic AID=%d IID=%d\n",aid,iid);  
 }

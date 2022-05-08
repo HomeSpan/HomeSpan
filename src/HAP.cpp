@@ -141,23 +141,14 @@ void HAPClient::init(){
   if(!nvs_get_blob(hapNVS,"HAPHASH",NULL,&len)){                 // if found HAP HASH structure
     nvs_get_blob(hapNVS,"HAPHASH",&homeSpan.hapConfig,&len);     // retrieve data    
   } else {
-    Serial.print("Resetting Accessory Configuration number...\n");
+    Serial.print("Resetting Database Hash...\n");
     nvs_set_blob(hapNVS,"HAPHASH",&homeSpan.hapConfig,sizeof(homeSpan.hapConfig));     // save data (will default to all zero values, which will then be updated below)
     nvs_commit(hapNVS);                                                                // commit to NVS
   }
 
   Serial.print("\n");
 
-  homeSpan.updateConfigNum();
-  
-  for(int i=0;i<homeSpan.Accessories.size();i++){                             // identify all services with over-ridden loop() methods
-    for(int j=0;j<homeSpan.Accessories[i]->Services.size();j++){
-      SpanService *s=homeSpan.Accessories[i]->Services[j];      
-      if((void(*)())(s->*(&SpanService::loop)) != (void(*)())(&SpanService::loop))    // save pointers to services in Loops vector
-        homeSpan.Loops.push_back(s);
-    }
-  }
-
+  homeSpan.updateConfigNum();       // create Configuration Cumber and Loop vector
 }
 
 //////////////////////////////////////
