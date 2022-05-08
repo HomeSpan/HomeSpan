@@ -1526,6 +1526,20 @@ SpanAccessory::SpanAccessory(uint32_t aid){
 
 ///////////////////////////////
 
+SpanAccessory::~SpanAccessory(){
+
+  while(Services.rbegin()!=Services.rend())           // delete all Services in this Accessory
+    delete *Services.rbegin();                       
+  
+  auto acc=homeSpan.Accessories.begin();              // find Accessory in homeSpan vector and erase entry
+  while((*acc)!=this)
+    acc++;
+  homeSpan.Accessories.erase(acc);
+  Serial.printf("Deleted Accessory AID=%d\n",aid);
+}
+
+///////////////////////////////
+
 int SpanAccessory::sprintfAttributes(char *cBuf, int flags){
   int nBytes=0;
 
@@ -1559,7 +1573,26 @@ SpanService::SpanService(const char *type, const char *hapName, boolean isCustom
   this->isCustom=isCustom;
 
   homeSpan.Accessories.back()->Services.push_back(this);  
+  accessory=homeSpan.Accessories.back();
   iid=++(homeSpan.Accessories.back()->iidCount);  
+}
+
+///////////////////////////////
+
+SpanService::~SpanService(){
+  
+  auto svc=accessory->Services.begin();              // find Service in containing Accessory vector and erase entry
+  while((*svc)!=this)
+    svc++;
+  accessory->Services.erase(svc);
+
+  for(svc=homeSpan.Loops.begin(); (*svc)!=this && svc!=homeSpan.Loops.end(); svc++);    // find and erase entry in Loop vector
+  if(svc!=homeSpan.Loops.end()){
+    homeSpan.Loops.erase(svc);
+    Serial.printf("Deleted Loop Entry\n");
+  }
+    
+  Serial.printf("Deleted Service AID=%d IID=%d\n",accessory->aid,iid); 
 }
 
 ///////////////////////////////
@@ -1624,6 +1657,13 @@ int SpanService::sprintfAttributes(char *cBuf, int flags){
 ///////////////////////////////
 
 SpanCharacteristic::SpanCharacteristic(HapChar *hapChar, boolean isCustom){
+
+  if(homeSpan.Accessories.empty() || homeSpan.Accessories.back()->Services.empty()){
+    Serial.printf("\nFATAL ERROR!  Can't create new Characteristic '%s' without a defined Service ***\n",hapName);
+    Serial.printf("\n=== PROGRAM HALTED ===");
+    while(1);
+  }
+
   type=hapChar->type;
   perms=hapChar->perms;
   hapName=hapChar->hapName;
@@ -1632,12 +1672,7 @@ SpanCharacteristic::SpanCharacteristic(HapChar *hapChar, boolean isCustom){
   this->isCustom=isCustom;
   this->hapChar=hapChar;
 
-  if(homeSpan.Accessories.empty() || homeSpan.Accessories.back()->Services.empty()){
-    Serial.printf("\nFATAL ERROR!  Can't create new Characteristic '%s' without a defined Service ***\n",hapName);
-    Serial.printf("\n=== PROGRAM HALTED ===");
-    while(1);
-  }
-
+  homeSpan.Accessories.back()->Services.back()->Characteristics.push_back(this);  
   iid=++(homeSpan.Accessories.back()->iidCount);
   service=homeSpan.Accessories.back()->Services.back();
   aid=homeSpan.Accessories.back()->aid;

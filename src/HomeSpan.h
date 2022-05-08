@@ -283,6 +283,7 @@ struct SpanAccessory{
   vector<SpanService *> Services;           // vector of pointers to all Services in this Accessory  
 
   SpanAccessory(uint32_t aid=0);
+  ~SpanAccessory();
 
   int sprintfAttributes(char *cBuf, int flags);        // prints Accessory JSON database into buf, unless buf=NULL; return number of characters printed, excluding null terminator, even if buf=NULL  
 };
@@ -301,8 +302,10 @@ struct SpanService{
   unordered_set<HapChar *> opt;                           // unordered set of pointers to all optional HAP Characteristic Types for this Service
   vector<SpanService *> linkedServices;                   // vector of pointers to any optional linked Services
   boolean isCustom;                                       // flag to indicate this is a Custom Service
+  SpanAccessory *accessory=NULL;                          // pointer to Accessory containing this Service
   
   SpanService(const char *type, const char *hapName, boolean isCustom=false);     // constructor
+  ~SpanService();
 
   SpanService *setPrimary();                              // sets the Service Type to be primary and returns pointer to self
   SpanService *setHidden();                               // sets the Service Type to be hidden and returns pointer to self
@@ -511,9 +514,7 @@ struct SpanCharacteristic{
         uvSet(maxValue,max);
         uvSet(stepValue,0);
     }
-       
-    homeSpan.Accessories.back()->Services.back()->Characteristics.push_back(this);  
-   
+          
   } // init()
 
 
