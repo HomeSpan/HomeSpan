@@ -214,7 +214,8 @@ struct Span{
   void checkConnect();                          // check WiFi connection; connect if needed
   void commandMode();                           // allows user to control and reset HomeSpan settings with the control button
   void processSerialCommand(const char *c);     // process command 'c' (typically from readSerial, though can be called with any 'c')
-  boolean updateConfigNum();                    // updates HAP configuration number (MDNS 'c#' record) if hash of current config database is different from previously-stored hash; returns true if config number changed
+  
+  boolean updateDatabase(boolean updateMDNS=true);   // updates HAP Configuration Number and Loop vector; iF updateMDNS=true and config number has changed, re-broadcasts MDNS 'c#' record; returns true if config number changed
 
   int sprintfAttributes(char *cBuf, int flags=GET_VALUE|GET_META|GET_PERMS|GET_TYPE|GET_DESC);   // prints Attributes JSON database into buf, unless buf=NULL; return number of characters printed, excluding null terminator
   

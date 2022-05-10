@@ -146,9 +146,13 @@ void HAPClient::init(){
     nvs_commit(hapNVS);                                                                // commit to NVS
   }
 
+  if(homeSpan.updateDatabase(false))       // create Configuration Number and Loop vector
+    Serial.printf("\nAccessory configuration has changed.  Updating configuration number to %d\n",homeSpan.hapConfig.configNumber);
+  else
+    Serial.printf("\nAccessory configuration number: %d\n",homeSpan.hapConfig.configNumber);
+
   Serial.print("\n");
 
-  homeSpan.updateConfigNum();       // create Configuration Cumber and Loop vector
 }
 
 //////////////////////////////////////

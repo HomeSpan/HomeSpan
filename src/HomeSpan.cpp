@@ -899,16 +899,6 @@ void Span::processSerialCommand(const char *c){
     }
     break;
 
-    case 'C': {
-
-      if(updateConfigNum()){        // if config number changed, update MDNS record
-        char cNum[16];
-        sprintf(cNum,"%d",hapConfig.configNumber);
-        mdns_service_txt_item_set("_hap","_tcp","c#",cNum);
-      }  
-    }
-    break;  
-
     case 'm': {
       Serial.printf("Free Memory: %d bytes\n",heap_caps_get_free_size(MALLOC_CAP_DEFAULT));  
     }
@@ -1052,6 +1042,7 @@ void Span::processSerialCommand(const char *c){
       Serial.print("  s - print connection status\n");
       Serial.print("  i - print summary information about the HAP Database\n");
       Serial.print("  d - print the full HAP Accessory Attributes Database in JSON format\n");
+      Serial.print("  m - print free heap memory\n");
       Serial.print("\n");      
       Serial.print("  W - configure WiFi Credentials and restart\n");      
       Serial.print("  X - delete WiFi Credentials and restart\n");      
@@ -1059,7 +1050,6 @@ void Span::processSerialCommand(const char *c){
       Serial.print("  Q <id> - change the HomeKit Setup ID for QR Codes to <id>\n");
       Serial.print("  O - change the OTA password\n");
       Serial.print("  A - start the HomeSpan Setup Access Point\n");
-      Serial.print("  C - update database configuration number\n");     
       Serial.print("\n");      
       Serial.print("  V - delete value settings for all saved Characteristics\n");
       Serial.print("  U - unpair device by deleting all Controller data\n");
@@ -1465,7 +1455,7 @@ int Span::sprintfAttributes(char **ids, int numIDs, int flags, char *cBuf){
 
 ///////////////////////////////
 
-boolean Span::updateConfigNum(){
+boolean Span::updateDatabase(boolean updateMDNS){
 
   uint8_t tHash[48];
   TempBuffer <char> tBuf(sprintfAttributes(NULL,GET_META|GET_PERMS|GET_TYPE|GET_DESC)+1);
@@ -1480,16 +1470,15 @@ boolean Span::updateConfigNum(){
     if(hapConfig.configNumber==65536)                // reached max value
       hapConfig.configNumber=1;                      // reset to 1
                    
-    Serial.print("Accessory configuration has changed.  Updating configuration number to ");
-    Serial.print(hapConfig.configNumber);
-    Serial.print("\n\n");
     nvs_set_blob(HAPClient::hapNVS,"HAPHASH",&hapConfig,sizeof(hapConfig));     // update data
     nvs_commit(HAPClient::hapNVS);                                              // commit to NVS
     changed=true;
-  } else {
-    Serial.print("Accessory configuration number: ");
-    Serial.print(hapConfig.configNumber);
-    Serial.print("\n\n");    
+
+    if(updateMDNS){
+      char cNum[16];
+      sprintf(cNum,"%d",hapConfig.configNumber);
+      mdns_service_txt_item_set("_hap","_tcp","c#",cNum);      
+    }
   }
 
   Loops.clear();
@@ -1544,7 +1533,7 @@ SpanAccessory::~SpanAccessory(){
   while((*acc)!=this)
     acc++;
   homeSpan.Accessories.erase(acc);
-  Serial.printf("Deleted Accessory AID=%d\n",aid);
+  LOG1("Deleted Accessory AID=%d\n",aid);
 }
 
 ///////////////////////////////
@@ -1602,10 +1591,10 @@ SpanService::~SpanService(){
 
   if(svc!=homeSpan.Loops.end()){                                                        // ...if it exists, erase it
     homeSpan.Loops.erase(svc);
-    Serial.printf("Deleted Loop Entry\n");
+    LOG1("Deleted Loop Entry\n");
   }
    
-  Serial.printf("Deleted Service AID=%d IID=%d\n",accessory->aid,iid); 
+  LOG1("Deleted Service AID=%d IID=%d\n",accessory->aid,iid); 
 }
 
 ///////////////////////////////
@@ -1713,7 +1702,7 @@ SpanCharacteristic::~SpanCharacteristic(){
     free(newValue.STRING);
   }
   
-  Serial.printf("Deleted Characteristic AID=%d IID=%d\n",aid,iid);  
+  LOG1("Deleted Characteristic AID=%d IID=%d\n",aid,iid);  
 }
 
 ///////////////////////////////
