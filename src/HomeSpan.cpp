@@ -1588,12 +1588,22 @@ SpanService::~SpanService(){
   accessory->Services.erase(svc);
 
   for(svc=homeSpan.Loops.begin(); svc!=homeSpan.Loops.end() && (*svc)!=this; svc++);    // search for entry in Loop vector...
-
   if(svc!=homeSpan.Loops.end()){                                                        // ...if it exists, erase it
     homeSpan.Loops.erase(svc);
     LOG1("Deleted Loop Entry\n");
   }
-   
+
+  auto pb=homeSpan.PushButtons.begin();         // loop through PushButton vector and delete ALL PushButtons associated with this Service
+  while(pb!=homeSpan.PushButtons.end()){
+    if((*pb)->service==this){
+      pb=homeSpan.PushButtons.erase(pb);
+      LOG1("Deleted PushButton on Pin=%d\n",(*pb)->pin);
+    }
+    else {
+      pb++;
+    }
+  }
+  
   LOG1("Deleted Service AID=%d IID=%d\n",accessory->aid,iid); 
 }
 
