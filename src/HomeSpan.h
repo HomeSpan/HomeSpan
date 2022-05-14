@@ -219,8 +219,9 @@ struct Span{
 
   int sprintfAttributes(char *cBuf, int flags=GET_VALUE|GET_META|GET_PERMS|GET_TYPE|GET_DESC);   // prints Attributes JSON database into buf, unless buf=NULL; return number of characters printed, excluding null terminator
   
-  void prettyPrint(char *buf, int nsp=2);       // print arbitrary JSON from buf to serial monitor, formatted with indentions of 'nsp' spaces
+  void prettyPrint(char *buf, int nsp=2);            // print arbitrary JSON from buf to serial monitor, formatted with indentions of 'nsp' spaces
   SpanCharacteristic *find(uint32_t aid, int iid);   // return Characteristic with matching aid and iid (else NULL if not found)
+  SpanAccessory *getAccessory(uint32_t aid);         // return Accessory with matching aid (else NULL if not found)
   
   int countCharacteristics(char *buf);                                    // return number of characteristic objects referenced in PUT /characteristics JSON request
   int updateCharacteristics(char *buf, SpanBuf *pObj);                    // parses PUT /characteristics JSON request 'buf into 'pObj' and updates referenced characteristics; returns 1 on success, 0 on fail

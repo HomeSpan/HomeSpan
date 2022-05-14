@@ -1032,7 +1032,7 @@ void Span::processSerialCommand(const char *c){
           Serial.print("\n");
         }
       }
-      Serial.print("\n*** End Info ***\n");
+      Serial.print("\n*** End Info ***\n\n");
     }
     break;
 
@@ -1166,6 +1166,20 @@ void Span::prettyPrint(char *buf, int nsp){
 
   Serial.print("\n");
 } // prettyPrint
+
+
+///////////////////////////
+
+SpanAccessory *Span::getAccessory(uint32_t n){
+  
+  auto it=homeSpan.Accessories.begin();
+  for(;it!=homeSpan.Accessories.end() && (*it)->aid!=n; it++);
+  
+  if(it==homeSpan.Accessories.end())
+    return(NULL);
+
+  return(*it);
+}
 
 ///////////////////////////////
 
