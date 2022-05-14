@@ -30,7 +30,7 @@
 #define MAX_LIGHTS 10
 
 nvs_handle savedData;
-int accNum[MAX_LIGHTS]={0};
+int accNum[MAX_LIGHTS+1]={0};
 
 //////////////////////////////////////
 
@@ -56,9 +56,9 @@ void setup() {
     if(accNum[i]>0)
       addLight(accNum[i]);
 
-  new SpanUserCommand('a'," <num> add a new light accessory with id=num",addAccessory);
-  new SpanUserCommand('d'," <num> delete a light accessory with id=num",deleteAccessory);
-  new SpanUserCommand('u',"update configuration database",[](const char *buf){homeSpan.updateDatabase();});
+  new SpanUserCommand('a',"<num> - add a new light accessory with id=<num>",addAccessory);
+  new SpanUserCommand('d',"<num> - delete a light accessory with id=<num>",deleteAccessory);
+  new SpanUserCommand('u',"update accessories database",updateAccessories);
   
 }
 
@@ -142,10 +142,21 @@ void deleteAccessory(const char *buf){
   Serial.printf("Deleting Accessory: Light-%d\n",n);
   delete acc;
 
-  int i;                                              // delete entry in accNum
+  int i;                                              // find entry in accNum
   for(i=0;accNum[i]!=n;i++);
-  accNum[i]=0;
+  for(;i<MAX_LIGHTS;i++)                              // shift entries - last one will always be zero since array stores MAX_LIGHTS+1 elements
+    accNum[i]=accNum[i+1];
 
   nvs_set_blob(savedData,"ACC_NUM",&accNum,sizeof(accNum));        // update data
   nvs_commit(savedData);   
+}
+
+///////////////////////////
+
+void updateAccessories(const char *buf){
+  
+  if(homeSpan.updateDatabase())
+    Serial.printf("Accessories Database updated.  New configuration number broadcasted...\n");
+  else
+    Serial.printf("Nothing to update - no changes were made!\n");
 }
