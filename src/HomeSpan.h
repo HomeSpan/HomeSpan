@@ -288,6 +288,7 @@ struct SpanAccessory{
   ~SpanAccessory();
 
   int sprintfAttributes(char *cBuf, int flags);        // prints Accessory JSON database into buf, unless buf=NULL; return number of characters printed, excluding null terminator, even if buf=NULL  
+  static boolean compare(SpanAccessory *a, SpanAccessory *b){return(a->aid<b->aid);}
 };
 
 ///////////////////////////////
