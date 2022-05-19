@@ -34,7 +34,6 @@
 #include <esp_task_wdt.h>
 #include <esp_sntp.h>
 #include <esp_ota_ops.h>
-#include <algorithm>
 
 #include "HomeSpan.h"
 #include "HAP.h"
@@ -1471,8 +1470,6 @@ int Span::sprintfAttributes(char **ids, int numIDs, int flags, char *cBuf){
 ///////////////////////////////
 
 boolean Span::updateDatabase(boolean updateMDNS){
-
-  std::sort(Accessories.begin(),Accessories.end(),SpanAccessory::compare);
 
   uint8_t tHash[48];
   TempBuffer <char> tBuf(sprintfAttributes(NULL,GET_META|GET_PERMS|GET_TYPE|GET_DESC)+1);
