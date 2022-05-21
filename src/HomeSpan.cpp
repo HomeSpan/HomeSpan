@@ -1170,15 +1170,16 @@ void Span::prettyPrint(char *buf, int nsp){
 
 ///////////////////////////
 
-SpanAccessory *Span::getAccessory(uint32_t n){
+int Span::deleteAccessory(uint32_t n){
   
   auto it=homeSpan.Accessories.begin();
   for(;it!=homeSpan.Accessories.end() && (*it)->aid!=n; it++);
   
   if(it==homeSpan.Accessories.end())
-    return(NULL);
+    return(-1);
 
-  return(*it);
+  delete *it;
+  return(0);
 }
 
 ///////////////////////////////

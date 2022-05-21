@@ -58,7 +58,8 @@ void setup() {
 
   new SpanUserCommand('a',"<num> - add a new light accessory with id=<num>",addAccessory);
   new SpanUserCommand('d',"<num> - delete a light accessory with id=<num>",deleteAccessory);
-  new SpanUserCommand('u',"update accessories database",updateAccessories);
+  new SpanUserCommand('D'," - delete ALL light accessories",deleteAllAccessories);  
+  new SpanUserCommand('u',"- update accessories database",updateAccessories);
   
 }
 
@@ -132,15 +133,12 @@ void deleteAccessory(const char *buf){
     return;
   }
 
-  SpanAccessory *acc=homeSpan.getAccessory(n+1);
-  
-  if(!acc){
+  if(homeSpan.deleteAccessory(n+1)){
     Serial.printf("No such Accessory: Light-%d\n",n);
     return;
   }
 
   Serial.printf("Deleting Accessory: Light-%d\n",n);
-  delete acc;
 
   int i;                                              // find entry in accNum
   for(i=0;accNum[i]!=n;i++);
@@ -150,6 +148,14 @@ void deleteAccessory(const char *buf){
   nvs_set_blob(savedData,"ACC_NUM",&accNum,sizeof(accNum));        // update data
   nvs_commit(savedData);   
 }
+
+///////////////////////////
+
+void deleteAllAccessories(const char *buf){
+  
+  nvs_erase_all(savedData);
+  nvs_commit(savedData); 
+ }
 
 ///////////////////////////
 
