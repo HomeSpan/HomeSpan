@@ -133,7 +133,7 @@ void deleteAccessory(const char *buf){
     return;
   }
 
-  if(homeSpan.deleteAccessory(n+1)){
+  if(homeSpan.deleteAccessory(n+1)!=0){
     Serial.printf("No such Accessory: Light-%d\n",n);
     return;
   }
