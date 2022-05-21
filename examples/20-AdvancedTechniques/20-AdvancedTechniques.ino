@@ -59,15 +59,8 @@ void setup() {
   new SpanUserCommand('d',"<num> - delete a light accessory with id=<num>",deleteAccessory);
   new SpanUserCommand('D'," - delete ALL light accessories",deleteAllAccessories);  
   new SpanUserCommand('u',"- update accessories database",updateAccessories);
-  
-}
 
-//////////////////////////////////////
-
-void loop(){
-  
-  homeSpan.poll();
-  
+  homeSpan.autoPoll();
 }
 
 ///////////////////////////
