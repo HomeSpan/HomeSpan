@@ -2119,6 +2119,11 @@ void SpanOTA::error(ota_error_t err){
 
 ///////////////////////////////
 
+void __attribute__((weak)) loop(){
+}
+
+///////////////////////////////
+
 int SpanOTA::otaPercent;
 boolean SpanOTA::safeLoad;
 boolean SpanOTA::enabled=false;
