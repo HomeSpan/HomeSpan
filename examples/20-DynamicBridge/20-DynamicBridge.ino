@@ -27,10 +27,10 @@
  
 #include "HomeSpan.h"
 
-#define MAX_LIGHTS 10
+#include <array>
 
 nvs_handle savedData;
-int accNum[MAX_LIGHTS+1]={0};
+std::array<int,10> lights;
 
 //////////////////////////////////////
 
@@ -39,22 +39,21 @@ void setup() {
   Serial.begin(115200);
 
   size_t len;  
-  nvs_open("SAVED_DATA",NVS_READWRITE,&savedData);        // open SAVED DATA
-  if(!nvs_get_blob(savedData,"ACC_NUM",NULL,&len))        // if ACCESSORY NUMBER data found
-    nvs_get_blob(savedData,"ACC_NUM",&accNum,&len);       // retrieve data
+  nvs_open("SAVED_DATA",NVS_READWRITE,&savedData);       // open SAVED DATA
+  if(!nvs_get_blob(savedData,"LIGHTS",NULL,&len))        // if LIGHTS data found
+    nvs_get_blob(savedData,"LIGHTS",&lights,&len);       // retrieve data
 
   homeSpan.setLogLevel(1);
 
-  homeSpan.begin(Category::Bridges,"HomeSpan Bridge");
+  homeSpan.begin(Category::Lighting,"HomeSpan Lights");
 
   new SpanAccessory();
     new Service::AccessoryInformation();
       new Characteristic::Identify();
       new Characteristic::Model("HomeSpan Dynamic Bridge");
 
-  for(int i=0;i<MAX_LIGHTS;i++)            // add previously-saved accessories
-    if(accNum[i]>0)
-      addLight(accNum[i]);
+  for(auto it=lights.begin(); it!=lights.end() && *it!=0; it++)
+    addLight(*it);
 
   new SpanUserCommand('a',"<num> - add a new light accessory with id=<num>",addAccessory);
   new SpanUserCommand('d',"<num> - delete a light accessory with id=<num>",deleteAccessory);
@@ -102,24 +101,22 @@ void addAccessory(const char *buf){
     return;
   }
 
-  int i;
-  for(i=0;i<MAX_LIGHTS && accNum[i]>0 && accNum[i]!=n;i++);
-
-  if(i==MAX_LIGHTS){
-    Serial.printf("Can't add any more lights - max is %d!\n",MAX_LIGHTS);
-    return;
-  }
-
-  if(accNum[i]>0){    
+  if(std::find(lights.begin(),lights.end(),n)!=lights.end()){
     Serial.printf("Accessory Light-%d already implemented!\n",n);
     return;
   }
+  
+  auto it=std::find(lights.begin(),lights.end(),0);
+  
+  if(it==lights.end()){
+    Serial.printf("Can't add any more lights - max is %d!\n",lights.size());
+    return;
+  }
 
-  accNum[i]=n;  
-  nvs_set_blob(savedData,"ACC_NUM",&accNum,sizeof(accNum));        // update data
+  *it=n;                                                        // save light number
+  nvs_set_blob(savedData,"LIGHTS",&lights,sizeof(lights));      // update data
   nvs_commit(savedData); 
-
-  addLight(n);  
+  addLight(n);                                                  // add light accessory
 }
 
 ///////////////////////////
@@ -140,22 +137,30 @@ void deleteAccessory(const char *buf){
 
   Serial.printf("Deleting Accessory: Light-%d\n",n);
 
-  int i;                                              // find entry in accNum
-  for(i=0;accNum[i]!=n;i++);
-  for(;i<MAX_LIGHTS;i++)                              // shift entries - last one will always be zero since array stores MAX_LIGHTS+1 elements
-    accNum[i]=accNum[i+1];
-
-  nvs_set_blob(savedData,"ACC_NUM",&accNum,sizeof(accNum));        // update data
-  nvs_commit(savedData);   
+  auto it=std::remove(lights.begin(),lights.end(),n);
+  *it=0;                                                        // overwrite end with a 0
+  nvs_set_blob(savedData,"LIGHTS",&lights,sizeof(lights));      // update data
+  nvs_commit(savedData); 
 }
 
 ///////////////////////////
 
 void deleteAllAccessories(const char *buf){
-  
-  nvs_erase_all(savedData);
-  nvs_commit(savedData); 
- }
+
+  if(lights[0]==0){
+    Serial.printf("There are no Light Accessories to delete!\n");
+    return;
+  }
+
+  for(auto it=lights.begin(); it!=lights.end() && *it!=0; it++)
+    homeSpan.deleteAccessory(*it+1);
+
+  std::fill(lights.begin(),lights.end(),0);
+  nvs_set_blob(savedData,"LIGHTS",&lights,sizeof(lights));      // update data
+  nvs_commit(savedData);
+
+  Serial.printf("All Light Accessories deleted!\n");
+}
 
 ///////////////////////////
 
@@ -166,3 +171,5 @@ void updateAccessories(const char *buf){
   else
     Serial.printf("Nothing to update - no changes were made!\n");
 }
+
+///////////////////////////
