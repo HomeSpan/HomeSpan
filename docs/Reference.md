@@ -24,11 +24,14 @@ At runtime HomeSpan will create a global **object** named `homeSpan` that suppor
    * checks for HAP requests, local commands, and device activity
    * **must** be called repeatedly in each sketch and is typically placed at the top of the Arduino `loop()` method, *unless* `autoPoll()` is used instead
 
-* `void autoPoll()`
-  * an *optional* method to create a task that repeatedly calls `poll()` in the background, which frees up the Ardino `loop()` method for any user-defined code that would otherwise block, or be blocked by, calling `poll()` in the `loop()` method
+* `void autoPoll(uint32_t stackSize)`
+  * an *optional* method to create a task with *stackSize* bytes of stack memory that repeatedly calls `poll()` in the background.  This frees up the Ardino `loop()` method for any user-defined code that would otherwise block, or be blocked by, calling `poll()` in the `loop()` method
   * if used, **must** be placed in a sketch as the last line in the Arduino `setup()` method
   * HomeSpan will throw and error and halt if both `poll()`and `autoPoll()` are used in the same sketch - either place `poll()` in the Arduino `loop()` method **or** place `autoPoll()` at the the end of the Arduino `setup()` method
   * can be used with both single-core and dual-core ESP32 boards.  If used with a dual-core board, the polling task is created on the free processor that is typically not running other Arduino functions
+  * if *stackSize* is not specified, defaults to the size used by the system for the normal Arduino `loop()` task (typically 8192 bytes)
+  * if this method is used, and you have no need to add your own code to the main Arduino `loop()`, you can safely skip defining a blank `void loop(){}` function in your sketch
+  * warning: this method should be considered *experimental* as different use cases are explored.  For example, if the code you add to the Arduino `loop()` method tries to alter any HomeSpan settings, race conditions may yield undefined results 
 
 ---
 
