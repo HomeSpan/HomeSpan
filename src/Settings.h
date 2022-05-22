@@ -55,6 +55,10 @@
 
 #define     ARDUINO_ESP_VERSION   STRINGIFY(ARDUINO_ESP32_GIT_DESC)
 
+#if ESP_ARDUINO_VERSION_MAJOR<2
+  #error THIS SKETCH REQUIRES VERSION 2 OF THE ARDUINO ESP32 LIBRARY
+#endif
+
 //////////////////////////////////////////////////////
 //                DEFAULT SETTINGS                  //  
 
