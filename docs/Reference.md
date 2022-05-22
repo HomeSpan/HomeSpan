@@ -143,11 +143,6 @@ The following **optional** `homeSpan` methods enable additional features and pro
   * if *s* contains an invalid code, an error will be reported and the code will *not* be saved.  Instead, the currently-stored Pairing Code (or the HomeSpan default Pairing Code if no code has been stored) will be used
   * :exclamation: SECURTY WARNING: Hardcoding a device's Pairing Code into your sketch is considered a security risk and is **not** recommended.  Instead, use one of the more secure methods provided by HomeSpan, such as typing 'S \<code\>' from the CLI, or launching HomeSpan's Access Point, to set your Pairing Code without hardcoding it into your sketch
 
-* `void deleteStoredValues()`
-  * deletes the value settings of all stored Characteristics from the NVS
-  * performs the same function as typing 'V' into the CLI
-  * can by called from anywhere in a sketch
-
 * `void setSketchVersion(const char *sVer)`
   * sets the version of a HomeSpan sketch to *sVer*, which can be any arbitrary character string
   * if unspecified, HomeSpan uses "n/a" as the default version text
@@ -170,6 +165,23 @@ The following **optional** `homeSpan` methods enable additional features and pro
 
 * `void setTimeServerTimeout(uint32_t tSec)`
   * changes the default 10-second timeout period HomeSpan uses when `enableWebLog()` tries set the device clock from an internet time server to *tSec* seconds
+ 
+---
+
+The following **optional** `homeSpan` methods provide additional run-time functionality for more advanced use cases: 
+ 
+* `void deleteStoredValues()`
+  * deletes the value settings of all stored Characteristics from the NVS
+  * performs the same function as typing 'V' into the CLI
+ 
+* `int deleteAccessory(uint32_t aid)`
+  * deletes Accessory with Accessory ID of *aid*, if found
+  * returns 0 if sucessful (match found), or -1 if the specified *aid* does not match any current Accessories
+  * allows for dynamically changing the Accessory database during run-time
+  * deleting an Accessory automatically deletes all Services, Characteristics, and any other resources it contains
+  * produces level-1 log messages listing all deleted components
+  * though deletions take effect immediately, HomeKit Controllers, such as the Home App, will not be aware of these changes until the configuration number is updated and rebroadcast - see updateDatabase() below
+ 
  
 ## *SpanAccessory(uint32_t aid)*
 
