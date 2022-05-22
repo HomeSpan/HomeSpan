@@ -215,13 +215,13 @@ struct Span{
   void commandMode();                           // allows user to control and reset HomeSpan settings with the control button
   void processSerialCommand(const char *c);     // process command 'c' (typically from readSerial, though can be called with any 'c')
   
-  boolean updateDatabase(boolean updateMDNS=true);   // updates HAP Configuration Number and Loop vector; iF updateMDNS=true and config number has changed, re-broadcasts MDNS 'c#' record; returns true if config number changed
+  boolean updateDatabase(boolean updateMDNS=true);   // updates HAP Configuration Number and Loop vector; if updateMDNS=true and config number has changed, re-broadcasts MDNS 'c#' record; returns true if config number changed
 
   int sprintfAttributes(char *cBuf, int flags=GET_VALUE|GET_META|GET_PERMS|GET_TYPE|GET_DESC);   // prints Attributes JSON database into buf, unless buf=NULL; return number of characters printed, excluding null terminator
   
   void prettyPrint(char *buf, int nsp=2);            // print arbitrary JSON from buf to serial monitor, formatted with indentions of 'nsp' spaces
   SpanCharacteristic *find(uint32_t aid, int iid);   // return Characteristic with matching aid and iid (else NULL if not found)
-  int deleteAccessory(uint32_t aid);                 // deletes Accessory with matching aid, if found.  Returns 0 on success, -1 on fail (aid not found)
+  boolean deleteAccessory(uint32_t aid);             // deletes Accessory with matching aid; returns true if found, else returns false
   
   int countCharacteristics(char *buf);                                    // return number of characteristic objects referenced in PUT /characteristics JSON request
   int updateCharacteristics(char *buf, SpanBuf *pObj);                    // parses PUT /characteristics JSON request 'buf into 'pObj' and updates referenced characteristics; returns 1 on success, 0 on fail

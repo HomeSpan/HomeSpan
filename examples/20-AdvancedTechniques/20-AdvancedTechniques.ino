@@ -123,17 +123,19 @@ void deleteAccessory(const char *buf){
     return;
   }
 
-  if(homeSpan.deleteAccessory(n+1)!=0){
+  if(homeSpan.deleteAccessory(n+1)){
+    Serial.printf("Deleting Accessory: Light-%d\n",n);
+  
+    auto it=std::remove(lights.begin(),lights.end(),n);           // remove entry from lights array
+    *it=0;                                                        // overwrite end with a 0
+    nvs_set_blob(savedData,"LIGHTS",&lights,sizeof(lights));      // update data
+    nvs_commit(savedData);
+    
+  } else {   
     Serial.printf("No such Accessory: Light-%d\n",n);
-    return;
   }
 
-  Serial.printf("Deleting Accessory: Light-%d\n",n);
 
-  auto it=std::remove(lights.begin(),lights.end(),n);
-  *it=0;                                                        // overwrite end with a 0
-  nvs_set_blob(savedData,"LIGHTS",&lights,sizeof(lights));      // update data
-  nvs_commit(savedData); 
 }
 
 ///////////////////////////
