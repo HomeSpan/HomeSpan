@@ -24,11 +24,14 @@ At runtime HomeSpan will create a global **object** named `homeSpan` that suppor
    * checks for HAP requests, local commands, and device activity
    * **must** be called repeatedly in each sketch and is typically placed at the top of the Arduino `loop()` method, *unless* `autoPoll()` is used instead
 
-* `void autoPoll()`
-  * an *optional* method to create a task that repeatedly calls `poll()` in the background, which frees up the Ardino `loop()` method for any user-defined code that would otherwise block, or be blocked by, calling `poll()` in the `loop()` method
+* `void autoPoll(uint32_t stackSize)`
+  * an *optional* method to create a task with *stackSize* bytes of stack memory that repeatedly calls `poll()` in the background.  This frees up the Ardino `loop()` method for any user-defined code that would otherwise block, or be blocked by, calling `poll()` in the `loop()` method
   * if used, **must** be placed in a sketch as the last line in the Arduino `setup()` method
   * HomeSpan will throw and error and halt if both `poll()`and `autoPoll()` are used in the same sketch - either place `poll()` in the Arduino `loop()` method **or** place `autoPoll()` at the the end of the Arduino `setup()` method
   * can be used with both single-core and dual-core ESP32 boards.  If used with a dual-core board, the polling task is created on the free processor that is typically not running other Arduino functions
+  * if *stackSize* is not specified, defaults to the size used by the system for the normal Arduino `loop()` task (typically 8192 bytes)
+  * if this method is used, and you have no need to add your own code to the main Arduino `loop()`, you can safely skip defining a blank `void loop(){}` function in your sketch
+  * warning: this method should be considered *experimental* as different use cases are explored.  For example, if the code you add to the Arduino `loop()` method tries to alter any HomeSpan settings, race conditions may yield undefined results 
 
 ---
 
@@ -140,11 +143,6 @@ The following **optional** `homeSpan` methods enable additional features and pro
   * if *s* contains an invalid code, an error will be reported and the code will *not* be saved.  Instead, the currently-stored Pairing Code (or the HomeSpan default Pairing Code if no code has been stored) will be used
   * :exclamation: SECURTY WARNING: Hardcoding a device's Pairing Code into your sketch is considered a security risk and is **not** recommended.  Instead, use one of the more secure methods provided by HomeSpan, such as typing 'S \<code\>' from the CLI, or launching HomeSpan's Access Point, to set your Pairing Code without hardcoding it into your sketch
 
-* `void deleteStoredValues()`
-  * deletes the value settings of all stored Characteristics from the NVS
-  * performs the same function as typing 'V' into the CLI
-  * can by called from anywhere in a sketch
-
 * `void setSketchVersion(const char *sVer)`
   * sets the version of a HomeSpan sketch to *sVer*, which can be any arbitrary character string
   * if unspecified, HomeSpan uses "n/a" as the default version text
@@ -167,6 +165,23 @@ The following **optional** `homeSpan` methods enable additional features and pro
 
 * `void setTimeServerTimeout(uint32_t tSec)`
   * changes the default 10-second timeout period HomeSpan uses when `enableWebLog()` tries set the device clock from an internet time server to *tSec* seconds
+ 
+---
+
+The following **optional** `homeSpan` methods provide additional run-time functionality for more advanced use cases: 
+ 
+* `void deleteStoredValues()`
+  * deletes the value settings of all stored Characteristics from the NVS
+  * performs the same function as typing 'V' into the CLI
+ 
+* `int deleteAccessory(uint32_t aid)`
+  * deletes Accessory with Accessory ID of *aid*, if found
+  * returns 0 if sucessful (match found), or -1 if the specified *aid* does not match any current Accessories
+  * allows for dynamically changing the Accessory database during run-time
+  * deleting an Accessory automatically deletes all Services, Characteristics, and any other resources it contains
+  * produces level-1 log messages listing all deleted components
+  * though deletions take effect immediately, HomeKit Controllers, such as the Home App, will not be aware of these changes until the configuration number is updated and rebroadcast - see updateDatabase() below
+ 
  
 ## *SpanAccessory(uint32_t aid)*
 
