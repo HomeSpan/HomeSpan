@@ -261,7 +261,7 @@ struct Span{
     webLog.init(maxEntries, serv, tz, url);
   }
 
-  void autoPoll(){xTaskCreateUniversal([](void *parms){for(;;)homeSpan.pollTask();}, "pollTask", CONFIG_ARDUINO_LOOP_STACK_SIZE, NULL, 1, &pollTaskHandle, 0);}     // start pollTask()
+  void autoPoll(uint32_t stackSize=CONFIG_ARDUINO_LOOP_STACK_SIZE){xTaskCreateUniversal([](void *parms){for(;;)homeSpan.pollTask();}, "pollTask", stackSize, NULL, 1, &pollTaskHandle, 0);}     // start pollTask()
 
   void setTimeServerTimeout(uint32_t tSec){webLog.waitTime=tSec*1000;}    // sets wait time (in seconds) for optional web log time server to connect
   
