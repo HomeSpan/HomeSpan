@@ -22,16 +22,7 @@ At runtime HomeSpan will create a global **object** named `homeSpan` that suppor
  
  * `void poll()`
    * checks for HAP requests, local commands, and device activity
-   * **must** be called repeatedly in each sketch and is typically placed at the top of the Arduino `loop()` method, *unless* `autoPoll()` is used instead
-
-* `void autoPoll(uint32_t stackSize)`
-  * an *optional* method to create a task with *stackSize* bytes of stack memory that repeatedly calls `poll()` in the background.  This frees up the Ardino `loop()` method for any user-defined code that would otherwise block, or be blocked by, calling `poll()` in the `loop()` method
-  * if used, **must** be placed in a sketch as the last line in the Arduino `setup()` method
-  * HomeSpan will throw and error and halt if both `poll()`and `autoPoll()` are used in the same sketch - either place `poll()` in the Arduino `loop()` method **or** place `autoPoll()` at the the end of the Arduino `setup()` method
-  * can be used with both single-core and dual-core ESP32 boards.  If used with a dual-core board, the polling task is created on the free processor that is typically not running other Arduino functions
-  * if *stackSize* is not specified, defaults to the size used by the system for the normal Arduino `loop()` task (typically 8192 bytes)
-  * if this method is used, and you have no need to add your own code to the main Arduino `loop()`, you can safely skip defining a blank `void loop(){}` function in your sketch
-  * warning: this method should be considered *experimental* as different use cases are explored.  For example, if the code you add to the Arduino `loop()` method tries to alter any HomeSpan settings, race conditions may yield undefined results 
+   * **must** be called repeatedly in each sketch and is typically placed at the top of the Arduino `loop()` method (*unless* `autoPoll()`, described further below, is used instead)
 
 ---
 
@@ -174,14 +165,33 @@ The following **optional** `homeSpan` methods provide additional run-time functi
   * deletes the value settings of all stored Characteristics from the NVS
   * performs the same function as typing 'V' into the CLI
  
-* `int deleteAccessory(uint32_t aid)`
+* `boolean deleteAccessory(uint32_t aid)`
   * deletes Accessory with Accessory ID of *aid*, if found
-  * returns 0 if sucessful (match found), or -1 if the specified *aid* does not match any current Accessories
-  * allows for dynamically changing the Accessory database during run-time
+  * returns true if successful (match found), or false if the specified *aid* does not match any current Accessories
+  * allows for dynamically changing the Accessory database during run-time (i.e. changing the configuration *after* the Arduino `setup()` has finished)
   * deleting an Accessory automatically deletes all Services, Characteristics, and any other resources it contains
-  * produces level-1 log messages listing all deleted components
-  * though deletions take effect immediately, HomeKit Controllers, such as the Home App, will not be aware of these changes until the configuration number is updated and rebroadcast - see updateDatabase() below
+  * outputs Level-1 Log Messages listing all deleted components
+  * note: though deletions take effect immediately, HomeKit Controllers, such as the Home App, will not be aware of these changes until the database configuration number is updated and rebroadcast - see updateDatabase() below
  
+* `boolean updateDatabase()`
+  * recomputes the database configuration number and, if changed, rebroadcasts the new number via MDNS so all connected HomeKit Controllers, such as the Home App, can request a full refresh to accurately reflect the new configuration
+  * returns true if configuration number has changed, false otherwise
+  * *only* needed if you want to make run-time (i.e. after the Arduino `setup()` function has completed) changes to the device's Accessory database 
+  * use anytime after dynamically adding one or more Accessories (with `new SpanAccessory(aid)`) or deleting one or more Accessories (with `homeSpan.deleteAccessory(aid)`)
+  * note: this method is **not** needed if you have a static Accessory database that is fully defined in the Arduino `setup()` function of a sketch
+ 
+---
+
+The following `homeSpan` methods are considered experimental, since not all use cases have been explored or debugged.  Use with caution:
+ 
+* `void autoPoll(uint32_t stackSize)`
+  * an *optional* method to create a task with *stackSize* bytes of stack memory that repeatedly calls `poll()` in the background.  This frees up the Ardino `loop()` method for any user-defined code to run in parallel that would otherwise block, or be blocked by, calling `poll()` in the `loop()` method
+  * if used, **must** be placed in a sketch as the last line in the Arduino `setup()` method
+  * HomeSpan will throw and error and halt if both `poll()`and `autoPoll()` are used in the same sketch - either place `poll()` in the Arduino `loop()` method **or** place `autoPoll()` at the the end of the Arduino `setup()` method
+  * can be used with both single-core and dual-core ESP32 boards.  If used with a dual-core board, the polling task is created on the free processor that is typically not running other Arduino functions
+  * if *stackSize* is not specified, defaults to the size used by the system for the normal Arduino `loop()` task (typically 8192 bytes)
+  * if this method is used, and you have no need to add your own code to the main Arduino `loop()`, you can safely skip defining a blank `void loop(){}` function in your sketch
+  * warning: if any code you add to the Arduino `loop()` method tries to alter any HomeSpan settings or functions running in the background `poll()` task, race conditions may yield undefined results
  
 ## *SpanAccessory(uint32_t aid)*
 
