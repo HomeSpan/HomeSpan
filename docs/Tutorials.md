@@ -99,6 +99,14 @@ Example 19 illustrates, through the implementation of two On/Off LEDs, how to ad
 * enabling the HomeSpan Web Log and specifying an optional NTP time server with the `homeSpan.enableWebLog()` method
 * using the `WEBLOG()` macro to create Web Log messages
 
+### [Example 20 - AdvancedTechniques](../examples/19-AdvancedTechniques)
+Example 20 illustrates a number of advanced techniques through the implementation of a "dynamic" bridge that allows Light Accessories to be *interactively* added and deleted at any time without the need to reboot the device.  New HomeSpan API topics covered in this example include:
+
+* creating custom CLI commands using `SpanUserCommand()`
+* dynamically deleting Accessories with `homeSpan.deleteAccessory()`
+* refreshing the Accessory database (which automatically updates the Home App) using `homeSpan.updateDatabase()`
+* using `homeSpan.autoPoll()` to implement HomeSpan Polling in the background (and on the second core, if available)
+ 
 ## Other Examples
 
 The following examples showcase a variety of HomeSpan and HomeKit functionality as referenced in different sections of the HomeSpan documentation.  The sketches can be found in the Arduino IDE under *File → Examples → HomeSpan → Other Examples*
