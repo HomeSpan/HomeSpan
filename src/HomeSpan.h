@@ -278,21 +278,37 @@ struct Span{
 
 ///////////////////////////////
 
-struct SpanAccessory{
+class SpanAccessory{
+
+  friend class Span;
+  friend class SpanService;
+  friend class SpanCharacteristic;
+  friend class SpanButton;
+  friend class SpanRange;
     
-  uint32_t aid=0;                           // Accessory Instance ID (HAP Table 6-1)
-  int iidCount=0;                           // running count of iid to use for Services and Characteristics associated with this Accessory                                 
-  vector<SpanService *> Services;           // vector of pointers to all Services in this Accessory  
+  uint32_t aid=0;                                         // Accessory Instance ID (HAP Table 6-1)
+  int iidCount=0;                                         // running count of iid to use for Services and Characteristics associated with this Accessory                                 
+  vector<SpanService *> Services;                         // vector of pointers to all Services in this Accessory  
 
-  SpanAccessory(uint32_t aid=0);            // constructor
-  ~SpanAccessory();
+  int sprintfAttributes(char *cBuf, int flags);           // prints Accessory JSON database into buf, unless buf=NULL; return number of characters printed, excluding null terminator, even if buf=NULL  
 
-  int sprintfAttributes(char *cBuf, int flags);        // prints Accessory JSON database into buf, unless buf=NULL; return number of characters printed, excluding null terminator, even if buf=NULL  
+  protected:
+
+  ~SpanAccessory();                                       // destructor
+
+  public:
+  
+  SpanAccessory(uint32_t aid=0);                          // constructor
 };
 
 ///////////////////////////////
 
-struct SpanService{
+class SpanService{
+
+  friend class Span;
+  friend class SpanAccessory;
+  friend class SpanCharacteristic;
+  friend class SpanRange;
 
   int iid=0;                                              // Instance ID (HAP Table 6-2)
   const char *type;                                       // Service Type
@@ -300,22 +316,26 @@ struct SpanService{
   boolean hidden=false;                                   // optional property indicating service is hidden
   boolean primary=false;                                  // optional property indicating service is primary
   vector<SpanCharacteristic *> Characteristics;           // vector of pointers to all Characteristics in this Service  
-  unordered_set<HapChar *> req;                           // unordered set of pointers to all required HAP Characteristic Types for this Service
-  unordered_set<HapChar *> opt;                           // unordered set of pointers to all optional HAP Characteristic Types for this Service
   vector<SpanService *> linkedServices;                   // vector of pointers to any optional linked Services
   boolean isCustom;                                       // flag to indicate this is a Custom Service
   SpanAccessory *accessory=NULL;                          // pointer to Accessory containing this Service
   
-  SpanService(const char *type, const char *hapName, boolean isCustom=false);     // constructor
-  ~SpanService();
-
-  SpanService *setPrimary();                              // sets the Service Type to be primary and returns pointer to self
-  SpanService *setHidden();                               // sets the Service Type to be hidden and returns pointer to self
-  SpanService *addLink(SpanService *svc);                 // adds svc as a Linked Service and returns pointer to self
-  vector<SpanService *> getLinks(){return(linkedServices);}   // returns linkedServices vector for use as range in "for-each" loops
-
   int sprintfAttributes(char *cBuf, int flags);           // prints Service JSON records into buf; return number of characters printed, excluding null terminator
+
+  protected:
   
+  ~SpanService();                                         // destructor
+  unordered_set<HapChar *> req;                           // unordered set of pointers to all required HAP Characteristic Types for this Service
+  unordered_set<HapChar *> opt;                           // unordered set of pointers to all optional HAP Characteristic Types for this Service
+
+  public:
+  
+  SpanService(const char *type, const char *hapName, boolean isCustom=false);     // constructor
+  SpanService *setPrimary();                                                      // sets the Service Type to be primary and returns pointer to self
+  SpanService *setHidden();                                                       // sets the Service Type to be hidden and returns pointer to self
+  SpanService *addLink(SpanService *svc);                                         // adds svc as a Linked Service and returns pointer to self
+  vector<SpanService *> getLinks(){return(linkedServices);}                       // returns linkedServices vector for use as range in "for-each" loops
+
   virtual boolean update() {return(true);}                // placeholder for code that is called when a Service is updated via a Controller.  Must return true/false depending on success of update
   virtual void loop(){}                                   // loops for each Service - called every cycle if over-ridden with user-defined code
   virtual void button(int pin, int pressType){}           // method called for a Service when a button attached to "pin" has a Single, Double, or Long Press, according to pressType
