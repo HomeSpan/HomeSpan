@@ -1321,20 +1321,6 @@ void HAPClient::callServiceLoops(){
     homeSpan.Loops[i]->loop();                    // call the loop() method
 }
 
-
-//////////////////////////////////////
-
-void HAPClient::checkPushButtons(){
-
-  for(int i=0;i<homeSpan.PushButtons.size();i++){                                // loop over all defined pushbuttons
-    SpanButton *sb=homeSpan.PushButtons[i];                                      // temporary pointer to SpanButton
-    if(sb->pushButton->triggered(sb->singleTime,sb->longTime,sb->doubleTime)){   // if the underlying PushButton is triggered
-      sb->service->button(sb->pin,sb->pushButton->type());                       // call the Service's button() routine with pin and type as parameters
-    }
-  }
-    
-}
-
 //////////////////////////////////////
 
 void HAPClient::checkNotifications(){
@@ -1347,7 +1333,7 @@ void HAPClient::checkNotifications(){
 
 //////////////////////////////////////
 
-void  HAPClient::checkTimedWrites(){
+void HAPClient::checkTimedWrites(){
 
   unsigned long cTime=millis();                                       // get current time
 

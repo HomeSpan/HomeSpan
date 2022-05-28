@@ -343,7 +343,10 @@ class SpanService{
 
 ///////////////////////////////
 
-struct SpanCharacteristic{
+class SpanCharacteristic{
+
+  friend class Span;
+  friend class SpanService;
 
   union UVal {                                  
     BOOL_t BOOL;
@@ -382,17 +385,9 @@ struct SpanCharacteristic{
   unsigned long updateTime=0;              // last time value was updated (in millis) either by PUT /characteristic OR by setVal()
   UVal newValue;                           // the updated value requested by PUT /characteristic
   SpanService *service=NULL;               // pointer to Service containing this Characteristic
-      
-  SpanCharacteristic(HapChar *hapChar, boolean isCustom=false);           // contructor
-  ~SpanCharacteristic();
-  
+   
   int sprintfAttributes(char *cBuf, int flags);   // prints Characteristic JSON records into buf, according to flags mask; return number of characters printed, excluding null terminator  
-  StatusCode loadUpdate(char *val, char *ev);     // load updated val/ev from PUT /characteristic JSON request.  Return intiial HAP status code (checks to see if characteristic is found, is writable, etc.)
-  
-  boolean updated(){return(isUpdated);}           // returns isUpdated
-  unsigned long timeVal();                        // returns time elapsed (in millis) since value was last updated
-  
-  SpanCharacteristic *setValidValues(int n, ...);   // sets a list of 'n' valid values allowed for a Characteristic and returns pointer to self.  Only applicable if format=uint8
+  StatusCode loadUpdate(char *val, char *ev);     // load updated val/ev from PUT /characteristic JSON request.  Return intitial HAP status code (checks to see if characteristic is found, is writable, etc.)  
     
   String uvPrint(UVal &u){
     char c[64];
@@ -479,19 +474,9 @@ struct SpanCharacteristic{
     return(0);       // included to prevent compiler warnings  
   }
     
-  template <typename A, typename B, typename S=int> SpanCharacteristic *setRange(A min, B max, S step=0){
+  protected:
 
-    if(!staticRange){
-      uvSet(minValue,min);
-      uvSet(maxValue,max);
-      uvSet(stepValue,step);  
-      customRange=true; 
-    } else
-      setRangeError=true;
-      
-    return(this);
-    
-  } // setRange()
+  ~SpanCharacteristic();                                                  // destructor  
     
   template <typename T, typename A=boolean, typename B=boolean> void init(T val, boolean nvsStore, A min=0, B max=1){
 
@@ -540,6 +525,9 @@ struct SpanCharacteristic{
           
   } // init()
 
+  public:
+
+  SpanCharacteristic(HapChar *hapChar, boolean isCustom=false);           // constructor
 
   template <class T=int> T getVal(){
     return(uvGet<T>(value));
@@ -622,6 +610,25 @@ struct SpanCharacteristic{
     
   } // setVal()
 
+  boolean updated(){return(isUpdated);}             // returns isUpdated
+  unsigned long timeVal();                          // returns time elapsed (in millis) since value was last updated
+  
+  SpanCharacteristic *setValidValues(int n, ...);   // sets a list of 'n' valid values allowed for a Characteristic and returns pointer to self.  Only applicable if format=uint8 
+
+  template <typename A, typename B, typename S=int> SpanCharacteristic *setRange(A min, B max, S step=0){
+
+    if(!staticRange){
+      uvSet(minValue,min);
+      uvSet(maxValue,max);
+      uvSet(stepValue,step);  
+      customRange=true; 
+    } else
+      setRangeError=true;
+      
+    return(this);
+    
+  } // setRange()
+
   SpanCharacteristic *setPerms(uint8_t perms){
     perms&=0x7F;
     if(perms>0)
@@ -659,7 +666,21 @@ struct [[deprecated("Please use Characteristic::setRange() method instead.")]] S
 
 ///////////////////////////////
 
-struct SpanButton{
+class SpanButton{
+
+  friend class Span;
+  friend class SpanService;
+  
+  int pin;                       // pin number  
+  uint16_t singleTime;           // minimum time (in millis) required to register a single press
+  uint16_t longTime;             // minimum time (in millis) required to register a long press
+  uint16_t doubleTime;           // maximum time (in millis) between single presses to register a double press instead
+  SpanService *service;          // Service to which this PushButton is attached
+  PushButton *pushButton;        // PushButton associated with this SpanButton
+  
+  void check();                  // check PushButton and call button() if pressed
+
+  public:
 
   enum {
     SINGLE=0,
@@ -667,14 +688,6 @@ struct SpanButton{
     LONG=2
   };
   
-  int pin;                       // pin number  
-  uint16_t singleTime;           // minimum time (in millis) required to register a single press
-  uint16_t longTime;             // minimum time (in millis) required to register a long press
-  uint16_t doubleTime;           // maximum time (in millis) between single presses to register a double press instead
-  SpanService *service;          // Service to which this PushButton is attached
-
-  PushButton *pushButton;        // PushButton associated with this SpanButton
-
   SpanButton(int pin, uint16_t longTime=2000, uint16_t singleTime=5, uint16_t doubleTime=200);
 };
 

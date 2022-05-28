@@ -277,7 +277,10 @@ void Span::pollTask() {
   } // for-loop over connection slots
 
   HAPClient::callServiceLoops();
-  HAPClient::checkPushButtons();
+
+  for(auto it=PushButtons.begin();it!=PushButtons.end();it++)     // check for SpanButton presses
+    (*it)->check();
+    
   HAPClient::checkNotifications();  
   HAPClient::checkTimedWrites();
 
@@ -1978,6 +1981,13 @@ SpanButton::SpanButton(int pin, uint16_t longTime, uint16_t singleTime, uint16_t
   homeSpan.PushButtons.push_back(this);
 }
 
+///////////////////////////////
+
+void SpanButton::check(){
+
+  if(pushButton->triggered(singleTime,longTime,doubleTime))   // if the underlying PushButton is triggered
+    service->button(pin,pushButton->type());                  // call the Service's button() routine with pin and type as parameters    
+}
 
 ///////////////////////////////
 //     SpanUserCommand       //
