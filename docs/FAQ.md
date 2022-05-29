@@ -4,15 +4,15 @@
 
 #### How do I set my WiFi SSID and Password (i.e. WiFi Credentials)?
 
-* Though commercial HomeKit device can retrieve your WiFi Credentials directly from your iPhone, Apple does not provide a mechanism for this in the non-commerical version of HomeKit used by HomeSpan.  Instead, you can add your WiFi Credentials to a HomeSpan device using one of four methods:
+* Though commercial HomeKit devices can automatically retrieve WiFi Credentials from an iPhone, Apple does not provide this mechanism in the non-commerical version of HomeKit used by HomeSpan.  Instead, you need to add your WiFi Credentials to a HomeSpan device using one of four methods:
 
-  * From within the Arduino IDE, simply use the HomeSpan Command Line Interface and type 'W' into the Serial Monitor.  HomeSpan will prompt you to input your WiFi SSID and Password.  You will only need to do this once, as HomeSpan stores the WiFi Credentials you provide in the device's non-volatile storage (NVS) for use every time the device boots.  See [CLI](CLI.md) for complete details.
+  * From within the Arduino IDE, simply use the HomeSpan Command Line Interface and type 'W' into the Serial Monitor.  HomeSpan will prompt you to input your WiFi SSID and Password.  You will only need to do this once since HomeSpan stores the WiFi Credentials you provide in the device's non-volatile storage (NVS) for use every time the device boots.  See the [HomeSpan CLI](CLI.md) for complete details.
   
-  * As an alternative, and especially if your HomeSpan device is not connected to a computer, you can launch HomeSpan's Temporary WiFi Setup Network and input your WiFi Credentials directly into the web form served by your device.  As above, this only needs to be done once as HomeSpan stores the WiFi Credentials you provide in NVS.  See the [User Guide](UserGuide.md#setting-homespans-wifi-credentials-and-setup-code) for details.
+  * As an alternative, and especially if your HomeSpan device is not connected to a computer, you can launch HomeSpan's Temporary WiFi Setup Network and input your WiFi Credentials directly into the temporary web form served by HomeSpan.  Similar to above, this only needs to be done once since HomeSpan likewise stores the WiFi Credentials you input using this method.  See the [HomeSpan User Guide](UserGuide.md#setting-homespans-wifi-credentials-and-setup-code) for details.
 
-  * If you must, you can programmatically set your WiFi Credentials directly in your sketch using the `setWifiCredentials()`.  However, this is not recommended since hardcoding sensitive passwords into a sketch poses a security risk and is generally not considered a good practice.  See the [API Reference](Reference.md) for details.
+  * If you really want to, you can programmatically set your WiFi Credentials directly in your sketch using HomeSpan's `setWifiCredentials()` method.  However, this is **not** recommended since hardcoding sensitive passwords into a sketch poses a security risk, and is generally not considered a good practice.  See the [HomeSpan API Reference](Reference.md) for details.
 
-  * Finally, for advanced users, HomeSpan provides an API hook, `setApFunction()`, that allows you to create your own custom method for inputting your WiFi Credentials, if you really want to.  See the [API Reference](Reference.md) for details.
+  * Finally, for advanced users, HomeSpan provides an API hook `setApFunction()` that allows you to create your own custom method for inputting your WiFi Credentials.  See the [HomeSpan API Reference](Reference.md) for details.
 
 #### What is the Setup Code used for pairing a HomeSpan device to HomeKit?
 
