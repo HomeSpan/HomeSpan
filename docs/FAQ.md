@@ -2,11 +2,17 @@
 
 *A list of answers to frequently-asked-questions, as well as discussions of various topics of interest.*
 
-#### How do I set my WiFi SSID and Password?
+#### How do I set my WiFi SSID and Password (i.e. WiFi Credentials)?
 
-* In the spirit of promoting good security practices, HomeSpan does not allow you to embed your WiFi SSID and Password (collectively known as WiFi Credentials) into your sketch.  This eliminates the possibility of accidentally disclosing this information should you share your sketch with others.
+* Though commercial HomeKit device can retrieve your WiFi Credentials directly from your iPhone, Apple does not provide a mechanism for this in the non-commerical version of HomeKit used by HomeSpan.  Instead, you can add your WiFi Credentials to a HomeSpan device using one of four methods:
 
-* Instead, HomeSpan stores your WiFi Credentials in a dedicated non-volatile storage (NVS) partition of the ESP32.  There are two ways of entering this information.  If you are developing a sketch within the Arduino IDE, simply use the HomeSpan Command Line Interface and type 'W' into the Serial Monitor.  HomeSpan will prompt you to input your WiFi SSID and Password (see [CLI](CLI.md) for details).  As an alternative, if your HomeSpan device is not connected to a computer, you can launch HomeSpan's Temporary WiFi Setup Network and input your WiFi Credentials directly into the web forms served by your device (see the [User Guide](UserGuide.md#setting-homespans-wifi-credentials-and-setup-code) for details).
+  * From within the Arduino IDE, simply use the HomeSpan Command Line Interface and type 'W' into the Serial Monitor.  HomeSpan will prompt you to input your WiFi SSID and Password.  You will only need to do this once, as HomeSpan stores the WiFi Credentials you provide in the device's non-volatile storage (NVS) for use every time the device boots.  See [CLI](CLI.md) for complete details.
+  
+  * As an alternative, and especially if your HomeSpan device is not connected to a computer, you can launch HomeSpan's Temporary WiFi Setup Network and input your WiFi Credentials directly into the web form served by your device.  As above, this only needs to be done once as HomeSpan stores the WiFi Credentials you provide in NVS.  See the [User Guide](UserGuide.md#setting-homespans-wifi-credentials-and-setup-code) for details.
+
+  * If you must, you can programmatically set your WiFi Credentials directly in your sketch using the `setWifiCredentials()`.  However, this is not recommended since hardcoding sensitive passwords into a sketch poses a security risk and is generally not considered a good practice.  See the [API Reference](Reference.md) for details.
+
+  * Finally, for advanced users, HomeSpan provides an API hook, `setApFunction()`, that allows you to create your own custom method for inputting your WiFi Credentials, if you really want to.  See the [API Reference](Reference.md) for details.
 
 #### What is the Setup Code used for pairing a HomeSpan device to HomeKit?
 
