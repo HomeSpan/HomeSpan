@@ -40,7 +40,7 @@ The following **optional** `homeSpan` methods override various HomeSpan initiali
   * if *duration* is set to zero, auto-off is disabled (Status LED will remain on indefinitely)
   
 * `int getStatusPin()`
-* returns the pin number of the Status LED as set by `setStatusPin(pin)`, or -1 if no pin has been set
+   * returns the pin number of the Status LED as set by `setStatusPin(pin)`, or -1 if no pin has been set
 
 * `void setApSSID(const char *ssid)`
   * sets the SSID (network name) of the HomeSpan Setup Access Point (default="HomeSpan-Setup")
@@ -61,6 +61,9 @@ The following **optional** `homeSpan` methods override various HomeSpan initiali
     * 2 = all HomeSpan status messages plus all HAP communication packets to and from the HomeSpan device, as well as all `LOG1()` and `LOG2()` messages specified in the sketch by the user
   * note the log level can also be changed at runtime with the 'L' command via the [HomeSpan CLI](CLI.md)
   * see [Message Logging](Logging.md) for complete details
+
+* `int getLogLevel()`
+  * returns the current Log Level as set by `setLogLevel(level)`
   
 * `void reserveSocketConnections(uint8_t nSockets)`
   * reserves *nSockets* network sockets for uses **other than** by the HomeSpan HAP Server for HomeKit Controller Connections
