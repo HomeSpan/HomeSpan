@@ -2047,7 +2047,7 @@ void SpanWebLog::initTime(){
 
 ///////////////////////////////
 
-void SpanWebLog::addLog(const char *fmt, ...){
+void SpanWebLog::vLog(const char *fmt, va_list ap){
   if(maxEntries==0)
     return;
 
@@ -2060,10 +2060,7 @@ void SpanWebLog::addLog(const char *fmt, ...){
     log[index].clockTime.tm_year=0;
 
   free(log[index].message);  
-  va_list ap;
-  va_start(ap,fmt);
   vasprintf(&log[index].message,fmt,ap);
-  va_end(ap);
 
   log[index].clientIP=homeSpan.lastClientIP;  
   nEntries++;

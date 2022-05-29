@@ -77,6 +77,8 @@ struct SpanUserCommand;
 
 extern Span homeSpan;
 
+#include "HAP.h"
+
 ////////////////////////////////////////////////////////
 // INTERNAL HOMESPAN STRUCTURES - NOT FOR USER ACCESS //
 ////////////////////////////////////////////////////////
@@ -126,7 +128,7 @@ struct SpanWebLog{                            // optional web status/log data
 
   void init(uint16_t maxEntries, const char *serv, const char *tz, const char *url);
   void initTime();  
-  void addLog(const char *fmr, ...);
+  void vLog(const char *fmr, va_list ap);
 };
 
 ///////////////////////////////
@@ -151,8 +153,19 @@ struct SpanOTA{                               // manages OTA process
 //   USER API CLASSES BEGINS HERE   //
 //////////////////////////////////////
 
-struct Span{
+class Span{
 
+  friend class SpanAccessory;
+  friend class SpanService;
+  friend class SpanCharacteristic;
+  friend class SpanUserCommand;
+  friend class SpanButton;
+  friend class SpanRange;
+  friend class SpanWebLog;
+  friend class SpanOTA;
+  friend class Network;
+  friend class HAPClient;
+  
   const char *displayName;                      // display name for this device - broadcast as part of Bonjour MDNS
   const char *hostNameBase;                     // base of hostName of this device - full host name broadcast by Bonjour MDNS will have 6-byte accessoryID as well as '.local' automatically appended
   const char *hostNameSuffix=NULL;              // optional "suffix" of hostName of this device.  If specified, will be used as the hostName suffix instead of the 6-byte accessoryID
@@ -207,33 +220,40 @@ struct Span{
   
   unordered_map<char, SpanUserCommand *> UserCommands;           // map of pointers to all UserCommands
 
+  void pollTask();                              // poll HAP Clients and process any new HAP requests
+  int getFreeSlot();                            // returns free HAPClient slot number. HAPClients slot keep track of each active HAPClient connection
+  void checkConnect();                          // check WiFi connection; connect if needed
+  void commandMode();                           // allows user to control and reset HomeSpan settings with the control button
+
+  int sprintfAttributes(char *cBuf, int flags=GET_VALUE|GET_META|GET_PERMS|GET_TYPE|GET_DESC);   // prints Attributes JSON database into buf, unless buf=NULL; return number of characters printed, excluding null terminator
+  
+  void prettyPrint(char *buf, int nsp=2);                                 // print arbitrary JSON from buf to serial monitor, formatted with indentions of 'nsp' spaces
+  SpanCharacteristic *find(uint32_t aid, int iid);                        // return Characteristic with matching aid and iid (else NULL if not found)
+  int countCharacteristics(char *buf);                                    // return number of characteristic objects referenced in PUT /characteristics JSON request
+  int updateCharacteristics(char *buf, SpanBuf *pObj);                    // parses PUT /characteristics JSON request 'buf into 'pObj' and updates referenced characteristics; returns 1 on success, 0 on fail
+  int sprintfAttributes(SpanBuf *pObj, int nObj, char *cBuf);             // prints SpanBuf object into buf, unless buf=NULL; return number of characters printed, excluding null terminator, even if buf=NULL
+  int sprintfAttributes(char **ids, int numIDs, int flags, char *cBuf);   // prints accessory.characteristic ids into buf, unless buf=NULL; return number of characters printed, excluding null terminator, even if buf=NULL
+  void clearNotify(int slotNum);                                          // set ev notification flags for connection 'slotNum' to false across all characteristics 
+  int sprintfNotify(SpanBuf *pObj, int nObj, char *cBuf, int conNum);     // prints notification JSON into buf based on SpanBuf objects and specified connection number
+
+  static boolean invalidUUID(const char *uuid, boolean isCustom){
+    int x=0;
+    sscanf(uuid,"%*8[0-9a-fA-F]-%*4[0-9a-fA-F]-%*4[0-9a-fA-F]-%*4[0-9a-fA-F]-%*12[0-9a-fA-F]%n",&x);
+    return(isCustom && (strlen(uuid)!=36 || x!=36));    
+  }
+  
+  public:
+
   void begin(Category catID=DEFAULT_CATEGORY,
              const char *displayName=DEFAULT_DISPLAY_NAME,
              const char *hostNameBase=DEFAULT_HOST_NAME,
              const char *modelName=DEFAULT_MODEL_NAME);        
              
   void poll();                                  // calls pollTask() with some error checking
-  void pollTask();                              // poll HAP Clients and process any new HAP requests
-  int getFreeSlot();                            // returns free HAPClient slot number. HAPClients slot keep track of each active HAPClient connection
-  void checkConnect();                          // check WiFi connection; connect if needed
-  void commandMode();                           // allows user to control and reset HomeSpan settings with the control button
   void processSerialCommand(const char *c);     // process command 'c' (typically from readSerial, though can be called with any 'c')
   
   boolean updateDatabase(boolean updateMDNS=true);   // updates HAP Configuration Number and Loop vector; if updateMDNS=true and config number has changed, re-broadcasts MDNS 'c#' record; returns true if config number changed
-
-  int sprintfAttributes(char *cBuf, int flags=GET_VALUE|GET_META|GET_PERMS|GET_TYPE|GET_DESC);   // prints Attributes JSON database into buf, unless buf=NULL; return number of characters printed, excluding null terminator
-  
-  void prettyPrint(char *buf, int nsp=2);            // print arbitrary JSON from buf to serial monitor, formatted with indentions of 'nsp' spaces
-  SpanCharacteristic *find(uint32_t aid, int iid);   // return Characteristic with matching aid and iid (else NULL if not found)
-  boolean deleteAccessory(uint32_t aid);             // deletes Accessory with matching aid; returns true if found, else returns false
-  
-  int countCharacteristics(char *buf);                                    // return number of characteristic objects referenced in PUT /characteristics JSON request
-  int updateCharacteristics(char *buf, SpanBuf *pObj);                    // parses PUT /characteristics JSON request 'buf into 'pObj' and updates referenced characteristics; returns 1 on success, 0 on fail
-  int sprintfAttributes(SpanBuf *pObj, int nObj, char *cBuf);             // prints SpanBuf object into buf, unless buf=NULL; return number of characters printed, excluding null terminator, even if buf=NULL
-  int sprintfAttributes(char **ids, int numIDs, int flags, char *cBuf);   // prints accessory.characteristic ids into buf, unless buf=NULL; return number of characters printed, excluding null terminator, even if buf=NULL
-
-  void clearNotify(int slotNum);                                          // set ev notification flags for connection 'slotNum' to false across all characteristics 
-  int sprintfNotify(SpanBuf *pObj, int nObj, char *cBuf, int conNum);     // prints notification JSON into buf based on SpanBuf objects and specified connection number
+  boolean deleteAccessory(uint32_t aid);             // deletes Accessory with matching aid; returns true if found, else returns false 
 
   void setControlPin(uint8_t pin){controlPin=pin;}                        // sets Control Pin
   void setStatusPin(uint8_t pin){statusPin=pin;}                          // sets Status Pin
@@ -244,6 +264,7 @@ struct Span{
   void setApTimeout(uint16_t nSec){network.lifetime=nSec*1000;}           // sets Access Point Timeout (seconds)
   void setCommandTimeout(uint16_t nSec){comModeLife=nSec*1000;}           // sets Command Mode Timeout (seconds)
   void setLogLevel(uint8_t level){logLevel=level;}                        // sets Log Level for log messages (0=baseline, 1=intermediate, 2=all)
+  int getLogLevel(){return(logLevel);}                                    // get Log Level
   void reserveSocketConnections(uint8_t n){maxConnections-=n;}            // reserves n socket connections *not* to be used for HAP
   void setHostNameSuffix(const char *suffix){hostNameSuffix=suffix;}      // sets the hostName suffix to be used instead of the 6-byte AccessoryID
   void setPortNum(uint16_t port){tcpPortNum=port;}                        // sets the TCP port number to use for communications between HomeKit and HomeSpan
@@ -265,19 +286,19 @@ struct Span{
     webLog.init(maxEntries, serv, tz, url);
   }
 
+  void addWebLog(const char *fmt, ...){               // add Web Log entry
+    va_list ap;
+    va_start(ap,fmt);
+    webLog.vLog(fmt,ap);
+    va_end(ap);    
+  }
+
   void autoPoll(uint32_t stackSize=CONFIG_ARDUINO_LOOP_STACK_SIZE){xTaskCreateUniversal([](void *parms){for(;;)homeSpan.pollTask();}, "pollTask", stackSize, NULL, 1, &pollTaskHandle, 0);}     // start pollTask()
 
   void setTimeServerTimeout(uint32_t tSec){webLog.waitTime=tSec*1000;}    // sets wait time (in seconds) for optional web log time server to connect
   
   [[deprecated("Please use reserveSocketConnections(n) method instead.")]]
   void setMaxConnections(uint8_t n){requestedMaxCon=n;}                   // sets maximum number of simultaneous HAP connections
-
-  static boolean invalidUUID(const char *uuid, boolean isCustom){
-    int x=0;
-    sscanf(uuid,"%*8[0-9a-fA-F]-%*4[0-9a-fA-F]-%*4[0-9a-fA-F]-%*4[0-9a-fA-F]-%*12[0-9a-fA-F]%n",&x);
-    return(isCustom && (strlen(uuid)!=36 || x!=36));    
-  }
-
 };
 
 ///////////////////////////////

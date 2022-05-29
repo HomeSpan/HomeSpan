@@ -30,7 +30,6 @@
 #include <MD5Builder.h>
 
 #include "HAP.h"
-#include "HomeSpan.h"
 
 //////////////////////////////////////
 
