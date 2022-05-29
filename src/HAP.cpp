@@ -1313,16 +1313,6 @@ int HAPClient::getStatusURL(){
 
 //////////////////////////////////////
 
-void HAPClient::callServiceLoops(){
-
-  homeSpan.snapTime=millis();                     // snap the current time for use in ALL loop routines
-  
-  for(int i=0;i<homeSpan.Loops.size();i++)        // loop over all services with over-ridden loop() methods
-    homeSpan.Loops[i]->loop();                    // call the loop() method
-}
-
-//////////////////////////////////////
-
 void HAPClient::checkNotifications(){
 
   if(!homeSpan.Notifications.empty()){                                          // if there are Notifications to process    

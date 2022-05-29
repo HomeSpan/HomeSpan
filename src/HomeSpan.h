@@ -77,7 +77,9 @@ struct SpanUserCommand;
 
 extern Span homeSpan;
 
-///////////////////////////////
+////////////////////////////////////////////////////////
+// INTERNAL HOMESPAN STRUCTURES - NOT FOR USER ACCESS //
+////////////////////////////////////////////////////////
 
 struct SpanPartition{
   char magicCookie[32];
@@ -145,7 +147,9 @@ struct SpanOTA{                               // manages OTA process
   static void error(ota_error_t err);
 };
 
-///////////////////////////////
+//////////////////////////////////////
+//   USER API CLASSES BEGINS HERE   //
+//////////////////////////////////////
 
 struct Span{
 
@@ -693,11 +697,16 @@ class SpanButton{
 
 ///////////////////////////////
 
-struct SpanUserCommand {
+class SpanUserCommand {
+
+  friend class Span;
+  
   const char *s;                                            // description of command
   void (*userFunction1)(const char *v)=NULL;                // user-defined function to call
   void (*userFunction2)(const char *v, void *arg)=NULL;     // user-defined function to call with user-defined arg
   void *userArg;
+
+  public:
 
   SpanUserCommand(char c, const char *s, void (*f)(const char *));  
   SpanUserCommand(char c, const char *s, void (*f)(const char *, void *), void *arg);  

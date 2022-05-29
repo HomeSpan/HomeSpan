@@ -276,7 +276,10 @@ void Span::pollTask() {
     } // process HAP Client 
   } // for-loop over connection slots
 
-  HAPClient::callServiceLoops();
+  snapTime=millis();                                     // snap the current time for use in ALL loop routines
+  
+  for(auto it=Loops.begin();it!=Loops.end();it++)                 // call loop() for all Services with over-ridden loop() methods
+    (*it)->loop();                           
 
   for(auto it=PushButtons.begin();it!=PushButtons.end();it++)     // check for SpanButton presses
     (*it)->check();
