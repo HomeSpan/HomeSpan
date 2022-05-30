@@ -16,7 +16,7 @@
 
 #### What is the Setup Code used for pairing a HomeSpan device to HomeKit?
 
-* The HomeSpan default Setup Code is 466-37-726.  You can (and should) use the HomeSpan Command Line Interface to change this default to a secret code unique for each of your devices.  Simply type 'S \<code\>' into the Serial Monitor, or specify your desired Setup Code at the outset when configuring your WiFi Credentials using HomeSpan's Temporary WiFi Setup Network.
+* The HomeSpan default Setup Code is 466-37-726.  You can (and should) use the HomeSpan Command Line Interface to change this default to a secret code unique for each of your devices.  Simply type 'S \<code\>' into the Serial Monitor, or specify your desired Setup Code at the outset when configuring your WiFi Credentials using HomeSpan's Temporary WiFi Setup Network.  Alternatively, you can programmatically set the Setup Code in your sketch using HomeSpan's `setPairingCode()` method.  However, hardcoding your Setup Code in a sketch is generally considered a security risk, as well as being inconsistent with Apple's HomeKit guidelines.
 
 #### Can you use more than one HomeSpan device on the same HomeKit network?
 
