@@ -50,6 +50,10 @@
 
 * Yes.  Though undocumented by Apple and not officially part of HAP-R2, HomeSpan supports HomeKit Television controls.  See [Television Services](../docs/TVServices.md) for details.
 
+#### Can you use HomeSpan via Bluetooth?
+
+* No.  HomeSpan does not support Apple's HAP-R2 protocol for HomeKit connectivity via Bluetooth.  However, you can still use the Bluetooth radio on your device for other connectivity unrelated to HomeKit if needed.
+
 #### Can you use HomeSpan with an Ethernet connection instead of a WiFi connection?
 
 * Not as present.  Though with a compatible Ethernet board the ESP32 can be configured to run as an Ethernet Server, using MDNS over Ethernet does not work on the ESP32 due to some apparent problems with the Ethernet UDP stack.  Unfortunately, HomeSpan and HAP-R2 require MDNS to operate.  If anyone has managed to get an Ethernet version of MDNS working on an ESP32 please let me know - it would be great to add Ethernet support to HomeSpan.
