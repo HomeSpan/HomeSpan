@@ -65,6 +65,7 @@ The following PWM resources are available:
 * ESP32: 16 Channels / 8 Timers (arranged in two distinct sets of 8 Channels and 4 Timers)
 * ESP32-S2: 8 Channels / 4 Timers
 * ESP32-C3: 6 Channels / 4 Timers
+* ESP32-S3: 8 Channels / 4 Timers
 
 HomeSpan *automatically* allocates Channels and Timers to LedPin and ServoPin objects as they are instantiated. Every pin assigned consumes a single Channel;  every *unique* frequency specified among all channels (within the same set, for the ESP32) consumes a single Timer.  HomeSpan will conserve resources by re-using the same Timer for all Channels operating at the same frequency.  *HomeSpan also automatically configures each Timer to support the maximum duty-resolution possible for the frequency specified.*
 
