@@ -31,15 +31,39 @@
 #pragma once
 
 #if defined(ARDUINO_FEATHER_ESP32)
-  enum {F13=13,F12=12,F27=27,F33=33,F15=15,F32=32,F14=14,F22=22,F23=23,F26=26,F25=25,F34=34,F39=39,F36=36,F4=4,F5=5,F18=18,F19=19,F16=16,F17=17,F21=21};
+  enum {
+    F13=13,F12=12,F27=27,F15=15,F32=32,F14=14,F16=16,F17=17,F21=21,   // Digital Only (9 pins)
+    F26=26,F25=25,F34=34,F39=39,F36=36,F4=4,                          // A0-A5
+    F22=22,F23=23,                                                    // I2C SCL/SDA
+    F5=5,F18=18,F19=19,F33=33                                         // SPI SCK/SDO/SDI/CS
+  };
   #define DEVICE_SUFFIX ""
 
 #elif defined(ARDUINO_ESP32S2_DEV)
-  enum {F13=1,F12=3,F27=7,F33=34,F15=10,F32=42,F14=11,F22=9,F23=8,F26=17,F25=14,F34=13,F39=12,F36=18,F4=19,F5=36,F18=35,F19=37,F16=20,F17=21,F21=16};
+  enum {
+    F13=1,F12=3,F27=7,F15=10,F32=42,F14=11,F16=20,F17=21,F21=16,      // Digital Only (9 pins)
+    F26=17,F25=14,F34=13,F39=12,F36=18,F4=19,                         // A0-A5
+    F22=9,F23=8,                                                      // I2C SCL/SDA
+    F5=36,F18=35,F19=37,F33=34                                        // SPI SCK/SDO/SDI/CS
+  };
   #define DEVICE_SUFFIX "-S2"
 
 #elif defined(ARDUINO_ESP32C3_DEV)
-  enum {F27=2,F33=7,F32=3,F14=10,F22=9,F23=8,F26=0,F25=1,F4=18,F5=4,F18=6,F19=5,F16=20,F17=21,F21=19};
+  enum {
+    F27=2,F32=3,F14=10,F16=20,F17=21,F21=19,                          // Digital Only (6 pins)
+    F26=0,F25=1,F4=18,                                                // A0/A1/A5
+    F22=9,F23=8,                                                      // I2C SCL/SDA
+    F5=4,F18=6,F19=5,F33=7                                            // SPI SCK/SDO/SDI/CS
+    };
   #define DEVICE_SUFFIX "-C3"
 
+#elif defined(ARDUINO_ESP32S3_DEV)
+  enum {
+    F13=5,F12=6,F27=7,F15=16,F32=17,F14=18,F16=37,F17=36,F21=35,      // Digital Only (9 pins)
+    F26=1,F25=2,F34=20,F39=19,F36=15,F4=4,                            // A0-A5
+    F22=9,F23=8,                                                      // I2C SCL/SDA
+    F5=12,F18=11,F19=13,F33=10                                        // SPI SCK/SDO/SDI/CS
+  };
+  #define DEVICE_SUFFIX "-S3"
+  
 #endif
