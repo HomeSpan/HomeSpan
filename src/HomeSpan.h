@@ -323,6 +323,9 @@ class SpanAccessory{
 
   public:
   
+
+  uint32_t getAccessoryId(){return aid;}                  // retrieves Accessory Instance ID (HAP Table 6-1)
+
   SpanAccessory(uint32_t aid=0);                          // constructor
 };
 
