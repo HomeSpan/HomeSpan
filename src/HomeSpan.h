@@ -252,6 +252,9 @@ class Span{
   void poll();                                  // calls pollTask() with some error checking
   void processSerialCommand(const char *c);     // process command 'c' (typically from readSerial, though can be called with any 'c')
   
+
+  boolean isConnected(){return connected;}      // retrieves the WiFi connection status
+
   boolean updateDatabase(boolean updateMDNS=true);   // updates HAP Configuration Number and Loop vector; if updateMDNS=true and config number has changed, re-broadcasts MDNS 'c#' record; returns true if config number changed
   boolean deleteAccessory(uint32_t aid);             // deletes Accessory with matching aid; returns true if found, else returns false 
 
