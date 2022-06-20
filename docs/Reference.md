@@ -180,6 +180,7 @@ The following **optional** `homeSpan` methods provide additional run-time functi
   * returns true if configuration number has changed, false otherwise
   * *only* needed if you want to make run-time (i.e. after the Arduino `setup()` function has completed) changes to the device's Accessory database 
   * use anytime after dynamically adding one or more Accessories (with `new SpanAccessory(aid)`) or deleting one or more Accessories (with `homeSpan.deleteAccessory(aid)`)
+  * **important**: once you delete an Accessory, you cannot re-use the same *aid* when adding a new Accessory (on the same device) unless the new Accessory is configured with the exact same Services and Characteristics as the deleted Accessory
   * note: this method is **not** needed if you have a static Accessory database that is fully defined in the Arduino `setup()` function of a sketch
  
 ---
