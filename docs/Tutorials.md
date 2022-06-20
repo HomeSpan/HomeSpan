@@ -99,7 +99,7 @@ Example 19 illustrates, through the implementation of two On/Off LEDs, how to ad
 * enabling the HomeSpan Web Log and specifying an optional NTP time server with the `homeSpan.enableWebLog()` method
 * using the `WEBLOG()` macro to create Web Log messages
 
-### [Example 20 - AdvancedTechniques](../examples/19-AdvancedTechniques)
+### [Example 20 - AdvancedTechniques](../examples/20-AdvancedTechniques)
 Example 20 illustrates a number of advanced techniques through the implementation of a "dynamic" bridge that allows Light Accessories to be *interactively* added and deleted at any time without the need to reboot the device.  New HomeSpan API topics covered in this example include:
 
 * creating custom CLI commands using `SpanUserCommand()`
