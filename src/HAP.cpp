@@ -1250,7 +1250,7 @@ int HAPClient::getStatusURL(){
 
   String response="HTTP/1.1 200 OK\r\nContent-type: text/html\r\n\r\n";
 
-  response+="<html><head><title>HomeSpan Status</title>\n";
+  response+="<html><head><title>" + String(homeSpan.displayName) + "</title>\n";
   response+="<style>th, td {padding-right: 10px; padding-left: 10px; border:1px solid black;}";
   response+="</style></head>\n";
   response+="<body style=\"background-color:lightblue;\">\n";
