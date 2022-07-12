@@ -110,7 +110,7 @@ struct SpanBuf{                               // temporary storage buffer for us
 
 struct SpanWebLog{                            // optional web status/log data
   boolean isEnabled=false;                    // flag to inidicate WebLog has been enabled
-  uint16_t maxEntries;                        // max number of log entries;
+  uint16_t maxEntries=0;                      // max number of log entries;
   int nEntries=0;                             // total cumulative number of log entries
   const char *timeServer;                     // optional time server to use for acquiring clock time
   const char *timeZone;                       // optional time-zone specification
@@ -184,7 +184,7 @@ class Span{
   String lastClientIP="0.0.0.0";                // IP address of last client accessing device through encrypted channel
   boolean newCode;                              // flag indicating new application code has been loaded (based on keeping track of app SHA256)
   
-  boolean connected=false;                      // WiFi connection status
+  int connected=0;                              // WiFi connection status (increments upon each connect and disconnect)
   unsigned long waitTime=60000;                 // time to wait (in milliseconds) between WiFi connection attempts
   unsigned long alarmConnect=0;                 // time after which WiFi connection attempt should be tried again
   

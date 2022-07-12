@@ -69,6 +69,8 @@ void setup() {
   homeSpan.setMaxConnections(5);          // reduce max connection to 5 (default is 8) since WebServer and a connecting client will need 2, and OTA needs 1
   homeSpan.setWifiCallback(setupWeb);     // need to start Web Server after WiFi is established 
   
+  homeSpan.enableWebLog(50,"pool.ntp.org","CST6CDT");
+  
   homeSpan.begin(Category::Bridges,"HomeSpan Light Hub","homespanhub");
 
   for(int i=0;i<NLIGHTS;i++)                              // create default names for each light
@@ -120,15 +122,55 @@ void setupWeb(){
 
     content+="<form action='/addLight' method='get'>";
     content+="<label for='lightName'>Light Name:</label>";
-    content+="<input type='text' id='lightName' name='lightName' maxlength='24' required><br><br>";
-    content+="<input type='radio' id='0' name='isDimmable' value='Not Dimmable'>";
+    content+="<input type='text' id='lightName' name='lightName' maxlength='24' required>";
+    
+    content+="<p>Select Light Features:</p>";
+    content+="<input type='radio' id='noColor' name='colorControl' value='0' checked>";
+    content+="<label for='noColor'>No Color</label><br>";
+    content+="<input type='radio' id='colorTemp' name='colorControl' value='1'>";
+    content+="<label for='colorTemp'>Color Temperature Only</label><br>";
+    content+="<input type='radio' id='fullColor' name='colorControl' value='2'>";
+    content+="<label for='fullColor'>Full RGB Color</label><br><br>";
+    
+    content+="<input type='checkbox' id='isDimmable' name='isDimmable' value='4'>";
+    content+="<label for='isDimmable'>Dimmable</label><br><br>";
+    
+    content+="<input type='submit' value='Add'>";
+    content+="<button type='button' onclick=\"document.location='/'\">Cancel</button>";
 
-    content+="<br><input type='submit' value='Add'>";
-    content+="<button type='button' onclick='window.history.back();'>Cancel</button>";
 
     content+="</form>";
     content+="</body></html>";
     
+    webServer.send(200, "text/html", content);
+    
+  });  
+
+  webServer.on("/addLight", []() {
+
+    char lightName[32];
+    uint8_t flags=0;
+
+    String sColorControl("colorControl");
+    String sIsDimmable("isDimmable");
+    String sLightName("lightName");
+    
+    for(int i=0;i<webServer.args();i++){
+      if(!webServer.argName(i).compareTo(sColorControl) || !webServer.argName(i).compareTo(sIsDimmable))
+        flags+=webServer.arg(i).toInt();
+      else if(!webServer.argName(i).compareTo(sLightName)){
+        webServer.arg(i).toCharArray(lightName,sizeof(lightName)-1);
+      }
+    }
+
+    Serial.printf("'%s' %d\n",lightName,flags);
+
+    String content="<html><body><h3>Light Added!</h3>";
+    content+="</body></html>";
+    content+="<button type='button' onclick=\"document.location='/addForm'\">Add Another</button>";
+    content+="<button type='button' onclick=\"document.location='/'\">Done</button>";
+    content+="</body></html>";
+
     webServer.send(200, "text/html", content);
     
   });  

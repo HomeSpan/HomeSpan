@@ -394,12 +394,12 @@ void Span::commandMode(){
 
 void Span::checkConnect(){
 
-  if(connected){
+  if(connected%2){
     if(WiFi.status()==WL_CONNECTED)
       return;
       
-    Serial.print("\n\n*** WiFi Connection Lost!\n");      // losing and re-establishing connection has not been tested
-    connected=false;
+    WEBLOG("*** WiFi Connection Lost!");      // losing and re-establishing connection has not been tested
+    connected++;
     waitTime=60000;
     alarmConnect=0;
     homeSpan.statusLED.start(LED_WIFI_CONNECTING);
@@ -420,6 +420,7 @@ void Span::checkConnect(){
       Serial.print(".  You may type 'W <return>' to re-configure WiFi, or 'X <return>' to erase WiFi credentials.  Will try connecting again in 60 seconds.\n\n");
       waitTime=60000;
     } else {    
+      WEBLOG("Trying to connect to %s.  Waiting %d sec",network.wifiData.ssid,waitTime/1000);
       Serial.print("Trying to connect to ");
       Serial.print(network.wifiData.ssid);
       Serial.print(".  Waiting ");
@@ -433,14 +434,18 @@ void Span::checkConnect(){
     return;
   }
 
-  connected=true;
+  connected++;
 
+  WEBLOG("WiFi Connected!");
   Serial.print("Successfully connected to ");
   Serial.print(network.wifiData.ssid);
   Serial.print("! IP Address: ");
   Serial.print(WiFi.localIP());
   Serial.print("\n");
 
+  if(connected>1)                           // Do not initialize everything below if this is only a reconnect
+    return;
+    
   char id[18];                              // create string version of Accessory ID for MDNS broadcast
   memcpy(id,HAPClient::accessory.ID,17);    // copy ID bytes
   id[17]='\0';                              // add terminating null
@@ -533,7 +538,6 @@ void Span::checkConnect(){
       ArduinoOTA.onStart(spanOTA.start).onEnd(spanOTA.end).onProgress(spanOTA.progress).onError(spanOTA.error);  
       
       ArduinoOTA.begin();
-      reserveSocketConnections(1);
       Serial.print("Starting OTA Server: ");
       Serial.print(displayName);
       Serial.print(" at ");
@@ -2024,6 +2028,8 @@ void SpanWebLog::init(uint16_t maxEntries, const char *serv, const char *tz, con
   timeZone=tz;
   statusURL="GET /" + String(url) + " ";
   log = (log_t *)calloc(maxEntries,sizeof(log_t));
+  if(timeServer)
+    homeSpan.reserveSocketConnections(1);
 }
 
 ///////////////////////////////
@@ -2038,7 +2044,6 @@ void SpanWebLog::initTime(){
   if(getLocalTime(&timeinfo,waitTime)){
     strftime(bootTime,sizeof(bootTime),"%c",&timeinfo);
     Serial.printf("%s\n\n",bootTime);
-    homeSpan.reserveSocketConnections(1);
     timeInit=true;
   } else {
     Serial.printf("Can't access Time Server - time-keeping not initialized!\n\n");
@@ -2077,6 +2082,7 @@ void SpanOTA::init(boolean _auth, boolean _safeLoad){
   enabled=true;
   safeLoad=_safeLoad;
   auth=_auth;
+  homeSpan.reserveSocketConnections(1);
 }
 
 ///////////////////////////////
