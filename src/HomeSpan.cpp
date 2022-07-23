@@ -398,7 +398,7 @@ void Span::checkConnect(){
     if(WiFi.status()==WL_CONNECTED)
       return;
       
-    WEBLOG("*** WiFi Connection Lost!");      // losing and re-establishing connection has not been tested
+    addWebLog(true,"*** WiFi Connection Lost!");      // losing and re-establishing connection has not been tested
     connected++;
     waitTime=60000;
     alarmConnect=0;
@@ -420,12 +420,7 @@ void Span::checkConnect(){
       Serial.print(".  You may type 'W <return>' to re-configure WiFi, or 'X <return>' to erase WiFi credentials.  Will try connecting again in 60 seconds.\n\n");
       waitTime=60000;
     } else {    
-      WEBLOG("Trying to connect to %s.  Waiting %d sec",network.wifiData.ssid,waitTime/1000);
-      Serial.print("Trying to connect to ");
-      Serial.print(network.wifiData.ssid);
-      Serial.print(".  Waiting ");
-      Serial.print(waitTime/1000);
-      Serial.print(" second(s) for response...\n");
+      addWebLog(true,"Trying to connect to %s.  Waiting %d sec...",network.wifiData.ssid,waitTime/1000);
       WiFi.begin(network.wifiData.ssid,network.wifiData.pwd);
     }
 
@@ -434,14 +429,14 @@ void Span::checkConnect(){
     return;
   }
 
+  if(!HAPClient::nAdminControllers())
+    statusLED.start(LED_PAIRING_NEEDED);
+  else
+    statusLED.on();
+  
   connected++;
 
-  WEBLOG("WiFi Connected!");
-  Serial.print("Successfully connected to ");
-  Serial.print(network.wifiData.ssid);
-  Serial.print("! IP Address: ");
-  Serial.print(WiFi.localIP());
-  Serial.print("\n");
+  addWebLog(true,"WiFi Connected!  IP Address = %s\n",WiFi.localIP().toString().c_str());
 
   if(connected>1)                           // Do not initialize everything below if this is only a reconnect
     return;
@@ -565,12 +560,8 @@ void Span::checkConnect(){
 
   Serial.print("\n");
 
-  if(!HAPClient::nAdminControllers()){
+  if(!HAPClient::nAdminControllers())
     Serial.print("DEVICE NOT YET PAIRED -- PLEASE PAIR WITH HOMEKIT APP\n\n");
-    statusLED.start(LED_PAIRING_NEEDED);
-  } else {
-    statusLED.on();
-  }
   
   if(wifiCallback)
     wifiCallback();
@@ -2052,26 +2043,33 @@ void SpanWebLog::initTime(){
 
 ///////////////////////////////
 
-void SpanWebLog::vLog(const char *fmt, va_list ap){
-  if(maxEntries==0)
-    return;
+void SpanWebLog::vLog(boolean sysMsg, const char *fmt, va_list ap){
 
-  int index=nEntries%maxEntries;
+  char *buf;
+  vasprintf(&buf,fmt,ap);
 
-  log[index].upTime=esp_timer_get_time();
-  if(timeInit)
-    getLocalTime(&log[index].clockTime,10);
-  else
-    log[index].clockTime.tm_year=0;
+  if(sysMsg)
+    Serial.printf("%s\n",buf);
+  else if(homeSpan.logLevel>0)
+    Serial.printf("WEBLOG: %s\n",buf);
+  
+  if(maxEntries>0){
+    int index=nEntries%maxEntries;
+  
+    log[index].upTime=esp_timer_get_time();
+    if(timeInit)
+      getLocalTime(&log[index].clockTime,10);
+    else
+      log[index].clockTime.tm_year=0;
+  
+    log[index].message=(char *)realloc(log[index].message, strlen(buf) + 1);
+    strcpy(log[index].message, buf);
+    
+    log[index].clientIP=homeSpan.lastClientIP;  
+    nEntries++;
+  }
 
-  free(log[index].message);  
-  vasprintf(&log[index].message,fmt,ap);
-
-  log[index].clientIP=homeSpan.lastClientIP;  
-  nEntries++;
-
-  if(homeSpan.logLevel>0)
-    Serial.printf("WEBLOG: %s\n",log[index].message);
+  free(buf);
 }
 
 ///////////////////////////////

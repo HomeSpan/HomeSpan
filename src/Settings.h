@@ -111,7 +111,7 @@
 #define LOG1(format,...) if(homeSpan.getLogLevel()>0)Serial.print ##__VA_OPT__(f)(format __VA_OPT__(,) __VA_ARGS__)
 #define LOG2(format,...) if(homeSpan.getLogLevel()>1)Serial.print ##__VA_OPT__(f)(format __VA_OPT__(,) __VA_ARGS__)
 
-#define WEBLOG(format,...) homeSpan.addWebLog(format __VA_OPT__(,) __VA_ARGS__)
+#define WEBLOG(format,...) homeSpan.addWebLog(false, format __VA_OPT__(,) __VA_ARGS__)
    
 //////////////////////////////////////////////////////
 //   Types of Accessory Categories                  //

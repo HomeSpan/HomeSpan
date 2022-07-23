@@ -128,7 +128,7 @@ struct SpanWebLog{                            // optional web status/log data
 
   void init(uint16_t maxEntries, const char *serv, const char *tz, const char *url);
   void initTime();  
-  void vLog(const char *fmr, va_list ap);
+  void vLog(boolean sysMsg, const char *fmr, va_list ap);
 };
 
 ///////////////////////////////
@@ -286,10 +286,10 @@ class Span{
     webLog.init(maxEntries, serv, tz, url);
   }
 
-  void addWebLog(const char *fmt, ...){               // add Web Log entry
+  void addWebLog(boolean sysMsg, const char *fmt, ...){               // add Web Log entry
     va_list ap;
     va_start(ap,fmt);
-    webLog.vLog(fmt,ap);
+    webLog.vLog(sysMsg,fmt,ap);
     va_end(ap);    
   }
 

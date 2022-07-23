@@ -1262,7 +1262,7 @@ int HAPClient::getStatusURL(){
   response+="<tr><td>Boot Time:</td><td>" + String(homeSpan.webLog.bootTime) + "</td></tr>\n";
   response+="<tr><td>Reset Reason Code:</td><td>" + String(esp_reset_reason()) + "</td></tr>\n";
   response+="<tr><td>WiFi Disconnects:</td><td>" + String(homeSpan.connected/2) + "</td></tr>\n";
-  response+="<tr><td>WiFi Signal:</td><td>" + String(WiFi.RSSI()) + " dDm</td></tr>\n";
+  response+="<tr><td>WiFi Signal:</td><td>" + String(WiFi.RSSI()) + " dBm</td></tr>\n";
   response+="<tr><td>WiFi Gateway:</td><td>" + WiFi.gatewayIP().toString() + "</td></tr>\n";
   response+="<tr><td>ESP32 Board:</td><td>" + String(ARDUINO_BOARD) + "</td></tr>\n";
   response+="<tr><td>Arduino-ESP Version:</td><td>" + String(ARDUINO_ESP_VERSION) + "</td></tr>\n";
