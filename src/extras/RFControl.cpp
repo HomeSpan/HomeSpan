@@ -31,7 +31,7 @@
 
 RFControl::RFControl(uint8_t pin, boolean refClock, boolean installDriver){
 
-#ifdef CONFIG_IDF_TARGET_ESP32C3
+#if defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32S3)
   if(nChannels==RMT_CHANNEL_MAX/2){
 #else
   if(nChannels==RMT_CHANNEL_MAX){
@@ -52,6 +52,7 @@ RFControl::RFControl(uint8_t pin, boolean refClock, boolean installDriver){
   config->mem_block_num=1;
   config->gpio_num=(gpio_num_t)pin;
   config->tx_config.idle_output_en=false;
+  config->tx_config.idle_level=RMT_IDLE_LEVEL_LOW;
   config->tx_config.loop_en=false;
 
   rmt_config(config);
