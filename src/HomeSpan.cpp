@@ -208,10 +208,10 @@ void Span::pollTask() {
       checkConnect();
   }
 
-  char cBuf[17]="?";
+  char cBuf[65]="?";
   
   if(Serial.available()){
-    readSerial(cBuf,16);
+    readSerial(cBuf,64);
     processSerialCommand(cBuf);
   }
 
