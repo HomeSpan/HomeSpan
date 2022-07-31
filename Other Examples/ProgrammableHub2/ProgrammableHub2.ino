@@ -30,13 +30,17 @@
 //       HomeSpan: A HomeKit implementation for the ESP32       //
 //       ------------------------------------------------       //
 //                                                              //
+//      Demonstrates how to implement a Web Server alongside    //
+//      of HomeSpan to create a Programmable Hub serving up to  //
+//      24 Configurable Lights.  Allows for dynamic changes     //
+//      to Accessories without needing to reboot                //
 //                                                              //
 //////////////////////////////////////////////////////////////////
 
 #include "HomeSpan.h"
  
-#define MAX_LIGHTS        10
-#define MAX_NAME_LENGTH   10
+#define MAX_LIGHTS        24
+#define MAX_NAME_LENGTH   32
 
 enum colorType_t : uint8_t{
   NO_COLOR,
@@ -56,8 +60,7 @@ struct lightData_t {
   };
 } lightData[MAX_LIGHTS];
 
- 
-nvs_handle savedData;           // declare savdData as a handle to be used with the NVS (see the ESP32-IDF for details on how to use NVS storage)
+nvs_handle savedData;
 
 //////////////////////////////////////
 
@@ -181,9 +184,9 @@ void deleteAccessory(const char *buf){
   }
 
   if(homeSpan.deleteAccessory(n+1)){                            // if deleteAccessory() is true, a match has been found
-    Serial.printf("Deleting Accessory: Light-%d\n",n);
+    Serial.printf("Deleting Light Accessory:  Name='%s'\n",lightData[n-1].name);
 
-    lightData[n].isConfigured=false;
+    lightData[n-1].isConfigured=false;
     nvs_set_blob(savedData,"LIGHTDATA",&lightData,sizeof(lightData));      // update data in the NVS
     nvs_commit(savedData);
     
@@ -197,9 +200,8 @@ void deleteAccessory(const char *buf){
 void deleteAllAccessories(const char *buf){
 
   for(int i=0;i<MAX_LIGHTS;i++){
-    if(lightData[i].isConfigured){
-      lightData[i].isConfigured=false;
-    }
+    lightData[i].isConfigured=false;
+    homeSpan.deleteAccessory(i+2);
   }
   
   nvs_set_blob(savedData,"LIGHTDATA",&lightData,sizeof(lightData));      // update data in the NVS
