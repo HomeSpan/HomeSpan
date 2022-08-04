@@ -140,6 +140,10 @@ void addLight(int index, const char *name, boolean isDimmable, colorType_t color
     new Service::AccessoryInformation();
       new Characteristic::Identify();
       new Characteristic::Name(name);
+      char sNum[32];
+      sprintf(sNum,"Light-%02d",index+1);
+      new Characteristic::SerialNumber(sNum);
+      
     new Service::LightBulb();
       new Characteristic::On(0,true);
       if(isDimmable)
