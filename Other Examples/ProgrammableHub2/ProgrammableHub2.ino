@@ -38,26 +38,27 @@
 //////////////////////////////////////////////////////////////////
 
 #include "HomeSpan.h"
+#include <WebServer.h>                    // include WebServer library
+
+WebServer webServer(80);                  // create WebServer on port 80
  
 #define MAX_LIGHTS        24
 #define MAX_NAME_LENGTH   32
+#define HUB_NAME          "lighthub"
 
-enum colorType_t : uint8_t{
+enum colorType_t : uint8_t {
   NO_COLOR,
   TEMPERATURE_ONLY,
   FULL_RGB
 };
 
+uint32_t aidStore=2;                      // keep track of unique AID numbers -  start with AID=2
+
 struct lightData_t {
   char name[MAX_NAME_LENGTH+1]="";
-  union {
-    struct {
-      boolean isConfigured:1;
-      boolean isDimmable:1;
-      colorType_t colorType:2;
-    };
-    uint8_t val=0;
-  };
+  uint32_t aid=0;
+  boolean isDimmable:1;
+  colorType_t colorType:2;
 } lightData[MAX_LIGHTS];
 
 nvs_handle savedData;
@@ -74,9 +75,15 @@ void setup() {
   if(!nvs_get_blob(savedData,"LIGHTDATA",NULL,&len))        // if LIGHTDATA data found
     nvs_get_blob(savedData,"LIGHTDATA",&lightData,&len);       // retrieve data
 
+  nvs_get_u32(savedData,"AID",&aidStore);                   // get AID, if it exists
+
   homeSpan.setLogLevel(1);
 
-  homeSpan.begin(Category::Lighting,"HomeSpan Light Hub");
+  homeSpan.setHostNameSuffix("");         // use null string for suffix (rather than the HomeSpan device ID)
+  homeSpan.setPortNum(1201);              // change port number for HomeSpan so we can use port 80 for the Web Server
+  homeSpan.setWifiCallback(setupWeb);     // need to start Web Server after WiFi is established   
+
+  homeSpan.begin(Category::Lighting,"HomeSpan Light Hub",HUB_NAME);
 
   new SpanAccessory(1);                                   // here we specified the AID=1 for clarity (it would default to 1 anyway if left blank)
     new Service::AccessoryInformation();
@@ -84,16 +91,16 @@ void setup() {
       new Characteristic::Model("HomeSpan Programmable Hub");
 
   for(int i=0;i<MAX_LIGHTS;i++){                         // create Light Accessories based on saved data
-    if(lightData[i].isConfigured)
-      addLight(i,lightData[i].name,lightData[i].isDimmable,lightData[i].colorType);
+    if(lightData[i].aid)
+      addLight(i);
   }
     
-  new SpanUserCommand('a',"<name> - add non-dimmable light accessory using name=<name>",[](const char *c){addLight(-1,c+1,false,NO_COLOR);});
-  new SpanUserCommand('A',"<name> - add dimmable light accessory using name=<name>",[](const char *c){addLight(-1,c+1,true,NO_COLOR);});
-  new SpanUserCommand('t',"<name> - add non-dimmable light accessory with color-temperature control using name=<name>",[](const char *c){addLight(-1,c+1,false,TEMPERATURE_ONLY);});
-  new SpanUserCommand('T',"<name> - add dimmable light accessory with color-temperature control using name=<name>",[](const char *c){addLight(-1,c+1,true,TEMPERATURE_ONLY);});
-  new SpanUserCommand('r',"<name> - add non-dimmable light accessory with full RGB color control using name=<name>",[](const char *c){addLight(-1,c+1,false,FULL_RGB);});
-  new SpanUserCommand('R',"<name> - add dimmable light accessory with full RGB color control using name=<name>",[](const char *c){addLight(-1,c+1,true,FULL_RGB);});
+  new SpanUserCommand('a',"<name> - add non-dimmable light accessory using name=<name>",[](const char *c){addLight(c+1,false,NO_COLOR);});
+  new SpanUserCommand('A',"<name> - add dimmable light accessory using name=<name>",[](const char *c){addLight(c+1,true,NO_COLOR);});
+  new SpanUserCommand('t',"<name> - add non-dimmable light accessory with color-temperature control using name=<name>",[](const char *c){addLight(c+1,false,TEMPERATURE_ONLY);});
+  new SpanUserCommand('T',"<name> - add dimmable light accessory with color-temperature control using name=<name>",[](const char *c){addLight(c+1,true,TEMPERATURE_ONLY);});
+  new SpanUserCommand('r',"<name> - add non-dimmable light accessory with full RGB color control using name=<name>",[](const char *c){addLight(c+1,false,FULL_RGB);});
+  new SpanUserCommand('R',"<name> - add dimmable light accessory with full RGB color control using name=<name>",[](const char *c){addLight(c+1,true,FULL_RGB);});
 
   new SpanUserCommand('l'," - list all light accessories",listAccessories);
   new SpanUserCommand('d',"<index> - delete a light accessory with index=<index>",deleteAccessory);
@@ -106,55 +113,69 @@ void setup() {
 
 ///////////////////////////
 
-void addLight(int index, const char *name, boolean isDimmable, colorType_t colorType){
+void loop(){
+  webServer.handleClient();           // handle incoming web server traffic
+}
 
-  if(index<0){
-    for(index=0;index<MAX_LIGHTS && lightData[index].isConfigured;index++);
-    if(index==MAX_LIGHTS){
-      Serial.printf("Can't add Light Accessory - maximum number of %d are already defined.\n",MAX_LIGHTS);
-      return;
-    }
-   
-    int n=strncpy_trim(lightData[index].name,name,sizeof(lightData[index].name));
+///////////////////////////
 
-    if(n==1){
-      Serial.printf("Can't add Light Accessory without a name specified.\n");
-      return;
-    }
+void addLight(int index){
+  
+  Serial.printf("Adding Light Accessory:  Name='%s'  Dimmable=%s  Color=%s\n",
+    lightData[index].name,lightData[index].isDimmable?"YES":"NO",lightData[index].colorType==NO_COLOR?"NONE":(lightData[index].colorType==TEMPERATURE_ONLY?"TEMPERATURE_ONLY":"FULL_RGB"));
 
-    if(n>sizeof(lightData[index].name))
-      Serial.printf("Warning - name trimmed to max length of %d characters.\n",MAX_NAME_LENGTH);
-    
-    lightData[index].isDimmable=isDimmable;
-    lightData[index].colorType=colorType;
-    lightData[index].isConfigured=true;
-    name=lightData[index].name;
-
-    nvs_set_blob(savedData,"LIGHTDATA",&lightData,sizeof(lightData));      // update data in the NVS
-    nvs_commit(savedData);     
-  }
-
-  Serial.printf("Adding Light Accessory:  Name='%s'  Dimmable=%s  Color=%s\n",name,isDimmable?"YES":"NO",colorType==NO_COLOR?"NONE":(colorType==TEMPERATURE_ONLY?"TEMPERATURE_ONLY":"FULL_RGB"));
-
-  new SpanAccessory(index+2);                       // IMPORTANT: add 2, since first Accessory with AID=1 is already used by the Bridge Accessory
+  new SpanAccessory(lightData[index].aid);
     new Service::AccessoryInformation();
       new Characteristic::Identify();
-      new Characteristic::Name(name);
+      new Characteristic::Name(lightData[index].name);
       char sNum[32];
-      sprintf(sNum,"Light-%02d",index+1);
+      sprintf(sNum,"Light-%02d",index);
       new Characteristic::SerialNumber(sNum);
       
     new Service::LightBulb();
       new Characteristic::On(0,true);
-      if(isDimmable)
+      if(lightData[index].isDimmable)
         new Characteristic::Brightness(100,true);
-      if(colorType==TEMPERATURE_ONLY)
+      if(lightData[index].colorType==TEMPERATURE_ONLY)
         new Characteristic::ColorTemperature(200,true);        
-      if(colorType==FULL_RGB){
+      if(lightData[index].colorType==FULL_RGB){
         new Characteristic::Hue(0,true);
         new Characteristic::Saturation(0,true);
       }
-    
+  
+}
+
+///////////////////////////
+
+void addLight(const char *name, boolean isDimmable, colorType_t colorType){
+
+  int index=0;
+  for(index=0;index<MAX_LIGHTS && lightData[index].aid;index++);
+  
+  if(index==MAX_LIGHTS){
+    Serial.printf("Can't add Light Accessory - maximum number of %d are already defined.\n",MAX_LIGHTS);
+    return;
+  }
+ 
+  int n=strncpy_trim(lightData[index].name,name,sizeof(lightData[index].name));
+
+  if(n==1){
+    Serial.printf("Can't add Light Accessory without a name specified.\n");
+    return;
+  }
+
+  if(n>sizeof(lightData[index].name))
+    Serial.printf("Warning - name trimmed to max length of %d characters.\n",MAX_NAME_LENGTH);
+  
+  lightData[index].isDimmable=isDimmable;
+  lightData[index].colorType=colorType;
+  lightData[index].aid=aidStore++;
+
+  nvs_set_blob(savedData,"LIGHTDATA",&lightData,sizeof(lightData));      // update data in the NVS
+  nvs_set_u32(savedData,"AID",aidStore);
+  nvs_commit(savedData); 
+
+  addLight(index);
 }
 
 ///////////////////////////
@@ -180,22 +201,22 @@ size_t strncpy_trim(char *dest, const char *src, size_t dSize){
 
 void deleteAccessory(const char *buf){
 
-  int n=atoi(buf+1);
+  int index=atoi(buf+1);
 
-  if(n<1 || n>MAX_LIGHTS){
-    Serial.printf("Invalid Light Accessory index - must be between 1 and %d.\n",MAX_LIGHTS);
+  if(index<0 || index>=MAX_LIGHTS){
+    Serial.printf("Invalid Light Accessory index - must be between 0 and %d.\n",MAX_LIGHTS-1);
     return;
   }
 
-  if(homeSpan.deleteAccessory(n+1)){                            // if deleteAccessory() is true, a match has been found
-    Serial.printf("Deleting Light Accessory:  Name='%s'\n",lightData[n-1].name);
+  if(homeSpan.deleteAccessory(lightData[index].aid)){                            // if deleteAccessory() is true, a match has been found
+    Serial.printf("Deleting Light Accessory:  Name='%s'\n",lightData[index].name);
 
-    lightData[n-1].isConfigured=false;
+    lightData[index].aid=0;
     nvs_set_blob(savedData,"LIGHTDATA",&lightData,sizeof(lightData));      // update data in the NVS
     nvs_commit(savedData);
     
   } else {   
-    Serial.printf("Nothing to delete - there is no Light Accessory at index=%d.\n",n);
+    Serial.printf("Nothing to delete - there is no Light Accessory at index=%d.\n",index);
   }
 }
 
@@ -204,8 +225,8 @@ void deleteAccessory(const char *buf){
 void deleteAllAccessories(const char *buf){
 
   for(int i=0;i<MAX_LIGHTS;i++){
-    lightData[i].isConfigured=false;
-    homeSpan.deleteAccessory(i+2);
+    homeSpan.deleteAccessory(lightData[i].aid);
+    lightData[i].aid=0;
   }
   
   nvs_set_blob(savedData,"LIGHTDATA",&lightData,sizeof(lightData));      // update data in the NVS
@@ -235,10 +256,41 @@ void listAccessories(const char *buf){
     Serial.printf("-");
   Serial.printf("\n");
   for(int i=0;i<MAX_LIGHTS;i++){
-    if(lightData[i].isConfigured)
-      Serial.printf("%5d  %8s  %5s  %-s\n",i+1,lightData[i].isDimmable?"YES":"NO",lightData[i].colorType==NO_COLOR?"NONE":(lightData[i].colorType==TEMPERATURE_ONLY?"TEMP":"RGB"),lightData[i].name);
+    if(lightData[i].aid)
+      Serial.printf("%5d  %8s  %5s  %-s\n",i,lightData[i].isDimmable?"YES":"NO",lightData[i].colorType==NO_COLOR?"NONE":(lightData[i].colorType==TEMPERATURE_ONLY?"TEMP":"RGB"),lightData[i].name);
   }
+  Serial.printf("\n");
   
+}
+
+///////////////////////////
+
+void setupWeb(){
+  Serial.printf("Starting Light Server Hub at %s.local\n\n",HUB_NAME);
+  webServer.begin();
+
+  webServer.on("/", []() {
+    
+    String response = "<html><head><title>HomeSpan Programmable Light Hub</title>";
+    response += "<style>table, th, td {border: 1px solid black; border-collapse: collapse;} th, td { padding: 5px; text-align: left; } </style></head>\n";
+    response += "<body><h2>HomeSpan Lights</h2>";
+    response += "<table><tr><th>Accessory</th><th>Dim?</th><th>Color Control</th></tr>";
+  
+    for(int i=0;i<MAX_LIGHTS;i++){
+      if(lightData[i].aid){
+        response += "<tr><td>" + String(lightData[i].name) + "</td>";
+        response += "<td><input type='checkbox' disabled " + String(lightData[i].isDimmable?"checked>":">") + "</td></tr>";
+      }
+    }
+
+    response += "</table>";
+    
+    
+    response += "</body></html>";
+    webServer.send(200, "text/html", response);
+
+  });
+
 }
 
 ///////////////////////////
