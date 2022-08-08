@@ -129,6 +129,9 @@ Demonstrates how to use HomeSpan's *Pixel* and *Dot* classes to control one- and
 ### [CustomService](../Other%20Examples/CustomService)
 Demonstrates how to create Custom Services and Custom Characteristics in HomeSpan to implement an Atmospheric Pressure Sensor recognized by the *Eve for HomeKit* app.  See [Custom Characteristics and Custom Services Macros](Reference.md#custom-characteristics-and-custom-services-macros) for full details
  
+### [ProgrammableHub](../Other%20Examples/ProgrammableHub)
+Demonstrates how to implement a fully programmable Light Accessory Hub that allows the user to *dynamically* add/delete up to 12 Light Accessories directly through a device-hosted *web interface* or via HomeSpan's *command-line inteface*.  Each light can be configured as dimmable/non-dimmable with either no color control, full RGB color control, or color-temperature control.  Builds upon many of the techniques used in [Example 20](../examples/20-AdvancedTechniques)
+
 ---
 
 [↩️](README.md) Back to the Welcome page
