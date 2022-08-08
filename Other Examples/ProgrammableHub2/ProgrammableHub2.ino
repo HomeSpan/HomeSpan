@@ -306,6 +306,7 @@ void setupWeb(){
     if(!openSlots)
       response += "<p>Can't add any more Light Accessories.  Max="+ String(MAX_LIGHTS) + "</p>";
 
+    response += "<p>Press here to delete ALL Light Accessories: <button type='button' onclick=\"document.location='/deleteAll'\">Delete All Lights</button></p>";
     response += "<p>Press here to update the Home App when finished making changes: <button type='button' onclick=\"document.location='/update'\">Upddate HomeKit</button></p>";
     
     response += "</body></html>";
@@ -325,6 +326,16 @@ void setupWeb(){
     webServer.send(200, "text/html", response);
 
   });
+
+  webServer.on("/deleteAll", []() {
+
+    String response = "<html><head><title>HomeSpan Programmable Light Hub</title><meta http-equiv='refresh' content = '3; url=/'/></head>";
+    response += "<body>Deleting All Light Accessories...</body></html>";    
+
+    webServer.send(200, "text/html", response);
+    deleteAllAccessories("");
+    
+  });  
 
   webServer.on("/update", []() {
 
