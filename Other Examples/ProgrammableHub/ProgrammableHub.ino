@@ -42,7 +42,7 @@
 
 WebServer webServer(80);                  // create WebServer on port 80
  
-#define MAX_LIGHTS        24
+#define MAX_LIGHTS        12
 #define MAX_NAME_LENGTH   32
 #define HUB_NAME          "lighthub"
 
