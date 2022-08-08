@@ -32,7 +32,7 @@
 //                                                              //
 //      Demonstrates how to implement a Web Server alongside    //
 //      of HomeSpan to create a Programmable Hub serving up to  //
-//      24 Configurable Lights.  Allows for dynamic changes     //
+//      12 Configurable Lights.  Allows for dynamic changes     //
 //      to Accessories without needing to reboot                //
 //                                                              //
 //////////////////////////////////////////////////////////////////
@@ -89,6 +89,7 @@ void setup() {
     new Service::AccessoryInformation();
       new Characteristic::Identify();
       new Characteristic::Model("HomeSpan Programmable Hub");
+      new Characteristic::AccessoryFlags();
 
   for(int i=0;i<MAX_LIGHTS;i++){                         // create Light Accessories based on saved data
     if(lightData[i].aid)

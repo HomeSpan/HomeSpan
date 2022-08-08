@@ -78,6 +78,7 @@ struct HapChar {
 
 struct HapCharacteristics {
   
+  HAPCHAR( AccessoryFlags, A6, PR+EV, UINT32, true );
   HAPCHAR( Active, B0, PW+PR+EV, UINT8, true );
   HAPCHAR( ActiveIdentifier, E7, PW+PR+EV, UINT32, true );
   HAPCHAR( AirQuality, 95, PR+EV, UINT8, true );
