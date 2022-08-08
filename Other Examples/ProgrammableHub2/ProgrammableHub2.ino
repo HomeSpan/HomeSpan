@@ -103,17 +103,16 @@ void setup() {
   new SpanUserCommand('R',"<name> - add dimmable light accessory with full RGB color control using name=<name>",[](const char *c){addLight(c+1,true,FULL_RGB);});
 
   new SpanUserCommand('l'," - list all light accessories",listAccessories);
-  new SpanUserCommand('d',"<index> - delete a light accessory with index=<index>",deleteAccessory);
+  new SpanUserCommand('d',"<index> - delete a light accessory with index=<index>",[](const char *buf){deleteAccessory(atoi(buf+1));});
   new SpanUserCommand('D'," - delete ALL light accessories",deleteAllAccessories);  
   new SpanUserCommand('u',"- update accessories database",updateAccessories);
-
-  homeSpan.autoPoll();
-  
+ 
 } // end of setup()
 
 ///////////////////////////
 
 void loop(){
+  homeSpan.poll();
   webServer.handleClient();           // handle incoming web server traffic
 }
 
@@ -147,21 +146,21 @@ void addLight(int index){
 
 ///////////////////////////
 
-void addLight(const char *name, boolean isDimmable, colorType_t colorType){
+int addLight(const char *name, boolean isDimmable, colorType_t colorType){
 
   int index=0;
   for(index=0;index<MAX_LIGHTS && lightData[index].aid;index++);
   
   if(index==MAX_LIGHTS){
     Serial.printf("Can't add Light Accessory - maximum number of %d are already defined.\n",MAX_LIGHTS);
-    return;
+    return(-1);
   }
  
   int n=strncpy_trim(lightData[index].name,name,sizeof(lightData[index].name));
 
   if(n==1){
     Serial.printf("Can't add Light Accessory without a name specified.\n");
-    return;
+    return(-1);
   }
 
   if(n>sizeof(lightData[index].name))
@@ -176,6 +175,7 @@ void addLight(const char *name, boolean isDimmable, colorType_t colorType){
   nvs_commit(savedData); 
 
   addLight(index);
+  return(index);
 }
 
 ///////////////////////////
@@ -199,9 +199,7 @@ size_t strncpy_trim(char *dest, const char *src, size_t dSize){
 
 ///////////////////////////
 
-void deleteAccessory(const char *buf){
-
-  int index=atoi(buf+1);
+void deleteAccessory(int index){
 
   if(index<0 || index>=MAX_LIGHTS){
     Serial.printf("Invalid Light Accessory index - must be between 0 and %d.\n",MAX_LIGHTS-1);
@@ -266,30 +264,95 @@ void listAccessories(const char *buf){
 ///////////////////////////
 
 void setupWeb(){
+  
   Serial.printf("Starting Light Server Hub at %s.local\n\n",HUB_NAME);
   webServer.begin();
 
   webServer.on("/", []() {
     
     String response = "<html><head><title>HomeSpan Programmable Light Hub</title>";
-    response += "<style>table, th, td {border: 1px solid black; border-collapse: collapse;} th, td { padding: 5px; text-align: left; } </style></head>\n";
+    response += "<style>table, th, td {border: 1px solid black; border-collapse: collapse;} th, td { padding: 5px; text-align: center; } </style></head>\n";
     response += "<body><h2>HomeSpan Lights</h2>";
-    response += "<table><tr><th>Accessory</th><th>Dim?</th><th>Color Control</th></tr>";
+    response += "<form action='/addLight' method='get'>";
+    response += "<table><tr><th style='text-align:left;'>Accessory</th><th>Dim?</th><th>Color Control</th><th>Action</th></tr>";
+
+    int openSlots=MAX_LIGHTS;
   
     for(int i=0;i<MAX_LIGHTS;i++){
       if(lightData[i].aid){
-        response += "<tr><td>" + String(lightData[i].name) + "</td>";
-        response += "<td><input type='checkbox' disabled " + String(lightData[i].isDimmable?"checked>":">") + "</td></tr>";
+        response += "<tr><td style='text-align:left;'>" + String(lightData[i].name) + "</td>";
+        response += "<td><input type='checkbox' disabled " + String(lightData[i].isDimmable?"checked>":">") + "</td>";
+        response += "<td><input type='radio' disabled " + String(lightData[i].colorType==NO_COLOR?"checked>":">") + " NONE ";
+        response += "<input type='radio' disabled " + String(lightData[i].colorType==TEMPERATURE_ONLY?"checked>":">") + " TEMP ONLY ";
+        response += "<input type='radio' disabled " + String(lightData[i].colorType==FULL_RGB?"checked>":">") + " FULL COLOR </td>";
+        response += "<td><button type='button' onclick=\"document.location='/deleteLight?index=" + String(i) + "'\">Delete Light</button></td>";
+        response += "</tr>";
+        openSlots--;
       }
     }
 
+    response += "<tr><td style='text-align:left;'><input type='text' name='name' required placeholder='Type accessory name here...' size='"
+             + String(MAX_NAME_LENGTH) + "' maxlength='" + String(MAX_NAME_LENGTH) + "'></td>";
+    response += "<td><input type='checkbox' name='isDimmable'></td>";
+    response += "<td><input type='radio' checked name='colorType' for='no_color' value='" + String(NO_COLOR) + "'><label for='no_color'> NONE </label>";
+    response += "<input type='radio' name='colorType' for='temp_only' value='" + String(TEMPERATURE_ONLY) + "'><label for='temp_only'> TEMP ONLY </label>";
+    response += "<input type='radio' name='colorType' for='full_rgb' value='" + String(FULL_RGB) + "'><label for='full_rgb'> FULL COLOR </label></td>";
+    response += "<td><input type='submit' value='Add Light'" + String(openSlots?"":" disabled") + "></td>";
+    response += "</tr>";      
+
     response += "</table>";
-    
+    response += "</form>";
+
+    if(!openSlots)
+      response += "<p>Can't add any more Light Accessories.  Max="+ String(MAX_LIGHTS) + "<p>";
     
     response += "</body></html>";
     webServer.send(200, "text/html", response);
 
   });
+
+  webServer.on("/deleteLight", []() {
+
+    int index=atoi(webServer.arg(0).c_str());
+
+    String response = "<html><head><title>HomeSpan Programmable Light Hub</title><meta http-equiv='refresh' content = '3; url=/'/></head>";
+    response += "<body>Deleted Light Accessory '" +  String(lightData[index].name) + "'...</body></html>";
+    
+    deleteAccessory(index);
+
+    webServer.send(200, "text/html", response);
+
+  });
+
+  webServer.on("/addLight", []() {
+
+    colorType_t colorType=NO_COLOR;
+    boolean isDimmable=false;
+    int iName=-1;
+     
+    for(int i=0;i<webServer.args();i++){
+      if(!webServer.argName(i).compareTo(String("colorType")))
+        colorType=(colorType_t)webServer.arg(i).toInt();
+      else if(!webServer.argName(i).compareTo(String("isDimmable")))
+        isDimmable=true;
+      else if(!webServer.argName(i).compareTo(String("name")))
+        iName=i;
+    }
+
+    String response = "<html><head><title>HomeSpan Programmable Light Hub</title><meta http-equiv='refresh' content = '3; url=/'/></head><body>";
+
+    if(iName!=-1){
+      int index=addLight(webServer.arg(iName).c_str(),isDimmable,colorType);
+      response += "Adding Light Accessory '" +  String(lightData[index].name) + "'";
+    } else
+      response += "Error - bad URL request";
+
+    response += "...</body></html>";
+    
+    webServer.send(200, "text/html", response);
+
+  });
+
 
 }
 
