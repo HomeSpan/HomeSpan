@@ -304,7 +304,9 @@ void setupWeb(){
     response += "</form>";
 
     if(!openSlots)
-      response += "<p>Can't add any more Light Accessories.  Max="+ String(MAX_LIGHTS) + "<p>";
+      response += "<p>Can't add any more Light Accessories.  Max="+ String(MAX_LIGHTS) + "</p>";
+
+    response += "<p>Press here to update the Home App when finished making changes: <button type='button' onclick=\"document.location='/update'\">Upddate HomeKit</button></p>";
     
     response += "</body></html>";
     webServer.send(200, "text/html", response);
@@ -316,13 +318,28 @@ void setupWeb(){
     int index=atoi(webServer.arg(0).c_str());
 
     String response = "<html><head><title>HomeSpan Programmable Light Hub</title><meta http-equiv='refresh' content = '3; url=/'/></head>";
-    response += "<body>Deleted Light Accessory '" +  String(lightData[index].name) + "'...</body></html>";
+    response += "<body>Deleting Light Accessory '" +  String(lightData[index].name) + "'...</body></html>";
     
     deleteAccessory(index);
 
     webServer.send(200, "text/html", response);
 
   });
+
+  webServer.on("/update", []() {
+
+    String response = "<html><head><title>HomeSpan Programmable Light Hub</title><meta http-equiv='refresh' content = '3; url=/'/></head><body>";
+    
+    if(homeSpan.updateDatabase())
+      response += "Accessories Database updated.  New configuration number broadcasted...";
+    else
+      response += "Nothing to update - no changes were made...";
+
+    response += "...</body></html>";      
+    
+    webServer.send(200, "text/html", response);
+
+  });  
 
   webServer.on("/addLight", []() {
 
