@@ -148,6 +148,10 @@ class PushButton{
 
 //  Waits for button to be released.  Use after Long Press if button release confirmation is desired
 
+  int getPin(){return(pin);}
+
+//  Returns pin number
+
 };
 
 ////////////////////////////////

@@ -59,7 +59,6 @@ void Span::begin(Category catID, const char *displayName, const char *hostNameBa
 
   esp_task_wdt_delete(xTaskGetIdleTaskHandleForCPU(0));       // required to avoid watchdog timeout messages from ESP32-C3
 
-  controlButton.init(controlPin);
   statusLED.init(statusPin,0,autoOffLED);
 
   if(requestedMaxCon<maxConnections)                          // if specific request for max connections is less than computed max connections
@@ -105,8 +104,8 @@ void Span::begin(Category catID, const char *displayName, const char *hostNameBa
   else
     Serial.print("-  *** WARNING: Status LED Pin is UNDEFINED");
   Serial.print("\nDevice Control:   Pin ");
-  if(controlPin>=0)
-    Serial.print(controlPin);
+  if(getControlPin()>=0)
+    Serial.print(getControlPin());
   else
     Serial.print("-  *** WARNING: Device Control Pin is UNDEFINED");
   Serial.print("\nSketch Version:   ");
@@ -196,7 +195,8 @@ void Span::pollTask() {
       homeSpan.statusLED.start(LED_WIFI_CONNECTING);
     }
           
-    controlButton.reset();        
+    if(controlButton)
+      controlButton->reset();        
 
     Serial.print(displayName);
     Serial.print(" is READY!\n\n");
@@ -290,14 +290,14 @@ void Span::pollTask() {
   if(spanOTA.enabled)
     ArduinoOTA.handle();
 
-  if(controlButton.primed()){
+  if(controlButton && controlButton->primed()){
     statusLED.start(LED_ALERT);
   }
   
-  if(controlButton.triggered(3000,10000)){
+  if(controlButton && controlButton->triggered(3000,10000)){
     statusLED.off();
-    if(controlButton.type()==PushButton::LONG){
-      controlButton.wait();
+    if(controlButton->type()==PushButton::LONG){
+      controlButton->wait();
       processSerialCommand("F");        // FACTORY RESET
     } else {
       commandMode();                    // COMMAND MODE
@@ -341,8 +341,8 @@ void Span::commandMode(){
       statusLED.start(LED_ALERT);
       delay(2000);
     } else
-    if(controlButton.triggered(10,3000)){
-      if(controlButton.type()==PushButton::SINGLE){
+    if(controlButton->triggered(10,3000)){
+      if(controlButton->type()==PushButton::SINGLE){
         mode++;
         if(mode==6)
           mode=1;
@@ -354,7 +354,7 @@ void Span::commandMode(){
   } // while
 
   statusLED.start(LED_ALERT);
-  controlButton.wait();
+  controlButton->wait();
   
   switch(mode){
 

@@ -191,7 +191,7 @@ class Span{
   const char *defaultSetupCode=DEFAULT_SETUP_CODE;            // Setup Code used for pairing
   int statusPin=DEFAULT_STATUS_PIN;                           // pin for Status LED
   uint16_t autoOffLED=0;                                      // automatic turn-off duration (in seconds) for Status LED
-  int controlPin=DEFAULT_CONTROL_PIN;                         // pin for Control Pushbutton
+//  int controlPin=DEFAULT_CONTROL_PIN;                         // pin for Control Pushbutton
   uint8_t logLevel=DEFAULT_LOG_LEVEL;                         // level for writing out log messages to serial monitor
   uint8_t maxConnections=CONFIG_LWIP_MAX_SOCKETS-2;           // maximum number of allowed simultaneous HAP connections
   uint8_t requestedMaxCon=CONFIG_LWIP_MAX_SOCKETS-2;          // requested maximum number of simultaneous HAP connections
@@ -205,7 +205,7 @@ class Span{
   
   WiFiServer *hapServer;                            // pointer to the HAP Server connection
   Blinker statusLED;                                // indicates HomeSpan status
-  PushButton controlButton;                         // controls HomeSpan configuration and resets
+  PushButton *controlButton = NULL;                 // controls HomeSpan configuration and resets
   Network network;                                  // configures WiFi and Setup Code via either serial monitor or temporary Access Point
   SpanWebLog webLog;                                // optional web status/log
   TaskHandle_t pollTaskHandle = NULL;               // optional task handle to use for poll() function
@@ -255,10 +255,11 @@ class Span{
   boolean updateDatabase(boolean updateMDNS=true);   // updates HAP Configuration Number and Loop vector; if updateMDNS=true and config number has changed, re-broadcasts MDNS 'c#' record; returns true if config number changed
   boolean deleteAccessory(uint32_t aid);             // deletes Accessory with matching aid; returns true if found, else returns false 
 
-  void setControlPin(uint8_t pin){controlPin=pin;}                        // sets Control Pin
+  void setControlPin(uint8_t pin){controlButton=new PushButton(pin);}     // sets Control Pin
   void setStatusPin(uint8_t pin){statusPin=pin;}                          // sets Status Pin
   void setStatusAutoOff(uint16_t duration){autoOffLED=duration;}          // sets Status LED auto off (seconds)  
   int getStatusPin(){return(statusPin);}                                  // get Status Pin
+  int getControlPin(){return(controlButton?controlButton->getPin():-1);}  // get Control Pin (returns -1 if undefined)
   void setApSSID(const char *ssid){network.apSSID=ssid;}                  // sets Access Point SSID
   void setApPassword(const char *pwd){network.apPassword=pwd;}            // sets Access Point Password
   void setApTimeout(uint16_t nSec){network.lifetime=nSec*1000;}           // sets Access Point Timeout (seconds)
