@@ -89,27 +89,12 @@ class PushButton{
     LONG=2
   };
   
-  PushButton();
   PushButton(int pin);
 
-//  Creates generic pushbutton functionality on specified pin
-//  that is wired to connect to ground when the button is pressed.
-//
-//  In the first form, a PushButton is instantiated without specifying
-//  the pin.  In this case the pin must be specified in a subsequent call 
-//  to init() before the PushButton can be used.
-//
-//  In the second form, a PushButton is instantiated and initialized with
-//  the specified pin, obviating the need for a separate call to init().
+//  Creates generic pushbutton functionality on specified pin.
 //
 //  pin:         Pin mumber to which pushbutton connects to ground when pressed
-
-  void init(int pin);
-  
-//  Initializes PushButton, if not configured during instantiation.
-//
-//  pin:         Pin mumber to which pushbutton connects to ground when pressed
-    
+   
   void reset();
 
 //  Resets state of PushButton.  Should be called once before any loops that will

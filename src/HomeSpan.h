@@ -191,7 +191,6 @@ class Span{
   const char *defaultSetupCode=DEFAULT_SETUP_CODE;            // Setup Code used for pairing
   int statusPin=DEFAULT_STATUS_PIN;                           // pin for Status LED
   uint16_t autoOffLED=0;                                      // automatic turn-off duration (in seconds) for Status LED
-//  int controlPin=DEFAULT_CONTROL_PIN;                         // pin for Control Pushbutton
   uint8_t logLevel=DEFAULT_LOG_LEVEL;                         // level for writing out log messages to serial monitor
   uint8_t maxConnections=CONFIG_LWIP_MAX_SOCKETS-2;           // maximum number of allowed simultaneous HAP connections
   uint8_t requestedMaxCon=CONFIG_LWIP_MAX_SOCKETS-2;          // requested maximum number of simultaneous HAP connections

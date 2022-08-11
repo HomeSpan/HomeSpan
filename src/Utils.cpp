@@ -85,22 +85,9 @@ String Utils::mask(char *c, int n){
 //         PushButton         //
 ////////////////////////////////
 
-PushButton::PushButton(){}
-
-//////////////////////////////////////
-
 PushButton::PushButton(int pin){
-  init(pin);
-}
-
-//////////////////////////////////////
-
-void PushButton::init(int pin){
 
   this->pin=pin;
-  if(pin<0)
-    return;
-
   status=0;
   doubleCheck=false;
   pinMode(pin, INPUT_PULLUP);
@@ -109,9 +96,6 @@ void PushButton::init(int pin){
 //////////////////////////////////////
 
 boolean PushButton::triggered(uint16_t singleTime, uint16_t longTime, uint16_t doubleTime){
-
-  if(pin<0)
-    return(false);
 
   unsigned long cTime=millis();
 
@@ -189,10 +173,7 @@ boolean PushButton::triggered(uint16_t singleTime, uint16_t longTime, uint16_t d
 //////////////////////////////////////
 
 boolean PushButton::primed(){
-
-  if(pin<0)
-    return(false); 
-  
+ 
   if(millis()>singleAlarm && status==1){
     status=2;
     return(true);
@@ -209,11 +190,7 @@ int PushButton::type(){
 
 //////////////////////////////////////
 
-void PushButton::wait(){
-
-  if(pin<0)
-    return;
-  
+void PushButton::wait(){  
   while(!digitalRead(pin));
 }
 
