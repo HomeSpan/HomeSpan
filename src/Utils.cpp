@@ -85,36 +85,18 @@ String Utils::mask(char *c, int n){
 //         PushButton         //
 ////////////////////////////////
 
-PushButton::PushButton(int pin, Button buttonType){
+PushButton::PushButton(int pin, pressTest_t pressed){
 
   this->pin=pin;
+  this->pressed=pressed;
   status=0;
   doubleCheck=false;
 
-  switch(buttonType){
-
-    case Button::GROUNDED:
-      pinMode(pin, INPUT_PULLUP);
-      pressed=groundedButton;
-    break;
-    
-    case Button::POWERED:
-      pinMode(pin, INPUT_PULLDOWN);
-      pressed=poweredButton;
-    break;
-
-    case Button::TOUCH:
-      pressed=touchButton;
-    break;
-
-  };
+  if(pressed==GROUNDED)
+    pinMode(pin, INPUT_PULLUP);
+  else if(pressed==POWERED)
+    pinMode(pin, INPUT_PULLDOWN);
   
-}
-
-//////////////////////////////////////
-
-PushButton::PushButton(int pin, boolean (*pressed)(int pin)) : PushButton(pin, Button::CUSTOM){
-  this->pressed=pressed;
 }
 
 //////////////////////////////////////

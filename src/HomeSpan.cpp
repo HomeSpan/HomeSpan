@@ -1963,7 +1963,7 @@ SpanRange::SpanRange(int min, int max, int step){
 //        SpanButton         //
 ///////////////////////////////
 
-SpanButton::SpanButton(int pin, uint16_t longTime, uint16_t singleTime, uint16_t doubleTime, Button buttonType) : PushButton(pin, buttonType){
+SpanButton::SpanButton(int pin, uint16_t longTime, uint16_t singleTime, uint16_t doubleTime, pressTest_t pressed) : PushButton(pin, pressed){
 
   if(homeSpan.Accessories.empty() || homeSpan.Accessories.back()->Services.empty()){
     Serial.printf("\nFATAL ERROR!  Can't create new SpanButton(%d,%u,%u,%u) without a defined Service ***\n",pin,longTime,singleTime,doubleTime);

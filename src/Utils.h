@@ -37,13 +37,6 @@ String mask(char *c, int n);          // simply utility that creates a String fr
   
 }
 
-enum class Button {
-  GROUNDED,
-  POWERED,
-  TOUCH,
-  CUSTOM
-};
-
 /////////////////////////////////////////////////
 // Creates a temporary buffer that is freed after
 // going out of scope
@@ -88,15 +81,13 @@ class PushButton{
   int pressType;
   
   static uint16_t touchThreshold;
-
-  static boolean groundedButton(int pin){return(!digitalRead(pin));}
-  static boolean poweredButton(int pin){return(digitalRead(pin));}
-  static boolean touchButton(int pin){return(touchRead(pin)<touchThreshold);}
   
   protected:
 
+  typedef boolean (*pressTest_t)(int pin);
+
   int pin;
-  boolean (*pressed)(int pin);
+  pressTest_t pressed;
 
   public:
 
@@ -106,19 +97,20 @@ class PushButton{
     LONG=2
   };
 
-  PushButton(int pin, Button buttonType=Button::GROUNDED);
+  static boolean GROUNDED(int pin){return(!digitalRead(pin));}
+  static boolean POWERED(int pin){return(digitalRead(pin));}
+  static boolean TOUCH(int pin){return(touchRead(pin)<touchThreshold);}
+
+  PushButton(int pin, pressTest_t pressed=GROUNDED);
 
 //  Creates pushbutton of specified type on specified pin
 //
-//  pin:         Pin mumber to which pushbutton connects to ground when pressed
-//  buttonType:  sets button type to Button::GROUNDED, Button::POWERED, or Button::TOUCH
-   
-  PushButton(int pin, boolean (*pressed)(int pin));
-
-//  Creates generic pushbutton using custom boolean function that accepts a single paramater
-//
-//  pin:      an arbitrary INT that is passed to the user-define BOOLEAN function.  Usually used to represent a pin number
-//  pressed:  a user-defined BOOLEAN function that takes a single INT argument and returns TRUE if "button" is pressed, or FALSE if not
+//  pin:         pin number to which the button is connected
+//  pressed:     a function of of the form 'boolean f(int)' that is passed
+//               the parameter *pin* and returns TRUE if the button associated
+//               with *pin* is pressed, or FALSE if not.  Can choose from 3 pre-specifed
+//               pressTest_t functions (GROUNDED, POWERED, and TOUCH), or write your
+//               own custom handler
 
   void reset();
 

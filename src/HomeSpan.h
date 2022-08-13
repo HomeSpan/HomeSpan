@@ -711,9 +711,8 @@ class SpanButton : PushButton {
     LONG=2
   };
   
-  SpanButton(int pin, uint16_t longTime=2000, uint16_t singleTime=5, uint16_t doubleTime=200, Button buttonType=Button::GROUNDED);
-  SpanButton(int pin, Button buttonType, uint16_t longTime=2000, uint16_t singleTime=5, uint16_t doubleTime=200) : SpanButton(pin,longTime,singleTime,doubleTime,buttonType){};
-  SpanButton(int pin, boolean (*pressed)(int pin), uint16_t longTime=2000, uint16_t singleTime=5, uint16_t doubleTime=200) : SpanButton(pin,longTime,singleTime,doubleTime,Button::CUSTOM){this->pressed=pressed;};
+  SpanButton(int pin, uint16_t longTime=2000, uint16_t singleTime=5, uint16_t doubleTime=200, pressTest_t pressed=GROUNDED);
+  SpanButton(int pin, pressTest_t pressed=GROUNDED, uint16_t longTime=2000, uint16_t singleTime=5, uint16_t doubleTime=200) : SpanButton(pin,longTime,singleTime,doubleTime,pressed){};
 
 };
 
