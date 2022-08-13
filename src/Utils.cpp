@@ -209,8 +209,10 @@ void PushButton::reset(){
 //////////////////////////////////////
 
 void PushButton::configureTouch(uint16_t measureTime, uint16_t sleepTime, uint16_t thresh){
+#ifndef CONFIG_IDF_TARGET_ESP32C3
   touchSetCycles(measureTime,sleepTime);
   touchThreshold=thresh;
+#endif
 }
 
 //////////////////////////////////////

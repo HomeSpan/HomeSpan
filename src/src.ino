@@ -12,13 +12,6 @@ CUSTOM_CHAR_STRING(DarkMode, AAAAAAAA-BBBB-AAAA-AAAA-AAAAAAAAAAAA, PR, "MY_VALUE
 void setup() {
  
   Serial.begin(115200);
-
-  touchSetCycles(4000,1000);
-  
-  while(1){
-    Serial.println(touchRead(4));
-    delay(1000);
-  }
  
 // homeSpan.setLogLevel(2);
 //  homeSpan.setStatusPin(13);

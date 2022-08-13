@@ -99,7 +99,10 @@ class PushButton{
 
   static boolean GROUNDED(int pin){return(!digitalRead(pin));}
   static boolean POWERED(int pin){return(digitalRead(pin));}
+
+#ifndef CONFIG_IDF_TARGET_ESP32C3  
   static boolean TOUCH(int pin){return(touchRead(pin)<touchThreshold);}
+#endif
 
   PushButton(int pin, pressTest_t pressed=GROUNDED);
 

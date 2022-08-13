@@ -712,7 +712,7 @@ class SpanButton : PushButton {
   };
   
   SpanButton(int pin, uint16_t longTime=2000, uint16_t singleTime=5, uint16_t doubleTime=200, pressTest_t pressed=GROUNDED);
-  SpanButton(int pin, pressTest_t pressed=GROUNDED, uint16_t longTime=2000, uint16_t singleTime=5, uint16_t doubleTime=200) : SpanButton(pin,longTime,singleTime,doubleTime,pressed){};
+  SpanButton(int pin, pressTest_t pressed, uint16_t longTime=2000, uint16_t singleTime=5, uint16_t doubleTime=200) : SpanButton(pin,longTime,singleTime,doubleTime,pressed){};
 
 };
 
