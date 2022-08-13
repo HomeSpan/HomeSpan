@@ -40,7 +40,8 @@ String mask(char *c, int n);          // simply utility that creates a String fr
 enum class Button {
   GROUNDED,
   POWERED,
-  TOUCH
+  TOUCH,
+  CUSTOM
 };
 
 /////////////////////////////////////////////////
@@ -80,13 +81,11 @@ struct TempBuffer {
 class PushButton{
   
   int status;
-  int pin;
   boolean doubleCheck;
   uint32_t singleAlarm;
   uint32_t doubleAlarm;
   uint32_t longAlarm;
   int pressType;
-  boolean (*pressed)(int pin);
   
   static uint16_t touchThreshold;
 
@@ -94,6 +93,11 @@ class PushButton{
   static boolean poweredButton(int pin){return(digitalRead(pin));}
   static boolean touchButton(int pin){return(touchRead(pin)<touchThreshold);}
   
+  protected:
+
+  int pin;
+  boolean (*pressed)(int pin);
+
   public:
 
   enum {
@@ -104,10 +108,18 @@ class PushButton{
 
   PushButton(int pin, Button buttonType=Button::GROUNDED);
 
-//  Creates generic pushbutton functionality on specified pin.
+//  Creates pushbutton of specified type on specified pin
 //
 //  pin:         Pin mumber to which pushbutton connects to ground when pressed
+//  buttonType:  sets button type to Button::GROUNDED, Button::POWERED, or Button::TOUCH
    
+  PushButton(int pin, boolean (*pressed)(int pin));
+
+//  Creates generic pushbutton using custom boolean function that accepts a single paramater
+//
+//  pin:      an arbitrary INT that is passed to the user-define BOOLEAN function.  Usually used to represent a pin number
+//  pressed:  a user-defined BOOLEAN function that takes a single INT argument and returns TRUE if "button" is pressed, or FALSE if not
+
   void reset();
 
 //  Resets state of PushButton.  Should be called once before any loops that will
@@ -150,9 +162,13 @@ class PushButton{
 
 //  Returns pin number
 
-  static void configureTouch(uint16_t measureTime, uint16_t sleepTime, uint16_t thresh){touchSetCycles(measureTime,sleepTime);touchThreshold=thresh;}
+  static void configureTouch(uint16_t measureTime, uint16_t sleepTime, uint16_t thresh);
 
 //  Sets the measure time, sleep time, and lower threshold that triggers a touch - used only when buttonType=Button::TOUCH
+
+//  measureTime:      duration of measurement time of all touch sensors in number of clock cycles
+//  sleepTime:        duration of sleep time (between measurements) of all touch sensors number of clock cycles
+//  touchThreshhold:  the read value of touch sensors, below which sensors are considered touched (i.e. "pressed")
 
 };
 

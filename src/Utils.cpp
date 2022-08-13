@@ -113,6 +113,12 @@ PushButton::PushButton(int pin, Button buttonType){
 
 //////////////////////////////////////
 
+PushButton::PushButton(int pin, boolean (*pressed)(int pin)) : PushButton(pin, Button::CUSTOM){
+  this->pressed=pressed;
+}
+
+//////////////////////////////////////
+
 boolean PushButton::triggered(uint16_t singleTime, uint16_t longTime, uint16_t doubleTime){
 
   unsigned long cTime=millis();
@@ -216,6 +222,13 @@ void PushButton::wait(){
 
 void PushButton::reset(){
   status=0;
+}
+
+//////////////////////////////////////
+
+void PushButton::configureTouch(uint16_t measureTime, uint16_t sleepTime, uint16_t thresh){
+  touchSetCycles(measureTime,sleepTime);
+  touchThreshold=thresh;
 }
 
 //////////////////////////////////////

@@ -1963,7 +1963,7 @@ SpanRange::SpanRange(int min, int max, int step){
 //        SpanButton         //
 ///////////////////////////////
 
-SpanButton::SpanButton(int pin, uint16_t longTime, uint16_t singleTime, uint16_t doubleTime, Button buttonType){
+SpanButton::SpanButton(int pin, uint16_t longTime, uint16_t singleTime, uint16_t doubleTime, Button buttonType) : PushButton(pin, buttonType){
 
   if(homeSpan.Accessories.empty() || homeSpan.Accessories.back()->Services.empty()){
     Serial.printf("\nFATAL ERROR!  Can't create new SpanButton(%d,%u,%u,%u) without a defined Service ***\n",pin,longTime,singleTime,doubleTime);
@@ -1971,13 +1971,11 @@ SpanButton::SpanButton(int pin, uint16_t longTime, uint16_t singleTime, uint16_t
     while(1);
   }
 
-  this->pin=pin;
   this->longTime=longTime;
   this->singleTime=singleTime;
   this->doubleTime=doubleTime;
   service=homeSpan.Accessories.back()->Services.back();
 
-  pushButton=new PushButton(pin,buttonType);         // create underlying PushButton
   homeSpan.PushButtons.push_back(this);
 }
 
@@ -1985,8 +1983,8 @@ SpanButton::SpanButton(int pin, uint16_t longTime, uint16_t singleTime, uint16_t
 
 void SpanButton::check(){
 
-  if(pushButton->triggered(singleTime,longTime,doubleTime))   // if the underlying PushButton is triggered
-    service->button(pin,pushButton->type());                  // call the Service's button() routine with pin and type as parameters    
+  if(triggered(singleTime,longTime,doubleTime))   // if the underlying PushButton is triggered
+    service->button(pin,type());                  // call the Service's button() routine with pin and type as parameters    
 }
 
 ///////////////////////////////

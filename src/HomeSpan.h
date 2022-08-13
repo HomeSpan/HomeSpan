@@ -691,17 +691,15 @@ struct [[deprecated("Please use Characteristic::setRange() method instead.")]] S
 
 ///////////////////////////////
 
-class SpanButton{
+class SpanButton : PushButton {
 
   friend class Span;
   friend class SpanService;
   
-  int pin;                       // pin number  
   uint16_t singleTime;           // minimum time (in millis) required to register a single press
   uint16_t longTime;             // minimum time (in millis) required to register a long press
   uint16_t doubleTime;           // maximum time (in millis) between single presses to register a double press instead
   SpanService *service;          // Service to which this PushButton is attached
-  PushButton *pushButton;        // PushButton associated with this SpanButton
   
   void check();                  // check PushButton and call button() if pressed
 
@@ -715,8 +713,8 @@ class SpanButton{
   
   SpanButton(int pin, uint16_t longTime=2000, uint16_t singleTime=5, uint16_t doubleTime=200, Button buttonType=Button::GROUNDED);
   SpanButton(int pin, Button buttonType, uint16_t longTime=2000, uint16_t singleTime=5, uint16_t doubleTime=200) : SpanButton(pin,longTime,singleTime,doubleTime,buttonType){};
+  SpanButton(int pin, boolean (*pressed)(int pin), uint16_t longTime=2000, uint16_t singleTime=5, uint16_t doubleTime=200) : SpanButton(pin,longTime,singleTime,doubleTime,Button::CUSTOM){this->pressed=pressed;};
 
-  static void configureTouch(uint16_t measureTime, uint16_t sleepTime, uint16_t thresh){PushButton::configureTouch(measureTime,sleepTime,thresh);}
 };
 
 ///////////////////////////////
