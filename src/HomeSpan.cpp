@@ -61,6 +61,8 @@ void Span::begin(Category catID, const char *displayName, const char *hostNameBa
 
   statusLED.init(statusPin,0,autoOffLED);
 
+  PushButton::configureTouch(4000,1000,10);                   // set default parameters for any touch-style pushbuttons
+
   if(requestedMaxCon<maxConnections)                          // if specific request for max connections is less than computed max connections
     maxConnections=requestedMaxCon;                           // over-ride max connections with requested value
     
@@ -1961,7 +1963,7 @@ SpanRange::SpanRange(int min, int max, int step){
 //        SpanButton         //
 ///////////////////////////////
 
-SpanButton::SpanButton(int pin, uint16_t longTime, uint16_t singleTime, uint16_t doubleTime){
+SpanButton::SpanButton(int pin, uint16_t longTime, uint16_t singleTime, uint16_t doubleTime, Button buttonType){
 
   if(homeSpan.Accessories.empty() || homeSpan.Accessories.back()->Services.empty()){
     Serial.printf("\nFATAL ERROR!  Can't create new SpanButton(%d,%u,%u,%u) without a defined Service ***\n",pin,longTime,singleTime,doubleTime);
@@ -1975,7 +1977,7 @@ SpanButton::SpanButton(int pin, uint16_t longTime, uint16_t singleTime, uint16_t
   this->doubleTime=doubleTime;
   service=homeSpan.Accessories.back()->Services.back();
 
-  pushButton=new PushButton(pin);         // create underlying PushButton
+  pushButton=new PushButton(pin,buttonType);         // create underlying PushButton
   homeSpan.PushButtons.push_back(this);
 }
 

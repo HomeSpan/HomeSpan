@@ -37,6 +37,12 @@ String mask(char *c, int n);          // simply utility that creates a String fr
   
 }
 
+enum class Button {
+  GROUNDED,
+  POWERED,
+  TOUCH
+};
+
 /////////////////////////////////////////////////
 // Creates a temporary buffer that is freed after
 // going out of scope
@@ -80,7 +86,14 @@ class PushButton{
   uint32_t doubleAlarm;
   uint32_t longAlarm;
   int pressType;
+  boolean (*pressed)(int pin);
+  
+  static uint16_t touchThreshold;
 
+  static boolean groundedButton(int pin){return(!digitalRead(pin));}
+  static boolean poweredButton(int pin){return(digitalRead(pin));}
+  static boolean touchButton(int pin){return(touchRead(pin)<touchThreshold);}
+  
   public:
 
   enum {
@@ -88,8 +101,8 @@ class PushButton{
     DOUBLE=1,
     LONG=2
   };
-  
-  PushButton(int pin);
+
+  PushButton(int pin, Button buttonType=Button::GROUNDED);
 
 //  Creates generic pushbutton functionality on specified pin.
 //
@@ -136,6 +149,10 @@ class PushButton{
   int getPin(){return(pin);}
 
 //  Returns pin number
+
+  static void configureTouch(uint16_t measureTime, uint16_t sleepTime, uint16_t thresh){touchSetCycles(measureTime,sleepTime);touchThreshold=thresh;}
+
+//  Sets the measure time, sleep time, and lower threshold that triggers a touch - used only when buttonType=Button::TOUCH
 
 };
 

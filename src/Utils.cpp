@@ -85,12 +85,30 @@ String Utils::mask(char *c, int n){
 //         PushButton         //
 ////////////////////////////////
 
-PushButton::PushButton(int pin){
+PushButton::PushButton(int pin, Button buttonType){
 
   this->pin=pin;
   status=0;
   doubleCheck=false;
-  pinMode(pin, INPUT_PULLUP);
+
+  switch(buttonType){
+
+    case Button::GROUNDED:
+      pinMode(pin, INPUT_PULLUP);
+      pressed=groundedButton;
+    break;
+    
+    case Button::POWERED:
+      pinMode(pin, INPUT_PULLDOWN);
+      pressed=poweredButton;
+    break;
+
+    case Button::TOUCH:
+      pressed=touchButton;
+    break;
+
+  };
+  
 }
 
 //////////////////////////////////////
@@ -108,7 +126,7 @@ boolean PushButton::triggered(uint16_t singleTime, uint16_t longTime, uint16_t d
         return(true);
       }
       
-      if(!digitalRead(pin)){         // button is pressed
+      if(pressed(pin)){         // button is pressed
         singleAlarm=cTime+singleTime;
         if(!doubleCheck){
           status=1;
@@ -122,7 +140,7 @@ boolean PushButton::triggered(uint16_t singleTime, uint16_t longTime, uint16_t d
   
     case 1:
     case 2:
-      if(digitalRead(pin)){         // button is released          
+      if(!pressed(pin)){         // button is released          
         status=0;
         if(cTime>singleAlarm){
           doubleCheck=true;
@@ -138,7 +156,7 @@ boolean PushButton::triggered(uint16_t singleTime, uint16_t longTime, uint16_t d
     break;
 
     case 3:
-      if(digitalRead(pin))          // button has been released after a long press
+      if(!pressed(pin))          // button has been released after a long press
         status=0;
       else if(cTime>longAlarm){
         longAlarm=cTime+longTime;
@@ -148,7 +166,7 @@ boolean PushButton::triggered(uint16_t singleTime, uint16_t longTime, uint16_t d
     break;
 
     case 4:    
-      if(digitalRead(pin)){         // button is released          
+      if(!pressed(pin)){         // button is released          
         status=0;
       } else
       
@@ -161,7 +179,7 @@ boolean PushButton::triggered(uint16_t singleTime, uint16_t longTime, uint16_t d
     break;
 
     case 5:
-      if(digitalRead(pin))          // button has been released after double-click
+      if(!pressed(pin))          // button has been released after double-click
         status=0;
      break;
 
@@ -191,7 +209,7 @@ int PushButton::type(){
 //////////////////////////////////////
 
 void PushButton::wait(){  
-  while(!digitalRead(pin));
+  while(pressed(pin));
 }
 
 //////////////////////////////////////
@@ -199,6 +217,10 @@ void PushButton::wait(){
 void PushButton::reset(){
   status=0;
 }
+
+//////////////////////////////////////
+
+uint16_t PushButton::touchThreshold;
 
 ////////////////////////////////
 //         Blinker            //

@@ -713,7 +713,10 @@ class SpanButton{
     LONG=2
   };
   
-  SpanButton(int pin, uint16_t longTime=2000, uint16_t singleTime=5, uint16_t doubleTime=200);
+  SpanButton(int pin, uint16_t longTime=2000, uint16_t singleTime=5, uint16_t doubleTime=200, Button buttonType=Button::GROUNDED);
+  SpanButton(int pin, Button buttonType, uint16_t longTime=2000, uint16_t singleTime=5, uint16_t doubleTime=200) : SpanButton(pin,longTime,singleTime,doubleTime,buttonType){};
+
+  static void configureTouch(uint16_t measureTime, uint16_t sleepTime, uint16_t thresh){PushButton::configureTouch(measureTime,sleepTime,thresh);}
 };
 
 ///////////////////////////////
