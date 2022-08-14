@@ -79,8 +79,11 @@ class PushButton{
   uint32_t doubleAlarm;
   uint32_t longAlarm;
   int pressType;
-  
-  static uint16_t touchThreshold;
+
+#if SOC_TOUCH_SENSOR_NUM > 0
+  static touch_value_t threshold;
+  static const int calibCount=20;
+#endif
   
   protected:
 
@@ -100,8 +103,10 @@ class PushButton{
   static boolean GROUNDED(int pin){return(!digitalRead(pin));}
   static boolean POWERED(int pin){return(digitalRead(pin));}
 
-#ifndef CONFIG_IDF_TARGET_ESP32C3  
-  static boolean TOUCH(int pin){return(touchRead(pin)<touchThreshold);}
+#if SOC_TOUCH_VERSION_1 // ESP32
+  static boolean TOUCH(int pin){return(touchRead(pin)<threshold);}
+#elif SOC_TOUCH_VERSION_2 // ESP32S2 ESP32S3
+  static boolean TOUCH(int pin){return(touchRead(pin)>threshold);}
 #endif
 
   PushButton(int pin, pressTest_t pressed=GROUNDED);

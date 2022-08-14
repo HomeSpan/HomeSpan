@@ -96,6 +96,21 @@ PushButton::PushButton(int pin, pressTest_t pressed){
     pinMode(pin, INPUT_PULLUP);
   else if(pressed==POWERED)
     pinMode(pin, INPUT_PULLDOWN);
+
+#if SOC_TOUCH_SENSOR_NUM > 0
+  else if (pressed==TOUCH && threshold==0){    
+    for(int i=0;i<calibCount;i++)
+      threshold+=touchRead(pin);
+    threshold/=calibCount;
+#if SOC_TOUCH_VERSION_1
+    threshold/=2;
+    Serial.printf("Touch Sensor at pin=%d used for calibration.  Triggers when sensor reading < %d.\n",pin,threshold);
+#elif SOC_TOUCH_VERSION_2
+    threshold*=2;
+    Serial.printf("Touch Sensor at pin=%d used for calibration.  Triggers when sensor reading > %d.\n",pin,threshold);
+#endif
+  }
+#endif
   
 }
 
@@ -209,15 +224,17 @@ void PushButton::reset(){
 //////////////////////////////////////
 
 void PushButton::configureTouch(uint16_t measureTime, uint16_t sleepTime, uint16_t thresh){
-#ifndef CONFIG_IDF_TARGET_ESP32C3
+#if SOC_TOUCH_SENSOR_NUM > 0
   touchSetCycles(measureTime,sleepTime);
-  touchThreshold=thresh;
+  threshold=thresh;
 #endif
 }
 
 //////////////////////////////////////
 
-uint16_t PushButton::touchThreshold;
+#if SOC_TOUCH_SENSOR_NUM > 0
+  touch_value_t PushButton::threshold=0;
+#endif
 
 ////////////////////////////////
 //         Blinker            //

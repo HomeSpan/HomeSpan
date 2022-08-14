@@ -61,8 +61,6 @@ void Span::begin(Category catID, const char *displayName, const char *hostNameBa
 
   statusLED.init(statusPin,0,autoOffLED);
 
-  PushButton::configureTouch(4000,1000,10);                   // set default parameters for any touch-style pushbuttons
-
   if(requestedMaxCon<maxConnections)                          // if specific request for max connections is less than computed max connections
     maxConnections=requestedMaxCon;                           // over-ride max connections with requested value
     
