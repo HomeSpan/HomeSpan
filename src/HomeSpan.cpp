@@ -993,7 +993,18 @@ void Span::processSerialCommand(const char *c){
 
           for(auto button=PushButtons.begin(); button!=PushButtons.end(); button++){
             if((*button)->service==(*svc)){
-              Serial.printf("      \u25bc SpanButton: Pin=%d, Single=%ums, Double=%ums, Long=%ums\n",(*button)->pin,(*button)->singleTime,(*button)->doubleTime,(*button)->longTime);
+              Serial.printf("      \u25bc SpanButton: Pin=%d, Single=%ums, Double=%ums, Long=%ums, Type=",(*button)->pin,(*button)->singleTime,(*button)->doubleTime,(*button)->longTime);
+              if((*button)->pressed==PushButton::GROUNDED)
+                Serial.printf("GROUNDED\n");
+              else if((*button)->pressed==PushButton::POWERED)
+                Serial.printf("POWERED\n");
+
+#if SOC_TOUCH_SENSOR_NUM > 0
+              else if((*button)->pressed==PushButton::TOUCH)
+                Serial.printf("TOUCH\n");
+#endif
+              else
+                Serial.printf("USER-DEFINED\n");
               
               if((void(*)(int,int))((*svc)->*(&SpanService::button))==(void(*)(int,int))(&SpanService::button))
                 Serial.printf("          *** WARNING!  No button() method defined in this Service ***\n",nWarnings++);
