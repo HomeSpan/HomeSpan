@@ -35,8 +35,8 @@
 //              HomeSpan Version                    //
 
 #define     HS_MAJOR  1
-#define     HS_MINOR  5
-#define     HS_PATCH  2
+#define     HS_MINOR  6
+#define     HS_PATCH  0
 
 #define     STRINGIFY(x) _STR(x)
 #define     _STR(x) #x
@@ -56,7 +56,7 @@
 #define     ARDUINO_ESP_VERSION   STRINGIFY(ARDUINO_ESP32_GIT_DESC)
 
 #if ESP_ARDUINO_VERSION_MAJOR<2
-  #error THIS SKETCH REQUIRES VERSION 2 OF THE ARDUINO ESP32 LIBRARY
+  #error HOMESPAN REQUIRES VERSION 2 OF THE ARDUINO ESP32 LIBRARY
 #endif
 
 //////////////////////////////////////////////////////
