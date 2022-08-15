@@ -223,15 +223,6 @@ void PushButton::reset(){
 
 //////////////////////////////////////
 
-void PushButton::configureTouch(uint16_t measureTime, uint16_t sleepTime, uint16_t thresh){
-#if SOC_TOUCH_SENSOR_NUM > 0
-  touchSetCycles(measureTime,sleepTime);
-  threshold=thresh;
-#endif
-}
-
-//////////////////////////////////////
-
 #if SOC_TOUCH_SENSOR_NUM > 0
   touch_value_t PushButton::threshold=0;
 #endif

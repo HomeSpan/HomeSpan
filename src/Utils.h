@@ -162,13 +162,23 @@ class PushButton{
 
 //  Returns pin number
 
-  static void configureTouch(uint16_t measureTime, uint16_t sleepTime, uint16_t thresh);
+#if SOC_TOUCH_SENSOR_NUM > 0
 
-//  Sets the measure time, sleep time, and lower threshold that triggers a touch - used only when buttonType=Button::TOUCH
+  static void setTouchCycles(uint16_t measureTime, uint16_t sleepTime){touchSetCycles(measureTime,sleepTime);}
+  
+//  Sets the measure time and sleep time touch cycles , and lower threshold that triggers a touch - used only when buttonType=Button::TOUCH
 
 //  measureTime:      duration of measurement time of all touch sensors in number of clock cycles
 //  sleepTime:        duration of sleep time (between measurements) of all touch sensors number of clock cycles
-//  touchThreshhold:  the read value of touch sensors, below which sensors are considered touched (i.e. "pressed")
+
+  static void setTouchThreshold(touch_value_t thresh){threshold=thresh;}
+
+//  Sets the threshold that triggers a touch - used only when buttonType=Button::TOUCH
+
+//  thresh:  the read value of touch sensors, beyond which which sensors are considered touched (i.e. "pressed").
+//           This is a class-level value applied to all touch sensor buttons.
+
+#endif
 
 };
 
