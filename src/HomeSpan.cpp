@@ -994,14 +994,14 @@ void Span::processSerialCommand(const char *c){
           for(auto button=PushButtons.begin(); button!=PushButtons.end(); button++){
             if((*button)->service==(*svc)){
               Serial.printf("      \u25bc SpanButton: Pin=%d, Single=%ums, Double=%ums, Long=%ums, Type=",(*button)->pin,(*button)->singleTime,(*button)->doubleTime,(*button)->longTime);
-              if((*button)->pressed==PushButton::GROUNDED)
-                Serial.printf("GROUNDED\n");
-              else if((*button)->pressed==PushButton::POWERED)
-                Serial.printf("POWERED\n");
+              if((*button)->triggerType==PushButton::TRIGGER_ON_LOW)
+                Serial.printf("TRIGGER_ON_LOW\n");
+              else if((*button)->triggerType==PushButton::TRIGGER_ON_HIGH)
+                Serial.printf("TRIGGER_ON_HIGH\n");
 
 #if SOC_TOUCH_SENSOR_NUM > 0
-              else if((*button)->pressed==PushButton::TOUCH)
-                Serial.printf("TOUCH\n");
+              else if((*button)->triggerType==PushButton::TRIGGER_ON_TOUCH)
+                Serial.printf("TRIGGER_ON_TOUCH\n");
 #endif
               else
                 Serial.printf("USER-DEFINED\n");
@@ -1972,7 +1972,7 @@ SpanRange::SpanRange(int min, int max, int step){
 //        SpanButton         //
 ///////////////////////////////
 
-SpanButton::SpanButton(int pin, uint16_t longTime, uint16_t singleTime, uint16_t doubleTime, pressTest_t pressed) : PushButton(pin, pressed){
+SpanButton::SpanButton(int pin, uint16_t longTime, uint16_t singleTime, uint16_t doubleTime, triggerType_t triggerType) : PushButton(pin, triggerType){
 
   if(homeSpan.Accessories.empty() || homeSpan.Accessories.back()->Services.empty()){
     Serial.printf("\nFATAL ERROR!  Can't create new SpanButton(%d,%u,%u,%u) without a defined Service ***\n",pin,longTime,singleTime,doubleTime);
