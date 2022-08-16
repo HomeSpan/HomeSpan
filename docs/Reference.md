@@ -351,7 +351,7 @@ This is a **base class** from which all HomeSpan Characteristics are derived, an
   * returns a pointer to the Characteristic itself so that the method can be chained during instantiation
   * example: `(new Characteristic::RotationSpeed())->setUnit("percentage");`
 
-### *SpanButton(int pin, uint16_t longTime, uint16_t singleTime, uint16_t doubleTime, buttonType)*
+### *SpanButton(int pin, uint16_t longTime, uint16_t singleTime, uint16_t doubleTime, boolean *triggerType(int))*
 
 Creating an instance of this **class** attaches a pushbutton handler to the ESP32 *pin* specified.
 
@@ -364,14 +364,15 @@ The first argument is required; the rest are optional:
 * *longTime* - the minimum time (in millis) required for the button to be pressed and held to trigger a Long Press (default=2000 ms)
 * *singleTime* - the minimum time (in millis) required for the button to be pressed to trigger a Single Press (default=5 ms)
 * *doubleTime* -  the maximum time (in millis) allowed between two Single Presses to qualify as a Double Press (default=200 ms)
-* *buttonType* - specifies the type of pushbutton.  Choices are:
-  * `PushButton::GROUNDED` - a button that connects *pin* to GROUND when pushed (this is the default)
-  * `PushButton::POWERED` - a button that connects *pin* to +3.3V when pushed
-  * `PushButton::TOUCH`- a button that is connected to a touch sensor (not available on ESP32-C3)
+* *triggerType* - pointer to a boolean function that returns `true` or `false` depending on whether or not a "press" has been triggered on the specified *pin*.  You may choose from the following built-in functions:
+
+  * `SpanButton::TRIGGER_ON_LOW` - triggers when *pin* is driven LOW.  Suitable for buttons that connect *pin* to GROUND (this is the default when triggerType is not specified)
+  * `SpanButton::TRIGGER_ON_HIGH` - triggers when *pin* is driven HIGH.  Suitable for buttons that connect *pin* to VCC (typically 3.3V)
+  * `SpanButton::TRIGGER_ON_TOUCH`- uses the device's touch-sensor peripheral to trigger when a sensor attached to *pin* has been touched (not available on ESP32-C3)
 
 A second form of *SpanButton()* is provided for convenience:
-  * `SpanButton(int pin, buttonType, uint16_t longTime=2000, uint16_t singleTime=5, uint16_t doubleTime=200)`
-    * this allows you to set the *pin* and *buttonType* while keeping the other parameters optional
+  * `SpanButton(int pin, boolean *triggerType(int), uint16_t longTime=2000, uint16_t singleTime=5, uint16_t doubleTime=200)`
+    * this allows you to set the *pin* and *triggerType* while keeping the other parameters optional
  
 Trigger Rules:
 * If button is pressed and continuously held, a Long Press will be triggered every longTime ms until the button is released
