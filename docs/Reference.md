@@ -351,7 +351,7 @@ This is a **base class** from which all HomeSpan Characteristics are derived, an
   * returns a pointer to the Characteristic itself so that the method can be chained during instantiation
   * example: `(new Characteristic::RotationSpeed())->setUnit("percentage");`
 
-### *SpanButton(int pin, uint16_t longTime, uint16_t singleTime, uint16_t doubleTime, buttonType)*
+### *SpanButton(int pin, uint16_t longTime, uint16_t singleTime, uint16_t doubleTime, boolean (\*triggerType)(int))*
 
 Creating an instance of this **class** attaches a pushbutton handler to the ESP32 *pin* specified.
 
@@ -364,22 +364,28 @@ The first argument is required; the rest are optional:
 * *longTime* - the minimum time (in millis) required for the button to be pressed and held to trigger a Long Press (default=2000 ms)
 * *singleTime* - the minimum time (in millis) required for the button to be pressed to trigger a Single Press (default=5 ms)
 * *doubleTime* -  the maximum time (in millis) allowed between two Single Presses to qualify as a Double Press (default=200 ms)
-* *buttonType* - specifies the type of pushbutton.  Choices are:
-  * `PushButton::GROUNDED` - a button that connects *pin* to GROUND when pushed (this is the default)
-  * `PushButton::POWERED` - a button that connects *pin* to +3.3V when pushed
-  * `PushButton::TOUCH`- a button that is connected to a touch sensor (not available on ESP32-C3)
-
-A second form of *SpanButton()* is provided for convenience:
-  * `SpanButton(int pin, buttonType, uint16_t longTime=2000, uint16_t singleTime=5, uint16_t doubleTime=200)`
-    * this allows you to set the *pin* and *buttonType* while keeping the other parameters optional
+* *triggerType* - pointer to a boolean function that accepts a single *int* argument and returns `true` or `false` depending on whether or not a "press" has been triggered on the *pin* number passed to the *int* argument.  For ease of use, you may simply choose from the following built-in functions:
+  * `SpanButton::TRIGGER_ON_LOW` - triggers when *pin* is driven LOW.  Suitable for buttons that connect *pin* to GROUND (this is the default when *triggerType* is not specified)
  
-Trigger Rules:
+  * `SpanButton::TRIGGER_ON_HIGH` - triggers when *pin* is driven HIGH.  Suitable for buttons that connect *pin* to VCC (typically 3.3V)
+  * `SpanButton::TRIGGER_ON_TOUCH`- uses the device's touch-sensor peripheral to trigger when a sensor attached to *pin* has been touched (not available on ESP32-C3 devices)
+ 
+When any of these built-in functions are selected (or *triggerType* is left unspecified and the default is used), SpanButton will automatically configure the *pin* as needed upon instantiation.
+ 
+Alternatively, you can set *triggerType* to any user-defined function of the form `boolean(int arg)` and provide your own logic for determining whether a trigger has occured on the specified *pin*, which is passed through to your function as *arg*. In this case *arg* can either represent an actual device pin, or simply be an arbitrary *int* your function utilizes, such as the virtual pin number on a multiplexer.  Note: if you specify your own function for *triggerType* you also must include in your sketch any code needed to initialize the logic or configure whatever resource *triggerType* is utilizing (such as a pin multiplexer).
+
+For convenience, a second form of the *SpanButton()* constructor is also provided:
+  * `SpanButton(int pin, boolean (*triggerType)(int), uint16_t longTime=2000, uint16_t singleTime=5, uint16_t doubleTime=200)`
+    * this allows you to set just the *pin* and *triggerType* while leaving the remaining parameters at their default values
+ 
+#### Trigger Rules ###
 * If button is pressed and continuously held, a Long Press will be triggered every longTime ms until the button is released
 * If button is pressed for more than singleTime ms but less than longTime ms and then released, a Single Press will be triggered, UNLESS the button is pressed a second time within doubleTime ms AND held again for at least singleTime ms, in which case a DoublePress will be triggered;  no further events will occur until the button is released
 * If singleTime>longTime, only Long Press triggers can occur
 * If doubleTime=0, Double Presses cannot occur
-  
-HomeSpan automatically calls the `button(int pin, int pressType)` method of a Service upon a trigger event in any Button associated with that Service, where *pin* is the ESP32 pin to which the pushbutton is connected, and *pressType* is an integer that can also be represented by the enum constants indicated:
+ 
+#### Usage ####
+HomeSpan automatically calls the `button(int pin, int pressType)` method of a Service upon a trigger event in any SpanButton associated with that Service, where *pin* is the ESP32 pin to which the pushbutton is connected, and *pressType* is an integer that can also be represented by the enum constants indicated:
   * 0=single press (SpanButton::SINGLE)
   * 1=double press (SpanButton::DOUBLE)
   * 2=long press (SpanButton::LONG)  
@@ -388,9 +394,10 @@ HomeSpan will report a warning, but not an error, during initialization if the u
  
 When using one or more Touch Sensors, HomeSpan automatically calibrates the threshold at which they are triggered by polling the baseline sensor reading upon instantiation of first SpanButton of type `PushButton::TOUCH` found.  For ESP32 devices, the threshold is set to 50% of the baseline value since triggers occur when a sensor value falls *below* the threhold level.  For ESP32-S2 and ESP32-S3 devices, the threshold is set to 200% of the baseline value since triggers occur when a sensor value rises *above* the threhold level.  Normally HomeSpan's auto calibration will result in accurate detection of SINGLE, DOUBLE, and LONG presses of touch sensors.  However, if needed you can override the calibration and set your own threshold value using the following class-level method:
 
- * `void PushButton::setTouchThreshold(thresh)`
-   * sets the threshold value at which touch sensors are triggered to *thresh*, where *thresh* is either of type *uint16_t* (for ESP32 devices) or *uint32_t* (for ESP32-S2 and ESP32-S3 devices)
-   * the threshold specified is used for all SpanButton instances of type `PushButton::TOUCH`
+ * `void PushButton::setTouchThreshold(uintXX_t thresh)`
+   * sets the threshold value above (for ESP32 devices) or below (for ESP32-S2 and ESP32-S3 devices) which touch sensors are triggered to *thresh*
+   * *XX* is 16 (for ESP32 devices) or 32 (for ESP32-S2 and ESP32-S3 devices)
+   * the threshold specified is considered global and used for *all* SpanButton instances of type `PushButton::TOUCH`
    * this method can be called either before or after SpanButtons are created
  
 In addition, you can also override the ESP32's touch sensor timing parameters using the following class-level method:
