@@ -386,25 +386,25 @@ For convenience, a second form of the *SpanButton()* constructor is also provide
  
 #### Usage ####
 HomeSpan automatically calls the `button(int pin, int pressType)` method of a Service upon a trigger event in any SpanButton associated with that Service, where *pin* is the ESP32 pin to which the pushbutton is connected, and *pressType* is an integer that can also be represented by the enum constants indicated:
-  * 0=single press (SpanButton::SINGLE)
-  * 1=double press (SpanButton::DOUBLE)
-  * 2=long press (SpanButton::LONG)  
+  * 0=single press (`SpanButton::SINGLE`)
+  * 1=double press (`SpanButton::DOUBLE`)
+  * 2=long press (`SpanButton::LONG`)  
   
 HomeSpan will report a warning, but not an error, during initialization if the user had not overridden the virtual button() method for a Service contaning one or more Buttons; triggers of those Buttons will simply ignored.
  
-When using one or more Touch Sensors, HomeSpan automatically calibrates the threshold at which they are triggered by polling the baseline sensor reading upon instantiation of first SpanButton of type `PushButton::TOUCH` found.  For ESP32 devices, the threshold is set to 50% of the baseline value since triggers occur when a sensor value falls *below* the threhold level.  For ESP32-S2 and ESP32-S3 devices, the threshold is set to 200% of the baseline value since triggers occur when a sensor value rises *above* the threhold level.  Normally HomeSpan's auto calibration will result in accurate detection of SINGLE, DOUBLE, and LONG presses of touch sensors.  However, if needed you can override the calibration and set your own threshold value using the following class-level method:
+When using one or more Touch Sensors, HomeSpan automatically calibrates the threshold at which they are triggered by polling the baseline sensor reading upon instantiation of first SpanButton of type `SpanButton::TRIGGER_ON_TOUCH`.  For ESP32 devices, the threshold is set to 50% of the baseline value since triggers occur when a sensor value falls *below* the threhold level.  For ESP32-S2 and ESP32-S3 devices, the threshold is set to 200% of the baseline value since triggers occur when a sensor value rises *above* the threhold level.  Normally HomeSpan's auto calibration will result in accurate detection of SINGLE, DOUBLE, and LONG presses of touch sensors.  However, if needed you can override the calibration and set your own threshold value using the following class-level method:
 
- * `void PushButton::setTouchThreshold(uintXX_t thresh)`
+ * `void SpanButton::setTouchThreshold(uintXX_t thresh)`
    * sets the threshold value above (for ESP32 devices) or below (for ESP32-S2 and ESP32-S3 devices) which touch sensors are triggered to *thresh*
    * *XX* is 16 (for ESP32 devices) or 32 (for ESP32-S2 and ESP32-S3 devices)
-   * the threshold specified is considered global and used for *all* SpanButton instances of type `PushButton::TOUCH`
+   * the threshold specified is considered global and used for *all* SpanButton instances of type `SpanButton::TRIGGER_ON_TOUCH`
    * this method can be called either before or after SpanButtons are created
  
 In addition, you can also override the ESP32's touch sensor timing parameters using the following class-level method:
 
-* `void PushButton::setTouchCycles(uint16_t measureTime, uint16_t sleepTime)`
+* `void SpanButton::setTouchCycles(uint16_t measureTime, uint16_t sleepTime)`
   * changes the measurement time and sleep time clock cycles to *measureTime* and *sleepTime*, respectively.  This is simply a pass-though call to the Arduino-ESP32 library `touchSetCycles()` function
-  * this method should be called *before* instantiating the first SpanButton() of type `PushButton::TOUCH` so that HomeSpan will calibrate the touch threshold based on the new timing parameters specified
+  * unless a specific threshold value has been set with `setTouchThreshold()`, `setTouchCycles()` must be called *before* instantiating the first SpanButton() of type `SpanButton::TRIGGER_ON_TOUCH` so that HomeSpan will calibrate the touch threshold based on the new timing parameters specified
 
 ### *SpanUserCommand(char c, const char \*desc, void (\*f)(const char \*buf [,void \*obj]) [,void \*userObject])*
 
