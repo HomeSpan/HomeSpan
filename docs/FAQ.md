@@ -28,10 +28,6 @@
 
 * No, HomeSpan is coded specifically for the ESP32 and will not operate on an ESP8266 device.
 
-#### Will HomeSpan work on an ESP32-S2 or ESP32-C3?
-
-* Yes!  Starting with version 1.4.0, HomeSpan is fully compatible with Espressif's ESP32-S2 and ESP32-C3 chips, as well as the original ESP32 chip. Note that to select an ESP32-S2 or ESP32-C3 device from the Arduino IDE you'll need to install Version 2 of the [Arduino-ESP32 Board Manager](https://github.com/espressif/arduino-esp32).
-
 #### How can I read HomeSpan's MDNS broadcast mentioned in the [OTA](OTA.md) documentation?
 
 * HomeSpan uses MDNS (multicast DNS) to broadcast a variety of HAP information used by Controllers wishing to pair with HomeSpan.  Apple uses the name *Bonjour* to refer to MDNS, and originally included a Bonjour "Browser" in Safari that has since been discontinued.  However, there are a number of alternative MDNS browsers available for free that operate on both the Mac and the iPhone, such as the [Discovery - DNS-SD Browser](https://apps.apple.com/us/app/discovery-dns-sd-browser/id1381004916?mt=12).  You'll find all your HomeSpan devices, as well as any other HomeKit devices you may have, under the MDNS service named *_hap._tcp.*  The fields broadcast by HomeSpan are a combination of all data elements requires by HAP (HAP-R2, Table 6-7) plus three additional HomeSpan fields:
@@ -54,7 +50,7 @@
 
 #### Can you add a Web Server to HomeSpan?
 
-* Yes, provided you implement your Web Server using standard ESP32-Arduino libraries, such as `WebServer.h`. See [ProgrammableHub](https://github.com/HomeSpan/ProgrammableHub) for an illustrative example of how to easily integrate a Web Server into HomeSpan.  This project also covers various other advanced topics, including TCP slot management, dynamic creation of Accessories, and saving arbitrary data in the ESP32's NVS.
+* Yes, provided you implement your Web Server using standard ESP32-Arduino libraries, such as `WebServer.h`. See [ProgrammableHub](../Other%20Examples/ProgrammableHub) for an illustrative example of how to easily integrate a Web Server into HomeSpan.  This project also covers various other advanced topics, including TCP slot management, dynamic creation of Accessories, and saving arbitrary data in the ESP32's NVS.
 
 #### Can you add *custom* Services and Characteristics to HomeSpan?
 
