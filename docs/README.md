@@ -52,71 +52,33 @@ HomeSpan requires version 2.0.0 or later of the [Arduino-ESP32 Board Manager](ht
 * **Support for ESP32-S3 devices**
   * Requires Arduino-ESP32 Board Manager version 2.0.4 or later
   
-* **New functionality to *dynamically* add/delete Accessories on the fly *without* rebooting the device**
+* **New functionality to *dynamically* add/delete Accessories on the fly without rebooting the device**
   * Adds `homeSpan.deleteAccessory()` and `homeSpan.updateDatabase()` methods
-  * Refactored the HomeSpan Info 'i' CLI command to reflect all dynamic database changes
+  * Includes new [Example 20 - AdvancedTechniques](https://github.com/HomeSpan/HomeSpan/blob/master/examples/20-AdvancedTechniques) to demonstrate how these methods can be used to create a dynamic bridge
   * See [HomeSpan API Reference](https://github.com/HomeSpan/HomeSpan/blob/master/docs/Reference.md) for details
   
-* **Expanded *SpanButton()* functionality**
-  * Now includes integrated support for pins connected to *touch pads*!
-  * Extends logic to include physical pushbuttons that connect pins to *VCC* as well as *ground*
-  * Allows users to easily add their own logic to use pin extenders, pin multiplexers, or any "pushbutton" device that requires calling additional methods
+* **New support for Touch Pads**
+  * `SpanButton()` now supports three pin trigger methods: *TRIGGER_ON_LOW*, *TRIGGER_ON_HIGH*, and *TRIGGER_ON_TOUCH*
+  * Also allows users to add their own trigger methods so `SpanButton()` can monitor pushbuttons attached to pin extenders, pin multiplexers, or any other device that requires calling third-party library functions
   * See [HomeSpan API Reference](https://github.com/HomeSpan/HomeSpan/blob/master/docs/Reference.md) for details
 
-* **Improved WiFi disconnect/reconnect handling
+* **Improved WiFi disconnect/reconnect handling**
   * Fixes code that may, under certain circumstances, have prevented HomeSpan from reconnecting to WiFi after signal is lost
-  * Adds WiFi diagnostics to Web Logs, including a record of each WiFi disconnect/reconnect, the total number of disconnects since booting, and WiFi signal strength
+  * Adds WiFi diagnostics to Web Logs to monitor for disconnects and WiFi signal strength
   
-* **New *experimental* multi-threading
-  * Adds new method `homeSpan.autoPoll()` that runs HomeSpan polling in a separate task thread
+* **New option to run HomeSpan as a separate task in its own thread**
   * Works with both single- and dual-core processors
   * For dual-core processors, polling task will be created on the "free" core not being used for other Arduino functions
   * Allows user to add time-sensitive code the the main Arduino `loop()` function without delaying, or being dalyed by, HomeSpan polling
   * See [HomeSpan API Reference](https://github.com/HomeSpan/HomeSpan/blob/master/docs/Reference.md) for details
-
-* **Created new [Example 20 - AdvancedTechniques](https://github.com/HomeSpan/HomeSpan/blob/master/examples/20-AdvancedTechniques)**
-  * Demonstrates how the `homeSpan.deleteAccessory()` and `homeSpan.updateDatabase()` methods can be used to create a bridge device that can be dynamically updated without the need to reboot HomeSpan
-  * Also included the `homeSpan.autoPoll()` method to show how it can be used in place calling `homeSpan.poll()` from the main Arduino `loop()` method
   
-* **Created new [Programmable Hub Example](https://github.com/HomeSpan/HomeSpan/blob/master/Other%20Examples/ProgrammableHub)
-  * Demonstrates how to implement a complete Web Interface to dynamically add/delete Light Accessories to a bridge accessory
+* **New [Programmable Hub](https://github.com/HomeSpan/HomeSpan/blob/master/Other%20Examples/ProgrammableHub) Example**
+  * Demonstrates how to implement a Web Interface that allows users to dynamically add, delete, and configure up to 12 separate Light Accessories on a bridge device
   * Expands upon many of the methods used in [Example 20](https://github.com/HomeSpan/HomeSpan/blob/master/examples/20-AdvancedTechniques)
   
-* **Other Updates:**
+* **Additional updates include:**
   * New 'm' CLI command that prints free bytes remaining in heap memory - useful for monitoring memory usage when dynamically adding Accessories
   * New `homeSpan.getLogLevel()` method that returns the current log level
-  * Converted all HomeSpan API objects (*Span, SpanAccessory, SpanService, SpanButton*...) from C++ *struct* to C++ *class* allowing proper separation of public, protected, and private members and methods
-  
-  
-
-
-
-* **New Web Logging functionality**
-  * HomeSpan can now host a Web Log page for message logging
-  * New WEBLOG() macro makes is easy to create user-defined log messages
-  * Provides for the optional use of an NTP Time Server to set the device clock so all messages can be properly timestamped
-  * See [HomeSpan Message Logging](https://github.com/HomeSpan/HomeSpan/blob/master/docs/Logging.md) for full details
-
-* **New *printf*-style formatting for LOG() macros**
-  * Adds variadic forms of the LOG0(), LOG1(), and LOG2() macros so they can be used in the same manner as a standard C printf function
-  * Greatly simplifies the creation of log messages 
-  * See [HomeSpan Message Logging](https://github.com/HomeSpan/HomeSpan/blob/master/docs/Logging.md) for full details
-
-* **New CUSTOM_SERV() macro**
-  * Allows for the creation of Custom Services
-  * Can be used in conjunction with the existing CUSTOM_CHAR() macro to produce Services beyond those provided in HAP-R2
-  * Includes a fully worked example of a custom [Pressure Sensor Accessory](https://github.com/HomeSpan/HomeSpan/blob/master/Other%20Examples/CustomService) that is recognized by *Eve for HomeKit*
-  * See [HomeSpan API Reference](https://github.com/HomeSpan/HomeSpan/blob/master/docs/Reference.md) for details
-
-* **New "Safe-Load" mode for OTA updates**
-  * HomeSpan can check to make sure the new sketch being uploaded via OTA is another HomeSpan sketch.  If not, the upload fails
-  * Upon rebooting after an OTA update, HomeSpan checks to ensure that OTA is enabled in the updated sketch.  If not, HomeSpan rolls back to the previous version of the sketch
-  * See [HomeSpan OTA](https://github.com/HomeSpan/HomeSpan/blob/master/docs/OTA.md) for full details
-  
-* **Additional updates include:**
-  * a new (optional) argument to `SpanUserCommand()` that allows for passing a pointer to any arbitrary data structure
-  * a new SPAN_ACCESSORY() macro that expands to a common snippet of code often used when creating Accessories 
-  * refreshed and streamlined example Tutorials, and fully reworked Examples 7 and 11, to best conform with Home App behavior under iOS 15.4
 
 See [Releases](https://github.com/HomeSpan/HomeSpan/releases) for details on all changes and bug fixes included in this update.
 
