@@ -31,7 +31,7 @@
 
 RFControl::RFControl(uint8_t pin, boolean refClock, boolean installDriver){
 
-#ifdef CONFIG_IDF_TARGET_ESP32C3
+#if defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32S3)
   if(nChannels==RMT_CHANNEL_MAX/2){
 #else
   if(nChannels==RMT_CHANNEL_MAX){
@@ -52,6 +52,7 @@ RFControl::RFControl(uint8_t pin, boolean refClock, boolean installDriver){
   config->mem_block_num=1;
   config->gpio_num=(gpio_num_t)pin;
   config->tx_config.idle_output_en=false;
+  config->tx_config.idle_level=RMT_IDLE_LEVEL_LOW;
   config->tx_config.loop_en=false;
 
   rmt_config(config);
@@ -64,8 +65,8 @@ RFControl::RFControl(uint8_t pin, boolean refClock, boolean installDriver){
   this->refClock=refClock;
   
   if(refClock)
-#ifdef CONFIG_IDF_TARGET_ESP32C3
-  REG_SET_FIELD(RMT_SYS_CONF_REG,RMT_SCLK_DIV_NUM,79);        // ESP32-C3 does not have a 1 MHz REF Tick Clock, but allows the 80 MHz APB clock to be scaled by an additional RMT-specific divider
+#ifdef RMT_SYS_CONF_REG
+  REG_SET_FIELD(RMT_SYS_CONF_REG,RMT_SCLK_DIV_NUM,79);        // ESP32-C3 and ESP32-S3 do not have a 1 MHz REF Tick Clock, but allows the 80 MHz APB clock to be scaled by an additional RMT-specific divider
 #else  
   rmt_set_source_clk(config->channel,RMT_BASECLK_REF);        // use 1 MHz REF Tick Clock for ESP32 and ESP32-S2
 #endif

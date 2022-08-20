@@ -59,7 +59,6 @@ void Span::begin(Category catID, const char *displayName, const char *hostNameBa
 
   esp_task_wdt_delete(xTaskGetIdleTaskHandleForCPU(0));       // required to avoid watchdog timeout messages from ESP32-C3
 
-  controlButton.init(controlPin);
   statusLED.init(statusPin,0,autoOffLED);
 
   if(requestedMaxCon<maxConnections)                          // if specific request for max connections is less than computed max connections
@@ -105,8 +104,8 @@ void Span::begin(Category catID, const char *displayName, const char *hostNameBa
   else
     Serial.print("-  *** WARNING: Status LED Pin is UNDEFINED");
   Serial.print("\nDevice Control:   Pin ");
-  if(controlPin>=0)
-    Serial.print(controlPin);
+  if(getControlPin()>=0)
+    Serial.print(getControlPin());
   else
     Serial.print("-  *** WARNING: Device Control Pin is UNDEFINED");
   Serial.print("\nSketch Version:   ");
@@ -159,42 +158,29 @@ void Span::begin(Category catID, const char *displayName, const char *hostNameBa
 
 void Span::poll() {
 
+  if(pollTaskHandle){
+    Serial.print("\n** FATAL ERROR: Do not call homeSpan.poll() directly if homeSpan.start() is used!\n** PROGRAM HALTED **\n\n");
+    vTaskDelete(pollTaskHandle);
+    while(1);    
+  }
+  
+  pollTask();
+}
+
+///////////////////////////////
+
+void Span::pollTask() {
+
   if(!strlen(category)){
-    Serial.print("\n** FATAL ERROR: Cannot run homeSpan.poll() without an initial call to homeSpan.begin()!\n** PROGRAM HALTED **\n\n");
+    Serial.print("\n** FATAL ERROR: Cannot start homeSpan polling without an initial call to homeSpan.begin()!\n** PROGRAM HALTED **\n\n");
     while(1);    
   }
 
   if(!isInitialized){
   
-    if(!homeSpan.Accessories.empty()){
-      
-      if(!homeSpan.Accessories.back()->Services.empty())
-        homeSpan.Accessories.back()->Services.back()->validate();    
-        
-      homeSpan.Accessories.back()->validate();    
-    }
-
-    checkRanges();
-
-    if(nWarnings>0){
-      configLog+="\n*** CAUTION: There " + String((nWarnings>1?"are ":"is ")) + String(nWarnings) + " WARNING" + (nWarnings>1?"S":"") + " associated with this configuration that may lead to the device becoming non-responsive, or operating in an unexpected manner. ***\n";
-    }
-
     processSerialCommand("i");        // print homeSpan configuration info
-   
-    if(nFatalErrors>0){
-      Serial.print("\n*** PROGRAM HALTED DUE TO ");
-      Serial.print(nFatalErrors);
-      Serial.print(" FATAL ERROR");
-      if(nFatalErrors>1)
-        Serial.print("S");
-      Serial.print(" IN CONFIGURATION! ***\n\n");
-      while(1);
-    }    
-
-    Serial.print("\n");
-        
-    HAPClient::init();        // read NVS and load HAP settings  
+           
+    HAPClient::init();                // read NVS and load HAP settings  
 
     if(!strlen(network.wifiData.ssid)){
       Serial.print("*** WIFI CREDENTIALS DATA NOT FOUND.  ");
@@ -209,7 +195,8 @@ void Span::poll() {
       homeSpan.statusLED.start(LED_WIFI_CONNECTING);
     }
           
-    controlButton.reset();        
+    if(controlButton)
+      controlButton->reset();        
 
     Serial.print(displayName);
     Serial.print(" is READY!\n\n");
@@ -221,10 +208,10 @@ void Span::poll() {
       checkConnect();
   }
 
-  char cBuf[17]="?";
+  char cBuf[65]="?";
   
   if(Serial.available()){
-    readSerial(cBuf,16);
+    readSerial(cBuf,64);
     processSerialCommand(cBuf);
   }
 
@@ -289,22 +276,28 @@ void Span::poll() {
     } // process HAP Client 
   } // for-loop over connection slots
 
-  HAPClient::callServiceLoops();
-  HAPClient::checkPushButtons();
+  snapTime=millis();                                     // snap the current time for use in ALL loop routines
+  
+  for(auto it=Loops.begin();it!=Loops.end();it++)                 // call loop() for all Services with over-ridden loop() methods
+    (*it)->loop();                           
+
+  for(auto it=PushButtons.begin();it!=PushButtons.end();it++)     // check for SpanButton presses
+    (*it)->check();
+    
   HAPClient::checkNotifications();  
   HAPClient::checkTimedWrites();
 
   if(spanOTA.enabled)
     ArduinoOTA.handle();
 
-  if(controlButton.primed()){
+  if(controlButton && controlButton->primed()){
     statusLED.start(LED_ALERT);
   }
   
-  if(controlButton.triggered(3000,10000)){
+  if(controlButton && controlButton->triggered(3000,10000)){
     statusLED.off();
-    if(controlButton.type()==PushButton::LONG){
-      controlButton.wait();
+    if(controlButton->type()==PushButton::LONG){
+      controlButton->wait();
       processSerialCommand("F");        // FACTORY RESET
     } else {
       commandMode();                    // COMMAND MODE
@@ -348,8 +341,8 @@ void Span::commandMode(){
       statusLED.start(LED_ALERT);
       delay(2000);
     } else
-    if(controlButton.triggered(10,3000)){
-      if(controlButton.type()==PushButton::SINGLE){
+    if(controlButton->triggered(10,3000)){
+      if(controlButton->type()==PushButton::SINGLE){
         mode++;
         if(mode==6)
           mode=1;
@@ -361,7 +354,7 @@ void Span::commandMode(){
   } // while
 
   statusLED.start(LED_ALERT);
-  controlButton.wait();
+  controlButton->wait();
   
   switch(mode){
 
@@ -401,12 +394,12 @@ void Span::commandMode(){
 
 void Span::checkConnect(){
 
-  if(connected){
+  if(connected%2){
     if(WiFi.status()==WL_CONNECTED)
       return;
       
-    Serial.print("\n\n*** WiFi Connection Lost!\n");      // losing and re-establishing connection has not been tested
-    connected=false;
+    addWebLog(true,"*** WiFi Connection Lost!");      // losing and re-establishing connection has not been tested
+    connected++;
     waitTime=60000;
     alarmConnect=0;
     homeSpan.statusLED.start(LED_WIFI_CONNECTING);
@@ -427,11 +420,7 @@ void Span::checkConnect(){
       Serial.print(".  You may type 'W <return>' to re-configure WiFi, or 'X <return>' to erase WiFi credentials.  Will try connecting again in 60 seconds.\n\n");
       waitTime=60000;
     } else {    
-      Serial.print("Trying to connect to ");
-      Serial.print(network.wifiData.ssid);
-      Serial.print(".  Waiting ");
-      Serial.print(waitTime/1000);
-      Serial.print(" second(s) for response...\n");
+      addWebLog(true,"Trying to connect to %s.  Waiting %d sec...",network.wifiData.ssid,waitTime/1000);
       WiFi.begin(network.wifiData.ssid,network.wifiData.pwd);
     }
 
@@ -440,14 +429,18 @@ void Span::checkConnect(){
     return;
   }
 
-  connected=true;
+  if(!HAPClient::nAdminControllers())
+    statusLED.start(LED_PAIRING_NEEDED);
+  else
+    statusLED.on();
+  
+  connected++;
 
-  Serial.print("Successfully connected to ");
-  Serial.print(network.wifiData.ssid);
-  Serial.print("! IP Address: ");
-  Serial.print(WiFi.localIP());
-  Serial.print("\n");
+  addWebLog(true,"WiFi Connected!  IP Address = %s\n",WiFi.localIP().toString().c_str());
 
+  if(connected>1)                           // Do not initialize everything below if this is only a reconnect
+    return;
+    
   char id[18];                              // create string version of Accessory ID for MDNS broadcast
   memcpy(id,HAPClient::accessory.ID,17);    // copy ID bytes
   id[17]='\0';                              // add terminating null
@@ -540,7 +533,6 @@ void Span::checkConnect(){
       ArduinoOTA.onStart(spanOTA.start).onEnd(spanOTA.end).onProgress(spanOTA.progress).onError(spanOTA.error);  
       
       ArduinoOTA.begin();
-      reserveSocketConnections(1);
       Serial.print("Starting OTA Server: ");
       Serial.print(displayName);
       Serial.print(" at ");
@@ -568,12 +560,8 @@ void Span::checkConnect(){
 
   Serial.print("\n");
 
-  if(!HAPClient::nAdminControllers()){
+  if(!HAPClient::nAdminControllers())
     Serial.print("DEVICE NOT YET PAIRED -- PLEASE PAIR WITH HOMEKIT APP\n\n");
-    statusLED.start(LED_PAIRING_NEEDED);
-  } else {
-    statusLED.on();
-  }
   
   if(wifiCallback)
     wifiCallback();
@@ -912,14 +900,128 @@ void Span::processSerialCommand(const char *c){
     }
     break;
 
+    case 'm': {
+      Serial.printf("Free Memory: %d bytes\n",heap_caps_get_free_size(MALLOC_CAP_DEFAULT));  
+    }
+    break;       
+
     case 'i':{
 
       Serial.print("\n*** HomeSpan Info ***\n\n");
 
-      Serial.print(configLog);
-      Serial.print("\nConfigured as Bridge: ");
-      Serial.print(homeSpan.isBridge?"YES":"NO");
-      Serial.print("\n\n");
+      int nErrors=0;
+      int nWarnings=0;
+      
+      unordered_set<uint32_t> aidValues;
+      char pNames[][7]={"PR","PW","EV","AA","TW","HD","WR"};
+
+      for(auto acc=Accessories.begin(); acc!=Accessories.end(); acc++){
+        Serial.printf("\u27a4 Accessory:  AID=%d\n",(*acc)->aid);
+        boolean foundInfo=false;
+
+        if(acc==Accessories.begin() && (*acc)->aid!=1)
+          Serial.printf("   *** ERROR!  AID of first Accessory must always be 1 ***\n",nErrors++);
+
+        if(aidValues.find((*acc)->aid)!=aidValues.end())
+          Serial.printf("   *** ERROR!  AID already in use for another Accessory ***\n",nErrors++);
+        
+        aidValues.insert((*acc)->aid);
+
+        for(auto svc=(*acc)->Services.begin(); svc!=(*acc)->Services.end(); svc++){
+          Serial.printf("   \u279f Service %s:  IID=%d, %sUUIS=\"%s\"",(*svc)->hapName,(*svc)->iid,(*svc)->isCustom?"Custom-":"",(*svc)->type);
+          Serial.printf("\n");
+
+          if(!strcmp((*svc)->type,"3E")){
+            foundInfo=true;
+            if((*svc)->iid!=1)
+              Serial.printf("     *** ERROR!  The Accessory Information Service must be defined before any other Services in an Accessory ***\n",nErrors++);
+          }
+          else if((*acc)->aid==1)            // this is an Accessory with aid=1, but it has more than just AccessoryInfo.  So...
+            isBridge=false;                  // ...this is not a bridge device          
+
+          unordered_set<HapChar *> hapChar;
+        
+          for(auto chr=(*svc)->Characteristics.begin(); chr!=(*svc)->Characteristics.end(); chr++){
+            Serial.printf("      \u21e8 Characteristic %s(%s):  IID=%d, %sUUID=\"%s\", %sPerms=",
+              (*chr)->hapName,(*chr)->uvPrint((*chr)->value).c_str(),(*chr)->iid,(*chr)->isCustom?"Custom-":"",(*chr)->type,(*chr)->perms!=(*chr)->hapChar->perms?"Custom-":"");
+
+            int foundPerms=0;
+            for(uint8_t i=0;i<7;i++){
+              if((*chr)->perms & (1<<i))
+                Serial.printf("%s%s",(foundPerms++)?"+":"",pNames[i]);
+            }           
+            
+            if((*chr)->format!=FORMAT::STRING && (*chr)->format!=FORMAT::BOOL){
+              if((*chr)->validValues)
+                Serial.printf(", Valid Values=%s",(*chr)->validValues);
+              else if((*chr)->uvGet<double>((*chr)->stepValue)>0)
+                Serial.printf(", %sRange=[%s,%s,%s]",(*chr)->customRange?"Custom-":"",(*chr)->uvPrint((*chr)->minValue).c_str(),(*chr)->uvPrint((*chr)->maxValue).c_str(),(*chr)->uvPrint((*chr)->stepValue).c_str());
+              else
+                Serial.printf(", %sRange=[%s,%s]",(*chr)->customRange?"Custom-":"",(*chr)->uvPrint((*chr)->minValue).c_str(),(*chr)->uvPrint((*chr)->maxValue).c_str());
+            }
+            
+            if((*chr)->nvsKey)
+              Serial.printf(" (nvs)");
+            Serial.printf("\n");        
+            
+            if(!(*chr)->isCustom && !(*svc)->isCustom  && (*svc)->req.find((*chr)->hapChar)==(*svc)->req.end() && (*svc)->opt.find((*chr)->hapChar)==(*svc)->opt.end())
+              Serial.printf("          *** WARNING!  Service does not support this Characteristic ***\n",nWarnings++);
+            else
+            if(invalidUUID((*chr)->type,(*chr)->isCustom))
+              Serial.printf("          *** ERROR!  Format of UUID is invalid ***\n",nErrors++);
+            else       
+            if(hapChar.find((*chr)->hapChar)!=hapChar.end())
+              Serial.printf("          *** ERROR!  Characteristic already defined for this Service ***\n",nErrors++);
+
+            if((*chr)->setRangeError)
+              Serial.printf("          *** WARNING!  Attempt to set Custom Range for this Characteristic ignored ***\n",nWarnings++);
+
+            if((*chr)->setValidValuesError)
+              Serial.printf("          *** WARNING!  Attempt to set Custom Valid Values for this Characteristic ignored ***\n",nWarnings++);
+
+            if((*chr)->format!=STRING && ((*chr)->uvGet<double>((*chr)->value) < (*chr)->uvGet<double>((*chr)->minValue) || (*chr)->uvGet<double>((*chr)->value) > (*chr)->uvGet<double>((*chr)->maxValue)))
+              Serial.printf("          *** WARNING!  Value of %llg is out of range [%llg,%llg] ***\n",(*chr)->uvGet<double>((*chr)->value),(*chr)->uvGet<double>((*chr)->minValue),(*chr)->uvGet<double>((*chr)->maxValue),nWarnings++);
+
+            hapChar.insert((*chr)->hapChar);
+          
+          } // Characteristics
+
+          for(auto req=(*svc)->req.begin(); req!=(*svc)->req.end(); req++){
+            if(hapChar.find(*req)==hapChar.end())
+              Serial.printf("          *** WARNING!  Required '%s' Characteristic for this Service not found ***\n",(*req)->hapName,nWarnings++);
+          }
+
+          for(auto button=PushButtons.begin(); button!=PushButtons.end(); button++){
+            if((*button)->service==(*svc)){
+              Serial.printf("      \u25bc SpanButton: Pin=%d, Single=%ums, Double=%ums, Long=%ums, Type=",(*button)->pin,(*button)->singleTime,(*button)->doubleTime,(*button)->longTime);
+              if((*button)->triggerType==PushButton::TRIGGER_ON_LOW)
+                Serial.printf("TRIGGER_ON_LOW\n");
+              else if((*button)->triggerType==PushButton::TRIGGER_ON_HIGH)
+                Serial.printf("TRIGGER_ON_HIGH\n");
+
+#if SOC_TOUCH_SENSOR_NUM > 0
+              else if((*button)->triggerType==PushButton::TRIGGER_ON_TOUCH)
+                Serial.printf("TRIGGER_ON_TOUCH\n");
+#endif
+              else
+                Serial.printf("USER-DEFINED\n");
+              
+              if((void(*)(int,int))((*svc)->*(&SpanService::button))==(void(*)(int,int))(&SpanService::button))
+                Serial.printf("          *** WARNING!  No button() method defined in this Service ***\n",nWarnings++);
+            }
+          }
+          
+        } // Services
+        
+        if(!foundInfo)
+          Serial.printf("   *** ERROR!  Required 'AccessoryInformation' Service not found ***\n",nErrors++);
+          
+      } // Accessories
+      
+      Serial.printf("\nConfigured as Bridge: %s\n",isBridge?"YES":"NO");
+      if(hapConfig.configNumber>0)
+        Serial.printf("Configuration Number: %d\n",hapConfig.configNumber);
+      Serial.printf("\nDatabase Validation:  Warnings=%d, Errors=%d\n\n",nWarnings,nErrors);    
 
       char d[]="------------------------------";
       Serial.printf("%-30s  %8s  %10s  %s  %s  %s  %s  %s\n","Service","UUID","AID","IID","Update","Loop","Button","Linked Services");
@@ -942,7 +1044,7 @@ void Span::processSerialCommand(const char *c){
           Serial.print("\n");
         }
       }
-      Serial.print("\n*** End Info ***\n");
+      Serial.print("\n*** End Info ***\n\n");
     }
     break;
 
@@ -952,13 +1054,14 @@ void Span::processSerialCommand(const char *c){
       Serial.print("  s - print connection status\n");
       Serial.print("  i - print summary information about the HAP Database\n");
       Serial.print("  d - print the full HAP Accessory Attributes Database in JSON format\n");
+      Serial.print("  m - print free heap memory\n");
       Serial.print("\n");      
       Serial.print("  W - configure WiFi Credentials and restart\n");      
       Serial.print("  X - delete WiFi Credentials and restart\n");      
       Serial.print("  S <code> - change the HomeKit Pairing Setup Code to <code>\n");
       Serial.print("  Q <id> - change the HomeKit Setup ID for QR Codes to <id>\n");
       Serial.print("  O - change the OTA password\n");
-      Serial.print("  A - start the HomeSpan Setup Access Point\n");      
+      Serial.print("  A - start the HomeSpan Setup Access Point\n");
       Serial.print("\n");      
       Serial.print("  V - delete value settings for all saved Characteristics\n");
       Serial.print("  U - unpair device by deleting all Controller data\n");
@@ -1017,14 +1120,14 @@ void Span::setWifiCredentials(const char *ssid, const char *pwd){
 
 ///////////////////////////////
 
-int Span::sprintfAttributes(char *cBuf){
+int Span::sprintfAttributes(char *cBuf, int flags){
 
   int nBytes=0;
 
   nBytes+=snprintf(cBuf,cBuf?64:0,"{\"accessories\":[");
 
   for(int i=0;i<Accessories.size();i++){
-    nBytes+=Accessories[i]->sprintfAttributes(cBuf?(cBuf+nBytes):NULL);    
+    nBytes+=Accessories[i]->sprintfAttributes(cBuf?(cBuf+nBytes):NULL,flags);    
     if(i+1<Accessories.size())
       nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",");
     }
@@ -1075,6 +1178,21 @@ void Span::prettyPrint(char *buf, int nsp){
 
   Serial.print("\n");
 } // prettyPrint
+
+
+///////////////////////////
+
+boolean Span::deleteAccessory(uint32_t n){
+  
+  auto it=homeSpan.Accessories.begin();
+  for(;it!=homeSpan.Accessories.end() && (*it)->aid!=n; it++);
+  
+  if(it==homeSpan.Accessories.end())
+    return(false);
+
+  delete *it;
+  return(true);
+}
 
 ///////////////////////////////
 
@@ -1275,7 +1393,7 @@ int Span::sprintfNotify(SpanBuf *pObj, int nObj, char *cBuf, int conNum){
         if(notifyFlag)                                                           // already printed at least one other characteristic
           nChars+=snprintf(cBuf?(cBuf+nChars):NULL,cBuf?64:0,",");               // add preceeding comma before printing next characteristic
         
-        nChars+=pObj[i].characteristic->sprintfAttributes(cBuf?(cBuf+nChars):NULL,GET_AID+GET_NV);    // get JSON attributes for characteristic
+        nChars+=pObj[i].characteristic->sprintfAttributes(cBuf?(cBuf+nChars):NULL,GET_VALUE|GET_AID|GET_NV);    // get JSON attributes for characteristic
         notifyFlag=true;
         
       } // notification requested
@@ -1364,33 +1482,42 @@ int Span::sprintfAttributes(char **ids, int numIDs, int flags, char *cBuf){
 
 ///////////////////////////////
 
-void Span::checkRanges(){
+boolean Span::updateDatabase(boolean updateMDNS){
 
-  boolean okay=true;
-  homeSpan.configLog+="\nRange Check:";
-  
-  for(int i=0;i<Accessories.size();i++){
-    for(int j=0;j<Accessories[i]->Services.size();j++){
-      for(int k=0;k<Accessories[i]->Services[j]->Characteristics.size();k++){
-        SpanCharacteristic *chr=Accessories[i]->Services[j]->Characteristics[k];
+  uint8_t tHash[48];
+  TempBuffer <char> tBuf(sprintfAttributes(NULL,GET_META|GET_PERMS|GET_TYPE|GET_DESC)+1);
+  sprintfAttributes(tBuf.buf,GET_META|GET_PERMS|GET_TYPE|GET_DESC);  
+  mbedtls_sha512_ret((uint8_t *)tBuf.buf,tBuf.len(),tHash,1);     // create SHA-384 hash of JSON (can be any hash - just looking for a unique key)
 
-        if(chr->format!=STRING && (chr->uvGet<double>(chr->value) < chr->uvGet<double>(chr->minValue) || chr->uvGet<double>(chr->value) > chr->uvGet<double>(chr->maxValue))){
-          char c[256];
-          sprintf(c,"\n  \u2718 Characteristic %s with AID=%d, IID=%d: Initial value of %lg is out of range [%llg,%llg]",
-                chr->hapName,chr->aid,chr->iid,chr->uvGet<double>(chr->value),chr->uvGet<double>(chr->minValue),chr->uvGet<double>(chr->maxValue));
-          if(okay)
-            homeSpan.configLog+="\n";
-          homeSpan.configLog+=c;
-          homeSpan.nWarnings++;
-          okay=false;
-        }       
-      }
+  boolean changed=false;
+
+  if(memcmp(tHash,hapConfig.hashCode,48)){           // if hash code of current HAP database does not match stored hash code
+    memcpy(hapConfig.hashCode,tHash,48);             // update stored hash code
+    hapConfig.configNumber++;                        // increment configuration number
+    if(hapConfig.configNumber==65536)                // reached max value
+      hapConfig.configNumber=1;                      // reset to 1
+                   
+    nvs_set_blob(HAPClient::hapNVS,"HAPHASH",&hapConfig,sizeof(hapConfig));     // update data
+    nvs_commit(HAPClient::hapNVS);                                              // commit to NVS
+    changed=true;
+
+    if(updateMDNS){
+      char cNum[16];
+      sprintf(cNum,"%d",hapConfig.configNumber);
+      mdns_service_txt_item_set("_hap","_tcp","c#",cNum);      
     }
   }
 
-  if(okay)
-    homeSpan.configLog+=" No Warnings";
-  homeSpan.configLog+="\n\n";
+  Loops.clear();
+
+  for(auto acc=Accessories.begin(); acc!=Accessories.end(); acc++){                        // identify all services with over-ridden loop() methods
+    for(auto svc=(*acc)->Services.begin(); svc!=(*acc)->Services.end(); svc++){
+      if((void(*)())((*svc)->*(&SpanService::loop)) != (void(*)())(&SpanService::loop))    // save pointers to services in Loops vector
+        homeSpan.Loops.push_back((*svc));
+    }
+  }    
+
+  return(changed);
 }
 
 ///////////////////////////////
@@ -1409,11 +1536,7 @@ SpanAccessory::SpanAccessory(uint32_t aid){
     }
     
     this->aid=homeSpan.Accessories.back()->aid+1;
-    
-    if(!homeSpan.Accessories.back()->Services.empty())
-      homeSpan.Accessories.back()->Services.back()->validate();    
-      
-    homeSpan.Accessories.back()->validate();    
+                
   } else {
     this->aid=1;
   }
@@ -1424,55 +1547,31 @@ SpanAccessory::SpanAccessory(uint32_t aid){
     this->aid=aid;
   }
 
-  homeSpan.configLog+="\u27a4 Accessory:  AID=" + String(this->aid);
-
-  for(int i=0;i<homeSpan.Accessories.size()-1;i++){
-    if(this->aid==homeSpan.Accessories[i]->aid){
-      homeSpan.configLog+=" *** ERROR!  ID already in use for another Accessory. ***";
-      homeSpan.nFatalErrors++;
-      break;
-    }
-  }
-
-  if(homeSpan.Accessories.size()==1 && this->aid!=1){
-    homeSpan.configLog+=" *** ERROR!  ID of first Accessory must always be 1. ***";
-    homeSpan.nFatalErrors++;    
-  }
-
-  homeSpan.configLog+="\n";
-
 }
 
 ///////////////////////////////
 
-void SpanAccessory::validate(){
+SpanAccessory::~SpanAccessory(){
 
-  boolean foundInfo=false;
+  while(Services.rbegin()!=Services.rend())           // delete all Services in this Accessory
+    delete *Services.rbegin();                       
   
-  for(int i=0;i<Services.size();i++){
-    if(!strcmp(Services[i]->type,"3E"))
-      foundInfo=true;
-    else if(aid==1)                             // this is an Accessory with aid=1, but it has more than just AccessoryInfo.  So...
-      homeSpan.isBridge=false;                  // ...this is not a bridge device
-  }
-
-  if(!foundInfo){
-    homeSpan.configLog+="   \u2718 Service AccessoryInformation";
-    homeSpan.configLog+=" *** ERROR!  Required Service for this Accessory not found. ***\n";
-    homeSpan.nFatalErrors++;
-  }    
-   
+  auto acc=homeSpan.Accessories.begin();              // find Accessory in homeSpan vector and erase entry
+  while((*acc)!=this)
+    acc++;
+  homeSpan.Accessories.erase(acc);
+  LOG1("Deleted Accessory AID=%d\n",aid);
 }
 
 ///////////////////////////////
 
-int SpanAccessory::sprintfAttributes(char *cBuf){
+int SpanAccessory::sprintfAttributes(char *cBuf, int flags){
   int nBytes=0;
 
   nBytes+=snprintf(cBuf,cBuf?64:0,"{\"aid\":%u,\"services\":[",aid);
 
   for(int i=0;i<Services.size();i++){
-    nBytes+=Services[i]->sprintfAttributes(cBuf?(cBuf+nBytes):NULL);    
+    nBytes+=Services[i]->sprintfAttributes(cBuf?(cBuf+nBytes):NULL,flags);    
     if(i+1<Services.size())
       nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",");
     }
@@ -1488,38 +1587,51 @@ int SpanAccessory::sprintfAttributes(char *cBuf){
 
 SpanService::SpanService(const char *type, const char *hapName, boolean isCustom){
 
-  if(!homeSpan.Accessories.empty() && !homeSpan.Accessories.back()->Services.empty())      // this is not the first Service to be defined for this Accessory
-    homeSpan.Accessories.back()->Services.back()->validate();    
+  if(homeSpan.Accessories.empty()){
+    Serial.printf("\nFATAL ERROR!  Can't create new Service '%s' without a defined Accessory ***\n",hapName);
+    Serial.printf("\n=== PROGRAM HALTED ===");
+    while(1);
+  }
 
   this->type=type;
   this->hapName=hapName;
   this->isCustom=isCustom;
 
-  homeSpan.configLog+="   \u279f Service " + String(hapName);
-  
-  if(homeSpan.Accessories.empty()){
-    homeSpan.configLog+=" *** ERROR!  Can't create new Service without a defined Accessory! ***\n";
-    homeSpan.nFatalErrors++;
-    return;
-  }
-
   homeSpan.Accessories.back()->Services.push_back(this);  
-  iid=++(homeSpan.Accessories.back()->iidCount);  
+  accessory=homeSpan.Accessories.back();
+  iid=++(homeSpan.Accessories.back()->iidCount);
+}
 
-  homeSpan.configLog+=":  IID=" + String(iid) + ", " + (isCustom?"Custom-":"") + "UUID=\"" + String(type) + "\"";
+///////////////////////////////
 
-  if(Span::invalidUUID(type,isCustom)){
-    homeSpan.configLog+=" *** ERROR!  Format of UUID is invalid. ***";
-    homeSpan.nFatalErrors++;    
+SpanService::~SpanService(){
+  
+  while(Characteristics.rbegin()!=Characteristics.rend())           // delete all Characteristics in this Service
+    delete *Characteristics.rbegin();
+      
+  auto svc=accessory->Services.begin();              // find Service in containing Accessory vector and erase entry
+  while((*svc)!=this)
+    svc++;
+  accessory->Services.erase(svc);
+
+  for(svc=homeSpan.Loops.begin(); svc!=homeSpan.Loops.end() && (*svc)!=this; svc++);    // search for entry in Loop vector...
+  if(svc!=homeSpan.Loops.end()){                                                        // ...if it exists, erase it
+    homeSpan.Loops.erase(svc);
+    LOG1("Deleted Loop Entry\n");
   }
 
-  if(!strcmp(this->type,"3E") && iid!=1){
-    homeSpan.configLog+=" *** ERROR!  The AccessoryInformation Service must be defined before any other Services in an Accessory. ***";
-    homeSpan.nFatalErrors++;
+  auto pb=homeSpan.PushButtons.begin();         // loop through PushButton vector and delete ALL PushButtons associated with this Service
+  while(pb!=homeSpan.PushButtons.end()){
+    if((*pb)->service==this){
+      pb=homeSpan.PushButtons.erase(pb);
+      LOG1("Deleted PushButton on Pin=%d\n",(*pb)->pin);
+    }
+    else {
+      pb++;
+    }
   }
-
-  homeSpan.configLog+="\n";
-
+  
+  LOG1("Deleted Service AID=%d IID=%d\n",accessory->aid,iid); 
 }
 
 ///////////////////////////////
@@ -1545,7 +1657,7 @@ SpanService *SpanService::addLink(SpanService *svc){
 
 ///////////////////////////////
 
-int SpanService::sprintfAttributes(char *cBuf){
+int SpanService::sprintfAttributes(char *cBuf, int flags){
   int nBytes=0;
 
   nBytes+=snprintf(cBuf,cBuf?64:0,"{\"iid\":%d,\"type\":\"%s\",",iid,type);
@@ -1569,7 +1681,7 @@ int SpanService::sprintfAttributes(char *cBuf){
   nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,"\"characteristics\":[");
   
   for(int i=0;i<Characteristics.size();i++){
-    nBytes+=Characteristics[i]->sprintfAttributes(cBuf?(cBuf+nBytes):NULL,GET_META|GET_PERMS|GET_TYPE|GET_DESC);    
+    nBytes+=Characteristics[i]->sprintfAttributes(cBuf?(cBuf+nBytes):NULL,flags);    
     if(i+1<Characteristics.size())
       nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",");
   }
@@ -1580,50 +1692,54 @@ int SpanService::sprintfAttributes(char *cBuf){
 }
 
 ///////////////////////////////
-
-void SpanService::validate(){
-
-  for(int i=0;i<req.size();i++){
-    boolean valid=false;
-    for(int j=0;!valid && j<Characteristics.size();j++)
-      valid=!strcmp(req[i]->type,Characteristics[j]->type);
-      
-    if(!valid){
-      homeSpan.configLog+="      \u2718 Characteristic " + String(req[i]->hapName);
-      homeSpan.configLog+=" *** WARNING!  Required Characteristic for this Service not found. ***\n";
-      homeSpan.nWarnings++;
-    }
-  }
-
-  vector<HapChar *>().swap(opt);
-  vector<HapChar *>().swap(req);
-}
-
-///////////////////////////////
 //    SpanCharacteristic     //
 ///////////////////////////////
 
 SpanCharacteristic::SpanCharacteristic(HapChar *hapChar, boolean isCustom){
+
+  if(homeSpan.Accessories.empty() || homeSpan.Accessories.back()->Services.empty()){
+    Serial.printf("\nFATAL ERROR!  Can't create new Characteristic '%s' without a defined Service ***\n",hapName);
+    Serial.printf("\n=== PROGRAM HALTED ===");
+    while(1);
+  }
+
   type=hapChar->type;
   perms=hapChar->perms;
   hapName=hapChar->hapName;
   format=hapChar->format;
   staticRange=hapChar->staticRange;
   this->isCustom=isCustom;
+  this->hapChar=hapChar;
 
-  homeSpan.configLog+="      \u21e8 Characteristic " + String(hapName);
-
-  if(homeSpan.Accessories.empty() || homeSpan.Accessories.back()->Services.empty()){
-    homeSpan.configLog+=" *** ERROR!  Can't create new Characteristic without a defined Service! ***\n";
-    homeSpan.nFatalErrors++;
-    return;
-  }
-
+  homeSpan.Accessories.back()->Services.back()->Characteristics.push_back(this);  
   iid=++(homeSpan.Accessories.back()->iidCount);
   service=homeSpan.Accessories.back()->Services.back();
   aid=homeSpan.Accessories.back()->aid;
 
   ev=(boolean *)calloc(homeSpan.maxConnections,sizeof(boolean));
+}
+
+///////////////////////////////
+
+SpanCharacteristic::~SpanCharacteristic(){
+
+  auto chr=service->Characteristics.begin();              // find Characteristic in containing Service vector and erase entry
+  while((*chr)!=this)
+    chr++;
+  service->Characteristics.erase(chr);
+
+  free(ev);
+  free(desc);
+  free(unit);
+  free(validValues);
+  free(nvsKey);
+
+  if(format==FORMAT::STRING){
+    free(value.STRING);
+    free(newValue.STRING);
+  }
+  
+  LOG1("Deleted Characteristic AID=%d IID=%d\n",aid,iid);  
 }
 
 ///////////////////////////////
@@ -1640,7 +1756,7 @@ int SpanCharacteristic::sprintfAttributes(char *cBuf, int flags){
   if(flags&GET_TYPE)  
     nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"type\":\"%s\"",type);
 
-  if(perms&PR){    
+  if((perms&PR) && (flags&GET_VALUE)){    
     if(perms&NV && !(flags&GET_NV))
       nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"value\":null");
     else
@@ -1814,35 +1930,26 @@ unsigned long SpanCharacteristic::timeVal(){
 ///////////////////////////////
 
 SpanCharacteristic *SpanCharacteristic::setValidValues(int n, ...){
-  char c[256];
-  String *s = new String("[");
+
+  if(format!=UINT8){
+    setValidValuesError=true;
+    return(this);
+  }
+ 
+  String s="[";
   va_list vl;
   va_start(vl,n);
   for(int i=0;i<n;i++){
-    *s+=va_arg(vl,int);
+    s+=(uint8_t)va_arg(vl,int);
     if(i!=n-1)
-      *s+=",";
+      s+=",";
   }
   va_end(vl);
-  *s+="]";
+  s+="]";
 
-  homeSpan.configLog+=String("         \u2b0c Set Valid Values for ") + String(hapName) + " with IID=" + String(iid);
+  validValues=(char *)realloc(validValues, strlen(s.c_str()) + 1);
+  strcpy(validValues,s.c_str());
 
-  if(validValues){
-    sprintf(c,"  *** ERROR!  Valid Values already set for this Characteristic! ***\n");
-    homeSpan.nFatalErrors++;
-  } else 
-
-  if(format!=UINT8){
-    sprintf(c,"  *** ERROR!  Can't set Valid Values for this Characteristic! ***\n");
-    homeSpan.nFatalErrors++;      
-  } else {
-    
-    validValues=s->c_str();
-    sprintf(c,":  ValidValues=%s\n",validValues);
-  }
-
-  homeSpan.configLog+=c;
   return(this);
 }
 
@@ -1853,8 +1960,9 @@ SpanCharacteristic *SpanCharacteristic::setValidValues(int n, ...){
 SpanRange::SpanRange(int min, int max, int step){
 
   if(homeSpan.Accessories.empty() || homeSpan.Accessories.back()->Services.empty() || homeSpan.Accessories.back()->Services.back()->Characteristics.empty() ){
-    homeSpan.configLog+="    \u2718 SpanRange: *** ERROR!  Can't create new Range without a defined Characteristic! ***\n";
-    homeSpan.nFatalErrors++;
+    Serial.printf("\nFATAL ERROR!  Can't create new SpanRange(%d,%d,%d) without a defined Characteristic ***\n",min,max,step);
+    Serial.printf("\n=== PROGRAM HALTED ===");
+    while(1);
   } else {
     homeSpan.Accessories.back()->Services.back()->Characteristics.back()->setRange(min,max,step);
   }
@@ -1864,37 +1972,29 @@ SpanRange::SpanRange(int min, int max, int step){
 //        SpanButton         //
 ///////////////////////////////
 
-SpanButton::SpanButton(int pin, uint16_t longTime, uint16_t singleTime, uint16_t doubleTime){
-
-  homeSpan.configLog+="      \u25bc SpanButton: Pin=" + String(pin) + ", Single=" + String(singleTime) + "ms, Double=" + String(doubleTime) + "ms, Long=" + String(longTime) + "ms";
+SpanButton::SpanButton(int pin, uint16_t longTime, uint16_t singleTime, uint16_t doubleTime, triggerType_t triggerType) : PushButton(pin, triggerType){
 
   if(homeSpan.Accessories.empty() || homeSpan.Accessories.back()->Services.empty()){
-    homeSpan.configLog+=" *** ERROR!  Can't create new PushButton without a defined Service! ***\n";
-    homeSpan.nFatalErrors++;
-    return;
+    Serial.printf("\nFATAL ERROR!  Can't create new SpanButton(%d,%u,%u,%u) without a defined Service ***\n",pin,longTime,singleTime,doubleTime);
+    Serial.printf("\n=== PROGRAM HALTED ===");
+    while(1);
   }
 
-  Serial.print("Configuring PushButton: Pin=");     // initialization message
-  Serial.print(pin);
-  Serial.print("\n");
-
-  this->pin=pin;
   this->longTime=longTime;
   this->singleTime=singleTime;
   this->doubleTime=doubleTime;
   service=homeSpan.Accessories.back()->Services.back();
 
-  if((void(*)(int,int))(service->*(&SpanService::button))==(void(*)(int,int))(&SpanService::button)){
-    homeSpan.configLog+=" *** WARNING:  No button() method defined for this PushButton! ***";
-    homeSpan.nWarnings++;
-  }
-
-  pushButton=new PushButton(pin);         // create underlying PushButton
-  
-  homeSpan.configLog+="\n";  
   homeSpan.PushButtons.push_back(this);
 }
 
+///////////////////////////////
+
+void SpanButton::check(){
+
+  if(triggered(singleTime,longTime,doubleTime))   // if the underlying PushButton is triggered
+    service->button(pin,type());                  // call the Service's button() routine with pin and type as parameters    
+}
 
 ///////////////////////////////
 //     SpanUserCommand       //
@@ -1928,6 +2028,8 @@ void SpanWebLog::init(uint16_t maxEntries, const char *serv, const char *tz, con
   timeZone=tz;
   statusURL="GET /" + String(url) + " ";
   log = (log_t *)calloc(maxEntries,sizeof(log_t));
+  if(timeServer)
+    homeSpan.reserveSocketConnections(1);
 }
 
 ///////////////////////////////
@@ -1942,7 +2044,6 @@ void SpanWebLog::initTime(){
   if(getLocalTime(&timeinfo,waitTime)){
     strftime(bootTime,sizeof(bootTime),"%c",&timeinfo);
     Serial.printf("%s\n\n",bootTime);
-    homeSpan.reserveSocketConnections(1);
     timeInit=true;
   } else {
     Serial.printf("Can't access Time Server - time-keeping not initialized!\n\n");
@@ -1951,29 +2052,33 @@ void SpanWebLog::initTime(){
 
 ///////////////////////////////
 
-void SpanWebLog::addLog(const char *fmt, ...){
-  if(maxEntries==0)
-    return;
+void SpanWebLog::vLog(boolean sysMsg, const char *fmt, va_list ap){
 
-  int index=nEntries%maxEntries;
+  char *buf;
+  vasprintf(&buf,fmt,ap);
 
-  log[index].upTime=esp_timer_get_time();
-  if(timeInit)
-    getLocalTime(&log[index].clockTime,10);
-  else
-    log[index].clockTime.tm_year=0;
+  if(sysMsg)
+    Serial.printf("%s\n",buf);
+  else if(homeSpan.logLevel>0)
+    Serial.printf("WEBLOG: %s\n",buf);
+  
+  if(maxEntries>0){
+    int index=nEntries%maxEntries;
+  
+    log[index].upTime=esp_timer_get_time();
+    if(timeInit)
+      getLocalTime(&log[index].clockTime,10);
+    else
+      log[index].clockTime.tm_year=0;
+  
+    log[index].message=(char *)realloc(log[index].message, strlen(buf) + 1);
+    strcpy(log[index].message, buf);
+    
+    log[index].clientIP=homeSpan.lastClientIP;  
+    nEntries++;
+  }
 
-  free(log[index].message);  
-  va_list ap;
-  va_start(ap,fmt);
-  vasprintf(&log[index].message,fmt,ap);
-  va_end(ap);
-
-  log[index].clientIP=homeSpan.lastClientIP;  
-  nEntries++;
-
-  if(homeSpan.logLevel>0)
-    Serial.printf("WEBLOG: %s\n",log[index].message);
+  free(buf);
 }
 
 ///////////////////////////////
@@ -1984,6 +2089,7 @@ void SpanOTA::init(boolean _auth, boolean _safeLoad){
   enabled=true;
   safeLoad=_safeLoad;
   auth=_auth;
+  homeSpan.reserveSocketConnections(1);
 }
 
 ///////////////////////////////
@@ -2032,6 +2138,11 @@ void SpanOTA::error(ota_error_t err){
     else if (err == OTA_CONNECT_ERROR) Serial.println("Connect Failed\n");
     else if (err == OTA_RECEIVE_ERROR) Serial.println("Receive Failed\n");
     else if (err == OTA_END_ERROR) Serial.println("End Failed\n");
+}
+
+///////////////////////////////
+
+void __attribute__((weak)) loop(){
 }
 
 ///////////////////////////////

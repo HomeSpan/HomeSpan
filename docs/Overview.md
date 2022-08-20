@@ -42,6 +42,30 @@ void loop(){
 } // end of loop()
 ```
 
+Note that as an *alternative*, you can intruct HomeSpan to create separate task that repeatedly calls `homeSpan.poll()` in the background.  To do so, **replace** the call to `homeSpan.poll()` in the main `loop()` with a call to  `homeSpan.autoPoll()` at the end of the `setup()` function:
+
+```C++
+#include "HomeSpan.h"         // include the HomeSpan library
+
+void setup() {     
+ 
+  Serial.begin(115200);       // start the Serial interface
+  
+  homeSpan.begin();           // initialize HomeSpan
+  
+  /// DEFINITION OF HAP ACCESSORY ATTRIBUTE DATABASE GOES HERE ///
+  
+ homeSpan.autoPoll();         // start a task that repeatedly calls `homeSpan.poll()` in the background
+
+} // end of setup()
+
+void loop(){
+
+} // end of loop()
+```
+
+This is particularly efficient when using dual-core processors since HomeSpan will run the polling task on the "free" processor that is otherwise not performing any other Arduino functions.
+
 ## Creating the HAP Accessory Attribute Database
 
 The next step is to implement the code that defines the HAP Accessory Attribute Database, which is not really a database but simply a list of all HAP accessory objects, Service objects, and Characteristic objects implemented by this HomeSpan device.

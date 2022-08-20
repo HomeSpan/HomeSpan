@@ -4,7 +4,7 @@ Welcome to HomeSpan - a robust and extremely easy-to-use Arduino library for cre
 
 HomeSpan provides a microcontroller-focused implementation of [Apple's HomeKit Accessory Protocol Specification Release R2 (HAP-R2)](https://developer.apple.com/homekit/specification/) designed specifically for the Espressif ESP32 microcontroller running within the Arduino IDE.  HomeSpan pairs directly to HomeKit via your home WiFi network without the need for any external bridges or components.  With HomeSpan you can use the full power of the ESP32's I/O functionality to create custom control software and/or hardware to automatically operate external devices from the Home App on your iPhone, iPad, or Mac, or with Siri.
 
-HomeSpan is fully compatible with both Versions 1 and 2 of the [Arduino-ESP32 Board Manager](https://github.com/espressif/arduino-esp32).  Under Version 1, HomeSpan can be run only on the original ESP32.  Under Version 2, HomeSpan can be run on the original ESP32 as well as Espressif's ESP32-S2 and ESP32-C3 chips.
+HomeSpan requires version 2.0.0 or later of the [Arduino-ESP32 Board Manager](https://github.com/espressif/arduino-esp32), and has been tested up through version 2.0.4 (recommended).  HomeSpan can be run on the original ESP32 as well as Espressif's ESP32-S2, ESP32-C3, and ESP32-S3 chips.
 
 ### HomeSpan Highlights
 
@@ -26,7 +26,9 @@ HomeSpan is fully compatible with both Versions 1 and 2 of the [Arduino-ESP32 Bo
 * Dedicated classes that utilize the ESP32's 16-channel PWM peripheral for easy control of:
   * LED Brightness
   * Servo Motors
-* Integrated Push Button functionality supporting single, double, and long presses 
+* Integrated Push Button functionality supporting single, double, and long presses of:
+  * Physical pushbuttons that connect an ESP32 pin to either ground or VCC
+  * Touch pads/sensors connected to an ESP32 pin (for ESP32 devices that support touch pads)
 * Integrated access to the ESP32's on-chip Remote Control peripheral for easy generation of IR and RF signals
 * Dedicated classes to control one- and two-wire addressable RGB and RGBW LEDs and LED strips
 * Integrated Web Log for user-defined log messages
@@ -45,34 +47,38 @@ HomeSpan is fully compatible with both Versions 1 and 2 of the [Arduino-ESP32 Bo
   * Launch the WiFi Access Point
 * A standalone, detailed End-User Guide
 
-## ❗Latest Update - HomeSpan 1.5.1 (4/17/2022)
+## ❗Latest Update - HomeSpan 1.6.0 (8/21/2022)
 
-* **New Web Logging functionality**
-  * HomeSpan can now host a Web Log page for message logging
-  * New WEBLOG() macro makes is easy to create user-defined log messages
-  * Provides for the optional use of an NTP Time Server to set the device clock so all messages can be properly timestamped
-  * See [HomeSpan Message Logging](https://github.com/HomeSpan/HomeSpan/blob/master/docs/Logging.md) for full details
-
-* **New *printf*-style formatting for LOG() macros**
-  * Adds variadic forms of the LOG0(), LOG1(), and LOG2() macros so they can be used in the same manner as a standard C printf function
-  * Greatly simplifies the creation of log messages 
-  * See [HomeSpan Message Logging](https://github.com/HomeSpan/HomeSpan/blob/master/docs/Logging.md) for full details
-
-* **New CUSTOM_SERV() macro**
-  * Allows for the creation of Custom Services
-  * Can be used in conjunction with the existing CUSTOM_CHAR() macro to produce Services beyond those provided in HAP-R2
-  * Includes a fully worked example of a custom [Pressure Sensor Accessory](https://github.com/HomeSpan/HomeSpan/blob/master/Other%20Examples/CustomService) that is recognized by *Eve for HomeKit*
+* **Support for ESP32-S3 devices**
+  * Requires Arduino-ESP32 Board Manager version 2.0.4 or later
+  
+* **New functionality to *dynamically* add/delete Accessories on the fly without rebooting the device**
+  * Adds `homeSpan.deleteAccessory()` and `homeSpan.updateDatabase()` methods
+  * Includes new [Example 20 - AdvancedTechniques](https://github.com/HomeSpan/HomeSpan/blob/master/examples/20-AdvancedTechniques) to demonstrate how these methods can be used to create a dynamic bridge
+  * See [HomeSpan API Reference](https://github.com/HomeSpan/HomeSpan/blob/master/docs/Reference.md) for details
+  
+* **New support for Touch Pads**
+  * `SpanButton()` now supports three pin trigger methods: *TRIGGER_ON_LOW*, *TRIGGER_ON_HIGH*, and *TRIGGER_ON_TOUCH*
+  * Also allows users to add their own trigger methods so `SpanButton()` can monitor pushbuttons attached to pin extenders, pin multiplexers, or any other device that requires calling third-party library functions
   * See [HomeSpan API Reference](https://github.com/HomeSpan/HomeSpan/blob/master/docs/Reference.md) for details
 
-* **New "Safe-Load" mode for OTA updates**
-  * HomeSpan can check to make sure the new sketch being uploaded via OTA is another HomeSpan sketch.  If not, the upload fails
-  * Upon rebooting after an OTA update, HomeSpan checks to ensure that OTA is enabled in the updated sketch.  If not, HomeSpan rolls back to the previous version of the sketch
-  * See [HomeSpan OTA](https://github.com/HomeSpan/HomeSpan/blob/master/docs/OTA.md) for full details
+* **Improved WiFi disconnect/reconnect handling**
+  * Fixes code that may, under certain circumstances, have prevented HomeSpan from reconnecting to WiFi after signal is lost
+  * Adds WiFi diagnostics to Web Logs to monitor for disconnects and WiFi signal strength
+  
+* **New option to run HomeSpan as a separate task in its own thread**
+  * Works with both single- and dual-core processors
+  * For dual-core processors, polling task will be created on the "free" core not being used for other Arduino functions
+  * Allows user to add time-sensitive code the the main Arduino `loop()` function without delaying, or being dalyed by, HomeSpan polling
+  * See [HomeSpan API Reference](https://github.com/HomeSpan/HomeSpan/blob/master/docs/Reference.md) for details
+  
+* **New [Programmable Hub](https://github.com/HomeSpan/HomeSpan/blob/master/Other%20Examples/ProgrammableHub) Example**
+  * Demonstrates how to implement a Web Interface that allows users to dynamically add, delete, and configure up to 12 separate Light Accessories on a bridge device
+  * Expands upon many of the methods used in [Example 20](https://github.com/HomeSpan/HomeSpan/blob/master/examples/20-AdvancedTechniques)
   
 * **Additional updates include:**
-  * a new (optional) argument to `SpanUserCommand()` that allows for passing a pointer to any arbitrary data structure
-  * a new SPAN_ACCESSORY() macro that expands to a common snippet of code often used when creating Accessories 
-  * refreshed and streamlined example Tutorials, and fully reworked Examples 7 and 11, to best conform with Home App behavior under iOS 15.4
+  * New 'm' CLI command that prints free bytes remaining in heap memory - useful for monitoring memory usage when dynamically adding Accessories
+  * New `homeSpan.getLogLevel()` method that returns the current log level
 
 See [Releases](https://github.com/HomeSpan/HomeSpan/releases) for details on all changes and bug fixes included in this update.
 

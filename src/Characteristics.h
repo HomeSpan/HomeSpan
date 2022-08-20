@@ -78,6 +78,7 @@ struct HapChar {
 
 struct HapCharacteristics {
   
+  HAPCHAR( AccessoryFlags, A6, PR+EV, UINT32, true );
   HAPCHAR( Active, B0, PW+PR+EV, UINT8, true );
   HAPCHAR( ActiveIdentifier, E7, PW+PR+EV, UINT32, true );
   HAPCHAR( AirQuality, 95, PR+EV, UINT8, true );
@@ -113,7 +114,7 @@ struct HapCharacteristics {
   HAPCHAR( CurrentVisibilityState, 135, PR+EV, UINT8, true );
   HAPCHAR( FilterLifeLevel, AB, PR+EV, FLOAT, false );
   HAPCHAR( FilterChangeIndication, AC, PR+EV, UINT8, true );
-  HAPCHAR( FirmwareRevision, 52, PR, STRING, true );
+  HAPCHAR( FirmwareRevision, 52, PR+EV, STRING, true );
   HAPCHAR( HardwareRevision, 53, PR, STRING, true );
   HAPCHAR( HeatingThresholdTemperature, 12, PR+PW+EV, FLOAT, false );
   HAPCHAR( HoldPosition, 6F, PW, BOOL, true );

@@ -74,12 +74,23 @@ struct TempBuffer {
 class PushButton{
   
   int status;
-  int pin;
   boolean doubleCheck;
   uint32_t singleAlarm;
   uint32_t doubleAlarm;
   uint32_t longAlarm;
   int pressType;
+
+#if SOC_TOUCH_SENSOR_NUM > 0
+  static touch_value_t threshold;
+  static const int calibCount=20;
+#endif
+  
+  protected:
+
+  typedef boolean (*triggerType_t)(int pin);
+
+  int pin;
+  triggerType_t triggerType;
 
   public:
 
@@ -88,28 +99,27 @@ class PushButton{
     DOUBLE=1,
     LONG=2
   };
-  
-  PushButton();
-  PushButton(int pin);
 
-//  Creates generic pushbutton functionality on specified pin
-//  that is wired to connect to ground when the button is pressed.
-//
-//  In the first form, a PushButton is instantiated without specifying
-//  the pin.  In this case the pin must be specified in a subsequent call 
-//  to init() before the PushButton can be used.
-//
-//  In the second form, a PushButton is instantiated and initialized with
-//  the specified pin, obviating the need for a separate call to init().
-//
-//  pin:         Pin mumber to which pushbutton connects to ground when pressed
+  static boolean TRIGGER_ON_LOW(int pin){return(!digitalRead(pin));}
+  static boolean TRIGGER_ON_HIGH(int pin){return(digitalRead(pin));}
 
-  void init(int pin);
-  
-//  Initializes PushButton, if not configured during instantiation.
+#if SOC_TOUCH_VERSION_1 // ESP32
+  static boolean TRIGGER_ON_TOUCH(int pin){return(touchRead(pin)<threshold);}
+#elif SOC_TOUCH_VERSION_2 // ESP32S2 ESP32S3
+  static boolean TRIGGER_ON_TOUCH(int pin){return(touchRead(pin)>threshold);}
+#endif
+
+  PushButton(int pin, triggerType_t triggerType=TRIGGER_ON_LOW);
+
+//  Creates pushbutton of specified type on specified pin
 //
-//  pin:         Pin mumber to which pushbutton connects to ground when pressed
-    
+//  pin:          pin number to which the button is connected
+//  triggerType:  a function of of the form 'boolean f(int)' that is passed
+//                the parameter *pin* and returns TRUE if the button associated
+//                with *pin* is pressed, or FALSE if not.  Can choose from 3 pre-specifed
+//                triggerType_t functions (TRIGGER_ON_LOW, TRIGGER_ON_HIGH, and TRIGGER_ON_TOUCH), or write your
+//                own custom handler
+
   void reset();
 
 //  Resets state of PushButton.  Should be called once before any loops that will
@@ -147,6 +157,28 @@ class PushButton{
   void wait();
 
 //  Waits for button to be released.  Use after Long Press if button release confirmation is desired
+
+  int getPin(){return(pin);}
+
+//  Returns pin number
+
+#if SOC_TOUCH_SENSOR_NUM > 0
+
+  static void setTouchCycles(uint16_t measureTime, uint16_t sleepTime){touchSetCycles(measureTime,sleepTime);}
+  
+//  Sets the measure time and sleep time touch cycles , and lower threshold that triggers a touch - used only when triggerType=PushButton::TRIGGER_ON_TOUCH
+
+//  measureTime:      duration of measurement time of all touch sensors in number of clock cycles
+//  sleepTime:        duration of sleep time (between measurements) of all touch sensors number of clock cycles
+
+  static void setTouchThreshold(touch_value_t thresh){threshold=thresh;}
+
+//  Sets the threshold that triggers a touch - used only when triggerType=TRIGGER_ON_TOUCH
+
+//  thresh:  the read value of touch sensors, beyond which which sensors are considered touched (i.e. "pressed").
+//           This is a class-level value applied to all touch sensor buttons.
+
+#endif
 
 };
 

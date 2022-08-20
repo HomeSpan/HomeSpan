@@ -31,8 +31,8 @@
 
 // Macros to define vectors of required and optional characteristics for each Span Service structure
 
-#define REQ(HAPCHAR) req.push_back(&hapChars.HAPCHAR)
-#define OPT(HAPCHAR) opt.push_back(&hapChars.HAPCHAR)
+#define REQ(HAPCHAR) req.insert(&hapChars.HAPCHAR)
+#define OPT(HAPCHAR) opt.insert(&hapChars.HAPCHAR)
 
 namespace Service {
 
@@ -43,7 +43,8 @@ namespace Service {
     OPT(Model);
     OPT(Name);
     OPT(SerialNumber);
-    OPT(HardwareRevision);    
+    OPT(HardwareRevision);
+    OPT(AccessoryFlags);    
   }};
 
   struct AirPurifier : SpanService { AirPurifier() : SpanService{"BB","AirPurifier"}{
@@ -403,6 +404,7 @@ namespace Service {
 
 namespace Characteristic {
 
+  CREATE_CHAR(uint32_t,AccessoryFlags,1,1,1);
   CREATE_CHAR(uint8_t,Active,0,0,1);
   CREATE_CHAR(uint32_t,ActiveIdentifier,0,0,255);
   CREATE_CHAR(uint8_t,AirQuality,0,0,5);

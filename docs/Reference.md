@@ -22,8 +22,8 @@ At runtime HomeSpan will create a global **object** named `homeSpan` that suppor
  
  * `void poll()`
    * checks for HAP requests, local commands, and device activity
-   * **must** be called repeatedly in each sketch and is typically placed at the top of the Arduino `loop()` method
-   
+   * **must** be called repeatedly in each sketch and is typically placed at the top of the Arduino `loop()` method (*unless* `autoPoll()`, described further below, is used instead)
+
 ---
 
 The following **optional** `homeSpan` methods override various HomeSpan initialization parameters used in `begin()`, and therefore **should** be called before `begin()` to take effect.  If a method is *not* called, HomeSpan uses the default parameter indicated below:
@@ -40,7 +40,7 @@ The following **optional** `homeSpan` methods override various HomeSpan initiali
   * if *duration* is set to zero, auto-off is disabled (Status LED will remain on indefinitely)
   
 * `int getStatusPin()`
-* returns the pin number of the Status LED as set by `setStatusPin(pin)`, or -1 if no pin has been set
+   * returns the pin number of the Status LED as set by `setStatusPin(pin)`, or -1 if no pin has been set
 
 * `void setApSSID(const char *ssid)`
   * sets the SSID (network name) of the HomeSpan Setup Access Point (default="HomeSpan-Setup")
@@ -61,6 +61,9 @@ The following **optional** `homeSpan` methods override various HomeSpan initiali
     * 2 = all HomeSpan status messages plus all HAP communication packets to and from the HomeSpan device, as well as all `LOG1()` and `LOG2()` messages specified in the sketch by the user
   * note the log level can also be changed at runtime with the 'L' command via the [HomeSpan CLI](CLI.md)
   * see [Message Logging](Logging.md) for complete details
+
+* `int getLogLevel()`
+  * returns the current Log Level as set by `setLogLevel(level)`
   
 * `void reserveSocketConnections(uint8_t nSockets)`
   * reserves *nSockets* network sockets for uses **other than** by the HomeSpan HAP Server for HomeKit Controller Connections
@@ -115,8 +118,7 @@ The following **optional** `homeSpan` methods enable additional features and pro
   * sets the SSID (*ssid*) and password (*pwd*) of the WiFi network to which HomeSpan will connect
   * *ssid* and *pwd* are automatically saved in HomeSpan's non-volatile storage (NVS) for retrieval when the device restarts
   * note that the saved values are truncated if they exceed the maximum allowable characters (ssid=32; pwd=64)
-  
-> :warning: SECURITY WARNING: The purpose of this function is to allow advanced users to *dynamically* set the device's WiFi Credentials using a customized Access Point function specified by `setApFunction(func)`. It it NOT recommended to use this function to hardcode your WiFi SSID and password directly into your sketch.  Instead, use one of the more secure methods provided by HomeSpan, such as typing 'W' from the CLI, or launching HomeSpan's Access Point, to set your WiFi credentials without hardcoding them into your sketch
+  * :warning: SECURITY WARNING: The purpose of this function is to allow advanced users to *dynamically* set the device's WiFi Credentials using a customized Access Point function specified by `setApFunction(func)`. It it NOT recommended to use this function to hardcode your WiFi SSID and password directly into your sketch.  Instead, use one of the more secure methods provided by HomeSpan, such as typing 'W' from the CLI, or launching HomeSpan's Access Point, to set your WiFi credentials without hardcoding them into your sketch
 
 * `void setWifiCallback(void (*func)())`
   * sets an optional user-defined callback function, *func*, to be called by HomeSpan upon start-up just after WiFi connectivity has been established.  This one-time call to *func* is provided for users that are implementing other network-related services as part of their sketch, but that cannot be started until WiFi connectivity is established.  The function *func* must be of type *void* and have no arguments
@@ -132,12 +134,7 @@ The following **optional** `homeSpan` methods enable additional features and pro
   * example: `homeSpan.setPairingCode("46637726");`
   * a hashed version of the Pairing Code will be saved to the device's non-volatile storage, overwriting any currently-stored Pairing Code
   * if *s* contains an invalid code, an error will be reported and the code will *not* be saved.  Instead, the currently-stored Pairing Code (or the HomeSpan default Pairing Code if no code has been stored) will be used
-  * :exclamation: SECURTY WARNING: Hardcoding a device's Pairing Code into your sketch is considered a security risk and is **not** recommended.  Instead, use one of the more secure methods provided by HomeSpan, such as typing 'S \<code\>' from the CLI, or launching HomeSpan's Access Point, to set your Pairing Code without hardcoding it into your sketch
-
-* `void deleteStoredValues()`
-  * deletes the value settings of all stored Characteristics from the NVS
-  * performs the same function as typing 'V' into the CLI
-  * can by called from anywhere in a sketch
+  * :warning: SECURTY WARNING: Hardcoding a device's Pairing Code into your sketch is considered a security risk and is **not** recommended.  Instead, use one of the more secure methods provided by HomeSpan, such as typing 'S \<code\>' from the CLI, or launching HomeSpan's Access Point, to set your Pairing Code without hardcoding it into your sketch
 
 * `void setSketchVersion(const char *sVer)`
   * sets the version of a HomeSpan sketch to *sVer*, which can be any arbitrary character string
@@ -161,6 +158,43 @@ The following **optional** `homeSpan` methods enable additional features and pro
 
 * `void setTimeServerTimeout(uint32_t tSec)`
   * changes the default 10-second timeout period HomeSpan uses when `enableWebLog()` tries set the device clock from an internet time server to *tSec* seconds
+ 
+---
+
+The following **optional** `homeSpan` methods provide additional run-time functionality for more advanced use cases: 
+ 
+* `void deleteStoredValues()`
+  * deletes the value settings of all stored Characteristics from the NVS
+  * performs the same function as typing 'V' into the CLI
+ 
+* `boolean deleteAccessory(uint32_t aid)`
+  * deletes Accessory with Accessory ID of *aid*, if found
+  * returns true if successful (match found), or false if the specified *aid* does not match any current Accessories
+  * allows for dynamically changing the Accessory database during run-time (i.e. changing the configuration *after* the Arduino `setup()` has finished)
+  * deleting an Accessory automatically deletes all Services, Characteristics, and any other resources it contains
+  * outputs Level-1 Log Messages listing all deleted components
+  * note: though deletions take effect immediately, HomeKit Controllers, such as the Home App, will not be aware of these changes until the database configuration number is updated and rebroadcast - see updateDatabase() below
+ 
+* `boolean updateDatabase()`
+  * recomputes the database configuration number and, if changed, rebroadcasts the new number via MDNS so all connected HomeKit Controllers, such as the Home App, can request a full refresh to accurately reflect the new configuration
+  * returns true if configuration number has changed, false otherwise
+  * *only* needed if you want to make run-time (i.e. after the Arduino `setup()` function has completed) changes to the device's Accessory database 
+  * use anytime after dynamically adding one or more Accessories (with `new SpanAccessory(aid)`) or deleting one or more Accessories (with `homeSpan.deleteAccessory(aid)`)
+  * **important**: once you delete an Accessory, you cannot re-use the same *aid* when adding a new Accessory (on the same device) unless the new Accessory is configured with the exact same Services and Characteristics as the deleted Accessory
+  * note: this method is **not** needed if you have a static Accessory database that is fully defined in the Arduino `setup()` function of a sketch
+ 
+---
+
+The following `homeSpan` methods are considered experimental, since not all use cases have been explored or debugged.  Use with caution:
+ 
+* `void autoPoll(uint32_t stackSize)`
+  * an *optional* method to create a task with *stackSize* bytes of stack memory that repeatedly calls `poll()` in the background.  This frees up the Ardino `loop()` method for any user-defined code to run in parallel that would otherwise block, or be blocked by, calling `poll()` in the `loop()` method
+  * if used, **must** be placed in a sketch as the last line in the Arduino `setup()` method
+  * HomeSpan will throw and error and halt if both `poll()`and `autoPoll()` are used in the same sketch - either place `poll()` in the Arduino `loop()` method **or** place `autoPoll()` at the the end of the Arduino `setup()` method
+  * can be used with both single-core and dual-core ESP32 boards.  If used with a dual-core board, the polling task is created on the free processor that is typically not running other Arduino functions
+  * if *stackSize* is not specified, defaults to the size used by the system for the normal Arduino `loop()` task (typically 8192 bytes)
+  * if this method is used, and you have no need to add your own code to the main Arduino `loop()`, you can safely skip defining a blank `void loop(){}` function in your sketch
+  * warning: if any code you add to the Arduino `loop()` method tries to alter any HomeSpan settings or functions running in the background `poll()` task, race conditions may yield undefined results
  
 ## *SpanAccessory(uint32_t aid)*
 
@@ -317,7 +351,7 @@ This is a **base class** from which all HomeSpan Characteristics are derived, an
   * returns a pointer to the Characteristic itself so that the method can be chained during instantiation
   * example: `(new Characteristic::RotationSpeed())->setUnit("percentage");`
 
-## *SpanButton(int pin, uint16_t longTime, uint16_t singleTime, uint16_t doubleTime)*
+### *SpanButton(int pin, uint16_t longTime, uint16_t singleTime, uint16_t doubleTime, boolean (\*triggerType)(int))*
 
 Creating an instance of this **class** attaches a pushbutton handler to the ESP32 *pin* specified.
 
@@ -325,23 +359,52 @@ Creating an instance of this **class** attaches a pushbutton handler to the ESP3
 * instantiating a Button without first instantiating a Service throws an error during initialization
 
 The first argument is required; the rest are optional:
-* *pin* - the ESP32 pin to which a one pole of a normally-open pushbutton will be connected; the other pole is connected to ground
+ 
+* *pin* - the ESP32 pin to which the button is connected 
 * *longTime* - the minimum time (in millis) required for the button to be pressed and held to trigger a Long Press (default=2000 ms)
 * *singleTime* - the minimum time (in millis) required for the button to be pressed to trigger a Single Press (default=5 ms)
 * *doubleTime* -  the maximum time (in millis) allowed between two Single Presses to qualify as a Double Press (default=200 ms)
-  
-Trigger Rules:
+* *triggerType* - pointer to a boolean function that accepts a single *int* argument and returns `true` or `false` depending on whether or not a "press" has been triggered on the *pin* number passed to the *int* argument.  For ease of use, you may simply choose from the following built-in functions:
+  * `SpanButton::TRIGGER_ON_LOW` - triggers when *pin* is driven LOW.  Suitable for buttons that connect *pin* to GROUND (this is the default when *triggerType* is not specified)
+ 
+  * `SpanButton::TRIGGER_ON_HIGH` - triggers when *pin* is driven HIGH.  Suitable for buttons that connect *pin* to VCC (typically 3.3V)
+  * `SpanButton::TRIGGER_ON_TOUCH`- uses the device's touch-sensor peripheral to trigger when a sensor attached to *pin* has been touched (not available on ESP32-C3 devices)
+ 
+When any of these built-in functions are selected (or *triggerType* is left unspecified and the default is used), SpanButton will automatically configure the *pin* as needed upon instantiation.
+ 
+Alternatively, you can set *triggerType* to any user-defined function of the form `boolean(int arg)` and provide your own logic for determining whether a trigger has occured on the specified *pin*, which is passed through to your function as *arg*. In this case *arg* can either represent an actual device pin, or simply be an arbitrary *int* your function utilizes, such as the virtual pin number on a multiplexer.  Note: if you specify your own function for *triggerType* you also must include in your sketch any code needed to initialize the logic or configure whatever resource *triggerType* is utilizing (such as a pin multiplexer).
+
+For convenience, a second form of the *SpanButton()* constructor is also provided:
+  * `SpanButton(int pin, boolean (*triggerType)(int), uint16_t longTime=2000, uint16_t singleTime=5, uint16_t doubleTime=200)`
+    * this allows you to set just the *pin* and *triggerType* while leaving the remaining parameters at their default values
+ 
+#### Trigger Rules ###
 * If button is pressed and continuously held, a Long Press will be triggered every longTime ms until the button is released
 * If button is pressed for more than singleTime ms but less than longTime ms and then released, a Single Press will be triggered, UNLESS the button is pressed a second time within doubleTime ms AND held again for at least singleTime ms, in which case a DoublePress will be triggered;  no further events will occur until the button is released
 * If singleTime>longTime, only Long Press triggers can occur
 * If doubleTime=0, Double Presses cannot occur
-  
-HomeSpan automatically calls the `button(int pin, int pressType)` method of a Service upon a trigger event in any Button associated with that Service, where *pin* is the ESP32 pin to which the pushbutton is connected, and *pressType* is an integer that can also be represented by the enum constants indicated:
-  * 0=single press (SpanButton::SINGLE)
-  * 1=double press (SpanButton::DOUBLE)
-  * 2=long press (SpanButton::LONG)  
+ 
+#### Usage ####
+HomeSpan automatically calls the `button(int pin, int pressType)` method of a Service upon a trigger event in any SpanButton associated with that Service, where *pin* is the ESP32 pin to which the pushbutton is connected, and *pressType* is an integer that can also be represented by the enum constants indicated:
+  * 0=single press (`SpanButton::SINGLE`)
+  * 1=double press (`SpanButton::DOUBLE`)
+  * 2=long press (`SpanButton::LONG`)  
   
 HomeSpan will report a warning, but not an error, during initialization if the user had not overridden the virtual button() method for a Service contaning one or more Buttons; triggers of those Buttons will simply ignored.
+ 
+When using one or more Touch Sensors, HomeSpan automatically calibrates the threshold at which they are triggered by polling the baseline sensor reading upon instantiation of first SpanButton of type `SpanButton::TRIGGER_ON_TOUCH`.  For ESP32 devices, the threshold is set to 50% of the baseline value since triggers occur when a sensor value falls *below* the threhold level.  For ESP32-S2 and ESP32-S3 devices, the threshold is set to 200% of the baseline value since triggers occur when a sensor value rises *above* the threhold level.  Normally HomeSpan's auto calibration will result in accurate detection of SINGLE, DOUBLE, and LONG presses of touch sensors.  However, if needed you can override the calibration and set your own threshold value using the following class-level method:
+
+ * `void SpanButton::setTouchThreshold(uintXX_t thresh)`
+   * sets the threshold value above (for ESP32 devices) or below (for ESP32-S2 and ESP32-S3 devices) which touch sensors are triggered to *thresh*
+   * *XX* is 16 (for ESP32 devices) or 32 (for ESP32-S2 and ESP32-S3 devices)
+   * the threshold specified is considered global and used for *all* SpanButton instances of type `SpanButton::TRIGGER_ON_TOUCH`
+   * this method can be called either before or after SpanButtons are created
+ 
+In addition, you can also override the ESP32's touch sensor timing parameters using the following class-level method:
+
+* `void SpanButton::setTouchCycles(uint16_t measureTime, uint16_t sleepTime)`
+  * changes the measurement time and sleep time clock cycles to *measureTime* and *sleepTime*, respectively.  This is simply a pass-though call to the Arduino-ESP32 library `touchSetCycles()` function
+  * unless a specific threshold value has been set with `setTouchThreshold()`, `setTouchCycles()` must be called *before* instantiating the first SpanButton() of type `SpanButton::TRIGGER_ON_TOUCH` so that HomeSpan will calibrate the touch threshold based on the new timing parameters specified
 
 ### *SpanUserCommand(char c, const char \*desc, void (\*f)(const char \*buf [,void \*obj]) [,void \*userObject])*
 

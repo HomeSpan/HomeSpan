@@ -6,7 +6,7 @@ The ESP32 has an on-chip signal-generator peripheral designed to drive an RF or 
 
 ## *RFControl(int pin, boolean refClock=true)*
 
-Creating an instance of this **class** initializes the RF/IR signal generator and specifies the ESP32 *pin* to output the signal.  You may create more than one instance of this class if driving more than one RF/IR transmitter (each connected to different *pin*), subject to the following limitations:  ESP32 - 8 instances; ESP32-S2 - 4 instances; ESP32-C3 - 2 instances.  The optional parameter *refClock* is more fully described further below under the `start()` method.
+Creating an instance of this **class** initializes the RF/IR signal generator and specifies the ESP32 *pin* to output the signal.  You may create more than one instance of this class if driving more than one RF/IR transmitter (each connected to different *pin*), subject to the following limitations:  ESP32 - 8 instances; ESP32-S2 and ESP32-S3 - 4 instances; ESP32-C3 - 2 instances.  The optional parameter *refClock* is more fully described further below under the `start()` method.
 
 Signals are defined as a sequence of HIGH and LOW phases that together form a pulse train where you specify the duration, in *ticks*, of each HIGH and LOW phase, shown respectively as H1-H4 and L1-L4 in the following diagram:  
 

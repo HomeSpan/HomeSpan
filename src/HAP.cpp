@@ -30,7 +30,6 @@
 #include <MD5Builder.h>
 
 #include "HAP.h"
-#include "HomeSpan.h"
 
 //////////////////////////////////////
 
@@ -141,42 +140,17 @@ void HAPClient::init(){
   if(!nvs_get_blob(hapNVS,"HAPHASH",NULL,&len)){                 // if found HAP HASH structure
     nvs_get_blob(hapNVS,"HAPHASH",&homeSpan.hapConfig,&len);     // retrieve data    
   } else {
-    Serial.print("Resetting Accessory Configuration number...\n");
-    nvs_set_blob(hapNVS,"HAPHASH",&homeSpan.hapConfig,sizeof(homeSpan.hapConfig));     // update data
+    Serial.print("Resetting Database Hash...\n");
+    nvs_set_blob(hapNVS,"HAPHASH",&homeSpan.hapConfig,sizeof(homeSpan.hapConfig));     // save data (will default to all zero values, which will then be updated below)
     nvs_commit(hapNVS);                                                                // commit to NVS
   }
+
+  if(homeSpan.updateDatabase(false))       // create Configuration Number and Loop vector
+    Serial.printf("\nAccessory configuration has changed.  Updating configuration number to %d\n",homeSpan.hapConfig.configNumber);
+  else
+    Serial.printf("\nAccessory configuration number: %d\n",homeSpan.hapConfig.configNumber);
 
   Serial.print("\n");
-
-  uint8_t tHash[48];
-  TempBuffer <char> tBuf(homeSpan.sprintfAttributes(NULL)+1);
-  homeSpan.sprintfAttributes(tBuf.buf);  
-  mbedtls_sha512_ret((uint8_t *)tBuf.buf,tBuf.len(),tHash,1);     // create SHA-384 hash of JSON (can be any hash - just looking for a unique key)
-
-  if(memcmp(tHash,homeSpan.hapConfig.hashCode,48)){           // if hash code of current HAP database does not match stored hash code
-    memcpy(homeSpan.hapConfig.hashCode,tHash,48);             // update stored hash code
-    homeSpan.hapConfig.configNumber++;                        // increment configuration number
-    if(homeSpan.hapConfig.configNumber==65536)                // reached max value
-      homeSpan.hapConfig.configNumber=1;                      // reset to 1
-                   
-    Serial.print("Accessory configuration has changed.  Updating configuration number to ");
-    Serial.print(homeSpan.hapConfig.configNumber);
-    Serial.print("\n\n");
-    nvs_set_blob(hapNVS,"HAPHASH",&homeSpan.hapConfig,sizeof(homeSpan.hapConfig));     // update data
-    nvs_commit(hapNVS);                                                                // commit to NVS
-  } else {
-    Serial.print("Accessory configuration number: ");
-    Serial.print(homeSpan.hapConfig.configNumber);
-    Serial.print("\n\n");    
-  }
-
-  for(int i=0;i<homeSpan.Accessories.size();i++){                             // identify all services with over-ridden loop() methods
-    for(int j=0;j<homeSpan.Accessories[i]->Services.size();j++){
-      SpanService *s=homeSpan.Accessories[i]->Services[j];      
-      if((void(*)())(s->*(&SpanService::loop)) != (void(*)())(&SpanService::loop))    // save pointers to services in Loops vector
-        homeSpan.Loops.push_back(s);
-    }
-  }
 
 }
 
@@ -1071,7 +1045,7 @@ int HAPClient::getCharacteristicsURL(char *urlBuf){
       numIDs++;
   
   char *ids[numIDs];            // reserve space for number of IDs found
-  int flags=GET_AID;            // flags indicating which characteristic fields to include in response (HAP Table 6-13)
+  int flags=GET_VALUE|GET_AID;  // flags indicating which characteristic fields to include in response (HAP Table 6-13)
   numIDs=0;                     // reset number of IDs found
 
   char *lastSpace=strchr(urlBuf,' ');
@@ -1276,7 +1250,7 @@ int HAPClient::getStatusURL(){
 
   String response="HTTP/1.1 200 OK\r\nContent-type: text/html\r\n\r\n";
 
-  response+="<html><head><title>HomeSpan Status</title>\n";
+  response+="<html><head><title>" + String(homeSpan.displayName) + "</title>\n";
   response+="<style>th, td {padding-right: 10px; padding-left: 10px; border:1px solid black;}";
   response+="</style></head>\n";
   response+="<body style=\"background-color:lightblue;\">\n";
@@ -1286,6 +1260,10 @@ int HAPClient::getStatusURL(){
   response+="<tr><td>Up Time:</td><td>" + String(uptime) + "</td></tr>\n";
   response+="<tr><td>Current Time:</td><td>" + String(clocktime) + "</td></tr>\n";
   response+="<tr><td>Boot Time:</td><td>" + String(homeSpan.webLog.bootTime) + "</td></tr>\n";
+  response+="<tr><td>Reset Reason Code:</td><td>" + String(esp_reset_reason()) + "</td></tr>\n";
+  response+="<tr><td>WiFi Disconnects:</td><td>" + String(homeSpan.connected/2) + "</td></tr>\n";
+  response+="<tr><td>WiFi Signal:</td><td>" + String(WiFi.RSSI()) + " dBm</td></tr>\n";
+  response+="<tr><td>WiFi Gateway:</td><td>" + WiFi.gatewayIP().toString() + "</td></tr>\n";
   response+="<tr><td>ESP32 Board:</td><td>" + String(ARDUINO_BOARD) + "</td></tr>\n";
   response+="<tr><td>Arduino-ESP Version:</td><td>" + String(ARDUINO_ESP_VERSION) + "</td></tr>\n";
   response+="<tr><td>ESP-IDF Version:</td><td>" + String(ESP_IDF_VERSION_MAJOR) + "." + String(ESP_IDF_VERSION_MINOR) + "." + String(ESP_IDF_VERSION_PATCH) + "</td></tr>\n";
@@ -1338,30 +1316,6 @@ int HAPClient::getStatusURL(){
 
 //////////////////////////////////////
 
-void HAPClient::callServiceLoops(){
-
-  homeSpan.snapTime=millis();                     // snap the current time for use in ALL loop routines
-  
-  for(int i=0;i<homeSpan.Loops.size();i++)        // loop over all services with over-ridden loop() methods
-    homeSpan.Loops[i]->loop();                    // call the loop() method
-}
-
-
-//////////////////////////////////////
-
-void HAPClient::checkPushButtons(){
-
-  for(int i=0;i<homeSpan.PushButtons.size();i++){                                // loop over all defined pushbuttons
-    SpanButton *sb=homeSpan.PushButtons[i];                                      // temporary pointer to SpanButton
-    if(sb->pushButton->triggered(sb->singleTime,sb->longTime,sb->doubleTime)){   // if the underlying PushButton is triggered
-      sb->service->button(sb->pin,sb->pushButton->type());                       // call the Service's button() routine with pin and type as parameters
-    }
-  }
-    
-}
-
-//////////////////////////////////////
-
 void HAPClient::checkNotifications(){
 
   if(!homeSpan.Notifications.empty()){                                          // if there are Notifications to process    
@@ -1372,7 +1326,7 @@ void HAPClient::checkNotifications(){
 
 //////////////////////////////////////
 
-void  HAPClient::checkTimedWrites(){
+void HAPClient::checkTimedWrites(){
 
   unsigned long cTime=millis();                                       // get current time
 
