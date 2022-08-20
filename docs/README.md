@@ -58,7 +58,7 @@ HomeSpan requires version 2.0.0 or later of the [Arduino-ESP32 Board Manager](ht
   * See [HomeSpan API Reference](https://github.com/HomeSpan/HomeSpan/blob/master/docs/Reference.md) for details
   
 * **New support for Touch Pads**
-  * `SpanButton()` now supports three pin trigger methods: *TRIGGER_ON_LOW*, *TRIGGER_ON_HIGH*, and *TRIGGER_ON_TOUCH*
+  * `SpanButton()` now supports three pin trigger methods: `TRIGGER_ON_LOW`, `TRIGGER_ON_HIGH`, and `TRIGGER_ON_TOUCH`
   * Also allows users to add their own trigger methods so `SpanButton()` can monitor pushbuttons attached to pin extenders, pin multiplexers, or any other device that requires calling third-party library functions
   * See [HomeSpan API Reference](https://github.com/HomeSpan/HomeSpan/blob/master/docs/Reference.md) for details
 
@@ -67,6 +67,7 @@ HomeSpan requires version 2.0.0 or later of the [Arduino-ESP32 Board Manager](ht
   * Adds WiFi diagnostics to Web Logs to monitor for disconnects and WiFi signal strength
   
 * **New option to run HomeSpan as a separate task in its own thread**
+  * Adds `homeSpan.autoPoll()` method
   * Works with both single- and dual-core processors
   * For dual-core processors, polling task will be created on the "free" core not being used for other Arduino functions
   * Allows user to add time-sensitive code the the main Arduino `loop()` function without delaying, or being dalyed by, HomeSpan polling
