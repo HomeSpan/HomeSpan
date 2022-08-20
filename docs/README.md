@@ -4,7 +4,7 @@ Welcome to HomeSpan - a robust and extremely easy-to-use Arduino library for cre
 
 HomeSpan provides a microcontroller-focused implementation of [Apple's HomeKit Accessory Protocol Specification Release R2 (HAP-R2)](https://developer.apple.com/homekit/specification/) designed specifically for the Espressif ESP32 microcontroller running within the Arduino IDE.  HomeSpan pairs directly to HomeKit via your home WiFi network without the need for any external bridges or components.  With HomeSpan you can use the full power of the ESP32's I/O functionality to create custom control software and/or hardware to automatically operate external devices from the Home App on your iPhone, iPad, or Mac, or with Siri.
 
-HomeSpan requires Version 2 of the [Arduino-ESP32 Board Manager](https://github.com/espressif/arduino-esp32).  HomeSpan can be run on the original ESP32 as well as Espressif's ESP32-S2, ESP32-C3, and ESP32-S3 chips.
+HomeSpan requires version 2.0.0 or later of the [Arduino-ESP32 Board Manager](https://github.com/espressif/arduino-esp32), and has been tested up through version 2.0.4 (recommended).  HomeSpan can be run on the original ESP32 as well as Espressif's ESP32-S2, ESP32-C3, and ESP32-S3 chips.
 
 ### HomeSpan Highlights
 
@@ -26,7 +26,9 @@ HomeSpan requires Version 2 of the [Arduino-ESP32 Board Manager](https://github.
 * Dedicated classes that utilize the ESP32's 16-channel PWM peripheral for easy control of:
   * LED Brightness
   * Servo Motors
-* Integrated Push Button functionality supporting single, double, and long presses 
+* Integrated Push Button functionality supporting single, double, and long presses of:
+  * Physical pushbuttons that connect an ESP32 pin to either ground or VCC
+  * Touch pads/sensors connected to an ESP32 pin (for ESP32 devices that support touch pads)
 * Integrated access to the ESP32's on-chip Remote Control peripheral for easy generation of IR and RF signals
 * Dedicated classes to control one- and two-wire addressable RGB and RGBW LEDs and LED strips
 * Integrated Web Log for user-defined log messages
@@ -45,7 +47,49 @@ HomeSpan requires Version 2 of the [Arduino-ESP32 Board Manager](https://github.
   * Launch the WiFi Access Point
 * A standalone, detailed End-User Guide
 
-## ❗Latest Update - HomeSpan 1.5.1 (4/17/2022)
+## ❗Latest Update - HomeSpan 1.6.0 (8/21/2022)
+
+* **Support for ESP32-S3 devices**
+  * Requires Arduino-ESP32 Board Manager version 2.0.4 or later
+  
+* **New functionality to *dynamically* add/delete Accessories on the fly *without* rebooting the device**
+  * Adds `homeSpan.deleteAccessory()` and `homeSpan.updateDatabase()` methods
+  * Refactored the HomeSpan Info 'i' CLI command to reflect all dynamic database changes
+  * See [HomeSpan API Reference](https://github.com/HomeSpan/HomeSpan/blob/master/docs/Reference.md) for details
+  
+* **Expanded *SpanButton()* functionality**
+  * Now includes integrated support for pins connected to *touch pads*!
+  * Extends logic to include physical pushbuttons that connect pins to *VCC* as well as *ground*
+  * Allows users to easily add their own logic to use pin extenders, pin multiplexers, or any "pushbutton" device that requires calling additional methods
+  * See [HomeSpan API Reference](https://github.com/HomeSpan/HomeSpan/blob/master/docs/Reference.md) for details
+
+* **Improved WiFi disconnect/reconnect handling
+  * Fixes code that may, under certain circumstances, have prevented HomeSpan from reconnecting to WiFi after signal is lost
+  * Adds WiFi diagnostics to Web Logs, including a record of each WiFi disconnect/reconnect, the total number of disconnects since booting, and WiFi signal strength
+  
+* **New *experimental* multi-threading
+  * Adds new method `homeSpan.autoPoll()` that runs HomeSpan polling in a separate task thread
+  * Works with both single- and dual-core processors
+  * For dual-core processors, polling task will be created on the "free" core not being used for other Arduino functions
+  * Allows user to add time-sensitive code the the main Arduino `loop()` function without delaying, or being dalyed by, HomeSpan polling
+  * See [HomeSpan API Reference](https://github.com/HomeSpan/HomeSpan/blob/master/docs/Reference.md) for details
+
+* **Created new [Example 20 - AdvancedTechniques](https://github.com/HomeSpan/HomeSpan/blob/master/examples/20-AdvancedTechniques)**
+  * Demonstrates how the `homeSpan.deleteAccessory()` and `homeSpan.updateDatabase()` methods can be used to create a bridge device that can be dynamically updated without the need to reboot HomeSpan
+  * Also included the `homeSpan.autoPoll()` method to show how it can be used in place calling `homeSpan.poll()` from the main Arduino `loop()` method
+  
+* **Created new [Programmable Hub Example](https://github.com/HomeSpan/HomeSpan/blob/master/Other%20Examples/ProgrammableHub)
+  * Demonstrates how to implement a complete Web Interface to dynamically add/delete Light Accessories to a bridge accessory
+  * Expands upon many of the methods used in [Example 20](https://github.com/HomeSpan/HomeSpan/blob/master/examples/20-AdvancedTechniques)
+  
+* **Other Updates:**
+  * New 'm' CLI command that prints free bytes remaining in heap memory - useful for monitoring memory usage when dynamically adding Accessories
+  * New `homeSpan.getLogLevel()` method that returns the current log level
+  * Converted all HomeSpan API objects (*Span, SpanAccessory, SpanService, SpanButton*...) from C++ *struct* to C++ *class* allowing proper separation of public, protected, and private members and methods
+  
+  
+
+
 
 * **New Web Logging functionality**
   * HomeSpan can now host a Web Log page for message logging
