@@ -33,12 +33,13 @@
 
 #include "RFControl.h"
 #include "PwmPin.h"
+#include "Blinker.h"
 
 ////////////////////////////////////////////
 //     Single-Wire RGB/RGBW NeoPixels     //
 ////////////////////////////////////////////
 
-class Pixel {
+class Pixel : Blinkable {
 
   public: 
     struct Color {

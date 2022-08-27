@@ -40,6 +40,7 @@
 #include <nvs.h>
 #include <ArduinoOTA.h>
 
+#include "extras/Blinker.h"
 #include "Settings.h"
 #include "Utils.h"
 #include "Network.h"
@@ -189,7 +190,6 @@ class Span{
   unsigned long alarmConnect=0;                 // time after which WiFi connection attempt should be tried again
   
   const char *defaultSetupCode=DEFAULT_SETUP_CODE;            // Setup Code used for pairing
-  int statusPin=DEFAULT_STATUS_PIN;                           // pin for Status LED
   uint16_t autoOffLED=0;                                      // automatic turn-off duration (in seconds) for Status LED
   uint8_t logLevel=DEFAULT_LOG_LEVEL;                         // level for writing out log messages to serial monitor
   uint8_t maxConnections=CONFIG_LWIP_MAX_SOCKETS-2;           // maximum number of allowed simultaneous HAP connections
@@ -203,7 +203,7 @@ class Span{
   void (*apFunction)()=NULL;                                  // optional function to invoke when starting Access Point
   
   WiFiServer *hapServer;                            // pointer to the HAP Server connection
-  Blinker statusLED;                                // indicates HomeSpan status
+  Blinker *statusLED = NULL;                        // indicates HomeSpan status
   PushButton *controlButton = NULL;                 // controls HomeSpan configuration and resets
   Network network;                                  // configures WiFi and Setup Code via either serial monitor or temporary Access Point
   SpanWebLog webLog;                                // optional web status/log
@@ -254,10 +254,12 @@ class Span{
   boolean updateDatabase(boolean updateMDNS=true);   // updates HAP Configuration Number and Loop vector; if updateMDNS=true and config number has changed, re-broadcasts MDNS 'c#' record; returns true if config number changed
   boolean deleteAccessory(uint32_t aid);             // deletes Accessory with matching aid; returns true if found, else returns false 
 
-  void setControlPin(uint8_t pin){controlButton=new PushButton(pin);}     // sets Control Pin
-  void setStatusPin(uint8_t pin){statusPin=pin;}                          // sets Status Pin
+  void setControlPin(uint8_t pin){controlButton=new PushButton(pin);}                  // sets Control Pin
+  void setStatusPin(uint8_t pin){statusLED=new Blinker(new LED(pin),0,autoOffLED);}    // sets Status Pin
+//  void setStatusPin(Blinkable *led){statusLED=new Blinker(led,0,autoOffLED);}          // sets Status Blinkable LED
+  
   void setStatusAutoOff(uint16_t duration){autoOffLED=duration;}          // sets Status LED auto off (seconds)  
-  int getStatusPin(){return(statusPin);}                                  // get Status Pin
+  int getStatusPin(){return(statusLED?statusLED->getPin():-1);}           // get Status Pin (returns -1 if undefined)
   int getControlPin(){return(controlButton?controlButton->getPin():-1);}  // get Control Pin (returns -1 if undefined)
   void setApSSID(const char *ssid){network.apSSID=ssid;}                  // sets Access Point SSID
   void setApPassword(const char *pwd){network.apPassword=pwd;}            // sets Access Point Password

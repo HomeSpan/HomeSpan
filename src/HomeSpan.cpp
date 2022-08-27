@@ -59,8 +59,6 @@ void Span::begin(Category catID, const char *displayName, const char *hostNameBa
 
   esp_task_wdt_delete(xTaskGetIdleTaskHandleForCPU(0));       // required to avoid watchdog timeout messages from ESP32-C3
 
-  statusLED.init(statusPin,0,autoOffLED);
-
   if(requestedMaxCon<maxConnections)                          // if specific request for max connections is less than computed max connections
     maxConnections=requestedMaxCon;                           // over-ride max connections with requested value
     
@@ -96,8 +94,8 @@ void Span::begin(Category catID, const char *displayName, const char *hostNameBa
   Serial.print("Message Logs:     Level ");
   Serial.print(logLevel);  
   Serial.print("\nStatus LED:       Pin ");
-  if(statusPin>=0){
-    Serial.print(statusPin);
+  if(getStatusPin()>=0){
+    Serial.print(getStatusPin());
     if(autoOffLED>0)
       Serial.printf("  (Auto Off=%d sec)",autoOffLED);
   }
@@ -189,10 +187,11 @@ void Span::pollTask() {
         processSerialCommand("A");
       } else {
         Serial.print("YOU MAY CONFIGURE BY TYPING 'W <RETURN>'.\n\n");
-        statusLED.start(LED_WIFI_NEEDED);
+        if(statusLED)
+          statusLED->start(LED_WIFI_NEEDED);
       }
-    } else {
-      homeSpan.statusLED.start(LED_WIFI_CONNECTING);
+    } else if(statusLED) {
+      statusLED->start(LED_WIFI_CONNECTING);
     }
           
     if(controlButton)
@@ -290,12 +289,12 @@ void Span::pollTask() {
   if(spanOTA.enabled)
     ArduinoOTA.handle();
 
-  if(controlButton && controlButton->primed()){
-    statusLED.start(LED_ALERT);
-  }
+  if(controlButton && controlButton->primed() && statusLED)
+    statusLED->start(LED_ALERT);
   
   if(controlButton && controlButton->triggered(3000,10000)){
-    statusLED.off();
+    if(statusLED)
+      statusLED->off();
     if(controlButton->type()==PushButton::LONG){
       controlButton->wait();
       processSerialCommand("F");        // FACTORY RESET
@@ -304,7 +303,8 @@ void Span::pollTask() {
     }
   }
 
-  statusLED.check();
+  if(statusLED)
+    statusLED->check();
     
 } // poll
 
@@ -323,11 +323,16 @@ int Span::getFreeSlot(){
 //////////////////////////////////////
 
 void Span::commandMode(){
+
+  if(!statusLED){
+    Serial.print("*** ERROR: CAN'T ENTER COMMAND MODE WITHOUT A DEFINED STATUS LED***\n\n");
+    return;
+  }
   
   Serial.print("*** ENTERING COMMAND MODE ***\n\n");
   int mode=1;
   boolean done=false;
-  statusLED.start(500,0.3,mode,1000);
+  statusLED->start(500,0.3,mode,1000);
 
   unsigned long alarmTime=millis()+comModeLife;
 
@@ -338,7 +343,7 @@ void Span::commandMode(){
       Serial.print(" seconds).\n\n");
       mode=1;
       done=true;
-      statusLED.start(LED_ALERT);
+      statusLED->start(LED_ALERT);
       delay(2000);
     } else
     if(controlButton->triggered(10,3000)){
@@ -346,14 +351,14 @@ void Span::commandMode(){
         mode++;
         if(mode==6)
           mode=1;
-        statusLED.start(500,0.3,mode,1000);        
+        statusLED->start(500,0.3,mode,1000);        
       } else {
         done=true;
       }
     } // button press
   } // while
 
-  statusLED.start(LED_ALERT);
+  statusLED->start(LED_ALERT);
   controlButton->wait();
   
   switch(mode){
@@ -361,12 +366,12 @@ void Span::commandMode(){
     case 1:
       Serial.print("*** NO ACTION\n\n");
       if(strlen(network.wifiData.ssid)==0)
-        statusLED.start(LED_WIFI_NEEDED);
+        statusLED->start(LED_WIFI_NEEDED);
       else
       if(!HAPClient::nAdminControllers())
-        statusLED.start(LED_PAIRING_NEEDED);
+        statusLED->start(LED_PAIRING_NEEDED);
       else
-        statusLED.on();
+        statusLED->on();
     break;
 
     case 2:
@@ -402,7 +407,8 @@ void Span::checkConnect(){
     connected++;
     waitTime=60000;
     alarmConnect=0;
-    homeSpan.statusLED.start(LED_WIFI_CONNECTING);
+    if(statusLED)
+      statusLED->start(LED_WIFI_CONNECTING);
   }
 
   if(WiFi.status()!=WL_CONNECTED){
@@ -429,10 +435,12 @@ void Span::checkConnect(){
     return;
   }
 
-  if(!HAPClient::nAdminControllers())
-    statusLED.start(LED_PAIRING_NEEDED);
-  else
-    statusLED.on();
+  if(statusLED){
+    if(!HAPClient::nAdminControllers())
+      statusLED->start(LED_PAIRING_NEEDED);
+    else 
+      statusLED->on();
+  }
   
   connected++;
 
@@ -756,11 +764,13 @@ void Span::processSerialCommand(const char *c){
       
       Serial.print("\nDEVICE NOT YET PAIRED -- PLEASE PAIR WITH HOMEKIT APP\n\n");
       mdns_service_txt_item_set("_hap","_tcp","sf","1");                                                        // set Status Flag = 1 (Table 6-8)
-      
-      if(strlen(network.wifiData.ssid)==0)
-        statusLED.start(LED_WIFI_NEEDED);
-      else
-        statusLED.start(LED_PAIRING_NEEDED);
+
+      if(statusLED){
+        if(strlen(network.wifiData.ssid)==0)
+          statusLED->start(LED_WIFI_NEEDED);
+        else
+          statusLED->start(LED_PAIRING_NEEDED);
+      }
     }
     break;
 
@@ -777,7 +787,8 @@ void Span::processSerialCommand(const char *c){
       nvs_set_blob(wifiNVS,"WIFIDATA",&network.wifiData,sizeof(network.wifiData));    // update data
       nvs_commit(wifiNVS);                                                            // commit to NVS
       Serial.print("\n*** WiFi Credentials SAVED!  Re-starting ***\n\n");
-      statusLED.off();
+      if(statusLED)
+        statusLED->off();
       delay(1000);
       ESP.restart();  
       }
@@ -810,7 +821,8 @@ void Span::processSerialCommand(const char *c){
       }
       
       Serial.print("\n*** Re-starting ***\n\n");
-      statusLED.off();
+      if(statusLED)
+        statusLED->off();
       delay(1000);
       ESP.restart();                                                                             // re-start device   
     }
@@ -818,7 +830,8 @@ void Span::processSerialCommand(const char *c){
     
     case 'X': {
 
-      statusLED.off();
+      if(statusLED)
+        statusLED->off();
       nvs_erase_all(wifiNVS);
       nvs_commit(wifiNVS);      
       Serial.print("\n*** WiFi Credentials ERASED!  Re-starting...\n\n");
@@ -837,7 +850,8 @@ void Span::processSerialCommand(const char *c){
 
     case 'H': {
       
-      statusLED.off();
+      if(statusLED)
+        statusLED->off();
       nvs_erase_all(HAPClient::hapNVS);
       nvs_commit(HAPClient::hapNVS);      
       Serial.print("\n*** HomeSpan Device ID and Pairing Data DELETED!  Restarting...\n\n");
@@ -848,7 +862,8 @@ void Span::processSerialCommand(const char *c){
 
     case 'R': {
       
-      statusLED.off();
+      if(statusLED)
+        statusLED->off();
       Serial.print("\n*** Restarting...\n\n");
       delay(1000);
       ESP.restart();
@@ -857,7 +872,8 @@ void Span::processSerialCommand(const char *c){
 
     case 'F': {
       
-      statusLED.off();
+      if(statusLED)
+        statusLED->off();
       nvs_erase_all(HAPClient::hapNVS);
       nvs_commit(HAPClient::hapNVS);      
       nvs_erase_all(wifiNVS);
@@ -874,7 +890,8 @@ void Span::processSerialCommand(const char *c){
 
     case 'E': {
       
-      statusLED.off();
+      if(statusLED)
+        statusLED->off();
       nvs_flash_erase();
       Serial.print("\n*** ALL DATA ERASED!  Restarting...\n\n");
       delay(1000);
@@ -2098,7 +2115,8 @@ void SpanOTA::start(){
   Serial.printf("\n*** Current Partition: %s\n*** New Partition: %s\n*** OTA Starting..",
       esp_ota_get_running_partition()->label,esp_ota_get_next_update_partition(NULL)->label);
   otaPercent=0;
-  homeSpan.statusLED.start(LED_OTA_STARTED);
+  if(homeSpan.statusLED)
+    homeSpan.statusLED->start(LED_OTA_STARTED);
 }
 
 ///////////////////////////////
@@ -2107,7 +2125,8 @@ void SpanOTA::end(){
   nvs_set_u8(homeSpan.otaNVS,"OTA_REQUIRED",safeLoad);
   nvs_commit(homeSpan.otaNVS);
   Serial.printf(" DONE!  Rebooting...\n");
-  homeSpan.statusLED.off();
+  if(homeSpan.statusLED)
+    homeSpan.statusLED->off();
   delay(100);                       // make sure commit it finished before reboot
 }
 

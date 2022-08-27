@@ -3,6 +3,9 @@
 // as well as compile and test from this point.  This file is ignored when the library is included in other sketches.
 
 #include "HomeSpan.h"
+#include "FeatherPins.h"
+#include "extras/Pixel.h"
+#include "extras/Blinker.h"
 
 #define STRING_t  const char *          // WORK-AROUND
 
@@ -14,8 +17,11 @@ void setup() {
   Serial.begin(115200);
  
 // homeSpan.setLogLevel(2);
-//  homeSpan.setStatusPin(13);
-  homeSpan.setControlPin(33);
+  homeSpan.setControlPin(F25);
+  homeSpan.setStatusPin(F26);
+//  homeSpan.setStatusPin(new LED(F26));
+
+//  new Pixel(F27);
   
   homeSpan.setHostNameSuffix("-lamp1");
   homeSpan.setPortNum(1201);

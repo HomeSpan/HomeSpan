@@ -637,7 +637,9 @@ int HAPClient::postPairSetupURL(){
       mdns_service_txt_item_set("_hap","_tcp","sf","0");           // broadcast new status
       
       LOG1("\n*** ACCESSORY PAIRED! ***\n");
-      homeSpan.statusLED.on();
+      
+      if(homeSpan.statusLED)
+        homeSpan.statusLED->on();
       
       if(homeSpan.pairCallback)                     // if set, invoke user-defined Pairing Callback to indicate device has been paired
         homeSpan.pairCallback(true);
@@ -1636,7 +1638,8 @@ void HAPClient::removeController(uint8_t *id){
       removeControllers();
       LOG1("That was last Admin Controller!  Removing any remaining Regular Controllers and unpairing Accessory\n");  
       mdns_service_txt_item_set("_hap","_tcp","sf","1");           // set Status Flag = 1 (Table 6-8)
-      homeSpan.statusLED.start(LED_PAIRING_NEEDED);
+      if(homeSpan.statusLED)
+        homeSpan.statusLED->start(LED_PAIRING_NEEDED);
       if(homeSpan.pairCallback)                                    // if set, invoke user-defined Pairing Callback to indicate device has been paired
         homeSpan.pairCallback(false);
     }

@@ -71,8 +71,6 @@
 
 #define     DEFAULT_QR_ID             "HSPN"              // change with homeSpan.setQRID(qrID);
 
-#define     DEFAULT_STATUS_PIN        -1                  // change with homeSpan.setStatusPin(pin)
-
 #define     DEFAULT_AP_SSID           "HomeSpan-Setup"    // change with homeSpan.setApSSID(ssid)
 #define     DEFAULT_AP_PASSWORD       "homespan"          // change with homeSpan.setApPassword(pwd)
 #define     DEFAULT_OTA_PASSWORD      "homespan-ota"      // change with 'O' command
