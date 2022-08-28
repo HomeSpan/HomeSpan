@@ -39,7 +39,7 @@
 //     Single-Wire RGB/RGBW NeoPixels     //
 ////////////////////////////////////////////
 
-class Pixel : Blinkable {
+class Pixel : public Blinkable {
 
   public: 
     struct Color {
@@ -152,6 +152,9 @@ class Pixel : Blinkable {
     operator bool(){         // override boolean operator to return true/false if creation succeeded/failed
       return(*rf);
     }
+
+    void on() {set(RGB(255,0,0));}
+    void off() {set(RGB(0,0,0));}
 };
 
 ////////////////////////////////////////////
