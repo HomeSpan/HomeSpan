@@ -5,7 +5,7 @@
 #include "Pixel.h"
 
 //Blinker p(new LED(26));
-Blinker p(new Pixel(27),20);
+Blinker p(new Pixel(8));
 
 void setup() {     
  

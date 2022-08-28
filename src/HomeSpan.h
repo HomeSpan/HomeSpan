@@ -41,6 +41,7 @@
 #include <ArduinoOTA.h>
 
 #include "extras/Blinker.h"
+#include "extras/Pixel.h"
 #include "Settings.h"
 #include "Utils.h"
 #include "Network.h"
@@ -255,8 +256,9 @@ class Span{
   boolean deleteAccessory(uint32_t aid);             // deletes Accessory with matching aid; returns true if found, else returns false 
 
   void setControlPin(uint8_t pin){controlButton=new PushButton(pin);}                  // sets Control Pin
-  void setStatusPin(uint8_t pin){statusLED=new Blinker(new LED(pin),0,autoOffLED);}    // sets Status Pin
-//  void setStatusPin(Blinkable *led){statusLED=new Blinker(led,0,autoOffLED);}          // sets Status Blinkable LED
+//  void setStatusPin(uint8_t pin){statusLED=new Blinker(new LED(pin),autoOffLED);}      // sets Status Pin
+  void setStatusPin(uint8_t pin){statusLED=new Blinker(new Pixel(8),autoOffLED);}      // sets Status Pin
+//  void setStatusPin(Blinkable *led){statusLED=new Blinker(led,autoOffLED);}            // sets Status Blinkable LED
   
   void setStatusAutoOff(uint16_t duration){autoOffLED=duration;}          // sets Status LED auto off (seconds)  
   int getStatusPin(){return(statusLED?statusLED->getPin():-1);}           // get Status Pin (returns -1 if undefined)

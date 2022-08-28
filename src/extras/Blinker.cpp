@@ -72,7 +72,7 @@ void Blinker::start(int period, float dutyCycle, int nBlinks, int delayTime){
 
   stop();  
   Serial.printf("Starting Blink Task\n");
-  xTaskCreate( blinkTask, "BlinkTask", 1024, (void *)this, 0, &blinkHandle );
+  xTaskCreate( blinkTask, "BlinkTask", 1024, (void *)this, 2, &blinkHandle );
 
   pauseTime=millis();
   isPaused=false;

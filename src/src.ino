@@ -5,7 +5,6 @@
 #include "HomeSpan.h"
 #include "FeatherPins.h"
 #include "extras/Pixel.h"
-#include "extras/Blinker.h"
 
 #define STRING_t  const char *          // WORK-AROUND
 
