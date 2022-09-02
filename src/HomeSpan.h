@@ -204,7 +204,8 @@ class Span{
   void (*apFunction)()=NULL;                                  // optional function to invoke when starting Access Point
   
   WiFiServer *hapServer;                            // pointer to the HAP Server connection
-  Blinker *statusLED = NULL;                        // indicates HomeSpan status
+  Blinker *statusLED;                               // indicates HomeSpan status
+  Blinkable *statusDevice = NULL;                   // the device used for the Blinker
   PushButton *controlButton = NULL;                 // controls HomeSpan configuration and resets
   Network network;                                  // configures WiFi and Setup Code via either serial monitor or temporary Access Point
   SpanWebLog webLog;                                // optional web status/log
@@ -255,11 +256,9 @@ class Span{
   boolean updateDatabase(boolean updateMDNS=true);   // updates HAP Configuration Number and Loop vector; if updateMDNS=true and config number has changed, re-broadcasts MDNS 'c#' record; returns true if config number changed
   boolean deleteAccessory(uint32_t aid);             // deletes Accessory with matching aid; returns true if found, else returns false 
 
-  void setControlPin(uint8_t pin){controlButton=new PushButton(pin);}                  // sets Control Pin
-//  void setStatusPin(uint8_t pin){statusLED=new Blinker(new LED(pin),autoOffLED);}      // sets Status Pin
-  void setStatusPin(uint8_t pin){statusLED=new Blinker(new Pixel(8),autoOffLED);}      // sets Status Pin
-//  void setStatusPin(Blinkable *led){statusLED=new Blinker(led,autoOffLED);}            // sets Status Blinkable LED
-  
+  void setControlPin(uint8_t pin){controlButton=new PushButton(pin);}     // sets Control Pin   
+  void setStatusPin(uint8_t pin){statusDevice=new LED(pin);}              // sets Status Device to a simple LED on specified pin
+  void setStatusDevice(Blinkable *dev){statusDevice=dev;}                 // sets Status Device to generic Blinkable object 
   void setStatusAutoOff(uint16_t duration){autoOffLED=duration;}          // sets Status LED auto off (seconds)  
   int getStatusPin(){return(statusLED?statusLED->getPin():-1);}           // get Status Pin (returns -1 if undefined)
   int getControlPin(){return(controlButton?controlButton->getPin():-1);}  // get Control Pin (returns -1 if undefined)

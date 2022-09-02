@@ -3,9 +3,10 @@
 
 #include "Blinker.h"
 #include "Pixel.h"
+#include <Wire.h>
 
-//Blinker p(new LED(26));
-Blinker p(new Pixel(8));
+Blinker p(new Pixel(2),10);
+//Blinker p(NULL,10);
 
 void setup() {     
  
@@ -14,7 +15,7 @@ void setup() {
   delay(1000);                    // wait for interface to flush
 
   Serial.println("\n\nHomeSpan Blinker Example\n");
-//  Serial.printf("Pins = %d %d\n",b.getPin(),p.getPin());
+   Serial.printf("Pins = %d\n",p.getPin());
 
   p.on();
   delay(2000);
@@ -24,8 +25,6 @@ void setup() {
   delay(5000);
   Serial.printf("New Pattern\n");
   p.start(200,0.2,2,200);
-  delay(3000);
-  p.off();
 }
 
 void loop(){

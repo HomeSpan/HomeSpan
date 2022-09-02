@@ -64,7 +64,10 @@ void Blinker::start(int period, float dutyCycle){
 //////////////////////////////////////
 
 void Blinker::start(int period, float dutyCycle, int nBlinks, int delayTime){
-  
+
+  if(!led)
+    return;
+    
   onTime=dutyCycle*period;
   offTime=period-onTime;
   this->delayTime=delayTime+offTime;
@@ -81,6 +84,9 @@ void Blinker::start(int period, float dutyCycle, int nBlinks, int delayTime){
 //////////////////////////////////////
 
 void Blinker::stop(){
+
+  if(!led)
+    return;  
   
   if(blinkHandle!=NULL){
     Serial.printf("Deleting Blink Task\n");
@@ -95,6 +101,9 @@ void Blinker::stop(){
 
 void Blinker::on(){
 
+  if(!led)
+    return;
+
   stop();
   led->on();
   
@@ -106,6 +115,9 @@ void Blinker::on(){
 
 void Blinker::off(){
 
+  if(!led)
+    return;
+
   stop();
   led->off();
 }
@@ -113,6 +125,9 @@ void Blinker::off(){
 //////////////////////////////////////
 
 void Blinker::check(){
+
+  if(!led)
+    return;
 
   if(pauseDuration==0 || isPaused || (millis()-pauseTime)<pauseDuration)
     return;
@@ -124,5 +139,9 @@ void Blinker::check(){
 //////////////////////////////////////
 
 int Blinker::getPin(){
+  
+  if(!led)
+    return(-1);
+    
   return(led->getPin());
 }

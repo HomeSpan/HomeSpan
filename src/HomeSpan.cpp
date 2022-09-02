@@ -57,6 +57,8 @@ void Span::begin(Category catID, const char *displayName, const char *hostNameBa
   this->modelName=modelName;
   sprintf(this->category,"%d",(int)catID);
 
+  statusLED=new Blinker(statusDevice,autoOffLED);
+
   esp_task_wdt_delete(xTaskGetIdleTaskHandleForCPU(0));       // required to avoid watchdog timeout messages from ESP32-C3
 
   if(requestedMaxCon<maxConnections)                          // if specific request for max connections is less than computed max connections
