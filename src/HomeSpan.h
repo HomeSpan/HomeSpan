@@ -260,7 +260,7 @@ class Span{
   void setStatusPin(uint8_t pin){statusDevice=new LED(pin);}              // sets Status Device to a simple LED on specified pin
   void setStatusDevice(Blinkable *dev){statusDevice=dev;}                 // sets Status Device to generic Blinkable object 
   void setStatusAutoOff(uint16_t duration){autoOffLED=duration;}          // sets Status LED auto off (seconds)  
-  int getStatusPin(){return(statusLED?statusLED->getPin():-1);}           // get Status Pin (returns -1 if undefined)
+  int getStatusPin(){return(statusLED->getPin());}                        // get Status Pin (getPin will return -1 if underlying statusDevice is undefined)
   int getControlPin(){return(controlButton?controlButton->getPin():-1);}  // get Control Pin (returns -1 if undefined)
   void setApSSID(const char *ssid){network.apSSID=ssid;}                  // sets Access Point SSID
   void setApPassword(const char *pwd){network.apPassword=pwd;}            // sets Access Point Password
