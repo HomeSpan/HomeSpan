@@ -43,21 +43,6 @@ class Blinkable {
 };
 
 ////////////////////////////////
-//         Generic_LED        //
-////////////////////////////////
-
-class LED : public Blinkable {
-  int pin;
-
-  public:
-   
-  LED(int pin) : pin{pin} {pinMode(pin,OUTPUT);digitalWrite(pin,0);}
-  void on() {digitalWrite(pin,HIGH);}
-  void off() {digitalWrite(pin,LOW);}
-  int getPin() {return(pin);}
-};
-
-////////////////////////////////
 //         Blinker            //
 ////////////////////////////////
 

@@ -132,13 +132,14 @@ class Pixel : public Blinkable {
     uint32_t txEndMask;            // mask for end-of-transmission interrupt
     uint32_t txThrMask;            // mask for threshold interrupt
     uint32_t lastBit;              // 0=RGBW; 8=RGB
+    Color onColor;                 // color used for on() command
     
     const int memSize=sizeof(RMTMEM.chan[0].data32)/4;    // determine size (in pulses) of one channel
      
     static void loadData(void *arg);            // interrupt handler 
     volatile static pixel_status_t status;      // storage for volatile information modified in interupt handler   
   
-  public:    
+  public:
     Pixel(int pin, boolean isRGBW=false);                                                   // creates addressable single-wire RGB (false) or RGBW (true) LED connected to pin (such as the SK68 or WS28)   
     void set(Color *c, int nPixels, boolean multiColor=true);                               // sets colors of nPixels based on array of Colors c; setting multiColor to false repeats Color in c[0] for all nPixels
     void set(Color c, int nPixels=1){set(&c,nPixels,false);}                                // sets color of nPixels to be equal to specific Color c
@@ -153,8 +154,9 @@ class Pixel : public Blinkable {
       return(*rf);
     }
 
-    void on() {set(RGB(255,0,0));}
-    void off() {set(RGB(0,0,0));}
+    void on() {set(onColor);}
+    void off() {set(RGB(0,0,0,0));}
+    Pixel *setOnColor(Color c){onColor=c;return(this);}
 };
 
 ////////////////////////////////////////////
