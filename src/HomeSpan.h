@@ -257,11 +257,15 @@ class Span{
   boolean deleteAccessory(uint32_t aid);             // deletes Accessory with matching aid; returns true if found, else returns false 
 
   void setControlPin(uint8_t pin){controlButton=new PushButton(pin);}     // sets Control Pin   
-  void setStatusPin(uint8_t pin){statusDevice=new LED(pin);}              // sets Status Device to a simple LED on specified pin
-  void setStatusDevice(Blinkable *dev){statusDevice=dev;}                 // sets Status Device to generic Blinkable object 
+  void setStatusPin(uint8_t pin){statusDevice=new GenericLED(pin);}       // sets Status Device to a simple LED on specified pin
   void setStatusAutoOff(uint16_t duration){autoOffLED=duration;}          // sets Status LED auto off (seconds)  
   int getStatusPin(){return(statusLED->getPin());}                        // get Status Pin (getPin will return -1 if underlying statusDevice is undefined)
   int getControlPin(){return(controlButton?controlButton->getPin():-1);}  // get Control Pin (returns -1 if undefined)
+  
+  void setStatusPixel(uint8_t pin,float h=0,float s=100,float v=100){     // sets Status Device to an RGB Pixel on specified pin
+    statusDevice=((new Pixel(pin))->setOnColor(Pixel::HSV(h,s,v)));
+  }              
+
   void setApSSID(const char *ssid){network.apSSID=ssid;}                  // sets Access Point SSID
   void setApPassword(const char *pwd){network.apPassword=pwd;}            // sets Access Point Password
   void setApTimeout(uint16_t nSec){network.lifetime=nSec*1000;}           // sets Access Point Timeout (seconds)

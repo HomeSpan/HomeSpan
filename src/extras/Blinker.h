@@ -111,3 +111,18 @@ class Blinker {
 //  Returns pin number of connected LED 
 
 };
+
+////////////////////////////////
+//        GenericLED          //
+////////////////////////////////
+
+class GenericLED : public Blinkable {
+  int pin;
+
+  public:
+   
+  GenericLED(int pin) : pin{pin} {pinMode(pin,OUTPUT);digitalWrite(pin,0);}
+  void on() {digitalWrite(pin,HIGH);}
+  void off() {digitalWrite(pin,LOW);}
+  int getPin() {return(pin);}
+};

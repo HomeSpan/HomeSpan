@@ -81,20 +81,7 @@ class LedPin : public LedC {
     static void HSVtoRGB(float h, float s, float v, float *r, float *g, float *b );       // converts Hue/Saturation/Brightness to R/G/B
 };
 
-////////////////////////////////
-//          LED               //
-////////////////////////////////
 
-class LED : public Blinkable {
-  int pin;
-
-  public:
-   
-  LED(int pin) : pin{pin} {pinMode(pin,OUTPUT);digitalWrite(pin,0);}
-  void on() {digitalWrite(pin,HIGH);}
-  void off() {digitalWrite(pin,LOW);}
-  int getPin() {return(pin);}
-};
 
 ////////////////////////////////
 //         ServoPin           //
