@@ -27,7 +27,11 @@
  
 // USER-DEFINED SETTINGS AND REFERENCE ENUMERATION CLASSES
 
+#ifdef PLATFORMIO // if built with PlatformIO
+#include <Arduino.h>
+#else
 #include <core_version.h>
+#endif
 
 #pragma once
 
