@@ -30,9 +30,26 @@ The following **optional** `homeSpan` methods override various HomeSpan initiali
 
 * `void setControlPin(uint8_t pin)`
   * sets the ESP32 pin to use for the HomeSpan Control Button.  If not specified, HomeSpan will assume there is no Control Button
+
+* `int getControlPin()`
+   * returns the pin number of the HomeSpan Control Button as set by `setControlPin(pin)`, or -1 if no pin has been set
   
 * `void setStatusPin(uint8_t pin)`
-  * sets the ESP32 pin to use for the HomeSpan Status LED.  If not specified, HomeSpan will assume there is no Status LED
+  * sets the ESP32 pin to use for the HomeSpan Status LED
+  * assumes a standard LED will be connected to *pin*
+  * if neither this method nor `setStatusPixel()` is called, HomeSpan will assume there is no Status LED
+  
+* `void setStatusPixel(uint8_t pin, float h=0, float s=100, float v=100)`
+  * sets the ESP32 pin to use for the HomeSpan Status LED
+  * assumes an RGB NeoPixel (or equivalent) will be connected to *pin*
+  * works well with ESP32 boards that have a built-in NeoPixel LED, though adding an external NeoPixel is fine
+  * users can optionally specify the color HomeSpan will use with the NeoPixel by providing the following HSV values:
+    * h = Hue from 0-360
+    * s = Saturation percentage from 0-100
+    * v = Brightness percentage from 0-100
+  * color defaults to *red* if unspecified
+  * example: `homeSpan.setStatusPixel(8,120,100,20)` sets the Status LED to light green using a NeoPixel attached to pin 8 
+  * if neither this method nor `setStatusPin()` is called, HomeSpan will assume there is no Status LED
 
 * `void setStatusAutoOff(uint16_t duration)`
   * sets Status LED to automatically turn off after *duration* seconds
