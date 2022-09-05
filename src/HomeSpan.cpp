@@ -34,6 +34,7 @@
 #include <esp_task_wdt.h>
 #include <esp_sntp.h>
 #include <esp_ota_ops.h>
+#include <esp_now.h>
 
 #include "HomeSpan.h"
 #include "HAP.h"
@@ -137,7 +138,13 @@ void Span::begin(Category catID, const char *displayName, const char *hostNameBa
   Serial.print(__TIME__);
 
   Serial.printf("\nPartition:        %s",esp_ota_get_running_partition()->label);
-
+  
+  if(espNowEnabled){                
+    WiFi.mode(WIFI_AP_STA);                             // set mode to mixed AP/STA.  AP mode will not be started, but WiFi will be properly configured for use with ESP-NOW
+    esp_now_init();                                     // initialize ESP NOW
+    Serial.print("\nESP-NOW:          ENABLED");
+  }
+  
   Serial.print("\n\nDevice Name:      ");
   Serial.print(displayName);  
   Serial.print("\n\n");
@@ -151,7 +158,7 @@ void Span::begin(Category catID, const char *displayName, const char *hostNameBa
     delay(100);
     esp_ota_mark_app_invalid_rollback_and_reboot();
   }
-
+  
 }  // begin
 
 ///////////////////////////////
@@ -440,7 +447,8 @@ void Span::checkConnect(){
   
   connected++;
 
-  addWebLog(true,"WiFi Connected!  IP Address = %s\n",WiFi.localIP().toString().c_str());
+  addWebLog(true,"WiFi Connected!  IP Address = %s",WiFi.localIP().toString().c_str());
+  Serial.printf("MAC Address = %s, Channel = %d\n",WiFi.macAddress().c_str(),WiFi.channel());
 
   if(connected>1)                           // Do not initialize everything below if this is only a reconnect
     return;
@@ -824,7 +832,8 @@ void Span::processSerialCommand(const char *c){
 
       statusLED->off();
       nvs_erase_all(wifiNVS);
-      nvs_commit(wifiNVS);      
+      nvs_commit(wifiNVS);
+      WiFi.begin("none");     
       Serial.print("\n*** WiFi Credentials ERASED!  Re-starting...\n\n");
       delay(1000);
       ESP.restart();                                                                             // re-start device   
@@ -869,7 +878,8 @@ void Span::processSerialCommand(const char *c){
       nvs_erase_all(charNVS);
       nvs_commit(charNVS);
       nvs_erase_all(otaNVS);
-      nvs_commit(otaNVS);       
+      nvs_commit(otaNVS);
+      WiFi.begin("none");     
       Serial.print("\n*** FACTORY RESET!  Restarting...\n\n");
       delay(1000);
       ESP.restart();
