@@ -48,6 +48,7 @@
 #include "HAPConstants.h"
 #include "HapQR.h"
 #include "Characteristics.h"
+#include "Now.h"
 
 using std::vector;
 using std::unordered_map;
