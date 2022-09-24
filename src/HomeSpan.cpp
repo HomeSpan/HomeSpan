@@ -58,6 +58,8 @@ void Span::begin(Category catID, const char *displayName, const char *hostNameBa
   this->modelName=modelName;
   sprintf(this->category,"%d",(int)catID);
 
+  WiFi.mode(WIFI_AP_STA);                                     // set mode to mixed AP/STA.  This does not start any servers, just configures the WiFi radio to ensure it does not sleep (required for ESP-NOW)
+
   statusLED=new Blinker(statusDevice,autoOffLED);             // create Status LED, even is statusDevice is NULL
 
   esp_task_wdt_delete(xTaskGetIdleTaskHandleForCPU(0));       // required to avoid watchdog timeout messages from ESP32-C3
@@ -138,9 +140,8 @@ void Span::begin(Category catID, const char *displayName, const char *hostNameBa
   Serial.print(__TIME__);
 
   Serial.printf("\nPartition:        %s",esp_ota_get_running_partition()->label);
-  
+
   if(espNowEnabled){                
-    WiFi.mode(WIFI_AP_STA);                             // set mode to mixed AP/STA.  AP mode will not be started, but WiFi will be properly configured for use with ESP-NOW
     esp_now_init();                                     // initialize ESP NOW
     Serial.print("\nESP-NOW:          ENABLED");
   }

@@ -1,12 +1,14 @@
 
-#include "Now.h"
+#include "HomePeer.h"
+
 #include <WiFi.h>
 #include <esp_wifi.h>
 #include <mbedtls/sha256.h>
+#include <esp_now.h>
     
-void SpanNow::start(const char *macAddress, const char *password){
+void SpanPeer::start(const char *macAddress, const char *password){
 
-  if(sscanf(macAddress,"%hhx:%hhx:%hhx:%hhx:%hhx:%hhx",mac,mac+1,mac+2,mac+3,mac+4,mac+5)!=6){
+  if(sscanf(macAddress,"%hhx:%hhx:%hhx:%hhx:%hhx:%hhx",peerInfo.peer_addr,peerInfo.peer_addr+1,peerInfo.peer_addr+2,peerInfo.peer_addr+3,peerInfo.peer_addr+4,peerInfo.peer_addr+5)!=6){
     Serial.printf("*** ERROR:  Can't start HomeSpan NOW!  Bad MAC Address '%s'\n\n",macAddress);
     return;
   }
@@ -17,26 +19,27 @@ void SpanNow::start(const char *macAddress, const char *password){
   esp_wifi_set_channel(channel, WIFI_SECOND_CHAN_NONE);
   esp_now_init();
   esp_now_register_send_cb(onDataSent);
-  
+
   uint8_t lmk[32];
+  uint8_t mac[6];
   
   mbedtls_sha256_ret((const unsigned char *)password,strlen(password),lmk,0);
   esp_now_set_pmk(lmk+16);
 
-  memcpy(peerInfo.peer_addr, mac, 6);
   peerInfo.encrypt = true;
   memcpy(peerInfo.lmk, lmk, 16);
   esp_now_add_peer(&peerInfo);
   esp_wifi_set_channel(channel, WIFI_SECOND_CHAN_NONE);
 
-  Serial.printf("Started HomeSpan NOW on Channel=%d.  Hub MAC Address: %X:%X:%X:%X:%X:%X\n",channel,mac[0],mac[1],mac[2],mac[3],mac[4],mac[5]);
+  Serial.printf("Started HomePeer: MAC Address = %s  HomeSpan Address = %X:%X:%X:%X:%X:%X\n",WiFi.macAddress().c_str(),
+    peerInfo.peer_addr[0],peerInfo.peer_addr[1],peerInfo.peer_addr[2],peerInfo.peer_addr[3],peerInfo.peer_addr[4],peerInfo.peer_addr[5]);
   started=true;
 }
 
-boolean SpanNow::send(uint8_t *data, size_t len){
+boolean SpanPeer::send(uint8_t *data, size_t len){
   
   if(!started){
-    Serial.printf("*** ERROR:  Can't send data until HomeSpanNOW has been started.\n\n");
+    Serial.printf("*** ERROR:  Can't send data until HomePeer has been started.\n\n");
     return(false);
     }
 
@@ -46,7 +49,7 @@ boolean SpanNow::send(uint8_t *data, size_t len){
     if((1<<channel) & channelMask){
       for(int i=1;i<=3;i++){
         Serial.printf("Sending on channel %d, attempt #%d\n",channel,i);
-        esp_now_send(mac, data, len);
+        esp_now_send(peerInfo.peer_addr, data, len);
         xQueueReceive(statusQueue, &status, pdMS_TO_TICKS(2000));
         if(status==ESP_NOW_SEND_SUCCESS)
           return(true);
@@ -61,6 +64,6 @@ boolean SpanNow::send(uint8_t *data, size_t len){
   return(false);
 }    
 
-QueueHandle_t SpanNow::statusQueue;
+QueueHandle_t SpanPeer::statusQueue;
 
-SpanNow homeSpanNow;
+SpanPeer homePeer;
