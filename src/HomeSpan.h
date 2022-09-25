@@ -39,6 +39,7 @@
 #include <unordered_set>
 #include <nvs.h>
 #include <ArduinoOTA.h>
+#include <esp_now.h>
 
 #include "extras/Blinker.h"
 #include "extras/Pixel.h"
@@ -155,6 +156,25 @@ struct SpanOTA{                               // manages OTA process
 //   USER API CLASSES BEGINS HERE   //
 //////////////////////////////////////
 
+class SpanPoint {
+
+  friend class Span;
+
+  esp_now_peer_info_t peerInfo;
+
+  static uint8_t lmk[16];
+  static boolean initialized;
+  
+  static void dataReceived(const uint8_t *mac, const uint8_t *incomingData, int len);
+  static void init(const char *password="HomeSpan");
+
+  public:
+
+  SpanPoint(const char *macAddress);
+};
+
+///////////////////////////////
+
 class Span{
 
   friend class SpanAccessory;
@@ -167,6 +187,7 @@ class Span{
   friend class SpanOTA;
   friend class Network;
   friend class HAPClient;
+  friend class SpanPoint;
   
   const char *displayName;                      // display name for this device - broadcast as part of Bonjour MDNS
   const char *hostNameBase;                     // base of hostName of this device - full host name broadcast by Bonjour MDNS will have 6-byte accessoryID as well as '.local' automatically appended
@@ -185,7 +206,6 @@ class Span{
   char pairingCodeCommand[12]="";               // user-specified Pairing Code - only needed if Pairing Setup Code is specified in sketch using setPairingCode()
   String lastClientIP="0.0.0.0";                // IP address of last client accessing device through encrypted channel
   boolean newCode;                              // flag indicating new application code has been loaded (based on keeping track of app SHA256)
-  boolean espNowEnabled=false;                  // flag indicating if ESP-NOW is enabled
   
   int connected=0;                              // WiFi connection status (increments upon each connect and disconnect)
   unsigned long waitTime=60000;                 // time to wait (in milliseconds) between WiFi connection attempts
@@ -284,8 +304,8 @@ class Span{
   void setApFunction(void (*f)()){apFunction=f;}                          // sets an optional user-defined function to call when activating the WiFi Access Point  
   void enableAutoStartAP(){autoStartAPEnabled=true;}                      // enables auto start-up of Access Point when WiFi Credentials not found
   void setWifiCredentials(const char *ssid, const char *pwd);             // sets WiFi Credentials
-  void enableEspNOW(){espNowEnabled=true;};                               // enables ESP-NOW
-
+  void setSpanPointPassword(const char *pwd){SpanPoint::init(pwd);};      // sets SpanPoint password
+  
   void setPairingCode(const char *s){sprintf(pairingCodeCommand,"S %9s",s);}    // sets the Pairing Code - use is NOT recommended.  Use 'S' from CLI instead
   void deleteStoredValues(){processSerialCommand("V");}                         // deletes stored Characteristic values from NVS  
 
@@ -305,7 +325,7 @@ class Span{
   void autoPoll(uint32_t stackSize=CONFIG_ARDUINO_LOOP_STACK_SIZE){xTaskCreateUniversal([](void *parms){for(;;)homeSpan.pollTask();}, "pollTask", stackSize, NULL, 1, &pollTaskHandle, 0);}     // start pollTask()
 
   void setTimeServerTimeout(uint32_t tSec){webLog.waitTime=tSec*1000;}    // sets wait time (in seconds) for optional web log time server to connect
-  
+ 
   [[deprecated("Please use reserveSocketConnections(n) method instead.")]]
   void setMaxConnections(uint8_t n){requestedMaxCon=n;}                   // sets maximum number of simultaneous HAP connections
 };
@@ -319,6 +339,7 @@ class SpanAccessory{
   friend class SpanCharacteristic;
   friend class SpanButton;
   friend class SpanRange;
+  friend class SpanPoint;
     
   uint32_t aid=0;                                         // Accessory Instance ID (HAP Table 6-1)
   int iidCount=0;                                         // running count of iid to use for Services and Characteristics associated with this Accessory                                 
