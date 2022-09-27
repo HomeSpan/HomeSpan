@@ -26,6 +26,8 @@ void SpanPeer::start(const char *macAddress, const char *password){
   mbedtls_sha256_ret((const unsigned char *)password,strlen(password),lmk,0);
   esp_now_set_pmk(lmk+16);
 
+  peerInfo.channel=0;                 
+  peerInfo.ifidx=WIFI_IF_STA;         
   peerInfo.encrypt = true;
   memcpy(peerInfo.lmk, lmk, 16);
   esp_now_add_peer(&peerInfo);

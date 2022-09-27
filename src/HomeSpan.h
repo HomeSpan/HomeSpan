@@ -160,17 +160,21 @@ class SpanPoint {
 
   friend class Span;
 
-  esp_now_peer_info_t peerInfo;
-
+  int qLength;                                // length of 1 queue item (in bytes)
+  esp_now_peer_info_t peerInfo;               // structure for all ESP-NOW peer data
+  QueueHandle_t dataQueue;                    // queue to store data after it is received
+  
   static uint8_t lmk[16];
   static boolean initialized;
+  static vector<SpanPoint *> SpanPoints;
   
   static void dataReceived(const uint8_t *mac, const uint8_t *incomingData, int len);
   static void init(const char *password="HomeSpan");
 
   public:
 
-  SpanPoint(const char *macAddress);
+  SpanPoint(const char *macAddress, int qLength, int nItems=1);
+  boolean get(void *dataBuf);
 };
 
 ///////////////////////////////
@@ -339,7 +343,6 @@ class SpanAccessory{
   friend class SpanCharacteristic;
   friend class SpanButton;
   friend class SpanRange;
-  friend class SpanPoint;
     
   uint32_t aid=0;                                         // Accessory Instance ID (HAP Table 6-1)
   int iidCount=0;                                         // running count of iid to use for Services and Characteristics associated with this Accessory                                 

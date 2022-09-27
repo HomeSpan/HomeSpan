@@ -15,6 +15,16 @@
 CUSTOM_CHAR(LightMode, AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAAAAAA, PR, STRING, "ANY_VALUE", NULL, NULL, true);
 CUSTOM_CHAR_STRING(DarkMode, AAAAAAAA-BBBB-AAAA-AAAA-AAAAAAAAAAAA, PR, "MY_VALUE");
 
+SpanPoint *dev1;
+SpanPoint *dev2;
+
+struct message_t {
+  char a[32];
+  int b;
+  float c;
+  bool d;
+} message;
+
 void setup() {
  
   Serial.begin(115200);
@@ -44,6 +54,9 @@ void setup() {
 
   homeSpan.setSpanPointPassword("Hello Thert");
 
+  dev1=new SpanPoint("AC:67:B2:77:42:20",sizeof(message_t));
+  dev2=new SpanPoint("7C:DF:A1:61:E4:A8",sizeof(message_t));
+
   new SpanAccessory();                                  // Begin by creating a new Accessory using SpanAccessory(), which takes no arguments
 
     new Service::AccessoryInformation();                    // HAP requires every Accessory to implement an AccessoryInformation Service, which has 6 required Characteristics
@@ -65,7 +78,8 @@ void setup() {
       new Characteristic::Name("Light 1");
       new Characteristic::ColorTemperature();
       new Characteristic::Active();
-      new SpanPoint("AC:67:B2:77:42:20");
+
+            
     new Service::LightBulb();
       new Characteristic::On(0,true);
       (new Characteristic::Brightness(50,false))->setRange(10,100,5);
@@ -99,6 +113,10 @@ void setup() {
 void loop(){
 
   homeSpan.poll();
+  if(dev1->get(&message))
+    Serial.printf("DEV1: '%s' %d %f %d\n",message.a,message.b,message.c,message.d);
+  if(dev2->get(&message))
+    Serial.printf("DEV2: '%s' %d %f %d\n",message.a,message.b,message.c,message.d);
 
 } // end of loop()
 

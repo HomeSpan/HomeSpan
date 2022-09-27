@@ -2154,15 +2154,8 @@ void SpanOTA::error(ota_error_t err){
 //        SpanPoint          //
 ///////////////////////////////
 
-SpanPoint::SpanPoint(const char *macAddress){
+SpanPoint::SpanPoint(const char *macAddress, int qLength, int nItems){
 
-  if(homeSpan.Accessories.empty() || homeSpan.Accessories.back()->Services.empty()){
-    Serial.printf("\nFATAL ERROR!  Can't create new SpanPoint(\"%s\") without a defined Service ***\n",macAddress);
-    Serial.printf("\n=== PROGRAM HALTED ===");
-    while(1);
-  }
-
-  init();
 
   if(sscanf(macAddress,"%hhx:%hhx:%hhx:%hhx:%hhx:%hhx",peerInfo.peer_addr,peerInfo.peer_addr+1,peerInfo.peer_addr+2,peerInfo.peer_addr+3,peerInfo.peer_addr+4,peerInfo.peer_addr+5)!=6){
     Serial.printf("\nFATAL ERROR!  Can't create new SpanPoint(\"%s\") - Invalid MAC Address ***\n",macAddress);
@@ -2170,11 +2163,17 @@ SpanPoint::SpanPoint(const char *macAddress){
     while(1);
   }
 
-  peerInfo.channel=0;                 // 0=matches current WiFi channel
+  init();                             // initialize SpanPoint
+  peerInfo.channel=0;                 // 0 = matches current WiFi channel
   peerInfo.ifidx=WIFI_IF_STA;         // must specify interface
   peerInfo.encrypt=true;              // turn on encryption for this peer
   memcpy(peerInfo.lmk, lmk, 16);      // set local key
   esp_now_add_peer(&peerInfo);        // add peer to ESP-NOW
+
+  this->qLength=qLength;
+  dataQueue = xQueueCreate(nItems,qLength);  
+
+  SpanPoints.push_back(this);             
 }
 
 ///////////////////////////////
@@ -2197,10 +2196,31 @@ void SpanPoint::init(const char *password){
 
 ///////////////////////////////
 
-void SpanPoint::dataReceived(const uint8_t *mac, const uint8_t *incomingData, int len){
-  Serial.printf("SpanPoint: %d bytes received from %02X:%02X:%02X:%02X:%02X:%02X\n",len,mac[0],mac[1],mac[2],mac[3],mac[4],mac[5]);
+boolean SpanPoint::get(void *dataBuf){
+
+  return(xQueueReceive(dataQueue, dataBuf, 0));
 }
 
+///////////////////////////////
+
+void SpanPoint::dataReceived(const uint8_t *mac, const uint8_t *incomingData, int len){
+  
+  auto it=SpanPoints.begin();
+  for(;it!=SpanPoints.end() && memcmp((*it)->peerInfo.peer_addr,mac,6)!=0; it++);
+  
+  if(it==SpanPoints.end())
+    return;
+
+  if(len!=(*it)->qLength){
+    Serial.printf("SpanPoint Warning! %d bytes received from %02X:%02X:%02X:%02X:%02X:%02X does not match %d-byte queue size\n",len,mac[0],mac[1],mac[2],mac[3],mac[4],mac[5],(*it)->qLength);
+    return;
+  }
+
+  xQueueSend((*it)->dataQueue, incomingData, pdMS_TO_TICKS(1000));  
+}
+
+///////////////////////////////
+//          MISC             //
 ///////////////////////////////
 
 void __attribute__((weak)) loop(){
@@ -2214,5 +2234,6 @@ boolean SpanOTA::enabled=false;
 boolean SpanOTA::auth;
 uint8_t SpanPoint::lmk[16];
 boolean SpanPoint::initialized=false;
+vector<SpanPoint *> SpanPoint::SpanPoints;
 
  
