@@ -58,7 +58,8 @@ void Span::begin(Category catID, const char *displayName, const char *hostNameBa
   this->modelName=modelName;
   sprintf(this->category,"%d",(int)catID);
 
-  WiFi.mode(WIFI_AP_STA);                                     // set mode to mixed AP/STA.  This does not start any servers, just configures the WiFi radio to ensure it does not sleep (required for ESP-NOW)
+  if(WiFi.getMode()!=WIFI_AP_STA)
+    WiFi.mode(WIFI_AP_STA);                                   // set mode to mixed AP/STA.  This does not start any servers, just configures the WiFi radio to ensure it does not sleep (required for ESP-NOW)
 
   statusLED=new Blinker(statusDevice,autoOffLED);             // create Status LED, even is statusDevice is NULL
 
@@ -2151,75 +2152,6 @@ void SpanOTA::error(ota_error_t err){
 }
 
 ///////////////////////////////
-//        SpanPoint          //
-///////////////////////////////
-
-SpanPoint::SpanPoint(const char *macAddress, int qLength, int nItems){
-
-
-  if(sscanf(macAddress,"%hhx:%hhx:%hhx:%hhx:%hhx:%hhx",peerInfo.peer_addr,peerInfo.peer_addr+1,peerInfo.peer_addr+2,peerInfo.peer_addr+3,peerInfo.peer_addr+4,peerInfo.peer_addr+5)!=6){
-    Serial.printf("\nFATAL ERROR!  Can't create new SpanPoint(\"%s\") - Invalid MAC Address ***\n",macAddress);
-    Serial.printf("\n=== PROGRAM HALTED ===");
-    while(1);
-  }
-
-  init();                             // initialize SpanPoint
-  peerInfo.channel=0;                 // 0 = matches current WiFi channel
-  peerInfo.ifidx=WIFI_IF_STA;         // must specify interface
-  peerInfo.encrypt=true;              // turn on encryption for this peer
-  memcpy(peerInfo.lmk, lmk, 16);      // set local key
-  esp_now_add_peer(&peerInfo);        // add peer to ESP-NOW
-
-  this->qLength=qLength;
-  dataQueue = xQueueCreate(nItems,qLength);  
-
-  SpanPoints.push_back(this);             
-}
-
-///////////////////////////////
-
-void SpanPoint::init(const char *password){
-
-  if(initialized)
-    return;
-
-  uint8_t hash[32];
-  mbedtls_sha256_ret((const unsigned char *)password,strlen(password),hash,0);      // produce 256-bit bit hash from password
-
-  esp_now_init();                           // initialize ESP-NOW
-  memcpy(lmk, hash, 16);                    // store first 16 bytes of hash for later use as local key
-  esp_now_set_pmk(hash+16);                 // set hash for primary key using last 16 bytes of hash
-  esp_now_register_recv_cb(dataReceived);   // set callback for receiving data
-
-  initialized=true;
-}
-
-///////////////////////////////
-
-boolean SpanPoint::get(void *dataBuf){
-
-  return(xQueueReceive(dataQueue, dataBuf, 0));
-}
-
-///////////////////////////////
-
-void SpanPoint::dataReceived(const uint8_t *mac, const uint8_t *incomingData, int len){
-  
-  auto it=SpanPoints.begin();
-  for(;it!=SpanPoints.end() && memcmp((*it)->peerInfo.peer_addr,mac,6)!=0; it++);
-  
-  if(it==SpanPoints.end())
-    return;
-
-  if(len!=(*it)->qLength){
-    Serial.printf("SpanPoint Warning! %d bytes received from %02X:%02X:%02X:%02X:%02X:%02X does not match %d-byte queue size\n",len,mac[0],mac[1],mac[2],mac[3],mac[4],mac[5],(*it)->qLength);
-    return;
-  }
-
-  xQueueSend((*it)->dataQueue, incomingData, pdMS_TO_TICKS(1000));  
-}
-
-///////////////////////////////
 //          MISC             //
 ///////////////////////////////
 
@@ -2232,8 +2164,6 @@ int SpanOTA::otaPercent;
 boolean SpanOTA::safeLoad;
 boolean SpanOTA::enabled=false;
 boolean SpanOTA::auth;
-uint8_t SpanPoint::lmk[16];
-boolean SpanPoint::initialized=false;
-vector<SpanPoint *> SpanPoint::SpanPoints;
+
 
  

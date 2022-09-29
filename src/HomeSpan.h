@@ -39,7 +39,6 @@
 #include <unordered_set>
 #include <nvs.h>
 #include <ArduinoOTA.h>
-#include <esp_now.h>
 
 #include "extras/Blinker.h"
 #include "extras/Pixel.h"
@@ -156,29 +155,6 @@ struct SpanOTA{                               // manages OTA process
 //   USER API CLASSES BEGINS HERE   //
 //////////////////////////////////////
 
-class SpanPoint {
-
-  friend class Span;
-
-  int qLength;                                // length of 1 queue item (in bytes)
-  esp_now_peer_info_t peerInfo;               // structure for all ESP-NOW peer data
-  QueueHandle_t dataQueue;                    // queue to store data after it is received
-  
-  static uint8_t lmk[16];
-  static boolean initialized;
-  static vector<SpanPoint *> SpanPoints;
-  
-  static void dataReceived(const uint8_t *mac, const uint8_t *incomingData, int len);
-  static void init(const char *password="HomeSpan");
-
-  public:
-
-  SpanPoint(const char *macAddress, int qLength, int nItems=1);
-  boolean get(void *dataBuf);
-};
-
-///////////////////////////////
-
 class Span{
 
   friend class SpanAccessory;
@@ -191,7 +167,6 @@ class Span{
   friend class SpanOTA;
   friend class Network;
   friend class HAPClient;
-  friend class SpanPoint;
   
   const char *displayName;                      // display name for this device - broadcast as part of Bonjour MDNS
   const char *hostNameBase;                     // base of hostName of this device - full host name broadcast by Bonjour MDNS will have 6-byte accessoryID as well as '.local' automatically appended
@@ -308,7 +283,6 @@ class Span{
   void setApFunction(void (*f)()){apFunction=f;}                          // sets an optional user-defined function to call when activating the WiFi Access Point  
   void enableAutoStartAP(){autoStartAPEnabled=true;}                      // enables auto start-up of Access Point when WiFi Credentials not found
   void setWifiCredentials(const char *ssid, const char *pwd);             // sets WiFi Credentials
-  void setSpanPointPassword(const char *pwd){SpanPoint::init(pwd);};      // sets SpanPoint password
   
   void setPairingCode(const char *s){sprintf(pairingCodeCommand,"S %9s",s);}    // sets the Pairing Code - use is NOT recommended.  Use 'S' from CLI instead
   void deleteStoredValues(){processSerialCommand("V");}                         // deletes stored Characteristic values from NVS  
