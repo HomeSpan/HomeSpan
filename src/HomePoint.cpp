@@ -25,11 +25,10 @@
  *  
  ********************************************************************************/
 
-#include "HomePoint.h"
-#include <WiFi.h>
+#include "HomeSpan.h"
 #include <mbedtls/sha256.h>
 
-SpanPoint::SpanPoint(const char *macAddress, int qLength, int nItems){
+SpanPoint::SpanPoint(const char *macAddress, int sendSize, int receiveSize, int queueDepth){
 
   if(sscanf(macAddress,"%hhx:%hhx:%hhx:%hhx:%hhx:%hhx",peerInfo.peer_addr,peerInfo.peer_addr+1,peerInfo.peer_addr+2,peerInfo.peer_addr+3,peerInfo.peer_addr+4,peerInfo.peer_addr+5)!=6){
     Serial.printf("\nFATAL ERROR!  Can't create new SpanPoint(\"%s\") - Invalid MAC Address ***\n",macAddress);
@@ -37,6 +36,12 @@ SpanPoint::SpanPoint(const char *macAddress, int qLength, int nItems){
     while(1);
   }
 
+  this->sendSize=sendSize;
+  this->receiveSize=receiveSize;
+
+  Serial.printf("SpanPoint: Created link to device with MAC Address %02X:%02X:%02X:%02X:%02X:%02X.  Send size: %d bytes. Receive size: %d bytes (queue depth=%d).\n",
+    peerInfo.peer_addr[0],peerInfo.peer_addr[1],peerInfo.peer_addr[2],peerInfo.peer_addr[3],peerInfo.peer_addr[4],peerInfo.peer_addr[5],sendSize,receiveSize,queueDepth);
+  
   init();                             // initialize SpanPoint
   peerInfo.channel=0;                 // 0 = matches current WiFi channel
   peerInfo.ifidx=WIFI_IF_STA;         // must specify interface
@@ -44,8 +49,7 @@ SpanPoint::SpanPoint(const char *macAddress, int qLength, int nItems){
   memcpy(peerInfo.lmk, lmk, 16);      // set local key
   esp_now_add_peer(&peerInfo);        // add peer to ESP-NOW
 
-  this->qLength=qLength;
-  dataQueue = xQueueCreate(nItems,qLength);  
+  receiveQueue = xQueueCreate(queueDepth,receiveSize);  
 
   SpanPoints.push_back(this);             
 }
@@ -75,7 +79,18 @@ void SpanPoint::init(const char *password){
 
 boolean SpanPoint::get(void *dataBuf){
 
-  return(xQueueReceive(dataQueue, dataBuf, 0));
+  return(xQueueReceive(receiveQueue, dataBuf, 0));
+}
+
+///////////////////////////////
+
+void SpanPoint::setAsHub(){
+  if(SpanPoints.size()>0){
+    Serial.printf("\nFATAL ERROR!  SpanPoint objects created in main hub device must be instantiated AFTER calling homeSpan.begin() ***\n");
+    Serial.printf("\n=== PROGRAM HALTED ===");
+    while(1);
+  }
+  isHub=true;
 }
 
 ///////////////////////////////
@@ -88,16 +103,17 @@ void SpanPoint::dataReceived(const uint8_t *mac, const uint8_t *incomingData, in
   if(it==SpanPoints.end())
     return;
 
-  if(len!=(*it)->qLength){
-    Serial.printf("SpanPoint Warning! %d bytes received from %02X:%02X:%02X:%02X:%02X:%02X does not match %d-byte queue size\n",len,mac[0],mac[1],mac[2],mac[3],mac[4],mac[5],(*it)->qLength);
+  if(len!=(*it)->receiveSize){
+    Serial.printf("SpanPoint Warning! %d bytes received from %02X:%02X:%02X:%02X:%02X:%02X does not match %d-byte queue size\n",len,mac[0],mac[1],mac[2],mac[3],mac[4],mac[5],(*it)->receiveSize);
     return;
   }
 
-  xQueueSend((*it)->dataQueue, incomingData, pdMS_TO_TICKS(1000));  
+  xQueueSend((*it)->receiveQueue, incomingData, 0);        // send to queue - do not wait if queue is full and instead fail immediately since we need to return from this function ASAP
 }
 
 ///////////////////////////////
 
 uint8_t SpanPoint::lmk[16];
 boolean SpanPoint::initialized=false;
+boolean SpanPoint::isHub=false;
 vector<SpanPoint *> SpanPoint::SpanPoints;

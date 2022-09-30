@@ -39,6 +39,7 @@
 #include <unordered_set>
 #include <nvs.h>
 #include <ArduinoOTA.h>
+#include <esp_now.h>
 
 #include "extras/Blinker.h"
 #include "extras/Pixel.h"
@@ -747,6 +748,33 @@ class SpanUserCommand {
 
   SpanUserCommand(char c, const char *s, void (*f)(const char *));  
   SpanUserCommand(char c, const char *s, void (*f)(const char *, void *), void *arg);  
+};
+
+///////////////////////////////
+
+class SpanPoint {
+
+  friend class Span;
+
+  int receiveSize;                            // size (in bytes) of messages to receive
+  int sendSize;                               // size (in bytes) of messages to send
+  esp_now_peer_info_t peerInfo;               // structure for all ESP-NOW peer data
+  QueueHandle_t receiveQueue;                 // queue to store data after it is received
+  
+  static uint8_t lmk[16];
+  static boolean initialized;
+  static boolean isHub;
+  static vector<SpanPoint *> SpanPoints;
+  
+  static void dataReceived(const uint8_t *mac, const uint8_t *incomingData, int len);
+  static void init(const char *password="HomeSpan");
+  static void setAsHub();
+
+  public:
+
+  SpanPoint(const char *macAddress, int sendSize, int receiveSize, int queueDepth=1);
+  static void setPassword(const char *pwd){init(pwd);};      
+  boolean get(void *dataBuf);
 };
 
 /////////////////////////////////////////////////

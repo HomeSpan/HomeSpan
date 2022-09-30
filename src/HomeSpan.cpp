@@ -58,6 +58,8 @@ void Span::begin(Category catID, const char *displayName, const char *hostNameBa
   this->modelName=modelName;
   sprintf(this->category,"%d",(int)catID);
 
+  SpanPoint::setAsHub();
+  
   if(WiFi.getMode()!=WIFI_AP_STA)
     WiFi.mode(WIFI_AP_STA);                                   // set mode to mixed AP/STA.  This does not start any servers, just configures the WiFi radio to ensure it does not sleep (required for ESP-NOW)
 

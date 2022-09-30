@@ -8,7 +8,6 @@
 #include "extras/RFControl.h"
 #include "extras/Blinker.h"
 #include "extras/PwmPin.h"
-#include "HomePoint.h"
 
 
 #define STRING_t  const char *          // WORK-AROUND
@@ -51,13 +50,11 @@ void setup() {
 //  homeSpan.enableAutoStartAP();
 //  homeSpan.setApFunction(myWiFiAP);
 
-  SpanPoint::setPassword("Hello Thert");
-  dev1=new SpanPoint("AC:67:B2:77:42:20",sizeof(message_t));
-
   homeSpan.begin(Category::Lighting,"HomeSpan Lamp Server","homespan");
 
-
-  dev2=new SpanPoint("7C:DF:A1:61:E4:A8",sizeof(message_t));
+  SpanPoint::setPassword("Hello Thert");
+  dev1=new SpanPoint("AC:67:B2:77:42:20",0,sizeof(message_t));
+  dev2=new SpanPoint("7C:DF:A1:61:E4:A8",0,sizeof(message_t));
 
   new SpanAccessory();                                  // Begin by creating a new Accessory using SpanAccessory(), which takes no arguments
 
