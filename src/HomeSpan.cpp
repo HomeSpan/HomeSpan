@@ -35,6 +35,7 @@
 #include <esp_task_wdt.h>
 #include <esp_sntp.h>
 #include <esp_ota_ops.h>
+#include <esp_wifi.h>
 
 #include "HomeSpan.h"
 #include "HAP.h"
@@ -2153,6 +2154,189 @@ void SpanOTA::error(ota_error_t err){
 }
 
 ///////////////////////////////
+
+int SpanOTA::otaPercent;
+boolean SpanOTA::safeLoad;
+boolean SpanOTA::enabled=false;
+boolean SpanOTA::auth;
+
+///////////////////////////////
+//        SpanPoint          //
+///////////////////////////////
+
+SpanPoint::SpanPoint(const char *macAddress, int sendSize, int receiveSize, int queueDepth){
+
+  if(sscanf(macAddress,"%hhx:%hhx:%hhx:%hhx:%hhx:%hhx",peerInfo.peer_addr,peerInfo.peer_addr+1,peerInfo.peer_addr+2,peerInfo.peer_addr+3,peerInfo.peer_addr+4,peerInfo.peer_addr+5)!=6){
+    Serial.printf("\nFATAL ERROR!  Can't create new SpanPoint(\"%s\") - Invalid MAC Address ***\n",macAddress);
+    Serial.printf("\n=== PROGRAM HALTED ===");
+    while(1);
+  }
+
+  if(sendSize<0 || sendSize>200 || receiveSize<0 || receiveSize>200 || queueDepth<1 || (sendSize==0 && receiveSize==0)){
+    Serial.printf("\nFATAL ERROR!  Can't create new SpanPoint(\"%s\",%d,%d,%d) - one or more invalid parameters ***\n",macAddress,sendSize,receiveSize,queueDepth);
+    Serial.printf("\n=== PROGRAM HALTED ===");
+    while(1);
+  }
+
+  this->sendSize=sendSize;
+  this->receiveSize=receiveSize;
+
+  Serial.printf("SpanPoint: Created link to device with MAC Address %02X:%02X:%02X:%02X:%02X:%02X.  Send size=%d bytes, Receive size=%d bytes with queue depth=%d.\n",
+    peerInfo.peer_addr[0],peerInfo.peer_addr[1],peerInfo.peer_addr[2],peerInfo.peer_addr[3],peerInfo.peer_addr[4],peerInfo.peer_addr[5],sendSize,receiveSize,queueDepth);
+  
+  init();                             // initialize SpanPoint
+  peerInfo.channel=0;                 // 0 = matches current WiFi channel
+  peerInfo.ifidx=WIFI_IF_STA;         // must specify interface
+  peerInfo.encrypt=true;              // turn on encryption for this peer
+  memcpy(peerInfo.lmk, lmk, 16);      // set local key
+  esp_now_add_peer(&peerInfo);        // add peer to ESP-NOW
+
+  if(receiveSize>0)
+    receiveQueue = xQueueCreate(queueDepth,receiveSize);  
+
+  SpanPoints.push_back(this);             
+}
+
+///////////////////////////////
+
+void SpanPoint::init(const char *password){
+
+  if(initialized)
+    return;
+
+  if(WiFi.getMode()!=WIFI_AP_STA)
+    WiFi.mode(WIFI_AP_STA);                 // set mode to mixed AP/STA.  This does not start any servers, just configures the WiFi radio to ensure it does not sleep (required for ESP-NOW)
+  
+  uint8_t hash[32];
+  mbedtls_sha256_ret((const unsigned char *)password,strlen(password),hash,0);      // produce 256-bit bit hash from password
+
+  esp_now_init();                           // initialize ESP-NOW
+  memcpy(lmk, hash, 16);                    // store first 16 bytes of hash for later use as local key
+  esp_now_set_pmk(hash+16);                 // set hash for primary key using last 16 bytes of hash
+  esp_now_register_recv_cb(dataReceived);   // set callback for receiving data
+  esp_now_register_send_cb(dataSent);       // set callback for sending data
+  
+  statusQueue = xQueueCreate(1,sizeof(esp_now_send_status_t));    // create statusQueue even if not needed
+  setChannelMask(channelMask);                                    // default channel mask at start-up uses channels 1-13  
+
+  initialized=true;
+}
+
+///////////////////////////////
+
+void SpanPoint::setChannelMask(uint16_t mask){
+  channelMask = mask & 0x3FFE;
+
+  if(isHub)
+    return;
+
+  uint8_t channel=0;
+
+  for(int i=1;i<=13 && channel==0;i++)          // find first "allowed" channel based on mask
+    channel=(channelMask & (1<<i))?i:0;
+
+  if(channel==0){
+    Serial.printf("\nFATAL ERROR!  SpanPoint::setChannelMask(0x%04X) - mask must allow for at least one channel ***\n",mask);
+    Serial.printf("\n=== PROGRAM HALTED ===");
+    while(1);
+  }
+
+  esp_wifi_set_channel(channel, WIFI_SECOND_CHAN_NONE);
+}
+
+///////////////////////////////
+
+uint8_t SpanPoint::nextChannel(){
+
+  uint8_t channel;
+  wifi_second_chan_t channel2; 
+  esp_wifi_get_channel(&channel,&channel2);     // get current channel
+
+  if(isHub || channelMask==(1<<channel))        // do not change channel if device is either a hub, or channel mask does not allow for any other channels
+    return(channel);
+
+  do {
+    channel=(channel<13)?channel+1:1;       // advance to next channel
+  } while(!(channelMask & (1<<channel)));   // until we find next valid one
+
+  esp_wifi_set_channel(channel, WIFI_SECOND_CHAN_NONE);         // set the WiFi channel 
+  
+  return(channel);  
+}
+
+///////////////////////////////
+
+boolean SpanPoint::get(void *dataBuf){
+
+  if(receiveSize==0)
+    return(false);
+
+  return(xQueueReceive(receiveQueue, dataBuf, 0));
+}
+
+///////////////////////////////
+
+boolean SpanPoint::send(void *data){
+
+  if(sendSize==0)
+    return(false);
+  
+  uint8_t channel;
+  wifi_second_chan_t channel2; 
+  esp_wifi_get_channel(&channel,&channel2);     // get current channel
+  uint8_t startingChannel=channel;              // set starting channel to current channel
+
+  esp_now_send_status_t status = ESP_NOW_SEND_FAIL;
+
+  do {
+    for(int i=1;i<=3;i++){
+      
+      LOG1("SpanPoint: Sending %d bytes to MAC Address %02X:%02X:%02X:%02X:%02X:%02X using channel %hhu...\n",
+        sendSize,peerInfo.peer_addr[0],peerInfo.peer_addr[1],peerInfo.peer_addr[2],peerInfo.peer_addr[3],peerInfo.peer_addr[4],peerInfo.peer_addr[5],channel);
+        
+      esp_now_send(peerInfo.peer_addr, (uint8_t *) data, sendSize);
+      xQueueReceive(statusQueue, &status, pdMS_TO_TICKS(2000));
+      if(status==ESP_NOW_SEND_SUCCESS)
+        return(true);
+      delay(10);
+    }    
+    channel=nextChannel();
+  } while(channel!=startingChannel);
+
+  return(false);
+} 
+
+///////////////////////////////
+
+void SpanPoint::dataReceived(const uint8_t *mac, const uint8_t *incomingData, int len){
+  
+  auto it=SpanPoints.begin();
+  for(;it!=SpanPoints.end() && memcmp((*it)->peerInfo.peer_addr,mac,6)!=0; it++);
+  
+  if(it==SpanPoints.end())
+    return;
+
+  if((*it)->receiveSize==0)
+    return;
+
+  if(len!=(*it)->receiveSize){
+    Serial.printf("SpanPoint Warning! %d bytes received from %02X:%02X:%02X:%02X:%02X:%02X does not match %d-byte queue size\n",len,mac[0],mac[1],mac[2],mac[3],mac[4],mac[5],(*it)->receiveSize);
+    return;
+  }
+
+  xQueueSend((*it)->receiveQueue, incomingData, 0);        // send to queue - do not wait if queue is full and instead fail immediately since we need to return from this function ASAP
+}
+
+///////////////////////////////
+
+uint8_t SpanPoint::lmk[16];
+boolean SpanPoint::initialized=false;
+boolean SpanPoint::isHub=false;
+vector<SpanPoint *> SpanPoint::SpanPoints;
+uint16_t SpanPoint::channelMask=0x3FFE;
+QueueHandle_t SpanPoint::statusQueue;
+
+///////////////////////////////
 //          MISC             //
 ///////////////////////////////
 
@@ -2161,10 +2345,6 @@ void __attribute__((weak)) loop(){
 
 ///////////////////////////////
 
-int SpanOTA::otaPercent;
-boolean SpanOTA::safeLoad;
-boolean SpanOTA::enabled=false;
-boolean SpanOTA::auth;
 
 
  

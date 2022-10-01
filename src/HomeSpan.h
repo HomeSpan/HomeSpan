@@ -765,13 +765,13 @@ class SpanPoint {
   static boolean initialized;
   static boolean isHub;
   static vector<SpanPoint *> SpanPoints;
-  static int channel;                         // WiFi channel (1-13)
   static uint16_t channelMask;                // channel mask
   static QueueHandle_t statusQueue;           // queue for communication between SpanPoint::dataSend and SpanPoint::send
   
   static void dataReceived(const uint8_t *mac, const uint8_t *incomingData, int len);
   static void init(const char *password="HomeSpan");
-  static void setAsHub();
+  static void setAsHub(){isHub=true;}
+  static uint8_t nextChannel();
   
   static void dataSent(const uint8_t *mac, esp_now_send_status_t status) {
     xQueueOverwrite( statusQueue, &status );
