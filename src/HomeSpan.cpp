@@ -60,8 +60,7 @@ void Span::begin(Category catID, const char *displayName, const char *hostNameBa
 
   SpanPoint::setAsHub();
   
-  if(WiFi.getMode()!=WIFI_AP_STA)
-    WiFi.mode(WIFI_AP_STA);                                   // set mode to mixed AP/STA.  This does not start any servers, just configures the WiFi radio to ensure it does not sleep (required for ESP-NOW)
+  WiFi.mode(WIFI_AP_STA);                                     // set mode to mixed AP/STA.  This does not start any servers, just configures the WiFi radio to ensure it does not sleep (required for ESP-NOW)
 
   statusLED=new Blinker(statusDevice,autoOffLED);             // create Status LED, even is statusDevice is NULL
 

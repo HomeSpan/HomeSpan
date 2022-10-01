@@ -27,6 +27,7 @@
 
 #include "HomeSpan.h"
 #include <mbedtls/sha256.h>
+#include <esp_wifi.h>
 
 SpanPoint::SpanPoint(const char *macAddress, int sendSize, int receiveSize, int queueDepth){
 
@@ -36,10 +37,16 @@ SpanPoint::SpanPoint(const char *macAddress, int sendSize, int receiveSize, int 
     while(1);
   }
 
+  if(sendSize<0 || sendSize>200 || receiveSize<0 || receiveSize>200 || queueDepth<1 || (sendSize==0 && receiveSize==0)){
+    Serial.printf("\nFATAL ERROR!  Can't create new SpanPoint(\"%s\",%d,%d,%d) - one or more invalid parameters ***\n",macAddress,sendSize,receiveSize,queueDepth);
+    Serial.printf("\n=== PROGRAM HALTED ===");
+    while(1);
+  }
+
   this->sendSize=sendSize;
   this->receiveSize=receiveSize;
 
-  Serial.printf("SpanPoint: Created link to device with MAC Address %02X:%02X:%02X:%02X:%02X:%02X.  Send size: %d bytes. Receive size: %d bytes (queue depth=%d).\n",
+  Serial.printf("SpanPoint: Created link to device with MAC Address %02X:%02X:%02X:%02X:%02X:%02X.  Send size=%d bytes, Receive size=%d bytes with queue depth=%d.\n",
     peerInfo.peer_addr[0],peerInfo.peer_addr[1],peerInfo.peer_addr[2],peerInfo.peer_addr[3],peerInfo.peer_addr[4],peerInfo.peer_addr[5],sendSize,receiveSize,queueDepth);
   
   init();                             // initialize SpanPoint
@@ -49,7 +56,8 @@ SpanPoint::SpanPoint(const char *macAddress, int sendSize, int receiveSize, int 
   memcpy(peerInfo.lmk, lmk, 16);      // set local key
   esp_now_add_peer(&peerInfo);        // add peer to ESP-NOW
 
-  receiveQueue = xQueueCreate(queueDepth,receiveSize);  
+  if(receiveSize>0)
+    receiveQueue = xQueueCreate(queueDepth,receiveSize);  
 
   SpanPoints.push_back(this);             
 }
@@ -71,25 +79,84 @@ void SpanPoint::init(const char *password){
   memcpy(lmk, hash, 16);                    // store first 16 bytes of hash for later use as local key
   esp_now_set_pmk(hash+16);                 // set hash for primary key using last 16 bytes of hash
   esp_now_register_recv_cb(dataReceived);   // set callback for receiving data
+  esp_now_register_send_cb(dataSent);       // set callback for sending data
+  
+  statusQueue = xQueueCreate(1,sizeof(esp_now_send_status_t));    // create statusQueue even if not needed
+  setChannelMask(0x3FFE);                                         // default channel mask uses channels 1-13  
 
   initialized=true;
 }
 
 ///////////////////////////////
 
+void SpanPoint::setChannelMask(uint16_t mask){
+  channelMask = mask & 0x3FFE;
+
+  channel=0;
+
+  for(int i=1;i<=13 && channel==0;i++)
+    channel=(channelMask & (1<<i))?i:0;
+
+  if(channel==0){
+    Serial.printf("\nFATAL ERROR!  SpanPoint::setChannelMask(0x%04X) - one or more invalid parameters ***\n",mask);
+    Serial.printf("\n=== PROGRAM HALTED ===");
+    while(1);
+  }
+
+  if(!isHub)                                                      // if this is NOT the main HomeSpan device
+    esp_wifi_set_channel(channel, WIFI_SECOND_CHAN_NONE);         // set the WiFi channel 
+
+  Serial.printf("ChannelMask=0x%04X => channel=%d\n",channelMask,channel);
+}
+
+///////////////////////////////
+
 boolean SpanPoint::get(void *dataBuf){
+
+  if(receiveSize==0)
+    return(false);
 
   return(xQueueReceive(receiveQueue, dataBuf, 0));
 }
 
 ///////////////////////////////
 
+boolean SpanPoint::send(void *data){
+
+  if(sendSize==0)
+    return(false);
+  
+  esp_now_send_status_t status = ESP_NOW_SEND_FAIL;
+
+  for(int c=0;c<13;c++){
+    if((1<<channel) & channelMask){
+      for(int i=1;i<=3;i++){
+        Serial.printf("Sending on channel %d, attempt #%d\n",channel,i);
+        esp_now_send(peerInfo.peer_addr, (uint8_t *) data, sendSize);
+        xQueueReceive(statusQueue, &status, pdMS_TO_TICKS(2000));
+        if(status==ESP_NOW_SEND_SUCCESS)
+          return(true);
+        delay(10);
+      }
+    }
+    channel++;
+    if(channel==14)
+      channel=1;
+    esp_wifi_set_channel(channel, WIFI_SECOND_CHAN_NONE);
+  }
+  return(false);
+} 
+
+///////////////////////////////
+
 void SpanPoint::setAsHub(){
+  
   if(SpanPoints.size()>0){
     Serial.printf("\nFATAL ERROR!  SpanPoint objects created in main hub device must be instantiated AFTER calling homeSpan.begin() ***\n");
     Serial.printf("\n=== PROGRAM HALTED ===");
     while(1);
   }
+  
   isHub=true;
 }
 
@@ -101,6 +168,9 @@ void SpanPoint::dataReceived(const uint8_t *mac, const uint8_t *incomingData, in
   for(;it!=SpanPoints.end() && memcmp((*it)->peerInfo.peer_addr,mac,6)!=0; it++);
   
   if(it==SpanPoints.end())
+    return;
+
+  if((*it)->receiveSize==0)
     return;
 
   if(len!=(*it)->receiveSize){
@@ -117,3 +187,6 @@ uint8_t SpanPoint::lmk[16];
 boolean SpanPoint::initialized=false;
 boolean SpanPoint::isHub=false;
 vector<SpanPoint *> SpanPoint::SpanPoints;
+int SpanPoint::channel;
+uint16_t SpanPoint::channelMask;
+QueueHandle_t SpanPoint::statusQueue;

@@ -50,11 +50,19 @@ void setup() {
 //  homeSpan.enableAutoStartAP();
 //  homeSpan.setApFunction(myWiFiAP);
 
+  homeSpan.enableWebLog(10,"pool.ntp.org","UTC","myLog");           // creates a web log on the URL /HomeSpan-[DEVICE-ID].local:[TCP-PORT]/myLog
+
+
   homeSpan.begin(Category::Lighting,"HomeSpan Lamp Server","homespan");
 
   SpanPoint::setPassword("Hello Thert");
-  dev1=new SpanPoint("AC:67:B2:77:42:20",0,sizeof(message_t));
+  dev1=new SpanPoint("AC:67:B2:77:42:20",4,0);
   dev2=new SpanPoint("7C:DF:A1:61:E4:A8",0,sizeof(message_t));
+
+  SpanPoint::setChannelMask(0x3FFE);
+  dev2->setChannelMask(1<<1);
+  dev2->setChannelMask(1<<3 | 1<<8 | 1<<13);
+  dev2->setChannelMask(1<<13); 
 
   new SpanAccessory();                                  // Begin by creating a new Accessory using SpanAccessory(), which takes no arguments
 
