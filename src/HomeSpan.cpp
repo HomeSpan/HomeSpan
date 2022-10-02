@@ -2324,6 +2324,7 @@ void SpanPoint::dataReceived(const uint8_t *mac, const uint8_t *incomingData, in
     return;
   }
 
+  (*it)->receiveTime=millis();                             // set time of receive
   xQueueSend((*it)->receiveQueue, incomingData, 0);        // send to queue - do not wait if queue is full and instead fail immediately since we need to return from this function ASAP
 }
 
