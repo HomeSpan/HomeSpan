@@ -58,7 +58,7 @@
 #define I2C_ADD  0x48       // ICS Address to use for the Adafruit ADT7410
 
 SpanPoint *mainDevice;
-uint32_t timer=0;           // keep track of time since last update
+uint32_t timer=-30000;      // keep track of time since last update
 
 void setup() {
   
@@ -90,7 +90,7 @@ void setup() {
 
 void loop() {
 
-  if(millis()-timer>60000){                // only sample every 5 seconds
+  if(millis()-timer>30000){                // only sample every 30 seconds
     timer=millis();
     
     Wire.beginTransmission(I2C_ADD);         // setup transmission

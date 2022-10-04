@@ -72,7 +72,7 @@ struct RemoteTempSensor : Service::TemperatureSensor {
        
       LOG1("Sensor %s update: Temperature=%0.2f\n",name,temperature*9/5+32);
       
-    } else if(remoteTemp->time()>120000 && !fault->getVal()){    // else if it has been a while since last update (60 seconds), and there is no current fault
+    } else if(remoteTemp->time()>60000 && !fault->getVal()){    // else if it has been a while since last update (60 seconds), and there is no current fault
       fault->setVal(1);                                         // set fault state
       LOG1("Sensor %s update: FAULT\n",name);
     }

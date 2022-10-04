@@ -52,16 +52,17 @@ void setup() {
 
   homeSpan.enableWebLog(10,"pool.ntp.org","UTC","myLog");           // creates a web log on the URL /HomeSpan-[DEVICE-ID].local:[TCP-PORT]/myLog
 
+  SpanPoint::setChannelMask(1<<13); 
+
   SpanPoint::setPassword("Hello Thert");
 
   homeSpan.setLogLevel(1);
   
-  dev1=new SpanPoint("AC:67:B2:77:42:20",sizeof(int),0);
   dev2=new SpanPoint("7C:DF:A1:61:E4:A8",sizeof(int),sizeof(message_t));
+  dev1=new SpanPoint("AC:67:B2:77:42:20",sizeof(int),0);
 
   homeSpan.begin(Category::Lighting,"HomeSpan Lamp Server","homespan");
 
-  SpanPoint::setChannelMask(1<<13); 
 
 
   new SpanAccessory();                                  // Begin by creating a new Accessory using SpanAccessory(), which takes no arguments
@@ -122,16 +123,16 @@ unsigned long alarmTime=0;
 void loop(){
 
   homeSpan.poll();
-  if(dev1->get(&message))
-    Serial.printf("DEV1: '%s' %d %f %d\n",message.a,message.b,message.c,message.d);
-  if(dev2->get(&message))
-    Serial.printf("DEV2: '%s' %d %f %d\n",message.a,message.b,message.c,message.d);
-
-  if(millis()-alarmTime>5000){
-    alarmTime=millis();
-    boolean success = dev2->send(&alarmTime);
-    Serial.printf("Success = %d\n",success);
-  }
+//  if(dev1->get(&message))
+//    Serial.printf("DEV1: '%s' %d %f %d\n",message.a,message.b,message.c,message.d);
+//  if(dev2->get(&message))
+//    Serial.printf("DEV2: '%s' %d %f %d\n",message.a,message.b,message.c,message.d);
+//
+//  if(millis()-alarmTime>5000){
+//    alarmTime=millis();
+//    boolean success = dev2->send(&alarmTime);
+//    Serial.printf("Success = %d\n",success);
+//  }
 
 } // end of loop()
 
@@ -146,6 +147,8 @@ void myWiFiAP(){
 
 void wifiEstablished(){
   Serial.print("IN CALLBACK FUNCTION\n\n");
+    Serial.printf("MODE = %d\n",WiFi.getMode());
+
 }
 
 //////////////////////////////////////

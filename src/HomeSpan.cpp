@@ -60,8 +60,6 @@ void Span::begin(Category catID, const char *displayName, const char *hostNameBa
   sprintf(this->category,"%d",(int)catID);
 
   SpanPoint::setAsHub();
-  
-  WiFi.mode(WIFI_AP_STA);                                     // set mode to mixed AP/STA.  This does not start any servers, just configures the WiFi radio to ensure it does not sleep (required for ESP-NOW)
 
   statusLED=new Blinker(statusDevice,autoOffLED);             // create Status LED, even is statusDevice is NULL
 
@@ -2183,6 +2181,11 @@ SpanPoint::SpanPoint(const char *macAddress, int sendSize, int receiveSize, int 
 
   Serial.printf("SpanPoint: Created link to device with MAC Address %02X:%02X:%02X:%02X:%02X:%02X.  Send size=%d bytes, Receive size=%d bytes with queue depth=%d.\n",
     peerInfo.peer_addr[0],peerInfo.peer_addr[1],peerInfo.peer_addr[2],peerInfo.peer_addr[3],peerInfo.peer_addr[4],peerInfo.peer_addr[5],sendSize,receiveSize,queueDepth);
+
+  if(receiveSize>0)
+    WiFi.mode(WIFI_AP_STA);
+  else if(WiFi.getMode()==WIFI_OFF)
+    WiFi.mode(WIFI_STA);
   
   init();                             // initialize SpanPoint
   peerInfo.channel=0;                 // 0 = matches current WiFi channel
@@ -2204,8 +2207,8 @@ void SpanPoint::init(const char *password){
   if(initialized)
     return;
 
-  if(WiFi.getMode()!=WIFI_AP_STA)
-    WiFi.mode(WIFI_AP_STA);                 // set mode to mixed AP/STA.  This does not start any servers, just configures the WiFi radio to ensure it does not sleep (required for ESP-NOW)
+  if(WiFi.getMode()==WIFI_OFF)
+    WiFi.mode(WIFI_STA);  
   
   uint8_t hash[32];
   mbedtls_sha256_ret((const unsigned char *)password,strlen(password),hash,0);      // produce 256-bit bit hash from password
