@@ -55,54 +55,54 @@
 #include "HomeSpan.h"
 #include <Wire.h>           // include the I2C library
 
-#define I2C_ADD  0x48       // ICS Address to use for the Adafruit ADT7410
+// #define DIAGNOSTIC_MODE
+
+#define SAMPLE_TIME   5000      // Time between temperature samples (in milliseconds)
+#define I2C_ADD       0x48      // ICS Address to use for the Adafruit ADT7410
 
 SpanPoint *mainDevice;
-uint32_t timer=-30000;      // keep track of time since last update
 
 void setup() {
-  
+
+  setCpuFrequencyMhz(80);       // reduce CPU frequency to save battery power  
+
+#if defined(DIAGNOSTIC_MODE)  
+  homeSpan.setLogLevel(1);
   Serial.begin(115200);
   delay(1000);
-
-  Serial.printf("Starting\n\n");
+#endif
 
   // In the line below, replace the MAC Address with that of your MAIN HOMESPAN DEVICE
 
-  homeSpan.setLogLevel(1);
   mainDevice=new SpanPoint("7C:DF:A1:61:E4:A8",sizeof(float),0);    // create a SpanPoint with send size=sizeof(float) and receive size=0     
 
   Wire.begin();                         // start I2C in Controller Mode
   
+#if defined(DIAGNOSTIC_MODE)  
   Wire.beginTransmission(I2C_ADD);      // setup transmission
   Wire.write(0x0B);                     // ADT7410 Identification Register
   Wire.endTransmission(0);              // transmit and leave in restart mode to allow reading
   Wire.requestFrom(I2C_ADD,1);          // request read of single byte
   uint8_t id = Wire.read();             // receive a byte
+  LOG1("Configuring Temperature Sensor ADT7410 version 0x%02X with address 0x%02X.\n",id,I2C_ADD);           // initialization message
+#endif
 
   Wire.beginTransmission(I2C_ADD);      // setup transmission
   Wire.write(0x03);                     // ADT740 Configuration Register
-  Wire.write(0xC0);                     // set 16-bit temperature resolution, 1 sampler per second
+  Wire.write(0xC0);                     // set 16-bit temperature resolution, 1 sample per second
   Wire.endTransmission();               // transmit
-      
-  LOG0("Configuring Temperature Sensor ADT7410 version 0x%02X with address 0x%02X.\n",id,I2C_ADD);           // initialization message
-}
+          
+  Wire.beginTransmission(I2C_ADD);      // setup transmission
+  Wire.write(0x00);                     // ADT7410 2-byte Temperature
+  Wire.endTransmission(0);              // transmit and leave in restart mode to allow reading
+  Wire.requestFrom(I2C_ADD,2);          // request read of two bytes
 
-void loop() {
-
-  if(millis()-timer>30000){                // only sample every 30 seconds
-    timer=millis();
-    
-    Wire.beginTransmission(I2C_ADD);         // setup transmission
-    Wire.write(0x00);                     // ADT7410 2-byte Temperature
-    Wire.endTransmission(0);              // transmit and leave in restart mode to allow reading
-    Wire.requestFrom(I2C_ADD,2);             // request read of two bytes
+  int16_t iTemp = ((int16_t)Wire.read()<<8)+Wire.read();    
+  float temperature = iTemp/128.0;
   
-    int16_t iTemp = ((int16_t)Wire.read()<<8)+Wire.read();    
-    float temperature = iTemp/128.0;
-    
-    boolean success = mainDevice->send(&temperature);                 // send temperature to main device
-    LOG1("Send temp update of %0.2f C: %s\n",temperature,success?"Succeded":"Failed");
-    }
-  }
+  boolean success = mainDevice->send(&temperature);                 // send temperature to main device
+  
+  LOG1("Send temp update of %0.2f F: %s\n",temperature*9/5+32,success?"Succeded":"Failed");  
 
+  esp_deep_sleep(SAMPLE_TIME*1000);     // enter deep sleep mode -- reboot after resuming
+}
