@@ -1,8 +1,16 @@
-# Pulse Width Modulation (PWM)
+# Multi-Device Point-to-Point Communication using ESP-NOW
 
-The ESP32 has up to 16 PWM channels that can be used to drive a variety of devices.  HomeSpan includes an integrated PWM library with dedicated classes designed for controlling **Dimmable LEDs** as well as **Servo Motors**.  Both classes are provided in a standalone header file that is accessed by placing the following near the top of your sketch:
+Like most commercial HomeKit devices, HomeSpan requires a power-consuming always-on WiFi connection, which unfortunately means powering a HomeKit device with batteries is generally not possible.  For most applications, this is not a problem since your HomeSpan device will be controlling a real-world light, fan, thermostat, etc., and will likely be plugged into a wall outlet.  However, there are some real-world applications where wall outlets are not readily available and battery-power is essential, such as remote temperature sensors, door and window sensors, or standalone switches.
 
-`#include "extras/PwmPin.h"`
+To address this problem, HomeSpan includes an integrated implementation of Espressif's ESP-NOW protocol that allows for the point-to-point transmission of short messages between ESP32 devices requiring **very little power**.  Importantly, ESP-NOW uses the ESP32's existing WiFi radio, so no new hardware is required.
+
+What all this means is you can readily create a multi-device Accessory where:
+
+* HomeSpan, running on an ESP32 plugged into wall-power, provides the required always-on connectivity to HomeKit via your home WiFi network, and
+* One or more remote devices, running on battery-powered ESP32's, monitor their local environment (e.g. temperature, humidity) and communicate this information back to the main HomeSpan device via the low-powered ESP-NOW protocol.
+* The main HomeSpan device processes this information and updates HomeKit and the Home App as needed, just as if were taking its own temperature and humidity measurements directly.
+
+All of the required logic needed to implement point-to-point communication between multiple ESP32 devices is embedded in HomeSpan's easy-to-use SpanPoint class, fully described below. 
 
 ## *LedPin(uint8_t pin [,float level [,uint16_t frequency]])*
 
