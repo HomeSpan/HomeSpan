@@ -8,9 +8,9 @@ Most importantly, because ESP-NOW does not require always-on WiFi connectivity, 
 
 ## *SpanPoint(const char \*macAddress, int sendSize, int receiveSize, int queueDepth=1)*
 
-Creating an instance of this **class** configures the specified *pin* to output a PWM signal suitable for a controlling dimmable LED.  Arguments, along with their defaults if left unspecified, are as follows:
+Creating an instance of this **class** initializes an ESP-NOW connection from the current device to a device with the specified *macAddress*. Arguments, along with their defaults if left unspecified, are as follows:
 
-  * *pin* - the pin on which the PWM control signal will be output
+  * *macAddress* - the MAC Address of the device to which you are connecting, in the form "XX:XX:XX:XX:XX:XX" the pin on which the PWM control signal will be output
   * *level* - sets the initial %duty-cycle of the PWM from from 0 (LED completely off) to 100 (LED fully on).  Default=0 (LED initially off)
   * *frequency* - sets the PWM frequency, in Hz, from 1-65535 (ESP32 only) or 5-65535 (ESP32-S2 and ESP32-C3).  Defaults to 5000 Hz if unspecified, or if set to 0
  
