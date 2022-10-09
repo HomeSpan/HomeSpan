@@ -6,7 +6,7 @@ In a typical setup, a "Main" ESP32 device runs a complete HomeSpan sketch, where
 
 Most importantly, because ESP-NOW does not require always-on WiFi connectivity, it draws very little power.  This means you can operate Remote devices with a battery instead of wall-power, which makes them much easier to place in remote locations (such as outdoors).
 
-## *LedPin(uint8_t pin [,float level [,uint16_t frequency]])*
+## *SpanPoint(const char \*macAddress, int sendSize, int receiveSize, int queueDepth=1)*
 
 Creating an instance of this **class** configures the specified *pin* to output a PWM signal suitable for a controlling dimmable LED.  Arguments, along with their defaults if left unspecified, are as follows:
 
