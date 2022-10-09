@@ -1,6 +1,10 @@
 # SpanPoint: Point-to-Point Communication between ESP32 Devices
 
-SpanPoint is HomeSpan's easy-to-use implementation of Espressif's ESP-NOW protocol.  ESP-NOW provides bi-directional, point-to-point communication between ESP32 devices without the need for a central WiFi network.  In a typical setup, a "Main" ESP32 device runs a complete HomeSpan sketch whereas one or more "Remote" ESP32 devices run simple sketches designed to take measurements (temperature, humidity, etc.).  The Main device is paired to HomeKit and communicates with the Home App over your WiFi network in the usual fashion.  The Remote devices do not connect to your WiFi network or to HomeKit but instead send their data to the Main device using an encrypted ESP-NOW channel.  The Main device is responsible for reading this data and determines what, if any, updates to send to HomeKit.
+SpanPoint is HomeSpan's easy-to-use implementation of Espressif's ESP-NOW protocol.  ESP-NOW provides bi-directional, point-to-point communication between ESP32 devices without the need for a central WiFi network.
+
+In a typical setup, a "Main" ESP32 device runs a complete HomeSpan sketch, whereas one or more "Remote" ESP32 devices run simple sketches designed to take measurements (temperature, humidity, etc.).  The Main device is paired to HomeKit and communicates with the Home App over your WiFi network in the usual fashion.  The Remote devices do not connect to your WiFi network or to HomeKit, but instead send their data directly to the Main device using an encrypted ESP-NOW channel.  The Main device is then responsible for reading this data and determining what, if any, actions to take or updates to send to HomeKit.
+
+Most importantly, because ESP-NOW does not require always-on WiFi connectivity, it draws very little power.  This means you can operate Remote devices with a battery instead of wall-power, which makes them much easier to place in remote locations (such as outdoors).
 
 ## *LedPin(uint8_t pin [,float level [,uint16_t frequency]])*
 
