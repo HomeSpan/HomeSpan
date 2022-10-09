@@ -1,6 +1,9 @@
-# Multi-Device Point-to-Point Communication using ESP-NOW
+# SpanPoint: Point-to-Point Communication between ESP32 Devices
 
-Like most commercial HomeKit devices, HomeSpan requires a power-consuming always-on WiFi connection, which unfortunately means powering a HomeKit device with batteries is generally not possible.  For most applications, this is not a problem since your HomeSpan device will be controlling a real-world light, fan, thermostat, etc., and will likely be plugged into a wall outlet.  However, there are some real-world applications where wall outlets are not readily available and battery-power is essential, such as remote temperature sensors, door and window sensors, or standalone switches.
+SpanPoint is HomeSpan's integrated implementation of Espressif's ESP-NOW protocol that enables bi-directional communication from one ESP32 device directly to another without the need for a central WiFi network.  In a typical setup, one ESP32 device runs a full HomeSpan sketcs (perhaps for a Thermostat Accessory) and connects to HomeKit in the usual fashion.  
+
+
+ike most commercial HomeKit devices, HomeSpan requires a power-consuming always-on WiFi connection, which unfortunately means powering a HomeKit device with batteries is generally not possible.  For most applications, this is not a problem since your HomeSpan device will be controlling a real-world light, fan, thermostat, etc., and will likely be plugged into a wall outlet.  However, there are some real-world applications where wall outlets are not readily available and battery-power is essential, such as remote temperature sensors, door and window sensors, or standalone switches.
 
 To address this problem, HomeSpan includes an integrated implementation of Espressif's ESP-NOW protocol that allows for the point-to-point transmission of short messages between ESP32 devices requiring **very little power**.  Importantly, ESP-NOW uses the ESP32's existing WiFi radio, so no new hardware is required.
 
