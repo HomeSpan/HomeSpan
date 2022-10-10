@@ -2,17 +2,19 @@
 
 SpanPoint is HomeSpan's easy-to-use implementation of Espressif's ESP-NOW protocol.  ESP-NOW provides bi-directional, point-to-point communication between ESP32 devices without the need for a central WiFi network.
 
-In a typical setup, a "Main" ESP32 device runs a complete HomeSpan sketch, whereas one or more "Remote" ESP32 devices run simple sketches designed to take measurements (temperature, humidity, etc.).  The Main device is paired to HomeKit and communicates with the Home App over your WiFi network in the usual fashion.  The Remote devices do not connect to your WiFi network or to HomeKit, but instead send their data directly to the Main device using an encrypted ESP-NOW channel.  The Main device is then responsible for reading this data and determining what, if any, actions to take or updates to send to HomeKit.
+In a typical "Remote Sensor" setup, a "Main" ESP32 device runs a complete HomeSpan sketch, whereas one or more "Remote" ESP32 devices run simple sketches designed to take measurements (temperature, humidity, etc.).  The Main device is paired to HomeKit and communicates with the Home App over your WiFi network in the usual fashion.  In contrast, the Remote devices do not connect to your WiFi network or to HomeKit, but instead send their data directly to the Main device using an encrypted ESP-NOW channel.  The Main device is then responsible for reading this data and determining what, if any, actions to take or updates to send to HomeKit.
 
-Most importantly, because ESP-NOW does not require always-on WiFi connectivity, it draws very little power.  This means you can operate Remote devices with a battery instead of wall-power, which makes them much easier to place in remote locations (such as outdoors).
+You are not limited to the above scenario.  SpanPoint can be used to communicate among devices that are each running a HomeSpan sketch, as well as among devices that are not running a HomeSpan sketch.  As long as your sketch contains `#include "HomeSpan.h"`, you can use SpanPoint.
+
+Perhaps most importantly, because ESP-NOW does not require always-on WiFi connectivity, it draws very little power.  This means you can operate Remote devices with a battery instead of wall-power, which opens up many possibilities, such as installing temperature sensors in remote (outdoor) locations where wall-power may be unavailable.
 
 ## *SpanPoint(const char \*macAddress, int sendSize, int receiveSize, int queueDepth=1)*
 
 Creating an instance of this **class** initializes an ESP-NOW connection from the current device to a device with the specified *macAddress*. Arguments, along with their defaults if left unspecified, are as follows:
 
-  * *macAddress* - the MAC Address of the device to which you are connecting, in the form "XX:XX:XX:XX:XX:XX" the pin on which the PWM control signal will be output
-  * *level* - sets the initial %duty-cycle of the PWM from from 0 (LED completely off) to 100 (LED fully on).  Default=0 (LED initially off)
-  * *frequency* - sets the PWM frequency, in Hz, from 1-65535 (ESP32 only) or 5-65535 (ESP32-S2 and ESP32-C3).  Defaults to 5000 Hz if unspecified, or if set to 0
+  * *macAddress* - the MAC Address of the device to which you are connecting, in the standard 6-byte form "XX:XX:XX:XX:XX:XX", where XX represents a single hexidecimal byte
+  * *sendSize* - the size, in bytes, of any messages to be sent from this device over this instance.  Set to zero if not sending messages from this device.  Maximum allowed size if 200 bytes.
+  * *receiveSize* - the size, in bytes, of any messages to be received by this device over this instance.  Set to zero if not receiving messages on this device.  Maximum allowed size if 200 bytes.
  
  The following methods are supported:
 
