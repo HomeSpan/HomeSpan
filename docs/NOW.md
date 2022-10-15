@@ -70,26 +70,17 @@ Once instances of *SpanPoint* are created, the following methods can be used to 
 * `boolean send(void *data)`
 
   * transmits data referenced by the pointer *data* to the other device
-  * returns true if transmission was successful, otherwise false if transmission failed.  Note that this method will return true as long as it can find and connect to the device with the *macAddress* specified when the relevant SpanPoint object was instantiated, regardless of whether or not the other device successful reads the message
-  * example (using the above scenario):  `float humidity=35.8; devB->send(&humidity);` sends a 4-byte floating number to **Device B**.  Note that the pointer *data* should always reference a data element or structure whose size exactly matches the *sendSize* specified when the relevant SpanPoint object was instantiated
-
-
+  * returns **true** if transmission was successful, otherwise **false** if transmission failed.  Note that this method will return **true** as long as it can find and connect to the device with the *macAddress* specified when the relevant SpanPoint object was instantiated, regardless of whether or not the other device successful reads the message
+  * example (using the above scenario):  `float humidity=35.8; devB->send(&humidity);` sends a 4-byte floating number to **Device B**.  Note that the pointer *data* should always reference a data element or structure whose size exactly matches the *sendSize* parameter specified when the relevant SpanPoint object was instantiated
   
-* `int getPin()`
+* `boolean get(void *dataBuf)`
 
-  * returns the pin number (or -1 if LedPin was not successfully initialized)
-  
-LedPin also includes a static class function that converts Hue/Saturation/Brightness values (typically used by HomeKit) to Red/Green/Blue values (typically used to control multi-color LEDS).
-
-* `static void HSVtoRGB(float h, float s, float v, float *r, float *g, float *b)`
-
-  * *h* - input Hue value, range 0-360
-  * *s* - input Saturation value, range 0-1
-  * *v* - input Brightness value, range 0-1
-  * *r* - output Red value, range 0-1
-  * *g* - output Green value, range 0-1
-  * *b* - output Blue value, range 0-1
-
+  * checks to see if a message has been received into SpanPoint's internal queue from a device with the *macAddress* specified when the relevant SpanPoint object was instantiated.  If so, the message is copied into the memory pointed to by *dataBuf*, the internal queue is cleared, and the method returns **true**.  If no message is available, the *dataBuf* memory is unmodified and the method returns **false**
+  * note that the pointer *dataBuf* should always reference a data element or structure whose size equals or exceeds the *receiveSize* parameter specified when the relevant SpanPoint object was instantiated
+  * once the internal SpanPoint queue is full, any messages received from the same device are discarded until the queue is cleared by calling this *get()* method.  Setting the optional *queueDepth* parameter to a number greater than one when the relevant SpanPoint object was instantiated allows SpanPoint to retain up to *queueDepth* messages even without a call to the this *get()* method.  However, once the queue is full, additional messages received will be discarded until messages are "gotten" of the queue with the *get()* method
+ 
+ 
+ 
 See tutorial sketch [#10 (RGB_LED)](../examples/10-RGB_LED) for an example of using LedPin to control an RGB LED.
 
 ---
