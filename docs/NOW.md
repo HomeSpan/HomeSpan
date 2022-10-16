@@ -68,13 +68,15 @@ Also note that regardless of whether or not the queue if full, if the size of a 
   * this method will throw a fatal error and halt the sketch if called with a *mask* that does not enable at least one channel
   * this method has no effect on SpanPoint if used within a full HomeSpan sketch that connects to HomeKit via a central WiFi network, since under these conditions the WiFi channel must remain set to whatever the central WiFi network requires
 
-One of the primary reasons for using SpanPoint is to enable the use of battery-powered devices.  Since HomeKit requires an always-on WiFi connection, wall-power is a must.  But ESP-NOW does not require always-on connectivity to a central WiFi network, which makes it possible to power things like "remote sensor" devices with just a battery, and have those devices transmit their measurement via SpanPoint to a central device that runs a full HomeSpan sketch and connects to HomeKit.
+## Typical Use Cases
 
-Examples showing one such "remote sensor" configuration be done can be found in the Arduino IDE under [*File → Examples → HomeSpan → Other Examples →RemoteSensors*](../Other%20Examples/RemoteSensors).  This folder contains three sketches:
+One of the primary reasons for using SpanPoint is to enable the deployement of battery-powered devices.  Since HomeKit requires an always-on WiFi connection, wall-power is a must.  But ESP-NOW does not require always-on connectivity to a central WiFi network, which makes it possible to power things like remote-sensor devices with just a battery.  Such battery-powered "Remote Devices" can take periodic local measurements and transmit them via SpanPoint messages to a wall-powered "Main Device" that is running a full HomeSpan sketch connected to HomeKit via a central WiFi network.
 
-* *MainDevice.ino* - a full HomeSpan sketch the implements 2 Temperature Sensor Accessories using SpanPoint to read messages containing temperature updates from remote devices
-* *RemoteDevice.ino* - a lightweight sketch that simulates taking a temperature measurement every 20 seconds and transmitting the result to the Main Device via SpanPoint
-* *RemoteTempSensor.ino* - a lightweight sketch that is similar to *RemoteDevice.ino*, except that instead of simulating a temperature sensor, it implements an actual Adafruit ADT7410 I2C-based temperature sensor.  This sketch also uses some power-management techniques, such as lowering the CPU frequency and entering into deep-sleep after each measurement is taken
+Examples showing such a configuration can be found in the Arduino IDE under [*File → Examples → HomeSpan → Other Examples → RemoteSensors*](../Other%20Examples/RemoteSensors).  This folder contains three sketches:
+
+* *MainDevice.ino* - a full HomeSpan sketch that implements two Temperature Sensor Accessories, but instead of taking its own temperature measurements, it uses SpanPoint to read messages containing temperature updates from other Remote Devices
+* *RemoteDevice.ino* - a lightweight sketch that simulates taking periodic temperature measurements, which are then transmitted to the Main Device via SpanPoint
+* *RemoteTempSensor.ino* - a lightweight sketch that is similar to *RemoteDevice.ino*, except that instead of simulating a temperature sensor, it implements an actual Adafruit ADT7410 I2C-based temperature sensor.  This sketch also uses some power-management techniques to extend battery life, such as lowering the CPU frequency and entering into deep-sleep after each measurement is taken
 
 ---
 
