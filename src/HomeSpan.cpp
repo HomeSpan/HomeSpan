@@ -2279,7 +2279,7 @@ boolean SpanPoint::get(void *dataBuf){
 
 ///////////////////////////////
 
-boolean SpanPoint::send(void *data){
+boolean SpanPoint::send(const void *data){
 
   if(sendSize==0)
     return(false);

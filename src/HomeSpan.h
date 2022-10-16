@@ -784,7 +784,7 @@ class SpanPoint {
   static void setPassword(const char *pwd){init(pwd);};      
   static void setChannelMask(uint16_t mask);  
   boolean get(void *dataBuf);
-  boolean send(void *data);
+  boolean send(const void *data);
   uint32_t time(){return(millis()-receiveTime);}
 };
 
