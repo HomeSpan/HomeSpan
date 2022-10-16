@@ -24,7 +24,7 @@ SpanPoint will throw a fatal error during instantiation and halt the sketch if:
   * either *sendSize* or *receiveSize* is set to greater than 200, or
   * both *sendSize* and *receiveSize* are set to 0, since there is no purpose for a SpanPoint that will neither transmit nor receive data
    
-**The following SpanPoint methods are used to transmit and receive messages from a SpanPoint object on one device to a corresponding SpanPoint object on the *other* device:**
+**The following SpanPoint methods are used to transmit and receive messages from a SpanPoint object on one device to a complementary SpanPoint object on the *other* device:**
 
 * `boolean send(const void *data)`
 
@@ -42,6 +42,32 @@ SpanPoint will throw a fatal error during instantiation and halt the sketch if:
 Note that whether or or not you call the `get()` method, SpanPoint is configured to store (in an internal queue) any SpanPoint messages it receives from *other* devices, provided that (a) there is room in the internal queue, and (b) the size of the message received matches the *receiveSize* parameter specified when the relevant SpanPoint object was instantiated.  If the internal queue is full when a message is received, the message is *not* moved to the queue and is instead discarded before it can ever be retreived by the `get()` method.  To avoid this, make sure you call `get()` more frequently than you expect to receive messages, or set the *queueDepth* parameter to something greater than 1 when instantating the SpanPoint object.
 
 Also note that regardless of whether or not the queue if full, if the size of a received message does not match the *receiveSize* parameter specified for this instance of the SpanPoint object, the message will be discarded.  If *receiveSize* is greater than zero, a non-fatal run-time warning about size mismatches will also be output on the Serial Monitor.
+
+**Other methods supported by SpanPoint are as follows:**
+
+* `uint32_t time()`
+
+  * returns the time elapsed (in millis) since a SpanPoint object last received a valid message
+  * valid messages are those that can be properly decrypted and whose size matches the *receiveSize* parameter, regardless of whether or not there is room in the queue to store the message
+  * reading a message in the queue with `get()` has no impact on the elapsed time calculation
+  * this method is typically used to check whether messages from a transmitting device are overdue (suggesting a potential problem with that device)
+
+* `static void setPassword(const char *pwd)`
+
+  * this *optional* **class-level** method changes the default passphrase used to generate ESP-NOW encryption keys for all SpanPoint objects from the default passphrase ("HomeSpan") to *pwd*, which can be a character string of any length
+  * if used, this method must be called *before* the instantiation of any SpanPoint objects.  Example: `SpanPoint::setPassword("MyPassword");`
+  * the same passphrase must be used among all devices that are communicating via SpanPoint, else the receiving device will not be able to decrypt messages it receives
+
+* `static void setChannelMask(uint16_t mask)`
+
+  * this *optional* **class-level** method changes the default channel bitmask from 0x3FFE (i.e. 0011 1111 1111 1110) to *mask*
+  * the channel bitmask is used to limit which of the standard channels (1-13) supported by the ESP32 WiFi radio should be tried whenever SpanPoint needs to reset the ESP-NOW channel after a transmission failure
+  * setting bit number *N* to 1 in the bitmask, where N=[1,13], enables the use of WiFi channel number *N*
+  * setting bit number *N* to 0 in the bitmask, where N=[1,13], disables the use of WiFi channel number *N*
+  * example: `SpanPoint::setChannelMask(1<<1 | 1<<6 | 1<<11);` causes SpanPoint to try only WiFi channels 1, 6, and 11 when transmitting messages
+  * this method will throw a fatal error and halt the sketch if called with a *mask* that does not enable at least one channel
+  * this method has no effect on SpanPoint if used within a full HomeSpan sketch that connects to HomeKit via the users WiFi network, since under these conditions the WiFi channel must remain set to whatever the WiFi network requires
+ 
 
 See tutorial sketch [#10 (RGB_LED)](../examples/10-RGB_LED) for an example of using LedPin to control an RGB LED.
 
