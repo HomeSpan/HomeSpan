@@ -41,9 +41,10 @@ The following SpanPoint methods are used to transmit and receive messages from a
   * if a message is available, it is **moved** from the internal message queue into *dataBuf* and the method returns **true**
   * the size of the message will always be equal to the *receiveSize* parameter specified when the SpanPoint object was created, so make sure *dataBuf* is sufficiently sized to store such a message
 
-Note that whether or or not you call the `get()` method, SpanPoint is configured to store in an internal queue any SpanPoint messages it receives from *other* devices, provided that (a) there is room in the internal queue, and (b) the size of the message received matches the *receiveSize* parameter specified when the relevant SpanPoint object was instantiated (i.e. each SpanPoint object maintains its own internal queue).  If the internal queue is already full, the message will be ignored and thus never retrievable by the `get()` method.  To avoid this, set the *queueDepth* to something greater than 1 when instantating the SpanPoint object.  If the queue is not full, but the sie of the message 
+Note that whether or or not you call the `get()` method, SpanPoint is configured to store in an internal queue any SpanPoint messages it receives from *other* devices, provided that (a) there is room in the internal queue, and (b) the size of the message received matches the *receiveSize* parameter specified when the relevant SpanPoint object was instantiated.  Each SpanPoint object maintains its own internal queue, which can be set tro hold more than one message by setting the *queueDepth* parameter to something greater than 1 when instantating the SpanPoint object.
 
- 
+If the internal queue is full when a message is received, the message is not moved to the queue and will thus never be retrievable by the `get()` method.  Regardless of whether or not the queue if full, if the size of a received messages does not match the *receiveSize* parameter specified for this instance of the SpanPoint object, the message will be discarded and if *receiveSize* is greater than zero, a non-fatal run-time warning about size mismatches will be output on the Serial Monitor.
+
 See tutorial sketch [#10 (RGB_LED)](../examples/10-RGB_LED) for an example of using LedPin to control an RGB LED.
 
 ---
