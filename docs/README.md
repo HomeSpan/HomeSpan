@@ -31,6 +31,7 @@ HomeSpan requires version 2.0.0 or later of the [Arduino-ESP32 Board Manager](ht
   * Touch pads/sensors connected to an ESP32 pin (for ESP32 devices that support touch pads)
 * Integrated access to the ESP32's on-chip Remote Control peripheral for easy generation of IR and RF signals
 * Dedicated classes to control one- and two-wire addressable RGB and RGBW LEDs and LED strips
+* Dedicated class that faciliates seemless point-to-point communication between ESP32 devices using ESP-NOW
 * Integrated Web Log for user-defined log messages
 * Extensively-commented Tutorial Sketches taking you from the very basics of HomeSpan through advanced HomeKit topics
 * Additional examples and projects showcasing real-world implementations of HomeSpan
