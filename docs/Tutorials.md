@@ -132,6 +132,9 @@ Demonstrates how to create Custom Services and Custom Characteristics in HomeSpa
 ### [ProgrammableHub](../Other%20Examples/ProgrammableHub)
 Demonstrates how to implement a fully programmable Light Accessory Hub that allows the user to *dynamically* add/delete up to 12 Light Accessories directly through a device-hosted *web interface* or via HomeSpan's *command-line inteface*.  Each light can be configured as dimmable/non-dimmable with either no color control, full RGB color control, or color-temperature control.  Builds upon many of the techniques used in [Example 20](../examples/20-AdvancedTechniques)
 
+### [RemoteSensors](../Other%20Examples/RemoteSensors)
+Demonstrates how SpanPoint can be used to transmit messages from battery-powered Remote Devices running light-weight sketches that measure the local temperature, to a wall-powered Main Device running a full HomeSpan sketch implementing Temperature Sensor Accessories.  See [SpanPoint: Point-to-Point Communication between ESP32 Devices](NOW.md) for full details regarding the SpanPoint class and all of its methods.
+
 ---
 
 [↩️](README.md) Back to the Welcome page
