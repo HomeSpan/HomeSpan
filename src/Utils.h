@@ -71,6 +71,12 @@ struct TempBuffer {
 //         PushButton         //
 ////////////////////////////////
 
+#if SOC_TOUCH_VERSION_2
+typedef uint32_t touch_value_t;
+#else
+typedef uint16_t touch_value_t;
+#endif
+
 class PushButton{
   
   int status;
@@ -79,11 +85,9 @@ class PushButton{
   uint32_t doubleAlarm;
   uint32_t longAlarm;
   int pressType;
-
-#if SOC_TOUCH_SENSOR_NUM > 0
+  
   static touch_value_t threshold;
   static const int calibCount=20;
-#endif
   
   protected:
 
@@ -103,10 +107,12 @@ class PushButton{
   static boolean TRIGGER_ON_LOW(int pin){return(!digitalRead(pin));}
   static boolean TRIGGER_ON_HIGH(int pin){return(digitalRead(pin));}
 
-#if SOC_TOUCH_VERSION_1 // ESP32
-  static boolean TRIGGER_ON_TOUCH(int pin){return(touchRead(pin)<threshold);}
-#elif SOC_TOUCH_VERSION_2 // ESP32S2 ESP32S3
+#if SOC_TOUCH_SENSOR_NUM > 0
+#if SOC_TOUCH_VERSION_2
   static boolean TRIGGER_ON_TOUCH(int pin){return(touchRead(pin)>threshold);}
+#else
+  static boolean TRIGGER_ON_TOUCH(int pin){return(touchRead(pin)<threshold);}
+#endif
 #endif
 
   PushButton(int pin, triggerType_t triggerType=TRIGGER_ON_LOW);

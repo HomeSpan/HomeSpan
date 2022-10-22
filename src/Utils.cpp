@@ -222,6 +222,4 @@ void PushButton::reset(){
 
 //////////////////////////////////////
 
-#if SOC_TOUCH_SENSOR_NUM > 0
-  touch_value_t PushButton::threshold=0;
-#endif
+touch_value_t PushButton::threshold=0;
