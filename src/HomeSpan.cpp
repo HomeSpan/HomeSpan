@@ -341,7 +341,8 @@ void Span::commandMode(){
   int mode=1;
   boolean done=false;
   statusLED->start(500,0.3,mode,1000);
-
+  if(hsEventCallback)
+    hsEventCallback(HS_CONFIG_MODE_EXIT);
   unsigned long alarmTime=millis()+comModeLife;
 
   while(!done){
@@ -360,6 +361,8 @@ void Span::commandMode(){
         if(mode==6)
           mode=1;
         statusLED->start(500,0.3,mode,1000);        
+        if(hsEventCallback)
+          hsEventCallback((HS_EVENT)(HS_CONFIG_MODE_EXIT+mode-1));
       } else {
         done=true;
       }
@@ -373,13 +376,28 @@ void Span::commandMode(){
 
     case 1:
       Serial.print("*** NO ACTION\n\n");
-      if(strlen(network.wifiData.ssid)==0)
+      if(strlen(network.wifiData.ssid)==0){
         statusLED->start(LED_WIFI_NEEDED);
+        if(hsEventCallback)
+          hsEventCallback(HS_WIFI_NEEDED);
+      }
       else
-      if(!HAPClient::nAdminControllers())
+      if(WiFi.status()!=WL_CONNECTED){
+        statusLED->start(LED_WIFI_CONNECTING);
+        if(hsEventCallback)
+          hsEventCallback(HS_WIFI_CONNECTING);
+      }
+      else
+      if(!HAPClient::nAdminControllers()){
         statusLED->start(LED_PAIRING_NEEDED);
-      else
+        if(hsEventCallback)
+          hsEventCallback(HS_PAIRING_NEEDED);
+      }
+      else{
         statusLED->on();
+        if(hsEventCallback)
+          hsEventCallback(HS_PAIRED);
+      }
     break;
 
     case 2:
@@ -411,12 +429,14 @@ void Span::checkConnect(){
     if(WiFi.status()==WL_CONNECTED)
       return;
       
-    addWebLog(true,"*** WiFi Connection Lost!");      // losing and re-establishing connection has not been tested
+    addWebLog(true,"*** WiFi Connection Lost!");
     connected++;
     waitTime=60000;
     alarmConnect=0;
     statusLED->start(LED_WIFI_CONNECTING);
-  }
+    if(hsEventCallback)
+      hsEventCallback(HS_WIFI_CONNECTING);
+    }
 
   if(WiFi.status()!=WL_CONNECTED){
     if(millis()<alarmConnect)         // not yet time to try to try connecting
@@ -442,10 +462,16 @@ void Span::checkConnect(){
     return;
   }
 
-  if(!HAPClient::nAdminControllers())
+  if(!HAPClient::nAdminControllers()){
     statusLED->start(LED_PAIRING_NEEDED);
-  else 
+    if(hsEventCallback)
+      hsEventCallback(HS_PAIRING_NEEDED);
+  }
+  else{ 
     statusLED->on();
+    if(hsEventCallback)
+      hsEventCallback(HS_PAIRED);
+  }
   
   connected++;
 
