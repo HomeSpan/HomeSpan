@@ -195,13 +195,13 @@ void Span::pollTask() {
       } else {
         Serial.print("YOU MAY CONFIGURE BY TYPING 'W <RETURN>'.\n\n");
         statusLED->start(LED_WIFI_NEEDED);
-        if(hsEventCallback)
-          hsEventCallback(HS_WIFI_NEEDED);
+        if(statusCallback)
+          statusCallback(HS_WIFI_NEEDED);
       }
     } else {
       statusLED->start(LED_WIFI_CONNECTING);
-      if(hsEventCallback)
-        hsEventCallback(HS_WIFI_CONNECTING);
+      if(statusCallback)
+        statusCallback(HS_WIFI_CONNECTING);
     }
           
     if(controlButton)
@@ -332,7 +332,7 @@ int Span::getFreeSlot(){
 
 void Span::commandMode(){
 
-  if(!statusDevice && !hsEventCallback){
+  if(!statusDevice && !statusCallback){
     Serial.print("*** ERROR: CAN'T ENTER COMMAND MODE WITHOUT A DEFINED STATUS LED OR EVENT HANDLER CALLBACK***\n\n");
     return;
   }
@@ -341,8 +341,8 @@ void Span::commandMode(){
   int mode=1;
   boolean done=false;
   statusLED->start(500,0.3,mode,1000);
-  if(hsEventCallback)
-    hsEventCallback(HS_CONFIG_MODE_EXIT);
+  if(statusCallback)
+    statusCallback(HS_CONFIG_MODE_EXIT);
   unsigned long alarmTime=millis()+comModeLife;
 
   while(!done){
@@ -361,8 +361,8 @@ void Span::commandMode(){
         if(mode==6)
           mode=1;
         statusLED->start(500,0.3,mode,1000);        
-        if(hsEventCallback)
-          hsEventCallback((HS_EVENT)(HS_CONFIG_MODE_EXIT+mode-1));
+        if(statusCallback)
+          statusCallback((HS_STATUS)(HS_CONFIG_MODE_EXIT+mode-1));
       } else {
         done=true;
       }
@@ -376,28 +376,7 @@ void Span::commandMode(){
 
     case 1:
       Serial.print("*** NO ACTION\n\n");
-      if(strlen(network.wifiData.ssid)==0){
-        statusLED->start(LED_WIFI_NEEDED);
-        if(hsEventCallback)
-          hsEventCallback(HS_WIFI_NEEDED);
-      }
-      else
-      if(WiFi.status()!=WL_CONNECTED){
-        statusLED->start(LED_WIFI_CONNECTING);
-        if(hsEventCallback)
-          hsEventCallback(HS_WIFI_CONNECTING);
-      }
-      else
-      if(!HAPClient::nAdminControllers()){
-        statusLED->start(LED_PAIRING_NEEDED);
-        if(hsEventCallback)
-          hsEventCallback(HS_PAIRING_NEEDED);
-      }
-      else{
-        statusLED->on();
-        if(hsEventCallback)
-          hsEventCallback(HS_PAIRED);
-      }
+      resetStatus();
     break;
 
     case 2:
@@ -434,8 +413,8 @@ void Span::checkConnect(){
     waitTime=60000;
     alarmConnect=0;
     statusLED->start(LED_WIFI_CONNECTING);
-    if(hsEventCallback)
-      hsEventCallback(HS_WIFI_CONNECTING);
+    if(statusCallback)
+      statusCallback(HS_WIFI_CONNECTING);
     }
 
   if(WiFi.status()!=WL_CONNECTED){
@@ -462,17 +441,7 @@ void Span::checkConnect(){
     return;
   }
 
-  if(!HAPClient::nAdminControllers()){
-    statusLED->start(LED_PAIRING_NEEDED);
-    if(hsEventCallback)
-      hsEventCallback(HS_PAIRING_NEEDED);
-  }
-  else{ 
-    statusLED->on();
-    if(hsEventCallback)
-      hsEventCallback(HS_PAIRED);
-  }
-  
+  resetStatus();  
   connected++;
 
   addWebLog(true,"WiFi Connected!  IP Address = %s",WiFi.localIP().toString().c_str());
@@ -796,10 +765,7 @@ void Span::processSerialCommand(const char *c){
       Serial.print("\nDEVICE NOT YET PAIRED -- PLEASE PAIR WITH HOMEKIT APP\n\n");
       mdns_service_txt_item_set("_hap","_tcp","sf","1");                                                        // set Status Flag = 1 (Table 6-8)
 
-      if(strlen(network.wifiData.ssid)==0)
-        statusLED->start(LED_WIFI_NEEDED);
-      else
-        statusLED->start(LED_PAIRING_NEEDED);
+      resetStatus();      
     }
     break;
 
@@ -1146,6 +1112,33 @@ void Span::processSerialCommand(const char *c){
     break;
     
   } // switch
+}
+
+///////////////////////////////
+
+void Span::resetStatus(){
+  if(strlen(network.wifiData.ssid)==0){
+    statusLED->start(LED_WIFI_NEEDED);
+    if(statusCallback)
+      statusCallback(HS_WIFI_NEEDED);
+  }
+  else
+  if(WiFi.status()!=WL_CONNECTED){
+    statusLED->start(LED_WIFI_CONNECTING);
+    if(statusCallback)
+      statusCallback(HS_WIFI_CONNECTING);
+  }
+  else
+  if(!HAPClient::nAdminControllers()){
+    statusLED->start(LED_PAIRING_NEEDED);
+    if(statusCallback)
+      statusCallback(HS_PAIRING_NEEDED);
+  }
+  else{
+    statusLED->on();
+    if(statusCallback)
+      statusCallback(HS_PAIRED);
+  }    
 }
 
 ///////////////////////////////

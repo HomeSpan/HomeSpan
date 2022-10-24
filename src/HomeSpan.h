@@ -67,7 +67,7 @@ enum {
 
 ///////////////////////////////
 
-enum HS_EVENT {
+enum HS_STATUS {
   HS_WIFI_NEEDED,
   HS_WIFI_CONNECTING,
   HS_PAIRING_NEEDED,
@@ -217,7 +217,7 @@ class Span{
   void (*pairCallback)(boolean isPaired)=NULL;                // optional callback function to invoke when pairing is established (true) or lost (false)
   boolean autoStartAPEnabled=false;                           // enables auto start-up of Access Point when WiFi Credentials not found
   void (*apFunction)()=NULL;                                  // optional function to invoke when starting Access Point
-  void (*hsEventCallback)(HS_EVENT hsEvent)=NULL;             // optional callback for various HomeSpan events
+  void (*statusCallback)(HS_STATUS status)=NULL;              // optional callback when HomeSpan status changes
   
   WiFiServer *hapServer;                            // pointer to the HAP Server connection
   Blinker *statusLED;                               // indicates HomeSpan status
@@ -241,6 +241,7 @@ class Span{
   int getFreeSlot();                            // returns free HAPClient slot number. HAPClients slot keep track of each active HAPClient connection
   void checkConnect();                          // check WiFi connection; connect if needed
   void commandMode();                           // allows user to control and reset HomeSpan settings with the control button
+  void resetStatus();                           // resets statusLED and calls statusCallback based on current HomeSpan status
 
   int sprintfAttributes(char *cBuf, int flags=GET_VALUE|GET_META|GET_PERMS|GET_TYPE|GET_DESC);   // prints Attributes JSON database into buf, unless buf=NULL; return number of characters printed, excluding null terminator
   
@@ -299,7 +300,7 @@ class Span{
   void setApFunction(void (*f)()){apFunction=f;}                          // sets an optional user-defined function to call when activating the WiFi Access Point  
   void enableAutoStartAP(){autoStartAPEnabled=true;}                      // enables auto start-up of Access Point when WiFi Credentials not found
   void setWifiCredentials(const char *ssid, const char *pwd);             // sets WiFi Credentials
-  void setEventCallback(void (*f)(HS_EVENT hsEvent)){hsEventCallback=f;}  // sets an optional user-defined function to call for various HomeSpan Events
+  void setStatusCallback(void (*f)(HS_STATUS status)){statusCallback=f;}  // sets an optional user-defined function to call when HomeSpan status changes
   
   void setPairingCode(const char *s){sprintf(pairingCodeCommand,"S %9s",s);}    // sets the Pairing Code - use is NOT recommended.  Use 'S' from CLI instead
   void deleteStoredValues(){processSerialCommand("V");}                         // deletes stored Characteristic values from NVS  
