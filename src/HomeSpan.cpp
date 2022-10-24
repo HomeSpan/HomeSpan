@@ -195,9 +195,13 @@ void Span::pollTask() {
       } else {
         Serial.print("YOU MAY CONFIGURE BY TYPING 'W <RETURN>'.\n\n");
         statusLED->start(LED_WIFI_NEEDED);
+        if(hsEventCallback)
+          hsEventCallback(HS_WIFI_NEEDED);
       }
     } else {
       statusLED->start(LED_WIFI_CONNECTING);
+      if(hsEventCallback)
+        hsEventCallback(HS_WIFI_CONNECTING);
     }
           
     if(controlButton)
@@ -328,8 +332,8 @@ int Span::getFreeSlot(){
 
 void Span::commandMode(){
 
-  if(!statusDevice){
-    Serial.print("*** ERROR: CAN'T ENTER COMMAND MODE WITHOUT A DEFINED STATUS LED***\n\n");
+  if(!statusDevice && !hsEventCallback){
+    Serial.print("*** ERROR: CAN'T ENTER COMMAND MODE WITHOUT A DEFINED STATUS LED OR EVENT HANDLER CALLBACK***\n\n");
     return;
   }
   

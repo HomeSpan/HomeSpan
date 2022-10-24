@@ -44,6 +44,8 @@ void setup() {
   homeSpan.setSketchVersion("OTA Test 8");
   homeSpan.setWifiCallback(wifiEstablished);
 
+  homeSpan.setEventCallback(hsEvents);
+  
   new SpanUserCommand('d',"- My Description",userCom1);
   new SpanUserCommand('e',"- My second Description",userCom2);
 
@@ -161,4 +163,10 @@ void userCom1(const char *v){
 
 void userCom2(const char *v){
   Serial.printf("In User Command 2: '%s'\n\n",v);
+}
+
+//////////////////////////////////////
+
+void hsEvents(HS_EVENT event){
+  Serial.printf("\n*** HOMESPAN EVENT: %d\n",event);
 }
