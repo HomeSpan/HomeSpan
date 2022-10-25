@@ -117,7 +117,9 @@ void Network::apConfigure(){
   Serial.print("\n");
 
   homeSpan.statusLED->start(LED_AP_STARTED);
-
+  if(homeSpan.statusCallback)
+    homeSpan.statusCallback(HS_AP_STARTED);
+        
   Serial.print("\nScanning for Networks...\n\n");
   
   scan();                   // scan for networks    

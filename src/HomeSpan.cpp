@@ -814,8 +814,10 @@ void Span::processSerialCommand(const char *c){
         Serial.print("*** Setup Code Unchanged\n");
       }
       
-      Serial.print("\n*** Re-starting ***\n\n");
       statusLED->off();
+      if(statusCallback)
+        statusCallback(HS_REBOOTING);
+      Serial.print("\n*** Re-starting ***\n\n");
       delay(1000);
       ESP.restart();                                                                             // re-start device   
     }
@@ -824,6 +826,8 @@ void Span::processSerialCommand(const char *c){
     case 'X': {
 
       statusLED->off();
+      if(statusCallback)
+        statusCallback(HS_WIFI_ERASED);      
       nvs_erase_all(wifiNVS);
       nvs_commit(wifiNVS);
       WiFi.begin("none");     
@@ -855,6 +859,8 @@ void Span::processSerialCommand(const char *c){
     case 'R': {
       
       statusLED->off();
+      if(statusCallback)
+        statusCallback(HS_REBOOTING);
       Serial.print("\n*** Restarting...\n\n");
       delay(1000);
       ESP.restart();
