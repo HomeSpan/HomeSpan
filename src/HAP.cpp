@@ -931,10 +931,11 @@ int HAPClient::postPairingsURL(){
       }
 
       if((newCont=findController(tlv8.buf(kTLVType_Identifier)))){
+        int originalPermissions=tlv8.val(kTLVType_Permissions);
         tlv8.clear();                                         // clear TLV records
         tlv8.val(kTLVType_State,pairState_M2);                // set State=<M2>
         if(!memcmp(cPair->LTPK,newCont->LTPK,32)){                       // requested Controller already exists and LTPK matches
-          newCont->admin=tlv8.val(kTLVType_Permissions)==1?true:false;     // update permission of matching Controller
+          newCont->admin=originalPermissions==1?true:false;     // update permission of matching Controller
         } else {
           tlv8.val(kTLVType_Error,tagError_Unknown);         // set Error=Unknown
         }
