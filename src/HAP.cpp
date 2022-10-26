@@ -931,7 +931,7 @@ int HAPClient::postPairingsURL(){
       }
 
       if((newCont=findController(tlv8.buf(kTLVType_Identifier)))){
-        int originalPermissions=tlv8.val(kTLVType_Permissions);
+        int originalPermissions=*tlv8.buf(kTLVType_Permissions);
         tlv8.clear();                                         // clear TLV records
         tlv8.val(kTLVType_State,pairState_M2);                // set State=<M2>
         if(!memcmp(cPair->LTPK,newCont->LTPK,32)){                       // requested Controller already exists and LTPK matches
