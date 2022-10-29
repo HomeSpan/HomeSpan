@@ -168,5 +168,5 @@ void userCom2(const char *v){
 //////////////////////////////////////
 
 void statusUpdate(HS_STATUS status){
-  Serial.printf("\n*** HOMESPAN STATUS CHANGE: %d\n",status);
+  Serial.printf("\n*** HOMESPAN STATUS CHANGE: %s\n",homeSpan.statusString(status));
 }

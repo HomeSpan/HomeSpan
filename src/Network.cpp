@@ -116,9 +116,7 @@ void Network::apConfigure(){
   Serial.print(apPassword);
   Serial.print("\n");
 
-  homeSpan.statusLED->start(LED_AP_STARTED);
-  if(homeSpan.statusCallback)
-    homeSpan.statusCallback(HS_AP_STARTED);
+  STATUS_UPDATE(start(LED_AP_STARTED),HS_AP_STARTED)
         
   Serial.print("\nScanning for Networks...\n\n");
   
@@ -156,11 +154,9 @@ void Network::apConfigure(){
 
     if(homeSpan.controlButton && homeSpan.controlButton->triggered(9999,3000)){
       Serial.print("\n*** Access Point Terminated.");
-      homeSpan.statusLED->start(LED_ALERT);
+      STATUS_UPDATE(start(LED_ALERT),HS_AP_TERMINATED)
       homeSpan.controlButton->wait();
-      Serial.print("  Restarting... \n\n");
-      homeSpan.statusLED->off();        
-      ESP.restart();      
+      homeSpan.reboot();
     }
 
     if(millis()>alarmTimeOut){
@@ -175,13 +171,11 @@ void Network::apConfigure(){
           Serial.print(lifetime/1000);
           Serial.print(" seconds).");
         } else {
-          Serial.print("\n*** Access Point: Configuration Canceled.");
+          Serial.print("\n*** Access Point: Configuration Cancelled.");
         }
         Serial.print("  Restarting...\n\n");
-        homeSpan.statusLED->start(LED_ALERT);
-        delay(1000);
-        homeSpan.statusLED->off();        
-        ESP.restart();
+        STATUS_UPDATE(start(LED_ALERT),HS_AP_TERMINATED)
+        homeSpan.reboot();
       }
     }
 
@@ -274,11 +268,9 @@ void Network::processRequest(char *body, char *formData){
 
     getFormValue(formData,"network",wifiData.ssid,MAX_SSID);
     getFormValue(formData,"pwd",wifiData.pwd,MAX_PWD);
-    
-    homeSpan.statusLED->start(LED_WIFI_CONNECTING);
-    if(homeSpan.statusCallback)
-      homeSpan.statusCallback(HS_WIFI_CONNECTING);
-    
+
+    STATUS_UPDATE(start(LED_WIFI_CONNECTING),HS_WIFI_CONNECTING)
+        
     responseBody+="<meta http-equiv = \"refresh\" content = \"" + String(waitTime) + "; url = /wifi-status\" />"
                   "<p>Initiating WiFi connection to:</p><p><b>" + String(wifiData.ssid) + "</p>";
 
@@ -323,10 +315,8 @@ void Network::processRequest(char *body, char *formData){
       WiFi.begin(wifiData.ssid,wifiData.pwd);
       
     } else {
-      
-      homeSpan.statusLED->start(LED_AP_CONNECTED);   // slow double-blink
-      if(homeSpan.statusCallback)
-        homeSpan.statusCallback(HS_AP_CONNECTED);
+
+      STATUS_UPDATE(start(LED_AP_CONNECTED),HS_AP_CONNECTED)
           
       responseBody+="<p>SUCCESS! Connected to:</p><p><b>" + String(wifiData.ssid) + "</b></p>";
       responseBody+="<p>You may enter new 8-digit Setup Code below, or leave blank to retain existing code.</p>";
@@ -346,10 +336,7 @@ void Network::processRequest(char *body, char *formData){
 
     LOG1("In Landing Page...\n");
 
-    homeSpan.statusLED->start(LED_AP_CONNECTED);
-    if(homeSpan.statusCallback)
-      homeSpan.statusCallback(HS_AP_CONNECTED);    
-    
+    STATUS_UPDATE(start(LED_AP_CONNECTED),HS_AP_CONNECTED)
     waitTime=2;
 
     responseBody+="<p>Welcome to HomeSpan! This page allows you to configure the above HomeSpan device to connect to your WiFi network.</p>"

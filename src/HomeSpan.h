@@ -67,7 +67,7 @@ enum {
 
 ///////////////////////////////
 
-#define STATUS_UPDATE(LED_UPDATE,MESSAGE_UPDATE)  {statusLED->LED_UPDATE;if(statusCallback)statusCallback(MESSAGE_UPDATE);}
+#define STATUS_UPDATE(LED_UPDATE,MESSAGE_UPDATE)  {homeSpan.statusLED->LED_UPDATE;if(homeSpan.statusCallback)homeSpan.statusCallback(MESSAGE_UPDATE);}
 
 enum HS_STATUS {
   HS_WIFI_NEEDED,
@@ -80,11 +80,16 @@ enum HS_STATUS {
   HS_CONFIG_MODE_LAUNCH_AP,
   HS_CONFIG_MODE_UNPAIR,
   HS_CONFIG_MODE_ERASE_WIFI,
+  HS_CONFIG_MODE_EXIT_SELECTED, 
+  HS_CONFIG_MODE_REBOOT_SELECTED,
+  HS_CONFIG_MODE_LAUNCH_AP_SELECTED,
+  HS_CONFIG_MODE_UNPAIR_SELECTED,
+  HS_CONFIG_MODE_ERASE_WIFI_SELECTED,
   HS_REBOOTING,
   HS_FACTORY_RESET,
-  HS_WIFI_ERASED,
   HS_AP_STARTED,
   HS_AP_CONNECTED,
+  HS_AP_TERMINATED,  
   HS_OTA_STARTED    
 };
 
@@ -226,7 +231,8 @@ class Span{
   void (*pairCallback)(boolean isPaired)=NULL;                // optional callback function to invoke when pairing is established (true) or lost (false)
   boolean autoStartAPEnabled=false;                           // enables auto start-up of Access Point when WiFi Credentials not found
   void (*apFunction)()=NULL;                                  // optional function to invoke when starting Access Point
-  void (*statusCallback)(HS_STATUS status)=NULL;                    // optional callback when HomeSpan status changes
+  void (*statusCallback)(HS_STATUS status)=NULL;              // optional callback when HomeSpan status changes
+  const char* statusString(HS_STATUS s);                      // returns char string for HomeSpan status change messages
   
   WiFiServer *hapServer;                            // pointer to the HAP Server connection
   Blinker *statusLED;                               // indicates HomeSpan status
@@ -251,6 +257,7 @@ class Span{
   void checkConnect();                          // check WiFi connection; connect if needed
   void commandMode();                           // allows user to control and reset HomeSpan settings with the control button
   void resetStatus();                           // resets statusLED and calls statusCallback based on current HomeSpan status
+  void reboot();                                // reboots device
 
   int sprintfAttributes(char *cBuf, int flags=GET_VALUE|GET_META|GET_PERMS|GET_TYPE|GET_DESC);   // prints Attributes JSON database into buf, unless buf=NULL; return number of characters printed, excluding null terminator
   
