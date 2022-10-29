@@ -194,14 +194,10 @@ void Span::pollTask() {
         processSerialCommand("A");
       } else {
         Serial.print("YOU MAY CONFIGURE BY TYPING 'W <RETURN>'.\n\n");
-        statusLED->start(LED_WIFI_NEEDED);
-        if(statusCallback)
-          statusCallback(HS_WIFI_NEEDED);
+        STATUS_UPDATE(start(LED_WIFI_NEEDED),HS_WIFI_NEEDED);
       }
     } else {
-      statusLED->start(LED_WIFI_CONNECTING);
-      if(statusCallback)
-        statusCallback(HS_WIFI_CONNECTING);
+      STATUS_UPDATE(start(LED_WIFI_CONNECTING),HS_WIFI_CONNECTING);
     }
           
     if(controlButton)
@@ -300,11 +296,11 @@ void Span::pollTask() {
     ArduinoOTA.handle();
 
   if(controlButton && controlButton->primed())
-    statusLED->start(LED_ALERT);
+    STATUS_UPDATE(start(LED_ALERT),HS_ENTERING_CONFIG_MODE);
   
   if(controlButton && controlButton->triggered(3000,10000)){
-    statusLED->off();
     if(controlButton->type()==PushButton::LONG){
+      STATUS_UPDATE(off(),HS_FACTORY_RESET);
       controlButton->wait();
       processSerialCommand("F");        // FACTORY RESET
     } else {
@@ -337,12 +333,10 @@ void Span::commandMode(){
     return;
   }
   
-  Serial.print("*** ENTERING COMMAND MODE ***\n\n");
+  Serial.print("*** COMMAND MODE ***\n\n");
   int mode=1;
   boolean done=false;
-  statusLED->start(500,0.3,mode,1000);
-  if(statusCallback)
-    statusCallback(HS_CONFIG_MODE_EXIT);
+  STATUS_UPDATE(start(500,0.3,mode,1000),static_cast<HS_STATUS>(HS_ENTERING_CONFIG_MODE+mode));
   unsigned long alarmTime=millis()+comModeLife;
 
   while(!done){
@@ -352,17 +346,13 @@ void Span::commandMode(){
       Serial.print(" seconds).\n\n");
       mode=1;
       done=true;
-      statusLED->start(LED_ALERT);
-      delay(2000);
     } else
     if(controlButton->triggered(10,3000)){
       if(controlButton->type()==PushButton::SINGLE){
         mode++;
         if(mode==6)
           mode=1;
-        statusLED->start(500,0.3,mode,1000);        
-        if(statusCallback)
-          statusCallback((HS_STATUS)(HS_CONFIG_MODE_EXIT+mode-1));
+        STATUS_UPDATE(start(500,0.3,mode,1000),static_cast<HS_STATUS>(HS_ENTERING_CONFIG_MODE+mode));
       } else {
         done=true;
       }
@@ -412,9 +402,7 @@ void Span::checkConnect(){
     connected++;
     waitTime=60000;
     alarmConnect=0;
-    statusLED->start(LED_WIFI_CONNECTING);
-    if(statusCallback)
-      statusCallback(HS_WIFI_CONNECTING);
+    STATUS_UPDATE(start(LED_WIFI_CONNECTING),HS_WIFI_CONNECTING);
     }
 
   if(WiFi.status()!=WL_CONNECTED){
@@ -869,7 +857,6 @@ void Span::processSerialCommand(const char *c){
 
     case 'F': {
       
-      statusLED->off();
       nvs_erase_all(HAPClient::hapNVS);
       nvs_commit(HAPClient::hapNVS);      
       nvs_erase_all(wifiNVS);
@@ -879,8 +866,6 @@ void Span::processSerialCommand(const char *c){
       nvs_erase_all(otaNVS);
       nvs_commit(otaNVS);
       WiFi.begin("none");  
-      if(statusCallback)
-        statusCallback(HS_FACTORY_RESET);        
       Serial.print("\n*** FACTORY RESET!  Restarting...\n\n");
       delay(1000);
       ESP.restart();

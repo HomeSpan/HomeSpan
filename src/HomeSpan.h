@@ -67,11 +67,14 @@ enum {
 
 ///////////////////////////////
 
+#define STATUS_UPDATE(LED_UPDATE,MESSAGE_UPDATE)  {statusLED->LED_UPDATE;if(statusCallback)statusCallback(MESSAGE_UPDATE);}
+
 enum HS_STATUS {
   HS_WIFI_NEEDED,
   HS_WIFI_CONNECTING,
   HS_PAIRING_NEEDED,
   HS_PAIRED,
+  HS_ENTERING_CONFIG_MODE,
   HS_CONFIG_MODE_EXIT,  
   HS_CONFIG_MODE_REBOOT,
   HS_CONFIG_MODE_LAUNCH_AP,
@@ -223,7 +226,7 @@ class Span{
   void (*pairCallback)(boolean isPaired)=NULL;                // optional callback function to invoke when pairing is established (true) or lost (false)
   boolean autoStartAPEnabled=false;                           // enables auto start-up of Access Point when WiFi Credentials not found
   void (*apFunction)()=NULL;                                  // optional function to invoke when starting Access Point
-  void (*statusCallback)(HS_STATUS status)=NULL;              // optional callback when HomeSpan status changes
+  void (*statusCallback)(HS_STATUS status)=NULL;                    // optional callback when HomeSpan status changes
   
   WiFiServer *hapServer;                            // pointer to the HAP Server connection
   Blinker *statusLED;                               // indicates HomeSpan status
@@ -306,7 +309,7 @@ class Span{
   void setApFunction(void (*f)()){apFunction=f;}                          // sets an optional user-defined function to call when activating the WiFi Access Point  
   void enableAutoStartAP(){autoStartAPEnabled=true;}                      // enables auto start-up of Access Point when WiFi Credentials not found
   void setWifiCredentials(const char *ssid, const char *pwd);             // sets WiFi Credentials
-  void setStatusCallback(void (*f)(HS_STATUS status)){statusCallback=f;}  // sets an optional user-defined function to call when HomeSpan status changes
+  void setStatusCallback(void (*f)(HS_STATUS status)){statusCallback=f;}        // sets an optional user-defined function to call when HomeSpan status changes
   
   void setPairingCode(const char *s){sprintf(pairingCodeCommand,"S %9s",s);}    // sets the Pairing Code - use is NOT recommended.  Use 'S' from CLI instead
   void deleteStoredValues(){processSerialCommand("V");}                         // deletes stored Characteristic values from NVS  
