@@ -878,7 +878,9 @@ void Span::processSerialCommand(const char *c){
       nvs_commit(charNVS);
       nvs_erase_all(otaNVS);
       nvs_commit(otaNVS);
-      WiFi.begin("none");     
+      WiFi.begin("none");  
+      if(statusCallback)
+        statusCallback(HS_FACTORY_RESET);        
       Serial.print("\n*** FACTORY RESET!  Restarting...\n\n");
       delay(1000);
       ESP.restart();
@@ -2139,6 +2141,8 @@ void SpanOTA::start(){
       esp_ota_get_running_partition()->label,esp_ota_get_next_update_partition(NULL)->label);
   otaPercent=0;
   homeSpan.statusLED->start(LED_OTA_STARTED);
+  if(homeSpan.statusCallback)
+    homeSpan.statusCallback(HS_OTA_STARTED);
 }
 
 ///////////////////////////////
@@ -2148,7 +2152,7 @@ void SpanOTA::end(){
   nvs_commit(homeSpan.otaNVS);
   Serial.printf(" DONE!  Rebooting...\n");
   homeSpan.statusLED->off();
-  delay(100);                       // make sure commit it finished before reboot
+  delay(100);                       // make sure commit is finished before reboot
 }
 
 ///////////////////////////////
