@@ -153,7 +153,7 @@ void Network::apConfigure(){
   while(1){                                  // loop until we get timed out (which will be accelerated if save/cancel selected)
 
     if(homeSpan.controlButton && homeSpan.controlButton->triggered(9999,3000)){
-      Serial.print("\n*** Access Point Terminated.");
+      Serial.print("\n*** Access Point Terminated.  Restarting...\n\n");
       STATUS_UPDATE(start(LED_ALERT),HS_AP_TERMINATED)
       homeSpan.controlButton->wait();
       homeSpan.reboot();

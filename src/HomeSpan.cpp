@@ -771,7 +771,7 @@ void Span::processSerialCommand(const char *c){
       network.serialConfigure();
       nvs_set_blob(wifiNVS,"WIFIDATA",&network.wifiData,sizeof(network.wifiData));    // update data
       nvs_commit(wifiNVS);                                                            // commit to NVS
-      Serial.print("\n*** WiFi Credentials SAVED!  Re-starting ***\n\n");
+      Serial.print("\n*** WiFi Credentials SAVED!  Restarting ***\n\n");
       reboot();  
       }
     break;
@@ -793,7 +793,7 @@ void Span::processSerialCommand(const char *c){
       network.apConfigure();
       nvs_set_blob(wifiNVS,"WIFIDATA",&network.wifiData,sizeof(network.wifiData));    // update data
       nvs_commit(wifiNVS);                                                            // commit to NVS
-      Serial.print("\n*** Credentials saved!\n\n");
+      Serial.print("\n*** Credentials saved!\n");
       if(strlen(network.setupCode)){
         char s[10];
         sprintf(s,"S%s",network.setupCode);
@@ -802,7 +802,8 @@ void Span::processSerialCommand(const char *c){
         Serial.print("*** Setup Code Unchanged\n");
       }
       
-      Serial.print("\n*** Re-starting ***\n\n");
+      Serial.print("\n*** Restarting...\n\n");
+      STATUS_UPDATE(start(LED_ALERT),HS_AP_TERMINATED)
       reboot();
     }
     break;
@@ -812,7 +813,7 @@ void Span::processSerialCommand(const char *c){
       nvs_erase_all(wifiNVS);
       nvs_commit(wifiNVS);
       WiFi.begin("none");     
-      Serial.print("\n*** WiFi Credentials ERASED!  Re-starting...\n\n");
+      Serial.print("\n*** WiFi Credentials ERASED!  Restarting...\n\n");
       reboot();
     }
     break;

@@ -44,7 +44,7 @@ struct Network {
 
   const char *apSSID=DEFAULT_AP_SSID;                 // Access Point SSID
   const char *apPassword=DEFAULT_AP_PASSWORD;         // Access Point password (does not need to be secret - only used to ensure excrypted WiFi connection)
-  unsigned long lifetime=DEFAULT_AP_TIMEOUT*1000;     // length of time (in milliseconds) to keep Access Point alive before shutting down and re-starting
+  unsigned long lifetime=DEFAULT_AP_TIMEOUT*1000;     // length of time (in milliseconds) to keep Access Point alive before shutting down and restarting
   
   char **ssidList=NULL;
   int numSSID;
