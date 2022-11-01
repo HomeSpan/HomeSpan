@@ -919,7 +919,7 @@ int HAPClient::postPairingsURL(){
         Serial.print("\n*** ERROR: One or more of required 'Identifier,' 'PublicKey,' and 'Permissions' TLV records for this step is bad or missing\n\n");
         tlv8.clear();                                         // clear TLV records
         tlv8.val(kTLVType_State,pairState_M2);                // set State=<M2>
-        tlv8.val(kTLVType_Error,tagError_Unknown);           // set Error=Unknown (there is no specific error type for missing/bad TLV data)
+        tlv8.val(kTLVType_Error,tagError_Unknown);            // set Error=Unknown (there is no specific error type for missing/bad TLV data)
         break;
       }
 
@@ -927,32 +927,27 @@ int HAPClient::postPairingsURL(){
         Serial.print("\n*** ERROR: Controller making request does not have admin privileges to add/update other Controllers\n\n");
         tlv8.clear();                                         // clear TLV records
         tlv8.val(kTLVType_State,pairState_M2);                // set State=<M2>
-        tlv8.val(kTLVType_Error,tagError_Authentication);    // set Error=Authentication
+        tlv8.val(kTLVType_Error,tagError_Authentication);     // set Error=Authentication
         break;        
       }
 
-      if((newCont=findController(tlv8.buf(kTLVType_Identifier)))){
+      if((newCont=findController(tlv8.buf(kTLVType_Identifier))) && memcmp(tlv8.buf(kTLVType_PublicKey),newCont->LTPK,32)){         // requested Controller already exists, but LTPKs don't match
+        Serial.print("\n*** ERROR: Invalid request to update the LTPK of an exsiting Controller\n\n");
         tlv8.clear();                                         // clear TLV records
         tlv8.val(kTLVType_State,pairState_M2);                // set State=<M2>
-        if(!memcmp(cPair->LTPK,newCont->LTPK,32)){                       // requested Controller already exists and LTPK matches
-          newCont->admin=tlv8.val(kTLVType_Permissions)==1?true:false;     // update permission of matching Controller
-        } else {
-          tlv8.val(kTLVType_Error,tagError_Unknown);         // set Error=Unknown
-        }
+        tlv8.val(kTLVType_Error,tagError_Unknown);            // set Error=Unknown
         break;
       }
-      
-      if(!(newCont=getFreeController())){
+
+      if(!addController(tlv8.buf(kTLVType_Identifier),tlv8.buf(kTLVType_PublicKey),tlv8.val(kTLVType_Permissions)==1?true:false)){
         Serial.print("\n*** ERROR: Can't pair more than ");
         Serial.print(MAX_CONTROLLERS);
         Serial.print(" Controllers\n\n");
         tlv8.clear();                                         // clear TLV records
         tlv8.val(kTLVType_State,pairState_M2);                // set State=<M2>
-        tlv8.val(kTLVType_Error,tagError_MaxPeers);           // set Error=Unknown (there is no specific error type for missing/bad TLV data)
-        break;        
+        tlv8.val(kTLVType_Error,tagError_MaxPeers);           // set Error=MaxPeers
+        break;         
       }
-
-      addController(tlv8.buf(kTLVType_Identifier),tlv8.buf(kTLVType_PublicKey),tlv8.val(kTLVType_Permissions)==1?true:false);
       
       tlv8.clear();                                         // clear TLV records
       tlv8.val(kTLVType_State,pairState_M2);                // set State=<M2>
@@ -1538,16 +1533,10 @@ void HAPClient::charPrintRow(uint8_t *buf, int n){
 
 Controller *HAPClient::findController(uint8_t *id){
   
-  for(int i=0;i<MAX_CONTROLLERS;i++){         // loop over all controller slots
-    
-    if(controllers[i].allocated && !memcmp(controllers[i].ID,id,36)){     // found matching ID
-      LOG2("Found Controller: ");
-      if(homeSpan.logLevel>1)
-        charPrintRow(id,36);
-      LOG2(controllers[i].admin?" (admin)\n":" (regular)\n");    
-      return(controllers+i);                                              // return with pointer to matching controller
-    }
-  } // loop
+  for(int i=0;i<MAX_CONTROLLERS;i++){                                    // loop over all controller slots
+    if(controllers[i].allocated && !memcmp(controllers[i].ID,id,36))     // found matching ID
+      return(controllers+i);                                             // return with pointer to matching controller
+  }
 
   return(NULL);       // no match
 }
@@ -1556,8 +1545,7 @@ Controller *HAPClient::findController(uint8_t *id){
 
 Controller *HAPClient::getFreeController(){
   
-  for(int i=0;i<MAX_CONTROLLERS;i++){     // loop over all controller slots
-    
+  for(int i=0;i<MAX_CONTROLLERS;i++){     // loop over all controller slots   
     if(!controllers[i].allocated)         // found free slot
       return(controllers+i);              // return with pointer to free slot
   }
@@ -1571,7 +1559,7 @@ Controller *HAPClient::addController(uint8_t *id, uint8_t *ltpk, boolean admin){
 
   Controller *slot;
 
-  if((slot=findController(id))){
+  if((slot=findController(id))){               // found existing controller
     memcpy(slot->LTPK,ltpk,32);
     slot->admin=admin;
     LOG2("\n*** Updated Controller: ");
@@ -1581,7 +1569,7 @@ Controller *HAPClient::addController(uint8_t *id, uint8_t *ltpk, boolean admin){
     return(slot);    
   }
 
-  if((slot=getFreeController())){
+  if((slot=getFreeController())){              // get slot for new controller, if available
     slot->allocated=true;
     memcpy(slot->ID,id,36);
     memcpy(slot->LTPK,ltpk,32);
@@ -1593,9 +1581,6 @@ Controller *HAPClient::addController(uint8_t *id, uint8_t *ltpk, boolean admin){
     return(slot);       
   }
 
-  Serial.print("\n*** WARNING: No open slots.  Can't add Controller: ");
-  hexPrintRow(id,36);
-  Serial.print(admin?" (admin)\n\n":" (regular)\n\n\n");
   return(NULL);
 }       
   
