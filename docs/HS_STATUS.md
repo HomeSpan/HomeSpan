@@ -1,6 +1,6 @@
 # HomeSpan Status
 
-The optional *homeSpan* method, `void setStatusCallback(void (*func)(HS_STATUS status))`, can be used to create a callback function, *func*, that HomeSpan calls whenever its status changes.  HomeSpan passes *func* a single argument, *status*, of type *HS_STATUS*, defined as follows:
+The optional ***homeSpan*** method, `void setStatusCallback(void (*func)(HS_STATUS status))`, can be used to create a callback function, *func*, that HomeSpan calls whenever its status changes.  HomeSpan passes *func* a single argument, *status*, of type *HS_STATUS*, defined as follows:
 
 ```C++
 enum HS_STATUS {
@@ -28,7 +28,7 @@ enum HS_STATUS {
 };
 ```
 
-The *homeSpan* method `char* statusString(HS_STATUS s)`, is a convenience function for converting any of the above enumerations to short, pre-defined character string messages as follows:
+The ***homeSpan*** method `char* statusString(HS_STATUS s)`, is a convenience function for converting any of the above enumerations to short, pre-defined character string messages as follows:
 
 ```C++
 const char* Span::statusString(HS_STATUS s){
@@ -58,6 +58,8 @@ const char* Span::statusString(HS_STATUS s){
   }
 }
 ```
+
+You can of course create any alternative messsages, or take any actions desired, in *func* and do not need to use the pre-defined strings above.
 
 ---
 
