@@ -59,6 +59,25 @@ const char* Span::statusString(HS_STATUS s){
 }
 ```
 
+Example
+
+```C++
+#include "HomeSpan.h"
+
+void setup(){
+  homeSpan.setStatusCallback(statusUpdate);   // set callback function
+  ...
+  homeSpan.begin();
+  ...
+}
+
+// create a callback function that simply prints the pre-defined short messages on the Serial Monitor whenever the HomeSpan status changes
+
+void statusUpdate(HS_STATUS status){
+  Serial.printf("\n*** HOMESPAN STATUS CHANGE: %s\n",homeSpan.statusString(status));
+}
+```
+
 You can of course create any alternative messsages, or take any actions desired, in *func* and do not need to use the pre-defined strings above.
 
 ---
