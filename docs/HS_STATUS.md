@@ -59,7 +59,7 @@ const char* Span::statusString(HS_STATUS s){
 }
 ```
 
-Example
+### Example:
 
 ```C++
 #include "HomeSpan.h"
