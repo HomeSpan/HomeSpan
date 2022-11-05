@@ -144,7 +144,17 @@ The following **optional** `homeSpan` methods enable additional features and pro
   * sets an optional user-defined callback function, *func*, to be called by HomeSpan upon completion of pairing to a controller (*status=true*) or unpairing from a controller (*status=false*)
   *   this one-time call to *func* is provided for users that would like to trigger additional actions when the device is first paired, or the device is later unpaired
   *   note this *func* is **not** called upon start-up and should not be used to simply check whether a device is paired or unpaired.  It is only called when pairing status changes
-  *   the function *func* must be of type *void* and have one *boolean* argument
+  *   the function *func* must be of type *void* and accept one *boolean* argument
+
+* `void setStatusCallback(void (*func)(HS_STATUS status))`
+  * sets an optional user-defined callback function, *func*, to be called by HomeSpan whenever its running state (e.g. WiFi Connecting, Pairing Needed...) changes in way that would alter the blinking pattern of the (optional) Status LED
+  * if *func* is set, it will be called regardless of whether or not a Status LED has actually been defined
+  * this allows users to reflect changes to the current state of HomeSpan using alternative methods, such as outputting messages to an embedded LCD or E-Ink display
+  * the function *func* must be of type *void* and accept one argument of enum type *HS_STATUS*
+
+* `char* statusString(HS_STATUS s)`
+  * returns a pre-defined character string message representing *s*, which must be of enum type *HS_STATUS*
+  * typically used in conjunction with `setStatusCallback()` above
 
 * `void setPairingCode(const char *s)`
   * sets the Setup Pairing Code to *s*, which **must** be exactly eight numerical digits (no dashes)
