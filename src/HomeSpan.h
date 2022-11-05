@@ -70,27 +70,27 @@ enum {
 #define STATUS_UPDATE(LED_UPDATE,MESSAGE_UPDATE)  {homeSpan.statusLED->LED_UPDATE;if(homeSpan.statusCallback)homeSpan.statusCallback(MESSAGE_UPDATE);}
 
 enum HS_STATUS {
-  HS_WIFI_NEEDED,
-  HS_WIFI_CONNECTING,
-  HS_PAIRING_NEEDED,
-  HS_PAIRED,
-  HS_ENTERING_CONFIG_MODE,
-  HS_CONFIG_MODE_EXIT,  
-  HS_CONFIG_MODE_REBOOT,
-  HS_CONFIG_MODE_LAUNCH_AP,
-  HS_CONFIG_MODE_UNPAIR,
-  HS_CONFIG_MODE_ERASE_WIFI,
-  HS_CONFIG_MODE_EXIT_SELECTED, 
-  HS_CONFIG_MODE_REBOOT_SELECTED,
-  HS_CONFIG_MODE_LAUNCH_AP_SELECTED,
-  HS_CONFIG_MODE_UNPAIR_SELECTED,
-  HS_CONFIG_MODE_ERASE_WIFI_SELECTED,
-  HS_REBOOTING,
-  HS_FACTORY_RESET,
-  HS_AP_STARTED,
-  HS_AP_CONNECTED,
-  HS_AP_TERMINATED,  
-  HS_OTA_STARTED    
+  HS_WIFI_NEEDED,                         // WiFi Credentials have not yet been set/stored
+  HS_WIFI_CONNECTING,                     // HomeSpan is trying to connect to the network specified in the stored WiFi Credentials
+  HS_PAIRING_NEEDED,                      // HomeSpan is connected to central WiFi network, but device has not yet been paired to HomeKit
+  HS_PAIRED,                              // HomeSpan is connected to central WiFi network and ther device has been paired to HomeKit
+  HS_ENTERING_CONFIG_MODE,                // User has requested the device to enter into Command Mode
+  HS_CONFIG_MODE_EXIT,                    // HomeSpan is in Command Mode with "Exit Command Mode" specified as choice
+  HS_CONFIG_MODE_REBOOT,                  // HomeSpan is in Command Mode with "Reboot" specified as choice
+  HS_CONFIG_MODE_LAUNCH_AP,               // HomeSpan is in Command Mode with "Launch Access Point" specified as choice
+  HS_CONFIG_MODE_UNPAIR,                  // HomeSpan is in Command Mode with "Unpair Device" specified as choice
+  HS_CONFIG_MODE_ERASE_WIFI,              // HomeSpan is in Command Mode with "Erase WiFi Credentials" specified as choice
+  HS_CONFIG_MODE_EXIT_SELECTED,           // User has selected "Exit Command Mode" 
+  HS_CONFIG_MODE_REBOOT_SELECTED,         // User has select "Reboot" from the Command Mode
+  HS_CONFIG_MODE_LAUNCH_AP_SELECTED,      // User has selected "Launch AP Access" from the Command Mode
+  HS_CONFIG_MODE_UNPAIR_SELECTED,         // User has seleected "Unpair Device" from the Command Mode
+  HS_CONFIG_MODE_ERASE_WIFI_SELECTED,     // User has selected "Erase WiFi Credentials" from the Command Mode
+  HS_REBOOTING,                           // HomeSpan is in the process of rebooting the device
+  HS_FACTORY_RESET,                       // HomeSpan is in the process of performing a Factory Reset of device
+  HS_AP_STARTED,                          // HomeSpan has started the Access Point but no one has yet connected
+  HS_AP_CONNECTED,                        // The Access Point is started and a user device has been connected
+  HS_AP_TERMINATED,                       // HomeSpan has terminated the Access Point 
+  HS_OTA_STARTED                          // HomeSpan is in the process of recveived an Over-the-Air software update
 };
 
 ///////////////////////////////
