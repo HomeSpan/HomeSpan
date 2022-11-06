@@ -58,7 +58,7 @@ HomeSpan requires version 2.0.0 or later of the [Arduino-ESP32 Board Manager](ht
  
 * **NeoPixels can now be used as a Status LED**
   * Adds`homeSpan.setStatusPixel()` method
-  * Works well with ESP32 boards that have a built-in NeoPixel LED, though adding an external NeoPixel is fine
+  * Works well with ESP32 boards that have a built-in NeoPixel LED
   * See the [API Reference](Reference.md) for details
 
 * **New functionality to track HomeSpan run-time status**
