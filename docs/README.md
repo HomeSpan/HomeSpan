@@ -51,24 +51,24 @@ HomeSpan requires version 2.0.0 or later of the [Arduino-ESP32 Board Manager](ht
 ## ❗Latest Update - HomeSpan 1.7.0 (11/6/2022)
 
 * **ESP-NOW is now fully integrated into HomeSpan!**
-  * New dedicated class, **SpanPoint**, facilities robust device-to-device communication between multiple ESP32 devices
+  * New dedicated class, **SpanPoint**, that facilitates bi-directional device-to-device communication between multiple ESP32 devices
   * Provides automatic calibration of WiFi channels to ensure compatibility with HomeSpan's normal WiFi connectivity
-  * Includes detailed [Example Sketches](Other%20Examples/RemoteSensors) demonstrating how SpanPoint can be used to implement a battery-powered Remote Sensor
+  * Includes detailed [Example Sketches](../Other%20Examples/RemoteSensors) demonstrating how SpanPoint can be used to implement a battery-powered Remote Sensor
   * See the dedicated [SpanPoint Tutorial Page](NOW.md) for full details
  
-* **New functionality that allows a NeoPixel to be used as a Status LED**
+* **NeoPixels can now be used as a Status LED**
   * Adds`homeSpan.setStatusPixel()` method
   * Works well with ESP32 boards that have a built-in NeoPixel LED, though adding an external NeoPixel is fine
   * See the [API Reference](Reference.md) for details
 
 * **New functionality to track HomeSpan run-time status**
   * Adds `homeSpan.setStatusCallback()` method providing users with a callback function whenever the internal state of HomeSpan changes, such as from *WiFi Needed* to *WiFi Connecting...*
-  * tracks changes to the run-time state of HomeSpan that would normally trigger a change in the blinking pattern of the (optional) Status LED
+  * Tracks changes to the run-time state of HomeSpan that would normally trigger a change in the blinking pattern of the (optional) Status LED
   * See the [API Reference](Reference.md) for details
 
 * **Important Bug Fixes**
 
-  * Fixed bug in controller-update logic associated with changes to the way Apple handles HomeKit Hubs that was producing *ERROR: Device not yet paired!* messages
+  * Fixed bug in controller-update logic associated with changes to the way Apple now handles HomeKit Hubs that was producing *ERROR: Device not yet paired!* messages
 
   * Fixed bug in touch sensor logic that would cause compile failure when using Arduino-ESP32 versions 2.0.0-2.0.2
 
@@ -78,24 +78,24 @@ See [Releases](https://github.com/HomeSpan/HomeSpan/releases) for details on all
 
 HomeSpan includes the following documentation:
 
-* [Getting Started with HomeSpan](https://github.com/HomeSpan/HomeSpan/blob/master/docs/GettingStarted.md) - setting up the software and the hardware needed to develop HomeSpan devices
-* [HomeSpan API Overview](https://github.com/HomeSpan/HomeSpan/blob/master/docs/Overview.md) - an overview of the HomeSpan API, including a step-by-step guide to developing your first HomeSpan Sketch
-* [HomeSpan Tutorials](https://github.com/HomeSpan/HomeSpan/blob/master/docs/Tutorials.md) - a guide to HomeSpan's tutorial-sketches
-* [HomeSpan Services and Characteristics](https://github.com/HomeSpan/HomeSpan/blob/master/docs/ServiceList.md) - a list of all HAP Services and Characterstics supported by HomeSpan
-* [HomeSpan Accessory Categories](https://github.com/HomeSpan/HomeSpan/blob/master/docs/Categories.md) - a list of all HAP Accessory Categories defined by HomeSpan
-* [HomeSpan Command-Line Interface (CLI)](https://github.com/HomeSpan/HomeSpan/blob/master/docs/CLI.md) - configure a HomeSpan device's WiFi Credentials, modify its HomeKit Setup Code, monitor and update its status, and access detailed, real-time device diagnostics from the Arduino IDE Serial Monitor
-* [HomeSpan User Guide](https://github.com/HomeSpan/HomeSpan/blob/master/docs/UserGuide.md) - turnkey instructions on how to configure an already-programmed HomeSpan device's WiFi Credentials, modify its HomeKit Setup Code, and pair the device to HomeKit.  No computer needed!
-* [HomeSpan API Reference](https://github.com/HomeSpan/HomeSpan/blob/master/docs/Reference.md) - a complete guide to the HomeSpan Library API
-* [HomeSpan QR Codes](https://github.com/HomeSpan/HomeSpan/blob/master/docs/QRCodes.md) - create and use QR Codes for pairing HomeSpan devices
-* [HomeSpan OTA](https://github.com/HomeSpan/HomeSpan/blob/master/docs/OTA.md) - update your sketches Over-the-Air directly from the Arduino IDE without a serial connection
-* [HomeSpan PWM](https://github.com/HomeSpan/HomeSpan/blob/master/docs/PWM.md) - integrated control of standard LEDs and Servo Motors using the ESP32's on-chip PWM peripheral
-* [HomeSpan RFControl](https://github.com/HomeSpan/HomeSpan/blob/master/docs/RMT.md) - easy generation of RF and IR Remote Control signals using the ESP32's on-chip RMT peripheral
-* [HomeSpan Pixels](https://github.com/HomeSpan/HomeSpan/blob/master/docs/Pixels.md) - integrated control of addressable one- and two-wire RGB and RGBW LEDs and LED strips
-* [HomeSpan SpanPoint](https://github.com/HomeSpan/HomeSpan/blob/master/docs/NOW.md) - facilitates point-to-point, bi-directional communication between ESP32 Devices using ESP-NOW
-* [HomeSpan Television Services](https://github.com/HomeSpan/HomeSpan/blob/master/docs/TVServices.md) - how to use HomeKit's undocumented Television Services and Characteristics
-* [HomeSpan Message Logging](https://github.com/HomeSpan/HomeSpan/blob/master/docs/Logging.md) - how to generate log messages for display on the Arduino Serial Monitor as well as optionally posted to an integrated Web Log page
+* [Getting Started with HomeSpan](GettingStarted.md) - setting up the software and the hardware needed to develop HomeSpan devices
+* [HomeSpan API Overview](Overview.md) - an overview of the HomeSpan API, including a step-by-step guide to developing your first HomeSpan Sketch
+* [HomeSpan Tutorials](Tutorials.md) - a guide to HomeSpan's tutorial-sketches
+* [HomeSpan Services and Characteristics](ServiceList.md) - a list of all HAP Services and Characterstics supported by HomeSpan
+* [HomeSpan Accessory Categories](Categories.md) - a list of all HAP Accessory Categories defined by HomeSpan
+* [HomeSpan Command-Line Interface (CLI)](CLI.md) - configure a HomeSpan device's WiFi Credentials, modify its HomeKit Setup Code, monitor and update its status, and access detailed, real-time device diagnostics from the Arduino IDE Serial Monitor
+* [HomeSpan User Guide](UserGuide.md) - turnkey instructions on how to configure an already-programmed HomeSpan device's WiFi Credentials, modify its HomeKit Setup Code, and pair the device to HomeKit.  No computer needed!
+* [HomeSpan API Reference](Reference.md) - a complete guide to the HomeSpan Library API
+* [HomeSpan QR Codes](QRCodes.md) - create and use QR Codes for pairing HomeSpan devices
+* [HomeSpan OTA](OTA.md) - update your sketches Over-the-Air directly from the Arduino IDE without a serial connection
+* [HomeSpan PWM](PWM.md) - integrated control of standard LEDs and Servo Motors using the ESP32's on-chip PWM peripheral
+* [HomeSpan RFControl](RMT.md) - easy generation of RF and IR Remote Control signals using the ESP32's on-chip RMT peripheral
+* [HomeSpan Pixels](Pixels.md) - integrated control of addressable one- and two-wire RGB and RGBW LEDs and LED strips
+* [HomeSpan SpanPoint](NOW.md) - facilitates point-to-point, bi-directional communication between ESP32 Devices using ESP-NOW
+* [HomeSpan Television Services](TVServices.md) - how to use HomeKit's undocumented Television Services and Characteristics
+* [HomeSpan Message Logging](Logging.md) - how to generate log messages for display on the Arduino Serial Monitor as well as optionally posted to an integrated Web Log page
 * [HomeSpan Projects](https://github.com/topics/homespan) - real-world applications of the HomeSpan Library
-* [HomeSpan FAQ](https://github.com/HomeSpan/HomeSpan/blob/master/docs/FAQ.md) - answers to frequently-asked questions
+* [HomeSpan FAQ](FAQ.md) - answers to frequently-asked questions
 
 Note that all documentation is version-controlled and tied to each branch.  The *master* branch generally points to the latest release.  The *dev* branch, when available, will contain code under active development.
 
