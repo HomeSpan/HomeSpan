@@ -35,7 +35,7 @@
 //              HomeSpan Version                    //
 
 #define     HS_MAJOR  1
-#define     HS_MINOR  6
+#define     HS_MINOR  7
 #define     HS_PATCH  0
 
 #define     STRINGIFY(x) _STR(x)
