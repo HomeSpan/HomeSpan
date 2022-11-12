@@ -35,7 +35,7 @@
 //              HomeSpan Version                    //
 
 #define     HS_MAJOR  1
-#define     HS_MINOR  6
+#define     HS_MINOR  7
 #define     HS_PATCH  0
 
 #define     STRINGIFY(x) _STR(x)
@@ -70,8 +70,6 @@
 #define     DEFAULT_SETUP_CODE        "46637726"          // changed during network setup or with 'S' command
 
 #define     DEFAULT_QR_ID             "HSPN"              // change with homeSpan.setQRID(qrID);
-
-#define     DEFAULT_STATUS_PIN        -1                  // change with homeSpan.setStatusPin(pin)
 
 #define     DEFAULT_AP_SSID           "HomeSpan-Setup"    // change with homeSpan.setApSSID(ssid)
 #define     DEFAULT_AP_PASSWORD       "homespan"          // change with homeSpan.setApPassword(pwd)

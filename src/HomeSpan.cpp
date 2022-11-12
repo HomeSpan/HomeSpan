@@ -31,9 +31,11 @@
 #include <WiFi.h>
 #include <driver/ledc.h>
 #include <mbedtls/version.h>
+#include <mbedtls/sha256.h>
 #include <esp_task_wdt.h>
 #include <esp_sntp.h>
 #include <esp_ota_ops.h>
+#include <esp_wifi.h>
 
 #include "HomeSpan.h"
 #include "HAP.h"
@@ -57,9 +59,11 @@ void Span::begin(Category catID, const char *displayName, const char *hostNameBa
   this->modelName=modelName;
   sprintf(this->category,"%d",(int)catID);
 
-  esp_task_wdt_delete(xTaskGetIdleTaskHandleForCPU(0));       // required to avoid watchdog timeout messages from ESP32-C3
+  SpanPoint::setAsHub();
 
-  statusLED.init(statusPin,0,autoOffLED);
+  statusLED=new Blinker(statusDevice,autoOffLED);             // create Status LED, even is statusDevice is NULL
+
+  esp_task_wdt_delete(xTaskGetIdleTaskHandleForCPU(0));       // required to avoid watchdog timeout messages from ESP32-C3
 
   if(requestedMaxCon<maxConnections)                          // if specific request for max connections is less than computed max connections
     maxConnections=requestedMaxCon;                           // over-ride max connections with requested value
@@ -96,8 +100,8 @@ void Span::begin(Category catID, const char *displayName, const char *hostNameBa
   Serial.print("Message Logs:     Level ");
   Serial.print(logLevel);  
   Serial.print("\nStatus LED:       Pin ");
-  if(statusPin>=0){
-    Serial.print(statusPin);
+  if(getStatusPin()>=0){
+    Serial.print(getStatusPin());
     if(autoOffLED>0)
       Serial.printf("  (Auto Off=%d sec)",autoOffLED);
   }
@@ -137,7 +141,8 @@ void Span::begin(Category catID, const char *displayName, const char *hostNameBa
   Serial.print(__TIME__);
 
   Serial.printf("\nPartition:        %s",esp_ota_get_running_partition()->label);
-
+  Serial.printf("\nMAC Address:      %s",WiFi.macAddress().c_str());
+  
   Serial.print("\n\nDevice Name:      ");
   Serial.print(displayName);  
   Serial.print("\n\n");
@@ -151,7 +156,7 @@ void Span::begin(Category catID, const char *displayName, const char *hostNameBa
     delay(100);
     esp_ota_mark_app_invalid_rollback_and_reboot();
   }
-
+  
 }  // begin
 
 ///////////////////////////////
@@ -189,10 +194,10 @@ void Span::pollTask() {
         processSerialCommand("A");
       } else {
         Serial.print("YOU MAY CONFIGURE BY TYPING 'W <RETURN>'.\n\n");
-        statusLED.start(LED_WIFI_NEEDED);
+        STATUS_UPDATE(start(LED_WIFI_NEEDED),HS_WIFI_NEEDED)
       }
     } else {
-      homeSpan.statusLED.start(LED_WIFI_CONNECTING);
+      STATUS_UPDATE(start(LED_WIFI_CONNECTING),HS_WIFI_CONNECTING)
     }
           
     if(controlButton)
@@ -290,13 +295,12 @@ void Span::pollTask() {
   if(spanOTA.enabled)
     ArduinoOTA.handle();
 
-  if(controlButton && controlButton->primed()){
-    statusLED.start(LED_ALERT);
-  }
+  if(controlButton && controlButton->primed())
+    STATUS_UPDATE(start(LED_ALERT),HS_ENTERING_CONFIG_MODE)
   
   if(controlButton && controlButton->triggered(3000,10000)){
-    statusLED.off();
     if(controlButton->type()==PushButton::LONG){
+      STATUS_UPDATE(off(),HS_FACTORY_RESET)
       controlButton->wait();
       processSerialCommand("F");        // FACTORY RESET
     } else {
@@ -304,7 +308,7 @@ void Span::pollTask() {
     }
   }
 
-  statusLED.check();
+  statusLED->check();
     
 } // poll
 
@@ -323,12 +327,16 @@ int Span::getFreeSlot(){
 //////////////////////////////////////
 
 void Span::commandMode(){
+
+  if(!statusDevice && !statusCallback){
+    Serial.print("*** ERROR: CAN'T ENTER COMMAND MODE WITHOUT A DEFINED STATUS LED OR EVENT HANDLER CALLBACK***\n\n");
+    return;
+  }
   
-  Serial.print("*** ENTERING COMMAND MODE ***\n\n");
+  Serial.print("*** COMMAND MODE ***\n\n");
   int mode=1;
   boolean done=false;
-  statusLED.start(500,0.3,mode,1000);
-
+  STATUS_UPDATE(start(500,0.3,mode,1000),static_cast<HS_STATUS>(HS_ENTERING_CONFIG_MODE+mode))
   unsigned long alarmTime=millis()+comModeLife;
 
   while(!done){
@@ -338,35 +346,26 @@ void Span::commandMode(){
       Serial.print(" seconds).\n\n");
       mode=1;
       done=true;
-      statusLED.start(LED_ALERT);
-      delay(2000);
     } else
     if(controlButton->triggered(10,3000)){
       if(controlButton->type()==PushButton::SINGLE){
         mode++;
         if(mode==6)
           mode=1;
-        statusLED.start(500,0.3,mode,1000);        
+        STATUS_UPDATE(start(500,0.3,mode,1000),static_cast<HS_STATUS>(HS_ENTERING_CONFIG_MODE+mode))
       } else {
         done=true;
       }
     } // button press
   } // while
 
-  statusLED.start(LED_ALERT);
+  STATUS_UPDATE(start(LED_ALERT),static_cast<HS_STATUS>(HS_ENTERING_CONFIG_MODE+mode+5))
   controlButton->wait();
   
   switch(mode){
 
     case 1:
-      Serial.print("*** NO ACTION\n\n");
-      if(strlen(network.wifiData.ssid)==0)
-        statusLED.start(LED_WIFI_NEEDED);
-      else
-      if(!HAPClient::nAdminControllers())
-        statusLED.start(LED_PAIRING_NEEDED);
-      else
-        statusLED.on();
+      resetStatus();
     break;
 
     case 2:
@@ -398,12 +397,12 @@ void Span::checkConnect(){
     if(WiFi.status()==WL_CONNECTED)
       return;
       
-    addWebLog(true,"*** WiFi Connection Lost!");      // losing and re-establishing connection has not been tested
+    addWebLog(true,"*** WiFi Connection Lost!");
     connected++;
     waitTime=60000;
     alarmConnect=0;
-    homeSpan.statusLED.start(LED_WIFI_CONNECTING);
-  }
+    STATUS_UPDATE(start(LED_WIFI_CONNECTING),HS_WIFI_CONNECTING)
+    }
 
   if(WiFi.status()!=WL_CONNECTED){
     if(millis()<alarmConnect)         // not yet time to try to try connecting
@@ -429,14 +428,10 @@ void Span::checkConnect(){
     return;
   }
 
-  if(!HAPClient::nAdminControllers())
-    statusLED.start(LED_PAIRING_NEEDED);
-  else
-    statusLED.on();
-  
+  resetStatus();  
   connected++;
 
-  addWebLog(true,"WiFi Connected!  IP Address = %s\n",WiFi.localIP().toString().c_str());
+  addWebLog(true,"WiFi Connected!  IP Address = %s",WiFi.localIP().toString().c_str());
 
   if(connected>1)                           // Do not initialize everything below if this is only a reconnect
     return;
@@ -756,11 +751,11 @@ void Span::processSerialCommand(const char *c){
       
       Serial.print("\nDEVICE NOT YET PAIRED -- PLEASE PAIR WITH HOMEKIT APP\n\n");
       mdns_service_txt_item_set("_hap","_tcp","sf","1");                                                        // set Status Flag = 1 (Table 6-8)
-      
-      if(strlen(network.wifiData.ssid)==0)
-        statusLED.start(LED_WIFI_NEEDED);
-      else
-        statusLED.start(LED_PAIRING_NEEDED);
+
+      if(homeSpan.pairCallback)
+        homeSpan.pairCallback(false);
+
+      resetStatus();      
     }
     break;
 
@@ -776,10 +771,8 @@ void Span::processSerialCommand(const char *c){
       network.serialConfigure();
       nvs_set_blob(wifiNVS,"WIFIDATA",&network.wifiData,sizeof(network.wifiData));    // update data
       nvs_commit(wifiNVS);                                                            // commit to NVS
-      Serial.print("\n*** WiFi Credentials SAVED!  Re-starting ***\n\n");
-      statusLED.off();
-      delay(1000);
-      ESP.restart();  
+      Serial.print("\n*** WiFi Credentials SAVED!  Restarting ***\n\n");
+      reboot();  
       }
     break;
 
@@ -800,7 +793,7 @@ void Span::processSerialCommand(const char *c){
       network.apConfigure();
       nvs_set_blob(wifiNVS,"WIFIDATA",&network.wifiData,sizeof(network.wifiData));    // update data
       nvs_commit(wifiNVS);                                                            // commit to NVS
-      Serial.print("\n*** Credentials saved!\n\n");
+      Serial.print("\n*** Credentials saved!\n");
       if(strlen(network.setupCode)){
         char s[10];
         sprintf(s,"S%s",network.setupCode);
@@ -809,21 +802,19 @@ void Span::processSerialCommand(const char *c){
         Serial.print("*** Setup Code Unchanged\n");
       }
       
-      Serial.print("\n*** Re-starting ***\n\n");
-      statusLED.off();
-      delay(1000);
-      ESP.restart();                                                                             // re-start device   
+      Serial.print("\n*** Restarting...\n\n");
+      STATUS_UPDATE(start(LED_ALERT),HS_AP_TERMINATED)
+      reboot();
     }
     break;
     
     case 'X': {
-
-      statusLED.off();
+     
       nvs_erase_all(wifiNVS);
-      nvs_commit(wifiNVS);      
-      Serial.print("\n*** WiFi Credentials ERASED!  Re-starting...\n\n");
-      delay(1000);
-      ESP.restart();                                                                             // re-start device   
+      nvs_commit(wifiNVS);
+      WiFi.begin("none");     
+      Serial.print("\n*** WiFi Credentials ERASED!  Restarting...\n\n");
+      reboot();
     }
     break;
 
@@ -837,27 +828,21 @@ void Span::processSerialCommand(const char *c){
 
     case 'H': {
       
-      statusLED.off();
       nvs_erase_all(HAPClient::hapNVS);
       nvs_commit(HAPClient::hapNVS);      
       Serial.print("\n*** HomeSpan Device ID and Pairing Data DELETED!  Restarting...\n\n");
-      delay(1000);
-      ESP.restart();
+      reboot();
     }
     break;
 
     case 'R': {
-      
-      statusLED.off();
-      Serial.print("\n*** Restarting...\n\n");
-      delay(1000);
-      ESP.restart();
+
+      reboot();      
     }
     break;
 
     case 'F': {
       
-      statusLED.off();
       nvs_erase_all(HAPClient::hapNVS);
       nvs_commit(HAPClient::hapNVS);      
       nvs_erase_all(wifiNVS);
@@ -865,20 +850,18 @@ void Span::processSerialCommand(const char *c){
       nvs_erase_all(charNVS);
       nvs_commit(charNVS);
       nvs_erase_all(otaNVS);
-      nvs_commit(otaNVS);       
+      nvs_commit(otaNVS);
+      WiFi.begin("none");  
       Serial.print("\n*** FACTORY RESET!  Restarting...\n\n");
-      delay(1000);
-      ESP.restart();
+      reboot();
     }
     break;
 
     case 'E': {
       
-      statusLED.off();
       nvs_flash_erase();
       Serial.print("\n*** ALL DATA ERASED!  Restarting...\n\n");
-      delay(1000);
-      ESP.restart();
+      reboot();
     }
     break;
 
@@ -1105,6 +1088,56 @@ void Span::processSerialCommand(const char *c){
     break;
     
   } // switch
+}
+
+///////////////////////////////
+
+void Span::resetStatus(){
+  if(strlen(network.wifiData.ssid)==0)
+    STATUS_UPDATE(start(LED_WIFI_NEEDED),HS_WIFI_NEEDED)
+  else if(WiFi.status()!=WL_CONNECTED)
+    STATUS_UPDATE(start(LED_WIFI_CONNECTING),HS_WIFI_CONNECTING)
+  else if(!HAPClient::nAdminControllers())
+    STATUS_UPDATE(start(LED_PAIRING_NEEDED),HS_PAIRING_NEEDED)
+  else
+    STATUS_UPDATE(on(),HS_PAIRED)
+}
+
+///////////////////////////////
+
+void Span::reboot(){
+  STATUS_UPDATE(off(),HS_REBOOTING)
+  delay(1000);
+  ESP.restart();  
+}
+
+///////////////////////////////
+
+const char* Span::statusString(HS_STATUS s){
+  switch(s){
+    case HS_WIFI_NEEDED: return("WiFi Credentials Needed");
+    case HS_WIFI_CONNECTING: return("WiFi Connecting");
+    case HS_PAIRING_NEEDED: return("Device not yet Paired");
+    case HS_PAIRED: return("Device Paired");
+    case HS_ENTERING_CONFIG_MODE: return("Entering Command Mode");
+    case HS_CONFIG_MODE_EXIT: return("1. Exit Command Mode"); 
+    case HS_CONFIG_MODE_REBOOT: return("2. Reboot Device");
+    case HS_CONFIG_MODE_LAUNCH_AP: return("3. Launch Access Point");
+    case HS_CONFIG_MODE_UNPAIR: return("4. Unpair Device");
+    case HS_CONFIG_MODE_ERASE_WIFI: return("5. Erase WiFi Credentials");
+    case HS_CONFIG_MODE_EXIT_SELECTED: return("Exiting Command Mode...");
+    case HS_CONFIG_MODE_REBOOT_SELECTED: return("Rebooting Device...");
+    case HS_CONFIG_MODE_LAUNCH_AP_SELECTED: return("Launching Access Point...");
+    case HS_CONFIG_MODE_UNPAIR_SELECTED: return("Unpairing Device...");
+    case HS_CONFIG_MODE_ERASE_WIFI_SELECTED: return("Erasing WiFi Credentials...");
+    case HS_REBOOTING: return("REBOOTING!");
+    case HS_FACTORY_RESET: return("Performing Factory Reset...");
+    case HS_AP_STARTED: return("Access Point Started");
+    case HS_AP_CONNECTED: return("Access Point Connected");
+    case HS_AP_TERMINATED: return("Access Point Terminated");
+    case HS_OTA_STARTED: return("OTA Update Started");
+    default: return("Unknown");
+  }
 }
 
 ///////////////////////////////
@@ -2096,9 +2129,9 @@ void SpanOTA::init(boolean _auth, boolean _safeLoad){
 
 void SpanOTA::start(){
   Serial.printf("\n*** Current Partition: %s\n*** New Partition: %s\n*** OTA Starting..",
-      esp_ota_get_running_partition()->label,esp_ota_get_next_update_partition(NULL)->label);
+    esp_ota_get_running_partition()->label,esp_ota_get_next_update_partition(NULL)->label);
   otaPercent=0;
-  homeSpan.statusLED.start(LED_OTA_STARTED);
+  STATUS_UPDATE(start(LED_OTA_STARTED),HS_OTA_STARTED)
 }
 
 ///////////////////////////////
@@ -2107,8 +2140,7 @@ void SpanOTA::end(){
   nvs_set_u8(homeSpan.otaNVS,"OTA_REQUIRED",safeLoad);
   nvs_commit(homeSpan.otaNVS);
   Serial.printf(" DONE!  Rebooting...\n");
-  homeSpan.statusLED.off();
-  delay(100);                       // make sure commit it finished before reboot
+  homeSpan.reboot();
 }
 
 ///////////////////////////////
@@ -2142,14 +2174,202 @@ void SpanOTA::error(ota_error_t err){
 
 ///////////////////////////////
 
+int SpanOTA::otaPercent;
+boolean SpanOTA::safeLoad;
+boolean SpanOTA::enabled=false;
+boolean SpanOTA::auth;
+
+///////////////////////////////
+//        SpanPoint          //
+///////////////////////////////
+
+SpanPoint::SpanPoint(const char *macAddress, int sendSize, int receiveSize, int queueDepth){
+
+  if(sscanf(macAddress,"%hhx:%hhx:%hhx:%hhx:%hhx:%hhx",peerInfo.peer_addr,peerInfo.peer_addr+1,peerInfo.peer_addr+2,peerInfo.peer_addr+3,peerInfo.peer_addr+4,peerInfo.peer_addr+5)!=6){
+    Serial.printf("\nFATAL ERROR!  Can't create new SpanPoint(\"%s\") - Invalid MAC Address ***\n",macAddress);
+    Serial.printf("\n=== PROGRAM HALTED ===");
+    while(1);
+  }
+
+  if(sendSize<0 || sendSize>200 || receiveSize<0 || receiveSize>200 || queueDepth<1 || (sendSize==0 && receiveSize==0)){
+    Serial.printf("\nFATAL ERROR!  Can't create new SpanPoint(\"%s\",%d,%d,%d) - one or more invalid parameters ***\n",macAddress,sendSize,receiveSize,queueDepth);
+    Serial.printf("\n=== PROGRAM HALTED ===");
+    while(1);
+  }
+
+  this->sendSize=sendSize;
+  this->receiveSize=receiveSize;
+
+  Serial.printf("SpanPoint: Created link to device with MAC Address %02X:%02X:%02X:%02X:%02X:%02X.  Send size=%d bytes, Receive size=%d bytes with queue depth=%d.\n",
+    peerInfo.peer_addr[0],peerInfo.peer_addr[1],peerInfo.peer_addr[2],peerInfo.peer_addr[3],peerInfo.peer_addr[4],peerInfo.peer_addr[5],sendSize,receiveSize,queueDepth);
+
+  if(receiveSize>0)
+    WiFi.mode(WIFI_AP_STA);
+  else if(WiFi.getMode()==WIFI_OFF)
+    WiFi.mode(WIFI_STA);
+  
+  init();                             // initialize SpanPoint
+  peerInfo.channel=0;                 // 0 = matches current WiFi channel
+  peerInfo.ifidx=WIFI_IF_STA;         // must specify interface
+  peerInfo.encrypt=true;              // turn on encryption for this peer
+  memcpy(peerInfo.lmk, lmk, 16);      // set local key
+  esp_now_add_peer(&peerInfo);        // add peer to ESP-NOW
+
+  if(receiveSize>0)
+    receiveQueue = xQueueCreate(queueDepth,receiveSize);  
+
+  SpanPoints.push_back(this);             
+}
+
+///////////////////////////////
+
+void SpanPoint::init(const char *password){
+
+  if(initialized)
+    return;
+
+  if(WiFi.getMode()==WIFI_OFF)
+    WiFi.mode(WIFI_STA);  
+  
+  uint8_t hash[32];
+  mbedtls_sha256_ret((const unsigned char *)password,strlen(password),hash,0);      // produce 256-bit bit hash from password
+
+  esp_now_init();                           // initialize ESP-NOW
+  memcpy(lmk, hash, 16);                    // store first 16 bytes of hash for later use as local key
+  esp_now_set_pmk(hash+16);                 // set hash for primary key using last 16 bytes of hash
+  esp_now_register_recv_cb(dataReceived);   // set callback for receiving data
+  esp_now_register_send_cb(dataSent);       // set callback for sending data
+  
+  statusQueue = xQueueCreate(1,sizeof(esp_now_send_status_t));    // create statusQueue even if not needed
+  setChannelMask(channelMask);                                    // default channel mask at start-up uses channels 1-13  
+
+  initialized=true;
+}
+
+///////////////////////////////
+
+void SpanPoint::setChannelMask(uint16_t mask){
+  channelMask = mask & 0x3FFE;
+
+  if(isHub)
+    return;
+
+  uint8_t channel=0;
+
+  for(int i=1;i<=13 && channel==0;i++)          // find first "allowed" channel based on mask
+    channel=(channelMask & (1<<i))?i:0;
+
+  if(channel==0){
+    Serial.printf("\nFATAL ERROR!  SpanPoint::setChannelMask(0x%04X) - mask must allow for at least one channel ***\n",mask);
+    Serial.printf("\n=== PROGRAM HALTED ===");
+    while(1);
+  }
+
+  esp_wifi_set_channel(channel, WIFI_SECOND_CHAN_NONE);
+}
+
+///////////////////////////////
+
+uint8_t SpanPoint::nextChannel(){
+
+  uint8_t channel;
+  wifi_second_chan_t channel2; 
+  esp_wifi_get_channel(&channel,&channel2);     // get current channel
+
+  if(isHub || channelMask==(1<<channel))        // do not change channel if device is either a hub, or channel mask does not allow for any other channels
+    return(channel);
+
+  do {
+    channel=(channel<13)?channel+1:1;       // advance to next channel
+  } while(!(channelMask & (1<<channel)));   // until we find next valid one
+
+  esp_wifi_set_channel(channel, WIFI_SECOND_CHAN_NONE);         // set the WiFi channel 
+  
+  return(channel);  
+}
+
+///////////////////////////////
+
+boolean SpanPoint::get(void *dataBuf){
+
+  if(receiveSize==0)
+    return(false);
+
+  return(xQueueReceive(receiveQueue, dataBuf, 0));
+}
+
+///////////////////////////////
+
+boolean SpanPoint::send(const void *data){
+
+  if(sendSize==0)
+    return(false);
+  
+  uint8_t channel;
+  wifi_second_chan_t channel2; 
+  esp_wifi_get_channel(&channel,&channel2);     // get current channel
+  uint8_t startingChannel=channel;              // set starting channel to current channel
+
+  esp_now_send_status_t status = ESP_NOW_SEND_FAIL;
+
+  do {
+    for(int i=1;i<=3;i++){
+      
+      LOG1("SpanPoint: Sending %d bytes to MAC Address %02X:%02X:%02X:%02X:%02X:%02X using channel %hhu...\n",
+        sendSize,peerInfo.peer_addr[0],peerInfo.peer_addr[1],peerInfo.peer_addr[2],peerInfo.peer_addr[3],peerInfo.peer_addr[4],peerInfo.peer_addr[5],channel);
+        
+      esp_now_send(peerInfo.peer_addr, (uint8_t *) data, sendSize);
+      xQueueReceive(statusQueue, &status, pdMS_TO_TICKS(2000));
+      if(status==ESP_NOW_SEND_SUCCESS)
+        return(true);
+      delay(10);
+    }    
+    channel=nextChannel();
+  } while(channel!=startingChannel);
+
+  return(false);
+} 
+
+///////////////////////////////
+
+void SpanPoint::dataReceived(const uint8_t *mac, const uint8_t *incomingData, int len){
+  
+  auto it=SpanPoints.begin();
+  for(;it!=SpanPoints.end() && memcmp((*it)->peerInfo.peer_addr,mac,6)!=0; it++);
+  
+  if(it==SpanPoints.end())
+    return;
+
+  if((*it)->receiveSize==0)
+    return;
+
+  if(len!=(*it)->receiveSize){
+    Serial.printf("SpanPoint Warning! %d bytes received from %02X:%02X:%02X:%02X:%02X:%02X does not match %d-byte queue size\n",len,mac[0],mac[1],mac[2],mac[3],mac[4],mac[5],(*it)->receiveSize);
+    return;
+  }
+
+  (*it)->receiveTime=millis();                             // set time of receive
+  xQueueSend((*it)->receiveQueue, incomingData, 0);        // send to queue - do not wait if queue is full and instead fail immediately since we need to return from this function ASAP
+}
+
+///////////////////////////////
+
+uint8_t SpanPoint::lmk[16];
+boolean SpanPoint::initialized=false;
+boolean SpanPoint::isHub=false;
+vector<SpanPoint *> SpanPoint::SpanPoints;
+uint16_t SpanPoint::channelMask=0x3FFE;
+QueueHandle_t SpanPoint::statusQueue;
+
+///////////////////////////////
+//          MISC             //
+///////////////////////////////
+
 void __attribute__((weak)) loop(){
 }
 
 ///////////////////////////////
 
-int SpanOTA::otaPercent;
-boolean SpanOTA::safeLoad;
-boolean SpanOTA::enabled=false;
-boolean SpanOTA::auth;
+
 
  

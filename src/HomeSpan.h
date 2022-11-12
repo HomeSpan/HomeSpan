@@ -39,7 +39,10 @@
 #include <unordered_set>
 #include <nvs.h>
 #include <ArduinoOTA.h>
+#include <esp_now.h>
 
+#include "extras/Blinker.h"
+#include "extras/Pixel.h"
 #include "Settings.h"
 #include "Utils.h"
 #include "Network.h"
@@ -60,6 +63,34 @@ enum {
   GET_DESC=32,
   GET_NV=64,
   GET_VALUE=128
+};
+
+///////////////////////////////
+
+#define STATUS_UPDATE(LED_UPDATE,MESSAGE_UPDATE)  {homeSpan.statusLED->LED_UPDATE;if(homeSpan.statusCallback)homeSpan.statusCallback(MESSAGE_UPDATE);}
+
+enum HS_STATUS {
+  HS_WIFI_NEEDED,                         // WiFi Credentials have not yet been set/stored
+  HS_WIFI_CONNECTING,                     // HomeSpan is trying to connect to the network specified in the stored WiFi Credentials
+  HS_PAIRING_NEEDED,                      // HomeSpan is connected to central WiFi network, but device has not yet been paired to HomeKit
+  HS_PAIRED,                              // HomeSpan is connected to central WiFi network and ther device has been paired to HomeKit
+  HS_ENTERING_CONFIG_MODE,                // User has requested the device to enter into Command Mode
+  HS_CONFIG_MODE_EXIT,                    // HomeSpan is in Command Mode with "Exit Command Mode" specified as choice
+  HS_CONFIG_MODE_REBOOT,                  // HomeSpan is in Command Mode with "Reboot" specified as choice
+  HS_CONFIG_MODE_LAUNCH_AP,               // HomeSpan is in Command Mode with "Launch Access Point" specified as choice
+  HS_CONFIG_MODE_UNPAIR,                  // HomeSpan is in Command Mode with "Unpair Device" specified as choice
+  HS_CONFIG_MODE_ERASE_WIFI,              // HomeSpan is in Command Mode with "Erase WiFi Credentials" specified as choice
+  HS_CONFIG_MODE_EXIT_SELECTED,           // User has selected "Exit Command Mode" 
+  HS_CONFIG_MODE_REBOOT_SELECTED,         // User has select "Reboot" from the Command Mode
+  HS_CONFIG_MODE_LAUNCH_AP_SELECTED,      // User has selected "Launch AP Access" from the Command Mode
+  HS_CONFIG_MODE_UNPAIR_SELECTED,         // User has seleected "Unpair Device" from the Command Mode
+  HS_CONFIG_MODE_ERASE_WIFI_SELECTED,     // User has selected "Erase WiFi Credentials" from the Command Mode
+  HS_REBOOTING,                           // HomeSpan is in the process of rebooting the device
+  HS_FACTORY_RESET,                       // HomeSpan is in the process of performing a Factory Reset of device
+  HS_AP_STARTED,                          // HomeSpan has started the Access Point but no one has yet connected
+  HS_AP_CONNECTED,                        // The Access Point is started and a user device has been connected
+  HS_AP_TERMINATED,                       // HomeSpan has terminated the Access Point 
+  HS_OTA_STARTED                          // HomeSpan is in the process of recveived an Over-the-Air software update
 };
 
 ///////////////////////////////
@@ -189,7 +220,6 @@ class Span{
   unsigned long alarmConnect=0;                 // time after which WiFi connection attempt should be tried again
   
   const char *defaultSetupCode=DEFAULT_SETUP_CODE;            // Setup Code used for pairing
-  int statusPin=DEFAULT_STATUS_PIN;                           // pin for Status LED
   uint16_t autoOffLED=0;                                      // automatic turn-off duration (in seconds) for Status LED
   uint8_t logLevel=DEFAULT_LOG_LEVEL;                         // level for writing out log messages to serial monitor
   uint8_t maxConnections=CONFIG_LWIP_MAX_SOCKETS-2;           // maximum number of allowed simultaneous HAP connections
@@ -201,9 +231,11 @@ class Span{
   void (*pairCallback)(boolean isPaired)=NULL;                // optional callback function to invoke when pairing is established (true) or lost (false)
   boolean autoStartAPEnabled=false;                           // enables auto start-up of Access Point when WiFi Credentials not found
   void (*apFunction)()=NULL;                                  // optional function to invoke when starting Access Point
+  void (*statusCallback)(HS_STATUS status)=NULL;              // optional callback when HomeSpan status changes
   
   WiFiServer *hapServer;                            // pointer to the HAP Server connection
-  Blinker statusLED;                                // indicates HomeSpan status
+  Blinker *statusLED;                               // indicates HomeSpan status
+  Blinkable *statusDevice = NULL;                   // the device used for the Blinker
   PushButton *controlButton = NULL;                 // controls HomeSpan configuration and resets
   Network network;                                  // configures WiFi and Setup Code via either serial monitor or temporary Access Point
   SpanWebLog webLog;                                // optional web status/log
@@ -223,6 +255,8 @@ class Span{
   int getFreeSlot();                            // returns free HAPClient slot number. HAPClients slot keep track of each active HAPClient connection
   void checkConnect();                          // check WiFi connection; connect if needed
   void commandMode();                           // allows user to control and reset HomeSpan settings with the control button
+  void resetStatus();                           // resets statusLED and calls statusCallback based on current HomeSpan status
+  void reboot();                                // reboots device
 
   int sprintfAttributes(char *cBuf, int flags=GET_VALUE|GET_META|GET_PERMS|GET_TYPE|GET_DESC);   // prints Attributes JSON database into buf, unless buf=NULL; return number of characters printed, excluding null terminator
   
@@ -254,11 +288,16 @@ class Span{
   boolean updateDatabase(boolean updateMDNS=true);   // updates HAP Configuration Number and Loop vector; if updateMDNS=true and config number has changed, re-broadcasts MDNS 'c#' record; returns true if config number changed
   boolean deleteAccessory(uint32_t aid);             // deletes Accessory with matching aid; returns true if found, else returns false 
 
-  void setControlPin(uint8_t pin){controlButton=new PushButton(pin);}     // sets Control Pin
-  void setStatusPin(uint8_t pin){statusPin=pin;}                          // sets Status Pin
+  void setControlPin(uint8_t pin){controlButton=new PushButton(pin);}     // sets Control Pin   
+  void setStatusPin(uint8_t pin){statusDevice=new GenericLED(pin);}       // sets Status Device to a simple LED on specified pin
   void setStatusAutoOff(uint16_t duration){autoOffLED=duration;}          // sets Status LED auto off (seconds)  
-  int getStatusPin(){return(statusPin);}                                  // get Status Pin
+  int getStatusPin(){return(statusLED->getPin());}                        // get Status Pin (getPin will return -1 if underlying statusDevice is undefined)
   int getControlPin(){return(controlButton?controlButton->getPin():-1);}  // get Control Pin (returns -1 if undefined)
+  
+  void setStatusPixel(uint8_t pin,float h=0,float s=100,float v=100){     // sets Status Device to an RGB Pixel on specified pin
+    statusDevice=((new Pixel(pin))->setOnColor(Pixel::HSV(h,s,v)));
+  }              
+
   void setApSSID(const char *ssid){network.apSSID=ssid;}                  // sets Access Point SSID
   void setApPassword(const char *pwd){network.apPassword=pwd;}            // sets Access Point Password
   void setApTimeout(uint16_t nSec){network.lifetime=nSec*1000;}           // sets Access Point Timeout (seconds)
@@ -276,7 +315,9 @@ class Span{
   void setApFunction(void (*f)()){apFunction=f;}                          // sets an optional user-defined function to call when activating the WiFi Access Point  
   void enableAutoStartAP(){autoStartAPEnabled=true;}                      // enables auto start-up of Access Point when WiFi Credentials not found
   void setWifiCredentials(const char *ssid, const char *pwd);             // sets WiFi Credentials
-
+  void setStatusCallback(void (*f)(HS_STATUS status)){statusCallback=f;}        // sets an optional user-defined function to call when HomeSpan status changes
+  const char* statusString(HS_STATUS s);                                  // returns char string for HomeSpan status change messages
+  
   void setPairingCode(const char *s){sprintf(pairingCodeCommand,"S %9s",s);}    // sets the Pairing Code - use is NOT recommended.  Use 'S' from CLI instead
   void deleteStoredValues(){processSerialCommand("V");}                         // deletes stored Characteristic values from NVS  
 
@@ -296,7 +337,7 @@ class Span{
   void autoPoll(uint32_t stackSize=CONFIG_ARDUINO_LOOP_STACK_SIZE){xTaskCreateUniversal([](void *parms){for(;;)homeSpan.pollTask();}, "pollTask", stackSize, NULL, 1, &pollTaskHandle, 0);}     // start pollTask()
 
   void setTimeServerTimeout(uint32_t tSec){webLog.waitTime=tSec*1000;}    // sets wait time (in seconds) for optional web log time server to connect
-  
+ 
   [[deprecated("Please use reserveSocketConnections(n) method instead.")]]
   void setMaxConnections(uint8_t n){requestedMaxCon=n;}                   // sets maximum number of simultaneous HAP connections
 };
@@ -740,6 +781,44 @@ class SpanUserCommand {
 
   SpanUserCommand(char c, const char *s, void (*f)(const char *));  
   SpanUserCommand(char c, const char *s, void (*f)(const char *, void *), void *arg);  
+};
+
+///////////////////////////////
+
+class SpanPoint {
+
+  friend class Span;
+
+  int receiveSize;                            // size (in bytes) of messages to receive
+  int sendSize;                               // size (in bytes) of messages to send
+  esp_now_peer_info_t peerInfo;               // structure for all ESP-NOW peer data
+  QueueHandle_t receiveQueue;                 // queue to store data after it is received
+  uint32_t receiveTime=0;                     // time (in millis) of most recent data received
+  
+  static uint8_t lmk[16];
+  static boolean initialized;
+  static boolean isHub;
+  static vector<SpanPoint *> SpanPoints;
+  static uint16_t channelMask;                // channel mask
+  static QueueHandle_t statusQueue;           // queue for communication between SpanPoint::dataSend and SpanPoint::send
+  
+  static void dataReceived(const uint8_t *mac, const uint8_t *incomingData, int len);
+  static void init(const char *password="HomeSpan");
+  static void setAsHub(){isHub=true;}
+  static uint8_t nextChannel();
+  
+  static void dataSent(const uint8_t *mac, esp_now_send_status_t status) {
+    xQueueOverwrite( statusQueue, &status );
+  }
+  
+  public:
+
+  SpanPoint(const char *macAddress, int sendSize, int receiveSize, int queueDepth=1);
+  static void setPassword(const char *pwd){init(pwd);};      
+  static void setChannelMask(uint16_t mask);  
+  boolean get(void *dataBuf);
+  boolean send(const void *data);
+  uint32_t time(){return(millis()-receiveTime);}
 };
 
 /////////////////////////////////////////////////

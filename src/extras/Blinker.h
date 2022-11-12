@@ -24,6 +24,7 @@
  *  SOFTWARE.
  *  
  ********************************************************************************/
- 
-#include "../src/extras/Pixel.h"
+
+#include "../src/extras/Blinker.h"
+
 
