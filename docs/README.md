@@ -48,7 +48,7 @@ HomeSpan requires version 2.0.0 or later of the [Arduino-ESP32 Board Manager](ht
   * Launch the WiFi Access Point
 * A standalone, detailed End-User Guide
 
-## ❗Latest Update - HomeSpan 1.7.0 (11/6/2022)
+## ❗Latest Update - HomeSpan 1.7.0 (11/11/2022)
 
 * **ESP-NOW is now fully integrated into HomeSpan!**
   * New dedicated class, **SpanPoint**, that facilitates bi-directional device-to-device communication between multiple ESP32 devices
