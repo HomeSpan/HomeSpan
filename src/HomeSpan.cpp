@@ -40,7 +40,7 @@
 #include "HomeSpan.h"
 #include "HAP.h"
 
-const __attribute__((section(".rodata_custom_desc"))) SpanPartition spanPartition = {HOMESPAN_MAGIC_COOKIE};
+const __attribute__((section(".rodata_custom_desc"))) SpanPartition spanPartition = {HOMESPAN_MAGIC_COOKIE,0};
 
 using namespace Utils;
 
@@ -903,10 +903,10 @@ void Span::processSerialCommand(const char *c){
         boolean foundInfo=false;
 
         if(acc==Accessories.begin() && (*acc)->aid!=1)
-          Serial.printf("   *** ERROR!  AID of first Accessory must always be 1 ***\n",nErrors++);
+          Serial.printf("   *** ERROR #%d!  AID of first Accessory must always be 1 ***\n",++nErrors);
 
         if(aidValues.find((*acc)->aid)!=aidValues.end())
-          Serial.printf("   *** ERROR!  AID already in use for another Accessory ***\n",nErrors++);
+          Serial.printf("   *** ERROR #%d!  AID already in use for another Accessory ***\n",++nErrors);
         
         aidValues.insert((*acc)->aid);
 
@@ -917,7 +917,7 @@ void Span::processSerialCommand(const char *c){
           if(!strcmp((*svc)->type,"3E")){
             foundInfo=true;
             if((*svc)->iid!=1)
-              Serial.printf("     *** ERROR!  The Accessory Information Service must be defined before any other Services in an Accessory ***\n",nErrors++);
+              Serial.printf("     *** ERROR #%d!  The Accessory Information Service must be defined before any other Services in an Accessory ***\n",++nErrors);
           }
           else if((*acc)->aid==1)            // this is an Accessory with aid=1, but it has more than just AccessoryInfo.  So...
             isBridge=false;                  // ...this is not a bridge device          
@@ -948,22 +948,22 @@ void Span::processSerialCommand(const char *c){
             Serial.printf("\n");        
             
             if(!(*chr)->isCustom && !(*svc)->isCustom  && (*svc)->req.find((*chr)->hapChar)==(*svc)->req.end() && (*svc)->opt.find((*chr)->hapChar)==(*svc)->opt.end())
-              Serial.printf("          *** WARNING!  Service does not support this Characteristic ***\n",nWarnings++);
+              Serial.printf("          *** WARNING #%d!  Service does not support this Characteristic ***\n",++nWarnings);
             else
             if(invalidUUID((*chr)->type,(*chr)->isCustom))
-              Serial.printf("          *** ERROR!  Format of UUID is invalid ***\n",nErrors++);
+              Serial.printf("          *** ERROR #%d!  Format of UUID is invalid ***\n",++nErrors);
             else       
             if(hapChar.find((*chr)->hapChar)!=hapChar.end())
-              Serial.printf("          *** ERROR!  Characteristic already defined for this Service ***\n",nErrors++);
+              Serial.printf("          *** ERROR #%d!  Characteristic already defined for this Service ***\n",++nErrors);
 
             if((*chr)->setRangeError)
-              Serial.printf("          *** WARNING!  Attempt to set Custom Range for this Characteristic ignored ***\n",nWarnings++);
+              Serial.printf("          *** WARNING #%d!  Attempt to set Custom Range for this Characteristic ignored ***\n",++nWarnings);
 
             if((*chr)->setValidValuesError)
-              Serial.printf("          *** WARNING!  Attempt to set Custom Valid Values for this Characteristic ignored ***\n",nWarnings++);
+              Serial.printf("          *** WARNING #%d!  Attempt to set Custom Valid Values for this Characteristic ignored ***\n",++nWarnings);
 
             if((*chr)->format!=STRING && ((*chr)->uvGet<double>((*chr)->value) < (*chr)->uvGet<double>((*chr)->minValue) || (*chr)->uvGet<double>((*chr)->value) > (*chr)->uvGet<double>((*chr)->maxValue)))
-              Serial.printf("          *** WARNING!  Value of %llg is out of range [%llg,%llg] ***\n",(*chr)->uvGet<double>((*chr)->value),(*chr)->uvGet<double>((*chr)->minValue),(*chr)->uvGet<double>((*chr)->maxValue),nWarnings++);
+              Serial.printf("          *** WARNING #%d!  Value of %g is out of range [%g,%g] ***\n",++nWarnings,(*chr)->uvGet<double>((*chr)->value),(*chr)->uvGet<double>((*chr)->minValue),(*chr)->uvGet<double>((*chr)->maxValue));
 
             hapChar.insert((*chr)->hapChar);
           
@@ -971,7 +971,7 @@ void Span::processSerialCommand(const char *c){
 
           for(auto req=(*svc)->req.begin(); req!=(*svc)->req.end(); req++){
             if(hapChar.find(*req)==hapChar.end())
-              Serial.printf("          *** WARNING!  Required '%s' Characteristic for this Service not found ***\n",(*req)->hapName,nWarnings++);
+              Serial.printf("          *** WARNING #%d!  Required '%s' Characteristic for this Service not found ***\n",++nWarnings,(*req)->hapName);
           }
 
           for(auto button=PushButtons.begin(); button!=PushButtons.end(); button++){
@@ -990,14 +990,14 @@ void Span::processSerialCommand(const char *c){
                 Serial.printf("USER-DEFINED\n");
               
               if((void(*)(int,int))((*svc)->*(&SpanService::button))==(void(*)(int,int))(&SpanService::button))
-                Serial.printf("          *** WARNING!  No button() method defined in this Service ***\n",nWarnings++);
+                Serial.printf("          *** WARNING #%d!  No button() method defined in this Service ***\n",++nWarnings);
             }
           }
           
         } // Services
         
         if(!foundInfo)
-          Serial.printf("   *** ERROR!  Required 'AccessoryInformation' Service not found ***\n",nErrors++);
+          Serial.printf("   *** ERROR #%d!  Required 'AccessoryInformation' Service not found ***\n",++nErrors);
           
       } // Accessories
       
@@ -1077,9 +1077,13 @@ void Span::processSerialCommand(const char *c){
           uCom->second->userFunction1(c+1);
         else
           uCom->second->userFunction2(c+1,uCom->second->userArg);
-        break;
+      } else {
+        Serial.print("*** Undefined user command: '");
+        Serial.print(c);
+        Serial.print("'.  Type '?' for list of commands.\n");        
       }
     }
+    break;
 
     default:
       Serial.print("*** Unknown command: '");
@@ -1730,12 +1734,6 @@ int SpanService::sprintfAttributes(char *cBuf, int flags){
 
 SpanCharacteristic::SpanCharacteristic(HapChar *hapChar, boolean isCustom){
 
-  if(homeSpan.Accessories.empty() || homeSpan.Accessories.back()->Services.empty()){
-    Serial.printf("\nFATAL ERROR!  Can't create new Characteristic '%s' without a defined Service ***\n",hapName);
-    Serial.printf("\n=== PROGRAM HALTED ===");
-    while(1);
-  }
-
   type=hapChar->type;
   perms=hapChar->perms;
   hapName=hapChar->hapName;
@@ -1743,6 +1741,12 @@ SpanCharacteristic::SpanCharacteristic(HapChar *hapChar, boolean isCustom){
   staticRange=hapChar->staticRange;
   this->isCustom=isCustom;
   this->hapChar=hapChar;
+
+  if(homeSpan.Accessories.empty() || homeSpan.Accessories.back()->Services.empty()){
+    Serial.printf("\nFATAL ERROR!  Can't create new Characteristic '%s' without a defined Service ***\n",hapName);
+    Serial.printf("\n=== PROGRAM HALTED ===");
+    while(1);
+  }
 
   homeSpan.Accessories.back()->Services.back()->Characteristics.push_back(this);  
   iid=++(homeSpan.Accessories.back()->iidCount);

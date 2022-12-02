@@ -32,6 +32,7 @@
 #endif
 
 #pragma GCC diagnostic ignored "-Wpmf-conversions"                // eliminates warning messages from use of pointers to member functions to detect whether update() and loop() are overridden by user
+#pragma GCC diagnostic ignored "-Wunused-result"                  // eliminates warning message regarded unused result from call to crypto_scalarmult_curve25519()
 
 #include <Arduino.h>
 #include <unordered_map>
@@ -390,7 +391,7 @@ class SpanService{
 
   protected:
   
-  ~SpanService();                                         // destructor
+  virtual ~SpanService();                                 // destructor
   unordered_set<HapChar *> req;                           // unordered set of pointers to all required HAP Characteristic Types for this Service
   unordered_set<HapChar *> opt;                           // unordered set of pointers to all optional HAP Characteristic Types for this Service
 
@@ -472,7 +473,7 @@ class SpanCharacteristic{
         sprintf(c,"%llu",u.UINT64);
         return(String(c));        
       case FORMAT::FLOAT:
-        sprintf(c,"%llg",u.FLOAT);
+        sprintf(c,"%g",u.FLOAT);
         return(String(c));        
       case FORMAT::STRING:
         sprintf(c,"\"%s\"",u.STRING);
@@ -516,6 +517,8 @@ class SpanCharacteristic{
       case FORMAT::FLOAT:
         u.FLOAT=(double)val;
       break;
+      case FORMAT::STRING:
+      break;
     } // switch
   }
  
@@ -536,6 +539,8 @@ class SpanCharacteristic{
         return((T) u.UINT64);        
       case FORMAT::FLOAT:
         return((T) u.FLOAT);        
+      case FORMAT::STRING:
+      break;
     }
     return(0);       // included to prevent compiler warnings  
   }
@@ -546,37 +551,32 @@ class SpanCharacteristic{
     
   template <typename T, typename A=boolean, typename B=boolean> void init(T val, boolean nvsStore, A min=0, B max=1){
 
-    int nvsFlag=0;
     uvSet(value,val);
 
     if(nvsStore){
       nvsKey=(char *)malloc(16);
       uint16_t t;
-      sscanf(type,"%x",&t);
+      sscanf(type,"%hx",&t);
       sprintf(nvsKey,"%04X%08X%03X",t,aid,iid&0xFFF);
       size_t len;    
 
       if(format != FORMAT::STRING){
         if(!nvs_get_blob(homeSpan.charNVS,nvsKey,NULL,&len)){
           nvs_get_blob(homeSpan.charNVS,nvsKey,&value,&len);          
-          nvsFlag=2;
         }
         else {
           nvs_set_blob(homeSpan.charNVS,nvsKey,&value,sizeof(UVal));     // store data           
           nvs_commit(homeSpan.charNVS);                                    // commit to NVS  
-          nvsFlag=1;
         }     
       } else {
         if(!nvs_get_str(homeSpan.charNVS,nvsKey,NULL,&len)){
           char c[len];
           nvs_get_str(homeSpan.charNVS,nvsKey,c,&len);                    
           uvSet(value,(const char *)c);
-          nvsFlag=2;
         }
         else {
           nvs_set_str(homeSpan.charNVS,nvsKey,value.STRING);             // store string data
           nvs_commit(homeSpan.charNVS);                                    // commit to NVS  
-          nvsFlag=1;
         }
       }
     }

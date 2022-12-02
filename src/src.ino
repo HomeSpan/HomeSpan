@@ -65,8 +65,6 @@ void setup() {
 
   homeSpan.begin(Category::Lighting,"HomeSpan Lamp Server","homespan");
 
-
-
   new SpanAccessory();                                  // Begin by creating a new Accessory using SpanAccessory(), which takes no arguments
 
     new Service::AccessoryInformation();                    // HAP requires every Accessory to implement an AccessoryInformation Service, which has 6 required Characteristics
@@ -92,7 +90,7 @@ void setup() {
             
     new Service::LightBulb();
       new Characteristic::On(0,true);
-      (new Characteristic::Brightness(50,false))->setRange(10,100,5);
+      (new Characteristic::Brightness())->setRange(10,100,5);
       new Characteristic::Name("Light 2");
 
   new SpanAccessory();                                  // Begin by creating a new Accessory using SpanAccessory(), which takes no arguments
