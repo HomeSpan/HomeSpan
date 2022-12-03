@@ -25,5 +25,6 @@
  *  
  ********************************************************************************/
  
-#include "../src/extras/Pixel.h"
+#pragma once
 
+#include "../src/extras/Pixel.h"
