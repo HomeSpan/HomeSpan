@@ -651,7 +651,7 @@ class SpanCharacteristic{
     }
 
     if(val < uvGet<T>(minValue) || val > uvGet<T>(maxValue)){
-      Serial.printf("\n*** WARNING:  Attempt to update Characteristic::%s with setVal(%llg) is out of range [%llg,%llg].  This may cause device to become non-reponsive!\n\n",
+      Serial.printf("\n*** WARNING:  Attempt to update Characteristic::%s with setVal(%g) is out of range [%g,%g].  This may cause device to become non-reponsive!\n\n",
       hapName,(double)val,uvGet<double>(minValue),uvGet<double>(maxValue));
     }
    
