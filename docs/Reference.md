@@ -186,6 +186,13 @@ The following **optional** `homeSpan` methods enable additional features and pro
 * `void setTimeServerTimeout(uint32_t tSec)`
   * changes the default 10-second timeout period HomeSpan uses when `enableWebLog()` tries set the device clock from an internet time server to *tSec* seconds
  
+* `void processSerialCommand(const char *CLIcommand)`
+  * processes the *CLIcommand* just as if were typed into the Serial Monitor
+  * allows for programmatic access to all CLI commands, included any custom commands defined by the user
+  * will work whether or not device is connected to a computer
+  * example: `homeSpan.processSerialCommand("A");` starts the HomeSpan Setup Access Point
+  * example: `homeSpan.processSerialCommand("Q HUB3");` changes the HomeKit Setup ID for QR Codes to "HUB3"
+ 
 ---
 
 The following **optional** `homeSpan` methods provide additional run-time functionality for more advanced use cases: 
