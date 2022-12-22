@@ -1,7 +1,5 @@
-# Frequently Asked Questions
+# Common Problems and Potential Solutions
 
-*A list of answers to frequently-asked-questions, as well as discussions of various topics of interest.*
+#### HomeSpan works correctly when my ESP32 is plugged into a computer or powered through the USB port, but it fails to work when powered directly with 5V through the ESP 5V pin
 
-#### How do I set my WiFi SSID and Password (i.e. WiFi Credentials)?
-
-* Though commercial HomeKit devices can automatically retrieve WiFi Credentials from an iPhone, Apple does not provide this mechanism in the non-commerical version of HomeKit used by HomeSpan.  Instead, you need to add your WiFi Credentials to a HomeSpan device using one of four methods:
+* On some ESP32 boards, the USB-UART chip only receives power if power is applied thruogh the USB port, and it remains off when the ESP32 is powered by feeding 5V directly through the ESP32 5V pin.  Since the USB-UART chip is connected to the primary serial RX and TX lines of the ESP32 chip, the RX pin on the ESP32, which is configured as an input, will float rather than be driven by the USB-UART chip.  This is not a problem for most sketched, but HomeSpan is designed to continously poll for input from the Serial Monitor and had no way of knowing that the ESP32 is not connected to a computer.  If the RX pin float low, the ESP32 thinks there is data available and HomeSpan tries to read the data.  If the RX pin remains floating low, HomeSpan keeps trying to read data even though nothing is avaialble, which causes 
