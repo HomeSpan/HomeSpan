@@ -1,3 +1,5 @@
+::construction::  Under Construction - Solutions Discussed Below are PRELIMINARY and still being TESTED
+
 # Common Problems and Potential Solutions
 
 ### *HomeSpan works correctly when my ESP32 is plugged into a computer or separately powered through the USB port, but it fails to work when powered directly through the ESP32 5V pin without any USB connection*
