@@ -192,7 +192,7 @@ struct HapCharacteristics {
   HAPCHAR( VOCDensity, C8, PR+EV, FLOAT, false );   
   HAPCHAR( Volume, 119, PW+PR+EV, UINT8, false );
   HAPCHAR( VolumeControlType, E9, PR+EV, UINT8, true );
-  HAPCHAR( VolumeSelector, EA, PR+EV, UINT8, true );
+  HAPCHAR( VolumeSelector, EA, PW, UINT8, true );
   HAPCHAR( WaterLevel, B5, PR+EV, FLOAT, false );
 
 };

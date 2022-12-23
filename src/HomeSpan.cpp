@@ -911,7 +911,7 @@ void Span::processSerialCommand(const char *c){
         aidValues.insert((*acc)->aid);
 
         for(auto svc=(*acc)->Services.begin(); svc!=(*acc)->Services.end(); svc++){
-          Serial.printf("   \u279f Service %s:  IID=%d, %sUUIS=\"%s\"",(*svc)->hapName,(*svc)->iid,(*svc)->isCustom?"Custom-":"",(*svc)->type);
+          Serial.printf("   \u279f Service %s:  IID=%d, %sUUID=\"%s\"",(*svc)->hapName,(*svc)->iid,(*svc)->isCustom?"Custom-":"",(*svc)->type);
           Serial.printf("\n");
 
           if(!strcmp((*svc)->type,"3E")){
