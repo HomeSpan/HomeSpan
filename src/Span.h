@@ -336,11 +336,8 @@ namespace Service {
   }};
 
   struct TelevisionSpeaker : SpanService { TelevisionSpeaker() : SpanService{"113","TelevisionSpeaker"}{
-      REQ(Mute);
-      OPT(Active);
-      OPT(Volume);
-      OPT(VolumeControlType);
-      OPT(VolumeSelector);      
+      REQ(VolumeControlType);
+      REQ(VolumeSelector);      
   }};
 
   struct TemperatureSensor : SpanService { TemperatureSensor() : SpanService{"8A","TemperatureSensor"}{

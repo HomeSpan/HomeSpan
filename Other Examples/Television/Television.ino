@@ -190,7 +190,6 @@ void setup() {
     new Characteristic::TargetVisibilityState(0);     // ...and a "checked" checkbox is provided on the Settings Screen that can be used to toggle CurrentVisibilityState()
 
   SpanService *speaker = new Service::TelevisionSpeaker();
-    new Characteristic::Mute();
     new Characteristic::VolumeSelector();
     new Characteristic::VolumeControlType(3);
 
