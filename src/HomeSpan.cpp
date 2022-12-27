@@ -2247,6 +2247,16 @@ void SpanPoint::init(const char *password){
   statusQueue = xQueueCreate(1,sizeof(esp_now_send_status_t));    // create statusQueue even if not needed
   setChannelMask(channelMask);                                    // default channel mask at start-up uses channels 1-13  
 
+  uint8_t channel;
+  if(!isHub){                                                   // this is not a hub
+    nvs_flash_init();                                           // initialize NVS
+    nvs_open("POINT",NVS_READWRITE,&pointNVS);                  // open SpanPoint data namespace in NVS
+    if(!nvs_get_u8(pointNVS,"CHANNEL",&channel)){               // if channel found in NVS...
+      if(channelMask & (1<<channel))                            // ... and if channel is allowed by channel mask
+        esp_wifi_set_channel(channel, WIFI_SECOND_CHAN_NONE);   // set the WiFi channel
+    }
+  }
+  
   initialized=true;
 }
 
@@ -2287,8 +2297,11 @@ uint8_t SpanPoint::nextChannel(){
     channel=(channel<13)?channel+1:1;       // advance to next channel
   } while(!(channelMask & (1<<channel)));   // until we find next valid one
 
-  esp_wifi_set_channel(channel, WIFI_SECOND_CHAN_NONE);         // set the WiFi channel 
+  esp_wifi_set_channel(channel, WIFI_SECOND_CHAN_NONE);         // set the WiFi channel
   
+  nvs_set_u8(pointNVS,"CHANNEL",channel);
+  nvs_commit(pointNVS);  
+     
   return(channel);  
 }
 
@@ -2364,6 +2377,8 @@ boolean SpanPoint::isHub=false;
 vector<SpanPoint *> SpanPoint::SpanPoints;
 uint16_t SpanPoint::channelMask=0x3FFE;
 QueueHandle_t SpanPoint::statusQueue;
+nvs_handle SpanPoint::pointNVS;
+
 
 ///////////////////////////////
 //          MISC             //

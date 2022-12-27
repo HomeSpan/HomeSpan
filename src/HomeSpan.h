@@ -799,8 +799,9 @@ class SpanPoint {
   static boolean initialized;
   static boolean isHub;
   static vector<SpanPoint *> SpanPoints;
-  static uint16_t channelMask;                // channel mask
+  static uint16_t channelMask;                // channel mask (only used for remote devices)
   static QueueHandle_t statusQueue;           // queue for communication between SpanPoint::dataSend and SpanPoint::send
+  static nvs_handle pointNVS;                 // NVS storage for channel number (only used for remote devices)
   
   static void dataReceived(const uint8_t *mac, const uint8_t *incomingData, int len);
   static void init(const char *password="HomeSpan");
