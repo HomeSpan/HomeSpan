@@ -96,6 +96,7 @@ HomeSpan includes the following documentation:
 * [HomeSpan Message Logging](Logging.md) - how to generate log messages for display on the Arduino Serial Monitor as well as optionally posted to an integrated Web Log page
 * [HomeSpan Projects](https://github.com/topics/homespan) - real-world applications of the HomeSpan Library
 * [HomeSpan FAQ](FAQ.md) - answers to frequently-asked questions
+* [Solutions to Common Problems](Solutions.md) - resolutions to some common problems when using/compiling HomeSpan
 
 Note that all documentation is version-controlled and tied to each branch.  The *master* branch generally points to the latest release.  The *dev* branch, when available, will contain code under active development.
 
