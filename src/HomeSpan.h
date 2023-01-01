@@ -41,6 +41,7 @@
 #include <nvs.h>
 #include <ArduinoOTA.h>
 #include <esp_now.h>
+#include <mbedtls/base64.h>
 
 #include "extras/Blinker.h"
 #include "extras/Pixel.h"
@@ -476,6 +477,7 @@ class SpanCharacteristic{
         sprintf(c,"%g",u.FLOAT);
         return(String(c));        
       case FORMAT::STRING:
+      case FORMAT::DATA:
         sprintf(c,"\"%s\"",u.STRING);
         return(String(c));        
     } // switch
@@ -483,7 +485,7 @@ class SpanCharacteristic{
   }
 
   void uvSet(UVal &dest, UVal &src){
-    if(format==FORMAT::STRING)
+    if(format==FORMAT::STRING || format==FORMAT::DATA)
       uvSet(dest,(const char *)src.STRING);
     else
       dest=src;
@@ -518,6 +520,7 @@ class SpanCharacteristic{
         u.FLOAT=(double)val;
       break;
       case FORMAT::STRING:
+      case FORMAT::DATA:
       break;
     } // switch
   }
@@ -540,6 +543,7 @@ class SpanCharacteristic{
       case FORMAT::FLOAT:
         return((T) u.FLOAT);        
       case FORMAT::STRING:
+      case FORMAT::DATA:
       break;
     }
     return(0);       // included to prevent compiler warnings  
@@ -560,7 +564,7 @@ class SpanCharacteristic{
       sprintf(nvsKey,"%04X%08X%03X",t,aid,iid&0xFFF);
       size_t len;    
 
-      if(format != FORMAT::STRING){
+      if(format!=FORMAT::STRING && format!=FORMAT::DATA){
         if(!nvs_get_blob(homeSpan.charNVS,nvsKey,NULL,&len)){
           nvs_get_blob(homeSpan.charNVS,nvsKey,&value,&len);          
         }
@@ -583,7 +587,7 @@ class SpanCharacteristic{
   
     uvSet(newValue,value);
 
-    if(format != FORMAT::STRING) {
+    if(format!=FORMAT::STRING && format!=FORMAT::DATA) {
         uvSet(minValue,min);
         uvSet(maxValue,max);
         uvSet(stepValue,0);
@@ -642,6 +646,61 @@ class SpanCharacteristic{
     }
     
   } // setString()
+
+  size_t getData(uint8_t *data, size_t len){    
+    if(format!=FORMAT::DATA)
+      return(0);
+
+    size_t olen;
+    int ret=mbedtls_base64_decode(data,len,&olen,(uint8_t *)value.STRING,strlen(value.STRING));
+    
+    if(data==NULL)
+      return(olen);
+      
+    if(ret==MBEDTLS_ERR_BASE64_BUFFER_TOO_SMALL)
+      Serial.printf("\n*** WARNING:  Can't decode Characteristic::%s with getData().  Destination buffer is too small (%d out of %d bytes needed)\n\n",hapName,len,olen);
+    else if(ret==MBEDTLS_ERR_BASE64_INVALID_CHARACTER)
+      Serial.printf("\n*** WARNING:  Can't decode Characteristic::%s with getData().  Data is not in base-64 format\n\n",hapName);
+      
+    return(olen);
+  }
+
+  size_t getNewData(uint8_t *data, size_t len){    
+    if(format!=FORMAT::DATA)
+      return(0);
+
+    size_t olen;
+    int ret=mbedtls_base64_decode(data,len,&olen,(uint8_t *)newValue.STRING,strlen(newValue.STRING));
+    
+    if(data==NULL)
+      return(olen);
+      
+    if(ret==MBEDTLS_ERR_BASE64_BUFFER_TOO_SMALL)
+      Serial.printf("\n*** WARNING:  Can't decode Characteristic::%s with getData().  Destination buffer is too small (%d out of %d bytes needed)\n\n",hapName,len,olen);
+    else if(ret==MBEDTLS_ERR_BASE64_INVALID_CHARACTER)
+      Serial.printf("\n*** WARNING:  Can't decode Characteristic::%s with getData().  Data is not in base-64 format\n\n",hapName);
+      
+    return(olen);
+  }  
+
+  void setData(uint8_t *data, size_t len){
+
+    if((perms & EV) == 0){
+      Serial.printf("\n*** WARNING:  Attempt to update Characteristic::%s with setData() ignored.  No NOTIFICATION permission on this characteristic\n\n",hapName);
+      return;
+    }
+
+    if(len<1){
+      Serial.printf("\n*** WARNING:  Attempt to update Characteristic::%s with setData() ignored.  Size of data buffer must be greater than zero\n\n",hapName);
+      return;      
+    }
+
+    size_t olen;
+    mbedtls_base64_encode(NULL,0,&olen,data,len);                    // get length of string buffer needed (mbedtls includes the trailing null in this size)
+    TempBuffer<char> tBuf(olen);                                     // create temporary string buffer, with room for trailing null
+    mbedtls_base64_encode((uint8_t*)tBuf.buf,olen,&olen,data,len );  // encode data into string buf
+    setString(tBuf.buf);                                             // call setString to continue processing as if characteristic was a string
+  }  
 
   template <typename T> void setVal(T val, boolean notify=true){
 

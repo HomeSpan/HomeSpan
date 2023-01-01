@@ -48,7 +48,8 @@ enum FORMAT {     // HAP Table 6-5
   UINT64=4,
   INT=5,
   FLOAT=6,
-  STRING=7
+  STRING=7,
+  DATA=8
 };
 
 ///////////////////////////////
@@ -194,6 +195,8 @@ struct HapCharacteristics {
   HAPCHAR( VolumeControlType, E9, PR+EV, UINT8, true );
   HAPCHAR( VolumeSelector, EA, PW, UINT8, true );
   HAPCHAR( WaterLevel, B5, PR+EV, FLOAT, false );
+
+  HAPCHAR( EveTest, 12345678-079E-48FF-8F27-9C2605A29F52, PW+PR+EV, DATA, false );
 
 };
 

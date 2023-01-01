@@ -934,7 +934,7 @@ void Span::processSerialCommand(const char *c){
                 Serial.printf("%s%s",(foundPerms++)?"+":"",pNames[i]);
             }           
             
-            if((*chr)->format!=FORMAT::STRING && (*chr)->format!=FORMAT::BOOL){
+            if((*chr)->format!=FORMAT::STRING && (*chr)->format!=FORMAT::BOOL && (*chr)->format!=FORMAT::DATA){
               if((*chr)->validValues)
                 Serial.printf(", Valid Values=%s",(*chr)->validValues);
               else if((*chr)->uvGet<double>((*chr)->stepValue)>0)
@@ -1378,7 +1378,7 @@ int Span::updateCharacteristics(char *buf, SpanBuf *pObj){
           if(status==StatusCode::OK){                                                     // if status is okay
             pObj[j].characteristic->uvSet(pObj[j].characteristic->value,pObj[j].characteristic->newValue);               // update characteristic value with new value
             if(pObj[j].characteristic->nvsKey){                                                                                               // if storage key found
-              if(pObj[j].characteristic->format != FORMAT::STRING)
+              if(pObj[j].characteristic->format!=FORMAT::STRING && pObj[j].characteristic->format!=FORMAT::DATA)
                 nvs_set_blob(charNVS,pObj[j].characteristic->nvsKey,&(pObj[j].characteristic->value),sizeof(pObj[j].characteristic->value));  // store data
               else
                 nvs_set_str(charNVS,pObj[j].characteristic->nvsKey,pObj[j].characteristic->value.STRING);                                     // store data
@@ -1771,7 +1771,7 @@ SpanCharacteristic::~SpanCharacteristic(){
   free(validValues);
   free(nvsKey);
 
-  if(format==FORMAT::STRING){
+  if(format==FORMAT::STRING || format==FORMAT::DATA){
     free(value.STRING);
     free(newValue.STRING);
   }
@@ -1786,7 +1786,7 @@ int SpanCharacteristic::sprintfAttributes(char *cBuf, int flags){
 
   const char permCodes[][7]={"pr","pw","ev","aa","tw","hd","wr"};
 
-  const char formatCodes[][8]={"bool","uint8","uint16","uint32","uint64","int","float","string"};
+  const char formatCodes[][9]={"bool","uint8","uint16","uint32","uint64","int","float","string","data"};
 
   nBytes+=snprintf(cBuf,cBuf?64:0,"{\"iid\":%d",iid);
 

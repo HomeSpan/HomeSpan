@@ -526,6 +526,8 @@ namespace Characteristic {
   CREATE_CHAR(uint8_t,VolumeSelector,0,0,1);
   CREATE_CHAR(double,WaterLevel,0,0,100);
 
+  CREATE_CHAR(const char *,EveTest,"AAAA",0,1);
+
 }
 
 ////////////////////////////////////////////////////////
