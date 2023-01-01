@@ -526,8 +526,6 @@ namespace Characteristic {
   CREATE_CHAR(uint8_t,VolumeSelector,0,0,1);
   CREATE_CHAR(double,WaterLevel,0,0,100);
 
-  CREATE_CHAR(const char *,EveTest,"AAAA",0,1);
-
 }
 
 ////////////////////////////////////////////////////////
@@ -541,6 +539,10 @@ namespace Characteristic {
 #define CUSTOM_CHAR_STRING(NAME,UUID,PERMISISONS,DEFVAL) \
   HapChar _CUSTOM_##NAME {#UUID,#NAME,(PERMS)(PERMISISONS),STRING,true}; \
   namespace Characteristic { struct NAME : SpanCharacteristic { NAME(const char * val=DEFVAL, boolean nvsStore=false) : SpanCharacteristic {&_CUSTOM_##NAME,true} { init(val,nvsStore); } }; }
+
+#define CUSTOM_CHAR_DATA(NAME,UUID,PERMISISONS) \
+  HapChar _CUSTOM_##NAME {#UUID,#NAME,(PERMS)(PERMISISONS),DATA,true}; \
+  namespace Characteristic { struct NAME : SpanCharacteristic { NAME(const char * val="AA==", boolean nvsStore=false) : SpanCharacteristic {&_CUSTOM_##NAME,true} { init(val,nvsStore); } }; }
 
 #define CUSTOM_SERV(NAME,UUID) \
   namespace Service { struct NAME : SpanService { NAME() : SpanService{#UUID,#NAME,true}{} }; }

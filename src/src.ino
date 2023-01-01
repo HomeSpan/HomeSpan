@@ -4,7 +4,9 @@
 
 #include "HomeSpan.h"
 
-Characteristic::EveTest *eveTest;
+CUSTOM_CHAR_DATA(DataTest, 87654321-079E-48FF-8F27-9C2605A29F52, PW+PR+EV);
+Characteristic::DataTest *eveTest;
+
 
 void setup() {
  
@@ -21,16 +23,26 @@ void setup() {
     new Service::LightBulb();
       new Characteristic::On();
       new Characteristic::ConfiguredName();
-      eveTest=new Characteristic::EveTest();
+      eveTest=new Characteristic::DataTest();
 
   uint8_t x[]={0x01,0x26,0xFF,0x01,0x26,0xFF};
   eveTest->setData(x,6);
   uint8_t y[6]={0};
   int n=eveTest->getData(y,10);
   Serial.printf("%d:",n);
-  for(int i=0;i<n;i++)
+  for(int i=0;i<n;i++){
     Serial.printf(" %02X",y[i]);
+    y[i]++;
+  }
   Serial.printf("\n\n");
+  eveTest->setData(y,6);
+  n=eveTest->getData(x,10);
+  Serial.printf("%d:",n);
+  for(int i=0;i<n;i++){
+    Serial.printf(" %02X",x[i]);
+  }
+  Serial.printf("\n\n");
+  
   
 
 }

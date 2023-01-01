@@ -196,8 +196,6 @@ struct HapCharacteristics {
   HAPCHAR( VolumeSelector, EA, PW, UINT8, true );
   HAPCHAR( WaterLevel, B5, PR+EV, FLOAT, false );
 
-  HAPCHAR( EveTest, 12345678-079E-48FF-8F27-9C2605A29F52, PW+PR+EV, DATA, false );
-
 };
 
 extern HapCharacteristics hapChars;
