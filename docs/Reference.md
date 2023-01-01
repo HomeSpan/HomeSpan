@@ -307,7 +307,7 @@ This is a **base class** from which all HomeSpan Characteristics are derived, an
   * example with template excluded : `int tilt = Characteristic::CurrentTiltAngle->getVal();`
 
 * `type T getNewVal<T>()`
-  * a template method that returns the desired **new** value to which a HomeKit Controller has requested the Characteristic be updated.  Same casting rules as for `getVal<>()`.  Only applicable for numerical-based Characteristics
+  * a template method that returns the desired **new** value to which a HomeKit Controller has requested the Characteristic be updated.  Same casting rules as for `getVal<>()`
     
 * `void setVal(value [,boolean notify])`
   * sets the value of a numerical-based Characteristic to *value*, and, if *notify* is set to true, notifies all HomeKit Controllers of the change.  The *notify* flag is optional and will be set to true if not specified.  Setting the *notify* flag to false allows you to update a Characateristic without notifying any HomeKit Controllers, which is useful for Characteristics that HomeKit automatically adjusts (such as a countdown timer) but will be requested from the Accessory if the Home App closes and is then re-opened
@@ -343,6 +343,23 @@ This is a **base class** from which all HomeSpan Characteristics are derived, an
 
 * `void setString(const char *value)`
   * equivalent to `setVal(value)`, but used exclusively for string-characteristics (i.e. a null-terminated array of characters)
+ 
+ #### The following methods are supported for "data" Characteristics (note the Home App does not currently use this format for any HAP-R2 Characteristics):
+
+* `size_t getData(uint8_t *data, size_t len)`
+  * similar to `getVal()`, but exclusively used for data-based Characteristics
+  * fills byte array *data*, of specified size *len*, with all bytes "encoded" as the current value of the Characteristic
+  * returns the total number of bytes encoded in the Characteristic
+  * if *len* is less than the total number of bytes encoded, no data is extracted (i.e. *data* is unmodified) and a warning message is thrown indicating that the size of the *data* array is insufficient to extract all the bytes encoded in the Characteristic
+  * setting *data* to NULL returns the total number of bytes encoded without extracting any data.  This can be used to help create a *data* array of sufficient size in advance of extracting the data
+  
+* `size_t getNewData(uint8_t *data, size_t len)`
+  * similar to `getData()`, but fills byte array *data*, of specified size *len*, with bytes based on the desired **new** value to which a HomeKit Controller has requested the Characteristic be updated
+
+* `void setData(uint8_t *data, size_t len)`
+  * similar to `setVal()`, but exclusively used for data-based Characteristics
+  * updates the Characteristic by "filling" it with *len* bytes from bytes array *data*
+  * note: data-based Characteristics are encoded and transmitted as base-64 strings.  HomeSpan automatically peforms all encoding and decoding between this format and the specified byte arrays.  But when output to the Serial Monitor, the value of data-based Characteristics are displayed in their base-64 format (as opposed to being shown as a byte array), since base-64 is the representation that is actually transmitted to and from HomeKit
 
 #### The following methods are supported for all Characteristics:
 
