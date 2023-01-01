@@ -344,10 +344,10 @@ This is a **base class** from which all HomeSpan Characteristics are derived, an
 * `void setString(const char *value)`
   * equivalent to `setVal(value)`, but used exclusively for string-characteristics (i.e. a null-terminated array of characters)
  
- #### The following methods are supported for "data" Characteristics (note the Home App does not currently use this format for any HAP-R2 Characteristics):
+ #### The following methods are supported for DATA (i.e. byte-array) Characteristics:
 
 * `size_t getData(uint8_t *data, size_t len)`
-  * similar to `getVal()`, but exclusively used for data-based Characteristics
+  * similar to `getVal()`, but exclusively used for byte-array Characteristics
   * fills byte array *data*, of specified size *len*, with all bytes "encoded" as the current value of the Characteristic
   * returns the total number of bytes encoded in the Characteristic
   * if *len* is less than the total number of bytes encoded, no data is extracted (i.e. *data* is unmodified) and a warning message is thrown indicating that the size of the *data* array is insufficient to extract all the bytes encoded in the Characteristic
@@ -357,9 +357,9 @@ This is a **base class** from which all HomeSpan Characteristics are derived, an
   * similar to `getData()`, but fills byte array *data*, of specified size *len*, with bytes based on the desired **new** value to which a HomeKit Controller has requested the Characteristic be updated
 
 * `void setData(uint8_t *data, size_t len)`
-  * similar to `setVal()`, but exclusively used for data-based Characteristics
+  * similar to `setVal()`, but exclusively used for byte-array Characteristics
   * updates the Characteristic by "filling" it with *len* bytes from bytes array *data*
-  * note: data-based Characteristics are encoded and transmitted as base-64 strings.  HomeSpan automatically peforms all encoding and decoding between this format and the specified byte arrays.  But when output to the Serial Monitor, the value of data-based Characteristics are displayed in their base-64 format (as opposed to being shown as a byte array), since base-64 is the representation that is actually transmitted to and from HomeKit
+  * note: byte-array Characteristics are encoded and transmitted as base-64 strings.  HomeSpan automatically peforms all encoding and decoding between this format and the specified byte arrays.  But when output to the Serial Monitor, the value of byte-array Characteristics are displayed in their base-64 format (as opposed to being shown as a byte array), since base-64 is the representation that is actually transmitted to and from HomeKit
 
 #### The following methods are supported for all Characteristics:
 
@@ -490,7 +490,7 @@ To create more than one user-defined command, simply create multiple instances o
 ### *CUSTOM_CHAR_STRING(name,uuid,perms,defaultValue)*
 ### *CUSTOM_CHAR_DATA(name,uuid,perms)*
 
-Creates a custom Characteristic that can be added to any Service.  Custom Characteristics are generally ignored by the Home App but may be used by other third-party applications (such as *Eve for HomeKit*).  The first form should be used create numerical Characterstics (e.g., UINT8, BOOL...). The second form is used to String-based Characteristics. The third form is used for base-64 encoded DATA Characteristics.  Parameters are as follows (note that quotes should NOT be used in any of the macro parameters, except for *defaultValue* when applied to a STRING-based Characteristic):
+Creates a custom Characteristic that can be added to any Service.  Custom Characteristics are generally ignored by the Home App but may be used by other third-party applications (such as *Eve for HomeKit*).  The first form should be used create numerical Characterstics (e.g., UINT8, BOOL...). The second form is used to STRING-based Characteristics. The third form is used for DATA-based (i.e. byte-array) Characteristics.  Parameters are as follows (note that quotes should NOT be used in any of the macro parameters, except for *defaultValue* when applied to a STRING-based Characteristic):
 
 * *name* - the name of the custom Characteristic.  This will be added to the Characteristic namespace so that it is accessed the same as any HomeSpan Characteristic
 * *uuid* - the UUID of the Characteristic as defined by the manufacturer.  Must be *exactly* 36 characters in the form XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX, where *X* represent a valid hexidecimal digit.  Leading zeros are required if needed as described more fully in HAP-R2 Section 6.6.1
