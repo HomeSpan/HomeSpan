@@ -301,6 +301,7 @@ class Span{
   }
 
   void setStatusDevice(Blinkable *sDev){statusDevice=sDev;}
+  void refreshStatusDevice(){if(statusLED)statusLED->refresh();}
 
   void setApSSID(const char *ssid){network.apSSID=ssid;}                  // sets Access Point SSID
   void setApPassword(const char *pwd){network.apPassword=pwd;}            // sets Access Point Password

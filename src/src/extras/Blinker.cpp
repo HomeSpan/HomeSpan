@@ -78,6 +78,7 @@ void Blinker::start(int period, float dutyCycle, int nBlinks, int delayTime){
 
   pauseTime=millis();
   isPaused=false;
+  status=STATUS::BLINKING;
 }
 
 //////////////////////////////////////
@@ -93,6 +94,7 @@ void Blinker::stop(){
   }    
 
   isPaused=true;  
+  status=STATUS::OFF;
 }
 
 //////////////////////////////////////
@@ -107,6 +109,7 @@ void Blinker::on(){
   
   pauseTime=millis();
   isPaused=false;
+  status=STATUS::ON;
 }
 
 //////////////////////////////////////
@@ -118,6 +121,7 @@ void Blinker::off(){
 
   stop();
   led->off();
+  status=STATUS::OFF;
 }
 
 //////////////////////////////////////
