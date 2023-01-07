@@ -298,7 +298,9 @@ class Span{
   
   void setStatusPixel(uint8_t pin,float h=0,float s=100,float v=100){     // sets Status Device to an RGB Pixel on specified pin
     statusDevice=((new Pixel(pin))->setOnColor(Pixel::HSV(h,s,v)));
-  }              
+  }
+
+  void setStatusDevice(Blinkable *sDev){statusDevice=sDev;}
 
   void setApSSID(const char *ssid){network.apSSID=ssid;}                  // sets Access Point SSID
   void setApPassword(const char *pwd){network.apPassword=pwd;}            // sets Access Point Password
