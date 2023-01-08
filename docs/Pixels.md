@@ -27,7 +27,7 @@ The two main methods to set pixel colors are:
 
   * individually sets the color of each pixel in a multi-pixel device to the color values specified in the **Color** array *\*color*, of *nPixels* size, where the  first pixel of the device is set to the value in *color\[0\]*, the second pixel is set to the value in *color\[1\]* ... and the last pixel is set to the value in *color\[nPixels-1\]*.  Similar to above, it is not a problem if the value specified for *nPixels* does not match the total number of actual RGB (or RGBW) pixels in your device
 
-In both of the methods above, colors are stored in a 32-bit **Color** object configured to hold four 8-bit RGBW values.  **Color** objects can be instantiated as single variables (e.g. `Pixel::Color myColor;`) or as arrays (e.g. `Pixel::Color myColors\[8\];`).  Note that the **Color** object used by the **Pixel** class is scoped to the **Pixel** class itself, so you need to use the fully-qualified class name "Pixel::Color".  Once a **Color** object is created, the color it stores can be set using one of the two following methods:
+In both of the methods above, colors are stored in a 32-bit **Color** object configured to hold four 8-bit RGBW values.  **Color** objects can be instantiated as single variables (e.g. `Pixel::Color myColor;`) or as arrays (e.g. `Pixel::Color myColors[8];`).  Note that the **Color** object used by the **Pixel** class is scoped to the **Pixel** class itself, so you need to use the fully-qualified class name "Pixel::Color".  Once a **Color** object is created, the color it stores can be set using one of the two following methods:
   
   * `Color RGB(uint8_t r, uint8_t g, uint8_t b, uint8_t w=0)`
 
