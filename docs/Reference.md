@@ -276,7 +276,7 @@ The following methods are supported:
   * returns a vector of pointers to Services that were added using `addLink()`
   * useful for creating loops that iterate over all linked Services
   * note that the returned vector points to generic SpanServices, which should be re-cast as needed
-  * example: `for(auto myValve : faucet::getLinks()) { if((MyValve *)myValve)->active->getVal()) ... }` checks all Valves linked to to a Faucet
+  * example: `for(auto myValve : faucet->getLinks()) { if((MyValve *)myValve)->active->getVal()) ... }` checks all Valves linked to a Faucet
   
 * `virtual boolean update()`
   * HomeSpan calls this method upon receiving a request from a HomeKit Controller to update one or more Characteristics associated with the Service.  Users should override this method with code that implements that requested updates using one or more of the SpanCharacteristic methods below.  Method **must** return *true* if update succeeds, or *false* if not.
