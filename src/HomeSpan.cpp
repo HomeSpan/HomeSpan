@@ -2187,7 +2187,7 @@ boolean SpanOTA::auth;
 //        SpanPoint          //
 ///////////////////////////////
 
-SpanPoint::SpanPoint(const char *macAddress, int sendSize, int receiveSize, int queueDepth){
+SpanPoint::SpanPoint(const char *macAddress, int sendSize, int receiveSize, int queueDepth, boolean useAPaddress){
 
   if(sscanf(macAddress,"%hhx:%hhx:%hhx:%hhx:%hhx:%hhx",peerInfo.peer_addr,peerInfo.peer_addr+1,peerInfo.peer_addr+2,peerInfo.peer_addr+3,peerInfo.peer_addr+4,peerInfo.peer_addr+5)!=6){
     Serial.printf("\nFATAL ERROR!  Can't create new SpanPoint(\"%s\") - Invalid MAC Address ***\n",macAddress);
@@ -2204,17 +2204,20 @@ SpanPoint::SpanPoint(const char *macAddress, int sendSize, int receiveSize, int 
   this->sendSize=sendSize;
   this->receiveSize=receiveSize;
 
-  Serial.printf("SpanPoint: Created link to device with MAC Address %02X:%02X:%02X:%02X:%02X:%02X.  Send size=%d bytes, Receive size=%d bytes with queue depth=%d.\n",
-    peerInfo.peer_addr[0],peerInfo.peer_addr[1],peerInfo.peer_addr[2],peerInfo.peer_addr[3],peerInfo.peer_addr[4],peerInfo.peer_addr[5],sendSize,receiveSize,queueDepth);
-
   if(receiveSize>0)
     WiFi.mode(WIFI_AP_STA);
   else if(WiFi.getMode()==WIFI_OFF)
     WiFi.mode(WIFI_STA);
+
+  Serial.printf("SpanPoint: Created link from (%s) to (%02X:%02X:%02X:%02X:%02X:%02X).  Send size=%d bytes, Receive size=%d bytes with queue depth=%d.\n",
+    useAPaddress?WiFi.softAPmacAddress().c_str():WiFi.macAddress().c_str(),
+    peerInfo.peer_addr[0],peerInfo.peer_addr[1],peerInfo.peer_addr[2],peerInfo.peer_addr[3],peerInfo.peer_addr[4],peerInfo.peer_addr[5],sendSize,receiveSize,queueDepth);
   
   init();                             // initialize SpanPoint
   peerInfo.channel=0;                 // 0 = matches current WiFi channel
-  peerInfo.ifidx=WIFI_IF_STA;         // must specify interface
+  
+  peerInfo.ifidx=useAPaddress?WIFI_IF_AP:WIFI_IF_STA;         // specify interface as either STA or AP
+  
   peerInfo.encrypt=true;              // turn on encryption for this peer
   memcpy(peerInfo.lmk, lmk, 16);      // set local key
   esp_now_add_peer(&peerInfo);        // add peer to ESP-NOW

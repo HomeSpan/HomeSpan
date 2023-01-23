@@ -876,7 +876,7 @@ class SpanPoint {
   
   public:
 
-  SpanPoint(const char *macAddress, int sendSize, int receiveSize, int queueDepth=1);
+  SpanPoint(const char *macAddress, int sendSize, int receiveSize, int queueDepth=1, boolean useAPaddress=false);
   static void setPassword(const char *pwd){init(pwd);};      
   static void setChannelMask(uint16_t mask);  
   boolean get(void *dataBuf);
