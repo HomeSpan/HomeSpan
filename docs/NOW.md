@@ -8,14 +8,15 @@ SpanPoint creates all the internal data queues needed to manage message flow, co
 
 SpanPoint is part of the main HomeSpan library and is accessible by adding `#include "HomeSpan.h"` near the top of your sketch.  Detailed descriptions of the SpanPoint class and all of its methods are provided below.
 
-## *SpanPoint(const char \*macAddress, int sendSize, int receiveSize, int queueDepth=1)*
+## *SpanPoint(const char \*macAddress, int sendSize, int receiveSize [, int queueDepth=1 [, boolean useAPaddress=false]])*
 
 Creating an instance of this **class** enables the device to send messages to, and/or receive messages from, a "complementary" instance of *SpanPoint* on another ESP32 device.  Arguments, along with their defaults if left unspecified, are as follows:
 
   * *macAddress* - the MAC Address of the *other* device to which you want to send data to, and/or receive data from, in the standard 6-byte format "XX:XX:XX:XX:XX:XX", where each XX represents a single 2-digit hexidecimal byte from 00 to FF
   * *sendSize* - the size, in bytes, of any messages that will be sent from this device to the *other* device. Allowed range is 0 to 200, where a value of 0 is used to indicate to SpanPoint that you will **not** be using `send()` to transmit any messages from this device to the *other* device
   * *receiveSize* - the size, in bytes, of any messages that will be received by this device from the *other* device.  Allowed range is 0 to 200, where a value of 0 is used to indicate to SpanPoint that you will **not** be using `get()` to retreive any messages transmitted by the *other* device to this device
-  * *queueDepth* - the depth of the queue reserved to hold messages of *receiveSize* bytes that were received by this device from the *other* device, but not yet retreived using `get()`. Default=1 if left unspecified, which should be sufficient for most applications.  See `get()` below for further details. 
+  * *queueDepth* - the depth of the queue reserved to hold messages of *receiveSize* bytes that were received by this device from the *other* device, but not yet retreived using `get()`. Default=1 if left unspecified, which should be sufficient for most applications.  See `get()` below for further details.
+  * *useAPaddress* - SpanPoint normally communicates via the ESP32's WiFi Station (STA) Interface using the STA MAC Address.  Setting *useAPaddress* to *true* causes SpanPoint to instead communicate via the ESP32's WiFi Access Point (AP) Interface using the AP MAC Address.  This is needed when using an ESP-8266 as a Remote Device (see below).  Default=*false* if left unspecified.  Note for each instance of SpanPoint, HomeSpan will display in the Serial Monitor during start up the specific MAC Address each Remote Device should use to connect back to the Main HomeSpan Device 
 
 > SpanPoint objects created on two separate devices are considered "complementary" if the MAC Addresses specified in each SpanPoint object references each other's devices, and the *sendSize* and *receiveSize* of the SpanPoint object on one device matches, respectively, the *receiveSize* and *sendSize* of the SpanPoint object on the *other* device, with the exception that it is always okay to set either the *sendSize* or *receiveSize* to zero regardless of the value set on the *other* device.
 
