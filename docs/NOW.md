@@ -73,12 +73,12 @@ Also note that regardless of whether or not the queue if full, if the size of a 
 
 One of the primary reasons for using SpanPoint is to enable the deployement of battery-powered devices.  Since HomeKit requires an always-on WiFi connection, wall-power is a must.  But ESP-NOW does not require always-on connectivity to a central WiFi network, which makes it possible to power things like remote-sensor devices with just a battery.  Such battery-powered "Remote Devices" can take periodic local measurements and transmit them via SpanPoint messages to a wall-powered "Main Device" that is running a full HomeSpan sketch connected to HomeKit via a central WiFi network.
 
-Examples showing such a configuration can be found in the Arduino IDE under [*File → Examples → HomeSpan → Other Examples → RemoteSensors*](../Other%20Examples/RemoteSensors).  This folder contains three sketches:
+Examples showing such a configuration can be found in the Arduino IDE under [*File → Examples → HomeSpan → Other Examples → RemoteSensors*](../Other%20Examples/RemoteSensors).  This folder contains the following sketches:
 
 * *MainDevice.ino* - a full HomeSpan sketch that implements two Temperature Sensor Accessories, but instead of taking its own temperature measurements, it uses SpanPoint to read messages containing temperature updates from other Remote Devices
 * *RemoteDevice.ino* - a lightweight sketch that simulates taking periodic temperature measurements, which are then transmitted to the Main Device via SpanPoint
 * *RemoteTempSensor.ino* - a lightweight sketch that is similar to *RemoteDevice.ino*, except that instead of simulating a temperature sensor, it implements an actual Adafruit ADT7410 I2C-based temperature sensor.  This sketch also uses some power-management techniques to extend battery life, such as lowering the CPU frequency and entering into deep-sleep after each measurement is taken
-
+* *RemoteDevice8266.ino* - similar in function to *RemoteDevice.ino*, but implemented to run on an ESP8266 device using native ESP-NOW commands (since neither HomeSpan nor SpanPoint support the ESP8266).  Note that the "complementary" SpanPoint object on the ESP32 that receives data from the ESP8266 must be configured to use the ESP32's *AP MAC Address* (instead of the *STA MAC Address*) by setting *useAPaddress* to *true* in the SpanPoint constructor
 ---
 
 [↩️](README.md) Back to the Welcome page
