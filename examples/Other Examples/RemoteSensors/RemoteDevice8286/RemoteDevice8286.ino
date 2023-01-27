@@ -60,9 +60,9 @@ float temp=-10.0;         // this global variable represents our "simulated" tem
 // called "useAPaddress".  When creating SpanPoint links of the ESP32 using HomeSpan, set useAPaddress to TRUE if the Remote Device SpanPoint is connecting
 // to is an ESP8266.  Set "useAPaddress" to FALSE (or leave unspecified, since FALSE is the default) if the Remote Device is an ESP32.
 
-// When HomeSpan first starts, it will will output to the Serial Monitor details of each SpanPoint object you instantiated in your ESP32 sketch.  This 
-// output includes the MAC Address at which SpanPoint will be listening for incoming data from Remote Devices.  The MAC Address shown for the instance
-// of SpanPoint corresponding to this Remote Deivce (i.e. this sketch) is the MAC Address you should use below.
+// When HomeSpan first starts (and whenever you type 'i' into the CLI), the Serial Monitor will display the details of each SpanPoint object you instantiated
+// in your ESP32 sketch.  This  output includes the MAC Address at which SpanPoint will be listening for incoming data from Remote Devices.  The MAC Address
+// shown for the instance of SpanPoint corresponding to this Remote Deivce (i.e. this sketch) is the MAC Address you should use below.
  
 uint8_t main_mac[6]={0x84,0xCC,0xA8,0x11,0xB4,0x85};        // this is the **AP MAC Address** of the Main Device running HomeSpan on an ESP32 as reported in the HomeSpan Serial Monitor
 
