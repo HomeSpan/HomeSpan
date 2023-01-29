@@ -61,7 +61,7 @@ void setup() {
 
   // In the line below, replace the MAC Address with that of your MAIN HOMESPAN DEVICE
 
-  mainDevice=new SpanPoint("7C:DF:A1:61:E4:A8",sizeof(float),0);    // create a SpanPoint with send size=sizeof(float) and receive size=0     
+  mainDevice=new SpanPoint("84:CC:A8:11:B4:84",sizeof(float),0);    // create a SpanPoint with send size=sizeof(float) and receive size=0     
 
   homeSpan.setLogLevel(1);
 }

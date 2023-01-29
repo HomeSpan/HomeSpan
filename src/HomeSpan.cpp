@@ -1032,13 +1032,14 @@ void Span::processSerialCommand(const char *c){
         uint8_t channel;
         wifi_second_chan_t channel2; 
         esp_wifi_get_channel(&channel,&channel2);
-        Serial.printf("\nSpanPoint Channel=%d:\n\n",channel); 
+        Serial.printf("\nFound %d SpanPoint Links:\n\n",SpanPoint::SpanPoints.size());
         Serial.printf("%-17s  %18s  %7s  %7s  %7s\n","Local MAC Address","Remote MAC Address","Send","Receive","Depth"); 
         Serial.printf("%.17s  %.18s  %.7s  %.7s  %.7s\n",d,d,d,d,d);
         for(auto it=SpanPoint::SpanPoints.begin();it!=SpanPoint::SpanPoints.end();it++)
           Serial.printf("%-18s  %02X:%02X:%02X:%02X:%02X:%02X  %7d  %7d  %7d\n",(*it)->peerInfo.ifidx==WIFI_IF_AP?WiFi.softAPmacAddress().c_str():WiFi.macAddress().c_str(),
                  (*it)->peerInfo.peer_addr[0],(*it)->peerInfo.peer_addr[1],(*it)->peerInfo.peer_addr[2],(*it)->peerInfo.peer_addr[3],(*it)->peerInfo.peer_addr[4],(*it)->peerInfo.peer_addr[5],
                  (*it)->sendSize,(*it)->receiveSize,uxQueueSpacesAvailable((*it)->receiveQueue));           
+        Serial.printf("\nSpanPoint using WiFi Channel %d%s\n",channel,WiFi.status()!=WL_CONNECTED?" (subject to change once WiFi connection established)":"");
       }
       
       Serial.print("\n*** End Info ***\n\n");
@@ -2221,7 +2222,7 @@ SpanPoint::SpanPoint(const char *macAddress, int sendSize, int receiveSize, int 
   if(receiveSize>0)
     WiFi.mode(WIFI_AP_STA);
   else if(WiFi.getMode()==WIFI_OFF)
-    WiFi.mode(WIFI_STA);
+    WiFi.mode(WIFI_STA);    
 
   init();                             // initialize SpanPoint
   peerInfo.channel=0;                 // 0 = matches current WiFi channel
@@ -2248,6 +2249,11 @@ void SpanPoint::init(const char *password){
   if(WiFi.getMode()==WIFI_OFF)
     WiFi.mode(WIFI_STA);  
   
+  wifi_config_t conf;                       // make sure AP is hidden (if WIFI_AP_STA is used), since it is just a "dummy" AP to keep WiFi alive for ESP-NOW
+  esp_wifi_get_config(WIFI_IF_AP,&conf);
+  conf.ap.ssid_hidden=1;
+  esp_wifi_set_config(WIFI_IF_AP,&conf);
+    
   uint8_t hash[32];
   mbedtls_sha256_ret((const unsigned char *)password,strlen(password),hash,0);      // produce 256-bit bit hash from password
 
