@@ -80,6 +80,7 @@ typedef uint16_t touch_value_t;
 class PushButton{
   
   int status;
+  int toggleStatus;
   boolean doubleCheck;
   uint32_t singleAlarm;
   uint32_t doubleAlarm;
@@ -101,7 +102,9 @@ class PushButton{
   enum {
     SINGLE=0,
     DOUBLE=1,
-    LONG=2
+    LONG=2,
+    ON=3,
+    OFF=4
   };
 
   static boolean TRIGGER_ON_LOW(int pin){return(!digitalRead(pin));}
@@ -158,11 +161,13 @@ class PushButton{
 
   int type();
 
-//  Returns 0=Single Press, 1=Double Press, or 2=Long Press 
+//  Returns 0=Single Press, 1=Double Press, or 2=Long Press
 
   void wait();
 
 //  Waits for button to be released.  Use after Long Press if button release confirmation is desired
+
+  boolean toggled(uint16_t toggleTime);
 
   int getPin(){return(pin);}
 
