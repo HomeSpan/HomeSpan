@@ -100,11 +100,11 @@ class PushButton{
   public:
 
   enum {
-    SINGLE=0,
-    DOUBLE=1,
-    LONG=2,
-    ON=3,
-    OFF=4
+    SINGLE=0,       // applicable only for push button
+    DOUBLE=1,       // applicable only for push button
+    LONG=2,         // applicable only for push button
+    ON=3,           // applicable only for toggle switch
+    OFF=4           // applicable only for toggle switch
   };
 
   static boolean TRIGGER_ON_LOW(int pin){return(!digitalRead(pin));}
@@ -120,27 +120,27 @@ class PushButton{
 
   PushButton(int pin, triggerType_t triggerType=TRIGGER_ON_LOW);
 
-//  Creates pushbutton of specified type on specified pin
+//  Creates a push-button/toggle-switch of specified type on specified pin
 //
 //  pin:          pin number to which the button is connected
 //  triggerType:  a function of of the form 'boolean f(int)' that is passed
 //                the parameter *pin* and returns TRUE if the button associated
-//                with *pin* is pressed, or FALSE if not.  Can choose from 3 pre-specifed
-//                triggerType_t functions (TRIGGER_ON_LOW, TRIGGER_ON_HIGH, and TRIGGER_ON_TOUCH), or write your
-//                own custom handler
+//                with *pin* is pressed/on, or FALSE if not.  Can choose from 3 pre-specifed
+//                triggerType_t functions (TRIGGER_ON_LOW, TRIGGER_ON_HIGH, and TRIGGER_ON_TOUCH),
+//                or write your own custom handler
 
   void reset();
 
 //  Resets state of PushButton.  Should be called once before any loops that will
-//  repeatedly check the button for a trigger event.
+//  repeatedly check the button for a trigger() event.
 
   boolean triggered(uint16_t singleTime, uint16_t longTime, uint16_t doubleTime=0);
 
 //  Returns true if button has been triggered by an press event based on the following parameters:
 
-//  singleTime:   the minimum time required for the button to be pressed to trigger a Single Press
-//  doubleTime:   the maximum time allowed between button presses to qualify as a Double Press
-//  longTime:     the minimum time required for the button to be pressed and held to trigger a Long Press
+//    singleTime:   the minimum time required for the button to be pressed to trigger a Single Press
+//    doubleTime:   the maximum time allowed between button presses to qualify as a Double Press
+//    longTime:     the minimum time required for the button to be pressed and held to trigger a Long Press
 
 //  All times are in milliseconds (ms). Trigger Rules:
 
@@ -161,13 +161,22 @@ class PushButton{
 
   int type();
 
-//  Returns 0=Single Press, 1=Double Press, or 2=Long Press
+//  Returns the press type based on the whether triggered() or toggled() is called:
+
+//  * For a push button, returns the last trigger event: 0=Single Press, 1=Double Press, 2=Long Press
+//  * For a toggle switch, returns the current state of the switch: 4=ON, 5=OFF
 
   void wait();
 
 //  Waits for button to be released.  Use after Long Press if button release confirmation is desired
 
   boolean toggled(uint16_t toggleTime);
+
+//  Returns true if switch has been toggled, where
+
+//    toggleTime:   the minimum time (in milliseconds) a switch needs to be ON to register a toggle event
+
+//  Once toggled() returns true, if will subsequently return false until the switch is toggled again.  
 
   int getPin(){return(pin);}
 
@@ -179,15 +188,15 @@ class PushButton{
   
 //  Sets the measure time and sleep time touch cycles , and lower threshold that triggers a touch - used only when triggerType=PushButton::TRIGGER_ON_TOUCH
 
-//  measureTime:      duration of measurement time of all touch sensors in number of clock cycles
-//  sleepTime:        duration of sleep time (between measurements) of all touch sensors number of clock cycles
+//    measureTime:  duration of measurement time of all touch sensors in number of clock cycles
+//    sleepTime:    duration of sleep time (between measurements) of all touch sensors number of clock cycles
 
   static void setTouchThreshold(touch_value_t thresh){threshold=thresh;}
 
 //  Sets the threshold that triggers a touch - used only when triggerType=TRIGGER_ON_TOUCH
 
-//  thresh:  the read value of touch sensors, beyond which which sensors are considered touched (i.e. "pressed").
-//           This is a class-level value applied to all touch sensor buttons.
+//    thresh:  the read value of touch sensors, beyond which which sensors are considered touched (i.e. "pressed").
+//             This is a class-level value applied to all touch sensor buttons.
 
 #endif
 
