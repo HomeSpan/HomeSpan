@@ -794,24 +794,35 @@ struct [[deprecated("Please use Characteristic::setRange() method instead.")]] S
 
 ///////////////////////////////
 
-class SpanButton : PushButton {
+class SpanButton : public PushButton {
 
   friend class Span;
   friend class SpanService;
-  
+   
   uint16_t singleTime;           // minimum time (in millis) required to register a single press
   uint16_t longTime;             // minimum time (in millis) required to register a long press
   uint16_t doubleTime;           // maximum time (in millis) between single presses to register a double press instead
-  SpanService *service;          // Service to which this PushButton is attached
+  SpanService *service;          // Service to which this PushButton is attached  
   
-  void check();                  // check PushButton and call button() if pressed
+  void check();                  // check PushButton and call button() if "pressed"
 
+  protected:
+  
+  enum buttonType_t {
+    BUTTON,
+    TOGGLE
+  };
+
+  buttonType_t buttonType=BUTTON;      // type of SpanButton  
+  
   public:
 
   enum {
     SINGLE=0,
     DOUBLE=1,
-    LONG=2
+    LONG=2,
+    ON=3,
+    OFF=4
   };
 
   static constexpr triggerType_t TRIGGER_ON_LOW=PushButton::TRIGGER_ON_LOW;
@@ -826,6 +837,15 @@ class SpanButton : PushButton {
   SpanButton(int pin, uint16_t longTime=2000, uint16_t singleTime=5, uint16_t doubleTime=200, triggerType_t triggerType=TRIGGER_ON_LOW);
   SpanButton(int pin, triggerType_t triggerType, uint16_t longTime=2000, uint16_t singleTime=5, uint16_t doubleTime=200) : SpanButton(pin,longTime,singleTime,doubleTime,triggerType){};
 
+};
+
+///////////////////////////////
+
+class SpanToggle : SpanButton {
+
+  public:
+
+  SpanToggle(int pin, triggerType_t triggerType=TRIGGER_ON_LOW, uint16_t toggleTime=5) : SpanButton(pin,triggerType,toggleTime){buttonType=TOGGLE;};
 };
 
 ///////////////////////////////

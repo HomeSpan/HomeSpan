@@ -976,7 +976,12 @@ void Span::processSerialCommand(const char *c){
 
           for(auto button=PushButtons.begin(); button!=PushButtons.end(); button++){
             if((*button)->service==(*svc)){
-              Serial.printf("      \u25bc SpanButton: Pin=%d, Single=%ums, Double=%ums, Long=%ums, Type=",(*button)->pin,(*button)->singleTime,(*button)->doubleTime,(*button)->longTime);
+              
+              if((*button)->buttonType==SpanButton::BUTTON)
+                Serial.printf("      \u25bc SpanButton: Pin=%d, Single=%ums, Double=%ums, Long=%ums, Type=",(*button)->pin,(*button)->singleTime,(*button)->doubleTime,(*button)->longTime);
+              else
+                Serial.printf("      \u25bc SpanToggle: Pin=%d, Toggle=%ums, Type=",(*button)->pin,(*button)->longTime);
+                
               if((*button)->triggerType==PushButton::TRIGGER_ON_LOW)
                 Serial.printf("TRIGGER_ON_LOW\n");
               else if((*button)->triggerType==PushButton::TRIGGER_ON_HIGH)
