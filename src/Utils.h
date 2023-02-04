@@ -85,13 +85,13 @@ class PushButton{
   uint32_t singleAlarm;
   uint32_t doubleAlarm;
   uint32_t longAlarm;
-  int pressType;
   
   static touch_value_t threshold;
   static const int calibCount=20;
   
   protected:
 
+  int pressType;
   typedef boolean (*triggerType_t)(int pin);
 
   int pin;
@@ -103,8 +103,8 @@ class PushButton{
     SINGLE=0,       // applicable only for push button
     DOUBLE=1,       // applicable only for push button
     LONG=2,         // applicable only for push button
-    ON=3,           // applicable only for toggle switch
-    OFF=4           // applicable only for toggle switch
+    CLOSED=3,       // applicable only for toggle switch
+    OPEN=4          // applicable only for toggle switch
   };
 
   static boolean TRIGGER_ON_LOW(int pin){return(!digitalRead(pin));}

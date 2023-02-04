@@ -817,14 +817,6 @@ class SpanButton : public PushButton {
   
   public:
 
-  enum {
-    SINGLE=0,
-    DOUBLE=1,
-    LONG=2,
-    ON=3,
-    OFF=4
-  };
-
   static constexpr triggerType_t TRIGGER_ON_LOW=PushButton::TRIGGER_ON_LOW;
   static constexpr triggerType_t TRIGGER_ON_HIGH=PushButton::TRIGGER_ON_HIGH;
 
@@ -846,6 +838,7 @@ class SpanToggle : SpanButton {
   public:
 
   SpanToggle(int pin, triggerType_t triggerType=TRIGGER_ON_LOW, uint16_t toggleTime=5) : SpanButton(pin,triggerType,toggleTime){buttonType=TOGGLE;};
+  int position(){return(pressType);}
 };
 
 ///////////////////////////////

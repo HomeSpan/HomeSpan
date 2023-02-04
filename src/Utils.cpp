@@ -113,10 +113,10 @@ PushButton::PushButton(int pin, triggerType_t triggerType){
 #endif
 
   if(triggerType(pin)){
-    pressType=ON;
+    pressType=CLOSED;
     toggleStatus=2;
   } else {
-    pressType=OFF;
+    pressType=OPEN;
     toggleStatus=0;
   }
   
@@ -208,28 +208,28 @@ boolean PushButton::toggled(uint16_t toggleTime){
   switch(toggleStatus){
     
     case 0:      
-      if(triggerType(pin)){         // switch is toggled "on"
+      if(triggerType(pin)){         // switch is toggled CLOSED
         singleAlarm=cTime+toggleTime;
         toggleStatus=1;
         }
     break;  
   
     case 1:
-      if(!triggerType(pin)){       // switch is toggled "off" too soon
+      if(!triggerType(pin)){       // switch is toggled back OPEN too soon
         toggleStatus=0;
       }
       
-      else if(cTime>singleAlarm){  // switch has been in "on" state for sufficient time
+      else if(cTime>singleAlarm){  // switch has been in CLOSED state for sufficient time
         toggleStatus=2;
-        pressType=ON;
+        pressType=CLOSED;
         return(true);
       }
     break;
 
     case 2:
-      if(!triggerType(pin)){       // switch is toggled "off" after being in "on" state
+      if(!triggerType(pin)){       // switch is toggled OPEN after being in CLOSED state
         toggleStatus=0;
-        pressType=OFF;
+        pressType=OPEN;
         return(true);        
       }
     break;
