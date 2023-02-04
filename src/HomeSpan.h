@@ -833,7 +833,7 @@ class SpanButton : public PushButton {
 
 ///////////////////////////////
 
-class SpanToggle : SpanButton {
+class SpanToggle : public SpanButton {
 
   public:
 
