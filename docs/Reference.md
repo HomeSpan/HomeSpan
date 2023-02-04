@@ -452,6 +452,20 @@ In addition, you can also override the ESP32's touch sensor timing parameters us
 
 ### *SpanToggle(int pin, boolean (\*triggerType)(int)=PushButton::TRIGGER_ON_LOW, uint16_32 toggleTime=5)*
  
+Creating an instance of this **class** attaches a toggle-switch handler to the ESP32 *pin* specified.  This is a child class of *SpanButton* and thus derives all of the same functionality.  For example, you can set *triggerType* to PushButton::TRIGGER_ON_HIGH, create your own trigger function, etc. However, instead of HomeSpan calling `button(int pin, int pressType)` when a pushbutton is "pressed," HomeSpan calls the same `button()` method when the switch is "toggled" from one position to another.  In this case the parameter *pressType* that is passed into `button()` has a different set of enumerations:
+  * 3=switch is closed (`SpanToggle::CLOSED`)
+  * 4=switch is open (`SpanToggle::OPEN`)
+ 
+Note there are no *singleTime*, *longTime*, or *doubleTime* paramaters in the constructor since you can't single-press, double-press, or long-press a toggle switch.  Instead, the constructor supports the single parameter *toggleTime* (default=5ms if left unspecified) that sets the minimum time at which the switch needs to be moved to the closed position in order to trigger a call to the `button()` method.  This effectively "debounces" the toggle switch.
+ 
+SpanToggle also supports the following additional method:
+ 
+ * `int position()`
+   * returns the current position of the toggle switch (i.e. SpanToggle::CLOSED or SpanToggle::OPEN)
+   * is equivalent to the *pressType* parameter passed to the `button()` method, but can be called from anywhere in a sketch
+   * useful for reading the initial state of a contact switch upon start-up so that the initial value of Characteristic::ContactSensorState can be set accordingly
+   * example `sensorState=new Characteristic::ContactSensorState(toggleSwitch->position()==SpanToggle::OPEN);`
+ 
 ### *SpanUserCommand(char c, const char \*desc, void (\*f)(const char \*buf [,void \*obj]) [,void \*userObject])*
 
 Creating an instance of this **class** adds a user-defined command to the HomeSpan Command-Line Interface (CLI), where:
