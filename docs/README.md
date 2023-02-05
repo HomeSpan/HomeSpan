@@ -26,7 +26,7 @@ HomeSpan requires version 2.0.0 or later of the [Arduino-ESP32 Board Manager](ht
 * Dedicated classes that utilize the ESP32's 16-channel PWM peripheral for easy control of:
   * LED Brightness
   * Servo Motors
-* Integrated Push Button functionality supporting single, double, and long presses of:
+* Integrated Push Button and Toggle Switch functionality supporting single, double, and long presses of:
   * Physical pushbuttons that connect an ESP32 pin to either ground or VCC
   * Touch pads/sensors connected to an ESP32 pin (for ESP32 devices that support touch pads)
 * Integrated access to the ESP32's on-chip Remote Control peripheral for easy generation of IR and RF signals
@@ -48,29 +48,40 @@ HomeSpan requires version 2.0.0 or later of the [Arduino-ESP32 Board Manager](ht
   * Launch the WiFi Access Point
 * A standalone, detailed End-User Guide
 
-## ❗Latest Update - HomeSpan 1.7.0 (11/11/2022)
+## ❗Latest Update - HomeSpan 1.7.1 (2/4/2023)
 
-* **ESP-NOW is now fully integrated into HomeSpan!**
-  * New dedicated class, **SpanPoint**, that facilitates bi-directional device-to-device communication between multiple ESP32 devices
-  * Provides automatic calibration of WiFi channels to ensure compatibility with HomeSpan's normal WiFi connectivity
-  * Includes detailed [Example Sketches](../Other%20Examples/RemoteSensors) demonstrating how SpanPoint can be used to implement a battery-powered Remote Sensor
-  * See the dedicated [SpanPoint Tutorial Page](NOW.md) for full details
- 
-* **NeoPixels can now be used as a Status LED**
-  * Adds`homeSpan.setStatusPixel()` method
-  * Works well with ESP32 boards that have a built-in NeoPixel LED
-  * See the [API Reference](Reference.md) for details
+* **SpanPoint support for the ESP8266!**
+  * Use ESP-NOW on an ESP8266 to connect to HomeSpan running on an ESP32
+  * See the [SpanPoint Tutorial Page](NOW.md) for more info as well as a detailed ESP8266 example
+  
+* **SpanPoint WiFi channel scanning upgrade**
+  * SpanPoint now saves the last WiFi channel successfully used for transmission in non-volatile storage
+  * Avoids the need for SpanPoint to restart a full scan of all channels upon reboot
+  * Dramatically extends battery life when used in conjunction with deep-sleep functionality
+  
+* **New SpanToggle class**
+  * Similar to SpanButton, but designed for toggle switches
+  * Integrated de-bounce logic prevents false triggers
+  * Ideal for use with Contact Sensors
+  * See the [API Reference](API.md) for details
+  
+* **Added Television Speaker Service**
+  * Control the volume of a Television from Apple's Remote App
+  * See the [Television Services Page](TVServices.md) for details and examples
+  
+* **Added support for byte-array ("DATA") Characteristics**
+  * Useful for experimentation with other HomeKit applications, such as *Eve for HomeKit*
+  * Includes three new Characteristic methods: `setData()`, `getData()`, and `getNewData()`
+  * Includes new macro `CUSTOM_CHAR_DATA()` to easily create custom byte-array Characteristics
+  * See the [API Reference](API.md) for details
+  
+* **LedPin upgrade**
+  * New option to invert the PWM signal
+  * Useful for generating two, separate out-of-phase PWM signals (one inverted, one not) to drive certain two-pin devices in a push/pull manner, such as a piezo-electric buzzer
+  * See the [PWM Page](PWM.md) for details
 
-* **New functionality to track HomeSpan run-time status**
-  * Adds `homeSpan.setStatusCallback()` method providing users with a callback function whenever the internal state of HomeSpan changes, such as from *WiFi Needed* to *WiFi Connecting...*
-  * Tracks changes to the run-time state of HomeSpan that would normally trigger a change in the blinking pattern of the (optional) Status LED
-  * See the [API Reference](Reference.md) for details
-
-* **Important Bug Fixes**
-
-  * Fixed bug in controller-update logic associated with changes to the way Apple now handles HomeKit Hubs that was producing *ERROR: Device not yet paired!* messages
-
-  * Fixed bug in touch sensor logic that would cause compile failure when using Arduino-ESP32 versions 2.0.0-2.0.2
+* **Bug Fixes**
+  * Added logic to prevent the extraneous broadcasting of an Access Point SSID when SpanPoint is being used
 
 See [Releases](https://github.com/HomeSpan/HomeSpan/releases) for details on all changes and bug fixes included in this update.
 
