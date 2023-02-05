@@ -1,172 +1,108 @@
+/*********************************************************************************
+ *  MIT License
+ *  
+ *  Copyright (c) 2020-2023 Gregg E. Berman
+ *  
+ *  https://github.com/HomeSpan/HomeSpan
+ *  
+ *  Permission is hereby granted, free of charge, to any person obtaining a copy
+ *  of this software and associated documentation files (the "Software"), to deal
+ *  in the Software without restriction, including without limitation the rights
+ *  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *  copies of the Software, and to permit persons to whom the Software is
+ *  furnished to do so, subject to the following conditions:
+ *  
+ *  The above copyright notice and this permission notice shall be included in all
+ *  copies or substantial portions of the Software.
+ *  
+ *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ *  SOFTWARE.
+ *  
+ ********************************************************************************/
 
 // This is a placeholder .ino file that allows you to easily edit the contents of this library using the Arduino IDE,
 // as well as compile and test from this point.  This file is ignored when the library is included in other sketches.
 
 #include "HomeSpan.h"
-#include "FeatherPins.h"
-#include "extras/Pixel.h"
-#include "extras/RFControl.h"
-#include "extras/Blinker.h"
-#include "extras/PwmPin.h"
 
+struct RemoteTempSensor : Service::TemperatureSensor {
 
-#define STRING_t  const char *          // WORK-AROUND
+  SpanCharacteristic *temp;
+  SpanCharacteristic *fault;
+  SpanPoint *remoteTemp;
+  const char *name;
+  float temperature;
+  
+  RemoteTempSensor(const char *name, const char*macAddress, boolean is8266=false) : Service::TemperatureSensor(){
 
-CUSTOM_CHAR(LightMode, AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAAAAAA, PR, STRING, "ANY_VALUE", NULL, NULL, true);
-CUSTOM_CHAR_STRING(DarkMode, AAAAAAAA-BBBB-AAAA-AAAA-AAAAAAAAAAAA, PR, "MY_VALUE");
+    this->name=name;
+    
+    temp=new Characteristic::CurrentTemperature(-10.0);      // set initial temperature
+    temp->setRange(-50,100);                                 // expand temperature range to allow negative values
 
-SpanPoint *dev1;
-SpanPoint *dev2;
+    fault=new Characteristic::StatusFault(1);                // set initial state = fault
 
-struct message_t {
-  char a[32];
-  int b;
-  float c;
-  bool d;
-} message;
+    remoteTemp=new SpanPoint(macAddress,0,sizeof(float),1,is8266);    // create a SpanPoint with send size=0 and receive size=sizeof(float)
+
+  } // end constructor
+
+  void loop(){
+       
+    if(remoteTemp->get(&temperature)){      // if there is data from the remote sensor
+      temp->setVal(temperature);            // update temperature
+      fault->setVal(0);                     // clear fault
+       
+      LOG1("Sensor %s update: Temperature=%0.2f\n",name,temperature*9/5+32);
+      
+    } else if(remoteTemp->time()>60000 && !fault->getVal()){    // else if it has been a while since last update (60 seconds), and there is no current fault
+      fault->setVal(1);                                         // set fault state
+      LOG1("Sensor %s update: FAULT\n",name);
+    }
+    
+  } // loop
+  
+};
+
+//////////////////////////////////////
 
 void setup() {
- 
+  
   Serial.begin(115200);
- 
-// homeSpan.setLogLevel(2);
-  homeSpan.setControlPin(F25);
-  homeSpan.setStatusPin(F26);
-//  homeSpan.setStatusPin(new LED(F26));
-
-//  new Pixel(F27);
-  
-  homeSpan.setHostNameSuffix("-lamp1");
-  homeSpan.setPortNum(1201);
-//  homeSpan.setMaxConnections(6);
-//  homeSpan.setQRID("One1");
-  homeSpan.enableOTA();
-  homeSpan.setSketchVersion("OTA Test 8");
-  homeSpan.setWifiCallback(wifiEstablished);
-
-  homeSpan.setStatusCallback(statusUpdate);
-  
-  new SpanUserCommand('d',"- My Description",userCom1);
-  new SpanUserCommand('e',"- My second Description",userCom2);
-
-//  homeSpan.enableAutoStartAP();
-//  homeSpan.setApFunction(myWiFiAP);
-
-  homeSpan.enableWebLog(10,"pool.ntp.org","UTC","myLog");           // creates a web log on the URL /HomeSpan-[DEVICE-ID].local:[TCP-PORT]/myLog
-
-  SpanPoint::setChannelMask(1<<13); 
-
-  SpanPoint::setPassword("Hello Thert");
 
   homeSpan.setLogLevel(1);
+
+  homeSpan.begin(Category::Bridges,"Sensor Hub");
+
+  new SpanAccessory();  
+    new Service::AccessoryInformation();
+      new Characteristic::Identify(); 
+      
+  new SpanAccessory();
+    new Service::AccessoryInformation();
+      new Characteristic::Identify();
+      new Characteristic::Name("Indoor Temp");
+    new RemoteTempSensor("Device 1","AC:67:B2:77:42:20");        // pass MAC Address of Remote Device
+
+  new SpanAccessory();
+    new Service::AccessoryInformation();
+      new Characteristic::Identify(); 
+      new Characteristic::Name("Outdoor Temp");
+    new RemoteTempSensor("Device 2","BC:FF:4D:40:8E:71",true);        // pass MAC Address of Remote Device with 8266 flag set (will use AP MAC Address)
+
   
-  dev2=new SpanPoint("7C:DF:A1:61:E4:A8",sizeof(int),sizeof(message_t));
-  dev1=new SpanPoint("AC:67:B2:77:42:20",sizeof(int),0);
-
-  homeSpan.begin(Category::Lighting,"HomeSpan Lamp Server","homespan");
-
-
-
-  new SpanAccessory();                                  // Begin by creating a new Accessory using SpanAccessory(), which takes no arguments
-
-    new Service::AccessoryInformation();                    // HAP requires every Accessory to implement an AccessoryInformation Service, which has 6 required Characteristics
-      new Characteristic::Name("HomeSpan Test");                // Name of the Accessory, which shows up on the HomeKit "tiles", and should be unique across Accessories                                                            
-      new Characteristic::Manufacturer("HomeSpan");             // Manufacturer of the Accessory (arbitrary text string, and can be the same for every Accessory)
-      new Characteristic::SerialNumber("HSL-123");              // Serial Number of the Accessory (arbitrary text string, and can be the same for every Accessory)
-      new Characteristic::Model("HSL Test");                    // Model of the Accessory (arbitrary text string, and can be the same for every Accessory)
-      new Characteristic::FirmwareRevision(HOMESPAN_VERSION);   // Firmware of the Accessory (arbitrary text string, and can be the same for every Accessory)  
-      new Characteristic::Identify();                           // Create the required Identify
-  
-    new Service::HAPProtocolInformation();                  // Create the HAP Protcol Information Service  
-      new Characteristic::Version("1.1.0");                     // Set the Version Characteristic to "1.1.0" as required by HAP
-
-    new Service::LightBulb();
-      new Characteristic::On(0);
-      new Characteristic::LightMode("HELLO");
-      new Characteristic::DarkMode();
-      new Characteristic::Brightness(50);
-      new Characteristic::Name("Light 1");
-      new Characteristic::ColorTemperature();
-      new Characteristic::Active();
-
-            
-    new Service::LightBulb();
-      new Characteristic::On(0,true);
-      (new Characteristic::Brightness(50,false))->setRange(10,100,5);
-      new Characteristic::Name("Light 2");
-
-  new SpanAccessory();                                  // Begin by creating a new Accessory using SpanAccessory(), which takes no arguments
-
-    new Service::AccessoryInformation();                    // HAP requires every Accessory to implement an AccessoryInformation Service, which has 6 required Characteristics
-      new Characteristic::Name("HomeSpan Test");                // Name of the Accessory, which shows up on the HomeKit "tiles", and should be unique across Accessories                                                            
-      new Characteristic::Manufacturer("HomeSpan");             // Manufacturer of the Accessory (arbitrary text string, and can be the same for every Accessory)
-      new Characteristic::SerialNumber("HSL-123");              // Serial Number of the Accessory (arbitrary text string, and can be the same for every Accessory)
-      new Characteristic::Model("HSL Test");                    // Model of the Accessory (arbitrary text string, and can be the same for every Accessory)
-      new Characteristic::FirmwareRevision(HOMESPAN_VERSION);   // Firmware of the Accessory (arbitrary text string, and can be the same for every Accessory)  
-      new Characteristic::Identify();                           // Create the required Identify      
-
-    new Service::HAPProtocolInformation();                  // Create the HAP Protcol Information Service  
-      new Characteristic::Version("1.1.0");                     // Set the Version Characteristic to "1.1.0" as required by HAP
-
-    new Service::LightBulb();
-      new Characteristic::On(0,true);
-      (new Characteristic::Brightness(50,true))->setRange(10,100,5);
-      new Characteristic::Name("Light 3");
-      new Characteristic::TargetPosition();
-      new Characteristic::OzoneDensity();
-      (new Characteristic::OzoneDensity())->addPerms(PW|AA)->removePerms(EV|PR);
-
 } // end of setup()
-
-unsigned long alarmTime=0;
 
 //////////////////////////////////////
 
 void loop(){
-
+  
   homeSpan.poll();
-//  if(dev1->get(&message))
-//    Serial.printf("DEV1: '%s' %d %f %d\n",message.a,message.b,message.c,message.d);
-//  if(dev2->get(&message))
-//    Serial.printf("DEV2: '%s' %d %f %d\n",message.a,message.b,message.c,message.d);
-//
-//  if(millis()-alarmTime>5000){
-//    alarmTime=millis();
-//    boolean success = dev2->send(&alarmTime);
-//    Serial.printf("Success = %d\n",success);
-//  }
 
 } // end of loop()
 
 //////////////////////////////////////
-
-void myWiFiAP(){
-  Serial.print("Calling My WIFI AP\n\n");
-  homeSpan.setWifiCredentials("MY_NETWORK","MY_PASSWORD");
-}
-
-//////////////////////////////////////
-
-void wifiEstablished(){
-  Serial.print("IN CALLBACK FUNCTION\n\n");
-    Serial.printf("MODE = %d\n",WiFi.getMode());
-
-}
-
-//////////////////////////////////////
-
-void userCom1(const char *v){
-  Serial.printf("In User Command 1: '%s'\n\n",v);
-}
-
-//////////////////////////////////////
-
-void userCom2(const char *v){
-  Serial.printf("In User Command 2: '%s'\n\n",v);
-}
-
-//////////////////////////////////////
-
-void statusUpdate(HS_STATUS status){
-  Serial.printf("\n*** HOMESPAN STATUS CHANGE: %s\n",homeSpan.statusString(status));
-}

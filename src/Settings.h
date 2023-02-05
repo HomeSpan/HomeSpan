@@ -1,7 +1,7 @@
 /*********************************************************************************
  *  MIT License
  *  
- *  Copyright (c) 2020-2022 Gregg E. Berman
+ *  Copyright (c) 2020-2023 Gregg E. Berman
  *  
  *  https://github.com/HomeSpan/HomeSpan
  *  
@@ -36,7 +36,7 @@
 
 #define     HS_MAJOR  1
 #define     HS_MINOR  7
-#define     HS_PATCH  0
+#define     HS_PATCH  1
 
 #define     STRINGIFY(x) _STR(x)
 #define     _STR(x) #x

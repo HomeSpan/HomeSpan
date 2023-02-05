@@ -8,16 +8,19 @@ SpanPoint creates all the internal data queues needed to manage message flow, co
 
 SpanPoint is part of the main HomeSpan library and is accessible by adding `#include "HomeSpan.h"` near the top of your sketch.  Detailed descriptions of the SpanPoint class and all of its methods are provided below.
 
-## *SpanPoint(const char \*macAddress, int sendSize, int receiveSize, int queueDepth=1)*
+## *SpanPoint(const char \*macAddress, int sendSize, int receiveSize [, int queueDepth=1 [, boolean useAPaddress=false]])*
 
 Creating an instance of this **class** enables the device to send messages to, and/or receive messages from, a "complementary" instance of *SpanPoint* on another ESP32 device.  Arguments, along with their defaults if left unspecified, are as follows:
 
   * *macAddress* - the MAC Address of the *other* device to which you want to send data to, and/or receive data from, in the standard 6-byte format "XX:XX:XX:XX:XX:XX", where each XX represents a single 2-digit hexidecimal byte from 00 to FF
   * *sendSize* - the size, in bytes, of any messages that will be sent from this device to the *other* device. Allowed range is 0 to 200, where a value of 0 is used to indicate to SpanPoint that you will **not** be using `send()` to transmit any messages from this device to the *other* device
   * *receiveSize* - the size, in bytes, of any messages that will be received by this device from the *other* device.  Allowed range is 0 to 200, where a value of 0 is used to indicate to SpanPoint that you will **not** be using `get()` to retreive any messages transmitted by the *other* device to this device
-  * *queueDepth* - the depth of the queue reserved to hold messages of *receiveSize* bytes that were received by this device from the *other* device, but not yet retreived using `get()`. Default=1 if left unspecified, which should be sufficient for most applications.  See `get()` below for further details. 
+  * *queueDepth* - the depth of the queue reserved to hold messages of *receiveSize* bytes that were received by this device from the *other* device, but not yet retreived using `get()`. Default=1 if left unspecified, which should be sufficient for most applications.  See `get()` below for further details
+  * *useAPaddress* - SpanPoint normally communicates via the ESP32's WiFi Station (STA) Interface using the STA MAC Address.  Setting *useAPaddress* to *true* causes SpanPoint to instead communicate via the ESP32's WiFi Access Point (AP) Interface using the AP MAC Address.  This is needed when using an ESP-8266 as a Remote Device (see below).  Default=*false* if left unspecified
 
-> SpanPoint objects created on two separate devices are considered "complementary" if the MAC Addresses specified in each SpanPoint object references each other's devices, and the *sendSize* and *receiveSize* of the SpanPoint object on one device matches, respectively, the *receiveSize* and *sendSize* of the SpanPoint object on the *other* device, with the exception that it is always okay to set either the *sendSize* or *receiveSize* to zero regardless of the value set on the *other* device.
+A list of all SpanPoint objects instantiated in a sketch, their parameters as specified above, and the specific MAC Address each Remote Device should use to connect back to the Main HomeSpan Device, is displayed in the Serial Monitor by typing 'i' into the CLI
+
+> SpanPoint objects created on two separate devices are considered "complementary" if the MAC Addresses specified in each SpanPoint object references each other's devices, and the *sendSize* and *receiveSize* of the SpanPoint object on one device matches, respectively, the *receiveSize* and *sendSize* of the SpanPoint object on the *other* device, with the exception that it is always okay to set either the *sendSize* or *receiveSize* to zero regardless of the value set on the *other* device
 
 SpanPoint will throw a fatal error during instantiation and halt the sketch if:
   * the *macAddress* specified is ill-formed, or
@@ -72,12 +75,12 @@ Also note that regardless of whether or not the queue if full, if the size of a 
 
 One of the primary reasons for using SpanPoint is to enable the deployement of battery-powered devices.  Since HomeKit requires an always-on WiFi connection, wall-power is a must.  But ESP-NOW does not require always-on connectivity to a central WiFi network, which makes it possible to power things like remote-sensor devices with just a battery.  Such battery-powered "Remote Devices" can take periodic local measurements and transmit them via SpanPoint messages to a wall-powered "Main Device" that is running a full HomeSpan sketch connected to HomeKit via a central WiFi network.
 
-Examples showing such a configuration can be found in the Arduino IDE under [*File → Examples → HomeSpan → Other Examples → RemoteSensors*](../Other%20Examples/RemoteSensors).  This folder contains three sketches:
+Examples showing such a configuration can be found in the Arduino IDE under [*File → Examples → HomeSpan → Other Examples → RemoteSensors*](../Other%20Examples/RemoteSensors).  This folder contains the following sketches:
 
 * *MainDevice.ino* - a full HomeSpan sketch that implements two Temperature Sensor Accessories, but instead of taking its own temperature measurements, it uses SpanPoint to read messages containing temperature updates from other Remote Devices
 * *RemoteDevice.ino* - a lightweight sketch that simulates taking periodic temperature measurements, which are then transmitted to the Main Device via SpanPoint
 * *RemoteTempSensor.ino* - a lightweight sketch that is similar to *RemoteDevice.ino*, except that instead of simulating a temperature sensor, it implements an actual Adafruit ADT7410 I2C-based temperature sensor.  This sketch also uses some power-management techniques to extend battery life, such as lowering the CPU frequency and entering into deep-sleep after each measurement is taken
-
+* *RemoteDevice8266.ino* - similar in function to *RemoteDevice.ino*, but implemented to run on an ESP8266 device using native ESP-NOW commands (since neither HomeSpan nor SpanPoint support the ESP8266).  Note that the "complementary" SpanPoint object on the ESP32 that receives data from the ESP8266 must be configured to use the ESP32's *AP MAC Address* (instead of the *STA MAC Address*) by setting *useAPaddress* to *true* in the SpanPoint constructor
 ---
 
 [↩️](README.md) Back to the Welcome page

@@ -1,7 +1,7 @@
 /*********************************************************************************
  *  MIT License
  *  
- *  Copyright (c) 2020-2022 Gregg E. Berman
+ *  Copyright (c) 2020-2023 Gregg E. Berman
  *  
  *  https://github.com/HomeSpan/HomeSpan
  *  
@@ -78,6 +78,7 @@ void Blinker::start(int period, float dutyCycle, int nBlinks, int delayTime){
 
   pauseTime=millis();
   isPaused=false;
+  status=STATUS::BLINKING;
 }
 
 //////////////////////////////////////
@@ -93,6 +94,7 @@ void Blinker::stop(){
   }    
 
   isPaused=true;  
+  status=STATUS::OFF;
 }
 
 //////////////////////////////////////
@@ -107,6 +109,7 @@ void Blinker::on(){
   
   pauseTime=millis();
   isPaused=false;
+  status=STATUS::ON;
 }
 
 //////////////////////////////////////
@@ -118,6 +121,7 @@ void Blinker::off(){
 
   stop();
   led->off();
+  status=STATUS::OFF;
 }
 
 //////////////////////////////////////

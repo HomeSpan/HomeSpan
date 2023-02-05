@@ -1,7 +1,7 @@
 /*********************************************************************************
  *  MIT License
  *  
- *  Copyright (c) 2020-2022 Gregg E. Berman
+ *  Copyright (c) 2020-2023 Gregg E. Berman
  *  
  *  https://github.com/HomeSpan/HomeSpan
  *  
@@ -335,6 +335,11 @@ namespace Service {
       OPT(PowerModeSelection);      
   }};
 
+  struct TelevisionSpeaker : SpanService { TelevisionSpeaker() : SpanService{"113","TelevisionSpeaker"}{
+      REQ(VolumeControlType);
+      REQ(VolumeSelector);      
+  }};
+
   struct TemperatureSensor : SpanService { TemperatureSensor() : SpanService{"8A","TemperatureSensor"}{
     REQ(CurrentTemperature);
     OPT(Name);
@@ -534,6 +539,10 @@ namespace Characteristic {
 #define CUSTOM_CHAR_STRING(NAME,UUID,PERMISISONS,DEFVAL) \
   HapChar _CUSTOM_##NAME {#UUID,#NAME,(PERMS)(PERMISISONS),STRING,true}; \
   namespace Characteristic { struct NAME : SpanCharacteristic { NAME(const char * val=DEFVAL, boolean nvsStore=false) : SpanCharacteristic {&_CUSTOM_##NAME,true} { init(val,nvsStore); } }; }
+
+#define CUSTOM_CHAR_DATA(NAME,UUID,PERMISISONS) \
+  HapChar _CUSTOM_##NAME {#UUID,#NAME,(PERMS)(PERMISISONS),DATA,true}; \
+  namespace Characteristic { struct NAME : SpanCharacteristic { NAME(const char * val="AA==", boolean nvsStore=false) : SpanCharacteristic {&_CUSTOM_##NAME,true} { init(val,nvsStore); } }; }
 
 #define CUSTOM_SERV(NAME,UUID) \
   namespace Service { struct NAME : SpanService { NAME() : SpanService{#UUID,#NAME,true}{} }; }

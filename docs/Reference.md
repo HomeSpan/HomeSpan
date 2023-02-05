@@ -314,7 +314,7 @@ This is a **base class** from which all HomeSpan Characteristics are derived, an
   * example with template excluded : `int tilt = Characteristic::CurrentTiltAngle->getVal();`
 
 * `type T getNewVal<T>()`
-  * a template method that returns the desired **new** value to which a HomeKit Controller has requested the Characteristic be updated.  Same casting rules as for `getVal<>()`.  Only applicable for numerical-based Characteristics
+  * a template method that returns the desired **new** value to which a HomeKit Controller has requested the Characteristic be updated.  Same casting rules as for `getVal<>()`
     
 * `void setVal(value [,boolean notify])`
   * sets the value of a numerical-based Characteristic to *value*, and, if *notify* is set to true, notifies all HomeKit Controllers of the change.  The *notify* flag is optional and will be set to true if not specified.  Setting the *notify* flag to false allows you to update a Characateristic without notifying any HomeKit Controllers, which is useful for Characteristics that HomeKit automatically adjusts (such as a countdown timer) but will be requested from the Accessory if the Home App closes and is then re-opened
@@ -350,6 +350,23 @@ This is a **base class** from which all HomeSpan Characteristics are derived, an
 
 * `void setString(const char *value)`
   * equivalent to `setVal(value)`, but used exclusively for string-characteristics (i.e. a null-terminated array of characters)
+ 
+ #### The following methods are supported for DATA (i.e. byte-array) Characteristics:
+
+* `size_t getData(uint8_t *data, size_t len)`
+  * similar to `getVal()`, but exclusively used for byte-array Characteristics
+  * fills byte array *data*, of specified size *len*, with all bytes "encoded" as the current value of the Characteristic
+  * returns the total number of bytes encoded in the Characteristic
+  * if *len* is less than the total number of bytes encoded, no data is extracted (i.e. *data* is unmodified) and a warning message is thrown indicating that the size of the *data* array is insufficient to extract all the bytes encoded in the Characteristic
+  * setting *data* to NULL returns the total number of bytes encoded without extracting any data.  This can be used to help create a *data* array of sufficient size in advance of extracting the data
+  
+* `size_t getNewData(uint8_t *data, size_t len)`
+  * similar to `getData()`, but fills byte array *data*, of specified size *len*, with bytes based on the desired **new** value to which a HomeKit Controller has requested the Characteristic be updated
+
+* `void setData(uint8_t *data, size_t len)`
+  * similar to `setVal()`, but exclusively used for byte-array Characteristics
+  * updates the Characteristic by "filling" it with *len* bytes from bytes array *data*
+  * note: byte-array Characteristics are encoded and transmitted as base-64 strings.  HomeSpan automatically peforms all encoding and decoding between this format and the specified byte arrays.  But when output to the Serial Monitor, the value of byte-array Characteristics are displayed in their base-64 format (as opposed to being shown as a byte array), since base-64 is the representation that is actually transmitted to and from HomeKit
 
 #### The following methods are supported for all Characteristics:
 
@@ -440,6 +457,22 @@ In addition, you can also override the ESP32's touch sensor timing parameters us
   * changes the measurement time and sleep time clock cycles to *measureTime* and *sleepTime*, respectively.  This is simply a pass-though call to the Arduino-ESP32 library `touchSetCycles()` function
   * unless a specific threshold value has been set with `setTouchThreshold()`, `setTouchCycles()` must be called *before* instantiating the first SpanButton() of type `SpanButton::TRIGGER_ON_TOUCH` so that HomeSpan will calibrate the touch threshold based on the new timing parameters specified
 
+### *SpanToggle(int pin, boolean (\*triggerType)(int)=PushButton::TRIGGER_ON_LOW, uint16_32 toggleTime=5)*
+ 
+Creating an instance of this **class** attaches a toggle-switch handler to the ESP32 *pin* specified.  This is a child class of *SpanButton* and thus derives all of the same functionality.  For example, you can set *triggerType* to PushButton::TRIGGER_ON_HIGH, create your own trigger function, etc. However, instead of HomeSpan calling `button(int pin, int pressType)` when a pushbutton is "pressed," HomeSpan calls the same `button()` method when the switch is "toggled" from one position to another.  In this case the parameter *pressType* that is passed into `button()` has a different set of enumerations:
+  * 3=switch is closed (`SpanToggle::CLOSED`)
+  * 4=switch is open (`SpanToggle::OPEN`)
+ 
+Note there are no *singleTime*, *longTime*, or *doubleTime* paramaters in the constructor since you can't single-press, double-press, or long-press a toggle switch.  Instead, the constructor supports the single parameter *toggleTime* (default=5ms if left unspecified) that sets the minimum time at which the switch needs to be moved to the closed position in order to trigger a call to the `button()` method.  This effectively "debounces" the toggle switch.
+ 
+SpanToggle also supports the following additional method:
+ 
+ * `int position()`
+   * returns the current position of the toggle switch (i.e. SpanToggle::CLOSED or SpanToggle::OPEN)
+   * is equivalent to the *pressType* parameter passed to the `button()` method, but can be called from anywhere in a sketch
+   * useful for reading the initial state of a contact switch upon start-up so that the initial value of Characteristic::ContactSensorState can be set accordingly
+   * example `sensorState=new Characteristic::ContactSensorState(toggleSwitch->position()==SpanToggle::OPEN);`
+ 
 ### *SpanUserCommand(char c, const char \*desc, void (\*f)(const char \*buf [,void \*obj]) [,void \*userObject])*
 
 Creating an instance of this **class** adds a user-defined command to the HomeSpan Command-Line Interface (CLI), where:
@@ -478,17 +511,18 @@ To create more than one user-defined command, simply create multiple instances o
 
 ### *CUSTOM_CHAR(name,uuid,perms,format,defaultValue,minValue,maxValue,staticRange)*
 ### *CUSTOM_CHAR_STRING(name,uuid,perms,defaultValue)*
+### *CUSTOM_CHAR_DATA(name,uuid,perms)*
 
-Creates a custom Characteristic that can be added to any Service.  Custom Characteristics are generally ignored by the Home App but may be used by other third-party applications (such as *Eve for HomeKit*).  The first form should be used create numerical Characterstics (e.g., UINT8, BOOL...). The second form is used to String-based Characteristics. Parameters are as follows (note that quotes should NOT be used in any of the macro parameters, except for *defaultValue* when applied to a STRING-based Characteristic):
+Creates a custom Characteristic that can be added to any Service.  Custom Characteristics are generally ignored by the Home App but may be used by other third-party applications (such as *Eve for HomeKit*).  The first form should be used create numerical Characterstics (e.g., UINT8, BOOL...). The second form is used to STRING-based Characteristics. The third form is used for DATA-based (i.e. byte-array) Characteristics.  Parameters are as follows (note that quotes should NOT be used in any of the macro parameters, except for *defaultValue* when applied to a STRING-based Characteristic):
 
 * *name* - the name of the custom Characteristic.  This will be added to the Characteristic namespace so that it is accessed the same as any HomeSpan Characteristic
 * *uuid* - the UUID of the Characteristic as defined by the manufacturer.  Must be *exactly* 36 characters in the form XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX, where *X* represent a valid hexidecimal digit.  Leading zeros are required if needed as described more fully in HAP-R2 Section 6.6.1
 * *perms* - additive list of permissions as described in HAP-R2 Table 6-4.  Valid values are PR, PW, EV, AA, TW, HD, and WR
-* *format* - specifies the format of the Characteristic value, as described in HAP-R2 Table 6-5.  Valid value are BOOL, UINT8, UINT16, UNIT32, UINT64, INT, and FLOAT (note that the HomeSpan does not presently support the TLV8 or DATA formats).  Not applicable for Strings-based Characteristics
-* *defaultValue* - specifies the default value of the Characteristic if not defined during instantiation
-* *minValue* - specifies the default minimum range for a valid value, which may be able to be overriden by a call to `setRange()`.  Not applicable for Strings-based Characteristics
-* *minValue* - specifies the default minimum range for a valid value, which may be able to be overriden by a call to `setRange()`. Not applicable for Strings-based Characteristics
-* *staticRange* - set to *true* if *minValue* and *maxValue* are static and cannot be overridden with a call to `setRange()`.  Set to *false* if calls to `setRange()` are allowed.  Not applicable for Strings-based Characteristics
+* *format* - specifies the format of the Characteristic value, as described in HAP-R2 Table 6-5.  Valid value are BOOL, UINT8, UINT16, UNIT32, UINT64, INT, and FLOAT (note that the HomeSpan does not presently support the TLV8 formats).  Not applicable for the STRING or DATA Characteristic macros
+* *defaultValue* - specifies the default value of the Characteristic if not defined during instantiation.  Not applicable for the DATA Characteristic macro.
+* *minValue* - specifies the default minimum range for a valid value, which may be able to be overriden by a call to `setRange()`.  Not applicable for the STRING or DATA Characteristic macros
+* *minValue* - specifies the default minimum range for a valid value, which may be able to be overriden by a call to `setRange()`.  Not applicable for the STRING or DATA Characteristic macros
+* *staticRange* - set to *true* if *minValue* and *maxValue* are static and cannot be overridden with a call to `setRange()`.  Set to *false* if calls to `setRange()` are allowed.  Not applicable for the STRING or DATA Characteristic macros
 
 As an example, the first line below creates a custom Characteristic named "Voltage" with a UUID code that is recognized by the *Eve for HomeKit* app.  The parameters show that the Characteristic is read-only (PR) and notifications are enabled (EV).  The default range of allowed values is 0-240, with a default of 120.  The range *can* be overridden by subsequent calls to `setRange()`.  The second line below creates a custom read-only String-based Characteristic:
 
@@ -504,9 +538,11 @@ new Service::LightBulb();
   new Characteristic::UserTag();        // adds UserTag Characteristic and retains default initial value of "Tag 123"
 ```
 
-Note that Custom Characteristics must be created prior to calling `homeSpan.begin()`
+Note that Custom Characteristics must be created at the global level (i.e. not inside `setup()`) and prior to calling `homeSpan.begin()`
 
-> Advanced Tip: When presented with an unrecognized Custom Characteristic, *Eve for HomeKit* helpfully displays a *generic control* allowing you to interact with any Custom Characteristic you create in HomeSpan.  However, since Eve does not recognize the Characteristic, it will only render the generic control if the Characteristic includes a **description** field, which you can add to any Characteristic using the `setDescription()` method described above.  You may also want to use `setUnit()` and `setRange()` so that the Eve App displays a control with appropriate ranges for your Custom Characteristic.
+> Advanced Tip 1: When presented with an unrecognized Custom Characteristic, *Eve for HomeKit* helpfully displays a *generic control* allowing you to interact with any Custom Characteristic you create in HomeSpan.  However, since Eve does not recognize the Characteristic, it will only render the generic control if the Characteristic includes a **description** field, which you can add to any Characteristic using the `setDescription()` method described above.  You may also want to use `setUnit()` and `setRange()` so that the Eve App displays a control with appropriate ranges for your Custom Characteristic.
+ 
+> Advanced Tip 2: The DATA format is not currently used by any native Home App Characteristic, though it is part of the HAP-R2 specifications.  This format is included in HomeSpan because other applications, such as *Eve for HomeKit* do use these types of Characteristics to create functionality beyond that of the Home App, and are thus provided for advanced users to experiment.
 
 ### *CUSTOM_SERV(name,uuid)*
 

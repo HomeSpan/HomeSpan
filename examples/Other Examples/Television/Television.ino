@@ -189,6 +189,10 @@ void setup() {
     new Characteristic::CurrentVisibilityState(0);    // ...and included in the Selection List...
     new Characteristic::TargetVisibilityState(0);     // ...and a "checked" checkbox is provided on the Settings Screen that can be used to toggle CurrentVisibilityState()
 
+  SpanService *speaker = new Service::TelevisionSpeaker();
+    new Characteristic::VolumeSelector();
+    new Characteristic::VolumeControlType(3);
+
   (new HomeSpanTV("Test TV"))                         // Define a Television Service.  Must link in InputSources!
     ->addLink(hdmi1)
     ->addLink(hdmi2)
@@ -200,6 +204,7 @@ void setup() {
     ->addLink(hdmi8)
     ->addLink(hdmi9)
     ->addLink(hdmi10)
+    ->addLink(speaker)
     ;
       
 }

@@ -4,13 +4,14 @@ The ESP32 has up to 16 PWM channels that can be used to drive a variety of devic
 
 `#include "extras/PwmPin.h"`
 
-## *LedPin(uint8_t pin [,float level [,uint16_t frequency]])*
+## *LedPin(uint8_t pin [,float level [,uint16_t frequency [,boolean invert]]])*
 
 Creating an instance of this **class** configures the specified *pin* to output a PWM signal suitable for a controlling dimmable LED.  Arguments, along with their defaults if left unspecified, are as follows:
 
   * *pin* - the pin on which the PWM control signal will be output
   * *level* - sets the initial %duty-cycle of the PWM from from 0 (LED completely off) to 100 (LED fully on).  Default=0 (LED initially off)
   * *frequency* - sets the PWM frequency, in Hz, from 1-65535 (ESP32 only) or 5-65535 (ESP32-S2 and ESP32-C3).  Defaults to 5000 Hz if unspecified, or if set to 0
+  * *boolean* - if true, the output of the PWM signal will be inverted.  Default=false
  
  The following methods are supported:
 

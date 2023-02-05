@@ -1,7 +1,7 @@
 /*********************************************************************************
  *  MIT License
  *  
- *  Copyright (c) 2020-2022 Gregg E. Berman
+ *  Copyright (c) 2020-2023 Gregg E. Berman
  *  
  *  https://github.com/HomeSpan/HomeSpan
  *  
@@ -48,7 +48,8 @@ enum FORMAT {     // HAP Table 6-5
   UINT64=4,
   INT=5,
   FLOAT=6,
-  STRING=7
+  STRING=7,
+  DATA=8
 };
 
 ///////////////////////////////
@@ -192,7 +193,7 @@ struct HapCharacteristics {
   HAPCHAR( VOCDensity, C8, PR+EV, FLOAT, false );   
   HAPCHAR( Volume, 119, PW+PR+EV, UINT8, false );
   HAPCHAR( VolumeControlType, E9, PR+EV, UINT8, true );
-  HAPCHAR( VolumeSelector, EA, PR+EV, UINT8, true );
+  HAPCHAR( VolumeSelector, EA, PW, UINT8, true );
   HAPCHAR( WaterLevel, B5, PR+EV, FLOAT, false );
 
 };

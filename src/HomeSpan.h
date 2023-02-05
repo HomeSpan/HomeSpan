@@ -1,7 +1,7 @@
 /*********************************************************************************
  *  MIT License
  *  
- *  Copyright (c) 2020-2022 Gregg E. Berman
+ *  Copyright (c) 2020-2023 Gregg E. Berman
  *  
  *  https://github.com/HomeSpan/HomeSpan
  *  
@@ -32,6 +32,7 @@
 #endif
 
 #pragma GCC diagnostic ignored "-Wpmf-conversions"                // eliminates warning messages from use of pointers to member functions to detect whether update() and loop() are overridden by user
+#pragma GCC diagnostic ignored "-Wunused-result"                  // eliminates warning message regarded unused result from call to crypto_scalarmult_curve25519()
 
 #include <Arduino.h>
 #include <unordered_map>
@@ -40,6 +41,7 @@
 #include <nvs.h>
 #include <ArduinoOTA.h>
 #include <esp_now.h>
+#include <mbedtls/base64.h>
 
 #include "extras/Blinker.h"
 #include "extras/Pixel.h"
@@ -296,7 +298,10 @@ class Span{
   
   void setStatusPixel(uint8_t pin,float h=0,float s=100,float v=100){     // sets Status Device to an RGB Pixel on specified pin
     statusDevice=((new Pixel(pin))->setOnColor(Pixel::HSV(h,s,v)));
-  }              
+  }
+
+  void setStatusDevice(Blinkable *sDev){statusDevice=sDev;}
+  void refreshStatusDevice(){if(statusLED)statusLED->refresh();}
 
   void setApSSID(const char *ssid){network.apSSID=ssid;}                  // sets Access Point SSID
   void setApPassword(const char *pwd){network.apPassword=pwd;}            // sets Access Point Password
@@ -390,7 +395,7 @@ class SpanService{
 
   protected:
   
-  ~SpanService();                                         // destructor
+  virtual ~SpanService();                                 // destructor
   unordered_set<HapChar *> req;                           // unordered set of pointers to all required HAP Characteristic Types for this Service
   unordered_set<HapChar *> opt;                           // unordered set of pointers to all optional HAP Characteristic Types for this Service
 
@@ -472,9 +477,10 @@ class SpanCharacteristic{
         sprintf(c,"%llu",u.UINT64);
         return(String(c));        
       case FORMAT::FLOAT:
-        sprintf(c,"%llg",u.FLOAT);
+        sprintf(c,"%g",u.FLOAT);
         return(String(c));        
       case FORMAT::STRING:
+      case FORMAT::DATA:
         sprintf(c,"\"%s\"",u.STRING);
         return(String(c));        
     } // switch
@@ -482,7 +488,7 @@ class SpanCharacteristic{
   }
 
   void uvSet(UVal &dest, UVal &src){
-    if(format==FORMAT::STRING)
+    if(format==FORMAT::STRING || format==FORMAT::DATA)
       uvSet(dest,(const char *)src.STRING);
     else
       dest=src;
@@ -516,6 +522,9 @@ class SpanCharacteristic{
       case FORMAT::FLOAT:
         u.FLOAT=(double)val;
       break;
+      case FORMAT::STRING:
+      case FORMAT::DATA:
+      break;
     } // switch
   }
  
@@ -536,6 +545,9 @@ class SpanCharacteristic{
         return((T) u.UINT64);        
       case FORMAT::FLOAT:
         return((T) u.FLOAT);        
+      case FORMAT::STRING:
+      case FORMAT::DATA:
+      break;
     }
     return(0);       // included to prevent compiler warnings  
   }
@@ -546,44 +558,39 @@ class SpanCharacteristic{
     
   template <typename T, typename A=boolean, typename B=boolean> void init(T val, boolean nvsStore, A min=0, B max=1){
 
-    int nvsFlag=0;
     uvSet(value,val);
 
     if(nvsStore){
       nvsKey=(char *)malloc(16);
       uint16_t t;
-      sscanf(type,"%x",&t);
+      sscanf(type,"%hx",&t);
       sprintf(nvsKey,"%04X%08X%03X",t,aid,iid&0xFFF);
       size_t len;    
 
-      if(format != FORMAT::STRING){
+      if(format!=FORMAT::STRING && format!=FORMAT::DATA){
         if(!nvs_get_blob(homeSpan.charNVS,nvsKey,NULL,&len)){
           nvs_get_blob(homeSpan.charNVS,nvsKey,&value,&len);          
-          nvsFlag=2;
         }
         else {
           nvs_set_blob(homeSpan.charNVS,nvsKey,&value,sizeof(UVal));     // store data           
           nvs_commit(homeSpan.charNVS);                                    // commit to NVS  
-          nvsFlag=1;
         }     
       } else {
         if(!nvs_get_str(homeSpan.charNVS,nvsKey,NULL,&len)){
           char c[len];
           nvs_get_str(homeSpan.charNVS,nvsKey,c,&len);                    
           uvSet(value,(const char *)c);
-          nvsFlag=2;
         }
         else {
           nvs_set_str(homeSpan.charNVS,nvsKey,value.STRING);             // store string data
           nvs_commit(homeSpan.charNVS);                                    // commit to NVS  
-          nvsFlag=1;
         }
       }
     }
   
     uvSet(newValue,value);
 
-    if(format != FORMAT::STRING) {
+    if(format!=FORMAT::STRING && format!=FORMAT::DATA) {
         uvSet(minValue,min);
         uvSet(maxValue,max);
         uvSet(stepValue,0);
@@ -643,6 +650,61 @@ class SpanCharacteristic{
     
   } // setString()
 
+  size_t getData(uint8_t *data, size_t len){    
+    if(format!=FORMAT::DATA)
+      return(0);
+
+    size_t olen;
+    int ret=mbedtls_base64_decode(data,len,&olen,(uint8_t *)value.STRING,strlen(value.STRING));
+    
+    if(data==NULL)
+      return(olen);
+      
+    if(ret==MBEDTLS_ERR_BASE64_BUFFER_TOO_SMALL)
+      Serial.printf("\n*** WARNING:  Can't decode Characteristic::%s with getData().  Destination buffer is too small (%d out of %d bytes needed)\n\n",hapName,len,olen);
+    else if(ret==MBEDTLS_ERR_BASE64_INVALID_CHARACTER)
+      Serial.printf("\n*** WARNING:  Can't decode Characteristic::%s with getData().  Data is not in base-64 format\n\n",hapName);
+      
+    return(olen);
+  }
+
+  size_t getNewData(uint8_t *data, size_t len){    
+    if(format!=FORMAT::DATA)
+      return(0);
+
+    size_t olen;
+    int ret=mbedtls_base64_decode(data,len,&olen,(uint8_t *)newValue.STRING,strlen(newValue.STRING));
+    
+    if(data==NULL)
+      return(olen);
+      
+    if(ret==MBEDTLS_ERR_BASE64_BUFFER_TOO_SMALL)
+      Serial.printf("\n*** WARNING:  Can't decode Characteristic::%s with getData().  Destination buffer is too small (%d out of %d bytes needed)\n\n",hapName,len,olen);
+    else if(ret==MBEDTLS_ERR_BASE64_INVALID_CHARACTER)
+      Serial.printf("\n*** WARNING:  Can't decode Characteristic::%s with getData().  Data is not in base-64 format\n\n",hapName);
+      
+    return(olen);
+  }  
+
+  void setData(uint8_t *data, size_t len){
+
+    if((perms & EV) == 0){
+      Serial.printf("\n*** WARNING:  Attempt to update Characteristic::%s with setData() ignored.  No NOTIFICATION permission on this characteristic\n\n",hapName);
+      return;
+    }
+
+    if(len<1){
+      Serial.printf("\n*** WARNING:  Attempt to update Characteristic::%s with setData() ignored.  Size of data buffer must be greater than zero\n\n",hapName);
+      return;      
+    }
+
+    size_t olen;
+    mbedtls_base64_encode(NULL,0,&olen,data,len);                    // get length of string buffer needed (mbedtls includes the trailing null in this size)
+    TempBuffer<char> tBuf(olen);                                     // create temporary string buffer, with room for trailing null
+    mbedtls_base64_encode((uint8_t*)tBuf.buf,olen,&olen,data,len );  // encode data into string buf
+    setString(tBuf.buf);                                             // call setString to continue processing as if characteristic was a string
+  }  
+
   template <typename T> void setVal(T val, boolean notify=true){
 
     if((perms & EV) == 0){
@@ -651,7 +713,7 @@ class SpanCharacteristic{
     }
 
     if(val < uvGet<T>(minValue) || val > uvGet<T>(maxValue)){
-      Serial.printf("\n*** WARNING:  Attempt to update Characteristic::%s with setVal(%llg) is out of range [%llg,%llg].  This may cause device to become non-reponsive!\n\n",
+      Serial.printf("\n*** WARNING:  Attempt to update Characteristic::%s with setVal(%g) is out of range [%g,%g].  This may cause device to become non-reponsive!\n\n",
       hapName,(double)val,uvGet<double>(minValue),uvGet<double>(maxValue));
     }
    
@@ -732,25 +794,28 @@ struct [[deprecated("Please use Characteristic::setRange() method instead.")]] S
 
 ///////////////////////////////
 
-class SpanButton : PushButton {
+class SpanButton : public PushButton {
 
   friend class Span;
   friend class SpanService;
-  
+   
   uint16_t singleTime;           // minimum time (in millis) required to register a single press
   uint16_t longTime;             // minimum time (in millis) required to register a long press
   uint16_t doubleTime;           // maximum time (in millis) between single presses to register a double press instead
-  SpanService *service;          // Service to which this PushButton is attached
+  SpanService *service;          // Service to which this PushButton is attached  
   
-  void check();                  // check PushButton and call button() if pressed
+  void check();                  // check PushButton and call button() if "pressed"
 
-  public:
-
-  enum {
-    SINGLE=0,
-    DOUBLE=1,
-    LONG=2
+  protected:
+  
+  enum buttonType_t {
+    BUTTON,
+    TOGGLE
   };
+
+  buttonType_t buttonType=BUTTON;      // type of SpanButton  
+  
+  public:
 
   static constexpr triggerType_t TRIGGER_ON_LOW=PushButton::TRIGGER_ON_LOW;
   static constexpr triggerType_t TRIGGER_ON_HIGH=PushButton::TRIGGER_ON_HIGH;
@@ -764,6 +829,16 @@ class SpanButton : PushButton {
   SpanButton(int pin, uint16_t longTime=2000, uint16_t singleTime=5, uint16_t doubleTime=200, triggerType_t triggerType=TRIGGER_ON_LOW);
   SpanButton(int pin, triggerType_t triggerType, uint16_t longTime=2000, uint16_t singleTime=5, uint16_t doubleTime=200) : SpanButton(pin,longTime,singleTime,doubleTime,triggerType){};
 
+};
+
+///////////////////////////////
+
+class SpanToggle : public SpanButton {
+
+  public:
+
+  SpanToggle(int pin, triggerType_t triggerType=TRIGGER_ON_LOW, uint16_t toggleTime=5) : SpanButton(pin,triggerType,toggleTime){buttonType=TOGGLE;};
+  int position(){return(pressType);}
 };
 
 ///////////////////////////////
@@ -799,8 +874,9 @@ class SpanPoint {
   static boolean initialized;
   static boolean isHub;
   static vector<SpanPoint *> SpanPoints;
-  static uint16_t channelMask;                // channel mask
+  static uint16_t channelMask;                // channel mask (only used for remote devices)
   static QueueHandle_t statusQueue;           // queue for communication between SpanPoint::dataSend and SpanPoint::send
+  static nvs_handle pointNVS;                 // NVS storage for channel number (only used for remote devices)
   
   static void dataReceived(const uint8_t *mac, const uint8_t *incomingData, int len);
   static void init(const char *password="HomeSpan");
@@ -813,7 +889,7 @@ class SpanPoint {
   
   public:
 
-  SpanPoint(const char *macAddress, int sendSize, int receiveSize, int queueDepth=1);
+  SpanPoint(const char *macAddress, int sendSize, int receiveSize, int queueDepth=1, boolean useAPaddress=false);
   static void setPassword(const char *pwd){init(pwd);};      
   static void setChannelMask(uint16_t mask);  
   boolean get(void *dataBuf);

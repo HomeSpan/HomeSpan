@@ -1,7 +1,7 @@
 /*********************************************************************************
  *  MIT License
  *  
- *  Copyright (c) 2020-2022 Gregg E. Berman
+ *  Copyright (c) 2020-2023 Gregg E. Berman
  *  
  *  https://github.com/HomeSpan/HomeSpan
  *  
@@ -88,6 +88,7 @@ PushButton::PushButton(int pin, triggerType_t triggerType){
 
   this->pin=pin;
   this->triggerType=triggerType;
+  
   status=0;
   doubleCheck=false;
 
@@ -95,7 +96,7 @@ PushButton::PushButton(int pin, triggerType_t triggerType){
     pinMode(pin, INPUT_PULLUP);
   else if(triggerType==TRIGGER_ON_HIGH)
     pinMode(pin, INPUT_PULLDOWN);
-
+  
 #if SOC_TOUCH_SENSOR_NUM > 0
   else if (triggerType==TRIGGER_ON_TOUCH && threshold==0){    
     for(int i=0;i<calibCount;i++)
@@ -110,6 +111,14 @@ PushButton::PushButton(int pin, triggerType_t triggerType){
 #endif
   }
 #endif
+
+  if(triggerType(pin)){
+    pressType=CLOSED;
+    toggleStatus=2;
+  } else {
+    pressType=OPEN;
+    toggleStatus=0;
+  }
   
 }
 
@@ -186,6 +195,46 @@ boolean PushButton::triggered(uint16_t singleTime, uint16_t longTime, uint16_t d
      break;
 
   }
+
+  return(false);
+}
+
+//////////////////////////////////////
+
+boolean PushButton::toggled(uint16_t toggleTime){
+
+  unsigned long cTime=millis();
+
+  switch(toggleStatus){
+    
+    case 0:      
+      if(triggerType(pin)){         // switch is toggled CLOSED
+        singleAlarm=cTime+toggleTime;
+        toggleStatus=1;
+        }
+    break;  
+  
+    case 1:
+      if(!triggerType(pin)){       // switch is toggled back OPEN too soon
+        toggleStatus=0;
+      }
+      
+      else if(cTime>singleAlarm){  // switch has been in CLOSED state for sufficient time
+        toggleStatus=2;
+        pressType=CLOSED;
+        return(true);
+      }
+    break;
+
+    case 2:
+      if(!triggerType(pin)){       // switch is toggled OPEN after being in CLOSED state
+        toggleStatus=0;
+        pressType=OPEN;
+        return(true);        
+      }
+    break;
+    
+  } // switch
 
   return(false);
 }

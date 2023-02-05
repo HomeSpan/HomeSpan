@@ -1,7 +1,7 @@
 /*********************************************************************************
  *  MIT License
  *  
- *  Copyright (c) 2020-2022 Gregg E. Berman
+ *  Copyright (c) 2020-2023 Gregg E. Berman
  *  
  *  https://github.com/HomeSpan/HomeSpan
  *  
@@ -40,7 +40,7 @@
 #include "HomeSpan.h"
 #include "HAP.h"
 
-const __attribute__((section(".rodata_custom_desc"))) SpanPartition spanPartition = {HOMESPAN_MAGIC_COOKIE};
+const __attribute__((section(".rodata_custom_desc"))) SpanPartition spanPartition = {HOMESPAN_MAGIC_COOKIE,0};
 
 using namespace Utils;
 
@@ -903,21 +903,21 @@ void Span::processSerialCommand(const char *c){
         boolean foundInfo=false;
 
         if(acc==Accessories.begin() && (*acc)->aid!=1)
-          Serial.printf("   *** ERROR!  AID of first Accessory must always be 1 ***\n",nErrors++);
+          Serial.printf("   *** ERROR #%d!  AID of first Accessory must always be 1 ***\n",++nErrors);
 
         if(aidValues.find((*acc)->aid)!=aidValues.end())
-          Serial.printf("   *** ERROR!  AID already in use for another Accessory ***\n",nErrors++);
+          Serial.printf("   *** ERROR #%d!  AID already in use for another Accessory ***\n",++nErrors);
         
         aidValues.insert((*acc)->aid);
 
         for(auto svc=(*acc)->Services.begin(); svc!=(*acc)->Services.end(); svc++){
-          Serial.printf("   \u279f Service %s:  IID=%d, %sUUIS=\"%s\"",(*svc)->hapName,(*svc)->iid,(*svc)->isCustom?"Custom-":"",(*svc)->type);
+          Serial.printf("   \u279f Service %s:  IID=%d, %sUUID=\"%s\"",(*svc)->hapName,(*svc)->iid,(*svc)->isCustom?"Custom-":"",(*svc)->type);
           Serial.printf("\n");
 
           if(!strcmp((*svc)->type,"3E")){
             foundInfo=true;
             if((*svc)->iid!=1)
-              Serial.printf("     *** ERROR!  The Accessory Information Service must be defined before any other Services in an Accessory ***\n",nErrors++);
+              Serial.printf("     *** ERROR #%d!  The Accessory Information Service must be defined before any other Services in an Accessory ***\n",++nErrors);
           }
           else if((*acc)->aid==1)            // this is an Accessory with aid=1, but it has more than just AccessoryInfo.  So...
             isBridge=false;                  // ...this is not a bridge device          
@@ -934,7 +934,7 @@ void Span::processSerialCommand(const char *c){
                 Serial.printf("%s%s",(foundPerms++)?"+":"",pNames[i]);
             }           
             
-            if((*chr)->format!=FORMAT::STRING && (*chr)->format!=FORMAT::BOOL){
+            if((*chr)->format!=FORMAT::STRING && (*chr)->format!=FORMAT::BOOL && (*chr)->format!=FORMAT::DATA){
               if((*chr)->validValues)
                 Serial.printf(", Valid Values=%s",(*chr)->validValues);
               else if((*chr)->uvGet<double>((*chr)->stepValue)>0)
@@ -948,22 +948,22 @@ void Span::processSerialCommand(const char *c){
             Serial.printf("\n");        
             
             if(!(*chr)->isCustom && !(*svc)->isCustom  && (*svc)->req.find((*chr)->hapChar)==(*svc)->req.end() && (*svc)->opt.find((*chr)->hapChar)==(*svc)->opt.end())
-              Serial.printf("          *** WARNING!  Service does not support this Characteristic ***\n",nWarnings++);
+              Serial.printf("          *** WARNING #%d!  Service does not support this Characteristic ***\n",++nWarnings);
             else
             if(invalidUUID((*chr)->type,(*chr)->isCustom))
-              Serial.printf("          *** ERROR!  Format of UUID is invalid ***\n",nErrors++);
+              Serial.printf("          *** ERROR #%d!  Format of UUID is invalid ***\n",++nErrors);
             else       
             if(hapChar.find((*chr)->hapChar)!=hapChar.end())
-              Serial.printf("          *** ERROR!  Characteristic already defined for this Service ***\n",nErrors++);
+              Serial.printf("          *** ERROR #%d!  Characteristic already defined for this Service ***\n",++nErrors);
 
             if((*chr)->setRangeError)
-              Serial.printf("          *** WARNING!  Attempt to set Custom Range for this Characteristic ignored ***\n",nWarnings++);
+              Serial.printf("          *** WARNING #%d!  Attempt to set Custom Range for this Characteristic ignored ***\n",++nWarnings);
 
             if((*chr)->setValidValuesError)
-              Serial.printf("          *** WARNING!  Attempt to set Custom Valid Values for this Characteristic ignored ***\n",nWarnings++);
+              Serial.printf("          *** WARNING #%d!  Attempt to set Custom Valid Values for this Characteristic ignored ***\n",++nWarnings);
 
             if((*chr)->format!=STRING && ((*chr)->uvGet<double>((*chr)->value) < (*chr)->uvGet<double>((*chr)->minValue) || (*chr)->uvGet<double>((*chr)->value) > (*chr)->uvGet<double>((*chr)->maxValue)))
-              Serial.printf("          *** WARNING!  Value of %llg is out of range [%llg,%llg] ***\n",(*chr)->uvGet<double>((*chr)->value),(*chr)->uvGet<double>((*chr)->minValue),(*chr)->uvGet<double>((*chr)->maxValue),nWarnings++);
+              Serial.printf("          *** WARNING #%d!  Value of %g is out of range [%g,%g] ***\n",++nWarnings,(*chr)->uvGet<double>((*chr)->value),(*chr)->uvGet<double>((*chr)->minValue),(*chr)->uvGet<double>((*chr)->maxValue));
 
             hapChar.insert((*chr)->hapChar);
           
@@ -971,12 +971,17 @@ void Span::processSerialCommand(const char *c){
 
           for(auto req=(*svc)->req.begin(); req!=(*svc)->req.end(); req++){
             if(hapChar.find(*req)==hapChar.end())
-              Serial.printf("          *** WARNING!  Required '%s' Characteristic for this Service not found ***\n",(*req)->hapName,nWarnings++);
+              Serial.printf("          *** WARNING #%d!  Required '%s' Characteristic for this Service not found ***\n",++nWarnings,(*req)->hapName);
           }
 
           for(auto button=PushButtons.begin(); button!=PushButtons.end(); button++){
             if((*button)->service==(*svc)){
-              Serial.printf("      \u25bc SpanButton: Pin=%d, Single=%ums, Double=%ums, Long=%ums, Type=",(*button)->pin,(*button)->singleTime,(*button)->doubleTime,(*button)->longTime);
+              
+              if((*button)->buttonType==SpanButton::BUTTON)
+                Serial.printf("      \u25bc SpanButton: Pin=%d, Single=%ums, Double=%ums, Long=%ums, Type=",(*button)->pin,(*button)->singleTime,(*button)->doubleTime,(*button)->longTime);
+              else
+                Serial.printf("      \u25bc SpanToggle: Pin=%d, Toggle=%ums, Type=",(*button)->pin,(*button)->longTime);
+                
               if((*button)->triggerType==PushButton::TRIGGER_ON_LOW)
                 Serial.printf("TRIGGER_ON_LOW\n");
               else if((*button)->triggerType==PushButton::TRIGGER_ON_HIGH)
@@ -990,14 +995,14 @@ void Span::processSerialCommand(const char *c){
                 Serial.printf("USER-DEFINED\n");
               
               if((void(*)(int,int))((*svc)->*(&SpanService::button))==(void(*)(int,int))(&SpanService::button))
-                Serial.printf("          *** WARNING!  No button() method defined in this Service ***\n",nWarnings++);
+                Serial.printf("          *** WARNING #%d!  No button() method defined in this Service ***\n",++nWarnings);
             }
           }
           
         } // Services
         
         if(!foundInfo)
-          Serial.printf("   *** ERROR!  Required 'AccessoryInformation' Service not found ***\n",nErrors++);
+          Serial.printf("   *** ERROR #%d!  Required 'AccessoryInformation' Service not found ***\n",++nErrors);
           
       } // Accessories
       
@@ -1027,6 +1032,21 @@ void Span::processSerialCommand(const char *c){
           Serial.print("\n");
         }
       }
+
+      if(SpanPoint::SpanPoints.size()>0){
+        uint8_t channel;
+        wifi_second_chan_t channel2; 
+        esp_wifi_get_channel(&channel,&channel2);
+        Serial.printf("\nFound %d SpanPoint Links:\n\n",SpanPoint::SpanPoints.size());
+        Serial.printf("%-17s  %18s  %7s  %7s  %7s\n","Local MAC Address","Remote MAC Address","Send","Receive","Depth"); 
+        Serial.printf("%.17s  %.18s  %.7s  %.7s  %.7s\n",d,d,d,d,d);
+        for(auto it=SpanPoint::SpanPoints.begin();it!=SpanPoint::SpanPoints.end();it++)
+          Serial.printf("%-18s  %02X:%02X:%02X:%02X:%02X:%02X  %7d  %7d  %7d\n",(*it)->peerInfo.ifidx==WIFI_IF_AP?WiFi.softAPmacAddress().c_str():WiFi.macAddress().c_str(),
+                 (*it)->peerInfo.peer_addr[0],(*it)->peerInfo.peer_addr[1],(*it)->peerInfo.peer_addr[2],(*it)->peerInfo.peer_addr[3],(*it)->peerInfo.peer_addr[4],(*it)->peerInfo.peer_addr[5],
+                 (*it)->sendSize,(*it)->receiveSize,uxQueueSpacesAvailable((*it)->receiveQueue));           
+        Serial.printf("\nSpanPoint using WiFi Channel %d%s\n",channel,WiFi.status()!=WL_CONNECTED?" (subject to change once WiFi connection established)":"");
+      }
+      
       Serial.print("\n*** End Info ***\n\n");
     }
     break;
@@ -1077,9 +1097,13 @@ void Span::processSerialCommand(const char *c){
           uCom->second->userFunction1(c+1);
         else
           uCom->second->userFunction2(c+1,uCom->second->userArg);
-        break;
+      } else {
+        Serial.print("*** Undefined user command: '");
+        Serial.print(c);
+        Serial.print("'.  Type '?' for list of commands.\n");        
       }
     }
+    break;
 
     default:
       Serial.print("*** Unknown command: '");
@@ -1374,7 +1398,7 @@ int Span::updateCharacteristics(char *buf, SpanBuf *pObj){
           if(status==StatusCode::OK){                                                     // if status is okay
             pObj[j].characteristic->uvSet(pObj[j].characteristic->value,pObj[j].characteristic->newValue);               // update characteristic value with new value
             if(pObj[j].characteristic->nvsKey){                                                                                               // if storage key found
-              if(pObj[j].characteristic->format != FORMAT::STRING)
+              if(pObj[j].characteristic->format!=FORMAT::STRING && pObj[j].characteristic->format!=FORMAT::DATA)
                 nvs_set_blob(charNVS,pObj[j].characteristic->nvsKey,&(pObj[j].characteristic->value),sizeof(pObj[j].characteristic->value));  // store data
               else
                 nvs_set_str(charNVS,pObj[j].characteristic->nvsKey,pObj[j].characteristic->value.STRING);                                     // store data
@@ -1730,12 +1754,6 @@ int SpanService::sprintfAttributes(char *cBuf, int flags){
 
 SpanCharacteristic::SpanCharacteristic(HapChar *hapChar, boolean isCustom){
 
-  if(homeSpan.Accessories.empty() || homeSpan.Accessories.back()->Services.empty()){
-    Serial.printf("\nFATAL ERROR!  Can't create new Characteristic '%s' without a defined Service ***\n",hapName);
-    Serial.printf("\n=== PROGRAM HALTED ===");
-    while(1);
-  }
-
   type=hapChar->type;
   perms=hapChar->perms;
   hapName=hapChar->hapName;
@@ -1743,6 +1761,12 @@ SpanCharacteristic::SpanCharacteristic(HapChar *hapChar, boolean isCustom){
   staticRange=hapChar->staticRange;
   this->isCustom=isCustom;
   this->hapChar=hapChar;
+
+  if(homeSpan.Accessories.empty() || homeSpan.Accessories.back()->Services.empty()){
+    Serial.printf("\nFATAL ERROR!  Can't create new Characteristic '%s' without a defined Service ***\n",hapName);
+    Serial.printf("\n=== PROGRAM HALTED ===");
+    while(1);
+  }
 
   homeSpan.Accessories.back()->Services.back()->Characteristics.push_back(this);  
   iid=++(homeSpan.Accessories.back()->iidCount);
@@ -1767,7 +1791,7 @@ SpanCharacteristic::~SpanCharacteristic(){
   free(validValues);
   free(nvsKey);
 
-  if(format==FORMAT::STRING){
+  if(format==FORMAT::STRING || format==FORMAT::DATA){
     free(value.STRING);
     free(newValue.STRING);
   }
@@ -1782,7 +1806,7 @@ int SpanCharacteristic::sprintfAttributes(char *cBuf, int flags){
 
   const char permCodes[][7]={"pr","pw","ev","aa","tw","hd","wr"};
 
-  const char formatCodes[][8]={"bool","uint8","uint16","uint32","uint64","int","float","string"};
+  const char formatCodes[][9]={"bool","uint8","uint16","uint32","uint64","int","float","string","data"};
 
   nBytes+=snprintf(cBuf,cBuf?64:0,"{\"iid\":%d",iid);
 
@@ -2008,7 +2032,11 @@ SpanRange::SpanRange(int min, int max, int step){
 SpanButton::SpanButton(int pin, uint16_t longTime, uint16_t singleTime, uint16_t doubleTime, triggerType_t triggerType) : PushButton(pin, triggerType){
 
   if(homeSpan.Accessories.empty() || homeSpan.Accessories.back()->Services.empty()){
-    Serial.printf("\nFATAL ERROR!  Can't create new SpanButton(%d,%u,%u,%u) without a defined Service ***\n",pin,longTime,singleTime,doubleTime);
+    if(buttonType==BUTTON)
+      Serial.printf("\nFATAL ERROR!  Can't create new SpanButton(%d,%u,%u,%u) without a defined Service ***\n",pin,longTime,singleTime,doubleTime);
+    else
+      Serial.printf("\nFATAL ERROR!  Can't create new SpanToggle(%d,%u) without a defined Service ***\n",pin,longTime);
+      
     Serial.printf("\n=== PROGRAM HALTED ===");
     while(1);
   }
@@ -2025,8 +2053,9 @@ SpanButton::SpanButton(int pin, uint16_t longTime, uint16_t singleTime, uint16_t
 
 void SpanButton::check(){
 
-  if(triggered(singleTime,longTime,doubleTime))   // if the underlying PushButton is triggered
-    service->button(pin,type());                  // call the Service's button() routine with pin and type as parameters    
+  if( (buttonType==BUTTON && triggered(singleTime,longTime,doubleTime)) ||
+      (buttonType==TOGGLE && toggled(longTime)) )                             // if the underlying PushButton is triggered/toggled
+    service->button(pin,type());                                              // call the Service's button() routine with pin and type as parameters    
 }
 
 ///////////////////////////////
@@ -2183,7 +2212,7 @@ boolean SpanOTA::auth;
 //        SpanPoint          //
 ///////////////////////////////
 
-SpanPoint::SpanPoint(const char *macAddress, int sendSize, int receiveSize, int queueDepth){
+SpanPoint::SpanPoint(const char *macAddress, int sendSize, int receiveSize, int queueDepth, boolean useAPaddress){
 
   if(sscanf(macAddress,"%hhx:%hhx:%hhx:%hhx:%hhx:%hhx",peerInfo.peer_addr,peerInfo.peer_addr+1,peerInfo.peer_addr+2,peerInfo.peer_addr+3,peerInfo.peer_addr+4,peerInfo.peer_addr+5)!=6){
     Serial.printf("\nFATAL ERROR!  Can't create new SpanPoint(\"%s\") - Invalid MAC Address ***\n",macAddress);
@@ -2199,18 +2228,17 @@ SpanPoint::SpanPoint(const char *macAddress, int sendSize, int receiveSize, int 
 
   this->sendSize=sendSize;
   this->receiveSize=receiveSize;
-
-  Serial.printf("SpanPoint: Created link to device with MAC Address %02X:%02X:%02X:%02X:%02X:%02X.  Send size=%d bytes, Receive size=%d bytes with queue depth=%d.\n",
-    peerInfo.peer_addr[0],peerInfo.peer_addr[1],peerInfo.peer_addr[2],peerInfo.peer_addr[3],peerInfo.peer_addr[4],peerInfo.peer_addr[5],sendSize,receiveSize,queueDepth);
-
+  
   if(receiveSize>0)
     WiFi.mode(WIFI_AP_STA);
   else if(WiFi.getMode()==WIFI_OFF)
-    WiFi.mode(WIFI_STA);
-  
+    WiFi.mode(WIFI_STA);    
+
   init();                             // initialize SpanPoint
   peerInfo.channel=0;                 // 0 = matches current WiFi channel
-  peerInfo.ifidx=WIFI_IF_STA;         // must specify interface
+  
+  peerInfo.ifidx=useAPaddress?WIFI_IF_AP:WIFI_IF_STA;         // specify interface as either STA or AP
+  
   peerInfo.encrypt=true;              // turn on encryption for this peer
   memcpy(peerInfo.lmk, lmk, 16);      // set local key
   esp_now_add_peer(&peerInfo);        // add peer to ESP-NOW
@@ -2231,6 +2259,11 @@ void SpanPoint::init(const char *password){
   if(WiFi.getMode()==WIFI_OFF)
     WiFi.mode(WIFI_STA);  
   
+  wifi_config_t conf;                       // make sure AP is hidden (if WIFI_AP_STA is used), since it is just a "dummy" AP to keep WiFi alive for ESP-NOW
+  esp_wifi_get_config(WIFI_IF_AP,&conf);
+  conf.ap.ssid_hidden=1;
+  esp_wifi_set_config(WIFI_IF_AP,&conf);
+    
   uint8_t hash[32];
   mbedtls_sha256_ret((const unsigned char *)password,strlen(password),hash,0);      // produce 256-bit bit hash from password
 
@@ -2243,6 +2276,16 @@ void SpanPoint::init(const char *password){
   statusQueue = xQueueCreate(1,sizeof(esp_now_send_status_t));    // create statusQueue even if not needed
   setChannelMask(channelMask);                                    // default channel mask at start-up uses channels 1-13  
 
+  uint8_t channel;
+  if(!isHub){                                                   // this is not a hub
+    nvs_flash_init();                                           // initialize NVS
+    nvs_open("POINT",NVS_READWRITE,&pointNVS);                  // open SpanPoint data namespace in NVS
+    if(!nvs_get_u8(pointNVS,"CHANNEL",&channel)){               // if channel found in NVS...
+      if(channelMask & (1<<channel))                            // ... and if channel is allowed by channel mask
+        esp_wifi_set_channel(channel, WIFI_SECOND_CHAN_NONE);   // set the WiFi channel
+    }
+  }
+  
   initialized=true;
 }
 
@@ -2283,8 +2326,11 @@ uint8_t SpanPoint::nextChannel(){
     channel=(channel<13)?channel+1:1;       // advance to next channel
   } while(!(channelMask & (1<<channel)));   // until we find next valid one
 
-  esp_wifi_set_channel(channel, WIFI_SECOND_CHAN_NONE);         // set the WiFi channel 
+  esp_wifi_set_channel(channel, WIFI_SECOND_CHAN_NONE);         // set the WiFi channel
   
+  nvs_set_u8(pointNVS,"CHANNEL",channel);
+  nvs_commit(pointNVS);  
+     
   return(channel);  
 }
 
@@ -2360,6 +2406,8 @@ boolean SpanPoint::isHub=false;
 vector<SpanPoint *> SpanPoint::SpanPoints;
 uint16_t SpanPoint::channelMask=0x3FFE;
 QueueHandle_t SpanPoint::statusQueue;
+nvs_handle SpanPoint::pointNVS;
+
 
 ///////////////////////////////
 //          MISC             //

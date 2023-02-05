@@ -1,7 +1,7 @@
 /*********************************************************************************
  *  MIT License
  *  
- *  Copyright (c) 2020-2022 Gregg E. Berman
+ *  Copyright (c) 2020-2023 Gregg E. Berman
  *  
  *  https://github.com/HomeSpan/HomeSpan
  *  
@@ -47,6 +47,8 @@ class Blinkable {
 ////////////////////////////////
 
 class Blinker {
+
+  enum STATUS {OFF, BLINKING, ON};
   
   TaskHandle_t blinkHandle = NULL;
   Blinkable *led;
@@ -55,6 +57,7 @@ class Blinker {
   int onTime;
   int offTime;
   int delayTime;
+  STATUS status=STATUS::OFF;
   
   unsigned long pauseDuration;
   unsigned long pauseTime;
@@ -101,6 +104,10 @@ class Blinker {
   void off();
 
 //  Stops current blinking pattern and turns off LED
+
+  void refresh(){if(status==STATUS::ON)on();}
+
+//  Refreshes LED color by turning device ON if status=ON (if status=BLINKING, new color is automatically used at next blink)
 
   void check();
 

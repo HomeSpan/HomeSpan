@@ -56,6 +56,14 @@ All of this is accomplished by using a combination of some, or all, of the follo
 
 * `Characteristic::CurrentVisibilityState()` and `Characteristic::TargetVisibilityState()` - these two Characteristics work in tandem much like any current-state/target-state pair.  When these are defined for an Input Source, a checkbox toggle appears next to the name of the Input Source on the Settings page, provided `Characteristic::IsConfigured()` has also been defined.  Clicking the checkbox causes the Home App to toggle the TargetVisibilityState between 0 to 1, where 0 ironically means the checkbox is *checked*, and 1 means it is *unchecked* (the reverse of what you might expect!).  If you read this update in HomeSpan you can then use `setVal()` to change the CurrentVisibiltyState() to match the TargetVisibilityState().  Setting CurrentVisibilityState() to 0 means the Input Source appears as a choice in the Input Source Selector.  Setting CurrentVisibilityState() to 1 means it does not appear as a selection.  Note these features only operate if an ID has been set for the Input Source with `Characteristic::Identifier()`, and IsConfigured() has been defined and set to 1
 
+### `Service::TelevisionSpeaker()`
+
+This Service allows you to change the volume of a television using the iPhone's physical volume control buttons when operating the TV via the iPhone's Remote Control widget (found in the iPhone Control Center).  Similar the Input Source Service above, the Television Speaker Service ***must*** be linked to a Television Service using `addLink()`.  The Television Speaker Service requires the following two Characteristics:
+
+* `Characteristic::VolumeControlType()` - this read-only Characteristic seems to be required but there is uncertainty as to its purpose. In the example HomeSpan sketches I initialized this Characteristic with a value of 3 based on what others have done in scripts based on [HomeBridge](https://developers.homebridge.io/#/service/TelevisionSpeaker)
+
+* `Characteristic::VolumeSelector()` - this write-only Characterstic is updated whenever the user is operating the TV via the iPhone's Remote Control widget and the physical volume control buttons are pressed.  The Home App sends a value of 0 when the up-volume button is pressed, and value of 1 when the down-volume button is pressed.  These values can be read the usual way by creating an `update()` method for a class that is derived from the Television Speaker Service
+
 ### Examples
 
 Please see [*File → Examples → HomeSpan → Other Examples → Television*](../Other%20Examples/Television) for a complete worked example demonstrating the effects of using different combinations of the above Characteristics.  Also, don't forget to check out the [HomeSpan Projects](https://github.com/topics/homespan) page for some real-world examples of TV sketches and controllers.
