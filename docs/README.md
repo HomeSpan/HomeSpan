@@ -4,7 +4,7 @@ Welcome to HomeSpan - a robust and extremely easy-to-use Arduino library for cre
 
 HomeSpan provides a microcontroller-focused implementation of [Apple's HomeKit Accessory Protocol Specification Release R2 (HAP-R2)](https://developer.apple.com/homekit/specification/) designed specifically for the Espressif ESP32 microcontroller running within the Arduino IDE.  HomeSpan pairs directly to HomeKit via your home WiFi network without the need for any external bridges or components.  With HomeSpan you can use the full power of the ESP32's I/O functionality to create custom control software and/or hardware to automatically operate external devices from the Home App on your iPhone, iPad, or Mac, or with Siri.
 
-HomeSpan requires version 2.0.0 or later of the [Arduino-ESP32 Board Manager](https://github.com/espressif/arduino-esp32), and has been tested up through version 2.0.5 (recommended).  HomeSpan can be run on the original ESP32 as well as Espressif's ESP32-S2, ESP32-C3, and ESP32-S3 chips.
+HomeSpan requires version 2.0.0 or later of the [Arduino-ESP32 Board Manager](https://github.com/espressif/arduino-esp32), and has been tested up through version 2.0.6 (recommended).  HomeSpan can be run on the original ESP32 as well as Espressif's ESP32-S2, ESP32-C3, and ESP32-S3 chips.
 
 ### HomeSpan Highlights
 
@@ -12,7 +12,7 @@ HomeSpan requires version 2.0.0 or later of the [Arduino-ESP32 Board Manager](ht
 * Utilizes a unique *Service-Centric* approach to creating HomeKit devices
 * Takes full advantage of the widely-popular Arduino IDE
 * 100% HAP-R2 compliance
-* 38 integrated HomeKit Services
+* 41 integrated HomeKit Services
 * Operates in either Accessory or Bridge mode
 * Supports pairing with Setup Codes or QR Codes
 
@@ -63,7 +63,7 @@ HomeSpan requires version 2.0.0 or later of the [Arduino-ESP32 Board Manager](ht
   * Similar to SpanButton, but designed for toggle switches
   * Integrated de-bounce logic prevents false triggers
   * Ideal for use with Contact Sensors
-  * See the [API Reference](API.md) for details
+  * See the [API Reference](Reference.md) for details
   
 * **Added Television Speaker Service**
   * Control the volume of a Television from Apple's Remote App
@@ -73,7 +73,7 @@ HomeSpan requires version 2.0.0 or later of the [Arduino-ESP32 Board Manager](ht
   * Useful for experimentation with other HomeKit applications, such as *Eve for HomeKit*
   * Includes three new Characteristic methods: `setData()`, `getData()`, and `getNewData()`
   * Includes new macro `CUSTOM_CHAR_DATA()` to easily create custom byte-array Characteristics
-  * See the [API Reference](API.md) for details
+  * See the [API Reference](Reference.md) for details
   
 * **LedPin upgrade**
   * New option to invert the PWM signal
