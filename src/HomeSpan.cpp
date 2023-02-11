@@ -519,25 +519,20 @@ void Span::checkConnect(){
   mdns_service_txt_item_set("_hap","_tcp","sh",setupHash);            // Step 4: broadcast the resulting Setup Hash
 
   if(spanOTA.enabled){
-    if(esp_ota_get_running_partition()!=esp_ota_get_next_update_partition(NULL)){
-      ArduinoOTA.setHostname(hostName);
+    ArduinoOTA.setHostname(hostName);
 
-      if(spanOTA.auth)
-        ArduinoOTA.setPasswordHash(spanOTA.otaPwd);
+    if(spanOTA.auth)
+      ArduinoOTA.setPasswordHash(spanOTA.otaPwd);
 
-      ArduinoOTA.onStart(spanOTA.start).onEnd(spanOTA.end).onProgress(spanOTA.progress).onError(spanOTA.error);  
-      
-      ArduinoOTA.begin();
-      Serial.print("Starting OTA Server: ");
-      Serial.print(displayName);
-      Serial.print(" at ");
-      Serial.print(WiFi.localIP());
-      Serial.print("\nAuthorization Password: ");
-      Serial.print(spanOTA.auth?"Enabled\n\n":"DISABLED!\n\n");
-    } else {
-      Serial.print("\n*** WARNING: Can't start OTA Server - Partition table used to compile this sketch is not configured for OTA.\n\n");
-      spanOTA.enabled=false;
-    }
+    ArduinoOTA.onStart(spanOTA.start).onEnd(spanOTA.end).onProgress(spanOTA.progress).onError(spanOTA.error);  
+    
+    ArduinoOTA.begin();
+    Serial.print("Starting OTA Server: ");
+    Serial.print(displayName);
+    Serial.print(" at ");
+    Serial.print(WiFi.localIP());
+    Serial.print("\nAuthorization Password: ");
+    Serial.print(spanOTA.auth?"Enabled\n\n":"DISABLED!\n\n");
   }
   
   mdns_service_txt_item_set("_hap","_tcp","ota",spanOTA.enabled?"yes":"no");                     // OTA status (info only - NOT used by HAP)
@@ -682,13 +677,8 @@ void Span::processSerialCommand(const char *c){
       }
       
       Serial.print(mask(textPwd,2));
-      Serial.print("\n");      
-      
-      MD5Builder otaPwdHash;
-      otaPwdHash.begin();
-      otaPwdHash.add(textPwd);
-      otaPwdHash.calculate();
-      otaPwdHash.getChars(spanOTA.otaPwd);
+      Serial.print("\n");           
+      spanOTA.setPassword(textPwd);
       nvs_set_str(otaNVS,"OTADATA",spanOTA.otaPwd);                 // update data
       nvs_commit(otaNVS);          
       
@@ -2147,11 +2137,35 @@ void SpanWebLog::vLog(boolean sysMsg, const char *fmt, va_list ap){
 //         SpanOTA           //
 ///////////////////////////////
 
-void SpanOTA::init(boolean _auth, boolean _safeLoad){
+int SpanOTA::init(boolean _auth, boolean _safeLoad, const char *pwd){
+  if(esp_ota_get_running_partition()==esp_ota_get_next_update_partition(NULL)){
+    Serial.print("\n*** WARNING: Can't start OTA Server - Partition table used to compile this sketch is not configured for OTA.\n\n");
+    return(-1);     
+  }
+  
   enabled=true;
   safeLoad=_safeLoad;
   auth=_auth;
   homeSpan.reserveSocketConnections(1);
+  if(pwd==NULL)
+    return(0);
+  return(setPassword(pwd));
+}
+
+///////////////////////////////
+
+int SpanOTA::setPassword(const char *pwd){
+  if(strlen(pwd)<1 || strlen(pwd)>32){
+    Serial.printf("\n*** WARNING: Cannot change OTA password to '%s'. Password length must be between 1 and 32 characters.\n\n",pwd);
+    return(-1);
+  }
+
+  MD5Builder otaPwdHash;
+  otaPwdHash.begin();
+  otaPwdHash.add(pwd);
+  otaPwdHash.calculate();
+  otaPwdHash.getChars(homeSpan.spanOTA.otaPwd);  
+  return(0);
 }
 
 ///////////////////////////////

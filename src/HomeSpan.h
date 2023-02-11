@@ -168,14 +168,15 @@ struct SpanWebLog{                            // optional web status/log data
 
 struct SpanOTA{                               // manages OTA process
   
-  char otaPwd[33];                            // MD5 Hash of OTA password, represented as a string of hexidecimal characters
+  char otaPwd[33]="";                         // MD5 Hash of OTA password, represented as a string of hexidecimal characters
 
   static boolean enabled;                     // enables OTA - default if not enabled
   static boolean auth;                        // indicates whether OTA password is required
   static int otaPercent;
   static boolean safeLoad;                    // indicates whether OTA update should reject any application update that is not another HomeSpan sketch
   
-  void init(boolean auth, boolean safeLoad);
+  int init(boolean auth, boolean safeLoad, const char *pwd);
+  int setPassword(const char *pwd);
   static void start();
   static void end();
   static void progress(uint32_t progress, uint32_t total);
@@ -326,7 +327,8 @@ class Span{
   void setPairingCode(const char *s){sprintf(pairingCodeCommand,"S %9s",s);}    // sets the Pairing Code - use is NOT recommended.  Use 'S' from CLI instead
   void deleteStoredValues(){processSerialCommand("V");}                         // deletes stored Characteristic values from NVS  
 
-  void enableOTA(boolean auth=true, boolean safeLoad=true){spanOTA.init(auth, safeLoad);}   // enables Over-the-Air updates, with (auth=true) or without (auth=false) authorization password  
+  int enableOTA(boolean auth=true, boolean safeLoad=true){return(spanOTA.init(auth, safeLoad, NULL));}   // enables Over-the-Air updates, with (auth=true) or without (auth=false) authorization password  
+  int enableOTA(const char *pwd, boolean safeLoad=true){return(spanOTA.init(true, safeLoad, pwd));}      // enables Over-the-Air updates, with custom authorization password (overrides any password stored with the 'O' command)
 
   void enableWebLog(uint16_t maxEntries=0, const char *serv=NULL, const char *tz="UTC", const char *url=DEFAULT_WEBLOG_URL){     // enable Web Logging
     webLog.init(maxEntries, serv, tz, url);
