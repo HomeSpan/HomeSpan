@@ -116,6 +116,13 @@ The following **optional** `homeSpan` methods enable additional features and pro
   * this can be changed via the [HomeSpan CLI](CLI.md) using the 'O' command
   * note enabling OTA reduces the number of HAP Controller Connections by 1
   * OTA Safe Load will be enabled by default unless the second argument is specified and set to *false*.  HomeSpan OTA Safe Load checks to ensure that sketches uploaded to an existing HomeSpan device are themselves HomeSpan sketches, and that they also have OTA enabled.  See [HomeSpan OTA Safe Load](OTA.md#ota-safe-load) for details
+  * returns 0 if enabling OTA was successful, or -1 and reports an error to the Serial Monitor if not
+
+* `int enableOTA(const char *pwd, boolean safeLoad=true)`
+  * an alternative form of `enableOTA()` that allows you to programmatically change the OTA password to the specified *pwd*
+  * *pwd* must contain between 1 and 32 characters
+  * this command causes HomeSpan to ignore, but does not otherwise alter, any password stored using the 'O' command 
+  * returns 0 if enabling OTA was successful, or -1 and reports an error to the Serial Monitor if not
 
 * `void enableAutoStartAP()`
   * enables automatic start-up of WiFi Access Point if WiFi Credentials are **not** found at boot time
