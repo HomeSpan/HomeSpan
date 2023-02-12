@@ -532,6 +532,8 @@ namespace Characteristic {
 // MACROS TO ADD CUSTOM SERVICES AND CHARACTERISTICS  //
 ////////////////////////////////////////////////////////
 
+#ifndef CUSTOM_CHAR_HEADER
+
 #define CUSTOM_CHAR(NAME,UUID,PERMISISONS,FORMAT,DEFVAL,MINVAL,MAXVAL,STATIC_RANGE) \
   HapChar _CUSTOM_##NAME {#UUID,#NAME,(PERMS)(PERMISISONS),FORMAT,STATIC_RANGE}; \
   namespace Characteristic { struct NAME : SpanCharacteristic { NAME(FORMAT##_t val=DEFVAL, boolean nvsStore=false) : SpanCharacteristic {&_CUSTOM_##NAME,true} { init(val,nvsStore,(FORMAT##_t)MINVAL,(FORMAT##_t)MAXVAL); } }; }
@@ -544,8 +546,25 @@ namespace Characteristic {
   HapChar _CUSTOM_##NAME {#UUID,#NAME,(PERMS)(PERMISISONS),DATA,true}; \
   namespace Characteristic { struct NAME : SpanCharacteristic { NAME(const char * val="AA==", boolean nvsStore=false) : SpanCharacteristic {&_CUSTOM_##NAME,true} { init(val,nvsStore); } }; }
 
+#else
+
+#define CUSTOM_CHAR(NAME,UUID,PERMISISONS,FORMAT,DEFVAL,MINVAL,MAXVAL,STATIC_RANGE) \
+  extern HapChar _CUSTOM_##NAME; \
+  namespace Characteristic { struct NAME : SpanCharacteristic { NAME(FORMAT##_t val=DEFVAL, boolean nvsStore=false) : SpanCharacteristic {&_CUSTOM_##NAME,true} { init(val,nvsStore,(FORMAT##_t)MINVAL,(FORMAT##_t)MAXVAL); } }; }
+
+#define CUSTOM_CHAR_STRING(NAME,UUID,PERMISISONS,DEFVAL) \
+  extern HapChar _CUSTOM_##NAME; \
+  namespace Characteristic { struct NAME : SpanCharacteristic { NAME(const char * val=DEFVAL, boolean nvsStore=false) : SpanCharacteristic {&_CUSTOM_##NAME,true} { init(val,nvsStore); } }; }
+
+#define CUSTOM_CHAR_DATA(NAME,UUID,PERMISISONS) \
+  extern HapChar _CUSTOM_##NAME; \
+  namespace Characteristic { struct NAME : SpanCharacteristic { NAME(const char * val="AA==", boolean nvsStore=false) : SpanCharacteristic {&_CUSTOM_##NAME,true} { init(val,nvsStore); } }; }
+
+#endif
+
 #define CUSTOM_SERV(NAME,UUID) \
   namespace Service { struct NAME : SpanService { NAME() : SpanService{#UUID,#NAME,true}{} }; }
+
 
 ////////////////////////////////////////////////////////
 // MACROS TO ADD A NEW ACCESSORT WITH OPTIONAL NAME   //
