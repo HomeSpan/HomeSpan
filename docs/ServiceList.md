@@ -21,161 +21,167 @@ Additionally, when first starting up, HomeSpan begins by validating the device's
 
 ### Service List
 
-| Service | Required Characteristics | Optional Characteristics |
-| ------- | -------------------- | ------------------- |
-| AccessoryInformation| FirmwareRevision<br>Identity<br>Manufacturer<br>Model<br>Name<br>SerialNumber | HardwareRevision |
-| AirPurifier | Active<br>CurrentAirPurifierState<br>TargetAirPurifierState | Name<br>RotationSpeed<br>SwingMode<br>LockPhysicalControls |
-| AirQualitySensor | AirQuality | Name<br>OzoneDensity<br>NitrogenDioxideDensity<br>SulphurDioxideDensity<br>PM25Density<br>PM10Density<br>VOCDensity<br>StatusActive<br>StatusFault<br>StatusTampered<br>StatusLowBattery |
-| BatteryService | BatteryLevel<br>ChargingState<br>StatusLowBattery | Name |
-| CarbonDioxideSensor | CarbonDioxideDetected | Name<br>StatusActive<br>StatusFault<br>StatusTampered<br>StatusLowBattery<br>CarbonDioxideLevel<br>CarbonDioxidePeakLevel |
-| CarbonMonoxideSensor | CarbonMonoxideDetected | Name<br>StatusActive<br>StatusFault<br>StatusTampered<br>StatusLowBattery<br>CarbonMonoxideLevel<br>CarbonMonoxidePeakLevel |
-| ContactSensor | ContactSensorState | Name<br>StatusActive<br>StatusFault<br>StatusTampered<br>StatusLowBattery |
-| Door | CurrentPosition<br>TargetPosition<br>PositionState | Name<br>HoldPosition<br>ObstructionDetected |
-| Doorbell | ProgrammableSwitchEvent | Name<br>Volume<br>Brightness |
-| Fan | Active | Name<br>CurrentFanState<br>TargetFanState<br>RotationDirection<br>RotationSpeed<br>SwingMode<br>LockPhysicalControls |
-| Faucet | Active | StatusFault<br>Name |
-| FilterMaintenance | FilterChangeIndication | Name<br>FilterLifeLevel<br>ResetFilterIndication |
-| GarageDoorOpener | CurrentDoorState<br>TargetDoorState<br>ObstructionDetected | LockCurrentState<br>LockTargetState<br>Name |
-| HAPProtocolInformation | Version | *none* |
-| HeaterCooler | Active<br>CurrentTemperature<br>CurrentHeaterCoolerState<br>TargetHeaterCoolerState | Name<br>RotationSpeed<br>TemperatureDisplayUnits<br>SwingMode<br>CoolingThresholdTemperature<br>HeatingThresholdTemperature<br>LockPhysicalControls |
-| HumidifierDehumidifier | Active<br>CurrentRelativeHumidity<br>CurrentHumidifierDehumidifierState<br>TargetHumidifierDehumidifierState | Name<br>RelativeHumidityDehumidifierThreshold<br>RelativeHumidityHumidifierThreshold<br>RotationSpeed<br>SwingMode<br>WaterLevel<br>LockPhysicalControls |
-| HumiditySensor | CurrentRelativeHumidity | Name<br>StatusActive<br>StatusFault<br>StatusTampered<br>StatusLowBattery |
-| InputSource | Identifier | ConfiguredName<br>IsConfigured<br>CurrentVisibilityState<br>TargetVisibilityState |
-| IrrigationSystem | Active<br>ProgramMode<br>InUse | RemainingDuration<br>Name<br>StatusFault |
-| LeakSensor | LeakDetected | Name<br>StatusActive<br>StatusFault<br>StatusTampered<br>StatusLowBattery |
-| LightBulb | On | Brightness<br>Hue<br>Name<br>Saturation<br>ColorTemperature |
-| LightSensor | CurrentAmbientLightLevel | Name<br>StatusActive<br>StatusFault<br>StatusTampered<br>StatusLowBattery |
-| LockMechanism | LockCurrentState<br>LockTargetState | Name |
-| Microphone | Mute | Name<br>Volume |
-| MotionSensor | MotionDetected | Name<br>StatusActive<br>StatusFault<br>StatusTampered<br>StatusLowBattery |
-| OccupancySensor | OccupancyDetected | Name<br>StatusActive<br>StatusFault<br>StatusTampered<br>StatusLowBattery |
-| Outlet | On<br>OutletInUse | Name |
-| SecuritySystem | SecuritySystemCurrentState<br>SecuritySystemTargetState | Name<br>SecuritySystemAlarmType<br>StatusFault<br>StatusTampered |
-| ServiceLabel | ServiceLabelNamespace | *none* |
-| Slat | CurrentSlatState<br>SlatType | Name<br>SwingMode<br>CurrentTiltAngle<br>TargetTiltAngle |
-| SmokeSensor | SmokeDetected | Name<br>StatusActive<br>StatusFault<br>StatusTampered<br>StatusLowBattery |
-| Speaker | Mute | Name<br>Volume |
-| StatelessProgrammableSwitch | ProgrammableSwitchEvent | Name<br>ServiceLabelIndex |
-| Switch | On | Name |
-| Television | Active | ConfiguredName<br>ActiveIdentifier<br>RemoteKey<br>PowerModeSelection | 
-| TemperatureSensor | CurrentTemperature | Name<br>StatusActive<br>StatusFault<br>StatusTampered<br>StatusLowBattery |
-| Thermostat | CurrentHeatingCoolingState<br>TargetHeatingCoolingState<br>CurrentTemperature<br>TargetTemperature<br>TemperatureDisplayUnits | CoolingThresholdTemperature<br>CurrentRelativeHumidity<br>HeatingThresholdTemperature<br>Name<br>TargetRelativeHumidity | 
-| Valve | Active<br>InUse<br>ValveType | SetDuration<br>RemainingDuration<br>IsConfigured<br>ServiceLabelIndex<br>StatusFault<br>Name |
-| Window | CurrentPosition<br>TargetPosition<br>PositionState | Name<br>HoldPosition<br>ObstructionDetected |
-| WindowCovering | CurrentPosition<br>TargetPosition | Name<br>PositionState<br>HoldPosition<br>CurrentHorizontalTiltAngle<br>TargetHorizontalTiltAngle<br>CurrentVerticalTiltAngle<br>TargetVerticalTiltAngle<br>ObstructionDetected |
-
+|Service|Required Characteristics|Optional Characteristics|
+|-|-|-|
+|AccessoryInformation|Identify|FirmwareRevision<br>Manufacturer<br>Model<br>Name<br>SerialNumber<br>HardwareRevision<br>AccessoryFlags|
+|AirPurifier|Active<br>CurrentAirPurifierState<br>TargetAirPurifierState|Name<br>RotationSpeed<br>SwingMode<br>LockPhysicalControls|
+|AirQualitySensor|AirQuality|Name<br>OzoneDensity<br>NitrogenDioxideDensity<br>SulphurDioxideDensity<br>PM25Density<br>PM10Density<br>VOCDensity<br>StatusActive<br>StatusFault<br>StatusTampered<br>StatusLowBattery|
+|BatteryService|BatteryLevel<br>ChargingState<br>StatusLowBattery|Name|
+|CarbonDioxideSensor|CarbonDioxideDetected|Name<br>StatusActive<br>StatusFault<br>StatusTampered<br>StatusLowBattery<br>CarbonDioxideLevel<br>CarbonDioxidePeakLevel|
+|CarbonMonoxideSensor|CarbonMonoxideDetected|Name<br>StatusActive<br>StatusFault<br>StatusTampered<br>StatusLowBattery<br>CarbonMonoxideLevel<br>CarbonMonoxidePeakLevel|
+|ContactSensor|ContactSensorState|Name<br>StatusActive<br>StatusFault<br>StatusTampered<br>StatusLowBattery|
+|Door|CurrentPosition<br>TargetPosition<br>PositionState|Name<br>HoldPosition<br>ObstructionDetected|
+|Doorbell|ProgrammableSwitchEvent|Name<br>Volume<br>Brightness|
+|Fan|Active|Name<br>CurrentFanState<br>TargetFanState<br>RotationDirection<br>RotationSpeed<br>SwingMode<br>LockPhysicalControls|
+|Faucet|Active|StatusFault<br>Name|
+|FilterMaintenance|FilterChangeIndication|Name<br>FilterLifeLevel<br>ResetFilterIndication|
+|GarageDoorOpener|CurrentDoorState<br>TargetDoorState<br>ObstructionDetected|LockCurrentState<br>LockTargetState<br>Name|
+|HAPProtocolInformation|Version||HeaterCooler|Active<br>CurrentTemperature<br>CurrentHeaterCoolerState<br>TargetHeaterCoolerState|Name<br>RotationSpeed<br>TemperatureDisplayUnits<br>SwingMode<br>CoolingThresholdTemperature<br>HeatingThresholdTemperature<br>LockPhysicalControls|
+|HumidifierDehumidifier|Active<br>CurrentRelativeHumidity<br>CurrentHumidifierDehumidifierState<br>TargetHumidifierDehumidifierState|Name<br>RelativeHumidityDehumidifierThreshold<br>RelativeHumidityHumidifierThreshold<br>RotationSpeed<br>SwingMode<br>WaterLevel<br>LockPhysicalControls|
+|HumiditySensor|CurrentRelativeHumidity|Name<br>StatusActive<br>StatusFault<br>StatusTampered<br>StatusLowBattery|
+|InputSource|Identifier|ConfiguredName<br>IsConfigured<br>CurrentVisibilityState<br>TargetVisibilityState|
+|IrrigationSystem|Active<br>ProgramMode<br>InUse|RemainingDuration<br>StatusFault|
+|LeakSensor|LeakDetected|Name<br>StatusActive<br>StatusFault<br>StatusTampered<br>StatusLowBattery|
+|LightBulb|On|Brightness<br>Hue<br>Name<br>Saturation<br>ColorTemperature|
+|LightSensor|CurrentAmbientLightLevel|Name<br>StatusActive<br>StatusFault<br>StatusTampered<br>StatusLowBattery|
+|LockMechanism|LockCurrentState<br>LockTargetState|Name|
+|Microphone|Mute|Name<br>Volume|
+|MotionSensor|MotionDetected|Name<br>StatusActive<br>StatusFault<br>StatusTampered<br>StatusLowBattery|
+|OccupancySensor|OccupancyDetected|Name<br>StatusActive<br>StatusFault<br>StatusTampered<br>StatusLowBattery|
+|Outlet|On<br>OutletInUse|Name|
+|SecuritySystem|SecuritySystemCurrentState<br>SecuritySystemTargetState|Name<br>SecuritySystemAlarmType<br>StatusFault<br>StatusTampered|
+|ServiceLabel|ServiceLabelNamespace||Slat|CurrentSlatState<br>SlatType|Name<br>SwingMode<br>CurrentTiltAngle<br>TargetTiltAngle|
+|SmokeSensor|SmokeDetected|Name<br>StatusActive<br>StatusFault<br>StatusTampered<br>StatusLowBattery|
+|Speaker|Mute|Name<br>Volume|
+|StatelessProgrammableSwitch|ProgrammableSwitchEvent|Name<br>ServiceLabelIndex|
+|Switch|On|Name|
+|Television|Active|ConfiguredName<br>ActiveIdentifier<br>RemoteKey<br>PowerModeSelection|
+|TelevisionSpeaker|VolumeControlType<br>VolumeSelector||TemperatureSensor|CurrentTemperature|Name<br>StatusActive<br>StatusFault<br>StatusTampered<br>StatusLowBattery|
+|Thermostat|CurrentHeatingCoolingState<br>TargetHeatingCoolingState<br>CurrentTemperature<br>TargetTemperature<br>TemperatureDisplayUnits|CoolingThresholdTemperature<br>CurrentRelativeHumidity<br>HeatingThresholdTemperature<br>Name<br>TargetRelativeHumidity|
+|Valve|Active<br>InUse<br>ValveType|SetDuration<br>RemainingDuration<br>IsConfigured<br>ServiceLabelIndex<br>StatusFault<br>Name|
+|Window|CurrentPosition<br>TargetPosition<br>PositionState|Name<br>HoldPosition<br>ObstructionDetected|
+|WindowCovering|TargetPosition<br>CurrentPosition<br>PositionState|Name<br>HoldPosition<br>CurrentHorizontalTiltAngle<br>TargetHorizontalTiltAngle<br>CurrentVerticalTiltAngle<br>TargetVerticalTiltAngle<br>ObstructionDetected|
 
 ### Characteristic Types and Defaults
 
-|Characteristic|Type|Default
-|---|---|---|
-|Active|uint8_t|0|
-|ActiveIdentifier|uint32_t|0|
-|AirQuality|uint8_t|0|
-|BatteryLevel|uint8_t|0|
-|Brightness|int|0|
-|CarbonMonoxideLevel|double|0|
-|CarbonMonoxidePeakLevel|double|0|
-|CarbonMonoxideDetected|uint8_t|0|
-|CarbonDioxideLevel|double|0|
-|CarbonDioxidePeakLevel|double|0|
-|CarbonDioxideDetected|uint8_t|0|
-|ChargingState|uint8_t|0|
-|CoolingThresholdTemperature|double|10| 
-|ColorTemperature|uint32_t|50|
-|ConfiguredName|char \*|"unnamed"|
-|ContactSensorState|uint8_t|1|
-|CurrentAmbientLightLevel|double|1|
-|CurrentHorizontalTiltAngle|int|0|
-|CurrentAirPurifierState|uint8_t|1|
-|CurrentSlatState|uint8_t|0|
-|CurrentPosition|uint8_t|0|
-|CurrentVerticalTiltAngle|int|0|
-|CurrentHumidifierDehumidifierState|uint8_t|1|
-|CurrentDoorState|uint8_t|1|
-|CurrentFanState|uint8_t|1|
-|CurrentHeatingCoolingState|uint8_t|0|
-|CurrentHeaterCoolerState|uint8_t|1|
-|CurrentRelativeHumidity|double|0|
-|CurrentTemperature|double|0|
-|CurrentTiltAngle|int|0|
-|CurrentVisibilityState|uint8_t|0|
-|FilterLifeLevel|double|0|
-|FilterChangeIndication|uint8_t|0|
-|FirmwareRevision|char \*|"1.0.0"|
-|HardwareRevision|char \*|"1.0.0"|
-|HeatingThresholdTemperature|double|16|
-|HoldPosition|boolean|false|
-|Hue|double|0|
-|Identifier|uint32_t|0|
-|Identify|boolean|false|
-|InUse|uint8_t|0|
-|IsConfigured|uint8_t|0|
-|LeakDetected|uint8_t|0|
-|LockCurrentState|uint8_t|0|
-|LockPhysicalControls|uint8_t|0|
-|LockTargetState|uint8_t|0|
-|Manufacturer|char \*|"HomeSpan"|
-|Model|char \*|"HomeSpan-ESP32"|
-|MotionDetected|boolean|false|
-|Mute|boolean|false|
-|Name|char \*|"unnamed"|
-|NitrogenDioxideDensity|double|0|
-|ObstructionDetected|boolean|false|
-|PM25Density|double|0|
-|OccupancyDetected|uint8_t|0|
-|OutletInUse|boolean|false|
-|On|boolean|false|
-|OzoneDensity|double|0|
-|PM10Density|double|0|
-|PositionState|uint8_t|2|
-|PowerModeSelection|uint8_t|0|
-|ProgramMode|uint8_t|0|
-|ProgrammableSwitchEvent|uint8_t|0|
-|RelativeHumidityDehumidifierThreshold|double|50|
-|RelativeHumidityHumidifierThreshold|double|50|
-|RemainingDuration|uint32_t|60|
-|RemoteKey|uint8_t|0|
-|ResetFilterIndication|uint8_t|0|
-|RotationDirection|int|0|
-|RotationSpeed|double|0|
-|Saturation|double|0|
-|SecuritySystemAlarmType|uint8_t|0|
-|SecuritySystemCurrentState|uint8_t|3|
-|SecuritySystemTargetState|uint8_t|3| 
-|SerialNumber|char \*|"HS-12345"|
-|ServiceLabelIndex|uint8_t|1|
-|ServiceLabelNamespace|uint8_t|1|
-|SlatType|uint8_t|0|
-|SmokeDetected|uint8_t|0|
-|StatusActive|boolean|true|
-|StatusFault|uint8_t|0|
-|StatusJammed|uint8_t|0|
-|StatusLowBattery|uint8_t|0|
-|StatusTampered|uint8_t|0|
-|SulphurDioxideDensity|double|0|
-|SwingMode|uint8_t|0|
-|TargetAirPurifierState|uint8_t|1|
-|TargetFanState|uint8_t|1|
-|TargetTiltAngle|int|0|
-|SetDuration|uint32_t|60|
-|TargetHorizontalTiltAngle|int|0|
-|TargetHumidifierDehumidifierState|uint8_t|0|
-|TargetPosition|uint8_t|0|
-|TargetDoorState|uint8_t|1|
-|TargetHeaterCoolerState|uint8_t|0|
-|TargetHeatingCoolingState|uint8_t|0|
-|TargetRelativeHumidity|double|0|
-|TargetTemperature|double|16|
-|TemperatureDisplayUnits|uint8_t|0|
-|TargetVerticalTiltAngle|int|0|
-|TargetVisibilityState|uint8_t|0|
-|ValveType|uint8_t|0|
-|Version|char \*|"1.0.0"|
-|VOCDensity|double|0|
-|Volume|uint8_t|0|
-|WaterLevel|double|0|
-
+|Characteristic|Type|Default|Range|
+|-|-|-|-|
+AccessoryFlags|uint32_t|1|[1,1]|
+Active|uint8_t|0|[0,1]|
+ActiveIdentifier|uint32_t|0|[0,255]|
+AirQuality|uint8_t|0|[0,5]|
+BatteryLevel|uint8_t|0|[0,100]|
+Brightness|int|0|[0,100]|
+CarbonMonoxideLevel|double|0|[0,100]|
+CarbonMonoxidePeakLevel|double|0|[0,100]|
+CarbonMonoxideDetected|uint8_t|0|[0,1]|
+CarbonDioxideLevel|double|0|[0,100000]|
+CarbonDioxidePeakLevel|double|0|[0,100000]|
+CarbonDioxideDetected|uint8_t|0|[0,1]|
+ChargingState|uint8_t|0|[0,2]|
+ClosedCaptions|uint8_t|0|[0,1]|
+CoolingThresholdTemperature|double|10|[10,35]|
+ColorTemperature|uint32_t|200|[140,500]|
+ContactSensorState|uint8_t|1|[0,1]|
+ConfiguredName|char \*|"unnamed"|||
+CurrentAmbientLightLevel|double|1|[0.0001,100000]|
+CurrentHorizontalTiltAngle|int|0|[-90,90]|
+CurrentAirPurifierState|uint8_t|1|[0,2]|
+CurrentSlatState|uint8_t|0|[0,2]|
+CurrentPosition|uint8_t|0|[0,100]|
+CurrentVerticalTiltAngle|int|0|[-90,90]|
+CurrentVisibilityState|uint8_t|0|[0,1]|
+CurrentHumidifierDehumidifierState|uint8_t|1|[0,3]|
+CurrentDoorState|uint8_t|1|[0,4]|
+CurrentFanState|uint8_t|1|[0,2]|
+CurrentHeatingCoolingState|uint8_t|0|[0,2]|
+CurrentHeaterCoolerState|uint8_t|1|[0,3]|
+CurrentMediaState|uint8_t|0|[0,5]|
+CurrentRelativeHumidity|double|0|[0,100]|
+CurrentTemperature|double|0|[0,100]|
+CurrentTiltAngle|int|0|[-90,90]|
+FilterLifeLevel|double|0|[0,100]|
+FilterChangeIndication|uint8_t|0|[0,1]|
+FirmwareRevision|char \*|"1.0.0"|||
+HardwareRevision|char \*|"1.0.0"|||
+HeatingThresholdTemperature|double|16|[0,25]|
+HoldPosition|boolean|false|[0,1]|
+Hue|double|0|[0,360]|
+Identify|boolean|false|[0,1]|
+Identifier|uint32_t|0|[0,255]|
+InputDeviceType|uint8_t|0|[0,6]|
+InputSourceType|uint8_t|0|[0,10]|
+InUse|uint8_t|0|[0,1]|
+IsConfigured|uint8_t|0|[0,1]|
+LeakDetected|uint8_t|0|[0,1]|
+LockCurrentState|uint8_t|0|[0,3]|
+LockPhysicalControls|uint8_t|0|[0,1]|
+LockTargetState|uint8_t|0|[0,1]|
+Manufacturer|char \*|"HomeSpan"|||
+Model|char \*|"HomeSpan-ESP32"|||
+MotionDetected|boolean|false|[0,1]|
+Mute|boolean|false|[0,1]|
+Name|char \*|"unnamed"|||
+NitrogenDioxideDensity|double|0|[0,1000]|
+ObstructionDetected|boolean|false|[0,1]|
+PM25Density|double|0|[0,1000]|
+OccupancyDetected|uint8_t|0|[0,1]|
+OutletInUse|boolean|false|[0,1]|
+On|boolean|false|[0,1]|
+OzoneDensity|double|0|[0,1000]|
+PictureMode|uint8_t|0|[0,13]|
+PM10Density|double|0|[0,1000]|
+PositionState|uint8_t|2|[0,2]|
+PowerModeSelection|uint8_t|0|[0,1]|
+ProgramMode|uint8_t|0|[0,2]|
+ProgrammableSwitchEvent|uint8_t|0|[0,2]|
+RelativeHumidityDehumidifierThreshold|double|50|[0,100]|
+RelativeHumidityHumidifierThreshold|double|50|[0,100]|
+RemainingDuration|uint32_t|60|[0,3600]|
+RemoteKey|uint8_t|0|[0,16]|
+ResetFilterIndication|uint8_t|0|[1,1]|
+RotationDirection|int|0|[0,1]|
+RotationSpeed|double|0|[0,100]|
+Saturation|double|0|[0,100]|
+SecuritySystemAlarmType|uint8_t|0|[0,1]|
+SecuritySystemCurrentState|uint8_t|3|[0,4]|
+SecuritySystemTargetState|uint8_t|3|[0,3]|
+SerialNumber|char \*|"HS-12345"|||
+ServiceLabelIndex|uint8_t|1|[1,255]|
+ServiceLabelNamespace|uint8_t|1|[0,1]|
+SlatType|uint8_t|0|[0,1]|
+SleepDiscoveryMode|uint8_t|0|[0,1]|
+SmokeDetected|uint8_t|0|[0,1]|
+StatusActive|boolean|true|[0,1]|
+StatusFault|uint8_t|0|[0,1]|
+StatusJammed|uint8_t|0|[0,1]|
+StatusLowBattery|uint8_t|0|[0,1]|
+StatusTampered|uint8_t|0|[0,1]|
+SulphurDioxideDensity|double|0|[0,1000]|
+SwingMode|uint8_t|0|[0,1]|
+TargetAirPurifierState|uint8_t|1|[0,1]|
+TargetFanState|uint8_t|1|[0,1]|
+TargetTiltAngle|int|0|[-90,90]|
+TargetHeaterCoolerState|uint8_t|0|[0,2]|
+SetDuration|uint32_t|60|[0,3600]|
+TargetHorizontalTiltAngle|int|0|[-90,90]|
+TargetHumidifierDehumidifierState|uint8_t|0|[0,2]|
+TargetPosition|uint8_t|0|[0,100]|
+TargetDoorState|uint8_t|1|[0,1]|
+TargetHeatingCoolingState|uint8_t|0|[0,3]|
+TargetMediaState|uint8_t|0|[0,2]|
+TargetRelativeHumidity|double|0|[0,100]|
+TargetTemperature|double|16|[10,38]|
+TargetVisibilityState|uint8_t|0|[0,1]|
+TemperatureDisplayUnits|uint8_t|0|[0,1]|
+TargetVerticalTiltAngle|int|0|[-90,90]|
+ValveType|uint8_t|0|[0,3]|
+Version|char \*|"1.0.0"|||
+VOCDensity|double|0|[0,1000]|
+Volume|uint8_t|0|[0,100]|
+VolumeControlType|uint8_t|0|[0,3]|
+VolumeSelector|uint8_t|0|[0,1]|
+WaterLevel|double|0|[0,100]|
 
 ### HAP Format Codes (HAP-R2 Table 6-5)
 
@@ -190,7 +196,7 @@ Additionally, when first starting up, HomeSpan begins by validating the device's
 |FLOAT|double|
 |STRING|char \*|
 |TLV8|(not implemented)|
-|DATA|(not implemented)|
+|DATA|uint8_t *|
 
 ---
 
