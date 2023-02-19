@@ -109,7 +109,7 @@ The following **optional** `homeSpan` methods override various HomeSpan initiali
 
 The following **optional** `homeSpan` methods enable additional features and provide for further customization of the HomeSpan environment.  Unless otherwise noted, calls **should** be made before `begin()` to take effect:
 
-* `void enableOTA(boolean auth=true, boolean safeLoad=true)`
+* `int enableOTA(boolean auth=true, boolean safeLoad=true)`
   * enables [Over-the-Air (OTA) Updating](OTA.md) of a HomeSpan device, which is otherwise disabled
   * HomeSpan OTA requires an authorizing password unless *auth* is specified and set to *false*
   * the default OTA password for new HomeSpan devices is "homespan-ota"
