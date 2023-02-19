@@ -543,6 +543,8 @@ Note that Custom Characteristics must be created at the global level (i.e. not i
 > Advanced Tip 1: When presented with an unrecognized Custom Characteristic, *Eve for HomeKit* helpfully displays a *generic control* allowing you to interact with any Custom Characteristic you create in HomeSpan.  However, since Eve does not recognize the Characteristic, it will only render the generic control if the Characteristic includes a **description** field, which you can add to any Characteristic using the `setDescription()` method described above.  You may also want to use `setUnit()` and `setRange()` so that the Eve App displays a control with appropriate ranges for your Custom Characteristic.
  
 > Advanced Tip 2: The DATA format is not currently used by any native Home App Characteristic, though it is part of the HAP-R2 specifications.  This format is included in HomeSpan because other applications, such as *Eve for HomeKit* do use these types of Characteristics to create functionality beyond that of the Home App, and are thus provided for advanced users to experiment.
+ 
+> Advanced Tip 3: When using multi-file sketches, the compiler will throw a "redefinition error" if you define the same Custom Characteristic in more than one file.  To avoid this error and allow the same Custom Characteristic to be used across more than one file, add the line `#define CUSTOM_CHAR_HEADER` *before* `#include "HomeSpan.h"` in each file containing a *duplicate* definition of a previously-defined Custom Characteristic.
 
 ### *CUSTOM_SERV(name,uuid)*
 
