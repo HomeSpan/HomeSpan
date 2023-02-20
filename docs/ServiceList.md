@@ -10,7 +10,7 @@ A list of all HomeSpan Services is provided in the table below.  For each Servic
 
 ```C++
 new Service::LightBulb();                         // instantiate a Light Bulb Service
-  new Characteristics:On();                         // instantiate the required On Characteristic without setting initial value
+  new Characteristic:On();                         // instantiate the required On Characteristic without setting initial value
   new Characteristic::Brightness(50);               // instantiate an optional Brightness Characteristic and set initial value to 50%
   new Characteristic::Name("Living Room Lamp");     // instantiate an optional Name Characteristic for this Service, and set to "Living Room Lamp"
 ```
