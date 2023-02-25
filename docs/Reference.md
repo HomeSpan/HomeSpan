@@ -268,8 +268,8 @@ The following methods are supported:
   * note though this functionality is defined by Apple in HAP-R2, it seems to have been deprecated and no longer serves any purpose or has any affect on the Home App
   
 * `SpanService *addLink(SpanService *svc)`
-  * adds *svc* as a Linked Service.  Returns a pointer to the calling Service itself so that the method can be chained during instantiation.
-  * note that Linked Services are only applicable for select HAP Services.  See Apple's [HAP-R2](https://developer.apple.com/support/homekit-accessory-protocol/) documentation for full details.
+  * adds *svc* as a Linked Service.  Returns a pointer to the calling Service itself so that the method can be chained during instantiation
+  * note that Linked Services are only applicable for select HAP Services.  See Apple's HAP-R2 documentation for full details
   * example: `(new Service::Faucet)->addLink(new Service::Valve)->addLink(new Service::Valve);` (links two Valves to a Faucet)
 
 * `vector<SpanService *> getLinks()`
