@@ -743,7 +743,7 @@ class SpanCharacteristic{
   boolean updated(){return(isUpdated);}             // returns isUpdated
   unsigned long timeVal();                          // returns time elapsed (in millis) since value was last updated
   
-  SpanCharacteristic *setValidValues(int n, ...);   // sets a list of 'n' valid values allowed for a Characteristic and returns pointer to self.  Only applicable if format=uint8 
+  SpanCharacteristic *setValidValues(int n, ...);   // sets a list of 'n' valid values allowed for a Characteristic and returns pointer to self.  Only applicable if format=INT, UINT8, UINT16, or UINT32
 
   template <typename A, typename B, typename S=int> SpanCharacteristic *setRange(A min, B max, S step=0){
 

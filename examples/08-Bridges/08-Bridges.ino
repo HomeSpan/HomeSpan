@@ -39,7 +39,7 @@
 
 void setup() {
 
-  // If the only Service defined in the FIRST Accessory of a mult-Accessory device is the required Accessory Information Service,
+  // If the only Service defined in the FIRST Accessory of a multi-Accessory device is the required Accessory Information Service,
   // the device is said to be configured as a "Bridge".  Historically there may have been a number of functional differences between bridge
   // devices and non-bridge devices, but since iOS 15, it's not obvious there are any differences in functionality, with two exceptions:
   

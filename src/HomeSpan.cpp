@@ -1977,17 +1977,28 @@ unsigned long SpanCharacteristic::timeVal(){
 ///////////////////////////////
 
 SpanCharacteristic *SpanCharacteristic::setValidValues(int n, ...){
-
-  if(format!=UINT8){
-    setValidValuesError=true;
-    return(this);
-  }
  
   String s="[";
   va_list vl;
   va_start(vl,n);
   for(int i=0;i<n;i++){
-    s+=(uint8_t)va_arg(vl,int);
+    switch(format){
+      case FORMAT::UINT8:
+        s+=(uint8_t)va_arg(vl,uint32_t);
+        break;
+      case FORMAT::UINT16:
+        s+=(uint16_t)va_arg(vl,uint32_t);
+        break;
+      case FORMAT::UINT32:
+        s+=(uint32_t)va_arg(vl,uint32_t);
+        break;
+      case FORMAT::INT:
+        s+=(int)va_arg(vl,uint32_t);
+        break;
+      default:
+        setValidValuesError=true;
+        return(this);      
+    }
     if(i!=n-1)
       s+=",";
   }
