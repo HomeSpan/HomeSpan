@@ -334,9 +334,8 @@ This is a **base class** from which all HomeSpan Characteristics are derived, an
   
 * `SpanCharacteristic *setValidValues(int n, [int v1, int v2 ...])`
   * overrides the default HAP Valid Values for Characteristics that have specific enumerated Valid Values with a variable-length list of *n* values *v1*, *v2*, etc.
-  * an error is thrown if:
-    * called on a Characteristic that does not have specific enumerated Valid Values, or
-    * called more than once on the same Characteristic
+  * works on Characteristics with UINT8, UINT16, UINT32, and INT formats only
+    * a warning message is thrown, and the request is ignored, if this method is called on a Characteristic with any other format
   * returns a pointer to the Characteristic itself so that the method can be chained during instantiation
   * example: `(new Characteristic::SecuritySystemTargetState())->setValidValues(3,0,1,3);` creates a new Valid Value list of length=3 containing the values 0, 1, and 3.  This has the effect of informing HomeKit that a SecuritySystemTargetState value of 2 (Night Arm) is not valid and should not be shown as a choice in the Home App
 
