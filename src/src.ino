@@ -56,7 +56,7 @@ void setup() {
       (new Characteristic::CharUInt8())->setValidValues(5,0,1,2,6,7,8);
       (new Characteristic::CharUInt16())->setValidValues(5,0,1<<8,1<<16,0xFFFFFFFF,-1);
       (new Characteristic::CharUInt32())->setValidValues(5,0,1<<8,1<<16,0xFFFFFFFF,-1);
-      (new Characteristic::CharInt())->setValidValues(5,0,255,2000000000,-2000000000,-1);
+      (new Characteristic::CharInt())->setValidValues(5,0,255,2000000000,-2000000000,-1)->setValidValues(1,2);
   
 } // end of setup()
 
