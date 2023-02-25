@@ -1,8 +1,8 @@
 # HomeSpan Services and Characteristics
 
-HomeSpan implements all [HAP-R2](https://developer.apple.com/homekit/specification/) Services and Characteristics except for those that involve video or audio streaming, Apple TV, or advanced lock management (i.e. all HAP Services except those that require Characteristics with a TLV8 data type).
+HomeSpan implements all HAP-R2 Services and Characteristics except for those that involve video or audio streaming, Apple TV, or advanced lock management (i.e. all HAP Services except those that require Characteristics with a TLV8 data type).
 
-HomeSpan Services and Characteristics are implemented as C++ Classes with names that exactly match the spelling and capitalization specified by Apple in Sections 8  and 9 of [HAP-R2](https://developer.apple.com/homekit/specification/), but without any spaces.  HomeSpan Services are defined in HomeSpan's `Service` namespace.  HomeSpan Characteristics are defined in HomeSpan's `Characteristic` namespace.  For example, HomeSpan defines the *Carbon Dioxide Sensor* Service (HAP Service 8.7) as `Service::CarbonDioxideSensor`, and the *Carbon Dioxide Detected* Characteristic (HAP Characteristic 9.16) as `Characteristic::CarbonDioxideDetected`.
+HomeSpan Services and Characteristics are implemented as C++ Classes with names that exactly match the spelling and capitalization specified by Apple in Sections 8  and 9 of HAP-R2, but without any spaces.  HomeSpan Services are defined in HomeSpan's `Service` namespace.  HomeSpan Characteristics are defined in HomeSpan's `Characteristic` namespace.  For example, HomeSpan defines the *Carbon Dioxide Sensor* Service (HAP Service 8.7) as `Service::CarbonDioxideSensor`, and the *Carbon Dioxide Detected* Characteristic (HAP Characteristic 9.16) as `Characteristic::CarbonDioxideDetected`.
 
 HomeSpan Services and Characteristics are instantiated with a C++ `new` command.  Services do not take any arguments, whereas Characteristics take a single, optional argument that is used to initialize the value of the Characteristic at startup.  If this argument is not specified, HomeSpan will apply a reasonable [default value](#characteristic-types-and-defaults) based on the Characteristic's type and allowed range.
 
@@ -15,7 +15,7 @@ new Service::LightBulb();                         // instantiate a Light Bulb Se
   new Characteristic::Name("Living Room Lamp");     // instantiate an optional Name Characteristic for this Service, and set to "Living Room Lamp"
 ```
 
-Please see Sections 8 and 9 of [HAP-R2](https://developer.apple.com/homekit/specification/) for a complete description of all HAP Services and Characteristics.  Note that HomeSpan's Service and Characteristic Classes already contain all the required HAP fields, such as the UUID, Format, and Permissions, so you don't need to specify any of these parameters.
+Please see Sections 8 and 9 of HAP-R2 for a complete description of all HAP Services and Characteristics.  Note that HomeSpan's Service and Characteristic Classes already contain all the required HAP fields, such as the UUID, Format, and Permissions, so you don't need to specify any of these parameters.
 
 Additionally, when first starting up, HomeSpan begins by validating the device's configuration to ensure each Service you instantiate includes all required Characteristics, but does not include any Characteristics that are neither required nor optional.  If any errors are found, HomeSpan reports them to the Arduino Serial Monitor and halts the program.
 
