@@ -97,7 +97,7 @@ You can extend the HomeSpan CLI with custom functions using `SpanUserCommand()`.
   
 ---
 
-[↩️](README.md) Back to the Welcome page  
+[↩️](../README.md) Back to the Welcome page  
   
 
 
