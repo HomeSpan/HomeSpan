@@ -38,6 +38,6 @@ Note that these check are *only* applicable when uploading sketches via OTA.  Th
 
 ---
 
-[↩️](README.md) Back to the Welcome page
+[↩️](../README.md) Back to the Welcome page
 
 
