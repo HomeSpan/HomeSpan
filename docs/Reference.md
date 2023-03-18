@@ -600,4 +600,4 @@ If REQUIRED is defined in the main sketch *prior* to including the HomeSpan libr
   
 ---
 
-[↩️](README.md) Back to the Welcome page
+[↩️](../README.md) Back to the Welcome page
