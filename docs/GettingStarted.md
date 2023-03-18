@@ -72,4 +72,4 @@ Finally, disconnect your HomeSpan device from the computer and power it directly
 
 ---
 
-[↩️](README.md) Back to the Welcome page
+[↩️](../README.md) Back to the Welcome page
