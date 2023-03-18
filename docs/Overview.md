@@ -314,5 +314,5 @@ Finally, don't forget to visit the [HomeSpan Command-Line Interface (CLI)](CLI.m
 
 ---
 
-[↩️](README.md) Back to the Welcome page
+[↩️](../README.md) Back to the Welcome page
 
