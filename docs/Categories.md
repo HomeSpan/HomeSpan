@@ -41,5 +41,5 @@ Note that the HomeKit primarily uses the Accessory Category of a device for dete
 
 ---
 
-[↩️](README.md) Back to the Welcome page
+[↩️](../README.md) Back to the Welcome page
 
