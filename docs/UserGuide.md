@@ -159,6 +159,6 @@ Note that if you can’t find *Scancardium* listed as a font choice in either th
 
 ---
 
-[↩️](README.md) Back to the Welcome page
+[↩️](../README.md) Back to the Welcome page
 
  
