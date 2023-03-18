@@ -63,22 +63,22 @@ HomeSpan requires version 2.0.0 or later of the [Arduino-ESP32 Board Manager](ht
   * Similar to SpanButton, but designed for toggle switches
   * Integrated de-bounce logic prevents false triggers
   * Ideal for use with Contact Sensors
-  * See the [API Reference](Reference.md) for details
+  * See the [API Reference](docs/Reference.md) for details
   
 * **Added Television Speaker Service**
   * Control the volume of a Television from Apple's Remote App
-  * See the [Television Services Page](TVServices.md) for details and examples
+  * See the [Television Services Page](docs/TVServices.md) for details and examples
   
 * **Added support for byte-array ("DATA") Characteristics**
   * Useful for experimentation with other HomeKit applications, such as *Eve for HomeKit*
   * Includes three new Characteristic methods: `setData()`, `getData()`, and `getNewData()`
   * Includes new macro `CUSTOM_CHAR_DATA()` to easily create custom byte-array Characteristics
-  * See the [API Reference](Reference.md) for details
+  * See the [API Reference](docs/Reference.md) for details
   
 * **LedPin upgrade**
   * New option to invert the PWM signal
   * Useful for generating two, separate out-of-phase PWM signals (one inverted, one not) to drive certain two-pin devices in a push/pull manner, such as a piezo-electric buzzer
-  * See the [PWM Page](PWM.md) for details
+  * See the [PWM Page](docs/PWM.md) for details
 
 * **Bug Fixes**
   * Added logic to prevent the extraneous broadcasting of an Access Point SSID when SpanPoint is being used
@@ -89,24 +89,24 @@ See [Releases](https://github.com/HomeSpan/HomeSpan/releases) for details on all
 
 HomeSpan includes the following documentation:
 
-* [Getting Started with HomeSpan](GettingStarted.md) - setting up the software and the hardware needed to develop HomeSpan devices
-* [HomeSpan API Overview](Overview.md) - an overview of the HomeSpan API, including a step-by-step guide to developing your first HomeSpan Sketch
-* [HomeSpan Tutorials](Tutorials.md) - a guide to HomeSpan's tutorial-sketches
-* [HomeSpan Services and Characteristics](ServiceList.md) - a list of all HAP Services and Characterstics supported by HomeSpan
-* [HomeSpan Accessory Categories](Categories.md) - a list of all HAP Accessory Categories defined by HomeSpan
-* [HomeSpan Command-Line Interface (CLI)](CLI.md) - configure a HomeSpan device's WiFi Credentials, modify its HomeKit Setup Code, monitor and update its status, and access detailed, real-time device diagnostics from the Arduino IDE Serial Monitor
-* [HomeSpan User Guide](UserGuide.md) - turnkey instructions on how to configure an already-programmed HomeSpan device's WiFi Credentials, modify its HomeKit Setup Code, and pair the device to HomeKit.  No computer needed!
-* [HomeSpan API Reference](Reference.md) - a complete guide to the HomeSpan Library API
-* [HomeSpan QR Codes](QRCodes.md) - create and use QR Codes for pairing HomeSpan devices
-* [HomeSpan OTA](OTA.md) - update your sketches Over-the-Air directly from the Arduino IDE without a serial connection
-* [HomeSpan PWM](PWM.md) - integrated control of standard LEDs and Servo Motors using the ESP32's on-chip PWM peripheral
-* [HomeSpan RFControl](RMT.md) - easy generation of RF and IR Remote Control signals using the ESP32's on-chip RMT peripheral
-* [HomeSpan Pixels](Pixels.md) - integrated control of addressable one- and two-wire RGB and RGBW LEDs and LED strips
-* [HomeSpan SpanPoint](NOW.md) - facilitates point-to-point, bi-directional communication between ESP32 Devices using ESP-NOW
-* [HomeSpan Television Services](TVServices.md) - how to use HomeKit's undocumented Television Services and Characteristics
-* [HomeSpan Message Logging](Logging.md) - how to generate log messages for display on the Arduino Serial Monitor as well as optionally posted to an integrated Web Log page
+* [Getting Started with HomeSpan](docs/GettingStarted.md) - setting up the software and the hardware needed to develop HomeSpan devices
+* [HomeSpan API Overview](docs/Overview.md) - an overview of the HomeSpan API, including a step-by-step guide to developing your first HomeSpan Sketch
+* [HomeSpan Tutorials](docs/Tutorials.md) - a guide to HomeSpan's tutorial-sketches
+* [HomeSpan Services and Characteristics](docs/ServiceList.md) - a list of all HAP Services and Characterstics supported by HomeSpan
+* [HomeSpan Accessory Categories](docs/Categories.md) - a list of all HAP Accessory Categories defined by HomeSpan
+* [HomeSpan Command-Line Interface (CLI)](docs/CLI.md) - configure a HomeSpan device's WiFi Credentials, modify its HomeKit Setup Code, monitor and update its status, and access detailed, real-time device diagnostics from the Arduino IDE Serial Monitor
+* [HomeSpan User Guide](docs/UserGuide.md) - turnkey instructions on how to configure an already-programmed HomeSpan device's WiFi Credentials, modify its HomeKit Setup Code, and pair the device to HomeKit.  No computer needed!
+* [HomeSpan API Reference](docs/Reference.md) - a complete guide to the HomeSpan Library API
+* [HomeSpan QR Codes](docs/QRCodes.md) - create and use QR Codes for pairing HomeSpan devices
+* [HomeSpan OTA](docs/OTA.md) - update your sketches Over-the-Air directly from the Arduino IDE without a serial connection
+* [HomeSpan PWM](docs/PWM.md) - integrated control of standard LEDs and Servo Motors using the ESP32's on-chip PWM peripheral
+* [HomeSpan RFControl](docs/RMT.md) - easy generation of RF and IR Remote Control signals using the ESP32's on-chip RMT peripheral
+* [HomeSpan Pixels](docs/Pixels.md) - integrated control of addressable one- and two-wire RGB and RGBW LEDs and LED strips
+* [HomeSpan SpanPoint](docs/NOW.md) - facilitates point-to-point, bi-directional communication between ESP32 Devices using ESP-NOW
+* [HomeSpan Television Services](docs/TVServices.md) - how to use HomeKit's undocumented Television Services and Characteristics
+* [HomeSpan Message Logging](docs/Logging.md) - how to generate log messages for display on the Arduino Serial Monitor as well as optionally posted to an integrated Web Log page
 * [HomeSpan Projects](https://github.com/topics/homespan) - real-world applications of the HomeSpan Library
-* [HomeSpan FAQ](FAQ.md) - answers to frequently-asked questions
+* [HomeSpan FAQ](docs/FAQ.md) - answers to frequently-asked questions
 
 Note that all documentation is version-controlled and tied to each branch.  The *master* branch generally points to the latest release.  The *dev* branch, when available, will contain code under active development.
 
