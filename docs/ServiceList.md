@@ -194,4 +194,4 @@ Additionally, when first starting up, HomeSpan begins by validating the device's
 
 ---
 
-[↩️](README.md) Back to the Welcome page
+[↩️](../README.md) Back to the Welcome page
