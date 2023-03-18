@@ -83,4 +83,4 @@ Examples showing such a configuration can be found in the Arduino IDE under [*Fi
 * *RemoteDevice8266.ino* - similar in function to *RemoteDevice.ino*, but implemented to run on an ESP8266 device using native ESP-NOW commands (since neither HomeSpan nor SpanPoint support the ESP8266).  Note that the "complementary" SpanPoint object on the ESP32 that receives data from the ESP8266 must be configured to use the ESP32's *AP MAC Address* (instead of the *STA MAC Address*) by setting *useAPaddress* to *true* in the SpanPoint constructor
 ---
 
-[↩️](README.md) Back to the Welcome page
+[↩️](../README.md) Back to the Welcome page
