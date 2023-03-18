@@ -74,4 +74,4 @@ HomeSpan will report a non-fatal error message to the Arduino Serial Monitor whe
 
 ---
 
-[↩️](README.md) Back to the Welcome page
+[↩️](../README.md) Back to the Welcome page
