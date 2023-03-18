@@ -137,4 +137,4 @@ Demonstrates how SpanPoint can be used to transmit messages from battery-powered
 
 ---
 
-[↩️](README.md) Back to the Welcome page
+[↩️](../README.md) Back to the Welcome page
