@@ -341,7 +341,10 @@ class Span{
     va_end(ap);    
   }
 
-  void autoPoll(uint32_t stackSize=CONFIG_ARDUINO_LOOP_STACK_SIZE){xTaskCreateUniversal([](void *parms){for(;;)homeSpan.pollTask();}, "pollTask", stackSize, NULL, 1, &pollTaskHandle, 0);}     // start pollTask()
+  void autoPoll(uint32_t stackSize=8192, uint32_t priority=1, uint32_t cpu=0){     // start pollTask()
+    xTaskCreateUniversal([](void *parms){for(;;)homeSpan.pollTask();}, "pollTask", stackSize, NULL, priority, &pollTaskHandle, cpu);
+    Serial.printf("\n*** AutoPolling Task started with priority=%d\n\n",uxTaskPriorityGet(pollTaskHandle)); 
+  }
 
   void setTimeServerTimeout(uint32_t tSec){webLog.waitTime=tSec*1000;}    // sets wait time (in seconds) for optional web log time server to connect
  
