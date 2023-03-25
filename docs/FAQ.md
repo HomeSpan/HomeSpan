@@ -70,6 +70,9 @@
 
 * No, a MFi license is needed to create commercial devices. HomeSpan was developed using Apple's HAP-R2 specs, which Apple provides for [non-commercial devices that won't be distributed or sold](https://developers.apple.com/homekit/faq/).  Though I believe the commercial specifications are functionally the same, there is a slight, but critical, difference in the pairing protocol between HAP-R2 and MFi. Note that when you pair a HomeSpan device (or any device that is based on HAP-R2, such as Apple's HAP-R2 ADK, Espressif's non-commercial ADK, HomeBridge, etc.) the Home App on your iPhone will flag the device as uncertified and require you to grant it permission to proceed with pairing. This warning message about the device being uncertified does not appear on commercial devices, presumably because Apple provides the licensee with a custom MFi authorization code that is recognized by the iPhone.
 
+#### Why does the Home App indicate the Doorbell Service is unsupported?
+
+* Though not documented in HAP-R2, it appears that the Doorbell Service is designed to be used in conjunction with another service, such as the Lock Mechanism.  If you add in a second service, the Home App will show the appropriate Tile (such as a Lock) with the Doorbell being the second service.  Howeveer, you can still use the Doorbell Service on a stanadlone basis --- even though the Home App says it is unsupported, a button press on the device will properly trigger a chime on your Home Pods as expected. 
 ---
 
 [↩️](README.md) Back to the Welcome page
