@@ -38,9 +38,13 @@ void setup() {
 
   Serial.println("\n\nHomeSpan LED Fade Test\n");
 
-  LedPin led(26,50);
+  LedPin led(26);
+  for(int i=10;i<=100;i+=10){
+    led.set(i);
+    delay(1000);
+  }
   Serial.printf("Start\n");
-  led.fade(0,10000);
+  led.set(0,5000);
   Serial.printf("End\n");
 
   while(1);  
