@@ -102,7 +102,7 @@ LedPin::LedPin(uint8_t pin, float level, uint16_t freq, boolean invert) : LedC(p
 
 ///////////////////
 
-void LedPin::set(float level, uint32_t fadeTime){
+void LedPin::set(float level){
 
   if(!channel)
     return;
@@ -110,14 +110,25 @@ void LedPin::set(float level, uint32_t fadeTime){
   if(level>100)
     level=100;
 
-  float d=level*(pow(2,(int)timer->duty_resolution)-1)/100.0;
+  float d=level*(pow(2,(int)timer->duty_resolution)-1)/100.0;  
+    
+  channel->duty=d;
+  ledc_channel_config(channel); 
+}
 
-  if(fadeTime==0){
-    channel->duty=d;
-    ledc_channel_config(channel);
-  } else {
-    ledc_set_fade_time_and_start(channel->speed_mode,channel->channel,(uint32_t)d,fadeTime,LEDC_FADE_NO_WAIT);      
-  }
+///////////////////
+
+void LedPin::fade(float level, uint32_t fadeTime){
+
+  if(!channel)
+    return;
+
+  if(level>100)
+    level=100;
+
+  float d=level*(pow(2,(int)timer->duty_resolution)-1)/100.0;  
+
+  ledc_set_fade_time_and_start(channel->speed_mode,channel->channel,(uint32_t)d,fadeTime,LEDC_FADE_NO_WAIT);  
 }
 
 ///////////////////
