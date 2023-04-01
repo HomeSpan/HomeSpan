@@ -111,7 +111,7 @@ Example 20 illustrates a number of advanced techniques through the implementatio
 
 The following examples showcase a variety of HomeSpan and HomeKit functionality as referenced in different sections of the HomeSpan documentation.  The sketches can be found in the Arduino IDE under *File → Examples → HomeSpan → Other Examples*
 
-### [TableLamp](../Other%20Examples/TableLamp)
+### [TableLamp](../examples/Other%20Examples/TableLamp)
 A basic implementation of a Table Lamp Accessory. Used as the tutorial in [HomeSpan API Overview](Overview.md)
 
 ### [RemoteControl](../Other%20Examples/RemoteControl)
