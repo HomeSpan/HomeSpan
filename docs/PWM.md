@@ -18,6 +18,28 @@ Creating an instance of this **class** configures the specified *pin* to output 
 * `void set(float level)`
 
   * sets the PWM %duty-cycle to *level*, where *level* ranges from 0 (LED completely off) to 100 (LED fully on)
+
+* `int fade(float level, uint32_t fadeTime, int fadeType=LedPin::ABSOLUTE)`
+
+  * uses the ESP32's PWM hardware to smoothly fade the LED to *level* (from 0-100) over a maximum of *fadeTime* milliseconds
+  * if *fadeType* is set to **LedPin::ABSOLUTE** (the default), fading will take the full amount of time specified by *fadeTime*
+  * if *fadeType* is set to **LedPin::PROPORTIONAL**, the fading time will be scaled down proportionally according to the difference between the current level and the level specified.  For example, if the current level is set to 30, then
+    * `fade(20, 1000, LedPin::ABSOLUTE)` sets the level to 20 over the course of 1 second, whereas
+    * `fade(20, 1000, LedPin::PROPORTIONAL)` sets the level to 20 over the course of 100 milliseconds (since the level only needs to change by 10 out of 100 units)
+  * this is a **NON-BLOCKING** method and will return immediately.  Fading occurs in the background controlled by the ESP32 hardware
+  * note: once fading begins it CANNOT be stopped or changed until completed (this is a limitation of the ESP32 hardware)
+  * this method returns 0 if the fading has successfully started, or 1 if fading is already in progress and cannot yet be changed (new requests for fading while fading is already in progress for a specific LedPin are simply ignored)
+  * use the *fadeStatus* method (below) to determine the current fading status of any given LedPin
+
+* `int fadeStatus()`
+
+  * returns the fading status of an LedPin.  Return values are as follows:
+  
+    * **LedPin::NOT_FADING** - the LedPin is not currently fading
+    * **LedPin::FADING** - fading on LedPin is currently in progress and cannot be changed/stopped
+    * **LedPin::COMPLETED** - fading has just completed  
+      * once this value is returned, subsequent calls to `fadeStatus()` will return **LedPin::NOT_FADING** (unless you called `fade()` again)
+      * by checking for `fadeStatus()==LedPin::COMPLETED` in a `loop()` method, you can thus trigger a new action (if desired) once fading is completed
   
 * `int getPin()`
 
