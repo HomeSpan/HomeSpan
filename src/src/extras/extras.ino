@@ -38,13 +38,31 @@ void setup() {
 
   Serial.println("\n\nHomeSpan LED Fade Test\n");
 
-  LedPin led(26,50);
-  Serial.printf("Start\n");
-  led.fade(0,10000);
-  Serial.printf("End\n");
+  LedPin red(33,0);
+  LedPin green(32,0);
+  LedPin blue(14,0);
 
-  while(1);  
+  int redLevel=0;
 
+  for(int i=100;i<=100;i+=10){
+    while(red.fadeStatus()==LedPin::FADING);
+    red.fade(i,1000,LedPin::PROPORTIONAL);
+  }
+
+  while(1);
+
+  
+  while(1){
+    delay(1000);
+    if(red.fade(redLevel,5000))
+      Serial.printf("Failed\n");
+    else{
+      Serial.printf("Success\n");
+      redLevel=100-redLevel;
+    }
+    
+  }
+ 
 }
 
 void loop(){

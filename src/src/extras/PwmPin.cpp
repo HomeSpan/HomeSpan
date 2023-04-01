@@ -96,6 +96,8 @@ LedPin::LedPin(uint8_t pin, float level, uint16_t freq, boolean invert) : LedC(p
       );
             
   ledc_fade_func_install(0);
+  ledc_cbs_t fadeCallbackList = {.fade_cb = fadeCallback};                          // for some reason, ledc_cb_register requires the function to be wrapped in a structure
+  ledc_cb_register(channel->speed_mode,channel->channel,&fadeCallbackList,this);
 
   set(level);   
 }
@@ -118,20 +120,47 @@ void LedPin::set(float level){
 
 ///////////////////
 
-void LedPin::fade(float level, uint32_t fadeTime){
+int LedPin::fade(float level, uint32_t fadeTime, int fadeType){
 
   if(!channel)
-    return;
+    return(1);
+
+  if(fadeState==FADING)       // fading already in progress
+    return(1);                // return error
 
   if(level>100)
     level=100;
 
-  float d=level*(pow(2,(int)timer->duty_resolution)-1)/100.0;  
+  float d=level*(pow(2,(int)timer->duty_resolution)-1)/100.0;
 
-  ledc_set_fade_time_and_start(channel->speed_mode,channel->channel,(uint32_t)d,fadeTime,LEDC_FADE_NO_WAIT);  
+  if(fadeType==PROPORTIONAL)
+    fadeTime*=fabs((float)ledc_get_duty(channel->speed_mode,channel->channel)-d)/(float)(pow(2,(int)timer->duty_resolution)-1);
+
+  fadeState=FADING;
+  ledc_set_fade_time_and_start(channel->speed_mode,channel->channel,d,fadeTime,LEDC_FADE_NO_WAIT);
+  return(0);
 }
 
 ///////////////////
+
+int LedPin::fadeStatus(){
+  if(fadeState==COMPLETED){
+    fadeState=NOT_FADING;
+    return(COMPLETED);
+  }
+
+  return(fadeState);
+}
+
+///////////////////
+
+bool IRAM_ATTR LedPin::fadeCallback(const ledc_cb_param_t *param, void *arg){
+  ((LedPin *)arg)->fadeState=COMPLETED;
+  return(false);
+}
+
+///////////////////
+
 
 void LedPin::HSVtoRGB(float h, float s, float v, float *r, float *g, float *b ){
 

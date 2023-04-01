@@ -75,9 +75,26 @@ class LedC {
 class LedPin : public LedC {
 
   public:
+    enum {
+      NOT_FADING,
+      COMPLETED,
+      FADING
+    };
+
+    enum {
+      ABSOLUTE,
+      PROPORTIONAL
+    };
+
+  private:
+    int fadeState=NOT_FADING;
+    static bool fadeCallback(const ledc_cb_param_t *param, void *arg);
+
+  public:
     LedPin(uint8_t pin, float level=0, uint16_t freq=DEFAULT_PWM_FREQ, boolean invert=false);   // assigns pin to be output of one of 16 PWM channels initial level and frequency
     void set(float level);                                                                      // sets the PWM duty to level (0-100)
-    void fade(float level, uint32_t fadeTime);                                                  // sets the PWM duty to level (0-100) within fadeTime in milliseconds
+    int fade(float level, uint32_t fadeTime, int fadeType=ABSOLUTE);                            // sets the PWM duty to level (0-100) within fadeTime in milliseconds, returns success (0) or fail (1)
+    int fadeStatus();                                                                           // returns fading state
     
     static void HSVtoRGB(float h, float s, float v, float *r, float *g, float *b );       // converts Hue/Saturation/Brightness to R/G/B
 };
