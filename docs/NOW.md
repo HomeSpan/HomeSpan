@@ -75,7 +75,7 @@ Also note that regardless of whether or not the queue if full, if the size of a 
 
 One of the primary reasons for using SpanPoint is to enable the deployement of battery-powered devices.  Since HomeKit requires an always-on WiFi connection, wall-power is a must.  But ESP-NOW does not require always-on connectivity to a central WiFi network, which makes it possible to power things like remote-sensor devices with just a battery.  Such battery-powered "Remote Devices" can take periodic local measurements and transmit them via SpanPoint messages to a wall-powered "Main Device" that is running a full HomeSpan sketch connected to HomeKit via a central WiFi network.
 
-Examples showing such a configuration can be found in the Arduino IDE under [*File → Examples → HomeSpan → Other Examples → RemoteSensors*](../Other%20Examples/RemoteSensors).  This folder contains the following sketches:
+Examples showing such a configuration can be found in the Arduino IDE under [*File → Examples → HomeSpan → Other Examples → RemoteSensors*](../examples/Other%20Examples/RemoteSensors).  This folder contains the following sketches:
 
 * *MainDevice.ino* - a full HomeSpan sketch that implements two Temperature Sensor Accessories, but instead of taking its own temperature measurements, it uses SpanPoint to read messages containing temperature updates from other Remote Devices
 * *RemoteDevice.ino* - a lightweight sketch that simulates taking periodic temperature measurements, which are then transmitted to the Main Device via SpanPoint
