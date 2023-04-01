@@ -56,7 +56,7 @@ LedPin also includes a static class function that converts Hue/Saturation/Bright
   * *g* - output Green value, range 0-1
   * *b* - output Blue value, range 0-1
 
-See tutorial sketch [#10 (RGB_LED)](../examples/10-RGB_LED) for an example of using LedPin to control an RGB LED.
+See tutorial sketch [#10 (RGB_LED)](../examples/10-RGB_LED) for an example of using LedPin to control an RGB LED.  Also see [*File → Examples → HomeSpan → Other Examples → FadingLED*](../examples/Other%20Examples/FadingLED) for an example of to use the ESP32's built-in fading controls.
 
 ## *ServoPin(uint8_t pin [,double initDegrees [,uint16_t minMicros, uint16_t maxMicros, double minDegrees, double maxDegrees]])*
 
