@@ -85,7 +85,7 @@ LedPin::LedPin(uint8_t pin, float level, uint16_t freq, boolean invert) : LedC(p
   if(!channel)
     Serial.printf("\n*** ERROR:  Can't create LedPin(%d) - no open PWM channels and/or Timers ***\n\n",pin);
   else
-    Serial.printf("LedPin=%d: mode=%d channel=%d, timer=%d, freq=%d Hz, resolution=%d bits %s\n",
+    Serial.printf("LedPin=%d: mode=%d, channel=%d, timer=%d, freq=%d Hz, resolution=%d bits %s\n",
       channel->gpio_num,
       channel->speed_mode,
       channel->channel,
