@@ -133,7 +133,10 @@ Demonstrates how to create Custom Services and Custom Characteristics in HomeSpa
 Demonstrates how to implement a fully programmable Light Accessory Hub that allows the user to *dynamically* add/delete up to 12 Light Accessories directly through a device-hosted *web interface* or via HomeSpan's *command-line inteface*.  Each light can be configured as dimmable/non-dimmable with either no color control, full RGB color control, or color-temperature control.  Builds upon many of the techniques used in [Example 20](../examples/20-AdvancedTechniques)
 
 ### [RemoteSensors](../Other%20Examples/RemoteSensors)
-Demonstrates how SpanPoint can be used to transmit messages from battery-powered Remote Devices running light-weight sketches that measure the local temperature, to a wall-powered Main Device running a full HomeSpan sketch implementing Temperature Sensor Accessories.  See [SpanPoint: Point-to-Point Communication between ESP32 Devices](NOW.md) for full details regarding the SpanPoint class and all of its methods.
+Demonstrates how *SpanPoint* can be used to transmit messages from battery-powered Remote Devices running light-weight sketches that measure the local temperature, to a wall-powered Main Device running a full HomeSpan sketch implementing Temperature Sensor Accessories.  See [SpanPoint: Point-to-Point Communication between ESP32 Devices](NOW.md) for full details regarding the *SpanPoint* class and all of its methods.
+
+### [FadingLED](../Other%20Examples/FadingLED)
+Demonstrates how the *LedPin* class can use the ESP32's built-in fading control to automatically fade an LED from from one level of brightness to another over a specified period of time. See the [LedPin](PWM.md#pulse-width-modulation-pwm) page for full details
 
 ---
 
