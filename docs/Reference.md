@@ -557,7 +557,7 @@ Creates a custom Service for use with third-party applications (such as *Eve for
 
 Custom Services may contain a mix of both Custom Characteristics and standard HAP Characteristics, though since the Service itself is custom, the Home App will ignore the entire Service even if it contains some standard HAP Characterstics.  Note that Custom Services must be created prior to calling `homeSpan.begin()`
 
-A fully worked example showing how to use both the ***CUSTOM_SERV()*** and ***CUSTOM_CHAR()*** macros to create a Pressure Sensor Accessory that is recognized by *Eve for HomeKit* can be found in the Arduino IDE under [*File → Examples → HomeSpan → Other Examples → CustomService*](../Other%20Examples/CustomService).
+A fully worked example showing how to use both the ***CUSTOM_SERV()*** and ***CUSTOM_CHAR()*** macros to create a Pressure Sensor Accessory that is recognized by *Eve for HomeKit* can be found in the Arduino IDE under [*File → Examples → HomeSpan → Other Examples → CustomService*](../examples/Other%20Examples/CustomService).
 
 ## Other Macros
 
