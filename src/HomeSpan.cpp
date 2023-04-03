@@ -1043,7 +1043,7 @@ void Span::processSerialCommand(const char *c){
     }
     break;
 
-    case 'p': {
+    case 'P': {
       
       Serial.printf("\n*** Pairing Data used for Cloning another Device\n\n");
       size_t olen;
@@ -1060,7 +1060,7 @@ void Span::processSerialCommand(const char *c){
     }
     break;
 
-    case 'P': {
+    case 'C': {
 
       Serial.printf("\n*** Clone Pairing Data from another Device\n\n");
       TempBuffer<char> tBuf(200);
@@ -1141,6 +1141,9 @@ void Span::processSerialCommand(const char *c){
       Serial.print("  V - delete value settings for all saved Characteristics\n");
       Serial.print("  U - unpair device by deleting all Controller data\n");
       Serial.print("  H - delete HomeKit Device ID as well as all Controller data and restart\n");      
+      Serial.print("\n");      
+      Serial.print("  P - output Pairing Data that can be saved offline to clone a new device\n");      
+      Serial.print("  C - clone Pairing Data previously saved offline from another device\n");      
       Serial.print("\n");      
       Serial.print("  R - restart device\n");      
       Serial.print("  F - factory reset and restart\n");      
