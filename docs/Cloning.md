@@ -1,5 +1,7 @@
 # Cloning Pairing Data from one Device to another
 
+### HomeSpan Pairing Data
+
 Every HomeSpan Accessory has unique 17-character Device ID, a unique 32-byte long-term public key (LTPK), and a unique 64-byte long-term secret key (LTSK).  these keys are randomly generated for permanent stoorage in a new HomeSpan device, but can be subsequently erased and randomly re-generated with the 'H' CLI Command.
 
 Similarly, every HomeKit Controller (e.g. the Home App on an iPhone) has unique 36-character Device ID and a unique 32-byte LTPK.
@@ -10,7 +12,7 @@ Pairing Data is used every time a HomeKit Controller opens up a new secure conne
 
 Once an Accessory is paired to a Controller, if cannot be paired to a second Controller.  But yet you can operate a HomeSpan device from multiple iPhones, HomePods, Macs, etc., as long as they are on the same network.  This is because in the background HomeKit shares the Pairing Data of a HomeSpan Accessory with other Controllers.  When opening their own connections to HomeSpan, those Controllers use the same Pairing Data.  However, sometimes HomeKit decides to create one or more additional sets of Pairing Data for other Controllers to use by sending such new Pairing Data securely to a HomeSpan Accessory.  HomeSpan can store up to 16 sets of Pairing Data.
 
-You can view the Pairing Data for any HomeSpan Accessory by typing 'S' into the CLI.  Here is an example:
+You can view most of the Pairing Data for any HomeSpan Accessory by typing 'S' into the CLI.  Here is an example:
 
 ```
 *** HomeSpan Status ***
@@ -37,8 +39,20 @@ Connection #11 (unconnected)
 *** End Status ***
 ```
 
+The only Pairing Data not shown on the CLI is the Accessory's LTSK (the long-term secret key).
 
-### Creating Scannable QR Codes
+### Cloning a HomeSpan Device
+
+Though you can run the same sketch on two different HomeSpan devices, each device will have a unique Device ID, will need to be separately paired with HomeKit, and each will operate as an independent device (perhaps controlling separate lights).  This is the normal use case for running the same sketch on more than one device.
+
+However, sometimes you may want to *replace* one HomeSpan device with another running the exact same sketch.  Maybe the first device has malfunctioned or was damaged.  Typically when this occurs, you unpair the first (broken) device from HomeKit and then pair the new device to HomeKit.  Unfortunately, once you unpair the old device, HomeKit forgets any automations, scenes, customizatons, etc., related to this device that you may have made using the Home App.  When you pair the new device, even though it is running the same sketch, HomeKit will treat it as a completely new device.  It will not apply any name-changes you may have made in the Home App, nor recreate any of the prior device's automations.
+
+To solve this problem, you need to be able to replace the broken device with a new device, but *without* unpairing the old device or re-pairing the new device.  This would require the new device to be initialized with the same Pairing Data as the old device, including having the same long-term secret key.
+
+Fortunately, HomeSpan provides a methods for "cloning" the Pairing Data from one device to another.  This means you can swap out a broken device for a new device without HomeKit knowing the difference (provided it is running the same sketch of course).  In fact, you can even swap out an ESP32 for an ESP32-S2, or ESP32-C3, etc.  As long as the sketch is the same, once you clone the Pairing Data the devices are effectively hot-swappable.  
+
+Cloning HomeSpan's pairing data is a two-step process.  First, type 'P' into the CLI for the device you wish to clone.  This necessarily means the device must still be working well enough for HomeSpan to run (if the device is completely dead, you will not be able to clone its Pairing Data).
+
 
 
 
