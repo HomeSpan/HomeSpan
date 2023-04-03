@@ -1043,6 +1043,86 @@ void Span::processSerialCommand(const char *c){
     }
     break;
 
+    case 'p': {
+      
+      Serial.printf("\n*** Pairing Data used for Cloning another Device\n\n");
+      size_t olen;
+      TempBuffer<char> tBuf(256);
+      mbedtls_base64_encode((uint8_t *)tBuf.buf,256,&olen,(uint8_t *)&HAPClient::accessory,sizeof(struct Accessory));
+      Serial.printf("Accessory data:  %s\n",tBuf.buf);
+      for(int i=0;i<HAPClient::MAX_CONTROLLERS;i++){
+        if(HAPClient::controllers[i].allocated){
+          mbedtls_base64_encode((uint8_t *)tBuf.buf,256,&olen,(uint8_t *)(HAPClient::controllers+i),sizeof(struct Controller));
+          Serial.printf("Controller data: %s\n",tBuf.buf);
+        }
+      }
+      Serial.printf("\n*** End Pairing Data\n\n");
+    }
+    break;
+
+    case 'P': {
+
+      Serial.printf("\n*** Clone Pairing Data from another Device\n\n");
+      TempBuffer<char> tBuf(200);
+      size_t olen;
+
+      tBuf.buf[0]='\0';
+      Serial.print(">>> Accessory data:  ");
+      readSerial(tBuf.buf,199);
+      if(strlen(tBuf.buf)==0){
+        Serial.printf("(cancelled)\n\n");
+        return;
+      }
+      mbedtls_base64_decode((uint8_t *)&HAPClient::accessory,sizeof(struct Accessory),&olen,(uint8_t *)tBuf.buf,strlen(tBuf.buf));
+      if(olen!=sizeof(struct Accessory)){
+        Serial.printf("\n*** Error in size of Accessory data - cloning cancelled.  Restarting...\n\n");
+        reboot();
+      } else {
+        HAPClient::charPrintRow(HAPClient::accessory.ID,17);
+        Serial.printf("\n");
+      }
+      
+      for(int i=0;i<HAPClient::MAX_CONTROLLERS;i++){
+        tBuf.buf[0]='\0';
+        Serial.print(">>> Controller data: ");
+        readSerial(tBuf.buf,199);
+        if(strlen(tBuf.buf)==0){
+          Serial.printf("(done)\n");
+          while(i<HAPClient::MAX_CONTROLLERS)              // clear data from remaining controller slots
+            HAPClient::controllers[i++].allocated=false;
+        } else {
+          mbedtls_base64_decode((uint8_t *)(HAPClient::controllers+i),sizeof(struct Controller),&olen,(uint8_t *)tBuf.buf,strlen(tBuf.buf));
+          if(olen!=sizeof(struct Controller)){
+            Serial.printf("\n*** Error in size of Controller data - cloning cancelled.  Restarting...\n\n");
+            reboot();
+          } else {
+            HAPClient::charPrintRow(HAPClient::controllers[i].ID,36);
+            Serial.printf("\n");
+          }
+        }
+      }
+
+      char qSave[2];
+      while(1){
+        qSave[0]='-';
+        Serial.printf("Save Cloned Pairing Data (y/n): ");
+        readSerial(qSave,1);
+        if(qSave[0]=='y'){
+          Serial.printf("(yes)\nData saved!  Rebooting...");
+          nvs_set_blob(HAPClient::hapNVS,"ACCESSORY",&HAPClient::accessory,sizeof(HAPClient::accessory));           // update data
+          nvs_set_blob(HAPClient::hapNVS,"CONTROLLERS",HAPClient::controllers,sizeof(HAPClient::controllers));      
+          nvs_commit(HAPClient::hapNVS);                                                      // commit to NVS
+          reboot();
+        } else
+        if(qSave[0]=='n'){
+          Serial.printf("(no)\nProcess Cancelled!  Rebooting...");
+          reboot();
+        }
+        Serial.printf("\n");
+      }
+    }
+    break;   
+
     case '?': {    
       
       Serial.print("\n*** HomeSpan Commands ***\n\n");
