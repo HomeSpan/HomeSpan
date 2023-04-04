@@ -51,7 +51,17 @@ To solve this problem, you need to be able to replace the broken device with a n
 
 Fortunately, HomeSpan provides a methods for "cloning" the Pairing Data from one device to another.  This means you can swap out a broken device for a new device without HomeKit knowing the difference (provided it is running the same sketch of course).  In fact, you can even swap out an ESP32 for an ESP32-S2, or ESP32-C3, etc.  As long as the sketch is the same, once you clone the Pairing Data the devices are effectively hot-swappable.  
 
-Cloning HomeSpan's pairing data is a two-step process.  First, type 'P' into the CLI for the device you wish to clone.  This necessarily means the device must still be working well enough for HomeSpan to run (if the device is completely dead, you will not be able to clone its Pairing Data).
+Cloning HomeSpan's pairing data is a two-step process.  First, type 'P' into the CLI for the device you wish to clone.  This necessarily means the device must still be working well enough for HomeSpan to run (if the device is completely dead, you will not be able to clone its Pairing Data).  HomeSpan will output its Pairing Data in base-64.  Here is an example:
+
+```
+*** Pairing Data used for Cloning another Device
+
+Accessory data:  ZzbH11I8uNx47Y3Bapq3axQfY5uPOrDfC8D2Q6ke2NwWqat/IGa/6ll8xyY8AShMYO2q6h8gZr/qWXzHJjwBKExg7arqFnNsfXUjy43HgNzc6RDI6RjY6OTk6Q0U6NjUb7mHwbmWzrEWca+5frayfmp=
+Controller data: YaNJH5JYDAQE4NjI0NTAwNy02Mi1FRUY4ODNENTA2NjdDvTRGLTRBRDEtQjkwRXFM1On32PKvumS+0YgVMaEo53X/TYNzg==
+Controller data: MEUwLTREMEUtODk3Ni0yMjBDREQ2RDUxMjjmah3s+Je0GkmAQE0NDQ1NUE2Ni1ExIUkujzeyWfCCRWol/xecsVkjAIYDRQ==
+
+*** End Pairing Data
+```
 
 
 
