@@ -51,7 +51,7 @@ To solve this problem, you need to be able to replace the broken device with a n
 
 Fortunately, HomeSpan provides a methods for "cloning" the Pairing Data from one device to another.  This means you can swap out a broken device for a new device without HomeKit knowing the difference (provided it is running the same sketch of course).  In fact, you can even swap out an ESP32 for an ESP32-S2, or ESP32-C3, etc.  As long as the sketch is the same, once you clone the Pairing Data the devices are effectively hot-swappable.  
 
-Cloning HomeSpan's pairing data is a two-step process.  First, type 'P' into the CLI for the device you wish to clone.  This necessarily means the device must still be working well enough for HomeSpan to run (if the device is completely dead, you will not be able to clone its Pairing Data).  HomeSpan will output its Pairing Data in base-64.  Here is an example:
+Cloning HomeSpan's pairing data is a two-step process.  **First, type 'P' into the CLI for the device you wish to clone.**  This necessarily means the device must still be working well enough for HomeSpan to run (if the device is completely dead, you will not be able to clone its Pairing Data).  HomeSpan will output its Pairing Data in base-64.  Here is an example reflecting a system with Pairing Data for two Controllers (similar to above):
 
 ```
 *** Pairing Data used for Cloning another Device
@@ -63,9 +63,28 @@ Controller data: MEUwLTREMEUtODk3Ni0yMjBDREQ2RDUxMjjmah3s+Je0GkmAQE0NDQ1NUE2Ni1E
 *** End Pairing Data
 ```
 
+The first line completely encodes the Pairing Data for the HomeSpan Accessory.  The second two lines encode the Pairing Data for two Controllers that HomeKit is using to control the HomeSpan device.  Note your system may only have one Controller.  Or it may have more than two.  The number of Controllers depends on your HomeKit network, how it is configured, what devices you have (Apple TVs, HomePods, etc.) and what version of iOS you are running.
 
+Copy this data, exactly as is, from the CLI and save it in a text file.  Make sure not to lose any trailing equal signs - they are part of the base64 data!
 
+Next, power down the device, or at least remove it from the WiFi network to avoid potential duplications two devices running on the same network with identical Pairing Data (HomeKit will likely not behave if this occurs).
 
+**Then, open the Serial Monitor on the new replacement device that is already running the *exact* same HomeSpan sketch as the first device and type 'C' to begin the cloning process.**
+
+HomeSpan will begin by asking you for the Accessory Pairing Data. Copy and paste the base64 data for the Accessory that you save in the text file directly into the Serial Monitor input window and hit return.  If you copied the data correctly it will be accepted and HomeSpan will display the Device ID that was encoded in the data (it does not bother to display the LTPK and LTSK data).  The Device ID should match that of the orignal device.
+
+If you copied or pasted the data incorrectly, HomeSpan will let you know there is a problem, cancel the process, and reboot without making any changes.  You can also cancel the process by simply hitting return after typing 'P' *without* entering any data (this does not cause a reboot, since no data was changed).
+
+After the Accessory data is accepted, HomeSpan will then ask for Controller data.  Copy and paste the base64 data from one of the Controllers in the saved text file directly into the Serial Monitor input window and hit return.  As before, if you copied and pasted correctly, HomeSpan will accept the data and display the Device ID of the Controller.  If you copied and pasted incorrectly, HomeSpan will inform you of the error, cancel the process, and reboot without making any changes.
+
+Assuming the data for the first Controller has been accepted, HomeSpan will ask you to repeat the process for any other Controllers you may have.  Keep repeating the process for copying and pasting the Pairing Data for each Controller.  When you have input the Pairing Data for each Controller, simply hit hit return without entering any data when asked for the next Controller.  An empty response tells HomeSpan you are done adding Controller data.
+
+Finally, HomeSpan will ask you to confirm saving the new data.  Type either 'y' to confirm (yes) or 'n' to cancel (no).  If you type 'n', HomeSpan will reboot without saving any of the changes.
+
+If you type 'y', HomeSpan will save all of the new Pairing Data in the ESP32's permanent storage and reboot.  Upon restarting, HomeSpan will be a clone of the original device and HomeKit should recognize it as if it were the original.  You will not need to re-pair the device or make any other changes to the Home App. 
+  
+❗Caution: Do NOT run two devices on the same HomeKit network with the same Pairing Data.  If you want to experiment by Cloning a working device onto a second device, make sure to unplug the first device before cloning the data onto the second device.  When you are experimenting, type 'H' into the CLI of the device to erase the Controller Pairing Data and regenerate a new, random set of Accessory Pairing Data, allowing you to plug both devices in at the same time without conflict.
+  
 ---
 
 [↩️](../README.md) Back to the Welcome page
