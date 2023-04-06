@@ -4,9 +4,9 @@
 
 Even though two different ESP32 devices may be running the exact same sketch, they are nevertheless distinct.  This is because every HomeSpan Accessory has unique 17-character Device ID, a unique 32-byte long-term public key (LTPK), and a unique 64-byte long-term secret key (LTSK).  When HomeSpan is run for the first time on a new device, it looks for these data in the device's non-volatile storage (NVS) memory.  If it is found, the data is loaded for use.  If not found, HomeSpan generates a new set of random keys, and saves this data in the NVS.  The data is permanently stored, though can be erased by typing 'H' into the CLI, which causes HomeSpan to generate a new set of random keys upon the next reboot.
 
-When HomeSpan is initially paired to HomeKit, the 36-character Device ID and 32-byte LTPK for one or more HomeKit Controllers is securely transmitted to the HomeSpan Accessory.  The Controllers keys are also saved in the device's NVS for permanent retention (though this data is also erased with the 'H' CLI command).
+When HomeSpan is initially paired to HomeKit, the 36-character Device ID and 32-byte LTPK for one or more HomeKit Controllers is securely transmitted to the HomeSpan Accessory.  These keys are then saved in the device's NVS for permanent retention (though can be erased by the 'H' command).
 
-Collectively, the Accessory Device ID, LTPK and LTSK, along with the Device ID and LTPK for each paired Controller, is known as the *Pairing Data* for the device.  You can view the Pairing Data (except for the LTSK) for any HomeSpan Accessory by typing 'S' into the CLI.  Here is an example:
+Collectively, the Accessory Device ID, LTPK and LTSK, along with the Device ID and LTPK for each paired Controller, is known as the device's *Pairing Data*.  You can view the Pairing Data (except for the LTSK) for any HomeSpan Accessory by typing 'S' into the CLI.  Here is an example:
 
 ```
 *** HomeSpan Status ***
@@ -39,15 +39,15 @@ Because every device has a unique set of Pairing Data, it is not possible to sim
 
 This can present a problem if you need to swap out a device (perhaps because it has malfunctioned or was damaged) and you have created a lot of custom automations and scenes for the device from within the Home App.  The new device you use to replace the old device will be seen as a completely new Accessory by HomeKit, and will not be connected with any automations or scenes associated with the old device. In fact, if your unpair the old device, automations and scenes specific to that device will be lost.
 
-To solve this problem, you need to be able to replace the broken device with a new device, but *without* unpairing the old device or re-pairing the new device.  This requires the new device to be initialized not with a new set of randomly-generated Device IDs, LTPKs and LTSKs, but rather with the *same* Pairing Data as the old device.
+To solve this problem you need to be able to replace the broken device with a new device, but *without* unpairing the old device or re-pairing the new device.  This requires the new device to be initialized not with a new set of randomly-generated Device IDs, LTPKs and LTSKs, but rather with the *same* Pairing Data as the old device.
 
 Fortunately, HomeSpan provides a methods for "cloning" the Pairing Data from one device to another.  This means you can swap out a broken device for a new device without HomeKit knowing the difference (provided it is running the same sketch of course).  In fact, you can even swap out an ESP32 for an ESP32-S2, or ESP32-C3.  As long as the sketch is the same, once you clone the Pairing Data the devices are effectively hot-swappable.  
 
-Cloning HomeSpan's Pairing Data is a two-step process.  First you output the Pairing Data from one device to the Serial Monitor, then you copy and paste this data into the Serial Monitor of the second device.  Of course if the first device is completely broken you will not be able to output its Pairing Data - if you create a lot of automations in HomeKit you may want to output the Pairing Data from your devices and save it in a plain text file for later use should the device need to be replaced in the future.
+Cloning HomeSpan's Pairing Data is a two-step process.  First you output the Pairing Data from one device to the Serial Monitor, then you copy and paste this data into the Serial Monitor of the second device.  Of course if the first device is completely broken you will not be able to output its Pairing Data.  If you create a lot of automations in HomeKit you may want to output the Pairing Data from each of your devices and save it in a plain text file for later use should any device need to be replaced in the future.
 
-**To output the Pairing Data from one device type 'P' into the CLI**
+#### Step 1: Type 'P' into the Serial Monitor CLI of the first device to output its Pairing Data
 
-Unlike the 'S' commnand, the 'P' command compresses all the data into base64 chunks as follows:
+Unlike the 'S' command, the 'P' command compresses all the Pairing Data into *base-64* chunks to make it easier to copy and paste as follows:
 
 ```
 *** Pairing Data used for Cloning another Device
@@ -61,9 +61,11 @@ Controller data: MEUwLTREMEUtODk3Ni0yMjBDREQ2RDUxMjjmah3s+Je0GkmAQE0NDQ1NUE2Ni1E
 
 The first line completely encodes the Pairing Data for the HomeSpan Accessory.  The second two lines encode the Pairing Data for two Controllers that HomeKit is using to control the HomeSpan device.  Note your system may only have one Controller, or it may have more than two.  The number of Controllers depends on your HomeKit network, how it is configured, what devices you have (Apple TVs, HomePods, etc.) and what version of iOS you are running.
 
-Copy this data, exactly as is, from the CLI and save it in a text file.  Make sure not to lose any trailing equal signs - they are part of the base64 data!
+Copy this data, exactly as is, from the CLI and save it in a text file.  Make sure not to lose any trailing equal signs as they are part of the base-64 data!
 
-Next, power down the device, or at least remove it from the WiFi network to avoid potential duplications of two devices running on the same network with identical Pairing Data (HomeKit will likely not behave if this occurs).
+Next, power down the first device, or at least remove it from the WiFi network to avoid potential duplications of two devices running on the same network with identical Pairing Data (HomeKit will likely not behave if this occurs).  If the second device is not plugged in, do so now and open its Serial Monitor.
+
+#### Step 2: Type 'C' into the Serial Monitor CLI of the second device to input the Pairing Data you just saved from the first device
 
 **To clone the Pairing Data onto a second device, type 'C' into the CLI for that device.**
 
