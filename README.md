@@ -24,7 +24,7 @@ HomeSpan requires version 2.0.0 or later of the [Arduino-ESP32 Board Manager](ht
   * Command-line interface with a variety of info, debugging, and configuration commands
 * Built-in database validation to ensure your configuration meets all HAP requirements
 * Dedicated classes that utilize the ESP32's 16-channel PWM peripheral for easy control of:
-  * LED Brightness
+  * LED Brightness (including auto-fading)
   * Servo Motors
 * Integrated Push Button and Toggle Switch functionality supporting single, double, and long presses of:
   * Physical pushbuttons that connect an ESP32 pin to either ground or VCC
@@ -48,40 +48,35 @@ HomeSpan requires version 2.0.0 or later of the [Arduino-ESP32 Board Manager](ht
   * Launch the WiFi Access Point
 * A standalone, detailed End-User Guide
 
-## ❗Latest Update - HomeSpan 1.7.1 (2/4/2023)
+## ❗Latest Update - HomeSpan 1.7.2 (4/6/2023)
 
-* **SpanPoint support for the ESP8266!**
-  * Use ESP-NOW on an ESP8266 to connect to HomeSpan running on an ESP32
-  * See the [SpanPoint Tutorial Page](docs/NOW.md) for more info as well as a detailed ESP8266 example
-  
-* **SpanPoint WiFi channel scanning upgrade**
-  * SpanPoint now saves the last WiFi channel successfully used for transmission in non-volatile storage
-  * Avoids the need for SpanPoint to restart a full scan of all channels upon reboot
-  * Dramatically extends battery life when used in conjunction with deep-sleep functionality
-  
-* **New SpanToggle class**
-  * Similar to SpanButton, but designed for toggle switches
-  * Integrated de-bounce logic prevents false triggers
-  * Ideal for use with Contact Sensors
+* New ability to set OTA password from within sketch
+  * See the [OTA Page](docs/OTA.md) for details
+
+* Added logic to allow duplicates of the same Custom Characteristic to be "defined" in more than one file in a sketch
+  * Allows the use of the same Custom Characteristic across multiple files in the same sketch without the compiler throwing a "redefinition error"
   * See the [API Reference](docs/Reference.md) for details
-  
-* **Added Television Speaker Service**
-  * Control the volume of a Television from Apple's Remote App
-  * See the [Television Services Page](docs/TVServices.md) for details and examples
-  
-* **Added support for byte-array ("DATA") Characteristics**
-  * Useful for experimentation with other HomeKit applications, such as *Eve for HomeKit*
-  * Includes three new Characteristic methods: `setData()`, `getData()`, and `getNewData()`
-  * Includes new macro `CUSTOM_CHAR_DATA()` to easily create custom byte-array Characteristics
+
+* Extended functionality of `setValidValues()` to work with more than just UINT8 Characteristics
+  * Now works with INT, UINT16, and UINT32 Characteristics, as well as UINT8 Characteristics
   * See the [API Reference](docs/Reference.md) for details
-  
-* **LedPin upgrade**
-  * New option to invert the PWM signal
-  * Useful for generating two, separate out-of-phase PWM signals (one inverted, one not) to drive certain two-pin devices in a push/pull manner, such as a piezo-electric buzzer
+
+* New parameters added to `autoPoll()` that allow the user to set priority and chose CPU
+  * Provides for enhanced performance on dual-processor chips
+  * See the [API Reference](docs/Reference.md) for details
+
+* Automatic LED Fading!
+  * Added new methods to LedPin class that enable use of the ESP32's built-in fade controls
+  * Allows user to specify speed of fade
+  * Runs in background without consuming any CPU resources
   * See the [PWM Page](docs/PWM.md) for details
 
-* **Bug Fixes**
-  * Added logic to prevent the extraneous broadcasting of an Access Point SSID when SpanPoint is being used
+* Added ability to Clone the Pairing Data from one device to another
+  * Adds new 'P' and 'C' commands to the CLI
+  * Enables a broken device to be swapped for a new device (running the same sketch) without the need to unpair the old device or pair the new device
+  * Avoids loss of automations, scenes, and any other Home App customizations associated with device
+  * New and old device can be different chips (e.g. ESP32-S2 versus ESP32-C3)
+  * See the new [Cloning Page](Cloning.MD) for details
 
 See [Releases](https://github.com/HomeSpan/HomeSpan/releases) for details on all changes and bug fixes included in this update.
 
