@@ -61,7 +61,7 @@ Controller data: MEUwLTREMEUtODk3Ni0yMjBDREQ2RDUxMjjmah3s+Je0GkmAQE0NDQ1NUE2Ni1E
 
 The first line completely encodes the Pairing Data for the HomeSpan Accessory.  The second two lines encode the Pairing Data for two Controllers that HomeKit is using to control the HomeSpan device.  Note your system may only have one Controller, or it may have more than two.  The number of Controllers depends on your HomeKit network, how it is configured, what devices you have (Apple TVs, HomePods, etc.) and what version of iOS you are running.
 
-Copy this data, exactly as is, from the CLI and save it in a text file.  Make sure not to lose any trailing equal signs as they are part of the base-64 data!
+Copy this data, exactly as is, from the CLI and save it in a text file.  Make sure not to lose any trailing equal signs as they are part of the base&#8209;64 data!
 
 Next, power down the first device, or at least remove it from the WiFi network to avoid potential duplications of two devices running on the same network with identical Pairing Data (HomeKit will likely not behave if this occurs).  If the second device is not plugged in, do so now and open its Serial Monitor.
 
