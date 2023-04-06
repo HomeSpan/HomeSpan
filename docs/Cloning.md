@@ -67,19 +67,17 @@ Next, power down the first device, or at least remove it from the WiFi network t
 
 #### Step 2: Type 'C' into the Serial Monitor CLI of the second device to input the Pairing Data you just saved from the first device
 
-**To clone the Pairing Data onto a second device, type 'C' into the CLI for that device.**
-
-HomeSpan will begin by asking you for the Accessory Pairing Data. Copy and paste the base64 data for the Accessory that you save in the text file directly into the Serial Monitor input window and hit return.  If you copied the data correctly it will be accepted and HomeSpan will display the Device ID that was encoded in the data (it does not bother to display the LTPK and LTSK data).  The Device ID should match that of the orignal device.
+HomeSpan will begin by asking you for the Accessory Pairing Data. Copy and paste this data (it's the first set of base-64 data output in Step 1 above) directly into the Serial Monitor input window and hit return.  If you copied the data correctly it will be accepted and HomeSpan will display the Device ID that was encoded in the data (it does not bother to display the LTPK and LTSK data).  The Device ID should match that of the orignal device.
 
 If you copied or pasted the data incorrectly, HomeSpan will let you know there is a problem, cancel the process, and reboot without making any changes.  You can also cancel the process by simply hitting return after typing 'P' *without* entering any data (this does not cause a reboot, since no data was changed).
 
-After the Accessory data is accepted, HomeSpan will then ask for Controller data.  Copy and paste the base64 data from one of the Controllers in the saved text file directly into the Serial Monitor input window and hit return.  As before, if you copied and pasted correctly, HomeSpan will accept the data and display the Device ID of the Controller.  If you copied and pasted incorrectly, HomeSpan will inform you of the error, cancel the process, and reboot without making any changes.
+After the Accessory data is accepted, HomeSpan will then ask for Controller data.  Copy and paste this base-64 data from one of the Controllers in the saved text file directly into the Serial Monitor input window and hit return.  As before, if you copied and pasted correctly, HomeSpan will accept the data and display the Device ID of the Controller.  If you copied and pasted incorrectly, HomeSpan will inform you of the error, cancel the process, and reboot without making any changes.
 
-Assuming the data for the first Controller has been accepted, HomeSpan will ask you to repeat the process for any other Controllers you may have.  Keep repeating the process for copying and pasting the Pairing Data for each Controller.  When you have input the Pairing Data for all Controllers, simply hit hit return without entering any data when asked for the next Controller.  An empty response tells HomeSpan you are done adding Controller data.
+Assuming the data for the first Controller has been accepted, HomeSpan will ask you to repeat the process for any other Controllers you may have.  Keep repeating the process for copying and pasting the Pairing Data for each Controller.  When you have input the Pairing Data for all Controllers, simply hit return without entering any data when asked for the next Controller.  An empty response tells HomeSpan you are done adding Controller data.
 
 Finally, HomeSpan will ask you to confirm saving the new data.  Type either 'y' to confirm (yes) or 'n' to cancel (no).  If you type 'n', HomeSpan will reboot without saving any of the changes.
 
-If you type 'y', HomeSpan will save all of the new Pairing Data in the new device's NVS and reboot.  Upon restarting, HomeSpan will be a clone of the original device and HomeKit should recognize it as if it were the original.  You will not need to re-pair the device or make any other changes to the Home App. 
+If you type 'y', HomeSpan will save all of the new Pairing Data in the device's NVS and reboot.  Upon restarting, this second device will be a perfect clone of the first device and HomeKit should recognize it as if it were the original.  You will not need to re-pair the device or make any other changes to the Home App. 
   
 ❗Caution: Do NOT run two devices on the same HomeKit network with the same Pairing Data.  If you want to experiment by Cloning a working device onto a second device, make sure to unplug the first device before cloning the data onto the second device.  When you are finished experimenting, type 'H' into the CLI of one of the devices so the cloned Pairing Data will be erased and re-generated into something once again unique, allowing you to plug both devices in at the same time without conflict.
   
