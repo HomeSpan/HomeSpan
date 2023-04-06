@@ -109,13 +109,20 @@ The following **optional** `homeSpan` methods override various HomeSpan initiali
 
 The following **optional** `homeSpan` methods enable additional features and provide for further customization of the HomeSpan environment.  Unless otherwise noted, calls **should** be made before `begin()` to take effect:
 
-* `void enableOTA(boolean auth=true, boolean safeLoad=true)`
+* `int enableOTA(boolean auth=true, boolean safeLoad=true)`
   * enables [Over-the-Air (OTA) Updating](OTA.md) of a HomeSpan device, which is otherwise disabled
   * HomeSpan OTA requires an authorizing password unless *auth* is specified and set to *false*
   * the default OTA password for new HomeSpan devices is "homespan-ota"
   * this can be changed via the [HomeSpan CLI](CLI.md) using the 'O' command
   * note enabling OTA reduces the number of HAP Controller Connections by 1
   * OTA Safe Load will be enabled by default unless the second argument is specified and set to *false*.  HomeSpan OTA Safe Load checks to ensure that sketches uploaded to an existing HomeSpan device are themselves HomeSpan sketches, and that they also have OTA enabled.  See [HomeSpan OTA Safe Load](OTA.md#ota-safe-load) for details
+  * returns 0 if enabling OTA was successful, or -1 and reports an error to the Serial Monitor if not
+
+* `int enableOTA(const char *pwd, boolean safeLoad=true)`
+  * an alternative form of `enableOTA()` that allows you to programmatically change the OTA password to the specified *pwd*
+  * *pwd* must contain between 1 and 32 characters
+  * this command causes HomeSpan to ignore, but does not otherwise alter, any password stored using the 'O' command 
+  * returns 0 if enabling OTA was successful, or -1 and reports an error to the Serial Monitor if not
 
 * `void enableAutoStartAP()`
   * enables automatic start-up of WiFi Access Point if WiFi Credentials are **not** found at boot time
@@ -221,12 +228,15 @@ The following **optional** `homeSpan` methods provide additional run-time functi
 
 The following `homeSpan` methods are considered experimental, since not all use cases have been explored or debugged.  Use with caution:
  
-* `void autoPoll(uint32_t stackSize)`
-  * an *optional* method to create a task with *stackSize* bytes of stack memory that repeatedly calls `poll()` in the background.  This frees up the Ardino `loop()` method for any user-defined code to run in parallel that would otherwise block, or be blocked by, calling `poll()` in the `loop()` method
+* `void autoPoll(uint32_t stackSize, uint32_t priority, uint32_t cpu)`
+ 
+  * an *optional* method to create a separate task that repeatedly calls `poll()` in the background.  This frees up the Ardino `loop()` method for any user-defined code to run in parallel that would otherwise block, or be blocked by, calling `poll()` in the `loop()` method.  Parameters, and their default values if unspecified, are as follows:
+ 
+    * *stackSize* - size of stack, in bytes, used by the polling task.  Default=8192 if unspecified
+    * *priority* - priority at which task runs.  Minimum is 1.  Maximum is typically 24, but it depends on how the ESP32 operating system is configured. If you set it to an arbitrarily high value (e.g. 999), it will be set to the maximum priority allowed.  Default=1 if unspecified
+    * *cpu* - specifies the CPU on which the polling task will run.  Valid values are 0 and 1.  This paramater is ignored on single-cpu boards.  Default=0 if unspecified
   * if used, **must** be placed in a sketch as the last line in the Arduino `setup()` method
   * HomeSpan will throw and error and halt if both `poll()`and `autoPoll()` are used in the same sketch - either place `poll()` in the Arduino `loop()` method **or** place `autoPoll()` at the the end of the Arduino `setup()` method
-  * can be used with both single-core and dual-core ESP32 boards.  If used with a dual-core board, the polling task is created on the free processor that is typically not running other Arduino functions
-  * if *stackSize* is not specified, defaults to the size used by the system for the normal Arduino `loop()` task (typically 8192 bytes)
   * if this method is used, and you have no need to add your own code to the main Arduino `loop()`, you can safely skip defining a blank `void loop(){}` function in your sketch
   * warning: if any code you add to the Arduino `loop()` method tries to alter any HomeSpan settings or functions running in the background `poll()` task, race conditions may yield undefined results
  
@@ -268,8 +278,8 @@ The following methods are supported:
   * note though this functionality is defined by Apple in HAP-R2, it seems to have been deprecated and no longer serves any purpose or has any affect on the Home App
   
 * `SpanService *addLink(SpanService *svc)`
-  * adds *svc* as a Linked Service.  Returns a pointer to the calling Service itself so that the method can be chained during instantiation.
-  * note that Linked Services are only applicable for select HAP Services.  See Apple's [HAP-R2](https://developer.apple.com/support/homekit-accessory-protocol/) documentation for full details.
+  * adds *svc* as a Linked Service.  Returns a pointer to the calling Service itself so that the method can be chained during instantiation
+  * note that Linked Services are only applicable for select HAP Services.  See Apple's HAP-R2 documentation for full details
   * example: `(new Service::Faucet)->addLink(new Service::Valve)->addLink(new Service::Valve);` (links two Valves to a Faucet)
 
 * `vector<SpanService *> getLinks()`
@@ -334,9 +344,8 @@ This is a **base class** from which all HomeSpan Characteristics are derived, an
   
 * `SpanCharacteristic *setValidValues(int n, [int v1, int v2 ...])`
   * overrides the default HAP Valid Values for Characteristics that have specific enumerated Valid Values with a variable-length list of *n* values *v1*, *v2*, etc.
-  * an error is thrown if:
-    * called on a Characteristic that does not have specific enumerated Valid Values, or
-    * called more than once on the same Characteristic
+  * works on Characteristics with UINT8, UINT16, UINT32, and INT formats only
+    * a warning message is thrown, and the request is ignored, if this method is called on a Characteristic with any other format
   * returns a pointer to the Characteristic itself so that the method can be chained during instantiation
   * example: `(new Characteristic::SecuritySystemTargetState())->setValidValues(3,0,1,3);` creates a new Valid Value list of length=3 containing the values 0, 1, and 3.  This has the effect of informing HomeKit that a SecuritySystemTargetState value of 2 (Night Arm) is not valid and should not be shown as a choice in the Home App
 
@@ -543,6 +552,8 @@ Note that Custom Characteristics must be created at the global level (i.e. not i
 > Advanced Tip 1: When presented with an unrecognized Custom Characteristic, *Eve for HomeKit* helpfully displays a *generic control* allowing you to interact with any Custom Characteristic you create in HomeSpan.  However, since Eve does not recognize the Characteristic, it will only render the generic control if the Characteristic includes a **description** field, which you can add to any Characteristic using the `setDescription()` method described above.  You may also want to use `setUnit()` and `setRange()` so that the Eve App displays a control with appropriate ranges for your Custom Characteristic.
  
 > Advanced Tip 2: The DATA format is not currently used by any native Home App Characteristic, though it is part of the HAP-R2 specifications.  This format is included in HomeSpan because other applications, such as *Eve for HomeKit* do use these types of Characteristics to create functionality beyond that of the Home App, and are thus provided for advanced users to experiment.
+ 
+> Advanced Tip 3: When using multi-file sketches, the compiler will throw a "redefinition error" if you define the same Custom Characteristic in more than one file.  To avoid this error and allow the same Custom Characteristic to be used across more than one file, add the line `#define CUSTOM_CHAR_HEADER` *before* `#include "HomeSpan.h"` in each file containing a *duplicate* definition of a previously-defined Custom Characteristic.
 
 ### *CUSTOM_SERV(name,uuid)*
 
@@ -553,7 +564,7 @@ Creates a custom Service for use with third-party applications (such as *Eve for
 
 Custom Services may contain a mix of both Custom Characteristics and standard HAP Characteristics, though since the Service itself is custom, the Home App will ignore the entire Service even if it contains some standard HAP Characterstics.  Note that Custom Services must be created prior to calling `homeSpan.begin()`
 
-A fully worked example showing how to use both the ***CUSTOM_SERV()*** and ***CUSTOM_CHAR()*** macros to create a Pressure Sensor Accessory that is recognized by *Eve for HomeKit* can be found in the Arduino IDE under [*File → Examples → HomeSpan → Other Examples → CustomService*](../Other%20Examples/CustomService).
+A fully worked example showing how to use both the ***CUSTOM_SERV()*** and ***CUSTOM_CHAR()*** macros to create a Pressure Sensor Accessory that is recognized by *Eve for HomeKit* can be found in the Arduino IDE under [*File → Examples → HomeSpan → Other Examples → CustomService*](../examples/Other%20Examples/CustomService).
 
 ## Other Macros
 
@@ -599,4 +610,4 @@ If REQUIRED is defined in the main sketch *prior* to including the HomeSpan libr
   
 ---
 
-[↩️](README.md) Back to the Welcome page
+[↩️](../README.md) Back to the Welcome page

@@ -309,6 +309,8 @@ void Span::pollTask() {
   }
 
   statusLED->check();
+
+  vTaskDelay(5);
     
 } // poll
 
@@ -519,25 +521,20 @@ void Span::checkConnect(){
   mdns_service_txt_item_set("_hap","_tcp","sh",setupHash);            // Step 4: broadcast the resulting Setup Hash
 
   if(spanOTA.enabled){
-    if(esp_ota_get_running_partition()!=esp_ota_get_next_update_partition(NULL)){
-      ArduinoOTA.setHostname(hostName);
+    ArduinoOTA.setHostname(hostName);
 
-      if(spanOTA.auth)
-        ArduinoOTA.setPasswordHash(spanOTA.otaPwd);
+    if(spanOTA.auth)
+      ArduinoOTA.setPasswordHash(spanOTA.otaPwd);
 
-      ArduinoOTA.onStart(spanOTA.start).onEnd(spanOTA.end).onProgress(spanOTA.progress).onError(spanOTA.error);  
-      
-      ArduinoOTA.begin();
-      Serial.print("Starting OTA Server: ");
-      Serial.print(displayName);
-      Serial.print(" at ");
-      Serial.print(WiFi.localIP());
-      Serial.print("\nAuthorization Password: ");
-      Serial.print(spanOTA.auth?"Enabled\n\n":"DISABLED!\n\n");
-    } else {
-      Serial.print("\n*** WARNING: Can't start OTA Server - Partition table used to compile this sketch is not configured for OTA.\n\n");
-      spanOTA.enabled=false;
-    }
+    ArduinoOTA.onStart(spanOTA.start).onEnd(spanOTA.end).onProgress(spanOTA.progress).onError(spanOTA.error);  
+    
+    ArduinoOTA.begin();
+    Serial.print("Starting OTA Server: ");
+    Serial.print(displayName);
+    Serial.print(" at ");
+    Serial.print(WiFi.localIP());
+    Serial.print("\nAuthorization Password: ");
+    Serial.print(spanOTA.auth?"Enabled\n\n":"DISABLED!\n\n");
   }
   
   mdns_service_txt_item_set("_hap","_tcp","ota",spanOTA.enabled?"yes":"no");                     // OTA status (info only - NOT used by HAP)
@@ -682,13 +679,8 @@ void Span::processSerialCommand(const char *c){
       }
       
       Serial.print(mask(textPwd,2));
-      Serial.print("\n");      
-      
-      MD5Builder otaPwdHash;
-      otaPwdHash.begin();
-      otaPwdHash.add(textPwd);
-      otaPwdHash.calculate();
-      otaPwdHash.getChars(spanOTA.otaPwd);
+      Serial.print("\n");           
+      spanOTA.setPassword(textPwd);
       nvs_set_str(otaNVS,"OTADATA",spanOTA.otaPwd);                 // update data
       nvs_commit(otaNVS);          
       
@@ -1051,6 +1043,86 @@ void Span::processSerialCommand(const char *c){
     }
     break;
 
+    case 'P': {
+      
+      Serial.printf("\n*** Pairing Data used for Cloning another Device\n\n");
+      size_t olen;
+      TempBuffer<char> tBuf(256);
+      mbedtls_base64_encode((uint8_t *)tBuf.buf,256,&olen,(uint8_t *)&HAPClient::accessory,sizeof(struct Accessory));
+      Serial.printf("Accessory data:  %s\n",tBuf.buf);
+      for(int i=0;i<HAPClient::MAX_CONTROLLERS;i++){
+        if(HAPClient::controllers[i].allocated){
+          mbedtls_base64_encode((uint8_t *)tBuf.buf,256,&olen,(uint8_t *)(HAPClient::controllers+i),sizeof(struct Controller));
+          Serial.printf("Controller data: %s\n",tBuf.buf);
+        }
+      }
+      Serial.printf("\n*** End Pairing Data\n\n");
+    }
+    break;
+
+    case 'C': {
+
+      Serial.printf("\n*** Clone Pairing Data from another Device\n\n");
+      TempBuffer<char> tBuf(200);
+      size_t olen;
+
+      tBuf.buf[0]='\0';
+      Serial.print(">>> Accessory data:  ");
+      readSerial(tBuf.buf,199);
+      if(strlen(tBuf.buf)==0){
+        Serial.printf("(cancelled)\n\n");
+        return;
+      }
+      mbedtls_base64_decode((uint8_t *)&HAPClient::accessory,sizeof(struct Accessory),&olen,(uint8_t *)tBuf.buf,strlen(tBuf.buf));
+      if(olen!=sizeof(struct Accessory)){
+        Serial.printf("\n*** Error in size of Accessory data - cloning cancelled.  Restarting...\n\n");
+        reboot();
+      } else {
+        HAPClient::charPrintRow(HAPClient::accessory.ID,17);
+        Serial.printf("\n");
+      }
+      
+      for(int i=0;i<HAPClient::MAX_CONTROLLERS;i++){
+        tBuf.buf[0]='\0';
+        Serial.print(">>> Controller data: ");
+        readSerial(tBuf.buf,199);
+        if(strlen(tBuf.buf)==0){
+          Serial.printf("(done)\n");
+          while(i<HAPClient::MAX_CONTROLLERS)              // clear data from remaining controller slots
+            HAPClient::controllers[i++].allocated=false;
+        } else {
+          mbedtls_base64_decode((uint8_t *)(HAPClient::controllers+i),sizeof(struct Controller),&olen,(uint8_t *)tBuf.buf,strlen(tBuf.buf));
+          if(olen!=sizeof(struct Controller)){
+            Serial.printf("\n*** Error in size of Controller data - cloning cancelled.  Restarting...\n\n");
+            reboot();
+          } else {
+            HAPClient::charPrintRow(HAPClient::controllers[i].ID,36);
+            Serial.printf("\n");
+          }
+        }
+      }
+
+      char qSave[2];
+      while(1){
+        qSave[0]='-';
+        Serial.printf("Save Cloned Pairing Data (y/n): ");
+        readSerial(qSave,1);
+        if(qSave[0]=='y'){
+          Serial.printf("(yes)\nData saved!  Rebooting...");
+          nvs_set_blob(HAPClient::hapNVS,"ACCESSORY",&HAPClient::accessory,sizeof(HAPClient::accessory));           // update data
+          nvs_set_blob(HAPClient::hapNVS,"CONTROLLERS",HAPClient::controllers,sizeof(HAPClient::controllers));      
+          nvs_commit(HAPClient::hapNVS);                                                      // commit to NVS
+          reboot();
+        } else
+        if(qSave[0]=='n'){
+          Serial.printf("(no)\nProcess Cancelled!  Rebooting...");
+          reboot();
+        }
+        Serial.printf("\n");
+      }
+    }
+    break;   
+
     case '?': {    
       
       Serial.print("\n*** HomeSpan Commands ***\n\n");
@@ -1069,6 +1141,9 @@ void Span::processSerialCommand(const char *c){
       Serial.print("  V - delete value settings for all saved Characteristics\n");
       Serial.print("  U - unpair device by deleting all Controller data\n");
       Serial.print("  H - delete HomeKit Device ID as well as all Controller data and restart\n");      
+      Serial.print("\n");      
+      Serial.print("  P - output Pairing Data that can be saved offline to clone a new device\n");      
+      Serial.print("  C - clone Pairing Data previously saved offline from another device\n");      
       Serial.print("\n");      
       Serial.print("  R - restart device\n");      
       Serial.print("  F - factory reset and restart\n");      
@@ -1987,17 +2062,28 @@ unsigned long SpanCharacteristic::timeVal(){
 ///////////////////////////////
 
 SpanCharacteristic *SpanCharacteristic::setValidValues(int n, ...){
-
-  if(format!=UINT8){
-    setValidValuesError=true;
-    return(this);
-  }
  
   String s="[";
   va_list vl;
   va_start(vl,n);
   for(int i=0;i<n;i++){
-    s+=(uint8_t)va_arg(vl,int);
+    switch(format){
+      case FORMAT::UINT8:
+        s+=(uint8_t)va_arg(vl,uint32_t);
+        break;
+      case FORMAT::UINT16:
+        s+=(uint16_t)va_arg(vl,uint32_t);
+        break;
+      case FORMAT::UINT32:
+        s+=(uint32_t)va_arg(vl,uint32_t);
+        break;
+      case FORMAT::INT:
+        s+=(int)va_arg(vl,uint32_t);
+        break;
+      default:
+        setValidValuesError=true;
+        return(this);      
+    }
     if(i!=n-1)
       s+=",";
   }
@@ -2147,11 +2233,35 @@ void SpanWebLog::vLog(boolean sysMsg, const char *fmt, va_list ap){
 //         SpanOTA           //
 ///////////////////////////////
 
-void SpanOTA::init(boolean _auth, boolean _safeLoad){
+int SpanOTA::init(boolean _auth, boolean _safeLoad, const char *pwd){
+  if(esp_ota_get_running_partition()==esp_ota_get_next_update_partition(NULL)){
+    Serial.print("\n*** WARNING: Can't start OTA Server - Partition table used to compile this sketch is not configured for OTA.\n\n");
+    return(-1);     
+  }
+  
   enabled=true;
   safeLoad=_safeLoad;
   auth=_auth;
   homeSpan.reserveSocketConnections(1);
+  if(pwd==NULL)
+    return(0);
+  return(setPassword(pwd));
+}
+
+///////////////////////////////
+
+int SpanOTA::setPassword(const char *pwd){
+  if(strlen(pwd)<1 || strlen(pwd)>32){
+    Serial.printf("\n*** WARNING: Cannot change OTA password to '%s'. Password length must be between 1 and 32 characters.\n\n",pwd);
+    return(-1);
+  }
+
+  MD5Builder otaPwdHash;
+  otaPwdHash.begin();
+  otaPwdHash.add(pwd);
+  otaPwdHash.calculate();
+  otaPwdHash.getChars(homeSpan.spanOTA.otaPwd);  
+  return(0);
 }
 
 ///////////////////////////////

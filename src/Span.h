@@ -29,14 +29,18 @@
 // SPAN SERVICES (HAP Chapter 8) //
 ///////////////////////////////////
 
-// Macros to define vectors of required and optional characteristics for each Span Service structure
+// Macros to define services, along with vectors of required and optional characteristics for each Span Service structure
+// The names of the macros are picked up by external scripts to help generate documentation
+
+#define CREATE_SERV(NAME,UUID) struct NAME : SpanService { NAME() : SpanService{#UUID,#NAME}{
+#define END_SERV }};
 
 #define REQ(HAPCHAR) req.insert(&hapChars.HAPCHAR)
 #define OPT(HAPCHAR) opt.insert(&hapChars.HAPCHAR)
 
 namespace Service {
 
-  struct AccessoryInformation : SpanService { AccessoryInformation() : SpanService{"3E","AccessoryInformation"}{
+  CREATE_SERV(AccessoryInformation,3E)
     REQ(Identify);
     OPT(FirmwareRevision);
     OPT(Manufacturer);
@@ -45,9 +49,9 @@ namespace Service {
     OPT(SerialNumber);
     OPT(HardwareRevision);
     OPT(AccessoryFlags);    
-  }};
+  END_SERV
 
-  struct AirPurifier : SpanService { AirPurifier() : SpanService{"BB","AirPurifier"}{
+  CREATE_SERV(AirPurifier,BB)
     REQ(Active);
     REQ(CurrentAirPurifierState);
     REQ(TargetAirPurifierState);
@@ -55,9 +59,9 @@ namespace Service {
     OPT(RotationSpeed);
     OPT(SwingMode);
     OPT(LockPhysicalControls);
-  }};
+  END_SERV
 
-  struct AirQualitySensor : SpanService { AirQualitySensor() : SpanService{"8D","AirQualitySensor"}{
+  CREATE_SERV(AirQualitySensor,8D)
     REQ(AirQuality);
     OPT(Name);
     OPT(OzoneDensity);
@@ -70,16 +74,16 @@ namespace Service {
     OPT(StatusFault);
     OPT(StatusTampered);
     OPT(StatusLowBattery);
-  }};
+  END_SERV
 
-  struct BatteryService : SpanService { BatteryService() : SpanService{"96","BatteryService"}{
+  CREATE_SERV(BatteryService,96)
     REQ(BatteryLevel);
     REQ(ChargingState);
     REQ(StatusLowBattery);
     OPT(Name);
-  }};
+  END_SERV
 
-  struct CarbonDioxideSensor : SpanService { CarbonDioxideSensor() : SpanService{"97","CarbonDioxideSensor"}{
+  CREATE_SERV(CarbonDioxideSensor,97)
     REQ(CarbonDioxideDetected);
     OPT(Name);
     OPT(StatusActive);
@@ -88,9 +92,9 @@ namespace Service {
     OPT(StatusLowBattery);
     OPT(CarbonDioxideLevel);
     OPT(CarbonDioxidePeakLevel);
-  }};
+  END_SERV
 
-  struct CarbonMonoxideSensor : SpanService { CarbonMonoxideSensor() : SpanService{"7F","CarbonMonoxideSensor"}{
+  CREATE_SERV(CarbonMonoxideSensor,7F)
     REQ(CarbonMonoxideDetected);
     OPT(Name);
     OPT(StatusActive);
@@ -99,34 +103,34 @@ namespace Service {
     OPT(StatusLowBattery);
     OPT(CarbonMonoxideLevel);
     OPT(CarbonMonoxidePeakLevel);
-    }};
+    END_SERV
 
-  struct ContactSensor : SpanService { ContactSensor() : SpanService{"80","ContactSensor"}{
+  CREATE_SERV(ContactSensor,80)
     REQ(ContactSensorState);
     OPT(Name);
     OPT(StatusActive);
     OPT(StatusFault);
     OPT(StatusTampered);
     OPT(StatusLowBattery);
-  }};
+  END_SERV
 
-  struct Door : SpanService { Door() : SpanService{"81","Door"}{
+  CREATE_SERV(Door,81)
     REQ(CurrentPosition);
     REQ(TargetPosition);
     REQ(PositionState);
     OPT(Name);
     OPT(HoldPosition);
     OPT(ObstructionDetected);
-  }};
+  END_SERV
 
-  struct Doorbell : SpanService { Doorbell() : SpanService{"121","Doorbell"}{
+  CREATE_SERV(Doorbell,121)
     REQ(ProgrammableSwitchEvent);
     OPT(Name);
     OPT(Volume);
     OPT(Brightness);
-  }};
+  END_SERV
 
-  struct Fan : SpanService { Fan() : SpanService{"B7","Fan"}{
+  CREATE_SERV(Fan,B7)
     REQ(Active);
     OPT(Name);
     OPT(CurrentFanState);
@@ -135,35 +139,35 @@ namespace Service {
     OPT(RotationSpeed);
     OPT(SwingMode);
     OPT(LockPhysicalControls);
-  }};
+  END_SERV
 
-  struct Faucet : SpanService { Faucet() : SpanService{"D7","Faucet"}{
+  CREATE_SERV(Faucet,D7)
     REQ(Active);
     OPT(StatusFault);
     OPT(Name);
-  }};
+  END_SERV
 
-  struct FilterMaintenance : SpanService { FilterMaintenance() : SpanService{"BA","FilterMaintenance"}{
+  CREATE_SERV(FilterMaintenance,BA)
     REQ(FilterChangeIndication);
     OPT(Name);
     OPT(FilterLifeLevel);
     OPT(ResetFilterIndication);
-  }};
+  END_SERV
 
-  struct GarageDoorOpener : SpanService { GarageDoorOpener() : SpanService{"41","GarageDoorOpener"}{
+  CREATE_SERV(GarageDoorOpener,41)
     REQ(CurrentDoorState);
     REQ(TargetDoorState);
     REQ(ObstructionDetected);
     OPT(LockCurrentState);
     OPT(LockTargetState);
     OPT(Name);
-  }};
+  END_SERV
 
-  struct HAPProtocolInformation : SpanService { HAPProtocolInformation() : SpanService{"A2","HAPProtocolInformation"}{
+  CREATE_SERV(HAPProtocolInformation,A2)
     REQ(Version);
-  }};
+  END_SERV
 
-  struct HeaterCooler : SpanService { HeaterCooler() : SpanService{"BC","HeaterCooler"}{
+  CREATE_SERV(HeaterCooler,BC)
     REQ(Active);
     REQ(CurrentTemperature);
     REQ(CurrentHeaterCoolerState);
@@ -175,9 +179,9 @@ namespace Service {
     OPT(CoolingThresholdTemperature);
     OPT(HeatingThresholdTemperature);
     OPT(LockPhysicalControls);
-  }};
+  END_SERV
 
-  struct HumidifierDehumidifier : SpanService { HumidifierDehumidifier() : SpanService{"BD","HumidifierDehumidifier"}{
+  CREATE_SERV(HumidifierDehumidifier,BD)
     REQ(Active);
     REQ(CurrentRelativeHumidity);
     REQ(CurrentHumidifierDehumidifierState);
@@ -189,167 +193,167 @@ namespace Service {
     OPT(SwingMode);
     OPT(WaterLevel);
     OPT(LockPhysicalControls);
-  }};
+  END_SERV
 
-  struct HumiditySensor : SpanService { HumiditySensor() : SpanService{"82","HumiditySensor"}{
+  CREATE_SERV(HumiditySensor,82)
     REQ(CurrentRelativeHumidity);
     OPT(Name);
     OPT(StatusActive);
     OPT(StatusFault);
     OPT(StatusTampered);
     OPT(StatusLowBattery);   
-  }};
+  END_SERV
 
-  struct InputSource : SpanService { InputSource() : SpanService{"D9","InputSource"}{
+  CREATE_SERV(InputSource,D9)
       OPT(ConfiguredName);
       OPT(IsConfigured);
       REQ(Identifier);
       OPT(CurrentVisibilityState);
       OPT(TargetVisibilityState);
-  }};
+  END_SERV
 
-  struct IrrigationSystem : SpanService { IrrigationSystem() : SpanService{"CF","IrrigationSystem"}{
+  CREATE_SERV(IrrigationSystem,CF)
     REQ(Active);
     REQ(ProgramMode);
     REQ(InUse);
     OPT(RemainingDuration);
     OPT(StatusFault);
-  }};
+  END_SERV
 
-  struct LeakSensor : SpanService { LeakSensor() : SpanService{"83","LeakSensor"}{
+  CREATE_SERV(LeakSensor,83)
     REQ(LeakDetected);
     OPT(Name);
     OPT(StatusActive);
     OPT(StatusFault);
     OPT(StatusTampered);
     OPT(StatusLowBattery);       
-  }};
+  END_SERV
 
-  struct LightBulb : SpanService { LightBulb() : SpanService{"43","LightBulb"}{
+  CREATE_SERV(LightBulb,43)
     REQ(On);
     OPT(Brightness);
     OPT(Hue);
     OPT(Name);
     OPT(Saturation);
     OPT(ColorTemperature);
-  }};
+  END_SERV
 
-  struct LightSensor : SpanService { LightSensor() : SpanService{"84","LightSensor"}{
+  CREATE_SERV(LightSensor,84)
     REQ(CurrentAmbientLightLevel);
     OPT(Name);
     OPT(StatusActive);
     OPT(StatusFault);
     OPT(StatusTampered);
     OPT(StatusLowBattery);          
-  }};
+  END_SERV
 
-  struct LockMechanism : SpanService { LockMechanism() : SpanService{"45","LockMechanism"}{
+  CREATE_SERV(LockMechanism,45)
     REQ(LockCurrentState);
     REQ(LockTargetState);
     OPT(Name);
-  }};
+  END_SERV
 
-  struct Microphone : SpanService { Microphone() : SpanService{"112","Microphone"}{
+  CREATE_SERV(Microphone,112)
     REQ(Mute);
     OPT(Name);
     OPT(Volume);
-  }};
+  END_SERV
 
-  struct MotionSensor : SpanService { MotionSensor() : SpanService{"85","MotionSensor"}{
+  CREATE_SERV(MotionSensor,85)
     REQ(MotionDetected);
     OPT(Name);
     OPT(StatusActive);
     OPT(StatusFault);
     OPT(StatusTampered);
     OPT(StatusLowBattery);       
-  }};
+  END_SERV
 
-  struct OccupancySensor : SpanService { OccupancySensor() : SpanService{"86","OccupancySensor"}{
+  CREATE_SERV(OccupancySensor,86)
     REQ(OccupancyDetected);
     OPT(Name);
     OPT(StatusActive);
     OPT(StatusFault);
     OPT(StatusTampered);
     OPT(StatusLowBattery);         
-  }};
+  END_SERV
 
-  struct Outlet : SpanService { Outlet() : SpanService{"47","Outlet"}{
+  CREATE_SERV(Outlet,47)
     REQ(On);
     REQ(OutletInUse);
     OPT(Name);
-  }};
+  END_SERV
 
-  struct SecuritySystem : SpanService { SecuritySystem() : SpanService{"7E","SecuritySystem"}{
+  CREATE_SERV(SecuritySystem,7E)
     REQ(SecuritySystemCurrentState);
     REQ(SecuritySystemTargetState);
     OPT(Name);
     OPT(SecuritySystemAlarmType);
     OPT(StatusFault);
     OPT(StatusTampered);
-  }};  
+  END_SERV  
 
-  struct ServiceLabel : SpanService { ServiceLabel() : SpanService{"CC","ServiceLabel"}{
+  CREATE_SERV(ServiceLabel,CC)
     REQ(ServiceLabelNamespace);
-  }};  
+  END_SERV  
 
-  struct Slat : SpanService { Slat() : SpanService{"B9","Slat"}{
+  CREATE_SERV(Slat,B9)
     REQ(CurrentSlatState);
     REQ(SlatType);
     OPT(Name);
     OPT(SwingMode);
     OPT(CurrentTiltAngle);
     OPT(TargetTiltAngle);
-  }};
+  END_SERV
 
-  struct SmokeSensor : SpanService { SmokeSensor() : SpanService{"87","SmokeSensor"}{
+  CREATE_SERV(SmokeSensor,87)
     REQ(SmokeDetected);
     OPT(Name);
     OPT(StatusActive);
     OPT(StatusFault);
     OPT(StatusTampered);
     OPT(StatusLowBattery);             
-  }};
+  END_SERV
 
-  struct Speaker : SpanService { Speaker() : SpanService{"113","Speaker"}{
+  CREATE_SERV(Speaker,113)
     REQ(Mute);
     OPT(Name);
     OPT(Volume);
-  }};
+  END_SERV
 
-  struct StatelessProgrammableSwitch : SpanService { StatelessProgrammableSwitch() : SpanService{"89","StatelessProgrammableSwitch"}{
+  CREATE_SERV(StatelessProgrammableSwitch,89)
     REQ(ProgrammableSwitchEvent);
     OPT(Name);
     OPT(ServiceLabelIndex);
-  }};
+  END_SERV
 
-  struct Switch : SpanService { Switch() : SpanService{"49","Switch"}{
+  CREATE_SERV(Switch,49)
     REQ(On);
     OPT(Name);
-  }};
+  END_SERV
 
-  struct Television : SpanService { Television() : SpanService{"D8","Television"}{
+  CREATE_SERV(Television,D8)
       REQ(Active);
       OPT(ConfiguredName);
       OPT(ActiveIdentifier);
       OPT(RemoteKey);
       OPT(PowerModeSelection);      
-  }};
+  END_SERV
 
-  struct TelevisionSpeaker : SpanService { TelevisionSpeaker() : SpanService{"113","TelevisionSpeaker"}{
+  CREATE_SERV(TelevisionSpeaker,113)
       REQ(VolumeControlType);
       REQ(VolumeSelector);      
-  }};
+  END_SERV
 
-  struct TemperatureSensor : SpanService { TemperatureSensor() : SpanService{"8A","TemperatureSensor"}{
+  CREATE_SERV(TemperatureSensor,8A)
     REQ(CurrentTemperature);
     OPT(Name);
     OPT(StatusActive);
     OPT(StatusFault);
     OPT(StatusTampered);
     OPT(StatusLowBattery);
-  }};
+  END_SERV
 
-  struct Thermostat : SpanService { Thermostat() : SpanService{"4A","Thermostat"}{
+  CREATE_SERV(Thermostat,4A)
     REQ(CurrentHeatingCoolingState);
     REQ(TargetHeatingCoolingState);
     REQ(CurrentTemperature);
@@ -360,9 +364,9 @@ namespace Service {
     OPT(HeatingThresholdTemperature);
     OPT(Name);
     OPT(TargetRelativeHumidity);
-  }};
+  END_SERV
 
-  struct Valve : SpanService { Valve() : SpanService{"D0","Valve"}{
+  CREATE_SERV(Valve,D0)
     REQ(Active);
     REQ(InUse);
     REQ(ValveType);
@@ -372,18 +376,18 @@ namespace Service {
     OPT(ServiceLabelIndex);
     OPT(StatusFault);
     OPT(Name);
-  }};
+  END_SERV
 
-  struct Window : SpanService { Window() : SpanService{"8B","Window"}{
+  CREATE_SERV(Window,8B)
     REQ(CurrentPosition);
     REQ(TargetPosition);
     REQ(PositionState);
     OPT(Name);
     OPT(HoldPosition);
     OPT(ObstructionDetected);
-  }};
+  END_SERV
 
-  struct WindowCovering : SpanService { WindowCovering() : SpanService{"8C","WindowCovering"}{
+  CREATE_SERV(WindowCovering,8C)
     REQ(TargetPosition);
     REQ(CurrentPosition);
     REQ(PositionState);   
@@ -394,7 +398,7 @@ namespace Service {
     OPT(CurrentVerticalTiltAngle);
     OPT(TargetVerticalTiltAngle);
     OPT(ObstructionDetected);
-  }};
+  END_SERV
 
 }
 
@@ -532,6 +536,8 @@ namespace Characteristic {
 // MACROS TO ADD CUSTOM SERVICES AND CHARACTERISTICS  //
 ////////////////////////////////////////////////////////
 
+#ifndef CUSTOM_CHAR_HEADER
+
 #define CUSTOM_CHAR(NAME,UUID,PERMISISONS,FORMAT,DEFVAL,MINVAL,MAXVAL,STATIC_RANGE) \
   HapChar _CUSTOM_##NAME {#UUID,#NAME,(PERMS)(PERMISISONS),FORMAT,STATIC_RANGE}; \
   namespace Characteristic { struct NAME : SpanCharacteristic { NAME(FORMAT##_t val=DEFVAL, boolean nvsStore=false) : SpanCharacteristic {&_CUSTOM_##NAME,true} { init(val,nvsStore,(FORMAT##_t)MINVAL,(FORMAT##_t)MAXVAL); } }; }
@@ -544,8 +550,25 @@ namespace Characteristic {
   HapChar _CUSTOM_##NAME {#UUID,#NAME,(PERMS)(PERMISISONS),DATA,true}; \
   namespace Characteristic { struct NAME : SpanCharacteristic { NAME(const char * val="AA==", boolean nvsStore=false) : SpanCharacteristic {&_CUSTOM_##NAME,true} { init(val,nvsStore); } }; }
 
+#else
+
+#define CUSTOM_CHAR(NAME,UUID,PERMISISONS,FORMAT,DEFVAL,MINVAL,MAXVAL,STATIC_RANGE) \
+  extern HapChar _CUSTOM_##NAME; \
+  namespace Characteristic { struct NAME : SpanCharacteristic { NAME(FORMAT##_t val=DEFVAL, boolean nvsStore=false) : SpanCharacteristic {&_CUSTOM_##NAME,true} { init(val,nvsStore,(FORMAT##_t)MINVAL,(FORMAT##_t)MAXVAL); } }; }
+
+#define CUSTOM_CHAR_STRING(NAME,UUID,PERMISISONS,DEFVAL) \
+  extern HapChar _CUSTOM_##NAME; \
+  namespace Characteristic { struct NAME : SpanCharacteristic { NAME(const char * val=DEFVAL, boolean nvsStore=false) : SpanCharacteristic {&_CUSTOM_##NAME,true} { init(val,nvsStore); } }; }
+
+#define CUSTOM_CHAR_DATA(NAME,UUID,PERMISISONS) \
+  extern HapChar _CUSTOM_##NAME; \
+  namespace Characteristic { struct NAME : SpanCharacteristic { NAME(const char * val="AA==", boolean nvsStore=false) : SpanCharacteristic {&_CUSTOM_##NAME,true} { init(val,nvsStore); } }; }
+
+#endif
+
 #define CUSTOM_SERV(NAME,UUID) \
   namespace Service { struct NAME : SpanService { NAME() : SpanService{#UUID,#NAME,true}{} }; }
+
 
 ////////////////////////////////////////////////////////
 // MACROS TO ADD A NEW ACCESSORT WITH OPTIONAL NAME   //

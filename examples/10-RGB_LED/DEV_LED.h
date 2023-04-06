@@ -182,7 +182,7 @@ struct DEV_RgbLED : Service::LightBulb {       // RGB LED (Command Cathode)
     sprintf(cBuf,"RGB=(%d,%d,%d)\n",R,G,B);
     LOG1(cBuf);
 
-    redPin->set(R);                      // update the ledPin channels with new values
+    redPin->set(R);                      // update each ledPin with new values
     greenPin->set(G);    
     bluePin->set(B);    
       

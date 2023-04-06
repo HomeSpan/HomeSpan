@@ -51,8 +51,8 @@
 
 #elif defined(ARDUINO_ESP32C3_DEV)
   enum {
-    F27=2,F32=3,F14=10,F16=20,F17=21,F21=19,                          // Digital Only (6 pins)
-    F26=0,F25=1,F4=18,                                                // A0/A1/A5
+    F27=19,F32=2,F14=10,F16=20,F17=21,F21=18,                         // Digital Only (6 pins)
+    F26=0,F25=1,F4=3,                                                 // A0/A1/A5
     F22=9,F23=8,                                                      // I2C SCL/SDA
     F5=4,F18=6,F19=5,F33=7,                                           // SPI SCK/SDO/SDI/CS
     BUILTIN_PIXEL=8                                                   // Built-in Neo-Pixel    

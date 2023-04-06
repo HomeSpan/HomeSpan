@@ -28,12 +28,7 @@
 // This is a placeholder .ino file that allows you to easily edit the contents of this files using the Arduino IDE,
 // as well as compile and test from this point.  This file is ignored when the library is included in other sketches.
 
-#include "Blinker.h"
-#include "Pixel.h"
-#include <Wire.h>
-
-Blinker p(new Pixel(2),10);
-//Blinker p(NULL,10);
+#include "PwmPin.h"
 
 void setup() {     
  
@@ -41,19 +36,34 @@ void setup() {
   Serial.flush();
   delay(1000);                    // wait for interface to flush
 
-  Serial.println("\n\nHomeSpan Blinker Example\n");
-   Serial.printf("Pins = %d\n",p.getPin());
+  Serial.println("\n\nHomeSpan LED Fade Test\n");
 
-  p.on();
-  delay(2000);
-  p.off();
-  delay(2000);
-  p.start(300,0.25,4,1000);
-  delay(5000);
-  Serial.printf("New Pattern\n");
-  p.start(200,0.2,2,200);
+  LedPin red(33,0);
+  LedPin green(32,0);
+  LedPin blue(14,0);
+
+  int redLevel=0;
+
+  for(int i=100;i<=100;i+=10){
+    while(red.fadeStatus()==LedPin::FADING);
+    red.fade(i,1000,LedPin::PROPORTIONAL);
+  }
+
+  while(1);
+
+  
+  while(1){
+    delay(1000);
+    if(red.fade(redLevel,5000))
+      Serial.printf("Failed\n");
+    else{
+      Serial.printf("Success\n");
+      redLevel=100-redLevel;
+    }
+    
+  }
+ 
 }
 
 void loop(){
-  p.check();
 }

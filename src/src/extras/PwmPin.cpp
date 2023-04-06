@@ -81,11 +81,11 @@ LedC::LedC(uint8_t pin, uint16_t freq, boolean invert){
 ///////////////////
 
 LedPin::LedPin(uint8_t pin, float level, uint16_t freq, boolean invert) : LedC(pin, freq, invert){
-
+  
   if(!channel)
     Serial.printf("\n*** ERROR:  Can't create LedPin(%d) - no open PWM channels and/or Timers ***\n\n",pin);
   else
-    Serial.printf("LedPin=%d: mode=%d channel=%d, timer=%d, freq=%d Hz, resolution=%d bits %s\n",
+    Serial.printf("LedPin=%d: mode=%d, channel=%d, timer=%d, freq=%d Hz, resolution=%d bits %s\n",
       channel->gpio_num,
       channel->speed_mode,
       channel->channel,
@@ -95,8 +95,11 @@ LedPin::LedPin(uint8_t pin, float level, uint16_t freq, boolean invert) : LedC(p
       channel->flags.output_invert?"(inverted)":""
       );
             
-  set(level);
-   
+  ledc_fade_func_install(0);
+  ledc_cbs_t fadeCallbackList = {.fade_cb = fadeCallback};                          // for some reason, ledc_cb_register requires the function to be wrapped in a structure
+  ledc_cb_register(channel->speed_mode,channel->channel,&fadeCallbackList,this);
+
+  set(level);   
 }
 
 ///////////////////
@@ -110,12 +113,54 @@ void LedPin::set(float level){
     level=100;
 
   float d=level*(pow(2,(int)timer->duty_resolution)-1)/100.0;  
+    
   channel->duty=d;
-  ledc_channel_config(channel);
-  
+  ledc_channel_config(channel); 
 }
 
 ///////////////////
+
+int LedPin::fade(float level, uint32_t fadeTime, int fadeType){
+
+  if(!channel)
+    return(1);
+
+  if(fadeState==FADING)       // fading already in progress
+    return(1);                // return error
+
+  if(level>100)
+    level=100;
+
+  float d=level*(pow(2,(int)timer->duty_resolution)-1)/100.0;
+
+  if(fadeType==PROPORTIONAL)
+    fadeTime*=fabs((float)ledc_get_duty(channel->speed_mode,channel->channel)-d)/(float)(pow(2,(int)timer->duty_resolution)-1);
+
+  fadeState=FADING;
+  ledc_set_fade_time_and_start(channel->speed_mode,channel->channel,d,fadeTime,LEDC_FADE_NO_WAIT);
+  return(0);
+}
+
+///////////////////
+
+int LedPin::fadeStatus(){
+  if(fadeState==COMPLETED){
+    fadeState=NOT_FADING;
+    return(COMPLETED);
+  }
+
+  return(fadeState);
+}
+
+///////////////////
+
+bool IRAM_ATTR LedPin::fadeCallback(const ledc_cb_param_t *param, void *arg){
+  ((LedPin *)arg)->fadeState=COMPLETED;
+  return(false);
+}
+
+///////////////////
+
 
 void LedPin::HSVtoRGB(float h, float s, float v, float *r, float *g, float *b ){
 

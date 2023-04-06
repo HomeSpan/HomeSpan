@@ -1,6 +1,6 @@
 # HomeSpan Accessory Categories
 
-Every HomeSpan device must be assigned a HomeKit Accessory Category. HomeSpan implements these categories as C++ Classes with names that exactly match the spelling and capitalization specified by Apple in Section 13 of [HAP-R2](https://developer.apple.com/homekit/specification/), but without any spaces.  HomeSpan Accessory Categories are defined in HomeSpan's `Category` namespace.  For example, HomeSpan defines the *Garage Door Openers* Category (HAP Category 4) as `Category::GarageDoorOpeners`, which could be used when initializing HomeSpan as follows:
+Every HomeSpan device must be assigned a HomeKit Accessory Category. HomeSpan implements these categories as C++ Classes with names that exactly match the spelling and capitalization specified by Apple in Section 13 of HAP-R2, but without any spaces.  HomeSpan Accessory Categories are defined in HomeSpan's `Category` namespace.  For example, HomeSpan defines the *Garage Door Openers* Category (HAP Category 4) as `Category::GarageDoorOpeners`, which could be used when initializing HomeSpan as follows:
 
 ```C++
 homeSpan.begin(Category::GarageDoorOpeners,"Acme Garage Door Lifts");
@@ -41,5 +41,5 @@ Note that the HomeKit primarily uses the Accessory Category of a device for dete
 
 ---
 
-[↩️](README.md) Back to the Welcome page
+[↩️](../README.md) Back to the Welcome page
 

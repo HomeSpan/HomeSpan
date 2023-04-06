@@ -20,7 +20,6 @@ struct DEV_DimmableLED : Service::LightBulb {       // Dimmable LED
   int powerPin;                                     // NEW! pin with pushbutton to turn on/off LED
   int raisePin;                                     // NEW! pin with pushbutton to increase brightness
   int lowerPin;                                     // NEW! pin with pushButton to decrease brightness
-  int channel;                                      // PWM channel used for this LED (should be unique for each LED)
   SpanCharacteristic *power;                        // reference to the On Characteristic
   SpanCharacteristic *level;                        // reference to the Brightness Characteristic
   int favoriteLevel=50;                             // NEW! keep track of a 'favorite' level
@@ -53,8 +52,6 @@ struct DEV_DimmableLED : Service::LightBulb {       // Dimmable LED
 
     Serial.print("Configuring Dimmable LED: Pin="); // initialization message
     Serial.print(ledPin->getPin());
-    Serial.print(" Channel=");
-    Serial.print(channel);
     Serial.print("\n");
     
   } // end constructor

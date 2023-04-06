@@ -118,10 +118,10 @@ Unlike the **Pixel** class, the **Dot** class does *not* utilize the ESP32's RMT
 
 ### Example Sketches
 
-A fully worked example showing how to use the Pixel library within a HomeSpan sketch to control an RGB Pixel Device, an RGBW Pixel Device, and an RGB DotStar Device, all from the Home App on your iPhone, can be found in the Arduino IDE under [*File → Examples → HomeSpan → Other Examples → Pixel*](../Other%20Examples/Pixel).
+A fully worked example showing how to use the Pixel library within a HomeSpan sketch to control an RGB Pixel Device, an RGBW Pixel Device, and an RGB DotStar Device, all from the Home App on your iPhone, can be found in the Arduino IDE under [*File → Examples → HomeSpan → Other Examples → Pixel*](../examples/Other%20Examples/Pixel).
 
-For a more complete showcase of the Pixel library , check out [Holiday Lights](https://github.com/HomeSpan/HolidayLights) on the [HomeSpan Projects page](https://github.com/topics/homespan).  This sketch demonstrates how the Pixel library can be used to generate a variety of special effects with a 60-pixel RGBW strip.  The sketch also showcases the use of HomeSpan's [Custom Characteristic macro](https://github.com/HomeSpan/HomeSpan/blob/master/docs/Reference.md#define-custom_charnameuuidpermsformatdefaultvalueminvaluemaxvaluestaticrange) to implement a special-effects "selector" button for use in the Eve for HomeKit App.
+For a more complete showcase of the Pixel library , check out [Holiday Lights](https://github.com/HomeSpan/HolidayLights) on the [HomeSpan Projects page](https://github.com/topics/homespan).  This sketch demonstrates how the Pixel library can be used to generate a variety of special effects with a 60-pixel RGBW strip.  The sketch also showcases the use of HomeSpan's [Custom Characteristic macro](Reference.md#custom-characteristics-and-custom-services-macros) to implement a special-effects "selector" button for use in the Eve for HomeKit App.
 
 ---
 
-[↩️](README.md) Back to the Welcome page
+[↩️](../README.md) Back to the Welcome page

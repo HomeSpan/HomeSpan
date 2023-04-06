@@ -111,30 +111,33 @@ Example 20 illustrates a number of advanced techniques through the implementatio
 
 The following examples showcase a variety of HomeSpan and HomeKit functionality as referenced in different sections of the HomeSpan documentation.  The sketches can be found in the Arduino IDE under *File → Examples → HomeSpan → Other Examples*
 
-### [TableLamp](../Other%20Examples/TableLamp)
+### [TableLamp](../examples/Other%20Examples/TableLamp)
 A basic implementation of a Table Lamp Accessory. Used as the tutorial in [HomeSpan API Overview](Overview.md)
 
-### [RemoteControl](../Other%20Examples/RemoteControl)
+### [RemoteControl](../examples/Other%20Examples/RemoteControl)
 A standalone example that shows how to use HomeSpan's *RFControl* class to produce a custom pulse train.  For illustrative purposes the pulse widths are very long and suitable for output to an LED so you can "see" the pulse train. See the [RF/IR Generation](RMT.md) page for full details
 
-### [ServoControl](../Other%20Examples/ServoControl)
+### [ServoControl](../examples/Other%20Examples/ServoControl)
 An implementation of a Window Shade that uses HomeSpan's *ServoPin* class to control the horizontal tilt of the slats. See [ServoPin](PWM.md#servopinuint8_t-pin-double-initdegrees-uint16_t-minmicros-uint16_t-maxmicros-double-mindegrees-double-maxdegrees) for full details
 
-### [Television](../Other%20Examples/Television)
+### [Television](../examples/Other%20Examples/Television)
 An example of HomeKit's *undocumented* Television Service showing how different Characteristics can be used to control a TV's power, input sources, and a few other functions.  See the [Television Services and Characteristics](TVServices.md) page for full details
 
-### [Pixel](../Other%20Examples/Pixel)
+### [Pixel](../examples/Other%20Examples/Pixel)
 Demonstrates how to use HomeSpan's *Pixel* and *Dot* classes to control one- and two-wire Addressable RGB and RGBW LEDs.  See the [Addressable RGB LEDs](Pixels.md) page for full details
 
-### [CustomService](../Other%20Examples/CustomService)
+### [CustomService](../examples/Other%20Examples/CustomService)
 Demonstrates how to create Custom Services and Custom Characteristics in HomeSpan to implement an Atmospheric Pressure Sensor recognized by the *Eve for HomeKit* app.  See [Custom Characteristics and Custom Services Macros](Reference.md#custom-characteristics-and-custom-services-macros) for full details
  
-### [ProgrammableHub](../Other%20Examples/ProgrammableHub)
+### [ProgrammableHub](../examples/Other%20Examples/ProgrammableHub)
 Demonstrates how to implement a fully programmable Light Accessory Hub that allows the user to *dynamically* add/delete up to 12 Light Accessories directly through a device-hosted *web interface* or via HomeSpan's *command-line inteface*.  Each light can be configured as dimmable/non-dimmable with either no color control, full RGB color control, or color-temperature control.  Builds upon many of the techniques used in [Example 20](../examples/20-AdvancedTechniques)
 
-### [RemoteSensors](../Other%20Examples/RemoteSensors)
-Demonstrates how SpanPoint can be used to transmit messages from battery-powered Remote Devices running light-weight sketches that measure the local temperature, to a wall-powered Main Device running a full HomeSpan sketch implementing Temperature Sensor Accessories.  See [SpanPoint: Point-to-Point Communication between ESP32 Devices](NOW.md) for full details regarding the SpanPoint class and all of its methods.
+### [RemoteSensors](../examples/Other%20Examples/RemoteSensors)
+Demonstrates how *SpanPoint* can be used to transmit messages from battery-powered Remote Devices running light-weight sketches that measure the local temperature, to a wall-powered Main Device running a full HomeSpan sketch implementing Temperature Sensor Accessories.  See [SpanPoint: Point-to-Point Communication between ESP32 Devices](NOW.md) for full details regarding the *SpanPoint* class and all of its methods.
+
+### [FadingLED](../examples/Other%20Examples/FadingLED)
+Demonstrates how the *LedPin* class can use the ESP32's built-in fading control to automatically fade an LED from from one level of brightness to another over a specified period of time. See the [LedPin](PWM.md#pulse-width-modulation-pwm) page for full details
 
 ---
 
-[↩️](README.md) Back to the Welcome page
+[↩️](../README.md) Back to the Welcome page

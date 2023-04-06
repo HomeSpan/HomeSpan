@@ -71,8 +71,14 @@ In addition to listening for incoming HAP requests, HomeSpan also continuously p
   
 * **H** - delete HomeKit Device ID as well as all Controller data and restart
   * In addition to deleting all Controller data (as if the 'U' command was run), this command also deletes the device's HomeKit ID.  This unique ID is broadcast to all HomeKit Controllers so the device can be uniquely recognized.  When HomeSpan first runs on a new device, it creates this unique ID and stores it permanently in an NVS partition.  Normally, this ID should not changed once set.  However, if you are actively developing and testing a HomeSpan sketch, you may find that HomeKit is cacheing information about your device and the changes you have made to your HAP Accessory Database are not always reflected in the Home App.  Sometimes simply unpairing and re-pairing the device solves this HomeKit issue.  If not, deleting your device's HomeKit ID with this command forces HomeSpan to generate a new one after restarting, which means HomeKit will think this is a completely different device, thereby ignoring any prior data it had cached.
-  * This command also restores the device's default Setup ID, which is used for optional pairing with QR codes, to "HSPN". 
+  * This command also restores the device's default Setup ID, which is used for optional pairing with QR codes, to "HSPN".
   
+* **P** - prints the device's Pairing Data in base-64 chunks
+  * Used for [Cloning](Cloning.md) the Pairing Data from one device to another
+  
+* **C** - prompts you to input the Pairing Data from another device in base-64 chunks
+  * Used for [Cloning](Cloning.md) the Pairing Data from one device to another
+
 * **R** - restart the device
   * This command simply reboots HomeSpan.
   
@@ -97,7 +103,7 @@ You can extend the HomeSpan CLI with custom functions using `SpanUserCommand()`.
   
 ---
 
-[↩️](README.md) Back to the Welcome page  
+[↩️](../README.md) Back to the Welcome page  
   
 
 

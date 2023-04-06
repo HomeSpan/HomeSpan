@@ -60,7 +60,7 @@
 
 #### Can you add a Web Server to HomeSpan?
 
-* Yes, provided you implement your Web Server using standard ESP32-Arduino libraries, such as `WebServer.h`. See [ProgrammableHub](../Other%20Examples/ProgrammableHub) for an illustrative example of how to easily integrate a Web Server into HomeSpan.  This project also covers various other advanced topics, including TCP slot management, dynamic creation of Accessories, and saving arbitrary data in the ESP32's NVS.
+* Yes, provided you implement your Web Server using standard ESP32-Arduino libraries, such as `WebServer.h`. See [ProgrammableHub](../examples/Other%20Examples/ProgrammableHub) for an illustrative example of how to easily integrate a Web Server into HomeSpan.  This project also covers various other advanced topics, including TCP slot management, dynamic creation of Accessories, and saving arbitrary data in the ESP32's NVS.
 
 #### Can you add *custom* Services and Characteristics to HomeSpan?
 
@@ -75,5 +75,5 @@
 * Though not documented in HAP-R2, it appears that the Doorbell Service is designed to be used in conjunction with another service, such as the Lock Mechanism.  If you add in a second service, the Home App will show the appropriate Tile (such as a Lock) with the Doorbell being the second service.  Howeveer, you can still use the Doorbell Service on a stanadlone basis --- even though the Home App says it is unsupported, a button press on the device will properly trigger a chime on your Home Pods as expected. 
 ---
 
-[↩️](README.md) Back to the Welcome page
+[↩️](../README.md) Back to the Welcome page
 

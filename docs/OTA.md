@@ -8,6 +8,8 @@ By default, HomeSpan requires the use of a password whenever you begin an OTA up
 
 You can change the password for a HomeSpan device from the [HomeSpan CLI](CLI.md) with the 'O' command.  Similar to a device's Setup Code, HomeSpan saves a non-recoverable hashed version of the OTA password you specify in non-volatile storage (NVS).  If you forget the password you specified, you'll need to create a new one using the 'O' command, or you can restore the default OTA password by fully erasing the NVS with the 'E' command.
 
+You can also change the password programmatically from within a sketch by calling `homeSpan.enableOTA(const char *pwd)`.  This is not as secure as setting the password using the method above since your sketch will contain a plaintext-version, instead of a hashed-version, or your password.  Note that setting your password this way causes HomeSpan to ignore, but does not alter, any password you have saved in NVS using the 'O' command.
+
 > :exclamation: Though not recommended, you can override the requirement for a password when enabling OTA for your sketch by including *false* as a parameter to the enabling method as such: `homeSpan.enableOTA(false)`.  Use with caution!  Anyone who can access the device over your network will now be able to upload a new sketch.
 
 Note that in in order for OTA to properly operate, your sketch must be compiled with a partition scheme that includes OTA partitions.  Partition schemes are found under the *Tools → Partition Scheme* menu of the Arduino IDE.  Select a scheme that indicates it supports OTA.  Note that schemes labeled "default" usually include OTA partitions.  If unsure, try it out.  HomeSpan will let you know if it does or does not.
@@ -36,6 +38,6 @@ Note that these check are *only* applicable when uploading sketches via OTA.  Th
 
 ---
 
-[↩️](README.md) Back to the Welcome page
+[↩️](../README.md) Back to the Welcome page
 
 
