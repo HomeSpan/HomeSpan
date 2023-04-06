@@ -76,7 +76,7 @@ HomeSpan requires version 2.0.0 or later of the [Arduino-ESP32 Board Manager](ht
   * Enables a broken device to be swapped for a new device (running the same sketch) without the need to unpair the old device or pair the new device
   * Avoids loss of automations, scenes, and any other Home App customizations associated with device
   * New and old device can be different chips (e.g. ESP32-S2 versus ESP32-C3)
-  * See the new [Cloning Page](Cloning.md) for details
+  * See the new [Cloning Page](docs/Cloning.md) for details
 
 See [Releases](https://github.com/HomeSpan/HomeSpan/releases) for details on all changes and bug fixes included in this update.
 
