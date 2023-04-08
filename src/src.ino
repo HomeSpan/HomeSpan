@@ -25,47 +25,68 @@
  *  
  ********************************************************************************/
 
-// This is a placeholder .ino file that allows you to easily edit the contents of this library using the Arduino IDE,
-// as well as compile and test from this point.  This file is ignored when the library is included in other sketches.
-
 #include "HomeSpan.h"
 
-CUSTOM_CHAR(CharFloat, 00000001-0001-0001-0001-46637266EA00, PR+PW+EV, FLOAT, 0, 0, 100, false);
-CUSTOM_CHAR(CharUInt8, 00000009-0001-0001-0001-46637266EA00, PR+PW+EV, UINT8, 0, 0, 100, false);
-CUSTOM_CHAR(CharUInt16, 00000016-0001-0001-0001-46637266EA00, PR+PW+EV, UINT16, 0, 0, 100, false);
-CUSTOM_CHAR(CharUInt32, 00000032-0001-0001-0001-46637266EA00, PR+PW+EV, UINT32, 0, 0, 100, false);
-CUSTOM_CHAR(CharInt, 00000002-0001-0001-0001-46637266EA00, PR+PW+EV, INT, 0, 0, 100, false);
+struct LED_Service : Service::LightBulb {
 
-//////////////////////////////////////
+  int ledPin;
+  boolean oldPower=false;
+  SpanCharacteristic *power;
   
+  LED_Service(int ledPin) : Service::LightBulb(){
+
+    power=new Characteristic::On();
+    this->ledPin=ledPin;
+    pinMode(ledPin,OUTPUT);    
+  }
+
+  boolean update(){            
+
+    digitalWrite(ledPin,power->getNewVal());   
+    oldPower=power->getNewVal();
+    return(true);  
+  }
+
+//  void loop(){
+//    if(power->getVal()!=oldPower){
+//      oldPower=!oldPower;
+//      Serial.printf("Power was manually changed to %s\n",oldPower?"ON":"OFF");
+//    }
+//  }
+};
+      
+//////////////////////////////////////
+
+boolean oldPower=false;
+LED_Service *pLed;
+
 void setup() {
   
   Serial.begin(115200);
 
-  homeSpan.setLogLevel(1);
+  homeSpan.setLogLevel(2);
 
-  homeSpan.begin(Category::Other,"HomeSpan Test");
-
-  new SpanAccessory();  
-    new Service::AccessoryInformation();
-      new Characteristic::Identify(); 
-    new Service::LightBulb();
-      new Characteristic::On();
-
-      (new Characteristic::CharFloat())->setValidValues(5,0,1,2,6,7,8);
-      (new Characteristic::CharUInt8())->setValidValues(5,0,1,2,6,7,8);
-      (new Characteristic::CharUInt16())->setValidValues(5,0,1<<8,1<<16,0xFFFFFFFF,-1);
-      (new Characteristic::CharUInt32())->setValidValues(5,0,1<<8,1<<16,0xFFFFFFFF,-1);
-      (new Characteristic::CharInt())->setValidValues(5,0,255,2000000000,-2000000000,-1)->setValidValues(1,2);
+  homeSpan.begin(Category::Lighting,"HomeSpan LED");
   
-} // end of setup()
+  new SpanAccessory();   
+    new Service::AccessoryInformation(); 
+      new Characteristic::Identify();
+    pLed=new LED_Service(13);  
+
+    homeSpan.autoPoll(8192,10,1);
+}
 
 //////////////////////////////////////
 
 void loop(){
   
-  homeSpan.poll();
+//  homeSpan.poll();
 
-} // end of loop()
+  while(pLed->power->getVal()!=oldPower){
+    oldPower=pLed->power->getVal();
+    Serial.printf("Power was manually changed to %s\n",oldPower?"ON":"OFF");
+  }
+
+}
 
 //////////////////////////////////////
