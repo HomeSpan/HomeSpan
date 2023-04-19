@@ -2169,12 +2169,13 @@ SpanUserCommand::SpanUserCommand(char c, const char *s, void (*f)(const char *, 
 //        SpanWebLog         //
 ///////////////////////////////
 
-void SpanWebLog::init(uint16_t maxEntries, const char *serv, const char *tz, const char *url){
+void SpanWebLog::init(uint16_t maxEntries, const char *serv, const char *tz, const char *url, String css){
   isEnabled=true;
   this->maxEntries=maxEntries;
   timeServer=serv;
   timeZone=tz;
   statusURL="GET /" + String(url) + " ";
+  cssStyle=css;
   log = (log_t *)calloc(maxEntries,sizeof(log_t));
   if(timeServer)
     homeSpan.reserveSocketConnections(1);
