@@ -21,3 +21,8 @@
 * If you receive the above error when you try to compile a HomeSpan sketch, that means the Arduino-ESP32 package was not properly installed.  This can occur if instead of using one of the two methods above, you've tried to manually install the Arduino-ESP32 package by downloading a zip file created live from a specific branch of the Arduino-ESP32 code (typically via the `<> Code` button on GitHub when browsing a particular branch).  The `core_version.h` file is usually not included in any of the branches, and thus will not be part of any zip files you request directly from a specific branch.
 
 * **Resolution:** Use the Arduino Board manager to install the Arduino-ESP32 package (recommended), or install manually using an *official release zip* file found under the "Assets" section of each release version shown on the Arduino-ESP32 GitHub site.
+
+---
+
+[↩️](../README.md) Back to the Welcome page
+
