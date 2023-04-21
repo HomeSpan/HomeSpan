@@ -814,11 +814,11 @@ class SpanButton : public PushButton {
   protected:
   
   enum buttonType_t {
-    BUTTON,
-    TOGGLE
+    HS_BUTTON,
+    HS_TOGGLE
   };
 
-  buttonType_t buttonType=BUTTON;      // type of SpanButton  
+  buttonType_t buttonType=HS_BUTTON;      // type of SpanButton  
   
   public:
 
@@ -842,7 +842,7 @@ class SpanToggle : public SpanButton {
 
   public:
 
-  SpanToggle(int pin, triggerType_t triggerType=TRIGGER_ON_LOW, uint16_t toggleTime=5) : SpanButton(pin,triggerType,toggleTime){buttonType=TOGGLE;};
+  SpanToggle(int pin, triggerType_t triggerType=TRIGGER_ON_LOW, uint16_t toggleTime=5) : SpanButton(pin,triggerType,toggleTime){buttonType=HS_TOGGLE;};
   int position(){return(pressType);}
 };
 
