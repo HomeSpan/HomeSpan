@@ -29,6 +29,7 @@
 #include <sodium.h>
 #include <mbedtls/version.h>
 #include <MD5Builder.h>
+#include <mbedtls/version.h>
 
 #include "HAP.h"
 
@@ -1268,6 +1269,13 @@ int HAPClient::getStatusURL(){
   response+="<tr><td>Sodium Version:</td><td>" + String(sodium_version_string()) + " Lib " + String(sodium_library_version_major()) + "." + String(sodium_library_version_minor()) + "</td></tr>\n";
   response+="<tr><td>MbedTLS:</td><td>" + String(mbtlsv) + "</td></tr>\n";
   response+="<tr><td>Sketch Version:</td><td>" + String(homeSpan.getSketchVersion()) + "</td></tr>\n"; 
+  response+="<tr><td>Sodium Version:</td><td>" + String(sodium_version_string()) + " Lib " + String(sodium_library_version_major()) + "." + String(sodium_library_version_minor()) +"</td></tr>\n"; 
+
+  char mbtlsv[64];
+  mbedtls_version_get_string_full(mbtlsv);
+  response+="<tr><td>MbedTLS Version:</td><td>" + String(mbtlsv) + "</td></tr>\n";
+
+  response+="<tr><td>HomeKit Status:</td><td>" + String(nAdminControllers()?"PAIRED":"NOT PAIRED") + "</td></tr>\n";   
   response+="<tr><td>Max Log Entries:</td><td>" + String(homeSpan.webLog.maxEntries) + "</td></tr>\n"; 
   response+="</table>\n";
   response+="<p></p>";
