@@ -1250,11 +1250,10 @@ int HAPClient::getStatusURL(){
   String response="HTTP/1.1 200 OK\r\nContent-type: text/html; charset=utf-8\r\n\r\n";
 
   response+="<html><head><title>" + String(homeSpan.displayName) + "</title>\n";
-  response+= String(homeSpan.webLog.cssStyle);
-  response+="</head>\n";
-  response+="<body>\n";
-  response+="<p><b>" + String(homeSpan.displayName) + "</b></p>\n";
-  response+="<table id=homespan_hap_properties>\n";
+  response+="<style>body {background-color:lightblue;} th, td {padding-right: 10px; padding-left: 10px; border:1px solid black;}" + homeSpan.webLog.css + "</style></head>\n";
+  response+="<body class=bod1><h2>" + String(homeSpan.displayName) + "</h2>\n";
+  
+  response+="<table class=tab1>\n";
   response+="<tr><td>Up Time:</td><td>" + String(uptime) + "</td></tr>\n";
   response+="<tr><td>Current Time:</td><td>" + String(clocktime) + "</td></tr>\n";
   response+="<tr><td>Boot Time:</td><td>" + String(homeSpan.webLog.bootTime) + "</td></tr>\n";
@@ -1281,7 +1280,7 @@ int HAPClient::getStatusURL(){
   response+="<p></p>";
 
   if(homeSpan.webLog.maxEntries>0){
-    response+="<table id=homespan_weblogs><tr><th>Entry</th><th>Up Time</th><th>Log Time</th><th>Client</th><th>Message</th></tr>\n";
+    response+="<table class=tab2><tr><th>Entry</th><th>Up Time</th><th>Log Time</th><th>Client</th><th>Message</th></tr>\n";
     int lastIndex=homeSpan.webLog.nEntries-homeSpan.webLog.maxEntries;
     if(lastIndex<0)
       lastIndex=0;

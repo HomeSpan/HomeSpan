@@ -151,7 +151,7 @@ struct SpanWebLog{                            // optional web status/log data
   char bootTime[33]="Unknown";                // boot time
   String statusURL;                           // URL of status log
   uint32_t waitTime=10000;                    // number of milliseconds to wait for initial connection to time server
-  String cssStyle;                            // Default CSS style.
+  String css="";                              // optional user-defined style sheet for web log
     
   struct log_t {                              // log entry type
     uint64_t upTime;                          // number of seconds since booting
@@ -341,6 +341,8 @@ class Span{
     webLog.vLog(sysMsg,fmt,ap);
     va_end(ap);    
   }
+
+  void setWebLogCSS(const char *css){webLog.css="\n" + String(css) + "\n";}
 
   void autoPoll(uint32_t stackSize=8192, uint32_t priority=1, uint32_t cpu=0){     // start pollTask()
     xTaskCreateUniversal([](void *parms){for(;;)homeSpan.pollTask();}, "pollTask", stackSize, NULL, priority, &pollTaskHandle, cpu);
