@@ -1243,7 +1243,7 @@ int HAPClient::getStatusURL(){
     
   sprintf(uptime,"%d:%02d:%02d:%02d",days,hours,mins,secs);
 
-  String response="HTTP/1.1 200 OK\r\nContent-type: text/html\r\n\r\n";
+  String response="HTTP/1.1 200 OK\r\nContent-type: text/html; charset=utf-8\r\n\r\n";
 
   response+="<html><head><title>" + String(homeSpan.displayName) + "</title>\n";
   response+="<style>body {background-color:lightblue;} th, td {padding-right: 10px; padding-left: 10px; border:1px solid black;}" + homeSpan.webLog.css + "</style></head>\n";
