@@ -160,7 +160,7 @@ struct SpanWebLog{                            // optional web status/log data
     String clientIP;                          // IP address of client making request (or "0.0.0.0" if not applicable)
   } *log=NULL;                                // array of log entries 
 
-  void init(uint16_t maxEntries, const char *serv, const char *tz, const char *url, String css);
+  void init(uint16_t maxEntries, const char *serv, const char *tz, const char *url);
   void initTime();  
   void vLog(boolean sysMsg, const char *fmr, va_list ap);
 };
@@ -331,8 +331,8 @@ class Span{
   int enableOTA(boolean auth=true, boolean safeLoad=true){return(spanOTA.init(auth, safeLoad, NULL));}   // enables Over-the-Air updates, with (auth=true) or without (auth=false) authorization password  
   int enableOTA(const char *pwd, boolean safeLoad=true){return(spanOTA.init(true, safeLoad, pwd));}      // enables Over-the-Air updates, with custom authorization password (overrides any password stored with the 'O' command)
 
-  void enableWebLog(uint16_t maxEntries=0, const char *serv=NULL, const char *tz="UTC", const char *url=DEFAULT_WEBLOG_URL, String css="<style>th, td {padding-right: 10px; padding-left: 10px; border:1px solid black;}</style>\n"){     // enable Web Logging
-    webLog.init(maxEntries, serv, tz, url, css);
+  void enableWebLog(uint16_t maxEntries=0, const char *serv=NULL, const char *tz="UTC", const char *url=DEFAULT_WEBLOG_URL){     // enable Web Logging
+    webLog.init(maxEntries, serv, tz, url);
   }
 
   void addWebLog(boolean sysMsg, const char *fmt, ...){               // add Web Log entry

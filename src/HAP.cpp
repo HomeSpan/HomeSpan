@@ -1242,9 +1242,6 @@ int HAPClient::getStatusURL(){
   int hours=(seconds/=60)%24;
   int days=(seconds/=24);
 
-  char mbtlsv[32];
-  mbedtls_version_get_string_full(mbtlsv);
-    
   sprintf(uptime,"%d:%02d:%02d:%02d",days,hours,mins,secs);
 
   String response="HTTP/1.1 200 OK\r\nContent-type: text/html; charset=utf-8\r\n\r\n";
@@ -1265,8 +1262,6 @@ int HAPClient::getStatusURL(){
   response+="<tr><td>Arduino-ESP Version:</td><td>" + String(ARDUINO_ESP_VERSION) + "</td></tr>\n";
   response+="<tr><td>ESP-IDF Version:</td><td>" + String(ESP_IDF_VERSION_MAJOR) + "." + String(ESP_IDF_VERSION_MINOR) + "." + String(ESP_IDF_VERSION_PATCH) + "</td></tr>\n";
   response+="<tr><td>HomeSpan Version:</td><td>" + String(HOMESPAN_VERSION) + "</td></tr>\n";
-  response+="<tr><td>Sodium Version:</td><td>" + String(sodium_version_string()) + " Lib " + String(sodium_library_version_major()) + "." + String(sodium_library_version_minor()) + "</td></tr>\n";
-  response+="<tr><td>MbedTLS:</td><td>" + String(mbtlsv) + "</td></tr>\n";
   response+="<tr><td>Sketch Version:</td><td>" + String(homeSpan.getSketchVersion()) + "</td></tr>\n"; 
   response+="<tr><td>Sodium Version:</td><td>" + String(sodium_version_string()) + " Lib " + String(sodium_library_version_major()) + "." + String(sodium_library_version_minor()) +"</td></tr>\n"; 
 
