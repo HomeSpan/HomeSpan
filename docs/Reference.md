@@ -181,11 +181,11 @@ The following **optional** `homeSpan` methods enable additional features and pro
   * can by called from anywhere in a sketch
 
 * `void enableWebLog(uint16_t maxEntries, const char *timeServerURL, const char *timeZone, const char *logURL)`
-  * enables a rolling web log that displays the most recent *maxEntries* entries created by the user with the `WEBLOG()` macro.  Parameters, and their default values if unspecified, are as follows:
-    * *maxEntries* - maximum number of (most recent) entries to save.  If unspecified, defaults to 0, in which case the web log will only display status without any log entries
+  * enables a rolling Web Log that displays the most recent *maxEntries* entries created by the user with the `WEBLOG()` macro.  Parameters, and their default values if unspecified, are as follows:
+    * *maxEntries* - maximum number of (most recent) entries to save.  If unspecified, defaults to 0, in which case the Web Log will only display status without any log entries
     * *timeServerURL* - the URL of a time server that HomeSpan will use to set its clock upon startup after a WiFi connection has been established.  If unspecified, default to NULL, in which case HomeSpan skips setting the device clock
     * *timeZone* - specifies the time zone to use for setting the clock.  Uses standard Unix timezone formatting as interpreted by Espressif IDF.  Note the IDF uses a somewhat non-intuitive convention such that a timezone of "UTC+5:00" *subtracts* 5 hours from UTC time, and "UTC-5:00" *adds* 5 hours to UTC time.  If *serverURL=NULL* this field is ignored; if *serverURL!=NULL* this field is required
-    * *logURL* - the URL of the log page for this device.  If unspecified, defaults to "status"
+    * *logURL* - the URL of the Web Log page for this device.  If unspecified, defaults to "status"
   * example: `homeSpan.enableWebLog(50,"pool.ntp.org","UTC-1:00","myLog");` creates a web log at the URL *http<nolink>://HomeSpan-\[DEVICE-ID\].local:\[TCP-PORT\]/myLog* that will display the 50 most-recent log messages produced with the WEBLOG() macro.  Upon start-up (after a WiFi connection has been established) HomeSpan will attempt to set the device clock by calling the server "pool.ntp.org" and adjusting the time to be 1 hour ahead of UTC.
   * when attemping to connect to *timeServerURL*, HomeSpan waits 10 seconds for a response.  If no response is received after the 10-second timeout period, HomeSpan assumes the server is unreachable and skips the clock-setting procedure.  Use `setTimeServerTimeout()` to re-configure the 10-second timeout period to another value
   * see [Message Logging](Logging.md) for complete details
@@ -194,8 +194,8 @@ The following **optional** `homeSpan` methods enable additional features and pro
   * changes the default 10-second timeout period HomeSpan uses when `enableWebLog()` tries set the device clock from an internet time server to *tSec* seconds
  
 * `void setWebLogCSS(const char *css)`
-  * sets the CSS style page use by the web log to a user-define CSS specified by *css* 
-  * see [Message Logging](Logging.md) for complete details
+  * sets the format of the HomeSpan Web Log to the custom style sheet specified by *css*
+  * see [Message Logging](Logging.md) for details on how to construct *css*
  
 * `void processSerialCommand(const char *CLIcommand)`
   * processes the *CLIcommand* just as if were typed into the Serial Monitor
