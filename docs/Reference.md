@@ -193,6 +193,10 @@ The following **optional** `homeSpan` methods enable additional features and pro
 * `void setTimeServerTimeout(uint32_t tSec)`
   * changes the default 10-second timeout period HomeSpan uses when `enableWebLog()` tries set the device clock from an internet time server to *tSec* seconds
  
+* `void setWebLogCSS(const char *css)`
+  * sets the CSS style page use by the web log to a user-define CSS specified by *css* 
+  * see [Message Logging](Logging.md) for complete details
+ 
 * `void processSerialCommand(const char *CLIcommand)`
   * processes the *CLIcommand* just as if were typed into the Serial Monitor
   * allows for programmatic access to all CLI commands, included any custom commands defined by the user
