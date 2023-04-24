@@ -60,7 +60,7 @@ See [Example 19 - WebLog](Tutorials.md#example-19---weblog) for a tutorial sketc
  
 ### Custom Style Sheets (CSS)
  
-HomeSpan's Web Log normally consists of black text on light blue background.  However, you can create a custom style sheet for HomeSpan to use by calling the method `homeSpan.setWebLogCSS(const char *css)`, where *css* is formatted as series of [HTML classes](https://www.w3schools.com/html/html_classes.asp) containing various style elements.  HomeSpan uses the following three class names for the different parts of the Web Log:
+HomeSpan's Web Log normally consists of black text on light blue background.  However, you can change use your own custom style sheets (CSS) formatting by calling the method `homeSpan.setWebLogCSS(const char *css)`, where *css* is formatted as series of [HTML classes](https://www.w3schools.com/html/html_classes.asp) containing various style elements.  HomeSpan uses the following three class names for the different parts of the Web Log:
  
  * *bod1* - this class specifies style elements for the main body of the Web Log page, including the background color and the header text at the top (which is formatted as \<h2\>
  * *tab1* - this class specifies style elements for the status table at the top of the Web Log page
