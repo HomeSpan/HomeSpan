@@ -58,6 +58,27 @@ Additional notes:
  
 See [Example 19 - WebLog](Tutorials.md#example-19---weblog) for a tutorial sketch demonstrating the use of `homeSpan.enableWebLog()` and the WEBLOG() macro.
  
+### Custom Style Sheets (CSS)
+ 
+HomeSpan's Web Log normally consists of black text on light blue background.  However, you can create a custom style sheet for HomeSpan to use by calling the method `homeSpan.setWebLogCSS(const char *css)`, where *css* is formatted as series of [HTML classes](https://www.w3schools.com/html/html_classes.asp) containing various style elements.  HomeSpan uses the following three class names for the different parts of the Web Log:
+ 
+ * *bod1* - this class specifies style elements for the main body of the Web Log page, including the background color and the header text at the top (which is formatted as \<h2\>
+ * *tab1* - this class specifies style elements for the status table at the top of the Web Log page
+ * *tab2* - this class specifies style elements for the log entry table at the botom of the Web Log page
+ 
+For example, the following CSS changes the color of the page background to light yellow and header text to blue, the color of top table to light green, and the color of the botom table to light blue.  It also changes the color of the text in the header row of the second table to red, and the color of the data rows in the second table to dark blue, as well as centering the text for the data rows:
+ 
+ ```C++
+   homeSpan.setWebLogCSS(".bod1 {background-color:lightyellow;}"
+                        ".bod1 h2 {color:blue;}"
+                        ".tab1 {background-color:lightgreen;}"
+                        ".tab2 {background-color:lightblue;} .tab2 th {color:red;} .tab2 td {color:darkblue; text-align:center;}"
+                        );
+ ```
+ 
+ Note that HomeSpan outputs the full content of the Web Log HTML to the Serial Monitor 
+ 
+ 
 ---
 
 [↩️](../README.md) Back to the Welcome page
