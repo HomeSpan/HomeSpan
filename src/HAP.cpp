@@ -1253,7 +1253,52 @@ int HAPClient::getStatusURL(){
   response+="<tr><td>Up Time:</td><td>" + String(uptime) + "</td></tr>\n";
   response+="<tr><td>Current Time:</td><td>" + String(clocktime) + "</td></tr>\n";
   response+="<tr><td>Boot Time:</td><td>" + String(homeSpan.webLog.bootTime) + "</td></tr>\n";
-  response+="<tr><td>Reset Reason Code:</td><td>" + String(esp_reset_reason()) + "</td></tr>\n";
+  
+  response+="<tr><td>Reset Reason Code:</td><td>" + String(esp_reset_reason()) + " - ";
+  switch(esp_reset_reason()) {
+    case ESP_RST_UNKNOWN:
+      response += "Reset reason can not be determined.";
+      break;
+    case ESP_RST_POWERON:
+      response += "Reset due to power-on event.";
+      break;
+    case ESP_RST_EXT:
+      response += "Reset by external pin (not applicable for ESP32).";
+      break;
+    case ESP_RST_SW:
+      response += "Software reset via esp_restart.";
+      break;
+    case ESP_RST_PANIC:
+      response += "Software reset due to exception/panic.";
+      break;
+    case ESP_RST_INT_WDT:
+      response += "Reset (software or hardware) due to interrupt watchdog.";
+      break;
+    case ESP_RST_TASK_WDT:
+      response += "Reset due to task watchdog.";
+      break;
+    case ESP_RST_WDT:
+      response += "Reset due to other watchdogs.";
+      break;
+    case ESP_RST_DEEPSLEEP:
+      response += "Reset after exiting deep sleep mode.";
+      break;
+    case ESP_RST_BROWNOUT:
+      response += "Brownout reset (software or hardware).";
+      break;
+    case ESP_RST_SDIO:
+      response += "Reset over SDIO.";
+      break;
+    /* HomeSpan not yet upgraded to support this one.. 
+    case ESP_RST_USB:
+      response += "Reset by USB peripheral.";
+      break;
+     */
+    default:
+      response += "No description available, contact HomeSpan maintainers.";
+  }
+  response+="</td></tr>\n";
+  
   response+="<tr><td>WiFi Disconnects:</td><td>" + String(homeSpan.connected/2) + "</td></tr>\n";
   response+="<tr><td>WiFi Signal:</td><td>" + String(WiFi.RSSI()) + " dBm</td></tr>\n";
   response+="<tr><td>WiFi Gateway:</td><td>" + WiFi.gatewayIP().toString() + "</td></tr>\n";
