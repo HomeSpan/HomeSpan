@@ -150,7 +150,7 @@ struct SpanWebLog{                            // optional web status/log data
   boolean timeInit=false;                     // flag to indicate time has been initialized
   char bootTime[33]="Unknown";                // boot time
   String statusURL;                           // URL of status log
-  uint32_t waitTime=10000;                    // number of milliseconds to wait for initial connection to time server
+  uint32_t waitTime=120000;                   // number of milliseconds to wait for initial connection to time server
   String css="";                              // optional user-defined style sheet for web log
     
   struct log_t {                              // log entry type
@@ -161,7 +161,7 @@ struct SpanWebLog{                            // optional web status/log data
   } *log=NULL;                                // array of log entries 
 
   void init(uint16_t maxEntries, const char *serv, const char *tz, const char *url);
-  void initTime();  
+  static void initTime(void *args);  
   void vLog(boolean sysMsg, const char *fmr, va_list ap);
 };
 

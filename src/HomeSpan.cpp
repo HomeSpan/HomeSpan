@@ -543,10 +543,11 @@ void Span::checkConnect(){
     mdns_service_txt_item_set("_hap","_tcp","logURL",webLog.statusURL.c_str()+4);           // Web Log status (info only - NOT used by HAP)
     
     Serial.printf("Web Logging enabled at http://%s.local:%d%swith max number of entries=%d\n\n",hostName,tcpPortNum,webLog.statusURL.c_str()+4,webLog.maxEntries);
-    webLog.initTime();
+    if(webLog.timeServer)
+      xTaskCreateUniversal(webLog.initTime, "timeSeverTaskHandle", 8096, &webLog, 1, NULL, 0);
   }
   
-  Serial.printf("Starting HAP Server on port %d supporting %d simultaneous HomeKit Controller Connections...\n",tcpPortNum,maxConnections);
+  Serial.printf("Starting HAP Server on port %d supporting %d simultaneous HomeKit Controller Connections...\n\n",tcpPortNum,maxConnections);
 
   hapServer->begin();
 
@@ -2182,20 +2183,22 @@ void SpanWebLog::init(uint16_t maxEntries, const char *serv, const char *tz, con
 
 ///////////////////////////////
 
-void SpanWebLog::initTime(){
-  if(!timeServer)
-    return;
-
-  Serial.printf("Acquiring Time from %s (%s).  Waiting %d second(s) for response... ",timeServer,timeZone,waitTime/1000);
-  configTzTime(timeZone,timeServer);
+void SpanWebLog::initTime(void *args){
+  SpanWebLog *wLog = (SpanWebLog *)args;
+  
+  WEBLOG("Acquiring Time from %s (%s)",wLog->timeServer,wLog->timeZone,wLog->waitTime/1000);
+  configTzTime(wLog->timeZone,wLog->timeServer);
   struct tm timeinfo;
-  if(getLocalTime(&timeinfo,waitTime)){
-    strftime(bootTime,sizeof(bootTime),"%c",&timeinfo);
-    Serial.printf("%s\n\n",bootTime);
-    timeInit=true;
+  if(getLocalTime(&timeinfo,wLog->waitTime)){
+    strftime(wLog->bootTime,sizeof(wLog->bootTime),"%c",&timeinfo);
+    wLog->timeInit=true;
+    WEBLOG("Time Acquired: %s",wLog->bootTime);
   } else {
-    Serial.printf("Can't access Time Server - time-keeping not initialized!\n\n");
+    WEBLOG("Can't access Time Server after %d seconds",wLog->waitTime/1000);
   }
+
+  vTaskDelete(NULL);
+  
 }
 
 ///////////////////////////////
