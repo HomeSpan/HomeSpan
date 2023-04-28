@@ -1254,50 +1254,45 @@ int HAPClient::getStatusURL(){
   response+="<tr><td>Current Time:</td><td>" + String(clocktime) + "</td></tr>\n";
   response+="<tr><td>Boot Time:</td><td>" + String(homeSpan.webLog.bootTime) + "</td></tr>\n";
   
-  response+="<tr><td>Reset Reason Code:</td><td>" + String(esp_reset_reason()) + " - ";
+  response+="<tr><td>Reset Reason:</td><td>";
   switch(esp_reset_reason()) {
     case ESP_RST_UNKNOWN:
-      response += "Reset reason can not be determined.";
+      response += "Cannot be determined";
       break;
     case ESP_RST_POWERON:
-      response += "Reset due to power-on event.";
+      response += "Power-on event";
       break;
     case ESP_RST_EXT:
-      response += "Reset by external pin (not applicable for ESP32).";
+      response += "External pin";
       break;
     case ESP_RST_SW:
-      response += "Software reset via esp_restart.";
+      response += "Software reboot via esp_restart";
       break;
     case ESP_RST_PANIC:
-      response += "Software reset due to exception/panic.";
+      response += "Software Exception/Panic";
       break;
     case ESP_RST_INT_WDT:
-      response += "Reset (software or hardware) due to interrupt watchdog.";
+      response += "Interrupt watchdog";
       break;
     case ESP_RST_TASK_WDT:
-      response += "Reset due to task watchdog.";
+      response += "Task watchdog";
       break;
     case ESP_RST_WDT:
-      response += "Reset due to other watchdogs.";
+      response += "Other watchdogs";
       break;
     case ESP_RST_DEEPSLEEP:
-      response += "Reset after exiting deep sleep mode.";
+      response += "Exiting deep sleep mode";
       break;
     case ESP_RST_BROWNOUT:
-      response += "Brownout reset (software or hardware).";
+      response += "Brownout";
       break;
     case ESP_RST_SDIO:
-      response += "Reset over SDIO.";
+      response += "SDIO";
       break;
-    /* HomeSpan not yet upgraded to support this one.. 
-    case ESP_RST_USB:
-      response += "Reset by USB peripheral.";
-      break;
-     */
     default:
-      response += "No description available, contact HomeSpan maintainers.";
+      response += "Unknown Reset Code";
   }
-  response+="</td></tr>\n";
+  response+=" (" + String(esp_reset_reason()) + ")</td></tr>\n";
   
   response+="<tr><td>WiFi Disconnects:</td><td>" + String(homeSpan.connected/2) + "</td></tr>\n";
   response+="<tr><td>WiFi Signal:</td><td>" + String(WiFi.RSSI()) + " dBm</td></tr>\n";
