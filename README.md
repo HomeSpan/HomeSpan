@@ -48,36 +48,19 @@ HomeSpan requires version 2.0.0 or later of the [Arduino-ESP32 Board Manager](ht
   * Launch the WiFi Access Point
 * A standalone, detailed End-User Guide
 
-## ❗Latest Update - HomeSpan 1.7.2 (4/5/2023)
+## ❗Latest Update - HomeSpan 1.7.3 (MM/DD/2023)
 
-* **New ability to set OTA password from within sketch**
-  * See the [OTA Page](docs/OTA.md) for details
+* **Upgrades to HomeSpan Web Log output**
 
-* **Added logic to allow duplicates of the same Custom Characteristic to be "defined" in more than one file in a sketch**
-  * Allows the use of the same Custom Characteristic across multiple files in the same sketch without the compiler throwing a "redefinition error"
-  * See the [API Reference](docs/Reference.md) for details
+  * adds new method `void homeSpan.setWebLogCSS(const char *css)` that allows you to define custom style sheets (CSS) for the Web Log text, tables, and background
+  * adds version numbers for the Sodium and MbedTLS libraries, HomeKit pairing status, and a text description of Reset Reason code
+  * see [Message Logging](Logging.md) for details
 
-* **Extended functionality of `setValidValues()` to work with more than just UINT8 Characteristics**
-  * Now works with INT, UINT16, and UINT32 Characteristics, as well as UINT8 Characteristics
-  * See the [API Reference](docs/Reference.md) for details
+* **Upgrades to Web Log Time Server initialization**
 
-* **New parameters added to `autoPoll()` that allow the user to set priority and chose CPU**
-  * Provides for enhanced performance on dual-processor chips
-  * See the [API Reference](docs/Reference.md) for details
-
-* **Automatic LED Fading!**
-  * Added new methods to LedPin class that enable use of the ESP32's built-in fade controls
-  * Allows user to specify speed of fade
-  * Runs in background without consuming any CPU resources
-  * See the [PWM Page](docs/PWM.md) for details
-
-* **Added ability to Clone the Pairing Data from one device to another**
-  * Adds new 'P' and 'C' commands to the CLI
-  * Enables a broken device to be swapped for a new device (running the same sketch) without the need to unpair the old device or pair the new device
-  * Avoids loss of automations, scenes, and any other Home App customizations associated with device
-  * New and old device can be different chips (e.g. ESP32-S2 versus ESP32-C3)
-  * See the new [Cloning Page](docs/Cloning.md) for details
-
+  * the process for retrieving the time and date from an NTP server upon booting now runs in the background as a separate task
+  * HomeSpan is no longer blocked from running during the NTP query
+    
 See [Releases](https://github.com/HomeSpan/HomeSpan/releases) for details on all changes and bug fixes included in this update.
 
 # HomeSpan Resources
