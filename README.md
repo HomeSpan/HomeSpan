@@ -54,7 +54,7 @@ HomeSpan requires version 2.0.0 or later of the [Arduino-ESP32 Board Manager](ht
 
   * adds new method `void homeSpan.setWebLogCSS(const char *css)` that allows you to define custom style sheets (CSS) for the Web Log text, tables, and background
   * adds version numbers for the Sodium and MbedTLS libraries, HomeKit pairing status, and a text description of Reset Reason code
-  * see [Message Logging](Logging.md) for details
+  * see [Message Logging](docs/Logging.md) for details
 
 * **Upgrades to Web Log Time Server initialization**
 
