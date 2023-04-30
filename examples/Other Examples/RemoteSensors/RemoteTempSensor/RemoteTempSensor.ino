@@ -58,7 +58,7 @@
 #define DIAGNOSTIC_MODE
 
 #define SAMPLE_TIME   30000     // Time between temperature samples (in milliseconds)
-#define I2C_ADD       0x48      // ICS Address to use for the Adafruit ADT7410
+#define I2C_ADD       0x48      // I2C Address to use for the Adafruit ADT7410
 
 SpanPoint *mainDevice;
 
