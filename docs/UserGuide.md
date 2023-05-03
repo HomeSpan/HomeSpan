@@ -1,5 +1,15 @@
 # HomeSpan User Guide
+1. [Introduction](#introduction)
+2. [Getting Started](#getting-started)
+3. [HomeSpan Device States](#homespan-device-states)
+4. [Device Configuration Mode](#device-configuration-mode)
+5. [Setting HomeSpan WiFi Credentials and Setup Code](#setting-homespan-wifi-credentials-and-setup-code)
+6. [Pairing to HomeKit](#pairing-to-homekit)
+7. [Factory Reset](#factory-reset)
+8. [Creating a Scannable Tag](#creating-a-scannable-tag)
 
+
+## Introduction
 This guide explains how to set up and configure a HomeSpan device that has already been programmed to operate one or more appliances, including how to:
 
 * Determine the state of the device by observing the HomeSpan Status LED
@@ -83,7 +93,7 @@ To execute the selected Action press and hold the Control Button for 3 seconds, 
 
 If no Action has been executed within 120 seconds (2 minutes) of starting the Device Configuration Mode, Action 1 is automatically executed and the Device Configuration Mode is exited.
 
-##	Setting HomeSpan’s WiFi Credentials and Setup Code
+##	Setting HomeSpan WiFi Credentials and Setup Code
 
 To configure a HomeSpace device to connect to your home WiFi network you must first connect your iPhone directly to the device so you can input your WiFi Credentials.   This connection is made via a temporary WiFi network HomeSpan launches just for this purpose.
 
