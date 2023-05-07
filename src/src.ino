@@ -30,35 +30,23 @@
 struct LED_Service : Service::LightBulb {
 
   int ledPin;
-  boolean oldPower=false;
   SpanCharacteristic *power;
   
   LED_Service(int ledPin) : Service::LightBulb(){
-
     power=new Characteristic::On();
     this->ledPin=ledPin;
     pinMode(ledPin,OUTPUT);    
   }
 
   boolean update(){            
-
     digitalWrite(ledPin,power->getNewVal());   
-    oldPower=power->getNewVal();
     return(true);  
   }
 
-//  void loop(){
-//    if(power->getVal()!=oldPower){
-//      oldPower=!oldPower;
-//      Serial.printf("Power was manually changed to %s\n",oldPower?"ON":"OFF");
-//    }
-//  }
 };
       
 //////////////////////////////////////
 
-boolean oldPower=false;
-LED_Service *pLed;
 
 void setup() {
   
@@ -71,22 +59,13 @@ void setup() {
   new SpanAccessory();   
     new Service::AccessoryInformation(); 
       new Characteristic::Identify();
-    pLed=new LED_Service(13);  
-
-    homeSpan.autoPoll(8192,10,1);
+    new LED_Service(13);  
 }
 
 //////////////////////////////////////
 
-void loop(){
-  
-//  homeSpan.poll();
-
-  while(pLed->power->getVal()!=oldPower){
-    oldPower=pLed->power->getVal();
-    Serial.printf("Power was manually changed to %s\n",oldPower?"ON":"OFF");
-  }
-
+void loop(){ 
+  homeSpan.poll();
 }
 
 //////////////////////////////////////
