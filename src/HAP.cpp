@@ -62,16 +62,11 @@ void HAPClient::init(){
     nvs_get_blob(srpNVS,"VERIFYDATA",&verifyData,&len);                  // retrieve data
     srp.loadVerifyCode(verifyData.verifyCode,verifyData.salt);           // load verification code and salt into SRP structure
   } else {
-    
-    char c[128];
-    sprintf(c,"Generating SRP verification data for default Setup Code: %.3s-%.2s-%.3s\n",homeSpan.defaultSetupCode,homeSpan.defaultSetupCode+3,homeSpan.defaultSetupCode+5);
-    Serial.print(c);
+    LOG0("Generating SRP verification data for default Setup Code: %.3s-%.2s-%.3s\n",homeSpan.defaultSetupCode,homeSpan.defaultSetupCode+3,homeSpan.defaultSetupCode+5);
     srp.createVerifyCode(homeSpan.defaultSetupCode,verifyData.verifyCode,verifyData.salt);         // create verification code from default Setup Code and random salt
     nvs_set_blob(srpNVS,"VERIFYDATA",&verifyData,sizeof(verifyData));                           // update data
     nvs_commit(srpNVS);                                                                         // commit to NVS
-    Serial.print("Setup Payload for Optional QR Code: ");
-    Serial.print(homeSpan.qrCode.get(atoi(homeSpan.defaultSetupCode),homeSpan.qrID,atoi(homeSpan.category)));
-    Serial.print("\n\n");          
+    LOG0("Setup Payload for Optional QR Code: %s\n\n",homeSpan.qrCode.get(atoi(homeSpan.defaultSetupCode),homeSpan.qrID,atoi(homeSpan.category)));
   }
 
   if(!strlen(homeSpan.qrID)){                                      // Setup ID has not been specified in sketch
@@ -85,7 +80,7 @@ void HAPClient::init(){
   if(!nvs_get_blob(hapNVS,"ACCESSORY",NULL,&len)){                    // if found long-term Accessory data in NVS
     nvs_get_blob(hapNVS,"ACCESSORY",&accessory,&len);                 // retrieve data
   } else {      
-    Serial.print("Generating new random Accessory ID and Long-Term Ed25519 Signature Keys...\n");
+    LOG0("Generating new random Accessory ID and Long-Term Ed25519 Signature Keys...\n");
     uint8_t buf[6];
     char cBuf[18];
     
@@ -103,7 +98,7 @@ void HAPClient::init(){
   if(!nvs_get_blob(hapNVS,"CONTROLLERS",NULL,&len)){                 // if found long-term Controller Pairings data from NVS
     nvs_get_blob(hapNVS,"CONTROLLERS",controllers,&len);             // retrieve data
   } else {
-    Serial.print("Initializing storage for Paired Controllers data...\n\n");               
+    LOG0("Initializing storage for Paired Controllers data...\n\n");               
     
     HAPClient::removeControllers();                                             // clear all Controller data
         
@@ -111,11 +106,11 @@ void HAPClient::init(){
     nvs_commit(hapNVS);                                                      // commit to NVS
   }
 
-  Serial.print("Accessory ID:      ");
+  LOG0("Accessory ID:      ");
   charPrintRow(accessory.ID,17);
-  Serial.print("                               LTPK: ");
+  LOG0("                               LTPK: ");
   hexPrintRow(accessory.LTPK,32);
-  Serial.print("\n");
+  LOG0("\n");
 
   printControllers();                                                         
 
@@ -139,17 +134,19 @@ void HAPClient::init(){
   if(!nvs_get_blob(hapNVS,"HAPHASH",NULL,&len)){                 // if found HAP HASH structure
     nvs_get_blob(hapNVS,"HAPHASH",&homeSpan.hapConfig,&len);     // retrieve data    
   } else {
-    Serial.print("Resetting Database Hash...\n");
+    LOG0("Resetting Database Hash...\n");
     nvs_set_blob(hapNVS,"HAPHASH",&homeSpan.hapConfig,sizeof(homeSpan.hapConfig));     // save data (will default to all zero values, which will then be updated below)
     nvs_commit(hapNVS);                                                                // commit to NVS
   }
 
-  if(homeSpan.updateDatabase(false))       // create Configuration Number and Loop vector
-    Serial.printf("\nAccessory configuration has changed.  Updating configuration number to %d\n",homeSpan.hapConfig.configNumber);
-  else
-    Serial.printf("\nAccessory configuration number: %d\n",homeSpan.hapConfig.configNumber);
+  if(homeSpan.updateDatabase(false)){       // create Configuration Number and Loop vector
+    LOG0("\nAccessory configuration has changed.  Updating configuration number to %d\n",homeSpan.hapConfig.configNumber);
+  }
+  else{
+    LOG0("\nAccessory configuration number: %d\n",homeSpan.hapConfig.configNumber);
+  }
 
-  Serial.print("\n");
+  LOG0("\n");
 
 }
 
@@ -180,7 +177,7 @@ void HAPClient::processRequest(){
        
     if(nBytes>MAX_HTTP){                              // exceeded maximum number of bytes allowed
       badRequestError();
-      Serial.print("\n*** ERROR:  Exceeded maximum HTTP message length\n\n");
+      LOG0("\n*** ERROR:  Exceeded maximum HTTP message length\n\n");
       return;
     }
         
@@ -193,7 +190,7 @@ void HAPClient::processRequest(){
       
   if(!(p=strstr((char *)httpBuf,"\r\n\r\n"))){
     badRequestError();
-    Serial.print("\n*** ERROR:  Malformed HTTP request (can't find blank line indicating end of BODY)\n\n");
+    LOG0("\n*** ERROR:  Malformed HTTP request (can't find blank line indicating end of BODY)\n\n");
     return;      
   }
 
@@ -205,7 +202,7 @@ void HAPClient::processRequest(){
     cLen=atoi(p+16);
   if(nBytes!=strlen(body)+4+cLen){
     badRequestError();
-    Serial.print("\n*** ERROR:  Malformed HTTP request (Content-Length plus Body Length does not equal total number of bytes read)\n\n");
+    LOG0("\n*** ERROR:  Malformed HTTP request (Content-Length plus Body Length does not equal total number of bytes read)\n\n");
     return;        
   }
 
@@ -216,7 +213,7 @@ void HAPClient::processRequest(){
 
     if(cLen==0){
       badRequestError();
-      Serial.print("\n*** ERROR:  HTTP POST request contains no Content\n\n");
+      LOG0("\n*** ERROR:  HTTP POST request contains no Content\n\n");
       return;      
     }
            
@@ -261,7 +258,7 @@ void HAPClient::processRequest(){
     }
 
     notFoundError();
-    Serial.print("\n*** ERROR:  Bad POST request - URL not found\n\n");
+    LOG0("\n*** ERROR:  Bad POST request - URL not found\n\n");
     return;                  
         
   } // POST request
@@ -270,7 +267,7 @@ void HAPClient::processRequest(){
 
     if(cLen==0){
       badRequestError();
-      Serial.print("\n*** ERROR:  HTTP PUT request contains no Content\n\n");
+      LOG0("\n*** ERROR:  HTTP PUT request contains no Content\n\n");
       return;      
     }
            
@@ -297,7 +294,7 @@ void HAPClient::processRequest(){
     }
       
     notFoundError();
-    Serial.print("\n*** ERROR:  Bad PUT request - URL not found\n\n");
+    LOG0("\n*** ERROR:  Bad PUT request - URL not found\n\n");
     return;                  
         
   } // PUT request           
@@ -320,13 +317,13 @@ void HAPClient::processRequest(){
     }    
 
     notFoundError();
-    Serial.print("\n*** ERROR:  Bad GET request - URL not found\n\n");
+    LOG0("\n*** ERROR:  Bad GET request - URL not found\n\n");
     return;                  
 
   } // GET request
       
   badRequestError();
-  Serial.print("\n*** ERROR:  Unknown or malformed HTTP request\n\n");
+  LOG0("\n*** ERROR:  Unknown or malformed HTTP request\n\n");
                         
 } // processHAP
 
@@ -394,13 +391,13 @@ int HAPClient::postPairSetupURL(){
   char buf[64];
 
   if(tlvState==-1){                                           // missing STATE TLV
-    Serial.print("\n*** ERROR: Missing <M#> State TLV\n\n");
+    LOG0("\n*** ERROR: Missing <M#> State TLV\n\n");
     badRequestError();                                        // return with 400 error, which closes connection      
     return(0);
   }
 
   if(nAdminControllers()){                              // error: Device already paired (i.e. there is at least one admin Controller). We should not be receiving any requests for Pair-Setup!
-    Serial.print("\n*** ERROR: Device already paired!\n\n");
+    LOG0("\n*** ERROR: Device already paired!\n\n");
     tlv8.clear();                                         // clear TLV records
     tlv8.val(kTLVType_State,tlvState+1);                  // set response STATE to requested state+1 (which should match the state that was expected by the controller)
     tlv8.val(kTLVType_Error,tagError_Unavailable);       // set Error=Unavailable
@@ -412,7 +409,7 @@ int HAPClient::postPairSetupURL(){
   LOG2(buf);
 
   if(tlvState!=pairStatus){                             // error: Device is not yet paired, but out-of-sequence pair-setup STATE was received
-    Serial.print("\n*** ERROR: Out-of-Sequence Pair-Setup request!\n\n");
+    LOG0("\n*** ERROR: Out-of-Sequence Pair-Setup request!\n\n");
     tlv8.clear();                                         // clear TLV records
     tlv8.val(kTLVType_State,tlvState+1);                  // set response STATE to requested state+1 (which should match the state that was expected by the controller)
     tlv8.val(kTLVType_Error,tagError_Unknown);           // set Error=Unknown (there is no specific error type for out-of-sequence steps)
@@ -426,7 +423,7 @@ int HAPClient::postPairSetupURL(){
     case pairState_M1:                     // 'SRP Start Request'
 
       if(tlv8.val(kTLVType_Method)!=0){                       // error: "Pair Setup" method must always be 0 to indicate setup without MiFi Authentification (HAP Table 5-3)
-        Serial.print("\n*** ERROR: Pair Method not set to 0\n\n");
+        LOG0("\n*** ERROR: Pair Method not set to 0\n\n");
         tlv8.clear();                                         // clear TLV records
         tlv8.val(kTLVType_State,pairState_M2);                // set State=<M2>
         tlv8.val(kTLVType_Error,tagError_Unavailable);       // set Error=Unavailable
@@ -451,7 +448,7 @@ int HAPClient::postPairSetupURL(){
       if(!srp.writeTLV(kTLVType_PublicKey,&srp.A) ||    // try to write TLVs into mpi structures
          !srp.writeTLV(kTLVType_Proof,&srp.M1)){
             
-        Serial.print("\n*** ERROR: One or both of the required 'PublicKey' and 'Proof' TLV records for this step is bad or missing\n\n");
+        LOG0("\n*** ERROR: One or both of the required 'PublicKey' and 'Proof' TLV records for this step is bad or missing\n\n");
         tlv8.clear();                                         // clear TLV records
         tlv8.val(kTLVType_State,pairState_M4);                // set State=<M4>
         tlv8.val(kTLVType_Error,tagError_Unknown);           // set Error=Unknown (there is no specific error type for missing/bad TLV data)
@@ -463,7 +460,7 @@ int HAPClient::postPairSetupURL(){
       srp.createSessionKey();                               // create session key, K, from receipt of HAP Client public key, A
 
       if(!srp.verifyProof()){                               // verify proof, M1, received from HAP Client
-        Serial.print("\n*** ERROR: SRP Proof Verification Failed\n\n");
+        LOG0("\n*** ERROR: SRP Proof Verification Failed\n\n");
         tlv8.clear();                                         // clear TLV records
         tlv8.val(kTLVType_State,pairState_M4);                // set State=<M4>
         tlv8.val(kTLVType_Error,tagError_Authentication);    // set Error=Authentication
@@ -486,7 +483,7 @@ int HAPClient::postPairSetupURL(){
     case pairState_M5:                     // 'Exchange Request'
 
       if(!tlv8.buf(kTLVType_EncryptedData)){            
-        Serial.print("\n*** ERROR: Required 'EncryptedData' TLV record for this step is bad or missing\n\n");
+        LOG0("\n*** ERROR: Required 'EncryptedData' TLV record for this step is bad or missing\n\n");
         tlv8.clear();                                         // clear TLV records
         tlv8.val(kTLVType_State,pairState_M6);                // set State=<M6>
         tlv8.val(kTLVType_Error,tagError_Unknown);           // set Error=Unknown (there is no specific error type for missing/bad TLV data)
@@ -513,7 +510,7 @@ int HAPClient::postPairSetupURL(){
         tlv8.buf(kTLVType_EncryptedData), tlv8.len(kTLVType_EncryptedData), NULL, 0,
         (unsigned char *)"\x00\x00\x00\x00PS-Msg05", sessionKey)==-1){
           
-        Serial.print("\n*** ERROR: Exchange-Request Authentication Failed\n\n");
+        LOG0("\n*** ERROR: Exchange-Request Authentication Failed\n\n");
         tlv8.clear();                                         // clear TLV records
         tlv8.val(kTLVType_State,pairState_M6);                // set State=<M6>
         tlv8.val(kTLVType_Error,tagError_Authentication);    // set Error=Authentication
@@ -523,7 +520,7 @@ int HAPClient::postPairSetupURL(){
       }
 
       if(!tlv8.unpack(decrypted,decryptedLen)){
-        Serial.print("\n*** ERROR: Can't parse decrypted data into separate TLV records\n\n");
+        LOG0("\n*** ERROR: Can't parse decrypted data into separate TLV records\n\n");
         tlv8.clear();                                         // clear TLV records
         tlv8.val(kTLVType_State,pairState_M6);                // set State=<M6>
         tlv8.val(kTLVType_Error,tagError_Unknown);           // set Error=Unknown (there is no specific error type for missing/bad TLV data)
@@ -536,7 +533,7 @@ int HAPClient::postPairSetupURL(){
       LOG2("------- END DECRYPTED TLVS! -------\n");
        
       if(!tlv8.buf(kTLVType_Identifier) || !tlv8.buf(kTLVType_PublicKey) || !tlv8.buf(kTLVType_Signature)){            
-        Serial.print("\n*** ERROR: One or more of required 'Identifier,' 'PublicKey,' and 'Signature' TLV records for this step is bad or missing\n\n");
+        LOG0("\n*** ERROR: One or more of required 'Identifier,' 'PublicKey,' and 'Signature' TLV records for this step is bad or missing\n\n");
         tlv8.clear();                                         // clear TLV records
         tlv8.val(kTLVType_State,pairState_M6);                // set State=<M6>
         tlv8.val(kTLVType_Error,tagError_Unknown);           // set Error=Unknown (there is no specific error type for missing/bad TLV data)
@@ -570,7 +567,7 @@ int HAPClient::postPairSetupURL(){
       uint8_t *iosDeviceSignature = tlv8.buf(kTLVType_Signature);                               // set iosDeviceSignature from TLV record (an Ed25519 should always be 64 bytes)
 
       if(crypto_sign_verify_detached(iosDeviceSignature, iosDeviceInfo, iosDeviceInfoLen, iosDeviceLTPK) != 0){         // verify signature of iosDeviceInfo using iosDeviceLTPK   
-        Serial.print("\n*** ERROR: LPTK Signature Verification Failed\n\n");
+        LOG0("\n*** ERROR: LPTK Signature Verification Failed\n\n");
         tlv8.clear();                                         // clear TLV records
         tlv8.val(kTLVType_State,pairState_M6);                // set State=<M6>
         tlv8.val(kTLVType_Error,tagError_Authentication);    // set Error=Authentication
@@ -667,13 +664,13 @@ int HAPClient::postPairVerifyURL(){
   int tlvState=tlv8.val(kTLVType_State);
 
   if(tlvState==-1){                                           // missing STATE TLV
-    Serial.print("\n*** ERROR: Missing <M#> State TLV\n\n");
+    LOG0("\n*** ERROR: Missing <M#> State TLV\n\n");
     badRequestError();                                        // return with 400 error, which closes connection      
     return(0);
   }
 
   if(!nAdminControllers()){                             // error: Device not yet paired - we should not be receiving any requests for Pair-Verify!
-    Serial.print("\n*** ERROR: Device not yet paired!\n\n");
+    LOG0("\n*** ERROR: Device not yet paired!\n\n");
     tlv8.clear();                                         // clear TLV records
     tlv8.val(kTLVType_State,tlvState+1);                  // set response STATE to requested state+1 (which should match the state that was expected by the controller)
     tlv8.val(kTLVType_Error,tagError_Unknown);           // set Error=Unknown
@@ -689,7 +686,7 @@ int HAPClient::postPairVerifyURL(){
     case pairState_M1:                     // 'Verify Start Request'
 
       if(!tlv8.buf(kTLVType_PublicKey)){            
-        Serial.print("\n*** ERROR: Required 'PublicKey' TLV record for this step is bad or missing\n\n");
+        LOG0("\n*** ERROR: Required 'PublicKey' TLV record for this step is bad or missing\n\n");
         tlv8.clear();                                     // clear TLV records
         tlv8.val(kTLVType_State,pairState_M2);            // set State=<M2>
         tlv8.val(kTLVType_Error,tagError_Unknown);       // set Error=Unknown (there is no specific error type for missing/bad TLV data)
@@ -755,7 +752,7 @@ int HAPClient::postPairVerifyURL(){
     case pairState_M3:                     // 'Verify Finish Request'
 
       if(!tlv8.buf(kTLVType_EncryptedData)){            
-        Serial.print("\n*** ERROR: Required 'EncryptedData' TLV record for this step is bad or missing\n\n");
+        LOG0("\n*** ERROR: Required 'EncryptedData' TLV record for this step is bad or missing\n\n");
         tlv8.clear();                                         // clear TLV records
         tlv8.val(kTLVType_State,pairState_M4);                // set State=<M4>
         tlv8.val(kTLVType_Error,tagError_Unknown);           // set Error=Unknown (there is no specific error type for missing/bad TLV data)
@@ -771,7 +768,7 @@ int HAPClient::postPairVerifyURL(){
         tlv8.buf(kTLVType_EncryptedData), tlv8.len(kTLVType_EncryptedData), NULL, 0,
         (unsigned char *)"\x00\x00\x00\x00PV-Msg03", sessionKey)==-1){
           
-        Serial.print("\n*** ERROR: Verify Authentication Failed\n\n");
+        LOG0("\n*** ERROR: Verify Authentication Failed\n\n");
         tlv8.clear();                                         // clear TLV records
         tlv8.val(kTLVType_State,pairState_M4);                // set State=<M4>
         tlv8.val(kTLVType_Error,tagError_Authentication);    // set Error=Authentication
@@ -780,7 +777,7 @@ int HAPClient::postPairVerifyURL(){
       }
 
       if(!tlv8.unpack(decrypted,decryptedLen)){
-        Serial.print("\n*** ERROR: Can't parse decrypted data into separate TLV records\n\n");
+        LOG0("\n*** ERROR: Can't parse decrypted data into separate TLV records\n\n");
         tlv8.clear();                                         // clear TLV records
         tlv8.val(kTLVType_State,pairState_M4);                // set State=<M4>
         tlv8.val(kTLVType_Error,tagError_Unknown);           // set Error=Unknown (there is no specific error type for missing/bad TLV data)
@@ -792,7 +789,7 @@ int HAPClient::postPairVerifyURL(){
       LOG2("------- END DECRYPTED TLVS! -------\n");
 
       if(!tlv8.buf(kTLVType_Identifier) || !tlv8.buf(kTLVType_Signature)){            
-        Serial.print("\n*** ERROR: One or more of required 'Identifier,' and 'Signature' TLV records for this step is bad or missing\n\n");
+        LOG0("\n*** ERROR: One or more of required 'Identifier,' and 'Signature' TLV records for this step is bad or missing\n\n");
         tlv8.clear();                                         // clear TLV records
         tlv8.val(kTLVType_State,pairState_M4);                // set State=<M4>
         tlv8.val(kTLVType_Error,tagError_Unknown);           // set Error=Unknown (there is no specific error type for missing/bad TLV data)
@@ -803,7 +800,7 @@ int HAPClient::postPairVerifyURL(){
       Controller *tPair;                                  // temporary pointer to Controller
 
       if(!(tPair=findController(tlv8.buf(kTLVType_Identifier)))){
-        Serial.print("\n*** ERROR: Unrecognized Controller PairingID\n\n");
+        LOG0("\n*** ERROR: Unrecognized Controller PairingID\n\n");
         tlv8.clear();                                         // clear TLV records
         tlv8.val(kTLVType_State,pairState_M4);                // set State=<M4>
         tlv8.val(kTLVType_Error,tagError_Authentication);    // set Error=Authentication
@@ -819,7 +816,7 @@ int HAPClient::postPairVerifyURL(){
       memcpy(iosDeviceInfo+32+36,publicCurveKey,32);
       
       if(crypto_sign_verify_detached(tlv8.buf(kTLVType_Signature), iosDeviceInfo, iosDeviceInfoLen, tPair->LTPK) != 0){         // verify signature of iosDeviceInfo using iosDeviceLTPK   
-        Serial.print("\n*** ERROR: LPTK Signature Verification Failed\n\n");
+        LOG0("\n*** ERROR: LPTK Signature Verification Failed\n\n");
         tlv8.clear();                                         // clear TLV records
         tlv8.val(kTLVType_State,pairState_M4);                // set State=<M4>
         tlv8.val(kTLVType_Error,tagError_Authentication);    // set Error=Authentication
@@ -904,7 +901,7 @@ int HAPClient::postPairingsURL(){
   LOG1(")...");
 
   if(tlv8.val(kTLVType_State)!=1){
-    Serial.print("\n*** ERROR: 'State' TLV record is either missing or not set to <M1> as required\n\n");
+    LOG0("\n*** ERROR: 'State' TLV record is either missing or not set to <M1> as required\n\n");
     badRequestError();                                        // return with 400 error, which closes connection      
     return(0);
   }
@@ -915,7 +912,7 @@ int HAPClient::postPairingsURL(){
       LOG1("Add...\n");
 
       if(!tlv8.buf(kTLVType_Identifier) || !tlv8.buf(kTLVType_PublicKey) || !tlv8.buf(kTLVType_Permissions)){            
-        Serial.print("\n*** ERROR: One or more of required 'Identifier,' 'PublicKey,' and 'Permissions' TLV records for this step is bad or missing\n\n");
+        LOG0("\n*** ERROR: One or more of required 'Identifier,' 'PublicKey,' and 'Permissions' TLV records for this step is bad or missing\n\n");
         tlv8.clear();                                         // clear TLV records
         tlv8.val(kTLVType_State,pairState_M2);                // set State=<M2>
         tlv8.val(kTLVType_Error,tagError_Unknown);            // set Error=Unknown (there is no specific error type for missing/bad TLV data)
@@ -923,7 +920,7 @@ int HAPClient::postPairingsURL(){
       }
 
       if(!cPair->admin){
-        Serial.print("\n*** ERROR: Controller making request does not have admin privileges to add/update other Controllers\n\n");
+        LOG0("\n*** ERROR: Controller making request does not have admin privileges to add/update other Controllers\n\n");
         tlv8.clear();                                         // clear TLV records
         tlv8.val(kTLVType_State,pairState_M2);                // set State=<M2>
         tlv8.val(kTLVType_Error,tagError_Authentication);     // set Error=Authentication
@@ -931,7 +928,7 @@ int HAPClient::postPairingsURL(){
       }
 
       if((newCont=findController(tlv8.buf(kTLVType_Identifier))) && memcmp(tlv8.buf(kTLVType_PublicKey),newCont->LTPK,32)){         // requested Controller already exists, but LTPKs don't match
-        Serial.print("\n*** ERROR: Invalid request to update the LTPK of an exsiting Controller\n\n");
+        LOG0("\n*** ERROR: Invalid request to update the LTPK of an exsiting Controller\n\n");
         tlv8.clear();                                         // clear TLV records
         tlv8.val(kTLVType_State,pairState_M2);                // set State=<M2>
         tlv8.val(kTLVType_Error,tagError_Unknown);            // set Error=Unknown
@@ -939,9 +936,7 @@ int HAPClient::postPairingsURL(){
       }
 
       if(!addController(tlv8.buf(kTLVType_Identifier),tlv8.buf(kTLVType_PublicKey),tlv8.val(kTLVType_Permissions)==1?true:false)){
-        Serial.print("\n*** ERROR: Can't pair more than ");
-        Serial.print(MAX_CONTROLLERS);
-        Serial.print(" Controllers\n\n");
+        LOG0("\n*** ERROR: Can't pair more than %d Controllers\n\n",MAX_CONTROLLERS);
         tlv8.clear();                                         // clear TLV records
         tlv8.val(kTLVType_State,pairState_M2);                // set State=<M2>
         tlv8.val(kTLVType_Error,tagError_MaxPeers);           // set Error=MaxPeers
@@ -956,7 +951,7 @@ int HAPClient::postPairingsURL(){
       LOG1("Remove...\n");
 
       if(!tlv8.buf(kTLVType_Identifier)){            
-        Serial.print("\n*** ERROR: Required 'Identifier' TLV record for this step is bad or missing\n\n");
+        LOG0("\n*** ERROR: Required 'Identifier' TLV record for this step is bad or missing\n\n");
         tlv8.clear();                                         // clear TLV records
         tlv8.val(kTLVType_State,pairState_M2);                // set State=<M2>
         tlv8.val(kTLVType_Error,tagError_Unknown);           // set Error=Unknown (there is no specific error type for missing/bad TLV data)
@@ -964,7 +959,7 @@ int HAPClient::postPairingsURL(){
       }
 
       if(!cPair->admin){
-        Serial.print("\n*** ERROR: Controller making request does not have admin privileges to remove Controllers\n\n");
+        LOG0("\n*** ERROR: Controller making request does not have admin privileges to remove Controllers\n\n");
         tlv8.clear();                                         // clear TLV records
         tlv8.val(kTLVType_State,pairState_M2);                // set State=<M2>
         tlv8.val(kTLVType_Error,tagError_Authentication);    // set Error=Authentication
@@ -987,7 +982,7 @@ int HAPClient::postPairingsURL(){
       break;
 
     default:
-      Serial.print("\n*** ERROR: 'Method' TLV record is either missing or not set to either 3, 4, or 5 as required\n\n");
+      LOG0("\n*** ERROR: 'Method' TLV record is either missing or not set to either 3, 4, or 5 as required\n\n");
       badRequestError();                                    // return with 400 error, which closes connection      
       return(0);
       break;      
@@ -1458,17 +1453,17 @@ int HAPClient::receiveEncrypted(){
     int n=buf[0]+buf[1]*256;                // compute number of bytes expected in encoded message
 
     if(nBytes+n>MAX_HTTP){                  // exceeded maximum number of bytes allowed in plaintext message
-      Serial.print("\n\n*** ERROR:  Exceeded maximum HTTP message length\n\n");
+      LOG0("\n\n*** ERROR:  Exceeded maximum HTTP message length\n\n");
       return(0);
       }
 
     if(client.read(buf+2,n+16)!=n+16){      // read expected number of total bytes = n bytes in encoded message + 16 bytes for appended authentication tag      
-      Serial.print("\n\n*** ERROR: Malformed encrypted message frame\n\n");
+      LOG0("\n\n*** ERROR: Malformed encrypted message frame\n\n");
       return(0);      
     }                
 
     if(crypto_aead_chacha20poly1305_ietf_decrypt(httpBuf+nBytes, NULL, NULL, buf+2, n+16, buf, 2, c2aNonce.get(), c2aKey)==-1){
-      Serial.print("\n\n*** ERROR: Can't Decrypt Message\n\n");
+      LOG0("\n\n*** ERROR: Can't Decrypt Message\n\n");
       return(0);        
     }
 
@@ -1537,40 +1532,25 @@ void HAPClient::sendEncrypted(char *body, uint8_t *dataBuf, int dataLen){
 /////////////////////////////////////////////////////////////////////////////////
 
 void HAPClient::hexPrintColumn(uint8_t *buf, int n){
-
-  char c[16];
   
-  for(int i=0;i<n;i++){
-    sprintf(c,"%d) %02X",i,buf[i]);
-    Serial.println(c);
-  }
-
+  for(int i=0;i<n;i++)
+    LOG0("%d) %02X\n",i,buf[i]);
 }
 
 //////////////////////////////////////
 
 void HAPClient::hexPrintRow(uint8_t *buf, int n){
-
-  char c[16];
   
-  for(int i=0;i<n;i++){
-    sprintf(c,"%02X",buf[i]);
-    Serial.print(c);
-  }
-
+  for(int i=0;i<n;i++)
+    LOG0("%02X",buf[i]);
 }
 
 //////////////////////////////////////
 
 void HAPClient::charPrintRow(uint8_t *buf, int n){
-
-  char c[16];
   
-  for(int i=0;i<n;i++){
-    sprintf(c,"%c",buf[i]);
-    Serial.print(c);
-  }
-
+  for(int i=0;i<n;i++)
+    LOG0("%c",buf[i]);
 }
 
 //////////////////////////////////////
@@ -1686,18 +1666,17 @@ void HAPClient::printControllers(){
   
   for(int i=0;i<MAX_CONTROLLERS;i++){           // loop over all controller slots
     if(controllers[i].allocated){
-      Serial.print("Paired Controller: ");
+      LOG0("Paired Controller: ");
       charPrintRow(controllers[i].ID,36);
-      Serial.print(controllers[i].admin?"   (admin)":" (regular)");
-      Serial.print("  LTPK: ");
+      LOG0("%s  LTPK: ",controllers[i].admin?"   (admin)":" (regular)");
       hexPrintRow(controllers[i].LTPK,32);
-      Serial.print("\n");
+      LOG0("\n");
       n++;
     }
   }
 
   if(n==0)
-    Serial.print("No Paired Controllers\n");
+    LOG0("No Paired Controllers\n");
 }
 
 //////////////////////////////////////

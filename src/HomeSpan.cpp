@@ -91,68 +91,60 @@ void Span::begin(Category catID, const char *displayName, const char *hostNameBa
 
   delay(2000);
 
-  Serial.print("\n************************************************************\n"
+  LOG0("\n************************************************************\n"
                  "Welcome to HomeSpan!\n"
                  "Apple HomeKit for the Espressif ESP-32 WROOM and Arduino IDE\n"
                  "************************************************************\n\n"
                  "** Please ensure serial monitor is set to transmit <newlines>\n\n");
 
-  Serial.print("Message Logs:     Level ");
-  Serial.print(logLevel);  
-  Serial.print("\nStatus LED:       Pin ");
+  LOG0("Message Logs:     Level %d",logLevel);
+  LOG0("\nStatus LED:       Pin ");
   if(getStatusPin()>=0){
-    Serial.print(getStatusPin());
+    LOG0(getStatusPin());
     if(autoOffLED>0)
-      Serial.printf("  (Auto Off=%d sec)",autoOffLED);
+      LOG0("  (Auto Off=%d sec)",autoOffLED);
   }
   else
-    Serial.print("-  *** WARNING: Status LED Pin is UNDEFINED");
-  Serial.print("\nDevice Control:   Pin ");
-  if(getControlPin()>=0)
-    Serial.print(getControlPin());
-  else
-    Serial.print("-  *** WARNING: Device Control Pin is UNDEFINED");
-  Serial.print("\nSketch Version:   ");
-  Serial.print(getSketchVersion());  
-  Serial.print("\nHomeSpan Version: ");
-  Serial.print(HOMESPAN_VERSION);
-  Serial.print("\nArduino-ESP Ver.: ");
-  Serial.print(ARDUINO_ESP_VERSION);
-  Serial.printf("\nESP-IDF Version:  %d.%d.%d",ESP_IDF_VERSION_MAJOR,ESP_IDF_VERSION_MINOR,ESP_IDF_VERSION_PATCH);
-  Serial.printf("\nESP32 Chip:       %s Rev %d %s-core %dMB Flash", ESP.getChipModel(),ESP.getChipRevision(),
+    LOG0("-  *** WARNING: Status LED Pin is UNDEFINED");
+  LOG0("\nDevice Control:   Pin ");
+  if(getControlPin()>=0){
+    LOG0(getControlPin());
+  }
+  else{
+    LOG0("-  *** WARNING: Device Control Pin is UNDEFINED");
+  }
+  LOG0("\nSketch Version:   %s",getSketchVersion());  
+  LOG0("\nHomeSpan Version: %s",HOMESPAN_VERSION);
+  LOG0("\nArduino-ESP Ver.: %s",ARDUINO_ESP_VERSION);
+  LOG0("\nESP-IDF Version:  %d.%d.%d",ESP_IDF_VERSION_MAJOR,ESP_IDF_VERSION_MINOR,ESP_IDF_VERSION_PATCH);
+  LOG0("\nESP32 Chip:       %s Rev %d %s-core %dMB Flash", ESP.getChipModel(),ESP.getChipRevision(),
                 ESP.getChipCores()==1?"single":"dual",ESP.getFlashChipSize()/1024/1024);
   
   #ifdef ARDUINO_VARIANT
-    Serial.print("\nESP32 Board:      ");
-    Serial.print(ARDUINO_VARIANT);
+    LOG0("\nESP32 Board:      ");
+    LOG0(ARDUINO_VARIANT);
   #endif
   
-  Serial.printf("\nPWM Resources:    %d channels, %d timers, max %d-bit duty resolution",
+  LOG0("\nPWM Resources:    %d channels, %d timers, max %d-bit duty resolution",
                 LEDC_SPEED_MODE_MAX*LEDC_CHANNEL_MAX,LEDC_SPEED_MODE_MAX*LEDC_TIMER_MAX,LEDC_TIMER_BIT_MAX-1);
 
-  Serial.printf("\nSodium Version:   %s  Lib %d.%d",sodium_version_string(),sodium_library_version_major(),sodium_library_version_minor());
+  LOG0("\nSodium Version:   %s  Lib %d.%d",sodium_version_string(),sodium_library_version_major(),sodium_library_version_minor());
   char mbtlsv[64];
   mbedtls_version_get_string_full(mbtlsv);
-  Serial.printf("\nMbedTLS Version:  %s",mbtlsv);
+  LOG0("\nMbedTLS Version:  %s",mbtlsv);
 
-  Serial.print("\nSketch Compiled:  ");
-  Serial.print(__DATE__);
-  Serial.print(" ");
-  Serial.print(__TIME__);
-
-  Serial.printf("\nPartition:        %s",esp_ota_get_running_partition()->label);
-  Serial.printf("\nMAC Address:      %s",WiFi.macAddress().c_str());
+  LOG0("\nSketch Compiled:  %s %s",__DATE__,__TIME__);
+  LOG0("\nPartition:        %s",esp_ota_get_running_partition()->label);
+  LOG0("\nMAC Address:      %s",WiFi.macAddress().c_str());
   
-  Serial.print("\n\nDevice Name:      ");
-  Serial.print(displayName);  
-  Serial.print("\n\n");
+  LOG0("\n\nDevice Name:      %s\n\n",displayName);
 
   uint8_t otaRequired=0;
   nvs_get_u8(otaNVS,"OTA_REQUIRED",&otaRequired);
   nvs_set_u8(otaNVS,"OTA_REQUIRED",0);
   nvs_commit(otaNVS);
   if(otaRequired && !spanOTA.enabled){
-    Serial.printf("\n\n*** OTA SAFE MODE ALERT:  OTA REQUIRED BUT NOT ENABLED.  ROLLING BACK TO PREVIOUS APPLICATION ***\n\n");
+    LOG0("\n\n*** OTA SAFE MODE ALERT:  OTA REQUIRED BUT NOT ENABLED.  ROLLING BACK TO PREVIOUS APPLICATION ***\n\n");
     delay(100);
     esp_ota_mark_app_invalid_rollback_and_reboot();
   }
@@ -164,7 +156,7 @@ void Span::begin(Category catID, const char *displayName, const char *hostNameBa
 void Span::poll() {
 
   if(pollTaskHandle){
-    Serial.print("\n** FATAL ERROR: Do not call homeSpan.poll() directly if homeSpan.start() is used!\n** PROGRAM HALTED **\n\n");
+    LOG0("\n** FATAL ERROR: Do not call homeSpan.poll() directly if homeSpan.start() is used!\n** PROGRAM HALTED **\n\n");
     vTaskDelete(pollTaskHandle);
     while(1);    
   }
@@ -177,7 +169,7 @@ void Span::poll() {
 void Span::pollTask() {
 
   if(!strlen(category)){
-    Serial.print("\n** FATAL ERROR: Cannot start homeSpan polling without an initial call to homeSpan.begin()!\n** PROGRAM HALTED **\n\n");
+    LOG0("\n** FATAL ERROR: Cannot start homeSpan polling without an initial call to homeSpan.begin()!\n** PROGRAM HALTED **\n\n");
     while(1);    
   }
 
@@ -188,12 +180,12 @@ void Span::pollTask() {
     HAPClient::init();                // read NVS and load HAP settings  
 
     if(!strlen(network.wifiData.ssid)){
-      Serial.print("*** WIFI CREDENTIALS DATA NOT FOUND.  ");
+      LOG0("*** WIFI CREDENTIALS DATA NOT FOUND.  ");
       if(autoStartAPEnabled){
-        Serial.print("AUTO-START OF ACCESS POINT ENABLED...\n\n");
+        LOG0("AUTO-START OF ACCESS POINT ENABLED...\n\n");
         processSerialCommand("A");
       } else {
-        Serial.print("YOU MAY CONFIGURE BY TYPING 'W <RETURN>'.\n\n");
+        LOG0("YOU MAY CONFIGURE BY TYPING 'W <RETURN>'.\n\n");
         STATUS_UPDATE(start(LED_WIFI_NEEDED),HS_WIFI_NEEDED)
       }
     } else {
@@ -203,8 +195,7 @@ void Span::pollTask() {
     if(controlButton)
       controlButton->reset();        
 
-    Serial.print(displayName);
-    Serial.print(" is READY!\n\n");
+    LOG0("%s is READY!\n\n",displayName);
     isInitialized=true;
     
   } // isInitialized
@@ -331,11 +322,11 @@ int Span::getFreeSlot(){
 void Span::commandMode(){
 
   if(!statusDevice && !statusCallback){
-    Serial.print("*** ERROR: CAN'T ENTER COMMAND MODE WITHOUT A DEFINED STATUS LED OR EVENT HANDLER CALLBACK***\n\n");
+    LOG0("*** ERROR: CAN'T ENTER COMMAND MODE WITHOUT A DEFINED STATUS LED OR EVENT HANDLER CALLBACK***\n\n");
     return;
   }
   
-  Serial.print("*** COMMAND MODE ***\n\n");
+  LOG0("*** COMMAND MODE ***\n\n");
   int mode=1;
   boolean done=false;
   STATUS_UPDATE(start(500,0.3,mode,1000),static_cast<HS_STATUS>(HS_ENTERING_CONFIG_MODE+mode))
@@ -343,9 +334,7 @@ void Span::commandMode(){
 
   while(!done){
     if(millis()>alarmTime){
-      Serial.print("*** Command Mode: Timed Out (");
-      Serial.print(comModeLife/1000);
-      Serial.print(" seconds).\n\n");
+      LOG0("*** Command Mode: Timed Out (%ld seconds)",comModeLife/1000);
       mode=1;
       done=true;
     } else
@@ -388,7 +377,7 @@ void Span::commandMode(){
     
   } // switch
   
-  Serial.print("*** EXITING COMMAND MODE ***\n\n");
+  LOG0("*** EXITING COMMAND MODE ***\n\n");
 }
 
 //////////////////////////////////////
@@ -416,9 +405,7 @@ void Span::checkConnect(){
       waitTime*=2;
       
     if(waitTime==32000){
-      Serial.print("\n*** Can't connect to ");
-      Serial.print(network.wifiData.ssid);
-      Serial.print(".  You may type 'W <return>' to re-configure WiFi, or 'X <return>' to erase WiFi credentials.  Will try connecting again in 60 seconds.\n\n");
+      LOG0("\n*** Can't connect to %s.  You may type 'W <return>' to re-configure WiFi, or 'X <return>' to erase WiFi credentials.  Will try connecting again in 60 seconds.\n\n",network.wifiData.ssid);
       waitTime=60000;
     } else {    
       addWebLog(true,"Trying to connect to %s.  Waiting %d sec...",network.wifiData.ssid,waitTime/1000);
@@ -462,25 +449,18 @@ void Span::checkConnect(){
   sscanf(hostName,"%[A-Za-z0-9-]",d);
   
   if(strlen(hostName)>255|| hostName[0]=='-' || hostName[strlen(hostName)-1]=='-' || strlen(hostName)!=strlen(d)){
-    Serial.printf("\n*** Error:  Can't start MDNS due to invalid hostname '%s'.\n",hostName);
-    Serial.print("*** Hostname must consist of 255 or less alphanumeric characters or a hyphen, except that the hyphen cannot be the first or last character.\n");
-    Serial.print("*** PROGRAM HALTED!\n\n");
+    LOG0("\n*** Error:  Can't start MDNS due to invalid hostname '%s'.\n",hostName);
+    LOG0("*** Hostname must consist of 255 or less alphanumeric characters or a hyphen, except that the hyphen cannot be the first or last character.\n");
+    LOG0("*** PROGRAM HALTED!\n\n");
     while(1);
   }
     
-  Serial.print("\nStarting MDNS...\n\n");
-  Serial.print("HostName:      ");
-  Serial.print(hostName);
-  Serial.print(".local:");
-  Serial.print(tcpPortNum);
-  Serial.print("\nDisplay Name:  ");
-  Serial.print(displayName);
-  Serial.print("\nModel Name:    ");
-  Serial.print(modelName);
-  Serial.print("\nSetup ID:      ");
-  Serial.print(qrID);
-  Serial.print("\n\n");
-
+  LOG0("\nStarting MDNS...\n\n");
+  LOG0("HostName:      %s.local:%d\n",hostName,tcpPortNum);
+  LOG0("Display Name:  %s\n",displayName);
+  LOG0("Model Name:    %s\n",modelName);
+  LOG0("Setup ID:      %s\n\n",qrID);
+  
   MDNS.begin(hostName);                         // set server host name (.local implied)
   MDNS.setInstanceName(displayName);            // set server display name
   MDNS.addService("_hap","_tcp",tcpPortNum);    // advertise HAP service on specified port
@@ -529,12 +509,8 @@ void Span::checkConnect(){
     ArduinoOTA.onStart(spanOTA.start).onEnd(spanOTA.end).onProgress(spanOTA.progress).onError(spanOTA.error);  
     
     ArduinoOTA.begin();
-    Serial.print("Starting OTA Server: ");
-    Serial.print(displayName);
-    Serial.print(" at ");
-    Serial.print(WiFi.localIP());
-    Serial.print("\nAuthorization Password: ");
-    Serial.print(spanOTA.auth?"Enabled\n\n":"DISABLED!\n\n");
+    LOG0("Starting OTA Server:    %s at %s\n",displayName,WiFi.localIP().toString().c_str());
+    LOG0("Authorization Password: %s",spanOTA.auth?"Enabled\n\n":"DISABLED!\n\n");
   }
   
   mdns_service_txt_item_set("_hap","_tcp","ota",spanOTA.enabled?"yes":"no");                     // OTA status (info only - NOT used by HAP)
@@ -542,19 +518,19 @@ void Span::checkConnect(){
   if(webLog.isEnabled){
     mdns_service_txt_item_set("_hap","_tcp","logURL",webLog.statusURL.c_str()+4);           // Web Log status (info only - NOT used by HAP)
     
-    Serial.printf("Web Logging enabled at http://%s.local:%d%swith max number of entries=%d\n\n",hostName,tcpPortNum,webLog.statusURL.c_str()+4,webLog.maxEntries);
+    LOG0("Web Logging enabled at http://%s.local:%d%swith max number of entries=%d\n\n",hostName,tcpPortNum,webLog.statusURL.c_str()+4,webLog.maxEntries);
     if(webLog.timeServer)
       xTaskCreateUniversal(webLog.initTime, "timeSeverTaskHandle", 8096, &webLog, 1, NULL, 0);
   }
   
-  Serial.printf("Starting HAP Server on port %d supporting %d simultaneous HomeKit Controller Connections...\n\n",tcpPortNum,maxConnections);
+  LOG0("Starting HAP Server on port %d supporting %d simultaneous HomeKit Controller Connections...\n\n",tcpPortNum,maxConnections);
 
   hapServer->begin();
 
-  Serial.print("\n");
+  LOG0("\n");
 
   if(!HAPClient::nAdminControllers())
-    Serial.print("DEVICE NOT YET PAIRED -- PLEASE PAIR WITH HOMEKIT APP\n\n");
+    LOG0("DEVICE NOT YET PAIRED -- PLEASE PAIR WITH HOMEKIT APP\n\n");
   
   if(wifiCallback)
     wifiCallback();
@@ -582,48 +558,40 @@ void Span::processSerialCommand(const char *c){
 
     case 's': {    
       
-      Serial.print("\n*** HomeSpan Status ***\n\n");
+      LOG0("\n*** HomeSpan Status ***\n\n");
 
-      Serial.print("IP Address:        ");
-      Serial.print(WiFi.localIP());
-      Serial.print("\n\n");
-      Serial.print("Accessory ID:      ");
+      LOG0("IP Address:        %s\n\n",WiFi.localIP().toString().c_str());
+      LOG0("Accessory ID:      ");
       HAPClient::charPrintRow(HAPClient::accessory.ID,17);
-      Serial.print("                               LTPK: ");
+      LOG0("                               LTPK: ");
       HAPClient::hexPrintRow(HAPClient::accessory.LTPK,32);
-      Serial.print("\n");
+      LOG0("\n");
 
       HAPClient::printControllers();
-      Serial.print("\n");
+      LOG0("\n");
 
       for(int i=0;i<maxConnections;i++){
-        Serial.print("Connection #");
-        Serial.print(i);
-        Serial.print(" ");
+        LOG0("Connection #%d ",i);
         if(hap[i]->client){
       
-          Serial.print(hap[i]->client.remoteIP());
-          Serial.print(" on Socket ");
-          Serial.print(hap[i]->client.fd()-LWIP_SOCKET_OFFSET+1);
-          Serial.print("/");
-          Serial.print(CONFIG_LWIP_MAX_SOCKETS);
+          LOG0("%s on Socket %d/%d",hap[i]->client.remoteIP().toString().c_str(),hap[i]->client.fd()-LWIP_SOCKET_OFFSET+1,CONFIG_LWIP_MAX_SOCKETS);
           
           if(hap[i]->cPair){
-            Serial.print("  ID=");
+            LOG0("  ID=");
             HAPClient::charPrintRow(hap[i]->cPair->ID,36);
-            Serial.print(hap[i]->cPair->admin?"   (admin)":" (regular)");
+            LOG0(hap[i]->cPair->admin?"   (admin)":" (regular)");
           } else {
-            Serial.print("  (unverified)");
+            LOG0("  (unverified)");
           }
       
         } else {
-          Serial.print("(unconnected)");
+          LOG0("(unconnected)");
         }
 
-        Serial.print("\n");
+        LOG0("\n");
       }
 
-      Serial.print("\n*** End Status ***\n\n");
+      LOG0("\n*** End Status ***\n\n");
     } 
     break;
 
@@ -632,13 +600,9 @@ void Span::processSerialCommand(const char *c){
       TempBuffer <char> qBuf(sprintfAttributes(NULL)+1);
       sprintfAttributes(qBuf.buf);  
 
-      Serial.print("\n*** Attributes Database: size=");
-      Serial.print(qBuf.len()-1);
-      Serial.print("  configuration=");
-      Serial.print(hapConfig.configNumber);
-      Serial.print(" ***\n\n");
+      LOG0("\n*** Attributes Database: size=%d  configuration=%d ***\n\n",qBuf.len()-1,hapConfig.configNumber);
       prettyPrint(qBuf.buf);
-      Serial.print("\n*** End Database ***\n\n");
+      LOG0("\n*** End Database ***\n\n");
     }
     break;
 

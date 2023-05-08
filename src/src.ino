@@ -52,7 +52,8 @@ void setup() {
   
   Serial.begin(115200);
 
-  homeSpan.setLogLevel(2);
+//  homeSpan.setLogLevel(-1);
+  homeSpan.enableOTA();
 
   homeSpan.begin(Category::Lighting,"HomeSpan LED");
   
