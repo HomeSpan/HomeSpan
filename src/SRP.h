@@ -87,6 +87,6 @@ struct SRP6A {
   int verifyProof();                               // verify M1 SRP6A Proof received from HAP client (return 1 on success, 0 on failure)
   void createProof();                              // create M2 server-side SRP6A Proof based on M1 as received from HAP Client
 
-  void print(mbedtls_mpi *mpi);                    // prints size of mpi (in bytes), followed by the mpi itself (as a hex charcter string) - for diagnostic purposes only
+  void print(mbedtls_mpi *mpi, int minLogLevel=0);   // prints size of mpi (in bytes), followed by the mpi itself (as a hex charcter string), subject to specified minimum log level
   
 };

@@ -220,7 +220,7 @@ void HAPClient::processRequest(){
     if(!strncmp(body,"POST /pair-setup ",17) &&                              // POST PAIR-SETUP
        strstr(body,"Content-Type: application/pairing+tlv8") &&              // check that content is TLV8
        tlv8.unpack(content,cLen)){                                          // read TLV content
-       if(homeSpan.logLevel>1) tlv8.print();                                                        // print TLV records in form "TAG(INT) LENGTH(INT) VALUES(HEX)"
+       tlv8.print(2);                                                        // print TLV records in form "TAG(INT) LENGTH(INT) VALUES(HEX)"
       LOG2("------------ END TLVS! ------------\n");
                
       postPairSetupURL();                   // process URL
@@ -230,7 +230,7 @@ void HAPClient::processRequest(){
     if(!strncmp(body,"POST /pair-verify ",18) &&                             // POST PAIR-VERIFY
        strstr(body,"Content-Type: application/pairing+tlv8") &&              // check that content is TLV8
        tlv8.unpack(content,cLen)){                                          // read TLV content
-       if(homeSpan.logLevel>1) tlv8.print();                                                        // print TLV records in form "TAG(INT) LENGTH(INT) VALUES(HEX)"
+       tlv8.print(2);                                                        // print TLV records in form "TAG(INT) LENGTH(INT) VALUES(HEX)"
       LOG2("------------ END TLVS! ------------\n");
                
       postPairVerifyURL();                  // process URL    
@@ -240,7 +240,7 @@ void HAPClient::processRequest(){
     if(!strncmp(body,"POST /pairings ",15) &&                                // POST PAIRINGS
        strstr(body,"Content-Type: application/pairing+tlv8") &&              // check that content is TLV8
        tlv8.unpack(content,cLen)){                                          // read TLV content
-       if(homeSpan.logLevel>1) tlv8.print();                                                        // print TLV records in form "TAG(INT) LENGTH(INT) VALUES(HEX)"
+       tlv8.print(2);                                                        // print TLV records in form "TAG(INT) LENGTH(INT) VALUES(HEX)"
       LOG2("------------ END TLVS! ------------\n");
                
       postPairingsURL();                  // process URL    
@@ -250,7 +250,7 @@ void HAPClient::processRequest(){
     if(!strncmp(body,"POST /pairings ",15) &&                                // POST PAIRINGS
        strstr(body,"Content-Type: application/pairing+tlv8") &&              // check that content is TLV8
        tlv8.unpack(content,cLen)){                                          // read TLV content
-       if(homeSpan.logLevel>1) tlv8.print();                                                        // print TLV records in form "TAG(INT) LENGTH(INT) VALUES(HEX)"
+       tlv8.print(2);                                                        // print TLV records in form "TAG(INT) LENGTH(INT) VALUES(HEX)"
       LOG2("------------ END TLVS! ------------\n");
                
       postPairingsURL();                  // process URL    
@@ -529,7 +529,7 @@ int HAPClient::postPairSetupURL(){
         return(0);
       }
 
-      if(homeSpan.logLevel>1) tlv8.print();             // print decrypted TLV data
+      tlv8.print(2);             // print decrypted TLV data
       LOG2("------- END DECRYPTED TLVS! -------\n");
        
       if(!tlv8.buf(kTLVType_Identifier) || !tlv8.buf(kTLVType_PublicKey) || !tlv8.buf(kTLVType_Signature)){            
@@ -609,7 +609,7 @@ int HAPClient::postPairSetupURL(){
 
       LOG2("------- ENCRYPTING SUB-TLVS -------\n");
 
-      if(homeSpan.logLevel>1) tlv8.print();
+      tlv8.print(2);
 
       size_t subTLVLen=tlv8.pack(NULL);                 // get size of buffer needed to store sub-TLV 
       uint8_t subTLV[subTLVLen];
@@ -721,7 +721,7 @@ int HAPClient::postPairVerifyURL(){
 
         LOG2("------- ENCRYPTING SUB-TLVS -------\n");
 
-        if(homeSpan.logLevel>1) tlv8.print();
+        tlv8.print(2);
 
         size_t subTLVLen=tlv8.pack(NULL);                 // get size of buffer needed to store sub-TLV 
         uint8_t subTLV[subTLVLen];
@@ -785,7 +785,7 @@ int HAPClient::postPairVerifyURL(){
         return(0);
       }
 
-      if(homeSpan.logLevel>1) tlv8.print();             // print decrypted TLV data
+      tlv8.print(2);             // print decrypted TLV data
       LOG2("------- END DECRYPTED TLVS! -------\n");
 
       if(!tlv8.buf(kTLVType_Identifier) || !tlv8.buf(kTLVType_Signature)){            
@@ -1429,7 +1429,7 @@ void HAPClient::tlvRespond(){
   LOG2(client.remoteIP());
   LOG2(" >>>>>>>>>>\n");
   LOG2(body);
-  if(homeSpan.logLevel>1) tlv8.print();
+  tlv8.print(2);
 
   if(!cPair){                       // unverified, unencrypted session
     client.print(body);
@@ -1531,26 +1531,35 @@ void HAPClient::sendEncrypted(char *body, uint8_t *dataBuf, int dataLen){
 /////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////
 
-void HAPClient::hexPrintColumn(uint8_t *buf, int n){
+void HAPClient::hexPrintColumn(uint8_t *buf, int n, int minLogLevel){
+
+  if(homeSpan.logLevel<minLogLevel)
+    return;
   
   for(int i=0;i<n;i++)
-    LOG0("%d) %02X\n",i,buf[i]);
+    Serial.printf("%d) %02X\n",i,buf[i]);
 }
 
 //////////////////////////////////////
 
-void HAPClient::hexPrintRow(uint8_t *buf, int n){
-  
+void HAPClient::hexPrintRow(uint8_t *buf, int n, int minLogLevel){
+
+  if(homeSpan.logLevel<minLogLevel)
+    return;
+
   for(int i=0;i<n;i++)
-    LOG0("%02X",buf[i]);
+    Serial.printf("%02X",buf[i]);
 }
 
 //////////////////////////////////////
 
-void HAPClient::charPrintRow(uint8_t *buf, int n){
+void HAPClient::charPrintRow(uint8_t *buf, int n, int minLogLevel){
+
+  if(homeSpan.logLevel<minLogLevel)
+    return;
   
   for(int i=0;i<n;i++)
-    LOG0("%c",buf[i]);
+    Serial.printf("%c",buf[i]);
 }
 
 //////////////////////////////////////
@@ -1587,8 +1596,7 @@ Controller *HAPClient::addController(uint8_t *id, uint8_t *ltpk, boolean admin){
     memcpy(slot->LTPK,ltpk,32);
     slot->admin=admin;
     LOG2("\n*** Updated Controller: ");
-    if(homeSpan.logLevel>1)
-      charPrintRow(id,36);
+    charPrintRow(id,36,2);
     LOG2(slot->admin?" (admin)\n\n":" (regular)\n\n");
     return(slot);    
   }
@@ -1599,8 +1607,7 @@ Controller *HAPClient::addController(uint8_t *id, uint8_t *ltpk, boolean admin){
     memcpy(slot->LTPK,ltpk,32);
     slot->admin=admin;
     LOG2("\n*** Added Controller: ");
-    if(homeSpan.logLevel>1)
-      charPrintRow(id,36);
+    charPrintRow(id,36,2);
     LOG2(slot->admin?" (admin)\n\n":" (regular)\n\n");
     return(slot);       
   }
@@ -1637,8 +1644,7 @@ void HAPClient::removeController(uint8_t *id){
 
   if((slot=findController(id))){      // remove controller if found
     LOG2("\n***Removed Controller: ");
-    if(homeSpan.logLevel>1)
-      charPrintRow(id,36);
+    charPrintRow(id,36,2);
     LOG2(slot->admin?" (admin)\n":" (regular)\n");
     slot->allocated=false;
 
@@ -1660,23 +1666,26 @@ void HAPClient::removeController(uint8_t *id){
 
 //////////////////////////////////////
 
-void HAPClient::printControllers(){
+void HAPClient::printControllers(int minLogLevel){
 
+  if(homeSpan.logLevel<minLogLevel)
+    return;
+    
   int n=0;
   
   for(int i=0;i<MAX_CONTROLLERS;i++){           // loop over all controller slots
     if(controllers[i].allocated){
-      LOG0("Paired Controller: ");
+      Serial.printf("Paired Controller: ");
       charPrintRow(controllers[i].ID,36);
-      LOG0("%s  LTPK: ",controllers[i].admin?"   (admin)":" (regular)");
+      Serial.printf("%s  LTPK: ",controllers[i].admin?"   (admin)":" (regular)");
       hexPrintRow(controllers[i].LTPK,32);
-      LOG0("\n");
+      Serial.printf("\n");
       n++;
     }
   }
 
   if(n==0)
-    LOG0("No Paired Controllers\n");
+    Serial.printf("No Paired Controllers\n");
 }
 
 //////////////////////////////////////

@@ -1218,7 +1218,11 @@ int Span::sprintfAttributes(char *cBuf, int flags){
 
 ///////////////////////////////
 
-void Span::prettyPrint(char *buf, int nsp){
+void Span::prettyPrint(char *buf, int nsp, int minLogLevel){
+
+  if(logLevel<minLogLevel)
+    return;
+      
   int s=strlen(buf);
   int indent=0;
   
@@ -1227,34 +1231,34 @@ void Span::prettyPrint(char *buf, int nsp){
       
       case '{':
       case '[':
-        LOG0("%c\n",buf[i]);
+        Serial.printf("%c\n",buf[i]);
         indent+=nsp;
         for(int j=0;j<indent;j++)
-          LOG0(" ");
+          Serial.printf(" ");
         break;
 
       case '}':
       case ']':
-        LOG0("\n");
+        Serial.printf("\n");
         indent-=nsp;
         for(int j=0;j<indent;j++)
-          LOG0(" ");
-        LOG0("%c",buf[i]);
+          Serial.printf(" ");
+        Serial.printf("%c",buf[i]);
         break;
 
       case ',':
-        LOG0("%c\n",buf[i]);
+        Serial.printf("%c\n",buf[i]);
         for(int j=0;j<indent;j++)
-          LOG0(" ");
+          Serial.printf(" ");
         break;
 
       default:
-        LOG0("%c",buf[i]);
+        Serial.printf("%c",buf[i]);
            
     } // switch
   } // loop over all characters
 
-  LOG0("\n");
+  Serial.printf("\n");
 }
 
 

@@ -26,6 +26,7 @@
  ********************************************************************************/
  
 #include "Utils.h"
+#include "HomeSpan.h"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -104,10 +105,10 @@ PushButton::PushButton(int pin, triggerType_t triggerType){
     threshold/=calibCount;
 #if SOC_TOUCH_VERSION_1
     threshold/=2;
-    Serial.printf("Touch Sensor at pin=%d used for calibration.  Triggers when sensor reading < %d.\n",pin,threshold);
+    LOG0("Touch Sensor at pin=%d used for calibration.  Triggers when sensor reading < %d.\n",pin,threshold);
 #elif SOC_TOUCH_VERSION_2
     threshold*=2;
-    Serial.printf("Touch Sensor at pin=%d used for calibration.  Triggers when sensor reading > %d.\n",pin,threshold);
+    LOG0("Touch Sensor at pin=%d used for calibration.  Triggers when sensor reading > %d.\n",pin,threshold);
 #endif
   }
 #endif
