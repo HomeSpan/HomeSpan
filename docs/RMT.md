@@ -81,6 +81,9 @@ rf.start(4,1000);  // start transmission of the pulse train; repeat for 4 cycles
 uint32_t pulseTrain[] = {RF_PULSE(100,50), RF_PULSE(100,50), RF_PULSE(25,500)};    // create the same pulse train in an external array
 rf.start(pulseTrain,3,4,1000);  // start transmission using the same parameters
 ```
+#### Diagnostic Messages
+
+The **RFControl** class outputs *Warning \[W\]* messages to the Serial Monitor based on the *Core Debug Level* selected when compiling the sketch using the Arduino IDE.  A non-fatal warning message is produced when insufficient Channel resources prevent the creation of a new RFControl object.  Calls to the `start()` method for objects that failed to be properly created are silently ignored.
 
 ## Example RFControl Sketch
 
