@@ -206,7 +206,7 @@ void Span::pollTask() {
 
   char cBuf[65]="?";
   
-  if(Serial.available()){
+  if(!serialInputDisabled && Serial.available()){
     readSerial(cBuf,64);
     processSerialCommand(cBuf);
   }
@@ -708,6 +708,9 @@ void Span::processSerialCommand(const char *c){
 
     case 'W': {
 
+      if(serialInputDisabled || logLevel<0)       // do not proceed if serial input/output is not fully enabled
+        return;
+
       if(strlen(network.wifiData.ssid)>0){
         LOG0("*** Stopping all current WiFi services...\n\n");
         hapServer->end();
@@ -817,14 +820,13 @@ void Span::processSerialCommand(const char *c){
       int level=0;
       sscanf(c+1,"%d",&level);
       
-      if(level<0)
-        level=0;
+      if(level<-1)
+        level=-1;
       if(level>2)
         level=2;
 
-      LOG0("\n*** Log Level set to %d\n\n",level);
-      delay(1000);
       setLogLevel(level);     
+      LOG0("\n*** Log Level set to %d\n\n",level);
     }
     break;
 

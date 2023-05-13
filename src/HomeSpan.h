@@ -216,6 +216,7 @@ class Span{
   char pairingCodeCommand[12]="";               // user-specified Pairing Code - only needed if Pairing Setup Code is specified in sketch using setPairingCode()
   String lastClientIP="0.0.0.0";                // IP address of last client accessing device through encrypted channel
   boolean newCode;                              // flag indicating new application code has been loaded (based on keeping track of app SHA256)
+  boolean serialInputDisabled=false;            // flag indiating that serial input is disabled
   
   int connected=0;                              // WiFi connection status (increments upon each connect and disconnect)
   unsigned long waitTime=60000;                 // time to wait (in milliseconds) between WiFi connection attempts
@@ -309,6 +310,8 @@ class Span{
   void setCommandTimeout(uint16_t nSec){comModeLife=nSec*1000;}           // sets Command Mode Timeout (seconds)
   void setLogLevel(int level){logLevel=level;}                            // sets Log Level for log messages (0=baseline, 1=intermediate, 2=all, -1=disable all serial input/output)
   int getLogLevel(){return(logLevel);}                                    // get Log Level
+  void setSerialInputDisable(boolean val){serialInputDisabled=val;}       // sets whether serial input is disabled (true) or enabled (false)
+  boolean getSerialInputDisable(){return(serialInputDisabled);}           // returns true if serial input is disabled, or false if serial input in enabled
   void reserveSocketConnections(uint8_t n){maxConnections-=n;}            // reserves n socket connections *not* to be used for HAP
   void setHostNameSuffix(const char *suffix){hostNameSuffix=suffix;}      // sets the hostName suffix to be used instead of the 6-byte AccessoryID
   void setPortNum(uint16_t port){tcpPortNum=port;}                        // sets the TCP port number to use for communications between HomeKit and HomeSpan

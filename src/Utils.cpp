@@ -40,6 +40,12 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 char *Utils::readSerial(char *c, int max){
+
+  if(homeSpan.getSerialInputDisable()){
+    c[0]='\0';
+    return(c);
+  }
+  
   int i=0;
   char buf;
 
