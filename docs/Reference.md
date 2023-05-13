@@ -205,6 +205,15 @@ The following **optional** `homeSpan` methods enable additional features and pro
   * example: `homeSpan.processSerialCommand("A");` starts the HomeSpan Setup Access Point
   * example: `homeSpan.processSerialCommand("Q HUB3");` changes the HomeKit Setup ID for QR Codes to "HUB3"
  
+* `void setSerialInputDisable(boolean val)`
+   * if *val* is true, disables HomeSpan from reading input from the Serial port
+   * if *val* is false, re-enables HomeSpan reading input from the Serial port
+   * useful when the main USB Serial port is needed for reading data from an external Serial peripheral, rather than being used to read input from the Arduino Serial Monitor
+
+ * `boolean getSerialInputDisable()`
+   * returns *true* if HomeSpan reading from the Serial port is currently disabled
+   * returns *false* if HomeSpan is operating normally and will read any CLI commands input into the Arduino Serial Monitor
+ 
 ---
 
 The following **optional** `homeSpan` methods provide additional run-time functionality for more advanced use cases: 
