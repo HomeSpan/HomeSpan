@@ -55,6 +55,9 @@ void setup() {
 //  homeSpan.setLogLevel(-1);
   homeSpan.enableOTA();
 
+  homeSpan.setStatusPin(13);
+  homeSpan.setStatusAutoOff(20);
+
   homeSpan.begin(Category::Lighting,"HomeSpan LED");
   
   new SpanAccessory();   

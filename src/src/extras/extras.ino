@@ -38,9 +38,24 @@ void setup() {
 
   Serial.println("\n\nHomeSpan LED Fade Test\n");
 
-  LedPin red(33,0);
-  LedPin green(32,0);
+  LedPin red(14,0);
+  LedPin green(14,0);
   LedPin blue(14,0);
+  LedPin blue2(14,0,1000);
+  LedPin blue3(14,0,2000);
+  LedPin blue4(14,0,3000);
+  LedPin blue5(14,0,60000);
+  LedPin blue6(14,0,5000);
+  LedPin blue7(14,0,6000);
+  LedPin blue8(14,0,7000);
+  LedPin blue9(14,0,8000);
+  LedPin blue10(14,0,8000);
+  LedPin blue11(14,0,8000);
+  LedPin blue12(14,0,8000);
+  LedPin blue13(14,0,8000);
+  LedPin blue14(14,0,5000);
+  LedPin blue15(14,0,5000);
+  LedPin blue16(14,0,15000);
 
   int redLevel=0;
 

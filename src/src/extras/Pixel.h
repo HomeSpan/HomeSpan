@@ -35,6 +35,8 @@
 #include "PwmPin.h"
 #include "Blinker.h"
 
+[[maybe_unused]] static const char* PIXEL_TAG = "Pixel";
+
 ////////////////////////////////////////////
 //     Single-Wire RGB/RGBW NeoPixels     //
 ////////////////////////////////////////////

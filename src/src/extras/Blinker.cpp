@@ -134,7 +134,7 @@ void Blinker::check(){
   if(pauseDuration==0 || isPaused || (millis()-pauseTime)<pauseDuration)
     return;
 
-  Serial.print("Pausing LED\n");
+  ESP_LOGI(BLINKER_TAG,"Pausing LED");
   off();
 }
 

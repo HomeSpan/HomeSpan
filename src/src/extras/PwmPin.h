@@ -46,6 +46,8 @@
 #include <driver/ledc.h>
 #include "Blinker.h"
 
+[[maybe_unused]] static const char* PWM_TAG = "PwmPin";
+
 #define DEFAULT_PWM_FREQ     5000
 
 /////////////////////////////////////
