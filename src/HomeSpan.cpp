@@ -2157,8 +2157,8 @@ void SpanWebLog::vLog(boolean sysMsg, const char *fmt, va_list ap){
 
   if(sysMsg)
     LOG0("%s\n",buf);
-  else if(homeSpan.logLevel>0)
-    LOG0("WEBLOG: %s\n",buf);
+  else
+    LOG1("WEBLOG: %s\n",buf);
   
   if(maxEntries>0){
     int index=nEntries%maxEntries;
