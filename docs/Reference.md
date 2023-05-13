@@ -71,11 +71,12 @@ The following **optional** `homeSpan` methods override various HomeSpan initiali
 * `void setCommandTimeout(uint16_t nSec)`
   * sets the duration (in seconds) that the HomeSpan End-User Command Mode, once activated, stays alive before timing out (default=120 seconds)
   
-* `void setLogLevel(uint8_t level)`
+* `void setLogLevel(int level)`
   * sets the logging level for diagnostic messages, where:
     * 0 = top-level HomeSpan status messages, and any messages output by the user using `Serial.print()` or `Serial.printf()` (default)
     * 1 = all HomeSpan status messages, and any `LOG1()` messages specified in the sketch by the user
     * 2 = all HomeSpan status messages plus all HAP communication packets to and from the HomeSpan device, as well as all `LOG1()` and `LOG2()` messages specified in the sketch by the user
+    * -1 = supresses ALL HomeSpan messages, freeing up the Serial port for other uses
   * note the log level can also be changed at runtime with the 'L' command via the [HomeSpan CLI](CLI.md)
   * see [Message Logging](Logging.md) for complete details
 
