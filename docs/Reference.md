@@ -73,10 +73,12 @@ The following **optional** `homeSpan` methods override various HomeSpan initiali
   
 * `void setLogLevel(int level)`
   * sets the logging level for diagnostic messages, where:
-    * 0 = top-level HomeSpan status messages, and any messages output by the user using `Serial.print()` or `Serial.printf()` (default)
+    * 0 = top-level HomeSpan status messages, and any `LOG0()` messages specified in the sketch by the user (default)
     * 1 = all HomeSpan status messages, and any `LOG1()` messages specified in the sketch by the user
     * 2 = all HomeSpan status messages plus all HAP communication packets to and from the HomeSpan device, as well as all `LOG1()` and `LOG2()` messages specified in the sketch by the user
-    * -1 = supresses ALL HomeSpan messages, freeing up the Serial port for other uses
+    * -1 = supresses ALL HomeSpan status messages, including all `LOG0()`, `LOG1()`, and `LOG2()` messages specified in the sketch by the user, freeing up the Serial port for other uses
+  * the log level setting has no impact on any `Serial.print()` or `Serial.printf()` statements that may be used in a sketch.  Use one of the `LOG()` macros instead of `Serial.print()` or `Serial.printf()` if you want to control the output by setting the HomeSpan log level
+  * the log level setting has no impact on any ESP32 diagnostic messages output by the ESP32 operating system itself.  To suppress these mesaages make sure to compile your sketch with the *Core Debug Level* set to "None" in the Tools menu of the Arduino IDE
   * note the log level can also be changed at runtime with the 'L' command via the [HomeSpan CLI](CLI.md)
   * see [Message Logging](Logging.md) for complete details
 
