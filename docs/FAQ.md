@@ -72,7 +72,7 @@
 
 #### Why does the Home App indicate the Doorbell Service is unsupported?
 
-* Though not documented in HAP-R2, it appears that the Doorbell Service is designed to be used in conjunction with another service, such as the Lock Mechanism.  If you add in a second service, the Home App will show the appropriate Tile (such as a Lock) with the Doorbell being the second service.  Howeveer, you can still use the Doorbell Service on a stanadlone basis --- even though the Home App says it is unsupported, a button press on the device will properly trigger a chime on your Home Pods as expected. 
+* Though not documented in HAP-R2, it appears that the Doorbell Service is designed to be used in conjunction with another service, such as the Lock Mechanism.  If you add in a second service, the Home App will show the appropriate Tile (such as a Lock) with the Doorbell being the second service.  However, you can still use the Doorbell Service on a stanadlone basis --- even though the Home App says it is unsupported, a button press on the device will properly trigger a chime on your Home Pods as expected. 
 ---
 
 [↩️](../README.md) Back to the Welcome page
