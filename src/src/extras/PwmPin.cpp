@@ -52,7 +52,7 @@ LedC::LedC(uint8_t pin, uint16_t freq, boolean invert){
               
             timerList[nTimer][nMode]->duty_resolution=(ledc_timer_bit_t)res;
             if(ledc_timer_config(timerList[nTimer][nMode])!=0){
-              ESP_LOGW(PWM_TAG,"Frequency=%d Hz is out of allowed range ---",freq);
+              ESP_LOGE(PWM_TAG,"Frequency=%d Hz is out of allowed range ---",freq);
               delete timerList[nTimer][nMode];
               timerList[nTimer][nMode]=NULL;
               return;              
@@ -83,7 +83,7 @@ LedC::LedC(uint8_t pin, uint16_t freq, boolean invert){
 LedPin::LedPin(uint8_t pin, float level, uint16_t freq, boolean invert) : LedC(pin, freq, invert){
   
   if(!channel){
-    ESP_LOGW(PWM_TAG,"Can't create LedPin(%d) - no open PWM channels and/or Timers",pin);
+    ESP_LOGE(PWM_TAG,"Can't create LedPin(%d) - no open PWM channels and/or Timers",pin);
     return;
   }
   else
@@ -224,7 +224,7 @@ void LedPin::HSVtoRGB(float h, float s, float v, float *r, float *g, float *b ){
 ServoPin::ServoPin(uint8_t pin, double initDegrees, uint16_t minMicros, uint16_t maxMicros, double minDegrees, double maxDegrees) : LedC(pin, 50){
   
   if(!channel)
-    ESP_LOGW(PWM_TAG,"Can't create ServoPin(%d) - no open PWM channels and/or Timers",pin);
+    ESP_LOGE(PWM_TAG,"Can't create ServoPin(%d) - no open PWM channels and/or Timers",pin);
   else
     ESP_LOGI(PWM_TAG,"ServoPin=%d: mode=%d channel=%d, timer=%d, freq=%d Hz, resolution=%d bits",
       channel->gpio_num,

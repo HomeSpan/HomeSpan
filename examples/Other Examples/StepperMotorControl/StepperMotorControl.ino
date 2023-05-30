@@ -33,8 +33,8 @@
 // This sketch is based on the WindowShade Accessory from Example 13.  Please review
 // that Example first if new to HomeSpan since it is fully commented.
 
-#include "HomeSpan.h" 
-#include "Stepper_TB6612.h"         // include stepper motor control for a TB6612 driver chip
+#include "HomeSpan.h"
+#include "Stepper_TB6612.h"
 
 ////////////////////////////////////
 
@@ -63,7 +63,7 @@ struct DEV_WindowShade : Service::WindowCovering {
     // Move motor to absolute position, assuming 200 steps per revolution and 20 revolutions for full up/travel travel.
     // Specify that motor should BRAKE upon moving to desired position.
     
-    motor->moveTo(target->getNewVal()*20,5,SpanStep::BRAKE);
+    motor->moveTo(target->getNewVal()*20,5,Stepper_TB6612::BRAKE);
     LOG1("Setting Shade Position=%d\n",target->getNewVal());
     return(true);  
   }
