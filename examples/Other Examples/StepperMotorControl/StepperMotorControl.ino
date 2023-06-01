@@ -26,15 +26,24 @@
  ********************************************************************************/
  
 // This example demonstrates how to control a real-world Stepper Motor using HomeSpan's
-// SpanStep Class.  This class is found in a SEPARATE standalone library called HomeStep.
-// To invoke, you include the name of the specific stepper motor controller to be used.
-// You can include more than one type if needed.
+// StepperControl Class.  Note the StepperControl Class serves as a generic interface
+// and cannot be instantiatiated directly.  Rather, you must create a child class derived
+// from StepperClass that implements the details of a specific Stepper Motor Driver Board.
 
-// This sketch is based on the WindowShade Accessory from Example 13.  Please review
+// In this example we will implement a child class of StepperControl designed to operate
+// the Adafruit TB6612 1.2A DC/Stepper Motor Driver Breakout Board using only the 4 control
+// pins AIN1, AIN2, BIN1, and BIN2 (https://www.adafruit.com/product/2448)
+
+// The implementation of this class is found in the file "Stepper_TB6612.h" included
+// with this sketch.  By separating the details of the Stepper Motor Driver Board from the
+// HomeSpan logic below, you can easily change the code that operates the Stepper Motor Driver Board
+// without very little modification to the HomeSpan sketch itself.
+
+// Note this sketch is based on the WindowShade Accessory from Example 13.  Please review
 // that Example first if new to HomeSpan since it is fully commented.
 
 #include "HomeSpan.h"
-#include "Stepper_TB6612.h"
+#include "Stepper_TB6612.h"             // Here we include the implementation of thge Adafruit TB6612 Stepper Motor Driver Board
 
 ////////////////////////////////////
 
@@ -61,7 +70,7 @@ struct DEV_WindowShade : Service::WindowCovering {
   boolean update(){
 
     // Move motor to absolute position, assuming 200 steps per revolution and 20 revolutions for full up/travel travel.
-    // Specify that motor should BRAKE upon moving to desired position.
+    // Specify that motor should enter the BRAKE state upon reaching to desired position.
     
     motor->moveTo(target->getNewVal()*20,5,Stepper_TB6612::BRAKE);
     LOG1("Setting Shade Position=%d\n",target->getNewVal());
@@ -72,7 +81,8 @@ struct DEV_WindowShade : Service::WindowCovering {
 
   void loop(){
 
-    // Check to see if target value does not equal current value.  If not, AND motor has no more steps to move, update current value
+    // If the current window shade position does NOT equal the target position, BUT the motor has stopped moving,
+    // we must have reached the target position, so set the current position equal to the target position
     
     if(current->getVal()!=target->getVal() && !motor->stepsRemaining()){
       current->setVal(target->getVal());
