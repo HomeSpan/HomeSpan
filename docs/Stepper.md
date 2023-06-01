@@ -1,8 +1,15 @@
-# Remote Control Radio Frequency / Infrared Signal Generation
+# Stepper Motor Control
 
 The ESP32 has an on-chip signal-generator peripheral designed to drive an RF or IR transmitter.  HomeSpan includes an easy-to-use library that interfaces with this peripheral so that with a few additional electronic components you can create a HomeSpan device that controls an RF or IR appliance directly from the Home App on your iPhone, or via Siri.  The library is accessed by placing the following near the top of your sketch:
 
 `#include "extras/RFControl.h"`
+
+
+
+
+
+....
+
 
 ## *RFControl(int pin, boolean refClock=true)*
 
