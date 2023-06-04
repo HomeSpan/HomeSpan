@@ -200,6 +200,11 @@ void setup() {
   delay(1000);
   Serial.printf("\nReady.\n\n");
 
+  pinMode(33,OUTPUT);
+  pinMode(27,OUTPUT);
+  digitalWrite(33,HIGH);
+  digitalWrite(27,HIGH);
+
   motor[0]=new Stepper_A3967(16,17,21,19,18);
   motor[1]=new Stepper_TB6612(23,32,22,14);
 
