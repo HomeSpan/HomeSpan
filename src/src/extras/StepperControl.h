@@ -3,7 +3,7 @@
  *  
  *  Copyright (c) 2023 Gregg E. Berman
  *  
- *  https://github.com/HomeSpan/HomeStep
+ *  https://github.com/HomeSpan/HomeSpan
  *  
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
  *  of this software and associated documentation files (the "Software"), to deal
