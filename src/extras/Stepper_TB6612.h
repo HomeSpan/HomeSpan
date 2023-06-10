@@ -1,7 +1,7 @@
 /*********************************************************************************
  *  MIT License
  *  
- *  Copyright (c) 2020-2023 Gregg E. Berman
+ *  Copyright (c) 2020-2022 Gregg E. Berman
  *  
  *  https://github.com/HomeSpan/HomeSpan
  *  
@@ -24,39 +24,7 @@
  *  SOFTWARE.
  *  
  ********************************************************************************/
- 
-// This is a placeholder .ino file that allows you to easily edit the contents of this files using the Arduino IDE,
-// as well as compile and test from this point.  This file is ignored when the library is included in other sketches.
 
-#include "Stepper_TB6612.h"
-#include "Stepper_A3967.h"
+#pragma once
 
-StepperControl *motor;
-
-////////////////////////////////////
-
-void setup() {
-
-  Serial.begin(115200);
-  delay(1000);
-  Serial.printf("\nHomeSpan Steppers\n\n");
-
-  motor=new Stepper_TB6612(23,32,22,14,33,27);
-//  motor=new Stepper_TB6612(23,32,22,14);
-
-  motor->setStepType(StepperControl::EIGHTH_STEP);
-  motor->setAccel(10,100);
-  motor->move(1600,2);
-  while(motor->stepsRemaining());
-  motor->moveTo(0,2,StepperControl::BRAKE);
-}
-
-//////////////////////////////////////
-
-void loop(){
-}
-
-//////////////////////////////////////
-
-
-//////////////////////////
+#include "../src/extras/Stepper_TB6612.h"

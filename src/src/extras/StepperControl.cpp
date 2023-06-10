@@ -25,7 +25,7 @@
  *  
  ********************************************************************************/
 
- #include "StepperControl.h"
+#include "StepperControl.h"
  
 //////////////////////////
 
@@ -40,12 +40,12 @@ StepperControl::StepperControl(uint32_t priority, uint32_t cpu){
 
 void StepperControl::setAccel(float accelSize, float accelSteps){
   if(accelSize<0.0){
-    ESP_LOGE(TAG,"accelSize cannot be less than 0.0");
+    ESP_LOGE(STEPPER_TAG,"accelSize cannot be less than 0.0");
     return;
   }
   
   if(accelSteps<1.0){
-    ESP_LOGE(TAG,"accelSteps cannot be less than 1.0");
+    ESP_LOGE(STEPPER_TAG,"accelSteps cannot be less than 1.0");
     return;
   }
 
@@ -57,7 +57,7 @@ void StepperControl::setAccel(float accelSize, float accelSteps){
 
 void StepperControl::move(int nSteps, uint32_t msDelay, endAction_t endAction){
   if(msDelay==0){
-    ESP_LOGE(TAG,"msDelay must be greater than zero");
+    ESP_LOGE(STEPPER_TAG,"msDelay must be greater than zero");
     return;
   }
   
@@ -71,7 +71,7 @@ void StepperControl::move(int nSteps, uint32_t msDelay, endAction_t endAction){
 
 void StepperControl::moveTo(int nPosition, uint32_t msDelay, endAction_t endAction){
   if(msDelay==0){
-    ESP_LOGE(TAG,"msDelay must be greater than zero");
+    ESP_LOGE(STEPPER_TAG,"msDelay must be greater than zero");
     return;
   }
   
@@ -143,7 +143,7 @@ void StepperControl::motorTask(void *args){
     if(downLinkData.stepsRemaining!=0)
       msDelay+=msDelay * motor->accelSize * (exp(-fabs(upLinkData.nSteps-downLinkData.stepsRemaining)/motor->accelSteps) + exp(-(fabs(downLinkData.stepsRemaining)-1.0)/motor->accelSteps));
       
-    ESP_LOGD(TAG,"Position: %d   Steps Remaining: %d   Delay=%d ms",downLinkData.position,downLinkData.stepsRemaining,(int)(msDelay));
+    ESP_LOGD(STEPPER_TAG,"Position: %d   Steps Remaining: %d   Delay=%d ms",downLinkData.position,downLinkData.stepsRemaining,(int)(msDelay));
 
     int dStep=0;
         

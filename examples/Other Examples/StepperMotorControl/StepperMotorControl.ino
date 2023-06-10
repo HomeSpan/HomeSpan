@@ -26,24 +26,19 @@
  ********************************************************************************/
  
 // This example demonstrates how to control a real-world Stepper Motor using HomeSpan's
-// StepperControl Class.  Note the StepperControl Class serves as a generic interface
-// and cannot be instantiatiated directly.  Rather, you must create a child class derived
-// from StepperClass that implements the details of a specific Stepper Motor Driver Board.
+// generic StepperControl Class.
 
-// In this example we will implement a child class of StepperControl designed to operate
-// the Adafruit TB6612 1.2A DC/Stepper Motor Driver Breakout Board using only the 4 control
-// pins AIN1, AIN2, BIN1, and BIN2 (https://www.adafruit.com/product/2448)
+// For this sketch we will use an implementation of StepperControl designed to operate an
+// Adafruit TB6612 1.2A DC/Stepper Motor Driver Breakout Board (https://www.adafruit.com/product/2448)
+// using only its 4 control pins: AIN1, AIN2, BIN1, and BIN2
 
-// The implementation of this class is found in the file "Stepper_TB6612.h" included
-// with this sketch.  By separating the details of the Stepper Motor Driver Board from the
-// HomeSpan logic below, you can easily change the code that operates the Stepper Motor Driver Board
-// without very little modification to the HomeSpan sketch itself.
+// See HomeSpan's StepperControl documentation for a list of built-in driver boards, as well as for
+// detailed instructions on how you can easily use StepperControl to implement a custom driver for any board.
 
-// Note this sketch is based on the WindowShade Accessory from Example 13.  Please review
-// that Example first if new to HomeSpan since it is fully commented.
+// Note this example is based on the fully-commented WindowShade Accessory sketch from Tutorial Example 13.
 
 #include "HomeSpan.h"
-#include "Stepper_TB6612.h"             // Here we include the implementation of thge Adafruit TB6612 Stepper Motor Driver Board
+#include "extras/Stepper_TB6612.h"     // this contains HomeSpan's StepperControl Class for the Adafruit TB6612 Driver Board
 
 ////////////////////////////////////
 

@@ -29,7 +29,7 @@
 
 #include <Arduino.h>
 
-[[maybe_unused]] static const char* TAG = "StepperControl";
+[[maybe_unused]] static const char* STEPPER_TAG = "StepperControl";
 
 //////////////////////////
 
