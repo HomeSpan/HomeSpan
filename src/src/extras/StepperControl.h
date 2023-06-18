@@ -87,6 +87,7 @@ class StepperControl {
   void move(int nSteps, uint32_t msDelay, endAction_t endAction=NONE);
   void moveTo(int nPosition, uint32_t msDelay, endAction_t endAction=NONE);
   int position();
+  void setPosition(int pos);
   int stepsRemaining();
   void enable();
   void disable();

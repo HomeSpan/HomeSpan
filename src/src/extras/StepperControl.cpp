@@ -97,6 +97,17 @@ int StepperControl::position(){
 
 //////////////////////////
 
+void StepperControl::setPosition(int pos){
+  if(!stepsRemaining()){
+    downLinkData.position=pos;
+    xQueueOverwrite(downLinkQueue,&downLinkData);
+  } else {
+    ESP_LOGE(STEPPER_TAG,"can't set Position while motor is running");
+  }
+}
+
+//////////////////////////
+
 void StepperControl::brake(){
   move(0,10,BRAKE);
   while(stepsRemaining());
