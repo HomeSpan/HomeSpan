@@ -45,14 +45,14 @@ void setup() {
   motor=new Stepper_TB6612(23,32,22,14);
 
   motor->setStepType(StepperControl::HALF_STEP);
-  motor->setAccel(10,100);
+  motor->setAccel(10,10);
+  motor->setPosition(200);
   motor->move(100,2);
-  motor->setPosition(200);
   while(motor->stepsRemaining());
-  motor->setPosition(200);
-  delay(10);
-  Serial.printf("Position=%d\n",motor->position());
+  motor->setPosition(-200);
   motor->moveTo(0,2,StepperControl::BRAKE);
+  while(motor->position()<-11);
+  motor->disable();
 }
 
 //////////////////////////////////////

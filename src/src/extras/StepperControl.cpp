@@ -61,10 +61,9 @@ void StepperControl::move(int nSteps, uint32_t msDelay, endAction_t endAction){
     return;
   }
   
-  upLink_t upLinkData = { .nSteps=nSteps, .msDelay=msDelay, .absoluteStep=false, endAction=endAction };
-  xQueueReceive(downLinkQueue,&downLinkData,0);
-  downLinkData.stepsRemaining=nSteps;
+  upLink_t upLinkData = { .nSteps=nSteps, .msDelay=msDelay, .action=MOVE, endAction=endAction };
   xQueueOverwrite(upLinkQueue,&upLinkData);
+  waitForAck();
 }
 
 //////////////////////////
@@ -75,10 +74,9 @@ void StepperControl::moveTo(int nPosition, uint32_t msDelay, endAction_t endActi
     return;
   }
   
-  upLink_t upLinkData = { .nSteps=nPosition, .msDelay=msDelay, .absoluteStep=true, .endAction=endAction };
-  xQueueReceive(downLinkQueue,&downLinkData,0);
-  downLinkData.stepsRemaining=nPosition-downLinkData.position;
+  upLink_t upLinkData = { .nSteps=nPosition, .msDelay=msDelay, .action=MOVETO, .endAction=endAction };
   xQueueOverwrite(upLinkQueue,&upLinkData);
+  waitForAck();
 }
 
 //////////////////////////
@@ -99,12 +97,21 @@ int StepperControl::position(){
 
 void StepperControl::setPosition(int pos){
   if(!stepsRemaining()){
-    downLinkData.position=pos;
-    xQueueOverwrite(downLinkQueue,&downLinkData);
+    upLink_t upLinkData = { .nSteps=pos, .msDelay=10, .action=SET_POSITION, .endAction=NONE };
+    xQueueOverwrite(upLinkQueue,&upLinkData);
+    waitForAck();
   } else {
-    ESP_LOGE(STEPPER_TAG,"can't set Position while motor is running");
+    ESP_LOGE(STEPPER_TAG,"can't set position while motor is running");
   }
 }
+
+//////////////////////////
+
+void StepperControl::waitForAck(){
+  downLinkData.ack=false;
+  while(downLinkData.ack==false)
+    xQueueReceive(downLinkQueue,&downLinkData,0);  
+};
 
 //////////////////////////
 
@@ -130,18 +137,27 @@ void StepperControl::enable(){
 
 void StepperControl::motorTask(void *args){
   StepperControl *motor = (StepperControl *)args;
-  upLink_t upLinkData = { .nSteps=0, .msDelay=10, .absoluteStep=false, .endAction=NONE };
-  downLink_t downLinkData = { .stepsRemaining=0, .position=0 };  
+  upLink_t upLinkData;
+  downLink_t downLinkData;
   boolean running=false;
 
   for(;;){
     
     if(xQueueReceive(motor->upLinkQueue, &upLinkData, 0)){
-      if(upLinkData.absoluteStep)
-        upLinkData.nSteps-=downLinkData.position;
-      downLinkData.stepsRemaining=upLinkData.nSteps;
-      motor->onEnable();
+      switch(upLinkData.action){
+        case SET_POSITION:
+          downLinkData.position=upLinkData.nSteps;
+        break;
+        case MOVETO:
+          upLinkData.nSteps-=downLinkData.position;
+          [[fallthrough]];
+        case MOVE:
+          downLinkData.stepsRemaining=upLinkData.nSteps;
+          motor->onEnable();
+        break;
+      }
       running=true;
+      downLinkData.ack=true;
     }
 
     uint32_t msDelay=upLinkData.msDelay;
@@ -175,6 +191,7 @@ void StepperControl::motorTask(void *args){
     xQueueOverwrite(motor->downLinkQueue,&downLinkData);
     downLinkData.stepsRemaining+=dStep;
     downLinkData.position-=dStep;
+    downLinkData.ack=false;
     vTaskDelay(msDelay);  
   }
 }

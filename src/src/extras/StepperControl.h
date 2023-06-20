@@ -51,28 +51,36 @@ class StepperControl {
     BRAKE
   };
 
+  enum action_t {
+    MOVE,
+    MOVETO,
+    SET_POSITION
+  };
+
   private:
   
   struct upLink_t {
     int nSteps;
     uint32_t msDelay;
-    boolean absoluteStep;
+    action_t action;
     endAction_t endAction;
   };
 
   struct downLink_t {
-    int stepsRemaining;
-    int position;
+    int stepsRemaining=0;
+    int position=0;
+    boolean ack=false;
   };
   
   float accelSteps=1;
   float accelSize=0;
-  downLink_t downLinkData = { .stepsRemaining=0, .position=0 };
+  downLink_t downLinkData;
 
   TaskHandle_t motorTaskHandle;
   QueueHandle_t upLinkQueue;
   QueueHandle_t downLinkQueue;
 
+  void waitForAck();
   virtual void onStep(boolean direction)=0;
   virtual void onEnable(){};
   virtual void onDisable(){};
