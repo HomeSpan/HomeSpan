@@ -1,6 +1,8 @@
 # Stepper Motor Control
 
-HomeSpan includes dedicated classes that provide integrated control of popular stepper motor driver boards.  These classes spawn dedicated background tasks for each stepper motor allowing parallel background...background allow for the simultaneous operation of one or more stepper motors in the background without blocking HomeSpan's normal operation.  
+HomeSpan includes dedicated classes that provide for easy control of stepper motors connected to an ESP32 via a stepper motor driver board.  These classes allow stepper motors to operate smoothly and asynchronously in the background while HomeSpan continues to run in the foreground.  On devices with dual processors, stepper-motor control can be run either on the same or a different processor from HomeSpan.  To add stepper-motor control to your sketch, simply instantiate one or more of the classes below matching your motor driver board (or boards).
+
+
 
 The ESP32 has an on-chip signal-generator peripheral designed to drive an RF or IR transmitter.  HomeSpan includes an easy-to-use library that interfaces with this peripheral so that with a few additional electronic components you can create a HomeSpan device that controls an RF or IR appliance directly from the Home App on your iPhone, or via Siri.  The library is accessed by placing the following near the top of your sketch:
 
