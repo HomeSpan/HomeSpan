@@ -15,9 +15,9 @@ Signals are defined as a sequence of HIGH and LOW phases that together form a pu
 Since most RF/IR signals repeat the same train of pulses more than once, the duration of the last LOW phase should be extended to account for the delay between repeats of the pulse train.  Pulse trains are encoded as sequential arrays of 32-bit words, where each 32-bit word represents an individual pulse using the following protocol:
 
   * bits 0-14: the duration, in *ticks* from 0-32767, of the first part of the pulse to be transmitted
-  * bit 15: indicates whether the first part of the pulse to be trasnmitted is HIGH (1) or LOW (0)
+  * bit 15: indicates whether the first part of the pulse to be transmitted is HIGH (1) or LOW (0)
   * bits 16-30: the duration, in *ticks* from 0-32767, of the second part of the pulse to be transmitted
-  * bit 31: indicates whether the second part of the pulse to be trasnmitted is HIGH (1) or LOW (0)
+  * bit 31: indicates whether the second part of the pulse to be transmitted is HIGH (1) or LOW (0)
 
 HomeSpan provides two easy methods to create, store, and transmit a pulse train.  The first method relies on the fact that each instance of RFControl maintains its own internal memory structure to store a pulse train of arbitrary length.  The functions `clear()`, `add()`, and `pulse()`, described below, allow you to create a pulse train using this internal memory structure.  The `start()` function is then used to begin transmission of the full pulse train.  This method is generally used when pulse trains are to be created on-the-fly as needed, since each RFControl instance can only store a single pulse train at one time.
 
