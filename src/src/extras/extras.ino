@@ -45,14 +45,11 @@ void setup() {
   motor=new Stepper_TB6612(23,32,22,14);
 
   motor->setStepType(StepperControl::HALF_STEP);
-  motor->setAccel(10,10);
-  motor->setPosition(200);
-  motor->move(100,2);
+  motor->setAccel(10,30);
+  motor->move(400,2);
   while(motor->stepsRemaining());
-  motor->setPosition(-200);
+  motor->setPosition(800);
   motor->moveTo(0,2,StepperControl::BRAKE);
-  while(motor->position()<-11);
-  motor->disable();
 }
 
 //////////////////////////////////////

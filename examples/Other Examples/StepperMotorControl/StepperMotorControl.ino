@@ -51,23 +51,27 @@ struct DEV_WindowShade : Service::WindowCovering {
 
   DEV_WindowShade(int a1, int a2, int b1, int b2) : Service::WindowCovering(){
         
-    current=new Characteristic::CurrentPosition(0);    
-    target=new Characteristic::TargetPosition(0);
+    current=new Characteristic::CurrentPosition(0,true);    
+    target=new Characteristic::TargetPosition(0,true);
     
     motor=new Stepper_TB6612(a1, a2, b1, b2);    // instantiate motor using pins specified in set-up below
     motor->setAccel(10,20);                      // set acceleration parameters
         
     LOG0("Configuring Motorized Window Shade with input pins: A1=%d, A2=%d, B1=%d, B2=%d\n",a1,a2,b1,b2);
+    LOG0("Initial Position: %d\n",current->getVal());
+    motor->setPosition(current->getVal()*10);
   }
 
   ///////////
   
   boolean update(){
 
-    // Move motor to absolute position, assuming 200 steps per revolution and 20 revolutions for full up/travel travel.
+    // Move motor to absolute position, assuming 200 steps per revolution and 5 revolutions for full up/travel travel,
+    // for a total of 1000 steps of full travel.
+    
     // Specify that motor should enter the BRAKE state upon reaching to desired position.
     
-    motor->moveTo(target->getNewVal()*20,5,Stepper_TB6612::BRAKE);
+    motor->moveTo(target->getNewVal()*10,5,Stepper_TB6612::BRAKE);
     LOG1("Setting Shade Position=%d\n",target->getNewVal());
     return(true);  
   }
