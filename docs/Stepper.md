@@ -1,8 +1,22 @@
 # Stepper Motor Control
 
-HomeSpan includes dedicated classes that provide for easy control of stepper motors connected to an ESP32 via a stepper motor driver board.  These classes allow stepper motors to operate smoothly and asynchronously in the background while HomeSpan continues to run in the foreground.  On devices with dual processors, stepper-motor control can be run either on the same or a different processor from HomeSpan.  HomeSpan natively supports the following driver chips:
+HomeSpan includes dedicated classes that provide for easy control of stepper motors connected to an ESP32 via a stepper motor driver board.  These classes allow stepper motors to operate smoothly and asynchronously in the background while HomeSpan continues to run in the foreground.  On devices with dual processors, stepper-motor control can be run either on the same or a different processor from HomeSpan.
 
-* Toshiba TB6612 (or equivalent), such as found on [Adafruit's TB6612 1.2A DC/Stepper Motor Driver Breakout Board](www.adafruit.com/product/2448)
+The HomeSpan class that contains all the methods to control a stepper motor is called **StepperControl**.  However, this is a virtual class and cannot be instantiated directly.  Instead you instantiate one or more driver-specific child-classes that are derived from **StepperControl** and include all the logic needed to configure and operate a specific stepper motor driver chip:
+HomeSpan supports the following stepper motor driver chips:
+
+
+* **Stepper_TB6612**
+  * This class is used to operate stepper motors driven by a ***Toshiba TB6612*** chip, either with or without the use of ESP32 PWM pins
+  * Example driver board: [Adafruit TB6612 1.2A DC/Stepper Motor Driver Breakout Board](www.adafruit.com/product/2448)
+  * To use, add the following to the top of your sketch: `#include "extras/Stepper_TB6612.h"`
+  * Contructors:
+    * *Stepper_TB6612(int AIN1, int AIN2, int BIN1, int BIN2)* 
+   
+* **Stepper_A3967**
+  * This class is used to operate stepper motors driven by an ***Allegro A3967*** chip
+  * Example driver board: [Sparkfun EasyDriver - Stepper Motor Driver](https://www.sparkfun.com/products/12779)
+  * To use, add the following to the top of your sketch: `#include "extras/Stepper_A3967.h"`
 
 such as To add stepper-motor control to your sketch, simply instantiate one or more of the classes below matching your motor driver board (or boards).
 
