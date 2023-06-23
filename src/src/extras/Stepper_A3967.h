@@ -53,7 +53,7 @@ struct Stepper_A3967 : StepperControl {
 
 //////////////////////////
 
-  Stepper_A3967(int m1Pin, int m2Pin, int stepPin, int dirPin, int enablePin) : StepperControl(){
+  Stepper_A3967(int m1Pin, int m2Pin, int stepPin, int dirPin, int enablePin, std::pair<uint32_t, uint32_t> taskParams = {1,0}) : StepperControl(taskParams.first,taskParams.second){
     this->m1Pin=m1Pin;
     this->m2Pin=m2Pin;
     this->stepPin=stepPin;

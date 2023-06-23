@@ -34,6 +34,7 @@ StepperControl::StepperControl(uint32_t priority, uint32_t cpu){
   upLinkQueue = xQueueCreate(1,sizeof(upLink_t));  
   downLinkQueue = xQueueCreate(1,sizeof(downLink_t));  
   xTaskCreateUniversal(motorTask, "motorTaskHandle", 8096, this, priority, &motorTaskHandle, cpu);
+  ESP_LOGI(STEPPER_TAG,"motor task started with priority %d on cpu %d",priority,cpu);
 }
 
 //////////////////////////

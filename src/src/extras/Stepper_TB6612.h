@@ -60,7 +60,7 @@ struct Stepper_TB6612 : StepperControl {
 
 //////////////////////////
 
-  Stepper_TB6612(int AIN1, int AIN2, int BIN1, int BIN2) : StepperControl(){
+  Stepper_TB6612(int AIN1, int AIN2, int BIN1, int BIN2, std::pair<uint32_t, uint32_t> taskParams = {1,0}) : StepperControl(taskParams.first,taskParams.second){
 
     ain1=AIN1;
     ain2=AIN2;
@@ -77,7 +77,7 @@ struct Stepper_TB6612 : StepperControl {
 
 //////////////////////////
 
-  Stepper_TB6612(int AIN1, int AIN2, int BIN1, int BIN2, int PWMA, int PWMB) : Stepper_TB6612(AIN1,AIN2,BIN1,BIN2){
+  Stepper_TB6612(int AIN1, int AIN2, int BIN1, int BIN2, int PWMA, int PWMB, std::pair<uint32_t, uint32_t> taskParams = {1,0}) : Stepper_TB6612(AIN1,AIN2,BIN1,BIN2,taskParams){
 
     pwmA=new LedPin(PWMA,0,50000);
     pwmB=new LedPin(PWMB,0,50000);
