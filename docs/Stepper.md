@@ -1,9 +1,21 @@
 # Stepper Motor Control
 
-HomeSpan includes dedicated classes that provide for easy control of stepper motors connected to an ESP32 via a stepper motor driver board.  These classes allow stepper motors to operate smoothly and asynchronously in the background while HomeSpan continues to run in the foreground.  On devices with dual processors, stepper-motor control can be run either on the same or a different processor from HomeSpan.  To add stepper-motor control to your sketch, simply instantiate one or more of the classes below matching your motor driver board (or boards).
+HomeSpan includes dedicated classes that provide for easy control of stepper motors connected to an ESP32 via a stepper motor driver board.  These classes allow stepper motors to operate smoothly and asynchronously in the background while HomeSpan continues to run in the foreground.  On devices with dual processors, stepper-motor control can be run either on the same or a different processor from HomeSpan.  HomeSpan natively supports the following driver chips:
+
+* Toshiba TB6612 (or equivalent), such as found on [Adafruit's TB6612 1.2A DC/Stepper Motor Driver Breakout Board](www.adafruit.com/product/2448)
+
+such as To add stepper-motor control to your sketch, simply instantiate one or more of the classes below matching your motor driver board (or boards).
+
+### *Stepper_TB6612(int AIN1, int AIN2, int BIN1, int BIN2 [, taskParams])*
+### *Stepper_TB6612(int AIN1, int AIN2, int BIN1, int BIN2, int PWMA, int PWMB [,taskParams])*
+
+Create an instance the **Stepper_TB6612** class using either of the constructors above to control a stepper motor driven by a Toshiba TB6612, such as found on an [Adafruit TB6612 1.2A DC/Stepper Motor Driver Breakout Board](www.adafruit.com/product/2448).  
 
 
 
+### *Stepper_TB6612(int AIN1, int AIN2, int BIN1, int BIN2, int PWMA, int PWMB [,taskParams])*
+
+These two classes instantiate control for a stepper motor driven by a Toshiba TB6612, such as found on this [Adafruit TB6612 1.2A DC/Stepper Motor Driver Breakout Board](www.adafruit.com/product/2448)
 The ESP32 has an on-chip signal-generator peripheral designed to drive an RF or IR transmitter.  HomeSpan includes an easy-to-use library that interfaces with this peripheral so that with a few additional electronic components you can create a HomeSpan device that controls an RF or IR appliance directly from the Home App on your iPhone, or via Siri.  The library is accessed by placing the following near the top of your sketch:
 
 `#include "extras/RFControl.h"`
