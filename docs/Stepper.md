@@ -1,47 +1,58 @@
 # Stepper Motor Control
 
-HomeSpan includes dedicated classes that provide for easy control of stepper motors connected to an ESP32 via a stepper motor driver board.  These classes allow stepper motors to operate smoothly and asynchronously in the background while HomeSpan continues to run in the foreground.  On devices with dual processors, stepper-motor control can be run either on the same or a different processor from HomeSpan.
+HomeSpan includes dedicated classes that provide for easy control of a stepper motor connected to an ESP32 via a stepper motor driver board.  These classes allow one or more stepper motors to operate smoothly and asynchronously in the background while HomeSpan continues to run in the foreground.  On devices with dual processors, stepper-motor control can be run either on the same or a different processor from HomeSpan.
 
-The HomeSpan class that contains all the methods to control a stepper motor is called **StepperControl**.  However, this is a virtual class and cannot be instantiated directly.  Instead you instantiate one or more driver-specific child-classes that are derived from **StepperControl** and include all the logic needed to configure and operate a specific stepper motor driver chip:
-HomeSpan supports the following stepper motor driver chips:
-
+The HomeSpan class that contains all the methods to control a stepper motor is called **StepperControl**.  However, this is a virtual class and cannot be instantiated directly.  Instead you instantiate stepper motor objects using driver-specific child-classes (derived from **StepperControl**) that contain all the logic to configure and operate a particular driver board.  Each child class supports one or more constructors allowing you to specify which output pins on your ESP32 device will be connected to the required pins on your driver board:
 
 * **Stepper_TB6612**
-  * This class is used to operate stepper motors driven by a ***Toshiba TB6612*** chip, either with or without the use of ESP32 PWM pins
-  * Example driver board: [Adafruit TB6612 1.2A DC/Stepper Motor Driver Breakout Board](www.adafruit.com/product/2448)
+  * This class is used to operate stepper motors driven by a [Toshiba TB6612](www.adafruit.com/product/2448) chip, either with or without the use of ESP32 PWM pins
   * To use, add the following to the top of your sketch: `#include "extras/Stepper_TB6612.h"`
   * Contructors:
-    * *Stepper_TB6612(int AIN1, int AIN2, int BIN1, int BIN2)* 
+    * *Stepper_TB6612(int AIN1, int AIN2, int BIN1, int BIN2)*  - controls the driver board using only 4 digital pins
+    * *Stepper_TB6612(int AIN1, int AIN2, int BIN1, int BIN2, int PWMA, int PWMB)*  -  adds PWM control of the motor, allowing for additional stepping modes
    
 * **Stepper_A3967**
-  * This class is used to operate stepper motors driven by an ***Allegro A3967*** chip
-  * Example driver board: [Sparkfun EasyDriver - Stepper Motor Driver](https://www.sparkfun.com/products/12779)
+  * This class is used to operate stepper motors driven by an [Allegro A3967](https://www.sparkfun.com/products/12779) chip
   * To use, add the following to the top of your sketch: `#include "extras/Stepper_A3967.h"`
+  * Contructor: *Stepper_A3967(int M1, int M2, int STEP, int DIR, int ENABLE)*
+ 
+Click on either of the driver-specific classes above for complete details on how to wire and configure a particular driver board.
 
-such as To add stepper-motor control to your sketch, simply instantiate one or more of the classes below matching your motor driver board (or boards).
+## StepperControl Methods
 
-### *Stepper_TB6612(int AIN1, int AIN2, int BIN1, int BIN2 [, taskParams])*
-### *Stepper_TB6612(int AIN1, int AIN2, int BIN1, int BIN2, int PWMA, int PWMB [,taskParams])*
+The **StepperControl** class provides the following methods to operate and control a stepper motor object instantiated with one of the driver-specific classes described above:
 
-Create an instance the **Stepper_TB6612** class using either of the constructors above to control a stepper motor driven by a Toshiba TB6612, such as found on an [Adafruit TB6612 1.2A DC/Stepper Motor Driver Breakout Board](www.adafruit.com/product/2448).  
+* `void enable()`
+ 
+ * enables current flow to the stepper motor coils, actively locking the position of the motor
+
+* `void disable()`
+ 
+ * disables current flow to the stepper motor coils and leaves in a state of high impedence, allowing the motor to turn freely
+
+* `void brake()`
+ 
+ * disables current flow to the stepper motor coils and leaves in a state of low impedence, creating "friction" that prevents the motor from freely turning
+ * applicable only for driver chips that support a "short brake" mode, otherwise has no effect
+
+* `void move(int nSteps, uint32_t msDelay, endAction_t endAction=NONE)`
+
+  * moves the stepper motor an absolute number of steps
+
+    * *nSteps* - the number of steps to move.  A positive number moves the motor in one direction; a negative number moved the motor in the opposite direction; a value of zero causes the motor to stop if it is already moving
+    * *msDelay* - the delay, in milliseconds, to pause between steps.  Must be greater than zero.  The lower the number, the faster the motor moves, subject to limitations of the motor itself
+    * *msDelay* -an optional action to be performed once the motor has finished moving *nStep* steps.  Choices include  in milliseconds, to pause between steps.  Must be greater than zero.  The lower the number, the faster the motor moves, subject to limitations of the motor itself
+ 
+ * disables current flow to the stepper motor coils and leaves in a state of high impedence, allowing the motor to turn freely
 
 
 
-### *Stepper_TB6612(int AIN1, int AIN2, int BIN1, int BIN2, int PWMA, int PWMB [,taskParams])*
-
-These two classes instantiate control for a stepper motor driven by a Toshiba TB6612, such as found on this [Adafruit TB6612 1.2A DC/Stepper Motor Driver Breakout Board](www.adafruit.com/product/2448)
-The ESP32 has an on-chip signal-generator peripheral designed to drive an RF or IR transmitter.  HomeSpan includes an easy-to-use library that interfaces with this peripheral so that with a few additional electronic components you can create a HomeSpan device that controls an RF or IR appliance directly from the Home App on your iPhone, or via Siri.  The library is accessed by placing the following near the top of your sketch:
-
-`#include "extras/RFControl.h"`
 
 
 
 
 
-....
 
-
-## *RFControl(int pin, boolean refClock=true)*
 
 Creating an instance of this **class** initializes the RF/IR signal generator and specifies the ESP32 *pin* to output the signal.  You may create more than one instance of this class if driving more than one RF/IR transmitter (each connected to different *pin*), subject to the following limitations:  ESP32 - 8 instances; ESP32-S2 and ESP32-S3 - 4 instances; ESP32-C3 - 2 instances.  The optional parameter *refClock* is more fully described further below under the `start()` method.
 
