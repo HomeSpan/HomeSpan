@@ -49,7 +49,35 @@ The **StepperControl** class provides the following methods to operate and contr
   * returns the number of steps remaining to turn
   * may be positive or negative depending on the direction the motor is turning
   * returns zero when the motor is not turning
-  * example: `myMotor.move(200,5,StepperControl::BRAKE); while(myMotor.stepsRemaining()!=0);` starts the motor turning and then waits until is completes all 200 steps
+  * example: `myMotor.move(200,5); while(myMotor.stepsRemaining()!=0); myMotor.move(-300,5);` starts the motor turning, waits until it completes all 200 steps, and then turns the motor in the opposite direction for 300 steps
+
+* `int position()`
+  * returns the absolute position of the stepper motor, which is defined as the cumulative sum of the all positive and negative steps turned since initial start-up
+  * can be called when the stepper motor is moving or when it is stopped
+  * example: `myMotor.move(-800,5); while(myMotor.stepsRemaining()); myMotor.move(200,5); while(myMotor.stepsRemaining()); Serial.print(myMotor.position())` would print a value of -600 after the motor finishes turning (first one direction for 800 steps, and then the other  for 200 steps)
+ 
+* `void setPosition(int pos)`
+  * resets the current position counter to *pos*
+  * this method does *not* move the motor; it only resets the internal position counter as returned by `position()`
+  * this method can only be called when the motor is **not** moving (if called when the motor is turning it is ignored and the internal position counter is **not** changed)
+  * example: `myMotor.move(300,5); while(myMotor.stepsRemaining()); myMotor.setPosition(-200); myMotor.move(600,5); while(myMotor.stepsRemaining()); Serial.print(myMotor.position())` would print a value of +400 after the motor finishes turning
+    
+* `void moveTo(int nPosition, uint32_t msDelay, endAction_t endAction=NONE)`
+  * enables the stepper motor and moves it to the position *nPosition*.  Note this is a **non-blocking** function and returns immediately after being called while the stepper motor turns until it reaches *nPosition*
+    
+    * *nPosition* - the position to which the stepper move should move, where position is defined as the cumulative number of positive and negative steps the motor has turned since initial start-up, as returned by `position()`
+    * *msDelay* - the delay, in milliseconds, to pause between steps.  Must be greater than zero.  The lower the number, the faster the motor moves, subject to limitations of the motor itself
+    * *endAction* - an optional action to be performed *after* the motor has reached *nPosition*.  Choices include:
+      *  **StepperControl::NONE** - no action is taken; the stepper motor is left in the enabled state (this is the default)
+      *  **StepperControl::DISABLE** - current to the stepper motor is disabled
+      *  **StepperControl::BRAKE** - the stepper motor is placed in a brake state
+  * it is okay to call this method while the stepper motor is already turning; the motor will either continue turning in the same direction, or reverse direction, until it reaches the *nPosition* specified
+  * calls to `stepsRemaining()` after calling `moveTo()` work as expected - the value returned will be the number of steps remaining until the motor reaches the *nPosition* specified
+  * note that `moveTo(nPosition)` is mathematically the same as `move(nPosition-position())`, but the `moveTo()` method is more accurate since it computes the position of the motor directly inside the task that is actually controlling the motor
+ 
+* `void setAccel(float accelSize, float accelSteps)` 
+
+* `void setStepType(int mode)` 
 
 ---
 
