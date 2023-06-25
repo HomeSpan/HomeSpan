@@ -84,11 +84,16 @@ The **StepperControl** class provides the following methods to operate and contr
  
 * `void setAccel(float accelSize, float accelSteps)`
   * adds an additional set of delays between steps so that the motor gradually accelerates when it starts and decelerates when it stops
+  
     * *accelSize* - the maximum size of the additional delay, expressed as a factor to be multiplied by the *msDelay* parameter used in `move()` and `moveTo()`.  Must be a value greater or equal to 0.  The larger the value, the greater the magnitude of the acceleration and deceleration. A value of zero yields no acceleration/deceleration
+      
     * *accelSteps* - the number of steps over which the *accelSize* factor exponentially decays, at which point  he motor begins turning at the full speed specified by the *msDelay* parameter.  Must be a value greater or equal to 1.  The larger the value, the longer the acceleration and deceleration period
-  * example: `myMotor.setAccel(10,20); myMotor.move(200,5);` adds an additional 50ms delay (=10\*5ms) after the first step, an additional 47ms after the second step, an additional 45ms after the third step, and so forth, until at step 82 the additional delay has fully decayed and the delay between steps remains fixed at the 5ms *msDelay* parameter specified.  Then, starting at step 118 an additional delay of 1ms is added, at step 134 this increases to 2ms, and so forth, until the additional delay reaches 50ms once again at step 199 just before the motor stops turning at step 200
-  * for reference, the total delay between each step equals the sum of *msDelay* plus two exponential curves as follows:
-    * msDelay \* accelSize \* \[ exp(-abs(nSteps-stepsRemaining)/accelSteps) + exp(-(abs(stepsRemaining)-1)/accelSteps) \]
+      
+  * the total delay between steps (when *stepsRemaining* is not zero) is given by the following formula:
+  $$totalDelay = msDelay \times (1 + accelSize \times (e^{\frac{-\mid nSteps-stepsRemaining \mid}{accelSteps}} + e^{\frac{-(\mid stepsRemaining \mid - 1)}{accelSteps}}))$$
+
+  * example: `myMotor.setAccel(10,20); myMotor.move(200,5);` yields a 55ms delay after the first step, a 52ms delay after the second step, a 50ms delay after the third step, and so forth, until at step 82 the additional delay has fully decayed such that the delay between steps remains fixed at the 5ms *msDelay* parameter specified.  Then, starting at step 118 (with 82 steps remaining) the delay increases to 6ms; at step 134 it further increases to 7ms, and so forth, until the delay reaches its maxmimum of 55ms once again at step 199 just before the motor stops turning at step 200
+
       
 * `void setStepType(int mode)`
   * sets the step type of the motor to one of the following *mode* enumerations:
