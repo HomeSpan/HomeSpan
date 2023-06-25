@@ -5,7 +5,7 @@ HomeSpan includes dedicated classes that provide for easy control of a stepper m
 The HomeSpan class that contains all the methods to control a stepper motor is called **StepperControl**.  However, this is a virtual class and cannot be instantiated directly.  Instead you instantiate stepper motor objects using driver-specific child-classes (derived from **StepperControl**) that contain all the logic to configure and operate a particular driver board.  Each child class supports one or more constructors allowing you to specify which output pins on your ESP32 device will be connected to the required pins on your driver board:
 
 * **Stepper_TB6612**
-  * This class is used to operate stepper motors driven by a [Toshiba TB6612](www.adafruit.com/product/2448) chip, either with or without the use of ESP32 PWM pins
+  * This class is used to operate stepper motors driven by a [Toshiba TB6612](https://www.adafruit.com/product/2448) chip, either with or without the use of ESP32 PWM pins
   * To use, add the following to the top of your sketch: `#include "extras/Stepper_TB6612.h"`
   * Contructors:
     * `Stepper_TB6612(int AIN1, int AIN2, int BIN1, int BIN2)`  - controls the driver board using only 4 digital pins
@@ -77,9 +77,11 @@ The **StepperControl** class provides the following methods to operate and contr
  
 * `void setAccel(float accelSize, float accelSteps)`
   * adds an additional set of delays between steps so that the motor gradually accelerates when it starts and decelerates when it stops
-    * *accelSize* - the maximum size of the additional delay, expressed as a factor to be multiplied by the *msDelay* parameter used in `move()` and `moveTo()`.  Must be a value greater or equal to 0.0.  The larger the value, the greater the magnitude of the acceleration and deceleration. A value of zero yields no acceleration/deceleration
-    * *accelSteps* - the number of steps over which the *accelSize* factor exponentially decays so that the motor begins turning at the full speed specified by the *msDelay* parameter.  Must be a value greater or equal to 1.0.  The larger the value, the longer the acceleration and deceleration period
-    * example: `myMotor.setAccel(10,20); myMotor.move(200,5);` adds an additional 50ms delay (=10*5ms) after the first step, an additional 47ms after the second step, an additional 45ms after the third step, and so forth, until at step 82 the additional has fully decayed and the delay between steps remains fixed at the 5ms *msDelay* parameter specified.  Then, starting at step 118 an additional delay of 1ms is added, at step 134 this increases to 2ms, and so forth, until the additional delay reaches 50ms once again at step 199 just before the motor stops turning at step 200
+    * *accelSize* - the maximum size of the additional delay, expressed as a factor to be multiplied by the *msDelay* parameter used in `move()` and `moveTo()`.  Must be a value greater or equal to 0.  The larger the value, the greater the magnitude of the acceleration and deceleration. A value of zero yields no acceleration/deceleration
+    * *accelSteps* - the number of steps over which the *accelSize* factor exponentially decays, at which point  he motor begins turning at the full speed specified by the *msDelay* parameter.  Must be a value greater or equal to 1.  The larger the value, the longer the acceleration and deceleration period
+  * example: `myMotor.setAccel(10,20); myMotor.move(200,5);` adds an additional 50ms delay (=10\*5ms) after the first step, an additional 47ms after the second step, an additional 45ms after the third step, and so forth, until at step 82 the additional delay has fully decayed and the delay between steps remains fixed at the 5ms *msDelay* parameter specified.  Then, starting at step 118 an additional delay of 1ms is added, at step 134 this increases to 2ms, and so forth, until the additional delay reaches 50ms once again at step 199 just before the motor stops turning at step 200
+  * for reference, the total delay between each step equals the sum of *msDelay* plus two exponential curves as follows:
+    * msDelay \* accelSize \* \[ exp(-abs(nSteps-stepsRemaining)/accelSteps) + exp(-(abs(stepsRemaining)-1)/accelSteps) \]
       
 * `void setStepType(int mode)` 
 
