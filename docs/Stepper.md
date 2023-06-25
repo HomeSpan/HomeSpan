@@ -7,14 +7,19 @@ The HomeSpan class that contains all the methods to control a stepper motor is c
 * **Stepper_TB6612**
   * This class is used to operate stepper motors driven by a [Toshiba TB6612](https://www.adafruit.com/product/2448) chip, either with or without the use of ESP32 PWM pins
   * To use, add the following to the top of your sketch: `#include "extras/Stepper_TB6612.h"`
-  * Contructors:
-    * `Stepper_TB6612(int AIN1, int AIN2, int BIN1, int BIN2)`  - controls the driver board using only 4 digital pins
-    * `Stepper_TB6612(int AIN1, int AIN2, int BIN1, int BIN2, int PWMA, int PWMB)`  -  adds PWM control of the motor, allowing for additional stepping modes
+  * Constructor 1: `Stepper_TB6612(int AIN1, int AIN2, int BIN1, int BIN2)`
+    * controls the driver board using only 4 digital pins from the ESP32
+    * does not provide ability to microstep the motor
+  * Constructor 2: `Stepper_TB6612(int AIN1, int AIN2, int BIN1, int BIN2, int PWMA, int PWMB)`
+    * controls the driver board using 4 digital pins and 2 PWM pins from the ESP32
+    * the addition of the PWM pins provides the ability to microstep the motor
    
 * **Stepper_A3967**
   * This class is used to operate stepper motors driven by an [Allegro A3967](https://www.sparkfun.com/products/12779) chip
   * To use, add the following to the top of your sketch: `#include "extras/Stepper_A3967.h"`
   * Contructor: `Stepper_A3967(int M1, int M2, int STEP, int DIR, int ENABLE)`
+    * controls the driver board using 5 digital pins from the ESP32
+    * microstepping is built into the driver board (separate ESP32 PWM pins are not needed)
  
 Click on either of the driver-specific classes above for complete details on how to wire and configure a particular driver board.
 
@@ -38,6 +43,7 @@ The **StepperControl** class provides the following methods to operate and contr
     * *nSteps* - the number of steps to turn.  A positive number turns the motor in one direction; a negative number turns the motor in the opposite direction; a value of zero causes the motor to *stop* if it is already turning
     * *msDelay* - the delay, in milliseconds, to pause between steps.  Must be greater than zero.  The lower the number, the faster the motor turns, subject to limitations of the motor itself
     * *endAction* - an optional action to be performed *after* the motor has finished moving *nSteps* steps.  Choices include:
+    
       *  **StepperControl::NONE** - no action is taken; the stepper motor is left in the enabled state (this is the default)
       *  **StepperControl::DISABLE** - current to the stepper motor is disabled
       *  **StepperControl::BRAKE** - the stepper motor is placed in a brake state
@@ -68,6 +74,7 @@ The **StepperControl** class provides the following methods to operate and contr
     * *nPosition* - the position to which the stepper move should turn, where position is defined as the cumulative number of positive and negative steps the motor has turned since initial start-up, as returned by `position()`
     * *msDelay* - the delay, in milliseconds, to pause between steps.  Must be greater than zero.  The lower the number, the faster the motor turns, subject to limitations of the motor itself
     * *endAction* - an optional action to be performed *after* the motor has reached *nPosition*.  Choices include:
+      
       *  **StepperControl::NONE** - no action is taken; the stepper motor is left in the enabled state (this is the default)
       *  **StepperControl::DISABLE** - current to the stepper motor is disabled
       *  **StepperControl::BRAKE** - the stepper motor is placed in a brake state
@@ -83,7 +90,19 @@ The **StepperControl** class provides the following methods to operate and contr
   * for reference, the total delay between each step equals the sum of *msDelay* plus two exponential curves as follows:
     * msDelay \* accelSize \* \[ exp(-abs(nSteps-stepsRemaining)/accelSteps) + exp(-(abs(stepsRemaining)-1)/accelSteps) \]
       
-* `void setStepType(int mode)` 
+* `void setStepType(int mode)`
+  * sets the step type of the motor to one of the following *mode* enumerations:
+    
+    * **StepperControl::FULL_STEP_ONE_PHASE** (0)
+    * **StepperControl::FULL_STEP_TWO_PHASE** (1)
+    * **StepperControl::HALF_STEP** (2)
+    * **StepperControl::QUARTER_STEP** (4)
+    * **StepperControl::EIGHTH_STEP** (8)
+  * *mode* can be specified using either the name of the enumeration or its integer equivalent
+  * smaller step types provide for smother operation of the motor, but require more steps (and therefore more time) to turn a complete revolution
+  * the quarter- and eighth-step modes require microstepping PWM functionality (either provided by the ESP32, or built into the driver chip)
+  * it is possible, though not recommended, to change the step type *mode* while the motor is turning
+  * see Stepper Motor Modes for a brief primer on how stepper motors are typically driven
 
 ---
 
