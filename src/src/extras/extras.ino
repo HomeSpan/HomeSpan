@@ -41,39 +41,12 @@ void setup() {
   delay(1000);
   Serial.printf("\nHomeSpan Steppers\n\n");
 
-
 //  motor=new Stepper_TB6612(23,32,22,14,33,27,{1,1});
   motor=new Stepper_TB6612(23,32,22,14);
 
   motor->setStepType(StepperControl::FULL_STEP_ONE_PHASE);
-  motor->setAccel(10,5);
-
-  motor->enable();
-  while(1);
-  
-  for(int i=0;i<100;i++){
-    motor->disable();
-    delay(10);
-    motor->enable();
-    delay(10);
-  }
-  Serial.printf("Done\n");
-  while(1);
-  
-  delay(1000);
-  for(int i=0;i<10;i++){
-    motor->move(1,100);
-    while(motor->stepsRemaining());
-    motor->move(-0,5);
-    while(motor->stepsRemaining());
-  }
-  while(1);
-    
-  delay(100);
-  motor->move(-400,5,StepperControl::BRAKE);
-  while(1);
-  motor->setPosition(800);
-  motor->moveTo(0,5,StepperControl::BRAKE);
+  motor->setAccel(10,20); 
+  motor->move(200,5);
 }
 
 //////////////////////////////////////
