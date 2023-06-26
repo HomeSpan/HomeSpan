@@ -93,20 +93,19 @@ The **StepperControl** class provides the following methods to operate and contr
   $$totalDelay = msDelay \times (1 + accelSize \times (e^{\frac{-\mid nSteps-stepsRemaining \mid}{accelSteps}} + e^{\frac{-(\mid stepsRemaining \mid - 1)}{accelSteps}}))$$
 
   * example: `myMotor.setAccel(10,20); myMotor.move(200,5);` yields a 55ms delay after the first step, a 52ms delay after the second step, a 50ms delay after the third step, and so forth, until at step 82 the additional delay has fully decayed such that the delay between steps remains fixed at the 5ms *msDelay* parameter specified.  Then, starting at step 118 (with 82 steps remaining) the delay increases to 6ms; at step 134 it further increases to 7ms, and so forth, until the delay reaches its maxmimum of 55ms once again at step 199 just before the motor stops turning at step 200
-
-      
+          
 * `void setStepType(int mode)`
   * sets the step type of the motor to one of the following *mode* enumerations:
-    
-    * **StepperControl::FULL_STEP_ONE_PHASE** (0)
+      
+    * **StepperControl::FULL_STEP_ONE_PHASE** (0)      
     * **StepperControl::FULL_STEP_TWO_PHASE** (1)
     * **StepperControl::HALF_STEP** (2)
     * **StepperControl::QUARTER_STEP** (4)
-    * **StepperControl::EIGHTH_STEP** (8)
+    * **StepperControl::EIGHTH_STEP** (8)      
   * *mode* can be specified using either the name of the enumeration or its integer equivalent
-  * smaller step types provide for smother operation of the motor, but require more steps (and therefore more time) to turn a complete revolution
+  * smaller step types provide for smoother operation of the motor, but require more steps to turn a complete revolution
   * not all *modes* are supported by all driver chips
-  * the quarter- and eighth-step modes require microstepping PWM functionality (either provided by the ESP32, or built into the driver chip)
+  * the quarter- and eighth-step modes require microstepping PWM functionality (either via ESP32 pins, or onboard the driver chip)
   * it is possible, though not recommended, to change the step type *mode* while the motor is turning
   * see Stepper Motor Modes for a brief primer on how stepper motors are typically driven
 
