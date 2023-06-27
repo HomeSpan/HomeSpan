@@ -107,7 +107,7 @@ The **StepperControl** class provides the following methods to operate and contr
   * not all *modes* are supported by all driver chips
   * the quarter- and eighth-step modes require microstepping PWM functionality (either via ESP32 pins, or onboard the driver chip)
   * it is possible, though not recommended, to change the step type *mode* while the motor is turning
-  * see Stepper Motor Modes for a brief primer on how stepper motors are typically driven
+  * see [Stepper Motor Modes](StepperModes.md) for a brief primer on how stepper motors are typically driven
 
 ---
 
