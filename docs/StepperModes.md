@@ -2,8 +2,11 @@
 
 A typical stepper motor has two sets of coils, *A* and *B*.  Applying a current to one or both coils creates a magnetic field that fixes the motor's position.  Any changes to the direction and/or magnitude of the current flowing through the coils causes the motor to "step" to a new fixed position.  By repeatedly changing the current flow according to a specific pattern the motor can be made to continuously step clockwise or counterclockwise.  The specific pattern chosen, known as the *step mode* in the **StepperControl** class, determines the size of the step and overall performance of the motor.  The speed at which changes to the current flow are made determines the speed at which the motor rotates.
 
-**StepperControl** supports two different types of step modes: digital-only modes that simply set the direction of the current flow to either fully on or off, and PWM modes that use a PWM signal to also modulate the magnitude of the current flow.
+**StepperControl** supports two different types of step modes: constant-current modes only set the direction of the current flow to either fully on or off, and PWM modes that use a PWM signal to also modulate the magnitude of the current flow.
 
+### Constant-Current Stepper Modes
+
+The most basic pattern you can use to drive a stepper motor is to sequentiually flip the direction of a constant current applied to both coils by changing the voltage across the coil wires from positive to negative.  Given two possibly choices for each coil, there are four possible combinations of current flow yielding the following pattern:
 
 <img width="290" alt="image" src="https://github.com/HomeSpan/HomeSpan/assets/68477936/8bea7031-7325-4ded-8ebd-5554d8f1e13d"><br>
 				
