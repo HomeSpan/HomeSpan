@@ -10,8 +10,11 @@ The most basic pattern you can use to drive a stepper motor is to sequentiually 
 
 <img width="290" alt="image" src="https://github.com/HomeSpan/HomeSpan/assets/68477936/8bea7031-7325-4ded-8ebd-5554d8f1e13d">
 
-Each flip of the direction of the current in one of the coils results in the motor moving a full step.  The pattern repeats after four steps, though note it is not symmetrical -  running the pattern from left to right ght to leftwill cuad tis not that same as runnign it from riBecause current is always applied to both coils (or phases) of the motor, **StepperControl** calls this pattern the **FULL_STEP_TWO_PHASE** mode.
+**StepperControl** refers to this pattern as the **FULL_STEP_TWO_PHASE** mode because each flip of the direction of the current in one of the coils (or phases) results in the motor moving a full step, and both phases are always powered.
 
+Note that though the pattern repeats after four steps, it is not symmetrical -  running the pattern from left to right causes the motor to rotate in one direction, whereas running the pattern from right to left will cause it to rotate in the opposite direction.  Many stepper motors are constructed to have 200 distinct steps, which means you need to repeat te above pattern 25 times to cause the motor to complete a single revolution.
+
+One advantage of the **FULL_STEP_TWO_PHASE** mode is that it is easy to implement since you only need a single.
 
 
 				
