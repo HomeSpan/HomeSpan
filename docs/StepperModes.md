@@ -6,9 +6,14 @@ A typical stepper motor has two sets of coils, *A* and *B*.  Applying a current 
 
 ### Constant-Current Stepper Modes
 
-The most basic pattern you can use to drive a stepper motor is to sequentiually flip the direction of a constant current applied to both coils by changing the voltage across the coil wires from positive to negative.  Given two possibly choices for each coil, there are four possible combinations of current flow yielding the following pattern:
+The most basic pattern you can use to drive a stepper motor is to sequentiually flip the direction of a constant current applied to the *A* and *B* coils by changing the voltage across their coil wires from positive to negative in the following manner:
 
-<img width="290" alt="image" src="https://github.com/HomeSpan/HomeSpan/assets/68477936/8bea7031-7325-4ded-8ebd-5554d8f1e13d"><br>
+<img width="290" alt="image" src="https://github.com/HomeSpan/HomeSpan/assets/68477936/8bea7031-7325-4ded-8ebd-5554d8f1e13d">
+
+Each flip of the direction of the current in one of the coils results in the motor moving a full step.  The pattern repeats after four steps, though note it is not symmetrical -  running the pattern from left to right ght to leftwill cuad tis not that same as runnign it from riBecause current is always applied to both coils (or phases) of the motor, **StepperControl** calls this pattern the **FULL_STEP_TWO_PHASE** mode.
+
+
+
 				
 <img width="291" alt="image" src="https://github.com/HomeSpan/HomeSpan/assets/68477936/cbf2fea5-072e-4fef-9231-504bb483b0c0"><br>
 						
