@@ -10,13 +10,17 @@ In this mode, a constant current is applied to both coils *A* and *B*. The motor
 
 Note that though the pattern repeats after four steps, it is not symmetrical -  running the pattern from left to right causes the motor to rotate in one direction, whereas running the pattern from right to left will cause it to rotate in the opposite direction.  Many stepper motors are constructed to have 200 full steps, which means you need to repeat the above pattern 25 times to cause the motor to complete a single revolution.
 
-Since in this mode each coil has only two possible states (i.e. the direction of the current flow), only one digital signal per coil is required to fully specify the stepping pattern.  However, fully flipping the direction of the current flow in a coil changes the magnetic fields very rapidly, which creates a rather clunky motion when stepping the motor.
+Since in this mode each coil has only two possible states (i.e. the direction of the current flow), only one digital signal per coil is required to implement the stepping pattern.  However, fully flipping the direction of the current flow in a coil changes the magnetic fields very rapidly, which creates a rather clunky motion when stepping the motor.
 
 ### FULL STEP ONE PHASE
 
 In this mode, a constant current is applied to only one coil, either *A* or *B*, at the same time. The motor is stepped by alternatively applying the current to each coil, while also flipping its direction as follows:
 
 <img width="250" alt="image" src="https://github.com/HomeSpan/HomeSpan/assets/68477936/cbf2fea5-072e-4fef-9231-504bb483b0c0"><br>
+
+This mode uses only half the power as the FULL STEP TWO PHASE mode since current only flows through one coil at a time.  Also, though the step size is the same, the transtition from one step to another is not as harsh since the direction of the current is never flipped while flowing.  However, since in this mode each coil has three possible states for current flow (positive, negative, and off), two digital signals per coil are required to implement the stepping pattern.
+
+### HALF STEP
 						
 <img width="434" alt="image" src="https://github.com/HomeSpan/HomeSpan/assets/68477936/ec317c77-fbd9-4641-9d50-d822b477c9ec"><br>
 
