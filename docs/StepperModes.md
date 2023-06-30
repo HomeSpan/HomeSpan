@@ -46,7 +46,7 @@ In addition to providing better motor performance, the PWM method also provides 
 
 ---
 
-[↩️](../Stepper.md) Back to the Stepper Control page
+[↩️](Stepper.md) Back to the Stepper Motor Control page
 
 
 
