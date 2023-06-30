@@ -31,6 +31,7 @@ HomeSpan requires version 2.0.0 or later of the [Arduino-ESP32 Board Manager](ht
   * Touch pads/sensors connected to an ESP32 pin (for ESP32 devices that support touch pads)
 * Integrated access to the ESP32's on-chip Remote Control peripheral for easy generation of IR and RF signals
 * Dedicated classes to control one- and two-wire addressable RGB and RGBW LEDs and LED strips
+* Dedicated classes to control stepper motors that can run smoothly in the background without interfering with HomeSpan
 * Dedicated class that faciliates seemless point-to-point communication between ESP32 devices using ESP-NOW
 * Integrated Web Log for user-defined log messages
 * Extensively-commented Tutorial Sketches taking you from the very basics of HomeSpan through advanced HomeKit topics
@@ -50,6 +51,16 @@ HomeSpan requires version 2.0.0 or later of the [Arduino-ESP32 Board Manager](ht
 
 ## ❗Latest Update - HomeSpan 1.7.3 (MM/DD/2023)
 
+* **New Stepper Motor Control!**
+
+  * adds new **StepperControl** class that allows for smooth, uninterrupted operation of one or more stepper motors running in the background while HomeSpan continues to run simultaneously in the foreground
+  * supports driver boards with or without PWM, including microstepping modes
+  * supports automatic acceleration and deceleration for smooth starts and stops
+  * motors can be set to an absolute position or instructucted to move a specified number of steps
+  * provides options to automatically enter into a "brake" state after motor stops to conserve power
+  * includes a fully worked example of a motorized window shade
+  * see [Stepper Motor Control](docs/Stepper.md) for details
+    
 * **Upgrades to HomeSpan Web Log output**
 
   * adds new method `void homeSpan.setWebLogCSS(const char *css)` that allows you to define *Custom Style Sheets (CSS)* for the Web Log text, tables, and background
