@@ -109,6 +109,59 @@ The **StepperControl** class provides the following methods to operate and contr
   * it is possible, though not recommended, to change the step type *mode* while the motor is turning
   * see [Stepper Motor Modes](StepperModes.md) for a brief primer on how stepper motors are typically driven
 
+## Example Sketches
+
+Below is a simple sketch demonstrating the above methods:
+
+```C++
+// StepperControl Example using TB6612-based Driver Board with HALF STEP PWM MODE
+
+#include "Stepper_TB6612.h"   // include the driver for a TB6612 chip
+
+StepperControl *motor;        // create a global pointer to StepperControl so it can be accessed in both setup() and loop()
+
+///////////////////
+
+void setup() {
+
+  Serial.begin(115200);
+  delay(1000);
+  Serial.printf("\nHomeSpan Stepper Control\n\n");
+
+  motor=new Stepper_TB6612(23,32,22,14,33,27);      // instantiate the motor object with optional PWM pin specified (33 and 27)
+
+  motor->setStepType(StepperControl::HALF_STEP);    // set the mode to HALF STEP, which means 400 steps are needed for a complete revolution of a 200-step motor
+  motor->setAccel(10,20);                           // add acceleration parameters: extra delay is 10x, decaying over 20 steps
+
+  Serial.printf("Moving motor 400 steps and waiting until motor stops...\n");
+  
+  motor->move(-400,5);              // move the motor -400 steps (1 revolution), with 5ms between steps.
+  while(motor->stepsRemaining());   // wait until there no remaining steps
+
+  Serial.printf("Moving motor to absolute position of +1200 (i.e reverse direction for 1600 steps, or 4 revolutions) without waiting...\n");
+  
+  motor->moveTo(1200,2,StepperControl::BRAKE);    // move the motor to an absolute position of 1200 steps with 2ms between steps; enter brake state when done
+
+  // Motor will continue moving in background even once setup() exits and loop() below starts
+}
+
+///////////////////
+
+void loop(){
+  
+  Serial.printf("Motor has %d remaining steps\n",motor->stepsRemaining());
+  
+  delay(1000);      // motor is unaffected by delay()
+  
+  if(motor->position()==1200){
+    Serial.printf("Motor has reached final position and is now stopped.\n");
+    while(1);
+  }
+}
+```
+
+A fully worked example showing how to use the *StepperControl* class within a complete HomeSpan sketch to control a Motorize Window Shade can be found in the Arduino IDE under [*File → Examples → HomeSpan → Other Examples → StepperMotorControl*](../examples/Other%20Examples/StepperMotorControl).
+
 ---
 
 [↩️](../README.md) Back to the Welcome page
