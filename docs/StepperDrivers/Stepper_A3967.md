@@ -1,5 +1,8 @@
 # Stepper_A3967
 
+TO BE EDITED
+
+
 This is a derived class of **StepperControl** designed to operate stepper motors driven by a [Toshiba TB6612](https://www.adafruit.com/product/2448) chip, either with or without the use of ESP32 PWM pins.  To use, add `#include "extras/Stepper_TB6612.h"` to the top of your sketch.
 
 The Toshiba TB6612 is a generic motor driver providing direct control of two full H-bridges.  Wiring is as follows (using Toshiba's names for each pin):
