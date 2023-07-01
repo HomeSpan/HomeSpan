@@ -18,14 +18,14 @@ The Toshiba TB6612 is a generic motor driver providing direct control of two ful
   * *STBY* - connect to +3.3V on ESP32 to pull high
  
 The **Stepper_TB6612** class includes two constructors:
-  * `Stepper_TB6612(int AIN1, int AIN2, int BIN1, int BIN2 [,{uint32_t priority, uint32_t cpu}] )`
+  * `Stepper_TB6612(int AIN1, int AIN2, int BIN1, int BIN2)`
     * controls the driver board using only 4 digital pins from the ESP32, where the parameters specify the pin numbers.  Supports the following step type modes:
       
       * FULL_STEP_ONE_PHASE
       * FULL_STEP_TWO_PHASE
       * HALF_STEP
       
-  * `Stepper_TB6612(int AIN1, int AIN2, int BIN1, int BIN2, int PWMA, int PWMB, [,{uint32_t priority, uint32_t cpu}])`
+  * `Stepper_TB6612(int AIN1, int AIN2, int BIN1, int BIN2, int PWMA, int PWMB)`
     * controls the driver board using 4 digital pins and 2 PWM pins from the ESP32, where the parameters specify the pin numbers.  Supports the following step type modes:
       
       * FULL_STEP_ONE_PHASE
@@ -33,9 +33,7 @@ The **Stepper_TB6612** class includes two constructors:
       * HALF_STEP
       * QUARTER_STEP
       * EIGHTH_STEP
-        
-Both constructors support an *optional* final parameter consisting of a *brace-enclosed* pair of numbers.  The first number in the braces specifies the *priority* of the background task used to control the stepper motor.  The second number in the braces specifies the CPU (0 or 1) that **StepperControl** will use to run the background control task (this number is ignored for single-processor chips).  The default (and recommended) value of this optional final parameter is {1,0}.  
-        
+                
 ---
 
 [↩️](../Stepper.md) Back to the Stepper Motor Control page
