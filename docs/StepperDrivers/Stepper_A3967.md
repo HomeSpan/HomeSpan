@@ -1,6 +1,6 @@
 # Stepper_A3967
 
-This is a derived class of **StepperControl** designed to operate stepper motors driven by an [Allegro A3967](https://www.sparkfun.com/products/12779) chip.  To use, add `#include "extras/Stepper_A3967.h"` to the top of your sketch.
+This is a derived class of **StepperControl** designed to operate stepper motors driven by an [Allegro A3967](https://cdn.sparkfun.com/datasheets/Robotics/A3967-Datasheet.pdf) chip.  To use, add `#include "extras/Stepper_A3967.h"` to the top of your sketch.
 
 The Allegro A3967 is a specialized driver designed for stepper motors. It contains a built-in PWM generator and pre-programmed stepping modes.  Wiring for the [Sparkfun EasyDriver Stepper Motor Board](https://learn.sparkfun.com/tutorials/easy-driver-hook-up-guide?_ga=2.152816825.1841726212.1688220137-156607829.1686369274) that uses this chip is as follows:
 
