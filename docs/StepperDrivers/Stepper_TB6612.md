@@ -2,7 +2,7 @@
 
 This is a derived class of **StepperControl** designed to operate stepper motors driven by a [Toshiba TB6612](https://cdn-shop.adafruit.com/datasheets/TB6612FNG_datasheet_en_20121101.pdf) chip, either with or without the use of ESP32 PWM pins.  To use, add `#include "extras/Stepper_TB6612.h"` to the top of your sketch.
 
-The Toshiba TB6612 is a generic motor driver providing direct control of two full H-bridges.  Wiring for the [Adafruit Motor Driver](https://learn.adafruit.com/adafruit-tb6612-h-bridge-dc-stepper-motor-driver-breakout) board that uses this chip is as follows:
+The Toshiba TB6612 is a generic motor driver providing direct control of two full H-bridges.  Wiring for the [Adafruit TB6612 1.2A DC/Stepper Motor Driver Breakout Board](https://learn.adafruit.com/adafruit-tb6612-h-bridge-dc-stepper-motor-driver-breakout) that uses this chip is as follows:
 
 #### **Power Connections**
   * *VCC* - connect to +3.3V on ESP32
