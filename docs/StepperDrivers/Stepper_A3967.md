@@ -13,7 +13,7 @@ The Allegro A3967 is a specialized driver designed for stepper motors. It contai
 #### **Control Connections**
   * *ENABLE* - connect to a digital pin on the ESP32 - used to enable/disable to motor driver
   * *STEP, DIR* - connect to two digital pins on the ESP32 - used to step the motor and set the direction
-  * *MS1, MS2* - connect to two digital pins on the ESP32 - used set the step mode
+  * *MS1, MS2* - connect to two digital pins on the ESP32 - used to set the step type mode
   * *SLEEP, RESET* - already pulled high on the EasyDriver board, so no connection neeed.  If using a different driver board, ensure these pins are pulled high, else connect to VCC
   * *PFD* - not used
  
