@@ -2,15 +2,15 @@
 
 This is a derived class of **StepperControl** designed to operate stepper motors driven by a [Toshiba TB6612](https://www.adafruit.com/product/2448) chip, either with or without the use of ESP32 PWM pins.  To use, add `#include "extras/Stepper_TB6612.h"` to the top of your sketch.
 
-The Toshiba TB6612 is a generic motor driver providing direct control of two full H-bridges.  Wiring for the [Adafruit Motor Driver board](https://learn.adafruit.com/adafruit-tb6612-h-bridge-dc-stepper-motor-driver-breakout) that uses this chip is as follows:
+The Toshiba TB6612 is a generic motor driver providing direct control of two full H-bridges.  Wiring for the [Adafruit Motor Driver](https://learn.adafruit.com/adafruit-tb6612-h-bridge-dc-stepper-motor-driver-breakout) board that uses this chip is as follows:
 
 #### **Power Connections**
   * *VCC* - connect to +3.3V on ESP32
-  * *VM* - connect to external DC power supply that will drive stepper motor (5-13V)
-  * *GND* (and *PGND1/PGND2*) - connect to GND on the ESP32, and to ground of external DC power supply
+  * *VM+* - connect to external DC power supply that will drive stepper motor (5-13V)
+  * *GND* - connect to GND on the ESP32, and to ground of external DC power supply
 #### **Motor Connections**
-  *  *AO1, AO2* - connect to the "A" coil of the stepper motor
-  *  *BO1, BO2* - connect to the "B" coil of the stepper motor
+  *  *MOTORA* - connect to the "A" coil of the stepper motor
+  *  *MOTORB* - connect to the "B" coil of the stepper motor
 #### **Control Connections**
   * *AIN1, AIN2* - connect to two digital pins on the ESP32 - used to control direction and state of coil *A*
   * *BIN1, BIN2* - connect to two digital pins on the ESP32 - used to control direction and state of coil *B*
