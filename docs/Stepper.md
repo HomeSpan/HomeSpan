@@ -20,7 +20,7 @@ The HomeSpan class that contains all the methods to control a stepper motor is c
   * Contructor: `Stepper_A3967(int M1, int M2, int STEP, int DIR, int ENABLE)`
     * controls the driver board using 5 digital pins from the ESP32
     * microstepping is built into the driver board (separate ESP32 PWM pins are not needed)
- 
+
 Click on either of the driver-specific classes above for complete details on how to wire and configure a particular driver board.
 
 ## StepperControl Methods
@@ -108,6 +108,12 @@ The **StepperControl** class provides the following methods to operate and contr
   * the quarter- and eighth-step modes require microstepping PWM functionality (either via ESP32 pins, or onboard the driver chip)
   * it is possible, though not recommended, to change the step type *mode* while the motor is turning
   * see [Stepper Motor Modes](StepperModes.md) for a brief primer on how stepper motors are typically driven
+
+### CPU and Task Priority
+
+All **StepperControl** constructors support an *optional* final parameter consisting of a *brace-enclosed* pair of numbers (not shown above).  The first number in the braces specifies the *priority* of the background task used to control the stepper motor.  The second number in the braces specifies the CPU (0 or 1) that **StepperControl** will use to run the background control task (this number is ignored for single-processor chips).  The default (and recommended) value of this optional final parameter is {1,0}.  Example:
+
+* `new Stepper_TB6612(23,32,22,14,{0,1})` instantiates control of a stepper motor driven by a TB6612 chip, where ESP32 pins 23, 32, 22, and 14 are connected to the AIN1, AIN2, BIN1, and BIN2 pins on the TB6612, respectively; the priority of the background task is set to 0; and the task will be run on cpu 1 (applicable only for a dual-processor chip) 
 
 ## Example Sketches
 
