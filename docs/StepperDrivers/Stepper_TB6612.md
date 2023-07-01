@@ -12,8 +12,8 @@ The Toshiba TB6612 is a generic motor driver providing direct control of two ful
   *  *AO1, AO2* - connect to the "A" coil of the stepper motor
   *  *BO1, BO2* - connect to the "B" coil of the stepper motor
 #### **Control Connections**
-  * *AIN1, AIN2* - connect to two digital pins on the ESP32 - will control direction and state of coil *A*
-  * *BIN1, BIN2* - connect to two digital pins on the ESP32 - will control direction and state of coil *B*
+  * *AIN1, AIN2* - connect to two digital pins on the ESP32 - used to control direction and state of coil *A*
+  * *BIN1, BIN2* - connect to two digital pins on the ESP32 - used to control direction and state of coil *B*
   * *PWMA, PWMB* - if using PWM, connect to two digital pins on the ESP32; if not, connect to +3.3V on ESP32 to pull high
   * *STBY* - connect to +3.3V on ESP32 to pull high
  
