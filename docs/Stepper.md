@@ -5,7 +5,8 @@ HomeSpan includes dedicated classes that provide for easy control of a stepper m
 The HomeSpan class that contains all the methods to control a stepper motor is called **StepperControl**.  However, this is a virtual class and cannot be instantiated directly.  Instead you instantiate stepper motor objects using driver-specific child-classes (derived from **StepperControl**) that contain all the logic to configure and operate a particular driver board.  Each child class supports one or more constructors allowing you to specify which output pins on your ESP32 device will be connected to the required pins on your driver board:
 
 * **[Stepper_TB6612](StepperDrivers/Stepper_TB6612.md)**
-  * This class is used to operate stepper motors driven by a [Toshiba TB6612](https://www.adafruit.com/product/2448) chip, either with or without the use of ESP32 PWM pins
+  * This class is used to operate stepper motors driven by a [Toshiba TB6612](https://cdn-shop.adafruit.com/datasheets/TB6612FNG_datasheet_en_20121101.pdf) chip, either with or without the use of ESP32 PWM pins
+  * See, for example, the [Adafruit TB6612 1.2A DC/Stepper Motor Driver Breakout Board](https://www.adafruit.com/product/2448)
   * To use, add the following to the top of your sketch: `#include "extras/Stepper_TB6612.h"`
   * Constructor 1: `Stepper_TB6612(int AIN1, int AIN2, int BIN1, int BIN2)`
     * controls the driver board using only 4 digital pins from the ESP32
