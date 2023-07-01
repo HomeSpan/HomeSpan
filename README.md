@@ -71,6 +71,11 @@ HomeSpan requires version 2.0.0 or later of the [Arduino-ESP32 Board Manager](ht
 
   * the process for retrieving the time and date from an NTP server upon booting now runs in the background as a separate task
   * HomeSpan is no longer blocked from running during the NTP query
+
+* **Adds new methods to disable HomeSpan's use of the USB Serial port**
+  
+  * new Log Level, -1, causes HomeSpan to suppress all OUTPUT messages
+  * new homeSpan method, `setSerialInputDisable(boolean val)` disables/re-enables HomeSpan's reading of CLI commands INPUT into the Arduino Serial Monitor 
     
 See [Releases](https://github.com/HomeSpan/HomeSpan/releases) for details on all changes and bug fixes included in this update.
 
