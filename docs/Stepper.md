@@ -16,7 +16,8 @@ The HomeSpan class that contains all the methods to control a stepper motor is c
     * the addition of the PWM pins provides the ability to microstep the motor
    
 * **[Stepper_A3967](StepperDrivers/Stepper_A3967.md)**
-  * This class is used to operate stepper motors driven by an [Allegro A3967](https://www.sparkfun.com/products/12779) chip
+  * This class is used to operate stepper motors driven by an [Allegro A3967](https://cdn.sparkfun.com/datasheets/Robotics/A3967-Datasheet.pdf) chip
+  * See, for example, the [Sparkfun EasyDriver Stepper Motor Board](https://www.sparkfun.com/products/12779)
   * To use, add the following to the top of your sketch: `#include "extras/Stepper_A3967.h"`
   * Contructor: `Stepper_A3967(int M1, int M2, int STEP, int DIR, int ENABLE)`
     * controls the driver board using 5 digital pins from the ESP32
