@@ -135,7 +135,7 @@ struct Stepper_TB6612 : StepperControl {
 
 //////////////////////////
 
-  void setStepType(int mode) override {
+  StepperControl *setStepType(int mode) override {
 
     switch(mode){
       case FULL_STEP_ONE_PHASE:
@@ -156,7 +156,7 @@ struct Stepper_TB6612 : StepperControl {
       case QUARTER_STEP:
         if(!pwmA){
           ESP_LOGE(STEPPER_TAG,"QUARTER_STEP requires PWM pins");
-          return;
+          return(this);
         }
         phase=0;
         nPhases=16;
@@ -165,7 +165,7 @@ struct Stepper_TB6612 : StepperControl {
       case EIGHTH_STEP:
         if(!pwmA){
           ESP_LOGE(STEPPER_TAG,"EIGHTH_STEP requires PWM pins");
-          return;
+          return(this);
         }
         phase=0;
         nPhases=32;
@@ -174,6 +174,7 @@ struct Stepper_TB6612 : StepperControl {
       default:
         ESP_LOGE(STEPPER_TAG,"Unknown StepType=%d",mode);
     }
+    return(this);
   }
   
 };

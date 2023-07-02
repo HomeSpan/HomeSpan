@@ -90,8 +90,8 @@ class StepperControl {
   public:
 
   StepperControl(uint32_t priority=1, uint32_t cpu=0);
-  virtual void setStepType(int mode){};
-  void setAccel(float accelSize, float accelSteps);
+  virtual StepperControl *setStepType(int mode){return(this);};
+  StepperControl *setAccel(float accelSize, float accelSteps);
   void move(int nSteps, uint32_t msDelay, endAction_t endAction=NONE);
   void moveTo(int nPosition, uint32_t msDelay, endAction_t endAction=NONE);
   int position();

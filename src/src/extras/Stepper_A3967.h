@@ -91,7 +91,7 @@ struct Stepper_A3967 : StepperControl {
 
 //////////////////////////
 
-  void setStepType(int mode) override {
+  StepperControl *setStepType(int mode) override {
     switch(mode){
       case FULL_STEP_TWO_PHASE:
         digitalWrite(m1Pin,LOW);
@@ -112,6 +112,7 @@ struct Stepper_A3967 : StepperControl {
       default:
         ESP_LOGE(STEPPER_TAG,"Unknown StepType=%d",mode);
     }
+    return(this);
   }
   
 };

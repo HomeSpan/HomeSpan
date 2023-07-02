@@ -29,8 +29,13 @@
 // as well as compile and test from this point.  This file is ignored when the library is included in other sketches.
 
 #include "Stepper_TB6612.h"   // include the driver for a TB6612 chip
+#include "Stepper_A3967.h"
 
-StepperControl *motor;        // create a global pointer to StepperControl so it can be accessed in both setup() and loop()
+StepperControl *bigMotor;
+StepperControl *smallMotor;
+
+#define BIG_MOTOR_POSITION    1600
+#define SMALL_MOTOR_POSITION  2064
 
 ///////////////////
 
@@ -40,33 +45,27 @@ void setup() {
   delay(1000);
   Serial.printf("\nHomeSpan Stepper Control\n\n");
 
-  motor=new Stepper_TB6612(23,32,22,14,33,27);      // instantiate the motor object (with PWM pins 33 and 27 specified)
+  bigMotor=(new Stepper_TB6612(23,32,22,14,33,27))->setStepType(StepperControl::HALF_STEP)->setAccel(10,20);;
+  smallMotor=new Stepper_A3967(17,16,19,18,21);
 
-  motor->setStepType(StepperControl::HALF_STEP);    // set the mode to half-step, which means 400 steps are needed for a complete revolution for a 200-step motor
-  motor->setAccel(10,20);                           // add acceleration parameters of 10x spread of 20 steps
-
-  Serial.printf("Moving motor 400 steps and waiting until motor stops...\n");
-  
-  motor->move(-400,5);              // move the motor -400 steps (1 revolution), with 2ms between steps.
-  while(motor->stepsRemaining());   // wait until there no remaining steps
-
-  Serial.printf("Moving motor to absolute position of +1200 (reversing a total of 1600 steps, or 4 revolutions) without waiting...\n");
-  
-  motor->moveTo(1200,2,StepperControl::BRAKE);    // move the motor to an absolute position of 1200 steps with 3ms between steps; enter brake state when done
-
-  // Motor will continue moving in background even once setup() exits and loop() below starts
+//  bigMotor->setStepType(StepperControl::HALF_STEP);
+//  bigMotor->setAccel(10,20);
 }
 
 ///////////////////
 
 void loop(){
-  
-  Serial.printf("Motor has %d remaining steps\n",motor->stepsRemaining());
-  
-  delay(1000);      // motor is unaffected by delay()
-  
-  if(motor->position()==1200){
-    Serial.printf("Motor has reached final position and is now stopped.\n");
-    while(1);
-  }
+
+  if(smallMotor->position()==0)
+    smallMotor->moveTo(SMALL_MOTOR_POSITION,2);
+  else if(smallMotor->position()==SMALL_MOTOR_POSITION)
+    smallMotor->moveTo(0,2);
+
+  if(bigMotor->position()==0)
+    bigMotor->moveTo(BIG_MOTOR_POSITION,4);
+  else if(bigMotor->position()==BIG_MOTOR_POSITION)
+    bigMotor->moveTo(0,4);    
+
+  delay(1000);
+  Serial.printf("Small Motor: %d     Big Motor %d\n",smallMotor->stepsRemaining(),bigMotor->stepsRemaining());
 }

@@ -39,19 +39,20 @@ StepperControl::StepperControl(uint32_t priority, uint32_t cpu){
 
 //////////////////////////
 
-void StepperControl::setAccel(float accelSize, float accelSteps){
+StepperControl *StepperControl::setAccel(float accelSize, float accelSteps){
   if(accelSize<0.0){
     ESP_LOGE(STEPPER_TAG,"accelSize cannot be less than 0.0");
-    return;
+    return(this);
   }
   
   if(accelSteps<1.0){
     ESP_LOGE(STEPPER_TAG,"accelSteps cannot be less than 1.0");
-    return;
+    return(this);
   }
 
   this->accelSize=accelSize;
   this->accelSteps=accelSteps;
+  return(this);
 }
 
 //////////////////////////
@@ -62,7 +63,7 @@ void StepperControl::move(int nSteps, uint32_t msDelay, endAction_t endAction){
     return;
   }
   
-  upLink_t upLinkData = { .nSteps=nSteps, .msDelay=msDelay, .action=MOVE, endAction=endAction };
+  upLink_t upLinkData = { .nSteps=nSteps, .msDelay=msDelay, .action=MOVE, .endAction=endAction };
   xQueueOverwrite(upLinkQueue,&upLinkData);
   waitForAck();
 }
@@ -138,7 +139,7 @@ void StepperControl::enable(){
 
 void StepperControl::motorTask(void *args){
   StepperControl *motor = (StepperControl *)args;
-  upLink_t upLinkData;
+  upLink_t upLinkData = { .nSteps=0, .msDelay=10, .action=MOVE, .endAction=NONE };
   downLink_t downLinkData;
   boolean running=false;
 
