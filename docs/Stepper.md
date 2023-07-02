@@ -174,7 +174,9 @@ void loop(){
 }
 ```
 
-A fully worked example showing how to use the *StepperControl* class within a complete HomeSpan sketch to control a Motorize Window Shade can be found in the Arduino IDE under [*File → Examples → HomeSpan → Other Examples → StepperMotorControl*](../examples/Other%20Examples/StepperMotorControl).
+### Motorized Window Shade Example
+
+A fully worked example showing how to use the *StepperControl* class within a complete HomeSpan sketch to control a Motorize Window Shade using both the TB6612 and A3967 driver boards can be found in the Arduino IDE under [*File → Examples → HomeSpan → Other Examples → MotorizedWindowShade*](../examples/Other%20Examples/MotorizedWindowShade).
 
 ## Creating your own **StepperControl** Driver
 
