@@ -84,7 +84,7 @@ The **StepperControl** class provides the following methods to operate and contr
   * calls to `stepsRemaining()` after calling `moveTo()` work as expected - the value returned will be the number of steps remaining until the motor reaches the *nPosition* specified
   * note that `moveTo(nPosition)` is mathematically the same as `move(nPosition-position())`, but the `moveTo()` method is more accurate since it computes the position of the motor directly inside the task that is actually controlling the motor
  
-* `void setAccel(float accelSize, float accelSteps)`
+* `StepperControl *setAccel(float accelSize, float accelSteps)`
   * adds an additional set of delays between steps so that the motor gradually accelerates when it starts and decelerates when it stops
   
     * *accelSize* - the maximum size of the additional delay, expressed as a factor to be multiplied by the *msDelay* parameter used in `move()` and `moveTo()`.  Must be a value greater or equal to 0.  The larger the value, the greater the magnitude of the acceleration and deceleration. A value of zero yields no acceleration/deceleration
@@ -93,10 +93,14 @@ The **StepperControl** class provides the following methods to operate and contr
       
   * the total delay between steps (when *stepsRemaining* is not zero) is given by the following formula:
   $$totalDelay = msDelay \times (1 + accelSize \times (e^{\frac{-\mid nSteps-stepsRemaining \mid}{accelSteps}} + e^{\frac{-(\mid stepsRemaining \mid - 1)}{accelSteps}}))$$
+    
+  * example: `myMotor.setAccel(10,20); myMotor.move(200,5);`
+    * yields a 55ms delay after the first step, a 52ms delay after the second step, a 50ms delay after the third step, and so forth, until at step 82 the additional delay has fully decayed such that the delay between steps remains fixed at the 5ms *msDelay* parameter specified.  Then, starting at step 118 (with 82 steps remaining) the delay increases to 6ms; at step 134 it further increases to 7ms, and so forth, until the delay reaches its maxmimum of 55ms once again at step 199 just before the motor stops turning at step 200
 
-  * example: `myMotor.setAccel(10,20); myMotor.move(200,5);` yields a 55ms delay after the first step, a 52ms delay after the second step, a 50ms delay after the third step, and so forth, until at step 82 the additional delay has fully decayed such that the delay between steps remains fixed at the 5ms *msDelay* parameter specified.  Then, starting at step 118 (with 82 steps remaining) the delay increases to 6ms; at step 134 it further increases to 7ms, and so forth, until the delay reaches its maxmimum of 55ms once again at step 199 just before the motor stops turning at step 200
+  * returns pointer to itself so methods can be daisy-chained
+    * example: `myMotor=(new Stepper_TB6612(23,32,22,14,33,27))->setAccel(10,20);`
           
-* `void setStepType(int mode)`
+* `StepperControl *setStepType(int mode)`
   * sets the step type of the motor to one of the following *mode* enumerations:
       
     * **StepperControl::FULL_STEP_ONE_PHASE** (0)      
@@ -105,9 +109,11 @@ The **StepperControl** class provides the following methods to operate and contr
     * **StepperControl::QUARTER_STEP** (4)
     * **StepperControl::EIGHTH_STEP** (8)      
   * *mode* can be specified using either the name of the enumeration or its integer equivalent
+  * returns pointer to itself so methods can be daisy-chained
+    * example: `myMotor=(new Stepper_TB6612(23,32,22,14,33,27))->setStepType(StepperControl::HALF_STEP);`
   * smaller step types provide for smoother operation of the motor, but require more steps to turn a complete revolution
-  * not all *modes* are supported by all driver chips
-  * the quarter- and eighth-step modes require microstepping PWM functionality (either via ESP32 pins, or onboard the driver chip)
+    * not all *modes* are supported by all driver chips
+    * the quarter- and eighth-step modes require microstepping PWM functionality
   * it is possible, though not recommended, to change the step type *mode* while the motor is turning
   * see [Stepper Motor Modes](StepperModes.md) for a brief primer on how stepper motors are typically driven
 
