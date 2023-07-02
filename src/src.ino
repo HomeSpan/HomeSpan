@@ -47,6 +47,17 @@ struct LED_Service : Service::LightBulb {
       
 //////////////////////////////////////
 
+struct reverseLED : Blinkable {
+
+  int pin;
+  
+  reverseLED(int pin) : pin{pin} {pinMode(pin,OUTPUT);digitalWrite(pin,1);}
+  void on() override {digitalWrite(pin,LOW);}
+  void off() override {digitalWrite(pin,HIGH);}
+  int getPin() override {return(pin);}
+};
+
+//////////////////////////////////////
 
 void setup() {
   
@@ -56,8 +67,8 @@ void setup() {
 //  homeSpan.setSerialInputDisable(true);
   homeSpan.enableOTA();
 
-  homeSpan.setStatusPin(13);
-  homeSpan.setStatusAutoOff(20);
+  homeSpan.setStatusDevice(new reverseLED(13));
+  homeSpan.setStatusAutoOff(30);
 
   homeSpan.begin(Category::Lighting,"HomeSpan LED");
   
