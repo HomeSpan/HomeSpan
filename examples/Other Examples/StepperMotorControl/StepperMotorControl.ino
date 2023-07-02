@@ -44,22 +44,25 @@
 
 struct DEV_WindowShade : Service::WindowCovering {
 
-  SpanCharacteristic *current;
-  SpanCharacteristic *target;
+//  SpanCharacteristic *current;
+//  SpanCharacteristic *target;
+
+  Characteristic::CurrentPosition currentPos{0,true};
+  Characteristic::TargetPosition targetPos{0,true};
   
   Stepper_TB6612 *motor;          // create pointer to TB6612 motor controller
 
   DEV_WindowShade(int a1, int a2, int b1, int b2) : Service::WindowCovering(){
         
-    current=new Characteristic::CurrentPosition(0,true);    
-    target=new Characteristic::TargetPosition(0,true);
+//    current=new Characteristic::CurrentPosition(0,true);    
+//    target=new Characteristic::TargetPosition(0,true);
     
     motor=new Stepper_TB6612(a1, a2, b1, b2);    // instantiate motor using pins specified in set-up below
     motor->setAccel(10,20);                      // set acceleration parameters
         
     LOG0("Configuring Motorized Window Shade with input pins: A1=%d, A2=%d, B1=%d, B2=%d\n",a1,a2,b1,b2);
-    LOG0("Initial Position: %d\n",current->getVal());
-    motor->setPosition(current->getVal()*10);
+    LOG0("Initial Position: %d\n",currentPos.getVal());
+    motor->setPosition(currentPos.getVal()*10);
   }
 
   ///////////
@@ -71,8 +74,8 @@ struct DEV_WindowShade : Service::WindowCovering {
     
     // Specify that motor should enter the BRAKE state upon reaching to desired position.
     
-    motor->moveTo(target->getNewVal()*10,5,Stepper_TB6612::BRAKE);
-    LOG1("Setting Shade Position=%d\n",target->getNewVal());
+    motor->moveTo(targetPos.getNewVal()*10,5,Stepper_TB6612::BRAKE);
+    LOG1("Setting Shade Position=%d\n",targetPos.getNewVal());
     return(true);  
   }
 
@@ -83,9 +86,9 @@ struct DEV_WindowShade : Service::WindowCovering {
     // If the current window shade position does NOT equal the target position, BUT the motor has stopped moving,
     // we must have reached the target position, so set the current position equal to the target position
     
-    if(current->getVal()!=target->getVal() && !motor->stepsRemaining()){
-      current->setVal(target->getVal());
-      LOG1("Motor Stopped at Shade Position=%d\n",current->getVal());
+    if(currentPos.getVal()!=targetPos.getVal() && !motor->stepsRemaining()){
+      currentPos.setVal(targetPos.getVal());
+      LOG1("Motor Stopped at Shade Position=%d\n",currentPos.getVal());
     }    
   }
   
