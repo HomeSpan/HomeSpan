@@ -184,7 +184,7 @@ If neither of the above motor driver classes works for your specific chip or dri
 * `void onEnable()` - contains the logic that enables the motor driver
 * `void onDisable()` - contains the logic that disables the motor driver
 * `void onBrake()` - contains the logic that puts the motor into a short brake state
-* `void setStepType(int mode)` - contains the logic to set the step type mode based on the *mode* parameter
+* `StepperControl *setStepType(int mode)` - contains the logic to set the step type mode based on the *mode* parameter
 
 Only the first method, `onStep()`, is required to be defined.  You can leave any of the other methods undefined if they are not applicable for your specific driver board.  You can of course create additional methods to reflect any other features your driver board may support.
 
@@ -223,7 +223,7 @@ struct Stepper_A3967 : StepperControl {
 
 //////////////////////////
 
-  void onStep(boolean direction){
+  void onStep(boolean direction) override {
     digitalWrite(dirPin,direction);
     digitalWrite(stepPin,HIGH);
     digitalWrite(stepPin,LOW);      
@@ -243,7 +243,7 @@ struct Stepper_A3967 : StepperControl {
 
 //////////////////////////
 
-  void setStepType(int mode) override {
+  StepperControl *setStepType(int mode) override {
     switch(mode){
       case FULL_STEP_TWO_PHASE:
         digitalWrite(m1Pin,LOW);
@@ -264,6 +264,7 @@ struct Stepper_A3967 : StepperControl {
       default:
         ESP_LOGE(STEPPER_TAG,"Unknown StepType=%d",mode);
     }
+    return(this);
   }
   
 };
