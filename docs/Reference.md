@@ -37,10 +37,11 @@ The following **optional** `homeSpan` methods override various HomeSpan initiali
 * `void setStatusPin(uint8_t pin)`
   * sets the ESP32 pin to use for the HomeSpan Status LED
   * assumes a standard LED will be connected to *pin*
-  * if neither this method nor `setStatusPixel()` is called, HomeSpan will assume there is no Status LED
+  * if neither this method nor any equivalent method is called, HomeSpan will assume there is no Status LED
   
 * `void setStatusPixel(uint8_t pin, float h=0, float s=100, float v=100)`
   * sets the ESP32 pin to use for the HomeSpan Status LED
+  * this method is an *alternative* to using `setStatusPin()` above
   * assumes an RGB NeoPixel (or equivalent) will be connected to *pin*
   * works well with ESP32 boards that have a built-in NeoPixel LED, though adding an external NeoPixel is fine
   * users can optionally specify the color HomeSpan will use with the NeoPixel by providing the following HSV values:
@@ -49,7 +50,14 @@ The following **optional** `homeSpan` methods override various HomeSpan initiali
     * v = Brightness percentage from 0-100
   * color defaults to *red* if unspecified
   * example: `homeSpan.setStatusPixel(8,120,100,20)` sets the Status LED to light green using a NeoPixel attached to pin 8 
-  * if neither this method nor `setStatusPin()` is called, HomeSpan will assume there is no Status LED
+  * if neither this method nor any equivalent method is called, HomeSpan will assume there is no Status LED
+
+* `void setStatusDevice(Blinkable *sDev)`
+  * sets the Status LED to a user-specified Blinkable device, *sDev*
+  * this method is an *alternative* to using either `setStatusPin()` or `setStatusPixel()` above
+  * see [Blinkable](Blinkable.md) for details on how to create generic Blinkable devices
+  * useful when using an LED connected to a pin expander, or other specialized driver, as the Status LED
+  * if neither this method nor any equivalent method is called, HomeSpan will assume there is no Status LED
 
 * `void setStatusAutoOff(uint16_t duration)`
   * sets Status LED to automatically turn off after *duration* seconds
