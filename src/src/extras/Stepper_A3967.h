@@ -71,7 +71,7 @@ struct Stepper_A3967 : StepperControl {
 
 //////////////////////////
 
-  void onStep(boolean direction){
+  void onStep(boolean direction) override {
     digitalWrite(dirPin,direction);
     digitalWrite(stepPin,HIGH);
     digitalWrite(stepPin,LOW);      

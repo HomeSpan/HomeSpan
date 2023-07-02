@@ -109,7 +109,7 @@ struct Stepper_TB6612 : StepperControl {
 
 //////////////////////////
 
-  void onStep(boolean direction){
+  void onStep(boolean direction) override {
     if(direction)
       phase=(phase+1)%nPhases;
     else
