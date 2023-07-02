@@ -57,7 +57,7 @@ struct DEV_WindowShade : Service::WindowCovering {
 
   DEV_WindowShade(StepperControl *mainMotor, StepperControl *slatMotor) : Service::WindowCovering(){
 
-    this->mainMotor=mainMotor;
+    this->mainMotor=mainMotor;                          // save pointers to the motors
     this->slatMotor=slatMotor;
            
     mainMotor->setAccel(10,20);                         // set acceleration parameters for main motor
@@ -88,8 +88,9 @@ struct DEV_WindowShade : Service::WindowCovering {
       
       // Move motor to absolute position, assuming 2064 steps per revolution and 1/2 revolution for full travel of slat tilt in either direction
       // Must multiply targetPos, which ranges from -90 to 90, by 11.47 to scale number of motor steps needed
+      // Note this driver board for this motor does not support a "short brake" state
     
-      slatMotor->moveTo(targetTilt.getNewVal()*11.47,5,StepperControl::BRAKE);
+      slatMotor->moveTo(targetTilt.getNewVal()*11.47,5);
       LOG1("Setting Shade Position=%d\n",targetTilt.getNewVal());
     }
 
@@ -124,6 +125,9 @@ void setup() {
   Serial.begin(115200);
 
   homeSpan.begin(Category::WindowCoverings,"Motorized Shade");
+
+  // MAKE SURE TO CHANGE THE PINS NUMBERS BELOW TO MATCH YOUR ESP32 DEVICE!!!
+  // THE PINS NUMBER SPECIFIED IN THIS EXAMPLE WORK WITH THE ORIGINAL ESP32, BUT WILL LIKELY CRASH AN ESP32-S2, -S3, or -C3.
 
   new SpanAccessory();                                                          
     new Service::AccessoryInformation();
