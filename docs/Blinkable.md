@@ -1,12 +1,12 @@
 # Creating a Custom Status LED with the Blinkable Interface
 
-The HomeSpan Status LED conveys information about the device to the user through different blinking patterns.  The *homeSpan* `setStatusPin()` and `setStatusPixel()` methods allow you to choose, respectively, either a standard LED or a NeoPixel LED as the Status LED.  However, the Status LED can be set to any object that implements the **Blinkable** interface[^1] using the *homeSpan* method `setStatusDevice(Blinkable *sDev)`, where *sDev* is a Blinkable object.
+The HomeSpan Status LED conveys information about the state of HomeSpan to the user through different blinking patterns.  The *homeSpan* `setStatusPin()` and `setStatusPixel()` methods allow you to choose, respectively, either a standard LED or a NeoPixel LED as the Status LED.  However, the Status LED can be set to any object that implements the **Blinkable** interface[^1] using the *homeSpan* method `setStatusDevice(Blinkable *sDev)`, where *sDev* is a Blinkable object.
 
-To create your own Blinkable object, start by creating a child class derived from **Blinkable**.  Next, add a constructor that defines the pins and performs any initializations if needed.  Finally, define the following methods that **Blinkable** calls to blink the device:
+To create your own Blinkable object, start by creating a child class derived from **Blinkable**.  Next, add a constructor that defines the pins and performs any initializations if needed.  Finally, define the following *required* methods that **Blinkable** calls to blink the device:
 
 * `void on()` - turns on the device (e.g. causes an LED to light)
 * `void off()` - turns off the device (e.g. causes an LED to go dark)
-* `virtual getPin()` - returns the pin number of the device (any number is fine; does not have to be an actual ESP32 pin)
+* `int getPin()` - returns the pin number of the device (any number is fine; does not have to be an actual ESP32 pin)
 
 For example, the following defines a Blinkable object for an inverted LED that turns *on* when an ESP32 pin is LOW, and turns *off* when the ESP32 pin is HIGH:
 
