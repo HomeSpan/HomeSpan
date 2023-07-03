@@ -47,15 +47,20 @@ struct LED_Service : Service::LightBulb {
       
 //////////////////////////////////////
 
-struct reverseLED : Blinkable {
+struct invertedLED : Blinkable {        // create a child class derived from Blinkable
 
-  int pin;
+  int pin;                              // variable to store the pin number
   
-  reverseLED(int pin) : pin{pin} {pinMode(pin,OUTPUT);digitalWrite(pin,1);}
-  void on() override {digitalWrite(pin,LOW);}
-  void off() override {digitalWrite(pin,HIGH);}
-  int getPin() override {return(pin);}
+  invertedLED(int pin) : pin{pin} {     // constructor that initializes the pin parameter
+    pinMode(pin,OUTPUT);                // set the pin to OUTPUT
+    digitalWrite(pin,HIGH);             // set pin HIGH (which is off for an inverted LED)
+  }
+
+  void on() override { digitalWrite(pin,LOW); }        // required function on() - sets pin LOW
+  void off() override { digitalWrite(pin,HIGH); }      // required function off() - sets pin HIGH
+  int getPin() override { return(pin); }               // required function getPin() - returns pin number
 };
+
 
 //////////////////////////////////////
 
@@ -67,7 +72,7 @@ void setup() {
 //  homeSpan.setSerialInputDisable(true);
   homeSpan.enableOTA();
 
-  homeSpan.setStatusDevice(new reverseLED(13));
+  homeSpan.setStatusDevice(new invertedLED(13));    // set Status LED to be a new Blinkable device attached to pin 13
   homeSpan.setStatusAutoOff(30);
 
   homeSpan.begin(Category::Lighting,"HomeSpan LED");
