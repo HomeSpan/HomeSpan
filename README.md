@@ -75,7 +75,13 @@ HomeSpan requires version 2.0.0 or later of the [Arduino-ESP32 Board Manager](ht
 * **Adds new methods to disable HomeSpan's use of the USB Serial port**
   
   * new Log Level, -1, causes HomeSpan to suppress all OUTPUT messages
-  * new homeSpan method, `setSerialInputDisable(boolean val)` disables/re-enables HomeSpan's reading of CLI commands INPUT into the Arduino Serial Monitor 
+  * new homeSpan method `setSerialInputDisable(boolean val)` disables/re-enables HomeSpan's reading of CLI commands INPUT into the Arduino Serial Monitor
+
+* **Adds ability to use a non-standard LED as the HomeSpan Status LED**
+
+  * new homeSpan method `setStatusDevice(Blinkable *sDev)` sets the Status LED to the Blinkable object *sDev*
+  * allows an LED connected to a pin expander, or any other non-standard LED controller (such as an inverted LED that lights when a pin is LOW instead of HIGH) to be used as the HomeSpan Status LED    
+  * see [Blinkable.md](docs/Blinkable.md) for details (including an example) on how to create Blinkable objects
     
 See [Releases](https://github.com/HomeSpan/HomeSpan/releases) for details on all changes and bug fixes included in this update.
 
