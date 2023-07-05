@@ -831,7 +831,13 @@ void Span::processSerialCommand(const char *c){
     break;
 
     case 'm': {
-      LOG0("Free Memory: %d bytes\n",heap_caps_get_free_size(MALLOC_CAP_DEFAULT));  
+      multi_heap_info_t heapInfo;
+      heap_caps_get_info(&heapInfo,MALLOC_CAP_INTERNAL);
+      LOG0("Total Heap=%d   ",heapInfo.total_free_bytes);
+      heap_caps_get_info(&heapInfo,MALLOC_CAP_DEFAULT);
+      LOG0("DRAM-Capable=%d   ",heapInfo.total_free_bytes);
+      heap_caps_get_info(&heapInfo,MALLOC_CAP_EXEC);
+      LOG0("IRAM-Capable=%d\n",heapInfo.total_free_bytes);
     }
     break;       
 
