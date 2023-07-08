@@ -29,17 +29,17 @@ Click on either of the driver-specific classes above for complete details on how
 
 The **StepperControl** class provides the following methods to operate and control a stepper motor object instantiated with one of the driver-specific classes described above:
 
-* `void enable()`
+* `StepperControl *enable()`
   * enables current flow to the stepper motor coils, actively holding the motor in its position
   * returns pointer to itself so methods can be daisy-chained
     * example: `myMotor=(new Stepper_TB6612(23,32,22,14,33,27))->enable();`
       
-* `void disable()`
+* `StepperControl *disable()`
   * disables current flow to the stepper motor coils and leaves them in a state of high impedence, allowing the motor to turn freely
   * returns pointer to itself so methods can be daisy-chained
     * example: `myMotor=(new Stepper_TB6612(23,32,22,14,33,27))->disable();`
 
-* `void brake()` 
+* `StepperControl *brake()` 
   * disables current flow to the stepper motor coils but leaves them in a state of low impedence, preventing the motor from freely turning
   * applicable only for driver chips that support a "short brake" mode, otherwise has no effect
   * returns pointer to itself so methods can be daisy-chained
