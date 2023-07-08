@@ -97,9 +97,9 @@ class StepperControl {
   int position();
   void setPosition(int pos);
   int stepsRemaining();
-  void enable();
-  void disable();
-  void brake();
+  StepperControl *enable();
+  StepperControl *disable();
+  StepperControl *brake();
 };
 
 //////////////////////////

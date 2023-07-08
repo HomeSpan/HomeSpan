@@ -117,25 +117,29 @@ void StepperControl::waitForAck(){
 
 //////////////////////////
 
-void StepperControl::brake(){
+StepperControl *StepperControl::brake(){
   move(0,10,BRAKE);
   while(stepsRemaining());
+  return(this);
 }
 
 //////////////////////////
 
-void StepperControl::disable(){
+StepperControl *StepperControl::disable(){
   move(0,10,DISABLE);
   while(stepsRemaining());
+  return(this);
 }
 
 //////////////////////////
 
-void StepperControl::enable(){
+StepperControl *StepperControl::enable(){
   move(0,10);
   while(stepsRemaining());
-  
-}//////////////////////////
+  return(this);  
+}
+
+//////////////////////////
 
 void StepperControl::motorTask(void *args){
   StepperControl *motor = (StepperControl *)args;
