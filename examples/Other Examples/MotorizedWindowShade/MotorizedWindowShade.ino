@@ -132,7 +132,7 @@ void setup() {
   new SpanAccessory();                                                          
     new Service::AccessoryInformation();
       new Characteristic::Identify(); 
-    new DEV_WindowShade(new Stepper_TB6612(23,32,22,14,33,27), new Stepper_A3967(17,16,19,18,21));   // instantiate drivers for each board and specify pins used on ESP32
+    new DEV_WindowShade(new Stepper_TB6612(23,32,22,14,33,27), new Stepper_A3967(18,21,5,4,19));   // instantiate drivers for each board and specify pins used on ESP32
 }
 
 //////////////////////////////////////

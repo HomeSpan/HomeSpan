@@ -46,7 +46,9 @@ void setup() {
   Serial.printf("\nHomeSpan Stepper Control\n\n");
 
   bigMotor=(new Stepper_TB6612(23,32,22,14,33,27))->setStepType(StepperControl::HALF_STEP)->setAccel(10,20);
-  smallMotor=new Stepper_A3967(17,16,19,18,21);
+  smallMotor=new Stepper_A3967(18,21,5,4,19);
+
+//  smallMotor->setStepType(StepperControl::EIGHTH_STEP);
 
 //  bigMotor->setStepType(StepperControl::HALF_STEP);
 //  bigMotor->setAccel(10,20);
