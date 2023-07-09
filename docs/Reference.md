@@ -37,10 +37,11 @@ The following **optional** `homeSpan` methods override various HomeSpan initiali
 * `void setStatusPin(uint8_t pin)`
   * sets the ESP32 pin to use for the HomeSpan Status LED
   * assumes a standard LED will be connected to *pin*
-  * if neither this method nor `setStatusPixel()` is called, HomeSpan will assume there is no Status LED
+  * if neither this method nor any equivalent method is called, HomeSpan will assume there is no Status LED
   
 * `void setStatusPixel(uint8_t pin, float h=0, float s=100, float v=100)`
   * sets the ESP32 pin to use for the HomeSpan Status LED
+  * this method is an *alternative* to using `setStatusPin()` above
   * assumes an RGB NeoPixel (or equivalent) will be connected to *pin*
   * works well with ESP32 boards that have a built-in NeoPixel LED, though adding an external NeoPixel is fine
   * users can optionally specify the color HomeSpan will use with the NeoPixel by providing the following HSV values:
@@ -49,7 +50,14 @@ The following **optional** `homeSpan` methods override various HomeSpan initiali
     * v = Brightness percentage from 0-100
   * color defaults to *red* if unspecified
   * example: `homeSpan.setStatusPixel(8,120,100,20)` sets the Status LED to light green using a NeoPixel attached to pin 8 
-  * if neither this method nor `setStatusPin()` is called, HomeSpan will assume there is no Status LED
+  * if neither this method nor any equivalent method is called, HomeSpan will assume there is no Status LED
+
+* `void setStatusDevice(Blinkable *sDev)`
+  * sets the Status LED to a user-specified Blinkable device, *sDev*
+  * this method is an *alternative* to using either `setStatusPin()` or `setStatusPixel()` above
+  * see [Blinkable](Blinkable.md) for details on how to create generic Blinkable devices
+  * useful when using an LED connected to a pin expander, or other specialized driver, as the Status LED
+  * if neither this method nor any equivalent method is called, HomeSpan will assume there is no Status LED
 
 * `void setStatusAutoOff(uint16_t duration)`
   * sets Status LED to automatically turn off after *duration* seconds
@@ -71,11 +79,14 @@ The following **optional** `homeSpan` methods override various HomeSpan initiali
 * `void setCommandTimeout(uint16_t nSec)`
   * sets the duration (in seconds) that the HomeSpan End-User Command Mode, once activated, stays alive before timing out (default=120 seconds)
   
-* `void setLogLevel(uint8_t level)`
+* `void setLogLevel(int level)`
   * sets the logging level for diagnostic messages, where:
-    * 0 = top-level HomeSpan status messages, and any messages output by the user using `Serial.print()` or `Serial.printf()` (default)
+    * 0 = top-level HomeSpan status messages, and any `LOG0()` messages specified in the sketch by the user (default)
     * 1 = all HomeSpan status messages, and any `LOG1()` messages specified in the sketch by the user
     * 2 = all HomeSpan status messages plus all HAP communication packets to and from the HomeSpan device, as well as all `LOG1()` and `LOG2()` messages specified in the sketch by the user
+    * -1 = supresses ALL HomeSpan status messages, including all `LOG0()`, `LOG1()`, and `LOG2()` messages specified in the sketch by the user, freeing up the Serial port for other uses
+  * the log level setting has no impact on any `Serial.print()` or `Serial.printf()` statements that may be used in a sketch.  Use one of the `LOG()` macros instead of `Serial.print()` or `Serial.printf()` if you want to control the output by setting the HomeSpan log level
+  * the log level setting has no impact on any ESP32 diagnostic messages output by the ESP32 operating system itself.  To suppress these mesaages make sure to compile your sketch with the *Core Debug Level* set to "None" in the Tools menu of the Arduino IDE
   * note the log level can also be changed at runtime with the 'L' command via the [HomeSpan CLI](CLI.md)
   * see [Message Logging](Logging.md) for complete details
 
@@ -181,17 +192,21 @@ The following **optional** `homeSpan` methods enable additional features and pro
   * can by called from anywhere in a sketch
 
 * `void enableWebLog(uint16_t maxEntries, const char *timeServerURL, const char *timeZone, const char *logURL)`
-  * enables a rolling web log that displays the most recent *maxEntries* entries created by the user with the `WEBLOG()` macro.  Parameters, and their default values if unspecified, are as follows:
-    * *maxEntries* - maximum number of (most recent) entries to save.  If unspecified, defaults to 0, in which case the web log will only display status without any log entries
-    * *timeServerURL* - the URL of a time server that HomeSpan will use to set its clock upon startup after a WiFi connection has been established.  If unspecified, default to NULL, in which case HomeSpan skips setting the device clock
+  * enables a rolling Web Log that displays the most recent *maxEntries* entries created by the user with the `WEBLOG()` macro.  Parameters, and their default values if unspecified, are as follows:
+    * *maxEntries* - maximum number of (most recent) entries to save.  If unspecified, defaults to 0, in which case the Web Log will only display status without any log entries
+    * *timeServerURL* - the URL of a time server that HomeSpan will use to set its clock upon startup after a WiFi connection has been established.  If unspecified, defaults to NULL, in which case HomeSpan skips setting the device clock
     * *timeZone* - specifies the time zone to use for setting the clock.  Uses standard Unix timezone formatting as interpreted by Espressif IDF.  Note the IDF uses a somewhat non-intuitive convention such that a timezone of "UTC+5:00" *subtracts* 5 hours from UTC time, and "UTC-5:00" *adds* 5 hours to UTC time.  If *serverURL=NULL* this field is ignored; if *serverURL!=NULL* this field is required
-    * *logURL* - the URL of the log page for this device.  If unspecified, defaults to "status"
+    * *logURL* - the URL of the Web Log page for this device.  If unspecified, defaults to "status"
   * example: `homeSpan.enableWebLog(50,"pool.ntp.org","UTC-1:00","myLog");` creates a web log at the URL *http<nolink>://HomeSpan-\[DEVICE-ID\].local:\[TCP-PORT\]/myLog* that will display the 50 most-recent log messages produced with the WEBLOG() macro.  Upon start-up (after a WiFi connection has been established) HomeSpan will attempt to set the device clock by calling the server "pool.ntp.org" and adjusting the time to be 1 hour ahead of UTC.
-  * when attemping to connect to *timeServerURL*, HomeSpan waits 10 seconds for a response.  If no response is received after the 10-second timeout period, HomeSpan assumes the server is unreachable and skips the clock-setting procedure.  Use `setTimeServerTimeout()` to re-configure the 10-second timeout period to another value
+  * when attemping to connect to *timeServerURL*, HomeSpan waits 120 seconds for a response.  This is done in the background and does not block HomeSpan from running as usual while it tries to set the time.  If no response is received after the 120-second timeout period, HomeSpan assumes the server is unreachable and skips the clock-setting procedure.  Use `setTimeServerTimeout()` to re-configure the 120-second timeout period to another value
   * see [Message Logging](Logging.md) for complete details
 
 * `void setTimeServerTimeout(uint32_t tSec)`
-  * changes the default 10-second timeout period HomeSpan uses when `enableWebLog()` tries set the device clock from an internet time server to *tSec* seconds
+  * changes the default 120-second timeout period HomeSpan uses when `enableWebLog()` tries set the device clock from an internet time server to *tSec* seconds
+ 
+* `void setWebLogCSS(const char *css)`
+  * sets the format of the HomeSpan Web Log to the custom style sheet specified by *css*
+  * see [Message Logging](Logging.md) for details on how to construct *css*
  
 * `void processSerialCommand(const char *CLIcommand)`
   * processes the *CLIcommand* just as if were typed into the Serial Monitor
@@ -199,6 +214,15 @@ The following **optional** `homeSpan` methods enable additional features and pro
   * will work whether or not device is connected to a computer
   * example: `homeSpan.processSerialCommand("A");` starts the HomeSpan Setup Access Point
   * example: `homeSpan.processSerialCommand("Q HUB3");` changes the HomeKit Setup ID for QR Codes to "HUB3"
+ 
+* `void setSerialInputDisable(boolean val)`
+   * if *val* is true, disables HomeSpan from reading input from the Serial port
+   * if *val* is false, re-enables HomeSpan reading input from the Serial port
+   * useful when the main USB Serial port is needed for reading data from an external Serial peripheral, rather than being used to read input from the Arduino Serial Monitor
+
+ * `boolean getSerialInputDisable()`
+   * returns *true* if HomeSpan reading from the Serial port is currently disabled
+   * returns *false* if HomeSpan is operating normally and will read any CLI commands input into the Arduino Serial Monitor
  
 ---
 
@@ -590,24 +614,6 @@ If REQUIRED is defined in the main sketch *prior* to including the HomeSpan libr
 #include "HomeSpan.h"
 ```
 
- ---
-
-#### Deprecated functions (available for backwards compatibility with older sketches):
-
-* `SpanRange(int min, int max, int step)`
-
-  * this legacy class was limited to integer-based parameters and has been re-coded to simply call the more generic `setRange(min, max, step)` method
-  * last supported version: [v1.2.0](https://github.com/HomeSpan/HomeSpan/blob/release-1.2.0/docs/Reference.md#spanrangeint-min-int-max-int-step)
-  * **please use** `setRange(min, max, step)` **for all new sketches**
-
-* `void homeSpan.setMaxConnections(uint8_t nCon)`
-  * this legacy method was used to set the total number of HAP Controller Connections HomeSpan implements upon start-up to ensure there are still free sockets available for user-defined code requiring separate network resources
-  * last supported version: [v1.4.2](https://github.com/HomeSpan/HomeSpan/blob/release-1.4.2/docs/Reference.md)
-  * this method has been replaced by the more flexible method, `reserveSocketConnections(uint8_t nSockets)`
-    * allows you to simply reserve network sockets for other custom code as needed
-    * upon calling `homespan.begin()`, HomeSpan automatically determines how many sockets are left that it can use for HAP Controller Connections 
-  * **please use** `homeSpan.reserveSocketConnections(uint8_t nSockets)` **for all new sketches**
-  
 ---
 
 [↩️](../README.md) Back to the Welcome page

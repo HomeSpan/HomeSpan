@@ -24,50 +24,7 @@
  *  SOFTWARE.
  *  
  ********************************************************************************/
- 
-// This is a placeholder .ino file that allows you to easily edit the contents of this files using the Arduino IDE,
-// as well as compile and test from this point.  This file is ignored when the library is included in other sketches.
 
-#include "Stepper_TB6612.h"   // include the driver for a TB6612 chip
-#include "Stepper_A3967.h"
+#pragma once
 
-StepperControl *bigMotor;
-StepperControl *smallMotor;
-
-#define BIG_MOTOR_POSITION    1600
-#define SMALL_MOTOR_POSITION  2064
-
-///////////////////
-
-void setup() {
-
-  Serial.begin(115200);
-  delay(1000);
-  Serial.printf("\nHomeSpan Stepper Control\n\n");
-
-  bigMotor=(new Stepper_TB6612(23,32,22,14,33,27))->setStepType(StepperControl::HALF_STEP)->setAccel(10,20);
-  smallMotor=new Stepper_A3967(18,21,5,4,19);
-
-//  smallMotor->setStepType(StepperControl::EIGHTH_STEP);
-
-//  bigMotor->setStepType(StepperControl::HALF_STEP);
-//  bigMotor->setAccel(10,20);
-}
-
-///////////////////
-
-void loop(){
-
-  if(smallMotor->position()==0)
-    smallMotor->moveTo(SMALL_MOTOR_POSITION,2);
-  else if(smallMotor->position()==SMALL_MOTOR_POSITION)
-    smallMotor->moveTo(0,2);
-
-  if(bigMotor->position()==0)
-    bigMotor->moveTo(BIG_MOTOR_POSITION,4);
-  else if(bigMotor->position()==BIG_MOTOR_POSITION)
-    bigMotor->moveTo(0,4);    
-
-  delay(1000);
-  Serial.printf("Small Motor: %d     Big Motor %d\n",smallMotor->stepsRemaining(),bigMotor->stepsRemaining());
-}
+#include "../src/extras/StepperControl.h"

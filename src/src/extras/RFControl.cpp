@@ -36,7 +36,7 @@ RFControl::RFControl(uint8_t pin, boolean refClock, boolean installDriver){
 #else
   if(nChannels==RMT_CHANNEL_MAX){
 #endif
-    Serial.printf("\n*** ERROR:  Can't create RFControl(%d) - no open channels ***\n\n",pin);
+    ESP_LOGE(RFControl_TAG,"Can't create RFControl(%d) - no open channels",pin);
     return;
   }
 
@@ -139,17 +139,17 @@ void RFControl::enableCarrier(uint32_t freq, float duty){
     uint32_t lowTime=period*(1.0-duty)+0.5;
 
     if(highTime>0xFFFF || lowTime>0xFFFF){
-      Serial.printf("\n*** ERROR:  Can't enable carrier frequency=%d Hz for RF Control pin=%d, duty=%0.2f. Frequency is too low!\n\n",freq,config->gpio_num,duty);
+      ESP_LOGE(RFControl_TAG,"Can't enable carrier frequency=%d Hz for RF Control pin=%d, duty=%0.2f. Frequency is too low!",freq,config->gpio_num,duty);
       return;      
     }
 
     if(highTime==0){
-      Serial.printf("\n*** ERROR:  Can't enable carrier frequency=%d Hz for RF Control pin=%d, duty=%0.2f. Duty is too low or frequency is too high!\n\n",freq,config->gpio_num,duty);
+      ESP_LOGE(RFControl_TAG,"Can't enable carrier frequency=%d Hz for RF Control pin=%d, duty=%0.2f. Duty is too low or frequency is too high!",freq,config->gpio_num,duty);
       return;
     }
     
     if(lowTime==0){
-      Serial.printf("\n*** ERROR:  Can't enable carrier frequency=%d Hz for RF Control pin=%d, duty=%0.2f. Duty is too high or frequency is too high!\n\n",freq,config->gpio_num,duty);
+      ESP_LOGE(RFControl_TAG,"Can't enable carrier frequency=%d Hz for RF Control pin=%d, duty=%0.2f. Duty is too high or frequency is too high!",freq,config->gpio_num,duty);
       return;
     }
 

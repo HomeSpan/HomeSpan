@@ -36,6 +36,8 @@
 #include "driver/rmt.h"
 #include <vector>
 
+[[maybe_unused]] static const char* RFControl_TAG = "RFControl";
+
 using std::vector;
 
 class RFControl {

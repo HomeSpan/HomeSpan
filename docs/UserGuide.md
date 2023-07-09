@@ -1,5 +1,16 @@
 # HomeSpan User Guide
+1. [Introduction](#introduction)
+2. [Getting Started](#getting-started)
+3. [HomeSpan Device States](#homespan-device-states)
+4. [Device Configuration Mode](#device-configuration-mode)
+5. [Setting HomeSpan’s WiFi Credentials and Setup Code](#setting-homespans-wifi-credentials-and-setup-code)
+6. [Pairing to HomeKit](#pairing-to-homekit)
+7. [Factory Reset](#factory-reset)
+8. [Creating a Scannable Tag](#creating-a-scannable-tag)
+9. [Status LED Flashing Reference](#status-led-flashing-reference)
 
+
+## Introduction
 This guide explains how to set up and configure a HomeSpan device that has already been programmed to operate one or more appliances, including how to:
 
 * Determine the state of the device by observing the HomeSpan Status LED
@@ -156,6 +167,20 @@ To create the scannable tag, construct a simple text box with a border in either
 The box can be bigger or smaller as long as you keep the same proportions.  For example, a 10pt font can be used with a box that is 75pt wide and 25pt high with a 1pt border.  Don’t forget to center-align your text and include the required hyphens as shown.  The result is a tag that can be scanned by HomeKit during the pairing process.
 
 Note that if you can’t find *Scancardium* listed as a font choice in either the *Pages* or *Keynote* font dropdown boxes, select Format → Font → Show Fonts from the menu bar of the *Pages* or *Keynote* application to bring up a list of all installed fonts where you can search for, and select, *Scancardium*.
+
+## Status LED Flashing Reference
+
+If a status LED has been connected and configured, HomeSpan will use flashing code to indicate different status.
+
+| Flash pattern               | Description                                                                |
+| --------------------------- | -------------------------------------------------------------------------- |
+| LED off, no flashing        | By default, no power, unless `setStatusAutoOff(timeout)` has been defined. |
+| LED on, no flashing         | All good. Device is connected to WiFi and paired. See [PAIRED](#paired).   |
+| 1-second flash every second | Attempting to connect to WiFi. See [CONNECTING](#connecting).              |
+| 1 flash every 3 seconds     | No WiFi. See [NO-WIFI](#nowifi).                                           |
+| 2 flashes every 3 seconds   | See [READY-TO-PAIR](#readytopair).                                         |
+| 10 flashes per second       | The Control button is pressed. Once released, HomeSpan will either<br>- Enter [Device Configuration Mode](#device-configuration-mode).<br>- Exit _Device Configuration Mode_ executing the action selected based on the number of flashes.|
+
 
 ---
 

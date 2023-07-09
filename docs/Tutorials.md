@@ -138,6 +138,9 @@ Demonstrates how *SpanPoint* can be used to transmit messages from battery-power
 ### [FadingLED](../examples/Other%20Examples/FadingLED)
 Demonstrates how the *LedPin* class can use the ESP32's built-in fading control to automatically fade an LED from from one level of brightness to another over a specified period of time. See the [LedPin](PWM.md#pulse-width-modulation-pwm) page for full details
 
+### [MotorizedWindowShade](../examples/Other%20Examples/MotorizedWindowShade)
+Demonstrates how to use the *StepperControl* class to operate a stepper motor.  Implements a motorized window shade based on [Example&nbsp;13](../examples/13-TargetStates) above. See the [Stepper Motor Control](Stepper.md) page for full details
+
 ---
 
 [↩️](../README.md) Back to the Welcome page

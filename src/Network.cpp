@@ -65,33 +65,26 @@ void Network::serialConfigure(){
   wifiData.ssid[0]='\0';
   wifiData.pwd[0]='\0';
 
-  Serial.print("*** WiFi Setup - Scanning for Networks...\n\n");
+  LOG0("*** WiFi Setup - Scanning for Networks...\n\n");
   
   scan();         // scan for networks    
 
-  for(int i=0;i<numSSID;i++){
-    Serial.print("  ");
-    Serial.print(i+1);
-    Serial.print(") ");
-    Serial.print(ssidList[i]);
-    Serial.print("\n");
-  }
+  for(int i=0;i<numSSID;i++)
+    LOG0("  %d) %s\n",i+1,ssidList[i]);
          
   while(!strlen(wifiData.ssid)){
-    Serial.print("\n>>> WiFi SSID: ");
+    LOG0("\n>>> WiFi SSID: ");
     readSerial(wifiData.ssid,MAX_SSID);
     if(atoi(wifiData.ssid)>0 && atoi(wifiData.ssid)<=numSSID){
       strcpy(wifiData.ssid,ssidList[atoi(wifiData.ssid)-1]);
     }
-    Serial.print(wifiData.ssid);
-    Serial.print("\n");
+    LOG0("%s\n",wifiData.ssid);
   }
   
   while(!strlen(wifiData.pwd)){
-    Serial.print(">>> WiFi PASS: ");
+    LOG0(">>> WiFi PASS: ");
     readSerial(wifiData.pwd,MAX_PWD);    
-    Serial.print(mask(wifiData.pwd,2));
-    Serial.print("\n");
+    LOG0("%s\n",mask(wifiData.pwd,2).c_str());
   }
 
   return;
@@ -110,25 +103,16 @@ boolean Network::allowedCode(char *s){
 
 void Network::apConfigure(){
 
-  Serial.print("*** Starting Access Point: ");
-  Serial.print(apSSID);
-  Serial.print(" / ");
-  Serial.print(apPassword);
-  Serial.print("\n");
+  LOG0("*** Starting Access Point: %s / %s\n",apSSID,apPassword);
 
   STATUS_UPDATE(start(LED_AP_STARTED),HS_AP_STARTED)
         
-  Serial.print("\nScanning for Networks...\n\n");
+  LOG0("\nScanning for Networks...\n\n");
   
   scan();                   // scan for networks    
 
-  for(int i=0;i<numSSID;i++){
-    Serial.print("  ");
-    Serial.print(i+1);
-    Serial.print(") ");
-    Serial.print(ssidList[i]);
-    Serial.print("\n");
-  }  
+  for(int i=0;i<numSSID;i++)
+    LOG0("  %d) %s\n",i+1,ssidList[i]);
 
   WiFiServer apServer(80);
   client=0;
@@ -148,12 +132,12 @@ void Network::apConfigure(){
   alarmTimeOut=millis()+lifetime;            // Access Point will shut down when alarmTimeOut is reached
   apStatus=0;                                // status will be "timed out" unless changed
 
-  Serial.print("\nReady.\n");
+  LOG0("\nReady.\n");
 
   while(1){                                  // loop until we get timed out (which will be accelerated if save/cancel selected)
 
     if(homeSpan.controlButton && homeSpan.controlButton->triggered(9999,3000)){
-      Serial.print("\n*** Access Point Terminated.  Restarting...\n\n");
+      LOG0("\n*** Access Point Terminated.  Restarting...\n\n");
       STATUS_UPDATE(start(LED_ALERT),HS_AP_TERMINATED)
       homeSpan.controlButton->wait();
       homeSpan.reboot();
@@ -163,17 +147,14 @@ void Network::apConfigure(){
       WiFi.softAPdisconnect(true);           // terminate connections and shut down captive access point
       delay(100);
       if(apStatus==1){
-        Serial.print("\n*** Access Point: Exiting and Saving Settings\n\n");
+        LOG0("\n*** Access Point: Exiting and Saving Settings\n\n");
         return;
       } else {
-        if(apStatus==0){
-          Serial.print("\n*** Access Point: Timed Out (");
-          Serial.print(lifetime/1000);
-          Serial.print(" seconds).");
-        } else {
-          Serial.print("\n*** Access Point: Configuration Cancelled.");
-        }
-        Serial.print("  Restarting...\n\n");
+        if(apStatus==0)
+          LOG0("\n*** Access Point: Timed Out (%ld seconds).",lifetime/1000);
+        else 
+          LOG0("\n*** Access Point: Configuration Cancelled.");
+        LOG0("  Restarting...\n\n");
         STATUS_UPDATE(start(LED_ALERT),HS_AP_TERMINATED)
         homeSpan.reboot();
       }
@@ -202,7 +183,7 @@ void Network::apConfigure(){
        
       if(nBytes>MAX_HTTP){                              // exceeded maximum number of bytes allowed
         badRequestError();
-        Serial.print("\n*** ERROR:  Exceeded maximum HTTP message length\n\n");
+        LOG0("\n*** ERROR:  Exceeded maximum HTTP message length\n\n");
         continue;
       }
 
@@ -212,7 +193,7 @@ void Network::apConfigure(){
       
       if(!(p=strstr((char *)httpBuf,"\r\n\r\n"))){
         badRequestError();
-        Serial.print("\n*** ERROR:  Malformed HTTP request (can't find blank line indicating end of BODY)\n\n");
+        LOG0("\n*** ERROR:  Malformed HTTP request (can't find blank line indicating end of BODY)\n\n");
         continue;      
       }
 
@@ -224,7 +205,7 @@ void Network::apConfigure(){
         cLen=atoi(p+16);
       if(nBytes!=strlen(body)+4+cLen){
         badRequestError();
-        Serial.print("\n*** ERROR:  Malformed HTTP request (Content-Length plus Body Length does not equal total number of bytes read)\n\n");
+        LOG0("\n*** ERROR:  Malformed HTTP request (Content-Length plus Body Length does not equal total number of bytes read)\n\n");
         continue;        
       }
 

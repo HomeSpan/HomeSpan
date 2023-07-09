@@ -31,6 +31,7 @@ HomeSpan requires version 2.0.0 or later of the [Arduino-ESP32 Board Manager](ht
   * Touch pads/sensors connected to an ESP32 pin (for ESP32 devices that support touch pads)
 * Integrated access to the ESP32's on-chip Remote Control peripheral for easy generation of IR and RF signals
 * Dedicated classes to control one- and two-wire addressable RGB and RGBW LEDs and LED strips
+* Dedicated classes to control stepper motors that can run smoothly in the background without interfering with HomeSpan
 * Dedicated class that faciliates seemless point-to-point communication between ESP32 devices using ESP-NOW
 * Integrated Web Log for user-defined log messages
 * Extensively-commented Tutorial Sketches taking you from the very basics of HomeSpan through advanced HomeKit topics
@@ -48,36 +49,40 @@ HomeSpan requires version 2.0.0 or later of the [Arduino-ESP32 Board Manager](ht
   * Launch the WiFi Access Point
 * A standalone, detailed End-User Guide
 
-## ❗Latest Update - HomeSpan 1.7.2 (4/5/2023)
+## ❗Latest Update - HomeSpan 1.8.0 (7/8/2023)
 
-* **New ability to set OTA password from within sketch**
-  * See the [OTA Page](docs/OTA.md) for details
+* **New Stepper Motor Control!**
 
-* **Added logic to allow duplicates of the same Custom Characteristic to be "defined" in more than one file in a sketch**
-  * Allows the use of the same Custom Characteristic across multiple files in the same sketch without the compiler throwing a "redefinition error"
-  * See the [API Reference](docs/Reference.md) for details
+  * adds new **StepperControl** class that allows for smooth, uninterrupted operation of one or more stepper motors running in the background while HomeSpan continues to run simultaneously in the foreground
+  * supports driver boards with or without PWM, including microstepping modes
+  * supports automatic acceleration and deceleration for smooth starts and stops
+  * motors can be set to an absolute position or instructucted to move a specified number of steps
+  * provides options to automatically enter into a "brake" state after motor stops to conserve power
+  * includes a fully worked example of a motorized window shade
+  * see [Stepper Motor Control](docs/Stepper.md) for details
+    
+* **Upgrades to HomeSpan Web Log output**
 
-* **Extended functionality of `setValidValues()` to work with more than just UINT8 Characteristics**
-  * Now works with INT, UINT16, and UINT32 Characteristics, as well as UINT8 Characteristics
-  * See the [API Reference](docs/Reference.md) for details
+  * adds new method `void homeSpan.setWebLogCSS(const char *css)` that allows you to define *Custom Style Sheets (CSS)* for the Web Log text, tables, and background
+  * adds version numbers for the Sodium and MbedTLS libraries, HomeKit pairing status, and a text description of Reset Reason code
+  * see [Message Logging](docs/Logging.md) for details
 
-* **New parameters added to `autoPoll()` that allow the user to set priority and chose CPU**
-  * Provides for enhanced performance on dual-processor chips
-  * See the [API Reference](docs/Reference.md) for details
+* **Upgrades to Web Log Time Server initialization**
 
-* **Automatic LED Fading!**
-  * Added new methods to LedPin class that enable use of the ESP32's built-in fade controls
-  * Allows user to specify speed of fade
-  * Runs in background without consuming any CPU resources
-  * See the [PWM Page](docs/PWM.md) for details
+  * the process for retrieving the time and date from an NTP server upon booting now runs in the background as a separate task
+  * HomeSpan is no longer blocked from running during the NTP query
 
-* **Added ability to Clone the Pairing Data from one device to another**
-  * Adds new 'P' and 'C' commands to the CLI
-  * Enables a broken device to be swapped for a new device (running the same sketch) without the need to unpair the old device or pair the new device
-  * Avoids loss of automations, scenes, and any other Home App customizations associated with device
-  * New and old device can be different chips (e.g. ESP32-S2 versus ESP32-C3)
-  * See the new [Cloning Page](docs/Cloning.md) for details
+* **Adds new methods to disable HomeSpan's use of the USB Serial port**
+  
+  * new Log Level, -1, causes HomeSpan to suppress all OUTPUT messages
+  * new homeSpan method `setSerialInputDisable(boolean val)` disables/re-enables HomeSpan's reading of CLI commands INPUT into the Arduino Serial Monitor
 
+* **Adds ability to use a non-standard LED as the HomeSpan Status LED**
+
+  * new homeSpan method `setStatusDevice(Blinkable *sDev)` sets the Status LED to the Blinkable object *sDev*
+  * allows an LED connected to a pin expander, or any other non-standard LED controller (such as an inverted LED that lights when a pin is LOW instead of HIGH) to be used as the HomeSpan Status LED    
+  * see [Blinkable.md](docs/Blinkable.md) for details (including an example) on how to create Blinkable objects
+    
 See [Releases](https://github.com/HomeSpan/HomeSpan/releases) for details on all changes and bug fixes included in this update.
 
 # HomeSpan Resources
@@ -97,6 +102,7 @@ HomeSpan includes the following documentation:
 * [HomeSpan PWM](docs/PWM.md) - integrated control of standard LEDs and Servo Motors using the ESP32's on-chip PWM peripheral
 * [HomeSpan RFControl](docs/RMT.md) - easy generation of RF and IR Remote Control signals using the ESP32's on-chip RMT peripheral
 * [HomeSpan Pixels](docs/Pixels.md) - integrated control of addressable one- and two-wire RGB and RGBW LEDs and LED strips
+* [HomeSpan Stepper Motor Control](docs/Stepper.md) - integrated control of stepper motors, including PWM microstepping
 * [HomeSpan SpanPoint](docs/NOW.md) - facilitates point-to-point, bi-directional communication between ESP32 Devices using ESP-NOW
 * [HomeSpan Television Services](docs/TVServices.md) - how to use HomeKit's undocumented Television Services and Characteristics
 * [HomeSpan Message Logging](docs/Logging.md) - how to generate log messages for display on the Arduino Serial Monitor as well as optionally posted to an integrated Web Log page

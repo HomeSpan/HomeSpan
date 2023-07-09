@@ -110,8 +110,6 @@ struct SpanUserCommand;
 
 extern Span homeSpan;
 
-#include "HAP.h"
-
 ////////////////////////////////////////////////////////
 // INTERNAL HOMESPAN STRUCTURES - NOT FOR USER ACCESS //
 ////////////////////////////////////////////////////////
@@ -150,7 +148,8 @@ struct SpanWebLog{                            // optional web status/log data
   boolean timeInit=false;                     // flag to indicate time has been initialized
   char bootTime[33]="Unknown";                // boot time
   String statusURL;                           // URL of status log
-  uint32_t waitTime=10000;                    // number of milliseconds to wait for initial connection to time server
+  uint32_t waitTime=120000;                   // number of milliseconds to wait for initial connection to time server
+  String css="";                              // optional user-defined style sheet for web log
     
   struct log_t {                              // log entry type
     uint64_t upTime;                          // number of seconds since booting
@@ -160,7 +159,7 @@ struct SpanWebLog{                            // optional web status/log data
   } *log=NULL;                                // array of log entries 
 
   void init(uint16_t maxEntries, const char *serv, const char *tz, const char *url);
-  void initTime();  
+  static void initTime(void *args);  
   void vLog(boolean sysMsg, const char *fmr, va_list ap);
 };
 
@@ -217,6 +216,7 @@ class Span{
   char pairingCodeCommand[12]="";               // user-specified Pairing Code - only needed if Pairing Setup Code is specified in sketch using setPairingCode()
   String lastClientIP="0.0.0.0";                // IP address of last client accessing device through encrypted channel
   boolean newCode;                              // flag indicating new application code has been loaded (based on keeping track of app SHA256)
+  boolean serialInputDisabled=false;            // flag indiating that serial input is disabled
   
   int connected=0;                              // WiFi connection status (increments upon each connect and disconnect)
   unsigned long waitTime=60000;                 // time to wait (in milliseconds) between WiFi connection attempts
@@ -224,7 +224,7 @@ class Span{
   
   const char *defaultSetupCode=DEFAULT_SETUP_CODE;            // Setup Code used for pairing
   uint16_t autoOffLED=0;                                      // automatic turn-off duration (in seconds) for Status LED
-  uint8_t logLevel=DEFAULT_LOG_LEVEL;                         // level for writing out log messages to serial monitor
+  int logLevel=DEFAULT_LOG_LEVEL;                             // level for writing out log messages to serial monitor
   uint8_t maxConnections=CONFIG_LWIP_MAX_SOCKETS-2;           // maximum number of allowed simultaneous HAP connections
   uint8_t requestedMaxCon=CONFIG_LWIP_MAX_SOCKETS-2;          // requested maximum number of simultaneous HAP connections
   unsigned long comModeLife=DEFAULT_COMMAND_TIMEOUT*1000;     // length of time (in milliseconds) to keep Command Mode alive before resuming normal operations
@@ -263,7 +263,7 @@ class Span{
 
   int sprintfAttributes(char *cBuf, int flags=GET_VALUE|GET_META|GET_PERMS|GET_TYPE|GET_DESC);   // prints Attributes JSON database into buf, unless buf=NULL; return number of characters printed, excluding null terminator
   
-  void prettyPrint(char *buf, int nsp=2);                                 // print arbitrary JSON from buf to serial monitor, formatted with indentions of 'nsp' spaces
+  void prettyPrint(char *buf, int nsp=2, int minLogLevel=0);              // print arbitrary JSON from buf to serial monitor, formatted with indentions of 'nsp' spaces, subject to specified minimum log level
   SpanCharacteristic *find(uint32_t aid, int iid);                        // return Characteristic with matching aid and iid (else NULL if not found)
   int countCharacteristics(char *buf);                                    // return number of characteristic objects referenced in PUT /characteristics JSON request
   int updateCharacteristics(char *buf, SpanBuf *pObj);                    // parses PUT /characteristics JSON request 'buf into 'pObj' and updates referenced characteristics; returns 1 on success, 0 on fail
@@ -308,8 +308,10 @@ class Span{
   void setApPassword(const char *pwd){network.apPassword=pwd;}            // sets Access Point Password
   void setApTimeout(uint16_t nSec){network.lifetime=nSec*1000;}           // sets Access Point Timeout (seconds)
   void setCommandTimeout(uint16_t nSec){comModeLife=nSec*1000;}           // sets Command Mode Timeout (seconds)
-  void setLogLevel(uint8_t level){logLevel=level;}                        // sets Log Level for log messages (0=baseline, 1=intermediate, 2=all)
+  void setLogLevel(int level){logLevel=level;}                            // sets Log Level for log messages (0=baseline, 1=intermediate, 2=all, -1=disable all serial input/output)
   int getLogLevel(){return(logLevel);}                                    // get Log Level
+  void setSerialInputDisable(boolean val){serialInputDisabled=val;}       // sets whether serial input is disabled (true) or enabled (false)
+  boolean getSerialInputDisable(){return(serialInputDisabled);}           // returns true if serial input is disabled, or false if serial input in enabled
   void reserveSocketConnections(uint8_t n){maxConnections-=n;}            // reserves n socket connections *not* to be used for HAP
   void setHostNameSuffix(const char *suffix){hostNameSuffix=suffix;}      // sets the hostName suffix to be used instead of the 6-byte AccessoryID
   void setPortNum(uint16_t port){tcpPortNum=port;}                        // sets the TCP port number to use for communications between HomeKit and HomeSpan
@@ -341,9 +343,11 @@ class Span{
     va_end(ap);    
   }
 
+  void setWebLogCSS(const char *css){webLog.css="\n" + String(css) + "\n";}
+
   void autoPoll(uint32_t stackSize=8192, uint32_t priority=1, uint32_t cpu=0){     // start pollTask()
     xTaskCreateUniversal([](void *parms){for(;;)homeSpan.pollTask();}, "pollTask", stackSize, NULL, priority, &pollTaskHandle, cpu);
-    Serial.printf("\n*** AutoPolling Task started with priority=%d\n\n",uxTaskPriorityGet(pollTaskHandle)); 
+    LOG0("\n*** AutoPolling Task started with priority=%d\n\n",uxTaskPriorityGet(pollTaskHandle)); 
   }
 
   void setTimeServerTimeout(uint32_t tSec){webLog.waitTime=tSec*1000;}    // sets wait time (in seconds) for optional web log time server to connect
@@ -632,7 +636,7 @@ class SpanCharacteristic{
   void setString(const char *val){
 
     if((perms & EV) == 0){
-      Serial.printf("\n*** WARNING:  Attempt to update Characteristic::%s with setString() ignored.  No NOTIFICATION permission on this characteristic\n\n",hapName);
+      LOG0("\n*** WARNING:  Attempt to update Characteristic::%s with setString() ignored.  No NOTIFICATION permission on this characteristic\n\n",hapName);
       return;
     }
 
@@ -666,9 +670,9 @@ class SpanCharacteristic{
       return(olen);
       
     if(ret==MBEDTLS_ERR_BASE64_BUFFER_TOO_SMALL)
-      Serial.printf("\n*** WARNING:  Can't decode Characteristic::%s with getData().  Destination buffer is too small (%d out of %d bytes needed)\n\n",hapName,len,olen);
+      LOG0("\n*** WARNING:  Can't decode Characteristic::%s with getData().  Destination buffer is too small (%d out of %d bytes needed)\n\n",hapName,len,olen);
     else if(ret==MBEDTLS_ERR_BASE64_INVALID_CHARACTER)
-      Serial.printf("\n*** WARNING:  Can't decode Characteristic::%s with getData().  Data is not in base-64 format\n\n",hapName);
+      LOG0("\n*** WARNING:  Can't decode Characteristic::%s with getData().  Data is not in base-64 format\n\n",hapName);
       
     return(olen);
   }
@@ -684,9 +688,9 @@ class SpanCharacteristic{
       return(olen);
       
     if(ret==MBEDTLS_ERR_BASE64_BUFFER_TOO_SMALL)
-      Serial.printf("\n*** WARNING:  Can't decode Characteristic::%s with getData().  Destination buffer is too small (%d out of %d bytes needed)\n\n",hapName,len,olen);
+      LOG0("\n*** WARNING:  Can't decode Characteristic::%s with getData().  Destination buffer is too small (%d out of %d bytes needed)\n\n",hapName,len,olen);
     else if(ret==MBEDTLS_ERR_BASE64_INVALID_CHARACTER)
-      Serial.printf("\n*** WARNING:  Can't decode Characteristic::%s with getData().  Data is not in base-64 format\n\n",hapName);
+      LOG0("\n*** WARNING:  Can't decode Characteristic::%s with getData().  Data is not in base-64 format\n\n",hapName);
       
     return(olen);
   }  
@@ -694,12 +698,12 @@ class SpanCharacteristic{
   void setData(uint8_t *data, size_t len){
 
     if((perms & EV) == 0){
-      Serial.printf("\n*** WARNING:  Attempt to update Characteristic::%s with setData() ignored.  No NOTIFICATION permission on this characteristic\n\n",hapName);
+      LOG0("\n*** WARNING:  Attempt to update Characteristic::%s with setData() ignored.  No NOTIFICATION permission on this characteristic\n\n",hapName);
       return;
     }
 
     if(len<1){
-      Serial.printf("\n*** WARNING:  Attempt to update Characteristic::%s with setData() ignored.  Size of data buffer must be greater than zero\n\n",hapName);
+      LOG0("\n*** WARNING:  Attempt to update Characteristic::%s with setData() ignored.  Size of data buffer must be greater than zero\n\n",hapName);
       return;      
     }
 
@@ -713,12 +717,12 @@ class SpanCharacteristic{
   template <typename T> void setVal(T val, boolean notify=true){
 
     if((perms & EV) == 0){
-      Serial.printf("\n*** WARNING:  Attempt to update Characteristic::%s with setVal() ignored.  No NOTIFICATION permission on this characteristic\n\n",hapName);
+      LOG0("\n*** WARNING:  Attempt to update Characteristic::%s with setVal() ignored.  No NOTIFICATION permission on this characteristic\n\n",hapName);
       return;
     }
 
     if(val < uvGet<T>(minValue) || val > uvGet<T>(maxValue)){
-      Serial.printf("\n*** WARNING:  Attempt to update Characteristic::%s with setVal(%g) is out of range [%g,%g].  This may cause device to become non-reponsive!\n\n",
+      LOG0("\n*** WARNING:  Attempt to update Characteristic::%s with setVal(%g) is out of range [%g,%g].  This may cause device to become non-reponsive!\n\n",
       hapName,(double)val,uvGet<double>(minValue),uvGet<double>(maxValue));
     }
    
@@ -814,11 +818,11 @@ class SpanButton : public PushButton {
   protected:
   
   enum buttonType_t {
-    BUTTON,
-    TOGGLE
+    HS_BUTTON,
+    HS_TOGGLE
   };
 
-  buttonType_t buttonType=BUTTON;      // type of SpanButton  
+  buttonType_t buttonType=HS_BUTTON;      // type of SpanButton  
   
   public:
 
@@ -842,7 +846,7 @@ class SpanToggle : public SpanButton {
 
   public:
 
-  SpanToggle(int pin, triggerType_t triggerType=TRIGGER_ON_LOW, uint16_t toggleTime=5) : SpanButton(pin,triggerType,toggleTime){buttonType=TOGGLE;};
+  SpanToggle(int pin, triggerType_t triggerType=TRIGGER_ON_LOW, uint16_t toggleTime=5) : SpanButton(pin,triggerType,toggleTime){buttonType=HS_TOGGLE;};
   int position(){return(pressType);}
 };
 

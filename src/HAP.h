@@ -131,9 +131,9 @@ struct HAPClient {
     
   static void init();                                  // initialize HAP after start-up
     
-  static void hexPrintColumn(uint8_t *buf, int n);     // prints 'n' bytes of *buf as HEX, one byte per row.  For diagnostics/debugging only
-  static void hexPrintRow(uint8_t *buf, int n);        // prints 'n' bytes of *buf as HEX, all on one row
-  static void charPrintRow(uint8_t *buf, int n);       // prints 'n' bytes of *buf as CHAR, all on one row
+  static void hexPrintColumn(uint8_t *buf, int n, int minLogLevel=0);     // prints 'n' bytes of *buf as HEX, one byte per row, subject to specified minimum log level
+  static void hexPrintRow(uint8_t *buf, int n, int minLogLevel=0);        // prints 'n' bytes of *buf as HEX, all on one row, subject to specified minimum log level
+  static void charPrintRow(uint8_t *buf, int n, int minLogLevel=0);       // prints 'n' bytes of *buf as CHAR, all on one row, subject to specified minimum log level
   
   static Controller *findController(uint8_t *id);                                      // returns pointer to controller with mathching ID (or NULL if no match)
   static Controller *getFreeController();                                              // return pointer to next free controller slot (or NULL if no free slots)
@@ -141,7 +141,7 @@ struct HAPClient {
   static int nAdminControllers();                                                      // returns number of admin Controllers stored
   static void removeControllers();                                                     // removes all Controllers (sets allocated flags to false for all slots)
   static void removeController(uint8_t *id);                                           // removes specific Controller.  If no remaining admin Controllers, remove all others (if any) as per HAP requirements.
-  static void printControllers();                                                      // prints IDs of all allocated (paired) Controller
+  static void printControllers(int minLogLevel=0);                                     // prints IDs of all allocated (paired) Controller, subject to specified minimum log level
   static void checkNotifications();                                                    // checks for Event Notifications and reports to controllers as needed (HAP Section 6.8)
   static void checkTimedWrites();                                                      // checks for expired Timed Write PIDs, and clears any found (HAP Section 6.7.2.4)
   static void eventNotify(SpanBuf *pObj, int nObj, int ignoreClient=-1);               // transmits EVENT Notifications for nObj SpanBuf objects, pObj, with optional flag to ignore a specific client

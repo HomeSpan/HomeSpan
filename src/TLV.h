@@ -56,7 +56,7 @@ public:
   uint8_t *buf(tagType tag);                // returns VAL Buffer for TLV with matching TAG (or NULL if no match)
   uint8_t *buf(tagType tag, int len);       // set length and returns VAL Buffer for TLV with matching TAG (or NULL if no match or if LEN>MAX)
   int len(tagType tag);                     // returns LEN for TLV matching TAG (or 0 if TAG is found but LEN not yet set; -1 if no match at all)
-  void print();                             // prints all defined TLVs (those with length>0). For diagnostics/debugging only
+  void print(int minLogLevel=0);            // prints all defined TLVs (those with length>0), subject to specified minimum log level
   int unpack(uint8_t *tlvBuf, int nBytes);  // unpacks nBytes of TLV content from single byte buffer into individual TLV records (return 1 on success, 0 if fail) 
   int pack(uint8_t *tlvBuf);                // if tlvBuf!=NULL, packs all defined TLV records (LEN>0) into a single byte buffer, spitting large TLVs into separate 255-byte chunks.  Returns number of bytes (that would be) stored in buffer
   int pack_old(uint8_t *buf);               // packs all defined TLV records (LEN>0) into a single byte buffer, spitting large TLVs into separate 255-byte records.  Returns number of bytes stored in buffer
@@ -192,24 +192,20 @@ uint8_t *TLV<tagType, maxTags>::buf(tagType tag, int len){
 // TLV print()
 
 template<class tagType, int maxTags>
-void TLV<tagType, maxTags>::print(){
+void TLV<tagType, maxTags>::print(int minLogLevel){
 
-  char buf[3];
-
+  if(homeSpan.getLogLevel()<minLogLevel)
+    return;
+    
   for(int i=0;i<numTags;i++){
     
     if(tlv[i].len>0){
-      Serial.print(tlv[i].name);
-      Serial.print("(");
-      Serial.print(tlv[i].len);
-      Serial.print(") ");
+      Serial.printf("%s(%d) ",tlv[i].name,tlv[i].len);
       
-      for(int j=0;j<tlv[i].len;j++){
-        sprintf(buf,"%02X",tlv[i].val[j]);
-        Serial.print(buf);
-       }
+      for(int j=0;j<tlv[i].len;j++)
+        Serial.printf("%02X",tlv[i].val[j]);
 
-      Serial.print("\n");
+      Serial.printf("\n");
 
     } // len>0
   } // loop over all TLVs
