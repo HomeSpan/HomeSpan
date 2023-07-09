@@ -614,24 +614,6 @@ If REQUIRED is defined in the main sketch *prior* to including the HomeSpan libr
 #include "HomeSpan.h"
 ```
 
- ---
-
-#### Deprecated functions (available for backwards compatibility with older sketches):
-
-* `SpanRange(int min, int max, int step)`
-
-  * this legacy class was limited to integer-based parameters and has been re-coded to simply call the more generic `setRange(min, max, step)` method
-  * last supported version: [v1.2.0](https://github.com/HomeSpan/HomeSpan/blob/release-1.2.0/docs/Reference.md#spanrangeint-min-int-max-int-step)
-  * **please use** `setRange(min, max, step)` **for all new sketches**
-
-* `void homeSpan.setMaxConnections(uint8_t nCon)`
-  * this legacy method was used to set the total number of HAP Controller Connections HomeSpan implements upon start-up to ensure there are still free sockets available for user-defined code requiring separate network resources
-  * last supported version: [v1.4.2](https://github.com/HomeSpan/HomeSpan/blob/release-1.4.2/docs/Reference.md)
-  * this method has been replaced by the more flexible method, `reserveSocketConnections(uint8_t nSockets)`
-    * allows you to simply reserve network sockets for other custom code as needed
-    * upon calling `homespan.begin()`, HomeSpan automatically determines how many sockets are left that it can use for HAP Controller Connections 
-  * **please use** `homeSpan.reserveSocketConnections(uint8_t nSockets)` **for all new sketches**
-  
 ---
 
 [↩️](../README.md) Back to the Welcome page
