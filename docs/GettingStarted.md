@@ -8,7 +8,7 @@ Since HomeSpan is a library designed for Arduino's Integrated Development Enviro
 
 #### Step 2: Install the Arduino-ESP32 Core
 
-The Arduino IDE comes with built-in compilers and support for a variety of Arduino boards, such as the Arduino Uno and Arduino Nano.  However, the IDE does not natively support programming for the ESP32.  Fortunately, the IDE allows you to download and install *cores* for other micro-controllers, including the ESP32, so  they can be programming from within the Arduino environment.  See the [Espressif Arduino-ESP32 GitHub page](https://github.com/espressif/arduino-esp32) for details on he Arduino-ESP32 Core, as well as for instructions on how to install easily this core (and keep it updated) from within the Arduino IDE using the [Arduino IDE Board Manager](https://docs.espressif.com/projects/arduino-esp32/en/latest/installing.html#installing-using-arduino-ide).
+The Arduino IDE comes with built-in compilers and support for a variety of Arduino boards, such as the Arduino Uno and Arduino Nano.  However, the IDE does not natively support programming for the ESP32.  Fortunately, the IDE allows you to download and install *cores* for other micro-controllers, including the ESP32, so  they can be programming from within the Arduino environment.  See the [Espressif Arduino-ESP32 GitHub page](https://github.com/espressif/arduino-esp32) for details on the Arduino-ESP32 Core, as well as for instructions on how to install easily this core (and keep it updated) from within the Arduino IDE using the [Arduino IDE Board Manager](https://docs.espressif.com/projects/arduino-esp32/en/latest/installing.html#installing-using-arduino-ide).
 
 #### Step 3: Install HomeSpan
 
