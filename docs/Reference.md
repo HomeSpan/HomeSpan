@@ -259,7 +259,7 @@ The following `homeSpan` methods are considered experimental, since not all use 
  
     * *stackSize* - size of stack, in bytes, used by the polling task.  Default=8192 if unspecified
     * *priority* - priority at which task runs.  Minimum is 1.  Maximum is typically 24, but it depends on how the ESP32 operating system is configured. If you set it to an arbitrarily high value (e.g. 999), it will be set to the maximum priority allowed.  Default=1 if unspecified
-    * *cpu* - specifies the CPU on which the polling task will run.  Valid values are 0 and 1.  This paramater is ignored on single-cpu boards.  Default=0 if unspecified
+    * *cpu* - specifies the CPU on which the polling task will run.  Valid values are 0 and 1.  This parameter is ignored on single-cpu boards.  Default=0 if unspecified
   * if used, **must** be placed in a sketch as the last line in the Arduino `setup()` method
   * HomeSpan will throw and error and halt if both `poll()`and `autoPoll()` are used in the same sketch - either place `poll()` in the Arduino `loop()` method **or** place `autoPoll()` at the the end of the Arduino `setup()` method
   * if this method is used, and you have no need to add your own code to the main Arduino `loop()`, you can safely skip defining a blank `void loop(){}` function in your sketch
@@ -497,7 +497,7 @@ Creating an instance of this **class** attaches a toggle-switch handler to the E
   * 3=switch is closed (`SpanToggle::CLOSED`)
   * 4=switch is open (`SpanToggle::OPEN`)
  
-Note there are no *singleTime*, *longTime*, or *doubleTime* paramaters in the constructor since you can't single-press, double-press, or long-press a toggle switch.  Instead, the constructor supports the single parameter *toggleTime* (default=5ms if left unspecified) that sets the minimum time at which the switch needs to be moved to the closed position in order to trigger a call to the `button()` method.  This effectively "debounces" the toggle switch.
+Note there are no *singleTime*, *longTime*, or *doubleTime* parameters in the constructor since you can't single-press, double-press, or long-press a toggle switch.  Instead, the constructor supports the single parameter *toggleTime* (default=5ms if left unspecified) that sets the minimum time at which the switch needs to be moved to the closed position in order to trigger a call to the `button()` method.  This effectively "debounces" the toggle switch.
  
 SpanToggle also supports the following additional method:
  
