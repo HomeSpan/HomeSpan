@@ -539,7 +539,7 @@ void Span::checkConnect(){
 
 ///////////////////////////////
 
-void Span::setQRID(const char *id){
+Span& Span::setQRID(const char *id){
   
   char tBuf[5];
   sscanf(id,"%4[0-9A-Za-z]",tBuf);
@@ -547,7 +547,8 @@ void Span::setQRID(const char *id){
   if(strlen(id)==4 && strlen(tBuf)==4){
     sprintf(qrID,"%s",id);
   }
-    
+
+  return(*this);
 } // setQRID
 
 ///////////////////////////////
@@ -833,7 +834,7 @@ void Span::processSerialCommand(const char *c){
     case 'm': {
       multi_heap_info_t heapInfo;
       heap_caps_get_info(&heapInfo,MALLOC_CAP_INTERNAL);
-      LOG0("Total Heap=%d   ",heapInfo.total_free_bytes);
+      LOG0("Total Heap=%d  (low=%d)  ",heapInfo.total_free_bytes,heapInfo.minimum_free_bytes);
       heap_caps_get_info(&heapInfo,MALLOC_CAP_DEFAULT);
       LOG0("DRAM-Capable=%d   ",heapInfo.total_free_bytes);
       heap_caps_get_info(&heapInfo,MALLOC_CAP_EXEC);
@@ -1197,13 +1198,15 @@ const char* Span::statusString(HS_STATUS s){
 
 ///////////////////////////////
 
-void Span::setWifiCredentials(const char *ssid, const char *pwd){
+Span& Span::setWifiCredentials(const char *ssid, const char *pwd){
   sprintf(network.wifiData.ssid,"%.*s",MAX_SSID,ssid);
   sprintf(network.wifiData.pwd,"%.*s",MAX_PWD,pwd);
   if(wifiNVS){                                                                      // is begin() already called and wifiNVS is open
     nvs_set_blob(wifiNVS,"WIFIDATA",&network.wifiData,sizeof(network.wifiData));    // update data
     nvs_commit(wifiNVS);                                                            // commit to NVS
   }
+
+  return(*this);
 }
 
 ///////////////////////////////
