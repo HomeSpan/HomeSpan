@@ -8,7 +8,7 @@ Since HomeSpan is a library designed for Arduino's Integrated Development Enviro
 
 #### Step 2: Install the Arduino-ESP32 Core
 
-The Arduino IDE comes with built-in compilers and support for a variety of Arduino boards, such as the Arduino Uno and Arduino Nano.  However, the IDE does not natively support programming for the ESP32.  Fortunately, the IDE allows you to download and install *cores* for other micro-controllers, including the ESP32, so  they can be programming from within the Arduino environment.  See the [Espressif Arduino-ESP32 GitHub page](https://github.com/espressif/arduino-esp32#arduino-core-for-esp32-wifi-chip) for complete instructions on how to install the Arduino-ESP32 core into the Arduino IDE using the [Arduino IDE Board Manager](https://github.com/espressif/arduino-esp32/blob/master/docs/arduino-ide/boards_manager.md).
+The Arduino IDE comes with built-in compilers and support for a variety of Arduino boards, such as the Arduino Uno and Arduino Nano.  However, the IDE does not natively support programming for the ESP32.  Fortunately, the IDE allows you to download and install *cores* for other micro-controllers, including the ESP32, so  they can be programming from within the Arduino environment.  See the [Espressif Arduino-ESP32 GitHub page](https://github.com/espressif/arduino-esp32) for details on the Arduino-ESP32 Core, as well as for instructions on how to install easily this core (and keep it updated) from within the Arduino IDE using the [Arduino IDE Board Manager](https://docs.espressif.com/projects/arduino-esp32/en/latest/installing.html#installing-using-arduino-ide).
 
 #### Step 3: Install HomeSpan
 
@@ -20,7 +20,7 @@ HomeSpan is packaged as a standard Arduino library and can be installed either a
 
 #### Step 4: Acquire an ESP32 Board
 
-ESP32 development boards are widely available in different configurations from most electronics hobby sites, such as [Adafruit](https://www.adafruit.com) and [Sparkfun](https://www.sparkfun.com).  HomeSpan was developed using a dual-core ESP32-WROOM-32 (the [Huzzah32 from Adafruit](https://www.adafruit.com/product/3619)) but should work equally well on dual-core ESP32-WROVER chips.  HomeSpan has *not* been tested on any single-core ESP32 chips, such as the ESP32-S2.
+ESP32 development boards are widely available in different configurations from most electronics hobby sites, such as [Adafruit](https://www.adafruit.com) and [Sparkfun](https://www.sparkfun.com).  HomeSpan works with any ESP32 supported by the [Arduino-ESP32 Core](https://docs.espressif.com/projects/arduino-esp32/en/latest/getting_started.html#supported-soc-s), including the original ESP32, the ESP32-S2 and ESP32&#8209;S3, and the ESP32-C3.
 
 #### Step 5: Install any required USB Drivers
 
