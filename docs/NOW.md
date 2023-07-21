@@ -1,6 +1,6 @@
 # SpanPoint: Point-to-Point Communication between ESP32 Devices
 
-SpanPoint is HomeSpan's easy-to-use implementation of the Espressif ESP-NOW protocol.  SpanPoint provides bi-directional, point-to-point communication of small, fixed-size messages directly between ESP32 devices based on their MAC Addresses without the need for a central WiFi network.
+SpanPoint is HomeSpan's easy-to-use implementation of the Espressif ESP-NOW protocol.  SpanPoint provides bi-directional, point-to-point communication of small, fixed-size messages directly between ESP32 devices based on their MAC Addresses without the need for a central WiFi network.  SpanPoint can also be used on an ESP-8266 when configured as a remote device.
 
 To establish connectivity between any two devices simply instantiate a SpanPoint object on each device that references the MAC Address of the other device, as well as specifies the (potentially different) sizes of the messages that each device is expected to send to, and receive from, the other.
 
