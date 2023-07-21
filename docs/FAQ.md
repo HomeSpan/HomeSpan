@@ -32,7 +32,7 @@
 
 #### Will HomeSpan work on an ESP8266 device?
 
-* No, HomeSpan is coded specifically for the ESP32 and will not operate on an ESP8266 device.
+* No, HomeSpan is coded specifically for the ESP32 and will not operate on an ESP8266 device, though an ESP8266 can be used as a remote [SpanPoint ESP-NOW](../docs/NOW.md) Device.
 
 #### How can I read HomeSpan's MDNS broadcast mentioned in the [OTA](OTA.md) documentation?
 
