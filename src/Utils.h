@@ -48,7 +48,7 @@ struct TempBuffer {
   
   TempBuffer(size_t len){
     nBytes=len*sizeof(bufType);
-    buf=(bufType *)heap_caps_malloc(nBytes,MALLOC_CAP_8BIT);
+    buf=(bufType *)malloc(nBytes);
     if(buf==NULL){
       Serial.print("\n\n*** FATAL ERROR: Requested allocation of ");
       Serial.print(nBytes);
@@ -58,7 +58,7 @@ struct TempBuffer {
    }
 
   ~TempBuffer(){
-    heap_caps_free(buf);
+    free(buf);
   }
 
   int len(){

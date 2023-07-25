@@ -154,16 +154,27 @@ void HAPClient::init(){
 
 void HAPClient::processRequest(){
 
-  int nBytes;
+  int nBytes, messageSize;
+
+  messageSize=client.available();        
+
+  if(messageSize>MAX_HTTP){            // exceeded maximum number of bytes allowed
+    badRequestError();
+    LOG0("\n*** ERROR:  HTTP message of %d bytes exceeds maximum allowed (%d)\n\n",messageSize,MAX_HTTP);
+    return;
+  }
+  
+  TempBuffer <uint8_t> tempBuffer(messageSize+1);      // leave room for null character added below
+  uint8_t *httpBuf=tempBuffer.buf;
   
   if(cPair){                           // expecting encrypted message
     LOG2("<<<< #### ");
     LOG2(client.remoteIP());
     LOG2(" #### <<<<\n");
 
-    nBytes=receiveEncrypted();           // decrypt and return number of bytes       
+    nBytes=receiveEncrypted(httpBuf,messageSize);   // decrypt and return number of bytes read      
         
-    if(!nBytes){                        // decryption failed (error message already printed in function)
+    if(!nBytes){                           // decryption failed (error message already printed in function)
       badRequestError();              
       return;          
     }
@@ -173,21 +184,21 @@ void HAPClient::processRequest(){
     LOG2(client.remoteIP());
     LOG2(" <<<<<<<<<\n");
     
-    nBytes=client.read(httpBuf,MAX_HTTP+1);   // read all available bytes up to maximum allowed+1
-       
-    if(nBytes>MAX_HTTP){                              // exceeded maximum number of bytes allowed
+    nBytes=client.read(httpBuf,messageSize);   // read expected number of bytes
+
+    if(nBytes!=messageSize || client.available()!=0){
       badRequestError();
-      LOG0("\n*** ERROR:  Exceeded maximum HTTP message length\n\n");
+      LOG0("\n*** ERROR:  HTTP message not read correctly.  Expected %d bytes, read %d bytes, %d bytes remaining\n\n",messageSize,nBytes,client.available());
       return;
     }
-        
+               
   } // encrypted/plaintext
       
   httpBuf[nBytes]='\0';         // add null character to enable string functions
       
   char *body=(char *)httpBuf;   // char pointer to start of HTTP Body
-  char *p;                          // char pointer used for searches
-      
+  char *p;                      // char pointer used for searches
+     
   if(!(p=strstr((char *)httpBuf,"\r\n\r\n"))){
     badRequestError();
     LOG0("\n*** ERROR:  Malformed HTTP request (can't find blank line indicating end of BODY)\n\n");
@@ -233,7 +244,7 @@ void HAPClient::processRequest(){
        tlv8.print(2);                                                        // print TLV records in form "TAG(INT) LENGTH(INT) VALUES(HEX)"
       LOG2("------------ END TLVS! ------------\n");
                
-      postPairVerifyURL();                  // process URL    
+      postPairVerifyURL();                  // process URL
       return;
     }
             
@@ -243,7 +254,7 @@ void HAPClient::processRequest(){
        tlv8.print(2);                                                        // print TLV records in form "TAG(INT) LENGTH(INT) VALUES(HEX)"
       LOG2("------------ END TLVS! ------------\n");
                
-      postPairingsURL();                  // process URL    
+      postPairingsURL();                  // process URL
       return;
     }
 
@@ -878,7 +889,7 @@ int HAPClient::getAccessoriesURL(){
   LOG2("\n");
   
   sendEncrypted(body,(uint8_t *)jBuf.buf,nBytes);
-       
+         
   return(1);
   
 } // getAccessories
@@ -1443,7 +1454,7 @@ void HAPClient::tlvRespond(){
 
 //////////////////////////////////////
 
-int HAPClient::receiveEncrypted(){
+int HAPClient::receiveEncrypted(uint8_t *httpBuf, int messageSize){
 
   uint8_t buf[1042];               // maximum size of encoded message = 2+1024+16 bytes (HAP Section 6.5.2)
   int nBytes=0;
@@ -1452,8 +1463,8 @@ int HAPClient::receiveEncrypted(){
 
     int n=buf[0]+buf[1]*256;                // compute number of bytes expected in encoded message
 
-    if(nBytes+n>MAX_HTTP){                  // exceeded maximum number of bytes allowed in plaintext message
-      LOG0("\n\n*** ERROR:  Exceeded maximum HTTP message length\n\n");
+    if(nBytes+n>messageSize){      // exceeded maximum number of bytes allowed in plaintext message
+      LOG0("\n\n*** ERROR:  Decrypted message of %d bytes exceeded maximum expected message length of %d bytes\n\n",nBytes+n,messageSize);
       return(0);
       }
 
@@ -1722,7 +1733,6 @@ void Nonce::inc(){
 TLV<kTLVType,10> HAPClient::tlv8;
 nvs_handle HAPClient::hapNVS;
 nvs_handle HAPClient::srpNVS;
-uint8_t HAPClient::httpBuf[MAX_HTTP+1];                 
 HKDF HAPClient::hkdf;                                   
 pairState HAPClient::pairStatus;                        
 Accessory HAPClient::accessory;                         
