@@ -599,10 +599,10 @@ void Span::processSerialCommand(const char *c){
     case 'd': {      
       
       TempBuffer <char> qBuf(sprintfAttributes(NULL)+1);
-      sprintfAttributes(qBuf.buf);  
+      sprintfAttributes(qBuf.get());  
 
       LOG0("\n*** Attributes Database: size=%d  configuration=%d ***\n\n",qBuf.len()-1,hapConfig.configNumber);
-      prettyPrint(qBuf.buf);
+      prettyPrint(qBuf.get());
       LOG0("\n*** End Database ***\n\n");
     }
     break;
@@ -1009,12 +1009,12 @@ void Span::processSerialCommand(const char *c){
       LOG0("\n*** Pairing Data used for Cloning another Device\n\n");
       size_t olen;
       TempBuffer<char> tBuf(256);
-      mbedtls_base64_encode((uint8_t *)tBuf.buf,256,&olen,(uint8_t *)&HAPClient::accessory,sizeof(struct Accessory));
-      LOG0("Accessory data:  %s\n",tBuf.buf);
+      mbedtls_base64_encode((uint8_t *)tBuf.get(),256,&olen,(uint8_t *)&HAPClient::accessory,sizeof(struct Accessory));
+      LOG0("Accessory data:  %s\n",tBuf.get());
       for(int i=0;i<HAPClient::MAX_CONTROLLERS;i++){
         if(HAPClient::controllers[i].allocated){
-          mbedtls_base64_encode((uint8_t *)tBuf.buf,256,&olen,(uint8_t *)(HAPClient::controllers+i),sizeof(struct Controller));
-          LOG0("Controller data: %s\n",tBuf.buf);
+          mbedtls_base64_encode((uint8_t *)tBuf.get(),256,&olen,(uint8_t *)(HAPClient::controllers+i),sizeof(struct Controller));
+          LOG0("Controller data: %s\n",tBuf.get());
         }
       }
       LOG0("\n*** End Pairing Data\n\n");
@@ -1027,14 +1027,14 @@ void Span::processSerialCommand(const char *c){
       TempBuffer<char> tBuf(200);
       size_t olen;
 
-      tBuf.buf[0]='\0';
+      tBuf.get()[0]='\0';
       LOG0(">>> Accessory data:  ");
-      readSerial(tBuf.buf,199);
-      if(strlen(tBuf.buf)==0){
+      readSerial(tBuf.get(),199);
+      if(strlen(tBuf.get())==0){
         LOG0("(cancelled)\n\n");
         return;
       }
-      mbedtls_base64_decode((uint8_t *)&HAPClient::accessory,sizeof(struct Accessory),&olen,(uint8_t *)tBuf.buf,strlen(tBuf.buf));
+      mbedtls_base64_decode((uint8_t *)&HAPClient::accessory,sizeof(struct Accessory),&olen,(uint8_t *)tBuf.get(),strlen(tBuf.get()));
       if(olen!=sizeof(struct Accessory)){
         LOG0("\n*** Error in size of Accessory data - cloning cancelled.  Restarting...\n\n");
         reboot();
@@ -1044,15 +1044,15 @@ void Span::processSerialCommand(const char *c){
       }
       
       for(int i=0;i<HAPClient::MAX_CONTROLLERS;i++){
-        tBuf.buf[0]='\0';
+        tBuf.get()[0]='\0';
         LOG0(">>> Controller data: ");
-        readSerial(tBuf.buf,199);
-        if(strlen(tBuf.buf)==0){
+        readSerial(tBuf.get(),199);
+        if(strlen(tBuf.get())==0){
           LOG0("(done)\n");
           while(i<HAPClient::MAX_CONTROLLERS)              // clear data from remaining controller slots
             HAPClient::controllers[i++].allocated=false;
         } else {
-          mbedtls_base64_decode((uint8_t *)(HAPClient::controllers+i),sizeof(struct Controller),&olen,(uint8_t *)tBuf.buf,strlen(tBuf.buf));
+          mbedtls_base64_decode((uint8_t *)(HAPClient::controllers+i),sizeof(struct Controller),&olen,(uint8_t *)tBuf.get(),strlen(tBuf.get()));
           if(olen!=sizeof(struct Controller)){
             LOG0("\n*** Error in size of Controller data - cloning cancelled.  Restarting...\n\n");
             reboot();
@@ -1577,8 +1577,8 @@ boolean Span::updateDatabase(boolean updateMDNS){
 
   uint8_t tHash[48];
   TempBuffer <char> tBuf(sprintfAttributes(NULL,GET_META|GET_PERMS|GET_TYPE|GET_DESC)+1);
-  sprintfAttributes(tBuf.buf,GET_META|GET_PERMS|GET_TYPE|GET_DESC);  
-  mbedtls_sha512_ret((uint8_t *)tBuf.buf,tBuf.len(),tHash,1);     // create SHA-384 hash of JSON (can be any hash - just looking for a unique key)
+  sprintfAttributes(tBuf.get(),GET_META|GET_PERMS|GET_TYPE|GET_DESC);  
+  mbedtls_sha512_ret((uint8_t *)tBuf.get(),tBuf.len(),tHash,1);     // create SHA-384 hash of JSON (can be any hash - just looking for a unique key)
 
   boolean changed=false;
 

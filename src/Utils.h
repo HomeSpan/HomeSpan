@@ -42,9 +42,14 @@ String mask(char *c, int n);          // simply utility that creates a String fr
 // going out of scope
 
 template <class bufType>
-struct TempBuffer {
+class TempBuffer {
+
+  private:
+  
   bufType *buf;
   int nBytes;
+
+  public:
   
   TempBuffer(size_t len){
     nBytes=len*sizeof(bufType);
@@ -63,6 +68,10 @@ struct TempBuffer {
 
   int len(){
     return(nBytes);
+  }
+
+  bufType *get(){
+    return(buf);
   }
   
 };

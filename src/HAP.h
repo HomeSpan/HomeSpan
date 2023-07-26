@@ -134,7 +134,7 @@ struct HAPClient {
   static void hexPrintRow(uint8_t *buf, int n, int minLogLevel=0);        // prints 'n' bytes of *buf as HEX, all on one row, subject to specified minimum log level
   static void charPrintRow(uint8_t *buf, int n, int minLogLevel=0);       // prints 'n' bytes of *buf as CHAR, all on one row, subject to specified minimum log level
   
-  static Controller *findController(uint8_t *id);                                      // returns pointer to controller with mathching ID (or NULL if no match)
+  static Controller *findController(uint8_t *id);                                      // returns pointer to controller with matching ID (or NULL if no match)
   static Controller *getFreeController();                                              // return pointer to next free controller slot (or NULL if no free slots)
   static Controller *addController(uint8_t *id, uint8_t *ltpk, boolean admin);         // stores data for new Controller with specified data.  Returns pointer to Controller slot on success, else NULL
   static int nAdminControllers();                                                      // returns number of admin Controllers stored

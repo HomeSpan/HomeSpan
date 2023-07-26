@@ -117,8 +117,8 @@ void Network::apConfigure(){
   WiFiServer apServer(80);
   client=0;
   
-  TempBuffer <uint8_t> tempBuffer(MAX_HTTP+1);
-  uint8_t *httpBuf=tempBuffer.buf;
+  TempBuffer <uint8_t> httpBuf(MAX_HTTP+1);
+//  uint8_t *httpBuf=tempBuffer.buf;
   
   const byte DNS_PORT = 53;
   DNSServer dnsServer;
@@ -179,7 +179,7 @@ void Network::apConfigure(){
       LOG2(client.remoteIP());
       LOG2(" <<<<<<<<<\n");
     
-      int nBytes=client.read(httpBuf,MAX_HTTP+1);       // read all available bytes up to maximum allowed+1
+      int nBytes=client.read(httpBuf.get(),MAX_HTTP+1);       // read all available bytes up to maximum allowed+1
        
       if(nBytes>MAX_HTTP){                              // exceeded maximum number of bytes allowed
         badRequestError();
@@ -187,11 +187,11 @@ void Network::apConfigure(){
         continue;
       }
 
-      httpBuf[nBytes]='\0';                             // add null character to enable string functions    
-      char *body=(char *)httpBuf;                       // char pointer to start of HTTP Body
+      httpBuf.get()[nBytes]='\0';                             // add null character to enable string functions    
+      char *body=(char *)httpBuf.get();                       // char pointer to start of HTTP Body
       char *p;                                          // char pointer used for searches
       
-      if(!(p=strstr((char *)httpBuf,"\r\n\r\n"))){
+      if(!(p=strstr((char *)httpBuf.get(),"\r\n\r\n"))){
         badRequestError();
         LOG0("\n*** ERROR:  Malformed HTTP request (can't find blank line indicating end of BODY)\n\n");
         continue;      

@@ -163,16 +163,15 @@ void HAPClient::processRequest(){
     LOG0("\n*** ERROR:  HTTP message of %d bytes exceeds maximum allowed (%d)\n\n",messageSize,MAX_HTTP);
     return;
   }
-  
-  TempBuffer <uint8_t> tempBuffer(messageSize+1);      // leave room for null character added below
-  uint8_t *httpBuf=tempBuffer.buf;
+ 
+  TempBuffer <uint8_t> httpBuf(messageSize+1);      // leave room for null character added below
   
   if(cPair){                           // expecting encrypted message
     LOG2("<<<< #### ");
     LOG2(client.remoteIP());
     LOG2(" #### <<<<\n");
 
-    nBytes=receiveEncrypted(httpBuf,messageSize);   // decrypt and return number of bytes read      
+    nBytes=receiveEncrypted(httpBuf.get(),messageSize);   // decrypt and return number of bytes read      
         
     if(!nBytes){                           // decryption failed (error message already printed in function)
       badRequestError();              
@@ -184,7 +183,7 @@ void HAPClient::processRequest(){
     LOG2(client.remoteIP());
     LOG2(" <<<<<<<<<\n");
     
-    nBytes=client.read(httpBuf,messageSize);   // read expected number of bytes
+    nBytes=client.read(httpBuf.get(),messageSize);   // read expected number of bytes
 
     if(nBytes!=messageSize || client.available()!=0){
       badRequestError();
@@ -194,12 +193,12 @@ void HAPClient::processRequest(){
                
   } // encrypted/plaintext
       
-  httpBuf[nBytes]='\0';         // add null character to enable string functions
+  httpBuf.get()[nBytes]='\0';   // add null character to enable string functions
       
-  char *body=(char *)httpBuf;   // char pointer to start of HTTP Body
-  char *p;                      // char pointer used for searches
+  char *body=(char *)httpBuf.get();   // char pointer to start of HTTP Body
+  char *p;                            // char pointer used for searches
      
-  if(!(p=strstr((char *)httpBuf,"\r\n\r\n"))){
+  if(!(p=strstr((char *)httpBuf.get(),"\r\n\r\n"))){
     badRequestError();
     LOG0("\n*** ERROR:  Malformed HTTP request (can't find blank line indicating end of BODY)\n\n");
     return;      
@@ -875,7 +874,7 @@ int HAPClient::getAccessoriesURL(){
 
   int nBytes = homeSpan.sprintfAttributes(NULL);        // get size of HAP attributes JSON
   TempBuffer <char> jBuf(nBytes+1);
-  homeSpan.sprintfAttributes(jBuf.buf);                  // create JSON database (will need to re-cast to uint8_t* below)
+  homeSpan.sprintfAttributes(jBuf.get());                  // create JSON database (will need to re-cast to uint8_t* below)
 
   int nChars=snprintf(NULL,0,"HTTP/1.1 200 OK\r\nContent-Type: application/hap+json\r\nContent-Length: %d\r\n\r\n",nBytes);      // create '200 OK' Body with Content Length = size of JSON Buf
   char body[nChars+1];
@@ -885,10 +884,10 @@ int HAPClient::getAccessoriesURL(){
   LOG2(client.remoteIP());
   LOG2(" >>>>>>>>>>\n");
   LOG2(body);
-  LOG2(jBuf.buf);
+  LOG2(jBuf.get());
   LOG2("\n");
   
-  sendEncrypted(body,(uint8_t *)jBuf.buf,nBytes);
+  sendEncrypted(body,(uint8_t *)jBuf.get(),nBytes);
          
   return(1);
   
@@ -1507,10 +1506,10 @@ void HAPClient::sendEncrypted(char *body, uint8_t *dataBuf, int dataLen){
 
   TempBuffer <uint8_t> tBuf(totalBytes);
   
-  tBuf.buf[count]=bodyLen%256;         // store number of bytes in first frame that encrypts the Body (AAD bytes)
-  tBuf.buf[count+1]=bodyLen/256;
+  tBuf.get()[count]=bodyLen%256;         // store number of bytes in first frame that encrypts the Body (AAD bytes)
+  tBuf.get()[count+1]=bodyLen/256;
   
-  crypto_aead_chacha20poly1305_ietf_encrypt(tBuf.buf+count+2,&nBytes,(uint8_t *)body,bodyLen,tBuf.buf+count,2,NULL,a2cNonce.get(),a2cKey);   // encrypt the Body with authentication tag appended
+  crypto_aead_chacha20poly1305_ietf_encrypt(tBuf.get()+count+2,&nBytes,(uint8_t *)body,bodyLen,tBuf.get()+count,2,NULL,a2cNonce.get(),a2cKey);   // encrypt the Body with authentication tag appended
 
   a2cNonce.inc();                 // increment nonce
   
@@ -1523,17 +1522,17 @@ void HAPClient::sendEncrypted(char *body, uint8_t *dataBuf, int dataLen){
     if(n>FRAME_SIZE)           // maximum number of bytes to encrypt=FRAME_SIZE
       n=FRAME_SIZE;                                     
     
-    tBuf.buf[count]=n%256;    // store number of bytes that encrypts this frame (AAD bytes)
-    tBuf.buf[count+1]=n/256;
+    tBuf.get()[count]=n%256;    // store number of bytes that encrypts this frame (AAD bytes)
+    tBuf.get()[count+1]=n/256;
 
-    crypto_aead_chacha20poly1305_ietf_encrypt(tBuf.buf+count+2,&nBytes,dataBuf+i,n,tBuf.buf+count,2,NULL,a2cNonce.get(),a2cKey);   // encrypt the next portion of dataBuf with authentication tag appended
+    crypto_aead_chacha20poly1305_ietf_encrypt(tBuf.get()+count+2,&nBytes,dataBuf+i,n,tBuf.get()+count,2,NULL,a2cNonce.get(),a2cKey);   // encrypt the next portion of dataBuf with authentication tag appended
 
     a2cNonce.inc();            // increment nonce
 
     count+=2+n+16;             // increment count by 2-byte AAD record + length of JSON + 16-byte authentication tag
   }
  
-  client.write(tBuf.buf,count);   // transmit all encrypted frames to Client
+  client.write(tBuf.get(),count);   // transmit all encrypted frames to Client
 
   LOG2("-------- SENT ENCRYPTED! --------\n");
       
