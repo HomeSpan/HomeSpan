@@ -114,12 +114,6 @@ void HAPClient::init(){
 
   printControllers();                                                         
 
-  // create broadcaset name from server base name plus accessory ID (without ':')
-  
-  int nChars=snprintf(NULL,0,"%s-%2.2s%2.2s%2.2s%2.2s%2.2s%2.2s",homeSpan.hostNameBase,accessory.ID,accessory.ID+3,accessory.ID+6,accessory.ID+9,accessory.ID+12,accessory.ID+15);       
-  homeSpan.hostName=(char *)malloc(nChars+1);
-  sprintf(homeSpan.hostName,"%s-%2.2s%2.2s%2.2s%2.2s%2.2s%2.2s",homeSpan.hostNameBase,accessory.ID,accessory.ID+3,accessory.ID+6,accessory.ID+9,accessory.ID+12,accessory.ID+15);
-
   tlv8.create(kTLVType_State,1,"STATE");                 // define the actual TLV records needed for the implementation of HAP; one for each kTLVType needed (HAP Table 5-6)
   tlv8.create(kTLVType_PublicKey,384,"PUBKEY");
   tlv8.create(kTLVType_Method,1,"METHOD");
@@ -876,9 +870,8 @@ int HAPClient::getAccessoriesURL(){
   TempBuffer <char> jBuf(nBytes+1);
   homeSpan.sprintfAttributes(jBuf.get());                  // create JSON database (will need to re-cast to uint8_t* below)
 
-  int nChars=snprintf(NULL,0,"HTTP/1.1 200 OK\r\nContent-Type: application/hap+json\r\nContent-Length: %d\r\n\r\n",nBytes);      // create '200 OK' Body with Content Length = size of JSON Buf
-  char body[nChars+1];
-  sprintf(body,"HTTP/1.1 200 OK\r\nContent-Type: application/hap+json\r\nContent-Length: %d\r\n\r\n",nBytes);
+  char *body;
+  asprintf(&body,"HTTP/1.1 200 OK\r\nContent-Type: application/hap+json\r\nContent-Length: %d\r\n\r\n",nBytes);
   
   LOG2("\n>>>>>>>>>> ");
   LOG2(client.remoteIP());
@@ -888,6 +881,7 @@ int HAPClient::getAccessoriesURL(){
   LOG2("\n");
   
   sendEncrypted(body,(uint8_t *)jBuf.get(),nBytes);
+  free(body);
          
   return(1);
   
@@ -1087,9 +1081,8 @@ int HAPClient::getCharacteristicsURL(char *urlBuf){
 
   boolean sFlag=strstr(jsonBuf,"status");          // status attribute found?
 
-  int nChars=snprintf(NULL,0,"HTTP/1.1 %s\r\nContent-Type: application/hap+json\r\nContent-Length: %d\r\n\r\n",!sFlag?"200 OK":"207 Multi-Status",nBytes);   
-  char body[nChars+1];    
-  sprintf(body,"HTTP/1.1 %s\r\nContent-Type: application/hap+json\r\nContent-Length: %d\r\n\r\n",!sFlag?"200 OK":"207 Multi-Status",nBytes);
+  char *body;
+  asprintf(&body,"HTTP/1.1 %s\r\nContent-Type: application/hap+json\r\nContent-Length: %d\r\n\r\n",!sFlag?"200 OK":"207 Multi-Status",nBytes);
     
   LOG2("\n>>>>>>>>>> ");
   LOG2(client.remoteIP());
@@ -1099,7 +1092,8 @@ int HAPClient::getCharacteristicsURL(char *urlBuf){
   LOG2("\n");
   
   sendEncrypted(body,(uint8_t *)jsonBuf,nBytes);        // note recasting of jsonBuf into uint8_t*
-      
+  free(body);
+        
   return(1);
 }
 
@@ -1148,9 +1142,8 @@ int HAPClient::putCharacteristicsURL(char *json){
     char jsonBuf[nBytes+1];
     homeSpan.sprintfAttributes(pObj,n,jsonBuf);
 
-    int nChars=snprintf(NULL,0,"HTTP/1.1 207 Multi-Status\r\nContent-Type: application/hap+json\r\nContent-Length: %d\r\n\r\n",nBytes);      // create Body with Content Length = size of JSON Buf
-    char body[nChars+1];
-    sprintf(body,"HTTP/1.1 207 Multi-Status\r\nContent-Type: application/hap+json\r\nContent-Length: %d\r\n\r\n",nBytes);
+    char *body;
+    asprintf(&body,"HTTP/1.1 207 Multi-Status\r\nContent-Type: application/hap+json\r\nContent-Length: %d\r\n\r\n",nBytes);
   
     LOG2("\n>>>>>>>>>> ");
     LOG2(client.remoteIP());
@@ -1160,6 +1153,7 @@ int HAPClient::putCharacteristicsURL(char *json){
     LOG2("\n");
   
     sendEncrypted(body,(uint8_t *)jsonBuf,nBytes);        // note recasting of jsonBuf into uint8_t*
+    free(body);
   
   }
 
@@ -1209,9 +1203,8 @@ int HAPClient::putPrepareURL(char *json){
 
   sprintf(jsonBuf,"{\"status\":%d}",(int)status);
   int nBytes=strlen(jsonBuf);
-  int nChars=snprintf(NULL,0,"HTTP/1.1 200 OK\r\nContent-Type: application/hap+json\r\nContent-Length: %d\r\n\r\n",nBytes);      // create Body with Content Length = size of JSON Buf
-  char body[nChars+1];
-  sprintf(body,"HTTP/1.1 200 OK\r\nContent-Type: application/hap+json\r\nContent-Length: %d\r\n\r\n",nBytes);
+  char *body;
+  asprintf(&body,"HTTP/1.1 200 OK\r\nContent-Type: application/hap+json\r\nContent-Length: %d\r\n\r\n",nBytes);
   
   LOG2("\n>>>>>>>>>> ");
   LOG2(client.remoteIP());
@@ -1221,6 +1214,7 @@ int HAPClient::putPrepareURL(char *json){
   LOG2("\n");
   
   sendEncrypted(body,(uint8_t *)jsonBuf,nBytes);        // note recasting of jsonBuf into uint8_t*
+  free(body);
     
   return(1);
 }
@@ -1403,9 +1397,8 @@ void HAPClient::eventNotify(SpanBuf *pObj, int nObj, int ignoreClient){
         char jsonBuf[nBytes+1];
         homeSpan.sprintfNotify(pObj,nObj,jsonBuf,cNum);
 
-        int nChars=snprintf(NULL,0,"EVENT/1.0 200 OK\r\nContent-Type: application/hap+json\r\nContent-Length: %d\r\n\r\n",nBytes);      // create Body with Content Length = size of JSON Buf
-        char body[nChars+1];
-        sprintf(body,"EVENT/1.0 200 OK\r\nContent-Type: application/hap+json\r\nContent-Length: %d\r\n\r\n",nBytes);
+        char *body;
+        asprintf(&body,"EVENT/1.0 200 OK\r\nContent-Type: application/hap+json\r\nContent-Length: %d\r\n\r\n",nBytes);
 
         LOG2("\n>>>>>>>>>> ");
         LOG2(hap[cNum]->client.remoteIP());
@@ -1415,6 +1408,7 @@ void HAPClient::eventNotify(SpanBuf *pObj, int nObj, int ignoreClient){
         LOG2("\n");
   
         hap[cNum]->sendEncrypted(body,(uint8_t *)jsonBuf,nBytes);        // note recasting of jsonBuf into uint8_t*
+        free(body);
 
       } // if there are characteristic updates to notify client cNum
     } // if client exists
@@ -1431,9 +1425,8 @@ void HAPClient::tlvRespond(){
   uint8_t tlvData[nBytes];         // create buffer
   tlv8.pack(tlvData);              // pack TLV records into buffer
 
-  int nChars=snprintf(NULL,0,"HTTP/1.1 200 OK\r\nContent-Type: application/pairing+tlv8\r\nContent-Length: %d\r\n\r\n",nBytes);      // create Body with Content Length = size of TLV data
-  char body[nChars+1];
-  sprintf(body,"HTTP/1.1 200 OK\r\nContent-Type: application/pairing+tlv8\r\nContent-Length: %d\r\n\r\n",nBytes);
+  char *body;
+  asprintf(&body,"HTTP/1.1 200 OK\r\nContent-Type: application/pairing+tlv8\r\nContent-Length: %d\r\n\r\n",nBytes);      // create Body with Content Length = size of TLV data
   
   LOG2("\n>>>>>>>>>> ");
   LOG2(client.remoteIP());
@@ -1448,6 +1441,8 @@ void HAPClient::tlvRespond(){
   } else {
     sendEncrypted(body,tlvData,nBytes);
   }
+
+  free(body);
 
 } // tlvRespond
 

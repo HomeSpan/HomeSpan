@@ -429,31 +429,26 @@ void Span::checkConnect(){
   memcpy(id,HAPClient::accessory.ID,17);    // copy ID bytes
   id[17]='\0';                              // add terminating null
 
-  // create broadcaset name from server base name plus accessory ID (without ':')
+  // create broadcast name from server base name plus accessory ID (without ':')
 
-  int nChars;
-
-  if(!hostNameSuffix)
-    nChars=snprintf(NULL,0,"%s-%.2s%.2s%.2s%.2s%.2s%.2s",hostNameBase,id,id+3,id+6,id+9,id+12,id+15);
-  else
-    nChars=snprintf(NULL,0,"%s%s",hostNameBase,hostNameSuffix);
-    
-  char hostName[nChars+1];
+  char *hostName;
   
   if(!hostNameSuffix)
-    sprintf(hostName,"%s-%.2s%.2s%.2s%.2s%.2s%.2s",hostNameBase,id,id+3,id+6,id+9,id+12,id+15);
+    asprintf(&hostName,"%s-%.2s%.2s%.2s%.2s%.2s%.2s",hostNameBase,id,id+3,id+6,id+9,id+12,id+15);
   else
-    sprintf(hostName,"%s%s",hostNameBase,hostNameSuffix);
+    asprintf(&hostName,"%s%s",hostNameBase,hostNameSuffix);
 
-  char d[strlen(hostName)+1];  
-  sscanf(hostName,"%[A-Za-z0-9-]",d);
+  char *d;
+  sscanf(hostName,"%m[A-Za-z0-9-]",&d);
   
-  if(strlen(hostName)>255|| hostName[0]=='-' || hostName[strlen(hostName)-1]=='-' || strlen(hostName)!=strlen(d)){
+  if(strlen(hostName)>255 || hostName[0]=='-' || hostName[strlen(hostName)-1]=='-' || strlen(hostName)!=strlen(d)){
     LOG0("\n*** Error:  Can't start MDNS due to invalid hostname '%s'.\n",hostName);
     LOG0("*** Hostname must consist of 255 or less alphanumeric characters or a hyphen, except that the hyphen cannot be the first or last character.\n");
     LOG0("*** PROGRAM HALTED!\n\n");
     while(1);
   }
+
+  free(d);
     
   LOG0("\nStarting MDNS...\n\n");
   LOG0("HostName:      %s.local:%d\n",hostName,tcpPortNum);
@@ -534,6 +529,8 @@ void Span::checkConnect(){
   
   if(wifiCallback)
     wifiCallback();
+
+  free(hostName);
   
 } // initWiFi
 
