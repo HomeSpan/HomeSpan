@@ -270,6 +270,7 @@ Creating an instance of this **class** adds a new HAP Accessory to the HomeSpan 
 
   * every HomeSpan sketch requires at least one Accessory
   * a sketch can contain a maximum of 41 Accessories per sketch (if exceeded, a runtime error will the thrown and the sketch will halt)
+  * extending the limit of 41 is possible by using the #define HOMESPAN_MAX_ACCESSORIES &lt;LIMIT;&gt;, but this is only recommended for experienced developers, as a higher limit may exceed the maximum available memory.
   * there are no associated methods
   * the argument *aid* is optional.
   
