@@ -966,14 +966,23 @@ int HAPClient::postPairingsURL(){
       tlv8.val(kTLVType_State,pairState_M2);                // set State=<M2>
       break;
       
-    case 5:        
-      LOG1("List...\n");   
+    case 5: {
+      LOG1("List...\n");
 
-      // NEEDS TO BE IMPLEMENTED - UNSURE IF THIS IS EVER USED BY HOMEKIT
+      TempBuffer <uint8_t> tBuf(listControllers(NULL));
 
-      tlv8.clear();                                         // clear TLV records
-      tlv8.val(kTLVType_State,pairState_M2);                // set State=<M2>
-      break;
+      char *body;
+      asprintf(&body,"HTTP/1.1 200 OK\r\nContent-Type: application/pairing+tlv8\r\nContent-Length: %d\r\n\r\n",tBuf.len());      // create Body with Content Length = size of TLV data
+  
+      LOG2("\n>>>>>>>>>> ");
+      LOG2(client.remoteIP());
+      LOG2(" >>>>>>>>>>\n");
+      LOG2(body);
+      listControllers(tBuf.get());
+      sendEncrypted(body,tBuf.get(),tBuf.len());
+      free(body);     
+      return(1);
+    }
 
     default:
       LOG0("\n*** ERROR: 'Method' TLV record is either missing or not set to either 3, 4, or 5 as required\n\n");
