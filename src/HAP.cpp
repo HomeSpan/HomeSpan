@@ -1440,24 +1440,26 @@ void HAPClient::tlvRespond(){
 
 int HAPClient::receiveEncrypted(uint8_t *httpBuf, int messageSize){
 
-  uint8_t buf[1042];               // maximum size of encoded message = 2+1024+16 bytes (HAP Section 6.5.2)
+  uint8_t aad[2];
   int nBytes=0;
 
-  while(client.read(buf,2)==2){    // read initial 2-byte AAD record
+  while(client.read(aad,2)==2){    // read initial 2-byte AAD record
 
-    int n=buf[0]+buf[1]*256;                // compute number of bytes expected in encoded message
+    int n=aad[0]+aad[1]*256;                // compute number of bytes expected in message after decoding
 
     if(nBytes+n>messageSize){      // exceeded maximum number of bytes allowed in plaintext message
       LOG0("\n\n*** ERROR:  Decrypted message of %d bytes exceeded maximum expected message length of %d bytes\n\n",nBytes+n,messageSize);
       return(0);
       }
 
-    if(client.read(buf+2,n+16)!=n+16){      // read expected number of total bytes = n bytes in encoded message + 16 bytes for appended authentication tag      
+    TempBuffer <uint8_t> tBuf(n+16);      // expected number of total bytes = n bytes in encoded message + 16 bytes for appended authentication tag      
+
+    if(client.read(tBuf.get(),tBuf.len())!=tBuf.len()){      
       LOG0("\n\n*** ERROR: Malformed encrypted message frame\n\n");
       return(0);      
     }                
 
-    if(crypto_aead_chacha20poly1305_ietf_decrypt(httpBuf+nBytes, NULL, NULL, buf+2, n+16, buf, 2, c2aNonce.get(), c2aKey)==-1){
+    if(crypto_aead_chacha20poly1305_ietf_decrypt(httpBuf+nBytes, NULL, NULL, tBuf.get(), tBuf.len(), aad, 2, c2aNonce.get(), c2aKey)==-1){
       LOG0("\n\n*** ERROR: Can't Decrypt Message\n\n");
       return(0);        
     }
