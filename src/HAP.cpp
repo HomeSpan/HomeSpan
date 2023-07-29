@@ -966,8 +966,8 @@ int HAPClient::postPairingsURL(){
       tlv8.val(kTLVType_State,pairState_M2);                // set State=<M2>
       break;
       
-    case 5:                     
-      LOG1("List...\n");
+    case 5:        
+      LOG1("List...\n");   
 
       // NEEDS TO BE IMPLEMENTED - UNSURE IF THIS IS EVER USED BY HOMEKIT
 
@@ -1411,12 +1411,11 @@ void HAPClient::eventNotify(SpanBuf *pObj, int nObj, int ignoreClient){
 
 void HAPClient::tlvRespond(){
 
-  int nBytes=tlv8.pack(NULL);      // return number of bytes needed to pack TLV records into a buffer
-  uint8_t tlvData[nBytes];         // create buffer
-  tlv8.pack(tlvData);              // pack TLV records into buffer
+  TempBuffer <uint8_t> tBuf(tlv8.pack(NULL));         // create buffer to hold TLV data    
+  tlv8.pack(tBuf.get());                              // pack TLV records into buffer
 
   char *body;
-  asprintf(&body,"HTTP/1.1 200 OK\r\nContent-Type: application/pairing+tlv8\r\nContent-Length: %d\r\n\r\n",nBytes);      // create Body with Content Length = size of TLV data
+  asprintf(&body,"HTTP/1.1 200 OK\r\nContent-Type: application/pairing+tlv8\r\nContent-Length: %d\r\n\r\n",tBuf.len());      // create Body with Content Length = size of TLV data
   
   LOG2("\n>>>>>>>>>> ");
   LOG2(client.remoteIP());
@@ -1426,10 +1425,10 @@ void HAPClient::tlvRespond(){
 
   if(!cPair){                       // unverified, unencrypted session
     client.print(body);
-    client.write(tlvData,nBytes);      
+    client.write(tBuf.get(),tBuf.len());      
     LOG2("------------ SENT! --------------\n");
   } else {
-    sendEncrypted(body,tlvData,nBytes);
+    sendEncrypted(body,tBuf.get(),tBuf.len());
   }
 
   free(body);
@@ -1664,6 +1663,44 @@ void HAPClient::removeController(uint8_t *id){
   }
 
 }    
+
+//////////////////////////////////////
+
+int HAPClient::listControllers(uint8_t *tlvBuf){
+
+  int nBytes=0;
+  int n;
+    
+  tlv8.clear();
+  tlv8.val(kTLVType_State,pairState_M2);      
+
+  for(int i=0;i<MAX_CONTROLLERS;i++){           // loop over all controller slots
+    if(controllers[i].allocated){
+      
+      if(tlv8.val(kTLVType_State)==-1){          // if State is not set then this is not the first controller found
+        n=tlv8.separate(tlvBuf);                 // add separator
+        nBytes+=n;
+        if(tlvBuf){
+          tlvBuf+=n;
+          LOG2("SEPARATOR(0)\n");
+        }
+      }
+                                   
+      tlv8.val(kTLVType_Permissions,controllers[i].admin);      
+      memcpy(tlv8.buf(kTLVType_Identifier,36),controllers[i].ID,36);
+      memcpy(tlv8.buf(kTLVType_PublicKey,32),controllers[i].LTPK,32);
+      n=tlv8.pack(tlvBuf);
+      nBytes+=n;
+      if(tlvBuf){
+        tlvBuf+=n;
+        tlv8.print();
+      }
+      tlv8.clear();
+    }
+  }
+
+  return(nBytes);       
+}
 
 //////////////////////////////////////
 

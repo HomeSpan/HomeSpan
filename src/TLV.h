@@ -30,7 +30,7 @@
 template <class tagType, int maxTags>
 class TLV {
 
-  int cLen;              // total number of bytes in all defined TLV records, including TAG andf LEN (suitable for use as Content-Length in HTTP Body)
+  int cLen;              // total number of bytes in all defined TLV records, including TAG and LEN (suitable for use as Content-Length in HTTP Body)
   int numTags;           // actual number of tags defined
   
   struct tlv_t {
@@ -59,7 +59,7 @@ public:
   void print(int minLogLevel=0);            // prints all defined TLVs (those with length>0), subject to specified minimum log level
   int unpack(uint8_t *tlvBuf, int nBytes);  // unpacks nBytes of TLV content from single byte buffer into individual TLV records (return 1 on success, 0 if fail) 
   int pack(uint8_t *tlvBuf);                // if tlvBuf!=NULL, packs all defined TLV records (LEN>0) into a single byte buffer, spitting large TLVs into separate 255-byte chunks.  Returns number of bytes (that would be) stored in buffer
-  int pack_old(uint8_t *buf);               // packs all defined TLV records (LEN>0) into a single byte buffer, spitting large TLVs into separate 255-byte records.  Returns number of bytes stored in buffer
+  int separate(uint8_t *tlvBuf);            // if tlvBuf!=NULL, packs a TLV separator into a single byte buffer.  Returns number of bytes (that would be) stored in buffer
   
 }; // TLV
 
@@ -210,6 +210,20 @@ void TLV<tagType, maxTags>::print(int minLogLevel){
     } // len>0
   } // loop over all TLVs
 }
+
+//////////////////////////////////////
+// TLV separate(tlvBuf)
+
+template<class tagType, int maxTags>
+int TLV<tagType, maxTags>::separate(uint8_t *tlvBuf){
+  
+  if(tlvBuf){              // load separator
+    *tlvBuf++=kTLVType_Separator;
+    *tlvBuf=0;
+  }
+
+  return(2);
+}     
 
 //////////////////////////////////////
 // TLV pack(tlvBuf)
