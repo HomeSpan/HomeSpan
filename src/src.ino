@@ -56,6 +56,10 @@ void setup() {
 //  homeSpan.setControlPin(21);
   
   homeSpan.setLogLevel(2);
+//  homeSpan.reserveSocketConnections(10);
+  
+//  homeSpan.setApSSID("HS_Setup");
+//  homeSpan.setApPassword("");
 
 //          .setStatusPin(13);
 //  homeSpan.setSerialInputDisable(true);

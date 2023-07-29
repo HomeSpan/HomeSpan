@@ -251,16 +251,6 @@ void HAPClient::processRequest(){
       return;
     }
 
-    if(!strncmp(body,"POST /pairings ",15) &&                                // POST PAIRINGS
-       strstr(body,"Content-Type: application/pairing+tlv8") &&              // check that content is TLV8
-       tlv8.unpack(content,cLen)){                                          // read TLV content
-       tlv8.print(2);                                                        // print TLV records in form "TAG(INT) LENGTH(INT) VALUES(HEX)"
-      LOG2("------------ END TLVS! ------------\n");
-               
-      postPairingsURL();                  // process URL    
-      return;
-    }
-
     notFoundError();
     LOG0("\n*** ERROR:  Bad POST request - URL not found\n\n");
     return;                  
@@ -1648,7 +1638,7 @@ void HAPClient::removeController(uint8_t *id){
   Controller *slot;
 
   if((slot=findController(id))){      // remove controller if found
-    LOG2("\n***Removed Controller: ");
+    LOG2("\n*** Removed Controller: ");
     charPrintRow(id,36,2);
     LOG2(slot->admin?" (admin)\n":" (regular)\n");
     slot->allocated=false;
@@ -1660,10 +1650,14 @@ void HAPClient::removeController(uint8_t *id){
 
       STATUS_UPDATE(start(LED_PAIRING_NEEDED),HS_PAIRING_NEEDED)
 
-      if(homeSpan.pairCallback)                                    // if set, invoke user-defined Pairing Callback to indicate device has been paired
+      if(homeSpan.pairCallback)                                    // if set, invoke user-defined Pairing Callback to indicate device has been un-paired
         homeSpan.pairCallback(false);
     }
 
+    LOG2("\n");
+  } else {
+    LOG2("\n*** Request to Remove Controller Ignored - Controller Not Found: ");
+    charPrintRow(id,36,2);
     LOG2("\n");
   }
 
