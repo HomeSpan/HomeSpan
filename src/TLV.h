@@ -178,19 +178,7 @@ uint8_t *TLV<tagType, maxTags>::buf(tagType tag){
 template<class tagType, int maxTags>
 uint8_t *TLV<tagType, maxTags>::buf(tagType tag, int len){
 
-  tlv_t *tlv=find(tag);
-  
-  if(tlv && len<=tlv->maxLen){
-    tlv->len=len;
-    cLen+=tlv->len;
-
-    for(int i=0;i<tlv->len;i+=255)
-      cLen+=2;
-    
-    return(tlv->val);
-  }
-  
-  return(NULL);
+  return(buf(tag,NULL,len));
 }
 
 //////////////////////////////////////
@@ -208,7 +196,9 @@ uint8_t *TLV<tagType, maxTags>::buf(tagType tag, uint8_t *src, int len){
     for(int i=0;i<tlv->len;i+=255)
       cLen+=2;
 
-    memcpy(tlv->val,src,len);
+    if(src)
+      memcpy(tlv->val,src,len);
+      
     return(tlv->val);
   }
   

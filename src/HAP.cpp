@@ -609,8 +609,8 @@ int HAPClient::postPairSetupURL(){
 
       crypto_sign_detached(tlv8.buf(kTLVType_Signature,64),NULL,accessoryInfo,accessoryInfoLen,accessory.LTSK);  // produce signature of accessoryInfo using AccessoryLTSK (Ed25519 long-term secret key)
 
-      memcpy(tlv8.buf(kTLVType_Identifier,accessoryPairingIDLen),accessoryPairingID,accessoryPairingIDLen);   // set Identifier TLV record as accessoryPairingID
-      memcpy(tlv8.buf(kTLVType_PublicKey,accessoryLTPKLen),accessoryLTPK,accessoryLTPKLen);                   // set PublicKey TLV record as accessoryLTPK
+      tlv8.buf(kTLVType_Identifier,accessoryPairingID,accessoryPairingIDLen);   // set Identifier TLV record as accessoryPairingID
+      tlv8.buf(kTLVType_PublicKey,accessoryLTPK,accessoryLTPKLen);              // set PublicKey TLV record as accessoryLTPK
 
       LOG2("------- ENCRYPTING SUB-TLVS -------\n");
 
@@ -722,7 +722,7 @@ int HAPClient::postPairVerifyURL(){
 
         crypto_sign_detached(tlv8.buf(kTLVType_Signature,64),NULL,accessoryInfo,accessoryInfoLen,accessory.LTSK);  // produce signature of accessoryInfo using AccessoryLTSK (Ed25519 long-term secret key)
 
-        memcpy(tlv8.buf(kTLVType_Identifier,accessoryPairingIDLen),accessoryPairingID,accessoryPairingIDLen);   // set Identifier TLV record as accessoryPairingID
+        tlv8.buf(kTLVType_Identifier,accessoryPairingID,accessoryPairingIDLen);   // set Identifier TLV record as accessoryPairingID
 
         LOG2("------- ENCRYPTING SUB-TLVS -------\n");
 
@@ -744,9 +744,9 @@ int HAPClient::postPairVerifyURL(){
                                               
         LOG2("---------- END SUB-TLVS! ----------\n");
         
-        tlv8.buf(kTLVType_EncryptedData,edLen);                           // set length of EncryptedData TLV record, which should now include the Authentication Tag at the end as required by HAP
-        tlv8.val(kTLVType_State,pairState_M2);                            // set State=<M2>
-        memcpy(tlv8.buf(kTLVType_PublicKey,32),publicCurveKey,32);        // set PublicKey to Accessory's Curve25519 public key
+        tlv8.buf(kTLVType_EncryptedData,edLen);                // set length of EncryptedData TLV record, which should now include the Authentication Tag at the end as required by HAP
+        tlv8.val(kTLVType_State,pairState_M2);                 // set State=<M2>
+        tlv8.buf(kTLVType_PublicKey,publicCurveKey,32);        // set PublicKey to Accessory's Curve25519 public key
       
         tlvRespond();                        // send response to client
         return(1);        
