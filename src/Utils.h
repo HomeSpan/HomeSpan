@@ -48,11 +48,12 @@ class TempBuffer {
   
   bufType *buf;
   int nBytes;
+  int nElements;
 
   public:
   
-  TempBuffer(size_t len){
-    nBytes=len*sizeof(bufType);
+  TempBuffer(int _nElements) : nElements(_nElements) {
+    nBytes=nElements*sizeof(bufType);
     buf=(bufType *)malloc(nBytes);
     if(buf==NULL){
       Serial.print("\n\n*** FATAL ERROR: Requested allocation of ");
@@ -68,6 +69,10 @@ class TempBuffer {
 
   int len(){
     return(nBytes);
+  }
+
+  int size(){
+    return(nElements);
   }
 
   bufType *get(){

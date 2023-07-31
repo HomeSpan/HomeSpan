@@ -77,7 +77,7 @@ struct HAPClient {
   static const int MAX_CONTROLLERS=16;                // maximum number of paired controllers (HAP requires at least 16)
   static const int MAX_ACCESSORIES=41;                // maximum number of allowed Acessories (HAP limit=150, but not enough memory in ESP32 to run that many)
   
-  static TLV<kTLVType,10> tlv8;                       // TLV8 structure (HAP Section 14.1) with space for 10 TLV records of type kTLVType (HAP Table 5-6)
+  static TLV<kTLVType,11> tlv8;                       // TLV8 structure (HAP Section 14.1) with space for 11 TLV records of type kTLVType (HAP Table 5-6)
   static nvs_handle hapNVS;                           // handle for non-volatile-storage of HAP data
   static nvs_handle srpNVS;                           // handle for non-volatile-storage of SRP data
   static HKDF hkdf;                                   // generates (and stores) HKDF-SHA-512 32-byte keys derived from an inputKey of arbitrary length, a salt string, and an info string
@@ -85,6 +85,7 @@ struct HAPClient {
   static SRP6A srp;                                   // stores all SRP-6A keys used for Pair-Setup
   static Accessory accessory;                         // Accessory ID and Ed25519 public and secret keys- permanently stored
   static Controller controllers[MAX_CONTROLLERS];     // Paired Controller IDs and ED25519 long-term public keys - permanently stored
+  static list<Controller> controllerList;             // linked-list of Paired Controller IDs and ED25519 long-term public keys - permanently stored
   static int conNum;                                  // connection number - used to keep track of per-connection EV notifications
 
   // individual structures and data defined for each Hap Client connection
@@ -142,6 +143,7 @@ struct HAPClient {
   static void removeController(uint8_t *id);                                           // removes specific Controller.  If no remaining admin Controllers, remove all others (if any) as per HAP requirements.
   static void printControllers(int minLogLevel=0);                                     // prints IDs of all allocated (paired) Controller, subject to specified minimum log level
   static int listControllers(uint8_t *tlvBuf);                                         // creates and prints a multi-TLV list of Controllers (HAP Section 5.12)
+  static void saveControllers();                                                       // saves Controller list in NVS
   static void checkNotifications();                                                    // checks for Event Notifications and reports to controllers as needed (HAP Section 6.8)
   static void checkTimedWrites();                                                      // checks for expired Timed Write PIDs, and clears any found (HAP Section 6.7.2.4)
   static void eventNotify(SpanBuf *pObj, int nObj, int ignoreClient=-1);               // transmits EVENT Notifications for nObj SpanBuf objects, pObj, with optional flag to ignore a specific client

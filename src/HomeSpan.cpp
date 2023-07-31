@@ -554,6 +554,14 @@ void Span::processSerialCommand(const char *c){
 
   switch(c[0]){
 
+    case 'Z': {
+      TempBuffer <uint8_t> tBuf(HAPClient::listControllers(NULL));
+      HAPClient::listControllers(tBuf.get());
+      Serial.printf("SIZE = %d\n",tBuf.len());
+      HAPClient::hexPrintRow(tBuf.get(),tBuf.len());
+      break;
+    }
+    
     case 's': {    
       
       LOG0("\n*** HomeSpan Status ***\n\n");

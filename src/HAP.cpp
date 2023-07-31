@@ -106,6 +106,16 @@ void HAPClient::init(){
     nvs_commit(hapNVS);                                                      // commit to NVS
   }
 
+  if(!nvs_get_blob(hapNVS,"CONTROLLERS",NULL,&len)){                // if found long-term Controller Pairings data from NVS
+    TempBuffer <Controller> tBuf(len/sizeof(Controller));
+    nvs_get_blob(hapNVS,"CONTROLLERS",tBuf.get(),&len);             // retrieve data
+    Serial.printf("*** SIZE %d ***\n",tBuf.size());
+    for(int i=0;i<tBuf.size();i++){
+      if(tBuf.get()[i].allocated)
+        controllerList.push_back(tBuf.get()[i]);
+    }
+  }
+  
   LOG0("Accessory ID:      ");
   charPrintRow(accessory.ID,17);
   LOG0("                               LTPK: ");
@@ -114,7 +124,8 @@ void HAPClient::init(){
 
   printControllers();                                                         
 
-  tlv8.create(kTLVType_State,1,"STATE");                 // define the actual TLV records needed for the implementation of HAP; one for each kTLVType needed (HAP Table 5-6)
+  tlv8.create(kTLVType_Separator,0,"SEPARATOR");   // define the actual TLV records needed for the implementation of HAP; one for each kTLVType needed (HAP Table 5-6)
+  tlv8.create(kTLVType_State,1,"STATE");
   tlv8.create(kTLVType_PublicKey,384,"PUBKEY");
   tlv8.create(kTLVType_Method,1,"METHOD");
   tlv8.create(kTLVType_Salt,16,"SALT");
@@ -476,7 +487,7 @@ int HAPClient::postPairSetupURL(){
     
     case pairState_M5:                     // 'Exchange Request'
 
-      if(!tlv8.buf(kTLVType_EncryptedData)){            
+      if(!tlv8.len(kTLVType_EncryptedData)){            
         LOG0("\n*** ERROR: Required 'EncryptedData' TLV record for this step is bad or missing\n\n");
         tlv8.clear();                                         // clear TLV records
         tlv8.val(kTLVType_State,pairState_M6);                // set State=<M6>
@@ -526,7 +537,7 @@ int HAPClient::postPairSetupURL(){
       tlv8.print(2);             // print decrypted TLV data
       LOG2("------- END DECRYPTED TLVS! -------\n");
        
-      if(!tlv8.buf(kTLVType_Identifier) || !tlv8.buf(kTLVType_PublicKey) || !tlv8.buf(kTLVType_Signature)){            
+      if(!tlv8.len(kTLVType_Identifier) || !tlv8.len(kTLVType_PublicKey) || !tlv8.len(kTLVType_Signature)){            
         LOG0("\n*** ERROR: One or more of required 'Identifier,' 'PublicKey,' and 'Signature' TLV records for this step is bad or missing\n\n");
         tlv8.clear();                                         // clear TLV records
         tlv8.val(kTLVType_State,pairState_M6);                // set State=<M6>
@@ -679,7 +690,7 @@ int HAPClient::postPairVerifyURL(){
 
     case pairState_M1:                     // 'Verify Start Request'
 
-      if(!tlv8.buf(kTLVType_PublicKey)){            
+      if(!tlv8.len(kTLVType_PublicKey)){            
         LOG0("\n*** ERROR: Required 'PublicKey' TLV record for this step is bad or missing\n\n");
         tlv8.clear();                                     // clear TLV records
         tlv8.val(kTLVType_State,pairState_M2);            // set State=<M2>
@@ -745,7 +756,7 @@ int HAPClient::postPairVerifyURL(){
    
     case pairState_M3:                     // 'Verify Finish Request'
 
-      if(!tlv8.buf(kTLVType_EncryptedData)){            
+      if(!tlv8.len(kTLVType_EncryptedData)){            
         LOG0("\n*** ERROR: Required 'EncryptedData' TLV record for this step is bad or missing\n\n");
         tlv8.clear();                                         // clear TLV records
         tlv8.val(kTLVType_State,pairState_M4);                // set State=<M4>
@@ -782,7 +793,7 @@ int HAPClient::postPairVerifyURL(){
       tlv8.print(2);             // print decrypted TLV data
       LOG2("------- END DECRYPTED TLVS! -------\n");
 
-      if(!tlv8.buf(kTLVType_Identifier) || !tlv8.buf(kTLVType_Signature)){            
+      if(!tlv8.len(kTLVType_Identifier) || !tlv8.len(kTLVType_Signature)){            
         LOG0("\n*** ERROR: One or more of required 'Identifier,' and 'Signature' TLV records for this step is bad or missing\n\n");
         tlv8.clear();                                         // clear TLV records
         tlv8.val(kTLVType_State,pairState_M4);                // set State=<M4>
@@ -905,7 +916,7 @@ int HAPClient::postPairingsURL(){
     case 3:
       LOG1("Add...\n");
 
-      if(!tlv8.buf(kTLVType_Identifier) || !tlv8.buf(kTLVType_PublicKey) || !tlv8.buf(kTLVType_Permissions)){            
+      if(!tlv8.len(kTLVType_Identifier) || !tlv8.len(kTLVType_PublicKey) || !tlv8.len(kTLVType_Permissions)){            
         LOG0("\n*** ERROR: One or more of required 'Identifier,' 'PublicKey,' and 'Permissions' TLV records for this step is bad or missing\n\n");
         tlv8.clear();                                         // clear TLV records
         tlv8.val(kTLVType_State,pairState_M2);                // set State=<M2>
@@ -944,7 +955,7 @@ int HAPClient::postPairingsURL(){
     case 4:
       LOG1("Remove...\n");
 
-      if(!tlv8.buf(kTLVType_Identifier)){            
+      if(!tlv8.len(kTLVType_Identifier)){            
         LOG0("\n*** ERROR: Required 'Identifier' TLV record for this step is bad or missing\n\n");
         tlv8.clear();                                         // clear TLV records
         tlv8.val(kTLVType_State,pairState_M2);                // set State=<M2>
@@ -1683,21 +1694,13 @@ int HAPClient::listControllers(uint8_t *tlvBuf){
   tlv8.clear();
   tlv8.val(kTLVType_State,pairState_M2);      
 
-  for(int i=0;i<MAX_CONTROLLERS;i++){           // loop over all controller slots
-    if(controllers[i].allocated){
-      
-      if(tlv8.val(kTLVType_State)==-1){          // if State is not set then this is not the first controller found
-        n=tlv8.separate(tlvBuf);                 // add separator
-        nBytes+=n;
-        if(tlvBuf){
-          tlvBuf+=n;
-          LOG2("SEPARATOR(0)\n");
-        }
-      }
-                                   
-      tlv8.val(kTLVType_Permissions,controllers[i].admin);      
-      memcpy(tlv8.buf(kTLVType_Identifier,36),controllers[i].ID,36);
-      memcpy(tlv8.buf(kTLVType_PublicKey,32),controllers[i].LTPK,32);
+  for(auto it=controllerList.begin();it!=controllerList.end();it++){
+    if((*it).allocated){          
+      if(tlv8.val(kTLVType_State)==-1)                // if State is not set then this is not the first controller found
+        tlv8.val(kTLVType_Separator,1);                                        
+      tlv8.val(kTLVType_Permissions,(*it).admin);      
+      tlv8.buf(kTLVType_Identifier,(*it).ID,36);
+      tlv8.buf(kTLVType_PublicKey,(*it).LTPK,32);
       n=tlv8.pack(tlvBuf);
       nBytes+=n;
       if(tlvBuf){
@@ -1717,23 +1720,40 @@ void HAPClient::printControllers(int minLogLevel){
 
   if(homeSpan.logLevel<minLogLevel)
     return;
-    
-  int n=0;
+
+  if(controllerList.empty()){
+    Serial.printf("No Paired Controllers\n");
+    return;    
+  }
   
-  for(int i=0;i<MAX_CONTROLLERS;i++){           // loop over all controller slots
-    if(controllers[i].allocated){
-      Serial.printf("Paired Controller: ");
-      charPrintRow(controllers[i].ID,36);
-      Serial.printf("%s  LTPK: ",controllers[i].admin?"   (admin)":" (regular)");
-      hexPrintRow(controllers[i].LTPK,32);
-      Serial.printf("\n");
-      n++;
-    }
+  for(auto it=controllerList.begin();it!=controllerList.end();it++){
+    Serial.printf("Paired Controller: ");
+    charPrintRow((*it).ID,36);
+    Serial.printf("%s  LTPK: ",(*it).admin?"   (admin)":" (regular)");
+    hexPrintRow((*it).LTPK,32);
+    Serial.printf("\n");    
+  }
+}
+
+//////////////////////////////////////
+
+void HAPClient::saveControllers(){
+
+  if(controllerList.empty()){
+    nvs_erase_key(hapNVS,"CONTROLLERS");
+    return;
   }
 
-  if(n==0)
-    Serial.printf("No Paired Controllers\n");
+  int n=0;
+  TempBuffer <Controller> tBuf(controllerList.size());    // create temporary buffer to hold Controller data
+  
+  for(auto it=controllerList.begin();it!=controllerList.end();it++)   // store Controller data in temporary buffer
+    tBuf.get()[n++]=(*it);
+
+  nvs_set_blob(hapNVS,"CONTROLLERS",tBuf.get(),tBuf.len());      // update data
+  nvs_commit(hapNVS);                                            // commit to NVS  
 }
+
 
 //////////////////////////////////////
 
@@ -1766,13 +1786,14 @@ void Nonce::inc(){
 
 // instantiate all static HAP Client structures and data
 
-TLV<kTLVType,10> HAPClient::tlv8;
+TLV<kTLVType,11> HAPClient::tlv8;
 nvs_handle HAPClient::hapNVS;
 nvs_handle HAPClient::srpNVS;
 HKDF HAPClient::hkdf;                                   
 pairState HAPClient::pairStatus;                        
 Accessory HAPClient::accessory;                         
-Controller HAPClient::controllers[MAX_CONTROLLERS];    
+Controller HAPClient::controllers[MAX_CONTROLLERS];
+list<Controller> HAPClient::controllerList;
 SRP6A HAPClient::srp;
 int HAPClient::conNum;
  
