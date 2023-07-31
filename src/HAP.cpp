@@ -26,6 +26,7 @@
  ********************************************************************************/
  
 #include <ESPmDNS.h>
+#include <esp_wifi.h>
 #include <sodium.h>
 #include <MD5Builder.h>
 #include <mbedtls/version.h>
@@ -1291,6 +1292,13 @@ int HAPClient::getStatusURL(){
   
   response+="<tr><td>WiFi Disconnects:</td><td>" + String(homeSpan.connected/2) + "</td></tr>\n";
   response+="<tr><td>WiFi Signal:</td><td>" + String(WiFi.RSSI()) + " dBm</td></tr>\n";
+
+  int8_t max_tx_power = CONFIG_ESP32_PHY_MAX_WIFI_TX_POWER;
+  ;
+  response+="<tr><td>WiFi TxPower (current / max):</td><td>" +
+   String(WiFi.getTxPower() * 0.25) + " / " +
+   (esp_wifi_get_max_tx_power(&max_tx_power) == ESP_OK ? String(max_tx_power * 0.25) : "(Error getting maxTxPower)") + " dBm</td></tr>\n";
+
   response+="<tr><td>WiFi Gateway:</td><td>" + WiFi.gatewayIP().toString() + "</td></tr>\n";
   response+="<tr><td>ESP32 Board:</td><td>" + String(ARDUINO_BOARD) + "</td></tr>\n";
   response+="<tr><td>Arduino-ESP Version:</td><td>" + String(ARDUINO_ESP_VERSION) + "</td></tr>\n";
