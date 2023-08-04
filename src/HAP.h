@@ -50,10 +50,20 @@ struct Nonce {
 // Paired Controller Structure for Permanently-Stored Data
 
 struct Controller {                
-  boolean allocated=false;  // slot is allocated with Controller data
+  boolean allocated=false;  // DEPRECATED (but needed for backwards compatability with original NVS storage of Controller info)
   boolean admin;            // Controller has admin privileges
   uint8_t ID[36];           // Pairing ID
   uint8_t LTPK[32];         // Long Term Ed2519 Public Key
+
+  Controller(){}
+  
+  Controller(uint8_t *id, uint8_t *ltpk, boolean ad){
+    allocated=true;
+    admin=ad;
+    memcpy(ID,id,sizeof(ID));
+    memcpy(LTPK,ltpk,sizeof(LTPK));
+  }
+
 };
 
 /////////////////////////////////////////////////
@@ -84,14 +94,13 @@ struct HAPClient {
   static pairState pairStatus;                        // tracks pair-setup status
   static SRP6A srp;                                   // stores all SRP-6A keys used for Pair-Setup
   static Accessory accessory;                         // Accessory ID and Ed25519 public and secret keys- permanently stored
-  static Controller controllers[MAX_CONTROLLERS];     // Paired Controller IDs and ED25519 long-term public keys - permanently stored
   static list<Controller> controllerList;             // linked-list of Paired Controller IDs and ED25519 long-term public keys - permanently stored
   static int conNum;                                  // connection number - used to keep track of per-connection EV notifications
 
   // individual structures and data defined for each Hap Client connection
   
   WiFiClient client;              // handle to client
-  Controller *cPair;              // pointer to info on current, session-verified Paired Controller (NULL=un-verified, and therefore un-encrypted, connection)
+  Controller *cPair=NULL;         // pointer to info on current, session-verified Paired Controller (NULL=un-verified, and therefore un-encrypted, connection)
    
   // These keys are generated in the first call to pair-verify and used in the second call to pair-verify so must persist for a short period
     
@@ -136,14 +145,13 @@ struct HAPClient {
   static void charPrintRow(uint8_t *buf, int n, int minLogLevel=0);       // prints 'n' bytes of *buf as CHAR, all on one row, subject to specified minimum log level
   
   static Controller *findController(uint8_t *id);                                      // returns pointer to controller with matching ID (or NULL if no match)
-  static Controller *getFreeController();                                              // return pointer to next free controller slot (or NULL if no free slots)
-  static Controller *addController(uint8_t *id, uint8_t *ltpk, boolean admin);         // stores data for new Controller with specified data.  Returns pointer to Controller slot on success, else NULL
-  static int nAdminControllers();                                                      // returns number of admin Controllers stored
-  static void removeControllers();                                                     // removes all Controllers (sets allocated flags to false for all slots)
+  static tagError addController(uint8_t *id, uint8_t *ltpk, boolean admin);            // stores data for new Controller with specified data.  Returns tagError (if any)
   static void removeController(uint8_t *id);                                           // removes specific Controller.  If no remaining admin Controllers, remove all others (if any) as per HAP requirements.
   static void printControllers(int minLogLevel=0);                                     // prints IDs of all allocated (paired) Controller, subject to specified minimum log level
   static int listControllers(uint8_t *tlvBuf);                                         // creates and prints a multi-TLV list of Controllers (HAP Section 5.12)
   static void saveControllers();                                                       // saves Controller list in NVS
+  static int nAdminControllers();                                                      // returns number of admin Controller
+  static void tearDown(uint8_t *id);                                                   // tears down connections using Controller with ID=id; tears down all connections if id=NULL
   static void checkNotifications();                                                    // checks for Event Notifications and reports to controllers as needed (HAP Section 6.8)
   static void checkTimedWrites();                                                      // checks for expired Timed Write PIDs, and clears any found (HAP Section 6.7.2.4)
   static void eventNotify(SpanBuf *pObj, int nObj, int ignoreClient=-1);               // transmits EVENT Notifications for nObj SpanBuf objects, pObj, with optional flag to ignore a specific client

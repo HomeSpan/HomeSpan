@@ -80,7 +80,7 @@ void HAPClient::init(){
   if(!nvs_get_blob(hapNVS,"ACCESSORY",NULL,&len)){                    // if found long-term Accessory data in NVS
     nvs_get_blob(hapNVS,"ACCESSORY",&accessory,&len);                 // retrieve data
   } else {      
-    LOG0("Generating new random Accessory ID and Long-Term Ed25519 Signature Keys...\n");
+    LOG0("Generating new random Accessory ID and Long-Term Ed25519 Signature Keys...\n\n");
     uint8_t buf[6];
     char cBuf[18];
     
@@ -95,21 +95,9 @@ void HAPClient::init(){
     nvs_commit(hapNVS);                                               // commit to NVS
   }
 
-  if(!nvs_get_blob(hapNVS,"CONTROLLERS",NULL,&len)){                 // if found long-term Controller Pairings data from NVS
-    nvs_get_blob(hapNVS,"CONTROLLERS",controllers,&len);             // retrieve data
-  } else {
-    LOG0("Initializing storage for Paired Controllers data...\n\n");               
-    
-    HAPClient::removeControllers();                                             // clear all Controller data
-        
-    nvs_set_blob(hapNVS,"CONTROLLERS",controllers,sizeof(controllers));      // update data
-    nvs_commit(hapNVS);                                                      // commit to NVS
-  }
-
   if(!nvs_get_blob(hapNVS,"CONTROLLERS",NULL,&len)){                // if found long-term Controller Pairings data from NVS
     TempBuffer <Controller> tBuf(len/sizeof(Controller));
     nvs_get_blob(hapNVS,"CONTROLLERS",tBuf.get(),&len);             // retrieve data
-    Serial.printf("*** SIZE %d ***\n",tBuf.size());
     for(int i=0;i<tBuf.size();i++){
       if(tBuf.get()[i].allocated)
         controllerList.push_back(tBuf.get()[i]);
@@ -583,9 +571,6 @@ int HAPClient::postPairSetupURL(){
 
       addController(iosDevicePairingID,iosDeviceLTPK,true);        // save Pairing ID and LTPK for this Controller with admin privileges
 
-      nvs_set_blob(hapNVS,"CONTROLLERS",controllers,sizeof(controllers));      // update data
-      nvs_commit(hapNVS);                                                      // commit to NVS
-
       // Now perform the above steps in reverse to securely transmit the AccessoryLTPK to the Controller (HAP Section 5.6.6.2)
 
       uint8_t accessoryX[32];
@@ -800,18 +785,24 @@ int HAPClient::postPairVerifyURL(){
         tlv8.val(kTLVType_Error,tagError_Unknown);           // set Error=Unknown (there is no specific error type for missing/bad TLV data)
         tlvRespond();                                       // send response to client
         return(0);
-      };
+      }
 
       Controller *tPair;                                  // temporary pointer to Controller
-
+      
       if(!(tPair=findController(tlv8.buf(kTLVType_Identifier)))){
-        LOG0("\n*** ERROR: Unrecognized Controller PairingID\n\n");
+        LOG0("\n*** ERROR: Unrecognized Controller ID: ");
+        charPrintRow(tlv8.buf(kTLVType_Identifier),36,2);
+        LOG0("\n\n");
         tlv8.clear();                                         // clear TLV records
         tlv8.val(kTLVType_State,pairState_M4);                // set State=<M4>
         tlv8.val(kTLVType_Error,tagError_Authentication);    // set Error=Authentication
         tlvRespond();                                       // send response to client
         return(0);
       }
+
+      LOG2("\n*** Verifying session with Controller ID: ");
+      charPrintRow(tPair->ID,36,2);
+      LOG2("...\n");
 
       size_t iosDeviceInfoLen=32+36+32;
       uint8_t iosDeviceInfo[iosDeviceInfoLen];
@@ -833,7 +824,7 @@ int HAPClient::postPairVerifyURL(){
       tlv8.val(kTLVType_State,pairState_M4);                // set State=<M4>
       tlvRespond();                                       // send response to client (unencrypted since cPair=NULL)
 
-      cPair=tPair;        // save Controller for this connection slot - connection is not verified and should be encrypted going forward
+      cPair=tPair;        // save Controller for this connection slot - connection is now verified and should be encrypted going forward
 
       hkdf.create(a2cKey,sharedCurveKey,32,"Control-Salt","Control-Read-Encryption-Key");        // create AccessoryToControllerKey (HAP Section 6.5.2)
       hkdf.create(c2aKey,sharedCurveKey,32,"Control-Salt","Control-Write-Encryption-Key");       // create ControllerToAccessoryKey (HAP Section 6.5.2)
@@ -897,8 +888,6 @@ int HAPClient::postPairingsURL(){
     return(0);
   }
 
-  Controller *newCont;
-
   LOG1("In Post Pairings #");
   LOG1(conNum);
   LOG1(" (");  
@@ -910,72 +899,61 @@ int HAPClient::postPairingsURL(){
     badRequestError();                                        // return with 400 error, which closes connection      
     return(0);
   }
-
+   
   switch(tlv8.val(kTLVType_Method)){
 
-    case 3:
+    case 3: {
       LOG1("Add...\n");
 
       if(!tlv8.len(kTLVType_Identifier) || !tlv8.len(kTLVType_PublicKey) || !tlv8.len(kTLVType_Permissions)){            
         LOG0("\n*** ERROR: One or more of required 'Identifier,' 'PublicKey,' and 'Permissions' TLV records for this step is bad or missing\n\n");
-        tlv8.clear();                                         // clear TLV records
-        tlv8.val(kTLVType_State,pairState_M2);                // set State=<M2>
-        tlv8.val(kTLVType_Error,tagError_Unknown);            // set Error=Unknown (there is no specific error type for missing/bad TLV data)
-        break;
-      }
+        tlv8.clear();
+        tlv8.val(kTLVType_Error,tagError_Unknown);
 
-      if(!cPair->admin){
+      } else if(!cPair->admin){
         LOG0("\n*** ERROR: Controller making request does not have admin privileges to add/update other Controllers\n\n");
-        tlv8.clear();                                         // clear TLV records
-        tlv8.val(kTLVType_State,pairState_M2);                // set State=<M2>
-        tlv8.val(kTLVType_Error,tagError_Authentication);     // set Error=Authentication
-        break;        
-      }
-
-      if((newCont=findController(tlv8.buf(kTLVType_Identifier))) && memcmp(tlv8.buf(kTLVType_PublicKey),newCont->LTPK,32)){         // requested Controller already exists, but LTPKs don't match
-        LOG0("\n*** ERROR: Invalid request to update the LTPK of an exsiting Controller\n\n");
-        tlv8.clear();                                         // clear TLV records
-        tlv8.val(kTLVType_State,pairState_M2);                // set State=<M2>
-        tlv8.val(kTLVType_Error,tagError_Unknown);            // set Error=Unknown
-        break;
-      }
-
-      if(!addController(tlv8.buf(kTLVType_Identifier),tlv8.buf(kTLVType_PublicKey),tlv8.val(kTLVType_Permissions)==1?true:false)){
-        LOG0("\n*** ERROR: Can't pair more than %d Controllers\n\n",MAX_CONTROLLERS);
-        tlv8.clear();                                         // clear TLV records
-        tlv8.val(kTLVType_State,pairState_M2);                // set State=<M2>
-        tlv8.val(kTLVType_Error,tagError_MaxPeers);           // set Error=MaxPeers
-        break;         
+        tlv8.clear();
+        tlv8.val(kTLVType_Error,tagError_Authentication);
+        
+      } else {
+        tagError err=addController(tlv8.buf(kTLVType_Identifier),tlv8.buf(kTLVType_PublicKey),tlv8.val(kTLVType_Permissions));
+        tlv8.clear();
+        if(err!=tagError_None)
+          tlv8.val(kTLVType_Error,err);
       }
       
-      tlv8.clear();                                         // clear TLV records
-      tlv8.val(kTLVType_State,pairState_M2);                // set State=<M2>
-      break;
+      tlv8.val(kTLVType_State,pairState_M2);
+      tlvRespond();
+      return(1);
+    }
 
-    case 4:
+    case 4: {
       LOG1("Remove...\n");
+
+      uint8_t id[36];
 
       if(!tlv8.len(kTLVType_Identifier)){            
         LOG0("\n*** ERROR: Required 'Identifier' TLV record for this step is bad or missing\n\n");
-        tlv8.clear();                                         // clear TLV records
-        tlv8.val(kTLVType_State,pairState_M2);                // set State=<M2>
-        tlv8.val(kTLVType_Error,tagError_Unknown);           // set Error=Unknown (there is no specific error type for missing/bad TLV data)
-        break;
-      }
-
-      if(!cPair->admin){
+        tlv8.clear();
+        tlv8.val(kTLVType_Error,tagError_Unknown);
+        
+      } else if(!cPair->admin){
         LOG0("\n*** ERROR: Controller making request does not have admin privileges to remove Controllers\n\n");
-        tlv8.clear();                                         // clear TLV records
-        tlv8.val(kTLVType_State,pairState_M2);                // set State=<M2>
-        tlv8.val(kTLVType_Error,tagError_Authentication);    // set Error=Authentication
-        break;        
+        tlv8.clear();
+        tlv8.val(kTLVType_Error,tagError_Authentication);
+      } else {
+        memcpy(id,tlv8.buf(kTLVType_Identifier),36);
+        tlv8.clear();
       }
 
-      removeController(tlv8.buf(kTLVType_Identifier));
+      tlv8.val(kTLVType_State,pairState_M2);        
+      tlvRespond();     // must send response before removing Controller below
       
-      tlv8.clear();                                         // clear TLV records
-      tlv8.val(kTLVType_State,pairState_M2);                // set State=<M2>
-      break;
+      if(tlv8.val(kTLVType_Error)==-1)
+        removeController(id);
+      
+      return(1);
+    } 
       
     case 5: {
       LOG1("List...\n");
@@ -991,37 +969,17 @@ int HAPClient::postPairingsURL(){
       LOG2(body);
       listControllers(tBuf.get());
       sendEncrypted(body,tBuf.get(),tBuf.len());
-      free(body);     
+      free(body);
+      
       return(1);
     }
 
-    default:
+    default: {
       LOG0("\n*** ERROR: 'Method' TLV record is either missing or not set to either 3, 4, or 5 as required\n\n");
       badRequestError();                                    // return with 400 error, which closes connection      
       return(0);
-      break;      
-  }
-
-  nvs_set_blob(hapNVS,"CONTROLLERS",controllers,sizeof(controllers));      // update Controller data
-  nvs_commit(hapNVS);                                                      // commit to NVS
-
-  tlvRespond();
-
-  // re-check connections and close any (or all) clients as a result of controllers that were removed above
-  // must be performed AFTER sending the TLV response, since that connection itself may be terminated below
-
-  for(int i=0;i<homeSpan.maxConnections;i++){     // loop over all connection slots
-    if(hap[i]->client){                    // if slot is connected
-      
-      if(!nAdminControllers() || (hap[i]->cPair && !hap[i]->cPair->allocated)){    // accessory unpaired, OR client connection is verified but points to a newly *unallocated* controller
-        LOG1("*** Terminating Client #");
-        LOG1(i);
-        LOG1("\n");
-        hap[i]->client.stop();
-      }
-      
-    } // if client connected
-  } // loop over all connection slots
+    }
+  } // switch
   
   return(1);
 }
@@ -1316,8 +1274,8 @@ int HAPClient::getStatusURL(){
   char mbtlsv[64];
   mbedtls_version_get_string_full(mbtlsv);
   response+="<tr><td>MbedTLS Version:</td><td>" + String(mbtlsv) + "</td></tr>\n";
-
-  response+="<tr><td>HomeKit Status:</td><td>" + String(nAdminControllers()?"PAIRED":"NOT PAIRED") + "</td></tr>\n";   
+  
+  response+="<tr><td>HomeKit Status:</td><td>" + String(HAPClient::nAdminControllers()?"PAIRED":"NOT PAIRED") + "</td></tr>\n";   
   response+="<tr><td>Max Log Entries:</td><td>" + String(homeSpan.webLog.maxEntries) + "</td></tr>\n"; 
   response+="</table>\n";
   response+="<p></p>";
@@ -1581,10 +1539,10 @@ void HAPClient::charPrintRow(uint8_t *buf, int n, int minLogLevel){
 //////////////////////////////////////
 
 Controller *HAPClient::findController(uint8_t *id){
-  
-  for(int i=0;i<MAX_CONTROLLERS;i++){                                    // loop over all controller slots
-    if(controllers[i].allocated && !memcmp(controllers[i].ID,id,36))     // found matching ID
-      return(controllers+i);                                             // return with pointer to matching controller
+
+  for(auto it=controllerList.begin();it!=controllerList.end();it++){
+    if(!memcmp((*it).ID,id,36))
+      return(&*it);
   }
 
   return(NULL);       // no match
@@ -1592,97 +1550,93 @@ Controller *HAPClient::findController(uint8_t *id){
 
 //////////////////////////////////////
 
-Controller *HAPClient::getFreeController(){
-  
-  for(int i=0;i<MAX_CONTROLLERS;i++){     // loop over all controller slots   
-    if(!controllers[i].allocated)         // found free slot
-      return(controllers+i);              // return with pointer to free slot
-  }
-
-  return(NULL);       // no free slots
-}
-
-//////////////////////////////////////
-
-Controller *HAPClient::addController(uint8_t *id, uint8_t *ltpk, boolean admin){
-
-  Controller *slot;
-
-  if((slot=findController(id))){               // found existing controller
-    memcpy(slot->LTPK,ltpk,32);
-    slot->admin=admin;
-    LOG2("\n*** Updated Controller: ");
-    charPrintRow(id,36,2);
-    LOG2(slot->admin?" (admin)\n\n":" (regular)\n\n");
-    return(slot);    
-  }
-
-  if((slot=getFreeController())){              // get slot for new controller, if available
-    slot->allocated=true;
-    memcpy(slot->ID,id,36);
-    memcpy(slot->LTPK,ltpk,32);
-    slot->admin=admin;
-    LOG2("\n*** Added Controller: ");
-    charPrintRow(id,36,2);
-    LOG2(slot->admin?" (admin)\n\n":" (regular)\n\n");
-    return(slot);       
-  }
-
-  return(NULL);
-}       
-  
-//////////////////////////////////////
-
 int HAPClient::nAdminControllers(){
 
   int n=0;
-  
-  for(int i=0;i<MAX_CONTROLLERS;i++){                         // loop over all controller slots
-    n+=(controllers[i].allocated && controllers[i].admin);    // count number of allocated controllers with admin privileges
-  }
-
+  for(auto it=controllerList.begin();it!=controllerList.end();it++)
+    n+=((*it).admin);
   return(n);
 }
-    
+
 //////////////////////////////////////
 
-void HAPClient::removeControllers(){
+tagError HAPClient::addController(uint8_t *id, uint8_t *ltpk, boolean admin){
+
+  Controller *cTemp=findController(id);
+
+  tagError err=tagError_None;
   
-  for(int i=0;i<MAX_CONTROLLERS;i++)
-    controllers[i].allocated=false;
-}    
+  if(!cTemp){                                            // new controller    
+    if(controllerList.size()<MAX_CONTROLLERS){
+      controllerList.emplace_back(id,ltpk,admin);        // create and store data
+      LOG2("\n*** Added Controller: ");
+      charPrintRow(id,36,2);
+      LOG2(admin?" (admin)\n\n":" (regular)\n\n");
+      saveControllers();
+    } else {
+      LOG0("\n*** ERROR: Can't pair more than %d Controllers\n\n",MAX_CONTROLLERS);
+      err=tagError_MaxPeers;
+    }    
+  } else if(!memcmp(ltpk,cTemp->LTPK,sizeof(cTemp->LTPK))){   // existing controller with same LTPK
+    LOG2("\n*** Updated Controller: ");
+    charPrintRow(id,36,2);
+    LOG2(" from %s to %s\n\n",cTemp->admin?"(admin)":"(regular)",admin?"(admin)":"(regular)");
+    cTemp->admin=admin;
+    saveControllers();    
+  } else {
+    LOG0("\n*** ERROR: Invalid request to update the LTPK of an existing Controller\n\n");
+    err=tagError_Unknown;    
+  }
+
+  return(err);
+}          
 
 //////////////////////////////////////
 
 void HAPClient::removeController(uint8_t *id){
 
-  Controller *slot;
+  auto it=std::find_if(controllerList.begin(), controllerList.end(), [id](const Controller& cTemp){return(!memcmp(cTemp.ID,id,sizeof(cTemp.ID)));});
 
-  if((slot=findController(id))){      // remove controller if found
-    LOG2("\n*** Removed Controller: ");
-    charPrintRow(id,36,2);
-    LOG2(slot->admin?" (admin)\n":" (regular)\n");
-    slot->allocated=false;
-
-    if(nAdminControllers()==0){       // if no more admins, remove all controllers
-      removeControllers();
-      LOG1("That was last Admin Controller!  Removing any remaining Regular Controllers and unpairing Accessory\n");  
-      mdns_service_txt_item_set("_hap","_tcp","sf","1");           // set Status Flag = 1 (Table 6-8)
-
-      STATUS_UPDATE(start(LED_PAIRING_NEEDED),HS_PAIRING_NEEDED)
-
-      if(homeSpan.pairCallback)                                    // if set, invoke user-defined Pairing Callback to indicate device has been un-paired
-        homeSpan.pairCallback(false);
-    }
-
-    LOG2("\n");
-  } else {
+  if(it==controllerList.end()){
     LOG2("\n*** Request to Remove Controller Ignored - Controller Not Found: ");
     charPrintRow(id,36,2);
     LOG2("\n");
+    return;
   }
 
-}    
+  LOG1("\n*** Removing Controller: ");
+  charPrintRow((*it).ID,36,2);
+  LOG1((*it).admin?" (admin)\n":" (regular)\n");
+  
+  tearDown((*it).ID);         // teardown any connections using this Controller
+  controllerList.erase(it);   // remove Controller
+
+  if(!nAdminControllers()){   // no more admin Controllers
+    
+    LOG1("That was last Admin Controller!  Removing any remaining Regular Controllers and unpairing Accessory\n");    
+    
+    tearDown(NULL);                                              // teardown all remaining connections
+    controllerList.clear();                                      // remove all remaining Controllers
+    mdns_service_txt_item_set("_hap","_tcp","sf","1");           // set Status Flag = 1 (Table 6-8)
+    STATUS_UPDATE(start(LED_PAIRING_NEEDED),HS_PAIRING_NEEDED)   // set optional Status LED
+    if(homeSpan.pairCallback)                                    // if set, invoke user-defined Pairing Callback to indicate device has been un-paired
+      homeSpan.pairCallback(false);    
+  }
+
+  saveControllers();
+}
+
+//////////////////////////////////////
+
+void HAPClient::tearDown(uint8_t *id){
+  
+  for(int i=0;i<homeSpan.maxConnections;i++){     // loop over all connection slots
+    if(hap[i]->client && (id==NULL || (hap[i]->cPair && !memcmp(id,hap[i]->cPair->ID,36)))){
+      LOG1("*** Terminating Client #%d\n",i);
+      hap[i]->client.stop();
+    }
+  }
+}
 
 //////////////////////////////////////
 
@@ -1744,12 +1698,9 @@ void HAPClient::saveControllers(){
     return;
   }
 
-  int n=0;
-  TempBuffer <Controller> tBuf(controllerList.size());    // create temporary buffer to hold Controller data
+  TempBuffer <Controller> tBuf(controllerList.size());                    // create temporary buffer to hold Controller data
+  std::copy(controllerList.begin(),controllerList.end(),tBuf.get());      // copy data from linked list to buffer
   
-  for(auto it=controllerList.begin();it!=controllerList.end();it++)   // store Controller data in temporary buffer
-    tBuf.get()[n++]=(*it);
-
   nvs_set_blob(hapNVS,"CONTROLLERS",tBuf.get(),tBuf.len());      // update data
   nvs_commit(hapNVS);                                            // commit to NVS  
 }
@@ -1792,7 +1743,6 @@ nvs_handle HAPClient::srpNVS;
 HKDF HAPClient::hkdf;                                   
 pairState HAPClient::pairStatus;                        
 Accessory HAPClient::accessory;                         
-Controller HAPClient::controllers[MAX_CONTROLLERS];
 list<Controller> HAPClient::controllerList;
 SRP6A HAPClient::srp;
 int HAPClient::conNum;

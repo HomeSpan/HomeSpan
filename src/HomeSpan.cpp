@@ -260,7 +260,7 @@ void Span::pollTask() {
       homeSpan.lastClientIP="0.0.0.0";                              // reset stored IP address to show "0.0.0.0" if homeSpan.getClientIP() is used in any other context
       
       if(!hap[i]->client){                                 // client disconnected by server
-        LOG1("** Disconnecting Client #");
+        LOG1("** Disconnected Client #");
         LOG1(i);
         LOG1("  (");
         LOG1(millis()/1000);
@@ -555,6 +555,8 @@ void Span::processSerialCommand(const char *c){
   switch(c[0]){
 
     case 'Z': {
+      HAPClient::saveControllers();
+      break;
       TempBuffer <uint8_t> tBuf(HAPClient::listControllers(NULL));
       HAPClient::listControllers(tBuf.get());
       Serial.printf("SIZE = %d\n",tBuf.len());
@@ -688,22 +690,13 @@ void Span::processSerialCommand(const char *c){
 
     case 'U': {
 
-      HAPClient::removeControllers();                                                                           // clear all Controller data  
-      nvs_set_blob(HAPClient::hapNVS,"CONTROLLERS",HAPClient::controllers,sizeof(HAPClient::controllers));      // update data
-      nvs_commit(HAPClient::hapNVS);                                                                            // commit to NVS
+      HAPClient::controllerList.clear();                                        // clear all Controller data  
+      HAPClient::saveControllers();
       LOG0("\n*** HomeSpan Pairing Data DELETED ***\n\n");
-      
-      for(int i=0;i<maxConnections;i++){     // loop over all connection slots
-        if(hap[i]->client){                    // if slot is connected
-          LOG1("*** Terminating Client #");
-          LOG1(i);
-          LOG1("\n");
-          hap[i]->client.stop();
-        }
-      }
-      
+      HAPClient::tearDown(NULL);                                                // tear down all verified connections
+            
       LOG0("\nDEVICE NOT YET PAIRED -- PLEASE PAIR WITH HOMEKIT APP\n\n");
-      mdns_service_txt_item_set("_hap","_tcp","sf","1");                                                        // set Status Flag = 1 (Table 6-8)
+      mdns_service_txt_item_set("_hap","_tcp","sf","1");                        // set Status Flag = 1 (Table 6-8)
 
       if(homeSpan.pairCallback)
         homeSpan.pairCallback(false);
@@ -1016,11 +1009,9 @@ void Span::processSerialCommand(const char *c){
       TempBuffer<char> tBuf(256);
       mbedtls_base64_encode((uint8_t *)tBuf.get(),256,&olen,(uint8_t *)&HAPClient::accessory,sizeof(struct Accessory));
       LOG0("Accessory data:  %s\n",tBuf.get());
-      for(int i=0;i<HAPClient::MAX_CONTROLLERS;i++){
-        if(HAPClient::controllers[i].allocated){
-          mbedtls_base64_encode((uint8_t *)tBuf.get(),256,&olen,(uint8_t *)(HAPClient::controllers+i),sizeof(struct Controller));
-          LOG0("Controller data: %s\n",tBuf.get());
-        }
+      for(const auto &cont : HAPClient::controllerList){
+        mbedtls_base64_encode((uint8_t *)tBuf.get(),256,&olen,(uint8_t *)(&cont),sizeof(struct Controller));
+        LOG0("Controller data: %s\n",tBuf.get());        
       }
       LOG0("\n*** End Pairing Data\n\n");
     }
@@ -1047,22 +1038,25 @@ void Span::processSerialCommand(const char *c){
         HAPClient::charPrintRow(HAPClient::accessory.ID,17);
         LOG0("\n");
       }
+
+      HAPClient::controllerList.clear();
+      Controller tCont;
       
-      for(int i=0;i<HAPClient::MAX_CONTROLLERS;i++){
+      while(HAPClient::controllerList.size()<16){
         tBuf.get()[0]='\0';
         LOG0(">>> Controller data: ");
         readSerial(tBuf.get(),199);
         if(strlen(tBuf.get())==0){
           LOG0("(done)\n");
-          while(i<HAPClient::MAX_CONTROLLERS)              // clear data from remaining controller slots
-            HAPClient::controllers[i++].allocated=false;
+          break;
         } else {
-          mbedtls_base64_decode((uint8_t *)(HAPClient::controllers+i),sizeof(struct Controller),&olen,(uint8_t *)tBuf.get(),strlen(tBuf.get()));
+          mbedtls_base64_decode((uint8_t *)(&tCont),sizeof(struct Controller),&olen,(uint8_t *)tBuf.get(),strlen(tBuf.get()));
           if(olen!=sizeof(struct Controller)){
             LOG0("\n*** Error in size of Controller data - cloning cancelled.  Restarting...\n\n");
             reboot();
           } else {
-            HAPClient::charPrintRow(HAPClient::controllers[i].ID,36);
+            HAPClient::controllerList.push_back(tCont);
+            HAPClient::charPrintRow(tCont.ID,36);
             LOG0("\n");
           }
         }
@@ -1076,8 +1070,7 @@ void Span::processSerialCommand(const char *c){
         if(qSave[0]=='y'){
           LOG0("(yes)\nData saved!  Rebooting...");
           nvs_set_blob(HAPClient::hapNVS,"ACCESSORY",&HAPClient::accessory,sizeof(HAPClient::accessory));           // update data
-          nvs_set_blob(HAPClient::hapNVS,"CONTROLLERS",HAPClient::controllers,sizeof(HAPClient::controllers));      
-          nvs_commit(HAPClient::hapNVS);                                                      // commit to NVS
+          HAPClient::saveControllers();
           reboot();
         } else
         if(qSave[0]=='n'){

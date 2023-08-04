@@ -52,6 +52,7 @@ typedef enum {
 // HAP Error Codes (HAP Table 5-5)
 
 typedef enum {
+  tagError_None=0x00,
   tagError_Unknown=0x01,
   tagError_Authentication=0x02,
   tagError_Backoff=0x03,
