@@ -1313,6 +1313,8 @@ int HAPClient::getStatusURL(){
 
   response+="<tr><td>HomeKit Status:</td><td>" + String(nAdminControllers()?"PAIRED":"NOT PAIRED") + "</td></tr>\n";   
   response+="<tr><td>Max Log Entries:</td><td>" + String(homeSpan.webLog.maxEntries) + "</td></tr>\n"; 
+  response+="<tr><td>Free RAM:</td><td>" + String((double)(esp_get_free_internal_heap_size() / 1024),2) + " Kb (" + String(esp_get_free_internal_heap_size()) + " bytes)</td></tr>\n"; 
+  response+="<tr><td>Free PSRAM:</td><td>" + String((double)(esp_get_free_heap_size() / 1024 / 1024),2) + " Mb (" + String(esp_get_free_heap_size()) + " bytes)</td></tr>\n"; 
   response+="</table>\n";
   response+="<p></p>";
 
