@@ -29,7 +29,7 @@ At runtime HomeSpan will create a global **object** named `homeSpan` that suppor
 The following **optional** `homeSpan` methods override various HomeSpan initialization parameters used in `begin()`, and therefore **should** be called before `begin()` to take effect.  If a method is *not* called, HomeSpan uses the default parameter indicated below:
 
 * `void setControlPin(uint8_t pin)`
-  * sets the ESP32 pin to use for the HomeSpan Control Button.  If not specified, HomeSpan will assume there is no Control Button
+  * sets the ESP32 pin to use for the HomeSpan Control Button (which must connect the specified pin to **ground** when pushed).  If not specified, HomeSpan will assume there is no Control Button
 
 * `int getControlPin()`
    * returns the pin number of the HomeSpan Control Button as set by `setControlPin(pin)`, or -1 if no pin has been set
