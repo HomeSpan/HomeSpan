@@ -27,7 +27,7 @@
  
 // USER-DEFINED SETTINGS AND REFERENCE ENUMERATION CLASSES
 
-#include <core_version.h>
+#include <esp_arduino_version.h>
 
 #pragma once
 
