@@ -490,7 +490,7 @@ class SpanCharacteristic{
         return(String(c));        
       case FORMAT::STRING:
       case FORMAT::DATA:
-        sprintf(c,"\"%s\"",u.STRING);
+        sprintf(c,"\"%.61s\"",u.STRING); // Truncating string to 61 chars.
         return(String(c));        
     } // switch
     return(String());       // included to prevent compiler warnings
