@@ -254,7 +254,7 @@ class Span{
   
   unordered_map<char, SpanUserCommand *> UserCommands;           // map of pointers to all UserCommands
 
-  void pollTask();                              // poll HAP Clients and process any new HAP requests
+  void pollTask(int taskDelay = 5);             // poll HAP Clients and process any new HAP requests with configurable vTaskDelay
   int getFreeSlot();                            // returns free HAPClient slot number. HAPClients slot keep track of each active HAPClient connection
   void checkConnect();                          // check WiFi connection; connect if needed
   void commandMode();                           // allows user to control and reset HomeSpan settings with the control button
@@ -285,7 +285,7 @@ class Span{
              const char *hostNameBase=DEFAULT_HOST_NAME,
              const char *modelName=DEFAULT_MODEL_NAME);        
              
-  void poll();                                  // calls pollTask() with some error checking
+  void poll(int taskDelay = 5);                 // calls pollTask() with some error checking and configurable vTaskDelay
   void processSerialCommand(const char *c);     // process command 'c' (typically from readSerial, though can be called with any 'c')
   
   boolean updateDatabase(boolean updateMDNS=true);   // updates HAP Configuration Number and Loop vector; if updateMDNS=true and config number has changed, re-broadcasts MDNS 'c#' record; returns true if config number changed

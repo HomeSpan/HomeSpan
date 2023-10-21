@@ -153,7 +153,7 @@ void Span::begin(Category catID, const char *displayName, const char *hostNameBa
 
 ///////////////////////////////
 
-void Span::poll() {
+void Span::poll(int taskDelay) {
 
   if(pollTaskHandle){
     LOG0("\n** FATAL ERROR: Do not call homeSpan.poll() directly if homeSpan.start() is used!\n** PROGRAM HALTED **\n\n");
@@ -161,12 +161,12 @@ void Span::poll() {
     while(1);    
   }
   
-  pollTask();
+  pollTask(taskDelay);
 }
 
 ///////////////////////////////
 
-void Span::pollTask() {
+void Span::pollTask(int taskDelay) {
 
   if(!strlen(category)){
     LOG0("\n** FATAL ERROR: Cannot start homeSpan polling without an initial call to homeSpan.begin()!\n** PROGRAM HALTED **\n\n");
@@ -300,8 +300,8 @@ void Span::pollTask() {
   }
 
   statusLED->check();
-
-  vTaskDelay(5);
+  if (taskDelay > 0)
+    vTaskDelay(taskDelay);
     
 } // poll
 
