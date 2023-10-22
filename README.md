@@ -60,7 +60,7 @@ HomeSpan requires version 2.0.0 or later of the [Arduino-ESP32 Board Manager](ht
   * converted various *homeSpan* methods that previously returned *void* to now return *Span &*
   * allows for chaining multiple *homeSpan* methods
   * example: `homeSpan.setControlPin(21).setStatusPin(13);`
-  * see [HomeSpan API Reference](Reference.md) for details
+  * see [HomeSpan API Reference](docs/Reference.md) for details
     
 * **Upgrades to HomeSpan Web Log output**
 
