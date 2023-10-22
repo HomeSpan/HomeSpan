@@ -237,7 +237,7 @@ void Network::processRequest(char *body, char *formData){
   
   String responseHead="HTTP/1.1 200 OK\r\nContent-type: text/html\r\n";
   
-  String responseBody="<html><head><style>"
+  String responseBody="<html><meta charset=\"utf-8\"><head><style>"
                         "p{font-size:300%; margin:1em}"
                         "label{font-size:300%; margin:1em}"
                         "input{font-size:250%; margin:1em}"
