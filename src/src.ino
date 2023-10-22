@@ -39,12 +39,22 @@ struct LED_Service : Service::LightBulb {
   }
 
   boolean update(){            
-    digitalWrite(ledPin,power->getNewVal());   
+    digitalWrite(ledPin,power->getNewVal());
+    WEBLOG("Power = %s",power->getNewVal()?"ON":"OFF");
     return(true);  
   }
 
 };
-      
+
+//////////////////////////////////////
+
+String extraData(){
+  String r;
+  r+="<tr><td>Free RAM:</td><td>" + String((double)(esp_get_free_internal_heap_size() / 1024),2) + " Kb (" + String(esp_get_free_internal_heap_size()) + " bytes)</td></tr>\n"; 
+  r+="<tr><td>Free PSRAM:</td><td>" + String((double)(esp_get_free_heap_size() / 1024 / 1024),2) + " Mb (" + String(esp_get_free_heap_size()) + " bytes)</td></tr>\n";
+  return(r);
+}
+
 //////////////////////////////////////
 
 void setup() {
@@ -55,7 +65,7 @@ void setup() {
 
 //  homeSpan.setControlPin(21);
   
-  homeSpan.setLogLevel(2);
+  homeSpan.setLogLevel(2).enableWebLog(20).setWebLogCallback(extraData);
 //  homeSpan.reserveSocketConnections(10);
   
 //  homeSpan.setApSSID("HS_Setup");

@@ -1277,6 +1277,10 @@ int HAPClient::getStatusURL(){
   
   response+="<tr><td>HomeKit Status:</td><td>" + String(HAPClient::nAdminControllers()?"PAIRED":"NOT PAIRED") + "</td></tr>\n";   
   response+="<tr><td>Max Log Entries:</td><td>" + String(homeSpan.webLog.maxEntries) + "</td></tr>\n"; 
+
+  if(homeSpan.weblogCallback)
+    response+=homeSpan.weblogCallback();
+
   response+="</table>\n";
   response+="<p></p>";
 

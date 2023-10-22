@@ -232,6 +232,7 @@ class Span{
   uint16_t tcpPortNum=DEFAULT_TCP_PORT;                       // port for TCP communications between HomeKit and HomeSpan
   char qrID[5]="";                                            // Setup ID used for pairing with QR Code
   void (*wifiCallback)()=NULL;                                // optional callback function to invoke once WiFi connectivity is established
+  String (*weblogCallback)()=NULL;                            // optional callback function to invoke after header table in Web Log is produced
   void (*pairCallback)(boolean isPaired)=NULL;                // optional callback function to invoke when pairing is established (true) or lost (false)
   boolean autoStartAPEnabled=false;                           // enables auto start-up of Access Point when WiFi Credentials not found
   void (*apFunction)()=NULL;                                  // optional function to invoke when starting Access Point
@@ -347,6 +348,7 @@ class Span{
   }
 
   Span& setWebLogCSS(const char *css){webLog.css="\n" + String(css) + "\n";return(*this);}
+  Span& setWebLogCallback(String (*f)()){weblogCallback=f;return(*this);}
 
   void autoPoll(uint32_t stackSize=8192, uint32_t priority=1, uint32_t cpu=0){     // start pollTask()
     xTaskCreateUniversal([](void *parms){for(;;)homeSpan.pollTask();}, "pollTask", stackSize, NULL, priority, &pollTaskHandle, cpu);
