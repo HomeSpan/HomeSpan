@@ -4,7 +4,7 @@ Welcome to HomeSpan - a robust and extremely easy-to-use Arduino library for cre
 
 HomeSpan provides a microcontroller-focused implementation of Apple's HomeKit Accessory Protocol Specification Release R2 (HAP-R2) designed specifically for the Espressif ESP32 microcontroller running within the Arduino IDE.  HomeSpan pairs directly to HomeKit via your home WiFi network without the need for any external bridges or components.  With HomeSpan you can use the full power of the ESP32's I/O functionality to create custom control software and/or hardware to automatically operate external devices from the Home App on your iPhone, iPad, or Mac, or with Siri.
 
-HomeSpan requires version 2.0.0 or later of the [Arduino-ESP32 Board Manager](https://github.com/espressif/arduino-esp32), and has been tested up through version 2.0.9 (recommended).  HomeSpan can be run on the original ESP32 as well as Espressif's ESP32-S2, ESP32-C3, and ESP32-S3 chips.
+HomeSpan requires version 2.0.0 or later of the [Arduino-ESP32 Board Manager](https://github.com/espressif/arduino-esp32), and has been tested up through version 2.0.14 (recommended).  HomeSpan can be run on the original ESP32 as well as Espressif's ESP32-S2, ESP32-C3, and ESP32-S3 chips.
 
 ### HomeSpan Highlights
 
@@ -49,39 +49,24 @@ HomeSpan requires version 2.0.0 or later of the [Arduino-ESP32 Board Manager](ht
   * Launch the WiFi Access Point
 * A standalone, detailed End-User Guide
 
-## ❗Latest Update - HomeSpan 1.8.0 (7/8/2023)
+## ❗Latest Update - HomeSpan 1.8.1 (10/XX/2023)
 
-* **New Stepper Motor Control!**
+* **Memory-Usage Improvements**
+  
+  * reduced RAM usage by 30-50K (as well as reduced reliance on large stack-based buffers)
+ 
+* **Added ability to "chain" *homeSpan* methods**
 
-  * adds new **StepperControl** class that allows for smooth, uninterrupted operation of one or more stepper motors running in the background while HomeSpan continues to run simultaneously in the foreground
-  * supports driver boards with or without PWM, including microstepping modes
-  * supports automatic acceleration and deceleration for smooth starts and stops
-  * motors can be set to an absolute position or instructucted to move a specified number of steps
-  * provides options to automatically enter into a "brake" state after motor stops to conserve power
-  * includes a fully worked example of a motorized window shade
-  * see [Stepper Motor Control](docs/Stepper.md) for details
+  * converted various *homeSpan* methods that previously returned *void* to now return *Span &*
+  * allows for chaining multiple *homeSpan* methods
+  * example: `homeSpan.setControlPin(21).setStatusPin(13);`
+  * see [HomeSpan API Reference](Reference.md) for details
     
 * **Upgrades to HomeSpan Web Log output**
 
   * adds new method `void homeSpan.setWebLogCSS(const char *css)` that allows you to define *Custom Style Sheets (CSS)* for the Web Log text, tables, and background
   * adds version numbers for the Sodium and MbedTLS libraries, HomeKit pairing status, and a text description of Reset Reason code
   * see [Message Logging](docs/Logging.md) for details
-
-* **Upgrades to Web Log Time Server initialization**
-
-  * the process for retrieving the time and date from an NTP server upon booting now runs in the background as a separate task
-  * HomeSpan is no longer blocked from running during the NTP query
-
-* **Adds new methods to disable HomeSpan's use of the USB Serial port**
-  
-  * new Log Level, -1, causes HomeSpan to suppress all OUTPUT messages
-  * new homeSpan method `setSerialInputDisable(boolean val)` disables/re-enables HomeSpan's reading of CLI commands INPUT into the Arduino Serial Monitor
-
-* **Adds ability to use a non-standard LED as the HomeSpan Status LED**
-
-  * new homeSpan method `setStatusDevice(Blinkable *sDev)` sets the Status LED to the Blinkable object *sDev*
-  * allows an LED connected to a pin expander, or any other non-standard LED controller (such as an inverted LED that lights when a pin is LOW instead of HIGH) to be used as the HomeSpan Status LED    
-  * see [Blinkable.md](docs/Blinkable.md) for details (including an example) on how to create Blinkable objects
     
 See [Releases](https://github.com/HomeSpan/HomeSpan/releases) for details on all changes and bug fixes included in this update.
 
