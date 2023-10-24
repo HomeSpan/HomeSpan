@@ -48,11 +48,9 @@ struct LED_Service : Service::LightBulb {
 
 //////////////////////////////////////
 
-String extraData(){
-  String r;
+void extraData(String &r){
   r+="<tr><td>Free RAM:</td><td>" + String((double)(esp_get_free_internal_heap_size() / 1024),2) + " Kb (" + String(esp_get_free_internal_heap_size()) + " bytes)</td></tr>\n"; 
   r+="<tr><td>Free PSRAM:</td><td>" + String((double)(esp_get_free_heap_size() / 1024 / 1024),2) + " Mb (" + String(esp_get_free_heap_size()) + " bytes)</td></tr>\n";
-  return(r);
 }
 
 //////////////////////////////////////

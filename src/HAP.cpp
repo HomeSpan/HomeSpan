@@ -1279,7 +1279,7 @@ int HAPClient::getStatusURL(){
   response+="<tr><td>Max Log Entries:</td><td>" + String(homeSpan.webLog.maxEntries) + "</td></tr>\n"; 
 
   if(homeSpan.weblogCallback)
-    response+=homeSpan.weblogCallback();
+    homeSpan.weblogCallback(response);
 
   response+="</table>\n";
   response+="<p></p>";
