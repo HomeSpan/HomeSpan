@@ -42,13 +42,19 @@ String mask(char *c, int n);          // simply utility that creates a String fr
 // going out of scope
 
 template <class bufType>
-struct TempBuffer {
+class TempBuffer {
+
+  private:
+  
   bufType *buf;
   int nBytes;
+  int nElements;
+
+  public:
   
-  TempBuffer(size_t len){
-    nBytes=len*sizeof(bufType);
-    buf=(bufType *)heap_caps_malloc(nBytes,MALLOC_CAP_8BIT);
+  TempBuffer(int _nElements) : nElements(_nElements) {
+    nBytes=nElements*sizeof(bufType);
+    buf=(bufType *)malloc(nBytes);
     if(buf==NULL){
       Serial.print("\n\n*** FATAL ERROR: Requested allocation of ");
       Serial.print(nBytes);
@@ -58,11 +64,19 @@ struct TempBuffer {
    }
 
   ~TempBuffer(){
-    heap_caps_free(buf);
+    free(buf);
   }
 
   int len(){
     return(nBytes);
+  }
+
+  int size(){
+    return(nElements);
+  }
+
+  bufType *get(){
+    return(buf);
   }
   
 };

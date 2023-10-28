@@ -30,7 +30,7 @@
 template <class tagType, int maxTags>
 class TLV {
 
-  int cLen;              // total number of bytes in all defined TLV records, including TAG andf LEN (suitable for use as Content-Length in HTTP Body)
+  int cLen;              // total number of bytes in all defined TLV records, including TAG and LEN (suitable for use as Content-Length in HTTP Body)
   int numTags;           // actual number of tags defined
   
   struct tlv_t {
@@ -55,11 +55,11 @@ public:
   int val(tagType tag, uint8_t val);        // sets and returns VAL for TLV with matching TAG (or -1 if no match)    
   uint8_t *buf(tagType tag);                // returns VAL Buffer for TLV with matching TAG (or NULL if no match)
   uint8_t *buf(tagType tag, int len);       // set length and returns VAL Buffer for TLV with matching TAG (or NULL if no match or if LEN>MAX)
+  uint8_t *buf(tagType tag, uint8_t *src, int len);       // copies len bytes of src into VAL buffer, and sets length to len, for TLV with matching TAG; returns VAL Buffer on success, or NULL if no match or if LEN>MAX  
   int len(tagType tag);                     // returns LEN for TLV matching TAG (or 0 if TAG is found but LEN not yet set; -1 if no match at all)
   void print(int minLogLevel=0);            // prints all defined TLVs (those with length>0), subject to specified minimum log level
   int unpack(uint8_t *tlvBuf, int nBytes);  // unpacks nBytes of TLV content from single byte buffer into individual TLV records (return 1 on success, 0 if fail) 
   int pack(uint8_t *tlvBuf);                // if tlvBuf!=NULL, packs all defined TLV records (LEN>0) into a single byte buffer, spitting large TLVs into separate 255-byte chunks.  Returns number of bytes (that would be) stored in buffer
-  int pack_old(uint8_t *buf);               // packs all defined TLV records (LEN>0) into a single byte buffer, spitting large TLVs into separate 255-byte records.  Returns number of bytes stored in buffer
   
 }; // TLV
 
@@ -129,8 +129,12 @@ int TLV<tagType, maxTags>::val(tagType tag){
 
   tlv_t *tlv=find(tag);
 
-  if(tlv && tlv->len>0)
-    return(tlv->val[0]);
+  if(tlv && tlv->len>=0){
+    if(tlv->maxLen>0)
+      return(tlv->val[0]);
+    else
+      return(0);
+  }
 
   return(-1);
 }
@@ -144,8 +148,9 @@ int TLV<tagType, maxTags>::val(tagType tag, uint8_t val){
   tlv_t *tlv=find(tag);
   
   if(tlv){
-    tlv->val[0]=val;
-    tlv->len=1;
+    if(tlv->maxLen>0)
+      tlv->val[0]=val;
+    tlv->len=(tlv->maxLen>0);
     cLen+=tlv->len+2;
     return(val);
   }
@@ -173,6 +178,15 @@ uint8_t *TLV<tagType, maxTags>::buf(tagType tag){
 template<class tagType, int maxTags>
 uint8_t *TLV<tagType, maxTags>::buf(tagType tag, int len){
 
+  return(buf(tag,NULL,len));
+}
+
+//////////////////////////////////////
+// TLV buf(tag, src, len)
+
+template<class tagType, int maxTags>
+uint8_t *TLV<tagType, maxTags>::buf(tagType tag, uint8_t *src, int len){
+
   tlv_t *tlv=find(tag);
   
   if(tlv && len<=tlv->maxLen){
@@ -181,7 +195,10 @@ uint8_t *TLV<tagType, maxTags>::buf(tagType tag, int len){
 
     for(int i=0;i<tlv->len;i+=255)
       cLen+=2;
-    
+
+    if(src)
+      memcpy(tlv->val,src,len);
+      
     return(tlv->val);
   }
   
@@ -199,7 +216,7 @@ void TLV<tagType, maxTags>::print(int minLogLevel){
     
   for(int i=0;i<numTags;i++){
     
-    if(tlv[i].len>0){
+    if(tlv[i].len>=0){
       Serial.printf("%s(%d) ",tlv[i].name,tlv[i].len);
       
       for(int j=0;j<tlv[i].len;j++)
@@ -209,7 +226,7 @@ void TLV<tagType, maxTags>::print(int minLogLevel){
 
     } // len>0
   } // loop over all TLVs
-}
+}    
 
 //////////////////////////////////////
 // TLV pack(tlvBuf)
@@ -220,19 +237,23 @@ int TLV<tagType, maxTags>::pack(uint8_t *tlvBuf){
   int n=0;
   int nBytes;
 
-  for(int i=0;i<numTags;i++){    
+  for(int i=0;i<numTags;i++){     
     
-    if((nBytes=tlv[i].len)>0){
-      for(int j=0;j<tlv[i].len;j+=255,nBytes-=255){
+    if((nBytes=tlv[i].len)>=0){
+      int j=0;
+      do{
+        int wBytes=nBytes>255?255:nBytes;
         if(tlvBuf!=NULL){
           *tlvBuf++=tlv[i].tag;
-          *tlvBuf++=nBytes>255?255:nBytes;
-          memcpy(tlvBuf,tlv[i].val+j,nBytes>255?255:nBytes);
-          tlvBuf+=nBytes>255?255:nBytes;
+          *tlvBuf++=wBytes;
+          memcpy(tlvBuf,tlv[i].val+j,wBytes);
+          tlvBuf+=wBytes;
         }
-        n+=(nBytes>255?255:nBytes)+2;      
-      } // j-loop
-    } // len>0
+        n+=wBytes+2;
+        j+=wBytes;
+        nBytes-=wBytes;      
+      } while(nBytes>0);
+    } // len>=0
     
   } // loop over all TLVs
 

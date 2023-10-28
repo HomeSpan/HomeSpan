@@ -260,7 +260,7 @@ void Span::pollTask() {
       homeSpan.lastClientIP="0.0.0.0";                              // reset stored IP address to show "0.0.0.0" if homeSpan.getClientIP() is used in any other context
       
       if(!hap[i]->client){                                 // client disconnected by server
-        LOG1("** Disconnecting Client #");
+        LOG1("** Disconnected Client #");
         LOG1(i);
         LOG1("  (");
         LOG1(millis()/1000);
@@ -422,38 +422,36 @@ void Span::checkConnect(){
 
   addWebLog(true,"WiFi Connected!  IP Address = %s",WiFi.localIP().toString().c_str());
 
-  if(connected>1)                           // Do not initialize everything below if this is only a reconnect
+  if(connected>1){                           // Do not initialize everything below if this is only a reconnect
+    if(wifiCallbackAll)
+      wifiCallbackAll((connected+1)/2);
     return;
+  }
     
   char id[18];                              // create string version of Accessory ID for MDNS broadcast
   memcpy(id,HAPClient::accessory.ID,17);    // copy ID bytes
   id[17]='\0';                              // add terminating null
 
-  // create broadcaset name from server base name plus accessory ID (without ':')
+  // create broadcast name from server base name plus accessory ID (without ':')
 
-  int nChars;
-
-  if(!hostNameSuffix)
-    nChars=snprintf(NULL,0,"%s-%.2s%.2s%.2s%.2s%.2s%.2s",hostNameBase,id,id+3,id+6,id+9,id+12,id+15);
-  else
-    nChars=snprintf(NULL,0,"%s%s",hostNameBase,hostNameSuffix);
-    
-  char hostName[nChars+1];
+  char *hostName;
   
   if(!hostNameSuffix)
-    sprintf(hostName,"%s-%.2s%.2s%.2s%.2s%.2s%.2s",hostNameBase,id,id+3,id+6,id+9,id+12,id+15);
+    asprintf(&hostName,"%s-%.2s%.2s%.2s%.2s%.2s%.2s",hostNameBase,id,id+3,id+6,id+9,id+12,id+15);
   else
-    sprintf(hostName,"%s%s",hostNameBase,hostNameSuffix);
+    asprintf(&hostName,"%s%s",hostNameBase,hostNameSuffix);
 
-  char d[strlen(hostName)+1];  
-  sscanf(hostName,"%[A-Za-z0-9-]",d);
+  char *d;
+  sscanf(hostName,"%m[A-Za-z0-9-]",&d);
   
-  if(strlen(hostName)>255|| hostName[0]=='-' || hostName[strlen(hostName)-1]=='-' || strlen(hostName)!=strlen(d)){
+  if(strlen(hostName)>255 || hostName[0]=='-' || hostName[strlen(hostName)-1]=='-' || strlen(hostName)!=strlen(d)){
     LOG0("\n*** Error:  Can't start MDNS due to invalid hostname '%s'.\n",hostName);
     LOG0("*** Hostname must consist of 255 or less alphanumeric characters or a hyphen, except that the hyphen cannot be the first or last character.\n");
     LOG0("*** PROGRAM HALTED!\n\n");
     while(1);
   }
+
+  free(d);
     
   LOG0("\nStarting MDNS...\n\n");
   LOG0("HostName:      %s.local:%d\n",hostName,tcpPortNum);
@@ -534,12 +532,18 @@ void Span::checkConnect(){
   
   if(wifiCallback)
     wifiCallback();
+
+  if(wifiCallbackAll)
+    wifiCallbackAll((connected+1)/2);
+
+
+  free(hostName);
   
 } // initWiFi
 
 ///////////////////////////////
 
-void Span::setQRID(const char *id){
+Span& Span::setQRID(const char *id){
   
   char tBuf[5];
   sscanf(id,"%4[0-9A-Za-z]",tBuf);
@@ -547,7 +551,8 @@ void Span::setQRID(const char *id){
   if(strlen(id)==4 && strlen(tBuf)==4){
     sprintf(qrID,"%s",id);
   }
-    
+
+  return(*this);
 } // setQRID
 
 ///////////////////////////////
@@ -556,6 +561,16 @@ void Span::processSerialCommand(const char *c){
 
   switch(c[0]){
 
+    case 'Z': {
+      HAPClient::saveControllers();
+      break;
+      TempBuffer <uint8_t> tBuf(HAPClient::listControllers(NULL));
+      HAPClient::listControllers(tBuf.get());
+      Serial.printf("SIZE = %d\n",tBuf.len());
+      HAPClient::hexPrintRow(tBuf.get(),tBuf.len());
+      break;
+    }
+    
     case 's': {    
       
       LOG0("\n*** HomeSpan Status ***\n\n");
@@ -598,10 +613,10 @@ void Span::processSerialCommand(const char *c){
     case 'd': {      
       
       TempBuffer <char> qBuf(sprintfAttributes(NULL)+1);
-      sprintfAttributes(qBuf.buf);  
+      sprintfAttributes(qBuf.get());  
 
       LOG0("\n*** Attributes Database: size=%d  configuration=%d ***\n\n",qBuf.len()-1,hapConfig.configNumber);
-      prettyPrint(qBuf.buf);
+      prettyPrint(qBuf.get());
       LOG0("\n*** End Database ***\n\n");
     }
     break;
@@ -682,22 +697,13 @@ void Span::processSerialCommand(const char *c){
 
     case 'U': {
 
-      HAPClient::removeControllers();                                                                           // clear all Controller data  
-      nvs_set_blob(HAPClient::hapNVS,"CONTROLLERS",HAPClient::controllers,sizeof(HAPClient::controllers));      // update data
-      nvs_commit(HAPClient::hapNVS);                                                                            // commit to NVS
+      HAPClient::controllerList.clear();                                        // clear all Controller data  
+      HAPClient::saveControllers();
       LOG0("\n*** HomeSpan Pairing Data DELETED ***\n\n");
-      
-      for(int i=0;i<maxConnections;i++){     // loop over all connection slots
-        if(hap[i]->client){                    // if slot is connected
-          LOG1("*** Terminating Client #");
-          LOG1(i);
-          LOG1("\n");
-          hap[i]->client.stop();
-        }
-      }
-      
+      HAPClient::tearDown(NULL);                                                // tear down all verified connections
+            
       LOG0("\nDEVICE NOT YET PAIRED -- PLEASE PAIR WITH HOMEKIT APP\n\n");
-      mdns_service_txt_item_set("_hap","_tcp","sf","1");                                                        // set Status Flag = 1 (Table 6-8)
+      mdns_service_txt_item_set("_hap","_tcp","sf","1");                        // set Status Flag = 1 (Table 6-8)
 
       if(homeSpan.pairCallback)
         homeSpan.pairCallback(false);
@@ -833,7 +839,7 @@ void Span::processSerialCommand(const char *c){
     case 'm': {
       multi_heap_info_t heapInfo;
       heap_caps_get_info(&heapInfo,MALLOC_CAP_INTERNAL);
-      LOG0("Total Heap=%d   ",heapInfo.total_free_bytes);
+      LOG0("Total Heap=%d  (low=%d)  ",heapInfo.total_free_bytes,heapInfo.minimum_free_bytes);
       heap_caps_get_info(&heapInfo,MALLOC_CAP_DEFAULT);
       LOG0("DRAM-Capable=%d   ",heapInfo.total_free_bytes);
       heap_caps_get_info(&heapInfo,MALLOC_CAP_EXEC);
@@ -1008,13 +1014,11 @@ void Span::processSerialCommand(const char *c){
       LOG0("\n*** Pairing Data used for Cloning another Device\n\n");
       size_t olen;
       TempBuffer<char> tBuf(256);
-      mbedtls_base64_encode((uint8_t *)tBuf.buf,256,&olen,(uint8_t *)&HAPClient::accessory,sizeof(struct Accessory));
-      LOG0("Accessory data:  %s\n",tBuf.buf);
-      for(int i=0;i<HAPClient::MAX_CONTROLLERS;i++){
-        if(HAPClient::controllers[i].allocated){
-          mbedtls_base64_encode((uint8_t *)tBuf.buf,256,&olen,(uint8_t *)(HAPClient::controllers+i),sizeof(struct Controller));
-          LOG0("Controller data: %s\n",tBuf.buf);
-        }
+      mbedtls_base64_encode((uint8_t *)tBuf.get(),256,&olen,(uint8_t *)&HAPClient::accessory,sizeof(struct Accessory));
+      LOG0("Accessory data:  %s\n",tBuf.get());
+      for(const auto &cont : HAPClient::controllerList){
+        mbedtls_base64_encode((uint8_t *)tBuf.get(),256,&olen,(uint8_t *)(&cont),sizeof(struct Controller));
+        LOG0("Controller data: %s\n",tBuf.get());        
       }
       LOG0("\n*** End Pairing Data\n\n");
     }
@@ -1026,14 +1030,14 @@ void Span::processSerialCommand(const char *c){
       TempBuffer<char> tBuf(200);
       size_t olen;
 
-      tBuf.buf[0]='\0';
+      tBuf.get()[0]='\0';
       LOG0(">>> Accessory data:  ");
-      readSerial(tBuf.buf,199);
-      if(strlen(tBuf.buf)==0){
+      readSerial(tBuf.get(),199);
+      if(strlen(tBuf.get())==0){
         LOG0("(cancelled)\n\n");
         return;
       }
-      mbedtls_base64_decode((uint8_t *)&HAPClient::accessory,sizeof(struct Accessory),&olen,(uint8_t *)tBuf.buf,strlen(tBuf.buf));
+      mbedtls_base64_decode((uint8_t *)&HAPClient::accessory,sizeof(struct Accessory),&olen,(uint8_t *)tBuf.get(),strlen(tBuf.get()));
       if(olen!=sizeof(struct Accessory)){
         LOG0("\n*** Error in size of Accessory data - cloning cancelled.  Restarting...\n\n");
         reboot();
@@ -1041,22 +1045,25 @@ void Span::processSerialCommand(const char *c){
         HAPClient::charPrintRow(HAPClient::accessory.ID,17);
         LOG0("\n");
       }
+
+      HAPClient::controllerList.clear();
+      Controller tCont;
       
-      for(int i=0;i<HAPClient::MAX_CONTROLLERS;i++){
-        tBuf.buf[0]='\0';
+      while(HAPClient::controllerList.size()<16){
+        tBuf.get()[0]='\0';
         LOG0(">>> Controller data: ");
-        readSerial(tBuf.buf,199);
-        if(strlen(tBuf.buf)==0){
+        readSerial(tBuf.get(),199);
+        if(strlen(tBuf.get())==0){
           LOG0("(done)\n");
-          while(i<HAPClient::MAX_CONTROLLERS)              // clear data from remaining controller slots
-            HAPClient::controllers[i++].allocated=false;
+          break;
         } else {
-          mbedtls_base64_decode((uint8_t *)(HAPClient::controllers+i),sizeof(struct Controller),&olen,(uint8_t *)tBuf.buf,strlen(tBuf.buf));
+          mbedtls_base64_decode((uint8_t *)(&tCont),sizeof(struct Controller),&olen,(uint8_t *)tBuf.get(),strlen(tBuf.get()));
           if(olen!=sizeof(struct Controller)){
             LOG0("\n*** Error in size of Controller data - cloning cancelled.  Restarting...\n\n");
             reboot();
           } else {
-            HAPClient::charPrintRow(HAPClient::controllers[i].ID,36);
+            HAPClient::controllerList.push_back(tCont);
+            HAPClient::charPrintRow(tCont.ID,36);
             LOG0("\n");
           }
         }
@@ -1070,8 +1077,7 @@ void Span::processSerialCommand(const char *c){
         if(qSave[0]=='y'){
           LOG0("(yes)\nData saved!  Rebooting...");
           nvs_set_blob(HAPClient::hapNVS,"ACCESSORY",&HAPClient::accessory,sizeof(HAPClient::accessory));           // update data
-          nvs_set_blob(HAPClient::hapNVS,"CONTROLLERS",HAPClient::controllers,sizeof(HAPClient::controllers));      
-          nvs_commit(HAPClient::hapNVS);                                                      // commit to NVS
+          HAPClient::saveControllers();
           reboot();
         } else
         if(qSave[0]=='n'){
@@ -1197,13 +1203,15 @@ const char* Span::statusString(HS_STATUS s){
 
 ///////////////////////////////
 
-void Span::setWifiCredentials(const char *ssid, const char *pwd){
+Span& Span::setWifiCredentials(const char *ssid, const char *pwd){
   sprintf(network.wifiData.ssid,"%.*s",MAX_SSID,ssid);
   sprintf(network.wifiData.pwd,"%.*s",MAX_PWD,pwd);
   if(wifiNVS){                                                                      // is begin() already called and wifiNVS is open
     nvs_set_blob(wifiNVS,"WIFIDATA",&network.wifiData,sizeof(network.wifiData));    // update data
     nvs_commit(wifiNVS);                                                            // commit to NVS
   }
+
+  return(*this);
 }
 
 ///////////////////////////////
@@ -1574,8 +1582,8 @@ boolean Span::updateDatabase(boolean updateMDNS){
 
   uint8_t tHash[48];
   TempBuffer <char> tBuf(sprintfAttributes(NULL,GET_META|GET_PERMS|GET_TYPE|GET_DESC)+1);
-  sprintfAttributes(tBuf.buf,GET_META|GET_PERMS|GET_TYPE|GET_DESC);  
-  mbedtls_sha512_ret((uint8_t *)tBuf.buf,tBuf.len(),tHash,1);     // create SHA-384 hash of JSON (can be any hash - just looking for a unique key)
+  sprintfAttributes(tBuf.get(),GET_META|GET_PERMS|GET_TYPE|GET_DESC);  
+  mbedtls_sha512_ret((uint8_t *)tBuf.get(),tBuf.len(),tHash,1);     // create SHA-384 hash of JSON (can be any hash - just looking for a unique key)
 
   boolean changed=false;
 

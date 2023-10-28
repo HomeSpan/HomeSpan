@@ -38,6 +38,7 @@
 #include <unordered_map>
 #include <vector>
 #include <unordered_set>
+#include <list>
 #include <nvs.h>
 #include <ArduinoOTA.h>
 #include <esp_now.h>
@@ -55,6 +56,7 @@
 using std::vector;
 using std::unordered_map;
 using std::unordered_set;
+using std::list;
 
 enum {
   GET_AID=1,
@@ -202,7 +204,6 @@ class Span{
   const char *displayName;                      // display name for this device - broadcast as part of Bonjour MDNS
   const char *hostNameBase;                     // base of hostName of this device - full host name broadcast by Bonjour MDNS will have 6-byte accessoryID as well as '.local' automatically appended
   const char *hostNameSuffix=NULL;              // optional "suffix" of hostName of this device.  If specified, will be used as the hostName suffix instead of the 6-byte accessoryID
-  char *hostName;                               // full host name of this device - constructed from hostNameBase and 6-byte AccessoryID
   const char *modelName;                        // model name of this device - broadcast as Bonjour field "md" 
   char category[3]="";                          // category ID of primary accessory - broadcast as Bonjour field "ci" (HAP Section 13)
   unsigned long snapTime;                       // current time (in millis) snapped before entering Service loops() or updates()
@@ -230,7 +231,9 @@ class Span{
   unsigned long comModeLife=DEFAULT_COMMAND_TIMEOUT*1000;     // length of time (in milliseconds) to keep Command Mode alive before resuming normal operations
   uint16_t tcpPortNum=DEFAULT_TCP_PORT;                       // port for TCP communications between HomeKit and HomeSpan
   char qrID[5]="";                                            // Setup ID used for pairing with QR Code
-  void (*wifiCallback)()=NULL;                                // optional callback function to invoke once WiFi connectivity is established
+  void (*wifiCallback)()=NULL;                                // optional callback function to invoke once WiFi connectivity is initially established
+  void (*wifiCallbackAll)(int)=NULL;                          // optional callback function to invoke every time WiFi connectivity is established or re-established
+  void (*weblogCallback)(String &)=NULL;                      // optional callback function to invoke after header table in Web Log is produced
   void (*pairCallback)(boolean isPaired)=NULL;                // optional callback function to invoke when pairing is established (true) or lost (false)
   boolean autoStartAPEnabled=false;                           // enables auto start-up of Access Point when WiFi Credentials not found
   void (*apFunction)()=NULL;                                  // optional function to invoke when starting Access Point
@@ -292,49 +295,52 @@ class Span{
   boolean updateDatabase(boolean updateMDNS=true);   // updates HAP Configuration Number and Loop vector; if updateMDNS=true and config number has changed, re-broadcasts MDNS 'c#' record; returns true if config number changed
   boolean deleteAccessory(uint32_t aid);             // deletes Accessory with matching aid; returns true if found, else returns false 
 
-  void setControlPin(uint8_t pin){controlButton=new PushButton(pin);}     // sets Control Pin   
-  void setStatusPin(uint8_t pin){statusDevice=new GenericLED(pin);}       // sets Status Device to a simple LED on specified pin
-  void setStatusAutoOff(uint16_t duration){autoOffLED=duration;}          // sets Status LED auto off (seconds)  
-  int getStatusPin(){return(statusLED->getPin());}                        // get Status Pin (getPin will return -1 if underlying statusDevice is undefined)
-  int getControlPin(){return(controlButton?controlButton->getPin():-1);}  // get Control Pin (returns -1 if undefined)
+  Span& setControlPin(uint8_t pin){controlButton=new PushButton(pin);return(*this);}     // sets Control Pin   
+  Span& setStatusPin(uint8_t pin){statusDevice=new GenericLED(pin);return(*this);}       // sets Status Device to a simple LED on specified pin
+  Span& setStatusAutoOff(uint16_t duration){autoOffLED=duration;return(*this);}          // sets Status LED auto off (seconds)  
+  int getStatusPin(){return(statusLED->getPin());}                                       // get Status Pin (getPin will return -1 if underlying statusDevice is undefined)
+  int getControlPin(){return(controlButton?controlButton->getPin():-1);}                 // get Control Pin (returns -1 if undefined)
   
-  void setStatusPixel(uint8_t pin,float h=0,float s=100,float v=100){     // sets Status Device to an RGB Pixel on specified pin
+  Span& setStatusPixel(uint8_t pin,float h=0,float s=100,float v=100){     // sets Status Device to an RGB Pixel on specified pin
     statusDevice=((new Pixel(pin))->setOnColor(Pixel::HSV(h,s,v)));
+    return(*this);
   }
 
-  void setStatusDevice(Blinkable *sDev){statusDevice=sDev;}
+  Span& setStatusDevice(Blinkable *sDev){statusDevice=sDev;return(*this);}
   void refreshStatusDevice(){if(statusLED)statusLED->refresh();}
 
-  void setApSSID(const char *ssid){network.apSSID=ssid;}                  // sets Access Point SSID
-  void setApPassword(const char *pwd){network.apPassword=pwd;}            // sets Access Point Password
-  void setApTimeout(uint16_t nSec){network.lifetime=nSec*1000;}           // sets Access Point Timeout (seconds)
-  void setCommandTimeout(uint16_t nSec){comModeLife=nSec*1000;}           // sets Command Mode Timeout (seconds)
-  void setLogLevel(int level){logLevel=level;}                            // sets Log Level for log messages (0=baseline, 1=intermediate, 2=all, -1=disable all serial input/output)
-  int getLogLevel(){return(logLevel);}                                    // get Log Level
-  void setSerialInputDisable(boolean val){serialInputDisabled=val;}       // sets whether serial input is disabled (true) or enabled (false)
-  boolean getSerialInputDisable(){return(serialInputDisabled);}           // returns true if serial input is disabled, or false if serial input in enabled
-  void reserveSocketConnections(uint8_t n){maxConnections-=n;}            // reserves n socket connections *not* to be used for HAP
-  void setHostNameSuffix(const char *suffix){hostNameSuffix=suffix;}      // sets the hostName suffix to be used instead of the 6-byte AccessoryID
-  void setPortNum(uint16_t port){tcpPortNum=port;}                        // sets the TCP port number to use for communications between HomeKit and HomeSpan
-  void setQRID(const char *id);                                           // sets the Setup ID for optional pairing with a QR Code
-  void setSketchVersion(const char *sVer){sketchVersion=sVer;}            // set optional sketch version number
-  const char *getSketchVersion(){return sketchVersion;}                   // get sketch version number
-  void setWifiCallback(void (*f)()){wifiCallback=f;}                      // sets an optional user-defined function to call once WiFi connectivity is established
-  void setPairCallback(void (*f)(boolean isPaired)){pairCallback=f;}      // sets an optional user-defined function to call when Pairing is established (true) or lost (false)
-  void setApFunction(void (*f)()){apFunction=f;}                          // sets an optional user-defined function to call when activating the WiFi Access Point  
-  void enableAutoStartAP(){autoStartAPEnabled=true;}                      // enables auto start-up of Access Point when WiFi Credentials not found
-  void setWifiCredentials(const char *ssid, const char *pwd);             // sets WiFi Credentials
-  void setStatusCallback(void (*f)(HS_STATUS status)){statusCallback=f;}        // sets an optional user-defined function to call when HomeSpan status changes
-  const char* statusString(HS_STATUS s);                                  // returns char string for HomeSpan status change messages
+  Span& setApSSID(const char *ssid){network.apSSID=ssid;return(*this);}                  // sets Access Point SSID
+  Span& setApPassword(const char *pwd){network.apPassword=pwd;return(*this);}            // sets Access Point Password
+  Span& setApTimeout(uint16_t nSec){network.lifetime=nSec*1000;return(*this);}           // sets Access Point Timeout (seconds)
+  Span& setCommandTimeout(uint16_t nSec){comModeLife=nSec*1000;return(*this);}           // sets Command Mode Timeout (seconds)
+  Span& setLogLevel(int level){logLevel=level;return(*this);}                            // sets Log Level for log messages (0=baseline, 1=intermediate, 2=all, -1=disable all serial input/output)
+  int getLogLevel(){return(logLevel);}                                                   // get Log Level
+  Span& setSerialInputDisable(boolean val){serialInputDisabled=val;return(*this);}       // sets whether serial input is disabled (true) or enabled (false)
+  boolean getSerialInputDisable(){return(serialInputDisabled);}                          // returns true if serial input is disabled, or false if serial input in enabled
+  Span& reserveSocketConnections(uint8_t n){maxConnections-=n;return(*this);}            // reserves n socket connections *not* to be used for HAP
+  Span& setHostNameSuffix(const char *suffix){hostNameSuffix=suffix;return(*this);}      // sets the hostName suffix to be used instead of the 6-byte AccessoryID
+  Span& setPortNum(uint16_t port){tcpPortNum=port;return(*this);}                        // sets the TCP port number to use for communications between HomeKit and HomeSpan
+  Span& setQRID(const char *id);                                                         // sets the Setup ID for optional pairing with a QR Code
+  Span& setSketchVersion(const char *sVer){sketchVersion=sVer;return(*this);}            // set optional sketch version number
+  const char *getSketchVersion(){return sketchVersion;}                                  // get sketch version number
+  Span& setWifiCallback(void (*f)()){wifiCallback=f;return(*this);}                      // sets an optional user-defined function to call once WiFi connectivity is initially established
+  Span& setWifiCallbackAll(void (*f)(int)){wifiCallbackAll=f;return(*this);}             // sets an optional user-defined function to call every time WiFi connectivity is established or re-established
+  Span& setPairCallback(void (*f)(boolean isPaired)){pairCallback=f;return(*this);}      // sets an optional user-defined function to call when Pairing is established (true) or lost (false)
+  Span& setApFunction(void (*f)()){apFunction=f;return(*this);}                          // sets an optional user-defined function to call when activating the WiFi Access Point  
+  Span& enableAutoStartAP(){autoStartAPEnabled=true;return(*this);}                      // enables auto start-up of Access Point when WiFi Credentials not found
+  Span& setWifiCredentials(const char *ssid, const char *pwd);                           // sets WiFi Credentials
+  Span& setStatusCallback(void (*f)(HS_STATUS status)){statusCallback=f;return(*this);}  // sets an optional user-defined function to call when HomeSpan status changes
+  const char* statusString(HS_STATUS s);                                                 // returns char string for HomeSpan status change messages
   
-  void setPairingCode(const char *s){sprintf(pairingCodeCommand,"S %9s",s);}    // sets the Pairing Code - use is NOT recommended.  Use 'S' from CLI instead
-  void deleteStoredValues(){processSerialCommand("V");}                         // deletes stored Characteristic values from NVS  
+  Span& setPairingCode(const char *s){sprintf(pairingCodeCommand,"S %9s",s);return(*this);}    // sets the Pairing Code - use is NOT recommended.  Use 'S' from CLI instead
+  void deleteStoredValues(){processSerialCommand("V");}                                        // deletes stored Characteristic values from NVS  
 
   int enableOTA(boolean auth=true, boolean safeLoad=true){return(spanOTA.init(auth, safeLoad, NULL));}   // enables Over-the-Air updates, with (auth=true) or without (auth=false) authorization password  
   int enableOTA(const char *pwd, boolean safeLoad=true){return(spanOTA.init(true, safeLoad, pwd));}      // enables Over-the-Air updates, with custom authorization password (overrides any password stored with the 'O' command)
 
-  void enableWebLog(uint16_t maxEntries=0, const char *serv=NULL, const char *tz="UTC", const char *url=DEFAULT_WEBLOG_URL){     // enable Web Logging
+  Span& enableWebLog(uint16_t maxEntries=0, const char *serv=NULL, const char *tz="UTC", const char *url=DEFAULT_WEBLOG_URL){     // enable Web Logging
     webLog.init(maxEntries, serv, tz, url);
+    return(*this);
   }
 
   void addWebLog(boolean sysMsg, const char *fmt, ...){               // add Web Log entry
@@ -344,7 +350,8 @@ class Span{
     va_end(ap);    
   }
 
-  void setWebLogCSS(const char *css){webLog.css="\n" + String(css) + "\n";}
+  Span& setWebLogCSS(const char *css){webLog.css="\n" + String(css) + "\n";return(*this);}
+  Span& setWebLogCallback(void (*f)(String &)){weblogCallback=f;return(*this);}
 
   void setVerboseWiFiReconnect(bool verbose) { verboseWiFiReconnect = verbose;}
 
@@ -353,7 +360,7 @@ class Span{
     LOG0("\n*** AutoPolling Task started with priority=%d\n\n",uxTaskPriorityGet(pollTaskHandle)); 
   }
 
-  void setTimeServerTimeout(uint32_t tSec){webLog.waitTime=tSec*1000;}    // sets wait time (in seconds) for optional web log time server to connect
+  Span& setTimeServerTimeout(uint32_t tSec){webLog.waitTime=tSec*1000;return(*this);}    // sets wait time (in seconds) for optional web log time server to connect
  
   [[deprecated("Please use reserveSocketConnections(n) method instead.")]]
   void setMaxConnections(uint8_t n){requestedMaxCon=n;}                   // sets maximum number of simultaneous HAP connections
@@ -713,8 +720,8 @@ class SpanCharacteristic{
     size_t olen;
     mbedtls_base64_encode(NULL,0,&olen,data,len);                    // get length of string buffer needed (mbedtls includes the trailing null in this size)
     TempBuffer<char> tBuf(olen);                                     // create temporary string buffer, with room for trailing null
-    mbedtls_base64_encode((uint8_t*)tBuf.buf,olen,&olen,data,len );  // encode data into string buf
-    setString(tBuf.buf);                                             // call setString to continue processing as if characteristic was a string
+    mbedtls_base64_encode((uint8_t*)tBuf.get(),olen,&olen,data,len );  // encode data into string buf
+    setString(tBuf.get());                                             // call setString to continue processing as if characteristic was a string
   }  
 
   template <typename T> void setVal(T val, boolean notify=true){

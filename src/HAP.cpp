@@ -80,7 +80,7 @@ void HAPClient::init(){
   if(!nvs_get_blob(hapNVS,"ACCESSORY",NULL,&len)){                    // if found long-term Accessory data in NVS
     nvs_get_blob(hapNVS,"ACCESSORY",&accessory,&len);                 // retrieve data
   } else {      
-    LOG0("Generating new random Accessory ID and Long-Term Ed25519 Signature Keys...\n");
+    LOG0("Generating new random Accessory ID and Long-Term Ed25519 Signature Keys...\n\n");
     uint8_t buf[6];
     char cBuf[18];
     
@@ -95,17 +95,15 @@ void HAPClient::init(){
     nvs_commit(hapNVS);                                               // commit to NVS
   }
 
-  if(!nvs_get_blob(hapNVS,"CONTROLLERS",NULL,&len)){                 // if found long-term Controller Pairings data from NVS
-    nvs_get_blob(hapNVS,"CONTROLLERS",controllers,&len);             // retrieve data
-  } else {
-    LOG0("Initializing storage for Paired Controllers data...\n\n");               
-    
-    HAPClient::removeControllers();                                             // clear all Controller data
-        
-    nvs_set_blob(hapNVS,"CONTROLLERS",controllers,sizeof(controllers));      // update data
-    nvs_commit(hapNVS);                                                      // commit to NVS
+  if(!nvs_get_blob(hapNVS,"CONTROLLERS",NULL,&len)){                // if found long-term Controller Pairings data from NVS
+    TempBuffer <Controller> tBuf(len/sizeof(Controller));
+    nvs_get_blob(hapNVS,"CONTROLLERS",tBuf.get(),&len);             // retrieve data
+    for(int i=0;i<tBuf.size();i++){
+      if(tBuf.get()[i].allocated)
+        controllerList.push_back(tBuf.get()[i]);
+    }
   }
-
+  
   LOG0("Accessory ID:      ");
   charPrintRow(accessory.ID,17);
   LOG0("                               LTPK: ");
@@ -114,13 +112,8 @@ void HAPClient::init(){
 
   printControllers();                                                         
 
-  // create broadcaset name from server base name plus accessory ID (without ':')
-  
-  int nChars=snprintf(NULL,0,"%s-%2.2s%2.2s%2.2s%2.2s%2.2s%2.2s",homeSpan.hostNameBase,accessory.ID,accessory.ID+3,accessory.ID+6,accessory.ID+9,accessory.ID+12,accessory.ID+15);       
-  homeSpan.hostName=(char *)malloc(nChars+1);
-  sprintf(homeSpan.hostName,"%s-%2.2s%2.2s%2.2s%2.2s%2.2s%2.2s",homeSpan.hostNameBase,accessory.ID,accessory.ID+3,accessory.ID+6,accessory.ID+9,accessory.ID+12,accessory.ID+15);
-
-  tlv8.create(kTLVType_State,1,"STATE");                 // define the actual TLV records needed for the implementation of HAP; one for each kTLVType needed (HAP Table 5-6)
+  tlv8.create(kTLVType_Separator,0,"SEPARATOR");   // define the actual TLV records needed for the implementation of HAP; one for each kTLVType needed (HAP Table 5-6)
+  tlv8.create(kTLVType_State,1,"STATE");
   tlv8.create(kTLVType_PublicKey,384,"PUBKEY");
   tlv8.create(kTLVType_Method,1,"METHOD");
   tlv8.create(kTLVType_Salt,16,"SALT");
@@ -154,16 +147,26 @@ void HAPClient::init(){
 
 void HAPClient::processRequest(){
 
-  int nBytes;
+  int nBytes, messageSize;
+
+  messageSize=client.available();        
+
+  if(messageSize>MAX_HTTP){            // exceeded maximum number of bytes allowed
+    badRequestError();
+    LOG0("\n*** ERROR:  HTTP message of %d bytes exceeds maximum allowed (%d)\n\n",messageSize,MAX_HTTP);
+    return;
+  }
+ 
+  TempBuffer <uint8_t> httpBuf(messageSize+1);      // leave room for null character added below
   
   if(cPair){                           // expecting encrypted message
     LOG2("<<<< #### ");
     LOG2(client.remoteIP());
     LOG2(" #### <<<<\n");
 
-    nBytes=receiveEncrypted();           // decrypt and return number of bytes       
+    nBytes=receiveEncrypted(httpBuf.get(),messageSize);   // decrypt and return number of bytes read      
         
-    if(!nBytes){                        // decryption failed (error message already printed in function)
+    if(!nBytes){                           // decryption failed (error message already printed in function)
       badRequestError();              
       return;          
     }
@@ -173,22 +176,22 @@ void HAPClient::processRequest(){
     LOG2(client.remoteIP());
     LOG2(" <<<<<<<<<\n");
     
-    nBytes=client.read(httpBuf,MAX_HTTP+1);   // read all available bytes up to maximum allowed+1
-       
-    if(nBytes>MAX_HTTP){                              // exceeded maximum number of bytes allowed
+    nBytes=client.read(httpBuf.get(),messageSize);   // read expected number of bytes
+
+    if(nBytes!=messageSize || client.available()!=0){
       badRequestError();
-      LOG0("\n*** ERROR:  Exceeded maximum HTTP message length\n\n");
+      LOG0("\n*** ERROR:  HTTP message not read correctly.  Expected %d bytes, read %d bytes, %d bytes remaining\n\n",messageSize,nBytes,client.available());
       return;
     }
-        
+               
   } // encrypted/plaintext
       
-  httpBuf[nBytes]='\0';         // add null character to enable string functions
+  httpBuf.get()[nBytes]='\0';   // add null character to enable string functions
       
-  char *body=(char *)httpBuf;   // char pointer to start of HTTP Body
-  char *p;                          // char pointer used for searches
-      
-  if(!(p=strstr((char *)httpBuf,"\r\n\r\n"))){
+  char *body=(char *)httpBuf.get();   // char pointer to start of HTTP Body
+  char *p;                            // char pointer used for searches
+     
+  if(!(p=strstr((char *)httpBuf.get(),"\r\n\r\n"))){
     badRequestError();
     LOG0("\n*** ERROR:  Malformed HTTP request (can't find blank line indicating end of BODY)\n\n");
     return;      
@@ -233,7 +236,7 @@ void HAPClient::processRequest(){
        tlv8.print(2);                                                        // print TLV records in form "TAG(INT) LENGTH(INT) VALUES(HEX)"
       LOG2("------------ END TLVS! ------------\n");
                
-      postPairVerifyURL();                  // process URL    
+      postPairVerifyURL();                  // process URL
       return;
     }
             
@@ -243,17 +246,7 @@ void HAPClient::processRequest(){
        tlv8.print(2);                                                        // print TLV records in form "TAG(INT) LENGTH(INT) VALUES(HEX)"
       LOG2("------------ END TLVS! ------------\n");
                
-      postPairingsURL();                  // process URL    
-      return;
-    }
-
-    if(!strncmp(body,"POST /pairings ",15) &&                                // POST PAIRINGS
-       strstr(body,"Content-Type: application/pairing+tlv8") &&              // check that content is TLV8
-       tlv8.unpack(content,cLen)){                                          // read TLV content
-       tlv8.print(2);                                                        // print TLV records in form "TAG(INT) LENGTH(INT) VALUES(HEX)"
-      LOG2("------------ END TLVS! ------------\n");
-               
-      postPairingsURL();                  // process URL    
+      postPairingsURL();                  // process URL
       return;
     }
 
@@ -482,7 +475,7 @@ int HAPClient::postPairSetupURL(){
     
     case pairState_M5:                     // 'Exchange Request'
 
-      if(!tlv8.buf(kTLVType_EncryptedData)){            
+      if(!tlv8.len(kTLVType_EncryptedData)){            
         LOG0("\n*** ERROR: Required 'EncryptedData' TLV record for this step is bad or missing\n\n");
         tlv8.clear();                                         // clear TLV records
         tlv8.val(kTLVType_State,pairState_M6);                // set State=<M6>
@@ -532,7 +525,7 @@ int HAPClient::postPairSetupURL(){
       tlv8.print(2);             // print decrypted TLV data
       LOG2("------- END DECRYPTED TLVS! -------\n");
        
-      if(!tlv8.buf(kTLVType_Identifier) || !tlv8.buf(kTLVType_PublicKey) || !tlv8.buf(kTLVType_Signature)){            
+      if(!tlv8.len(kTLVType_Identifier) || !tlv8.len(kTLVType_PublicKey) || !tlv8.len(kTLVType_Signature)){            
         LOG0("\n*** ERROR: One or more of required 'Identifier,' 'PublicKey,' and 'Signature' TLV records for this step is bad or missing\n\n");
         tlv8.clear();                                         // clear TLV records
         tlv8.val(kTLVType_State,pairState_M6);                // set State=<M6>
@@ -578,9 +571,6 @@ int HAPClient::postPairSetupURL(){
 
       addController(iosDevicePairingID,iosDeviceLTPK,true);        // save Pairing ID and LTPK for this Controller with admin privileges
 
-      nvs_set_blob(hapNVS,"CONTROLLERS",controllers,sizeof(controllers));      // update data
-      nvs_commit(hapNVS);                                                      // commit to NVS
-
       // Now perform the above steps in reverse to securely transmit the AccessoryLTPK to the Controller (HAP Section 5.6.6.2)
 
       uint8_t accessoryX[32];
@@ -604,8 +594,8 @@ int HAPClient::postPairSetupURL(){
 
       crypto_sign_detached(tlv8.buf(kTLVType_Signature,64),NULL,accessoryInfo,accessoryInfoLen,accessory.LTSK);  // produce signature of accessoryInfo using AccessoryLTSK (Ed25519 long-term secret key)
 
-      memcpy(tlv8.buf(kTLVType_Identifier,accessoryPairingIDLen),accessoryPairingID,accessoryPairingIDLen);   // set Identifier TLV record as accessoryPairingID
-      memcpy(tlv8.buf(kTLVType_PublicKey,accessoryLTPKLen),accessoryLTPK,accessoryLTPKLen);                   // set PublicKey TLV record as accessoryLTPK
+      tlv8.buf(kTLVType_Identifier,accessoryPairingID,accessoryPairingIDLen);   // set Identifier TLV record as accessoryPairingID
+      tlv8.buf(kTLVType_PublicKey,accessoryLTPK,accessoryLTPKLen);              // set PublicKey TLV record as accessoryLTPK
 
       LOG2("------- ENCRYPTING SUB-TLVS -------\n");
 
@@ -685,7 +675,7 @@ int HAPClient::postPairVerifyURL(){
 
     case pairState_M1:                     // 'Verify Start Request'
 
-      if(!tlv8.buf(kTLVType_PublicKey)){            
+      if(!tlv8.len(kTLVType_PublicKey)){            
         LOG0("\n*** ERROR: Required 'PublicKey' TLV record for this step is bad or missing\n\n");
         tlv8.clear();                                     // clear TLV records
         tlv8.val(kTLVType_State,pairState_M2);            // set State=<M2>
@@ -717,7 +707,7 @@ int HAPClient::postPairVerifyURL(){
 
         crypto_sign_detached(tlv8.buf(kTLVType_Signature,64),NULL,accessoryInfo,accessoryInfoLen,accessory.LTSK);  // produce signature of accessoryInfo using AccessoryLTSK (Ed25519 long-term secret key)
 
-        memcpy(tlv8.buf(kTLVType_Identifier,accessoryPairingIDLen),accessoryPairingID,accessoryPairingIDLen);   // set Identifier TLV record as accessoryPairingID
+        tlv8.buf(kTLVType_Identifier,accessoryPairingID,accessoryPairingIDLen);   // set Identifier TLV record as accessoryPairingID
 
         LOG2("------- ENCRYPTING SUB-TLVS -------\n");
 
@@ -739,9 +729,9 @@ int HAPClient::postPairVerifyURL(){
                                               
         LOG2("---------- END SUB-TLVS! ----------\n");
         
-        tlv8.buf(kTLVType_EncryptedData,edLen);                           // set length of EncryptedData TLV record, which should now include the Authentication Tag at the end as required by HAP
-        tlv8.val(kTLVType_State,pairState_M2);                            // set State=<M2>
-        memcpy(tlv8.buf(kTLVType_PublicKey,32),publicCurveKey,32);        // set PublicKey to Accessory's Curve25519 public key
+        tlv8.buf(kTLVType_EncryptedData,edLen);                // set length of EncryptedData TLV record, which should now include the Authentication Tag at the end as required by HAP
+        tlv8.val(kTLVType_State,pairState_M2);                 // set State=<M2>
+        tlv8.buf(kTLVType_PublicKey,publicCurveKey,32);        // set PublicKey to Accessory's Curve25519 public key
       
         tlvRespond();                        // send response to client
         return(1);        
@@ -751,7 +741,7 @@ int HAPClient::postPairVerifyURL(){
    
     case pairState_M3:                     // 'Verify Finish Request'
 
-      if(!tlv8.buf(kTLVType_EncryptedData)){            
+      if(!tlv8.len(kTLVType_EncryptedData)){            
         LOG0("\n*** ERROR: Required 'EncryptedData' TLV record for this step is bad or missing\n\n");
         tlv8.clear();                                         // clear TLV records
         tlv8.val(kTLVType_State,pairState_M4);                // set State=<M4>
@@ -788,25 +778,31 @@ int HAPClient::postPairVerifyURL(){
       tlv8.print(2);             // print decrypted TLV data
       LOG2("------- END DECRYPTED TLVS! -------\n");
 
-      if(!tlv8.buf(kTLVType_Identifier) || !tlv8.buf(kTLVType_Signature)){            
+      if(!tlv8.len(kTLVType_Identifier) || !tlv8.len(kTLVType_Signature)){            
         LOG0("\n*** ERROR: One or more of required 'Identifier,' and 'Signature' TLV records for this step is bad or missing\n\n");
         tlv8.clear();                                         // clear TLV records
         tlv8.val(kTLVType_State,pairState_M4);                // set State=<M4>
         tlv8.val(kTLVType_Error,tagError_Unknown);           // set Error=Unknown (there is no specific error type for missing/bad TLV data)
         tlvRespond();                                       // send response to client
         return(0);
-      };
+      }
 
       Controller *tPair;                                  // temporary pointer to Controller
-
+      
       if(!(tPair=findController(tlv8.buf(kTLVType_Identifier)))){
-        LOG0("\n*** ERROR: Unrecognized Controller PairingID\n\n");
+        LOG0("\n*** ERROR: Unrecognized Controller ID: ");
+        charPrintRow(tlv8.buf(kTLVType_Identifier),36,2);
+        LOG0("\n\n");
         tlv8.clear();                                         // clear TLV records
         tlv8.val(kTLVType_State,pairState_M4);                // set State=<M4>
         tlv8.val(kTLVType_Error,tagError_Authentication);    // set Error=Authentication
         tlvRespond();                                       // send response to client
         return(0);
       }
+
+      LOG2("\n*** Verifying session with Controller ID: ");
+      charPrintRow(tPair->ID,36,2);
+      LOG2("...\n");
 
       size_t iosDeviceInfoLen=32+36+32;
       uint8_t iosDeviceInfo[iosDeviceInfoLen];
@@ -828,7 +824,7 @@ int HAPClient::postPairVerifyURL(){
       tlv8.val(kTLVType_State,pairState_M4);                // set State=<M4>
       tlvRespond();                                       // send response to client (unencrypted since cPair=NULL)
 
-      cPair=tPair;        // save Controller for this connection slot - connection is not verified and should be encrypted going forward
+      cPair=tPair;        // save Controller for this connection slot - connection is now verified and should be encrypted going forward
 
       hkdf.create(a2cKey,sharedCurveKey,32,"Control-Salt","Control-Read-Encryption-Key");        // create AccessoryToControllerKey (HAP Section 6.5.2)
       hkdf.create(c2aKey,sharedCurveKey,32,"Control-Salt","Control-Write-Encryption-Key");       // create ControllerToAccessoryKey (HAP Section 6.5.2)
@@ -864,21 +860,21 @@ int HAPClient::getAccessoriesURL(){
 
   int nBytes = homeSpan.sprintfAttributes(NULL);        // get size of HAP attributes JSON
   TempBuffer <char> jBuf(nBytes+1);
-  homeSpan.sprintfAttributes(jBuf.buf);                  // create JSON database (will need to re-cast to uint8_t* below)
+  homeSpan.sprintfAttributes(jBuf.get());                  // create JSON database (will need to re-cast to uint8_t* below)
 
-  int nChars=snprintf(NULL,0,"HTTP/1.1 200 OK\r\nContent-Type: application/hap+json\r\nContent-Length: %d\r\n\r\n",nBytes);      // create '200 OK' Body with Content Length = size of JSON Buf
-  char body[nChars+1];
-  sprintf(body,"HTTP/1.1 200 OK\r\nContent-Type: application/hap+json\r\nContent-Length: %d\r\n\r\n",nBytes);
+  char *body;
+  asprintf(&body,"HTTP/1.1 200 OK\r\nContent-Type: application/hap+json\r\nContent-Length: %d\r\n\r\n",nBytes);
   
   LOG2("\n>>>>>>>>>> ");
   LOG2(client.remoteIP());
   LOG2(" >>>>>>>>>>\n");
   LOG2(body);
-  LOG2(jBuf.buf);
+  LOG2(jBuf.get());
   LOG2("\n");
   
-  sendEncrypted(body,(uint8_t *)jBuf.buf,nBytes);
-       
+  sendEncrypted(body,(uint8_t *)jBuf.get(),nBytes);
+  free(body);
+         
   return(1);
   
 } // getAccessories
@@ -892,8 +888,6 @@ int HAPClient::postPairingsURL(){
     return(0);
   }
 
-  Controller *newCont;
-
   LOG1("In Post Pairings #");
   LOG1(conNum);
   LOG1(" (");  
@@ -905,109 +899,87 @@ int HAPClient::postPairingsURL(){
     badRequestError();                                        // return with 400 error, which closes connection      
     return(0);
   }
-
+   
   switch(tlv8.val(kTLVType_Method)){
 
-    case 3:
+    case 3: {
       LOG1("Add...\n");
 
-      if(!tlv8.buf(kTLVType_Identifier) || !tlv8.buf(kTLVType_PublicKey) || !tlv8.buf(kTLVType_Permissions)){            
+      if(!tlv8.len(kTLVType_Identifier) || !tlv8.len(kTLVType_PublicKey) || !tlv8.len(kTLVType_Permissions)){            
         LOG0("\n*** ERROR: One or more of required 'Identifier,' 'PublicKey,' and 'Permissions' TLV records for this step is bad or missing\n\n");
-        tlv8.clear();                                         // clear TLV records
-        tlv8.val(kTLVType_State,pairState_M2);                // set State=<M2>
-        tlv8.val(kTLVType_Error,tagError_Unknown);            // set Error=Unknown (there is no specific error type for missing/bad TLV data)
-        break;
-      }
+        tlv8.clear();
+        tlv8.val(kTLVType_Error,tagError_Unknown);
 
-      if(!cPair->admin){
+      } else if(!cPair->admin){
         LOG0("\n*** ERROR: Controller making request does not have admin privileges to add/update other Controllers\n\n");
-        tlv8.clear();                                         // clear TLV records
-        tlv8.val(kTLVType_State,pairState_M2);                // set State=<M2>
-        tlv8.val(kTLVType_Error,tagError_Authentication);     // set Error=Authentication
-        break;        
-      }
-
-      if((newCont=findController(tlv8.buf(kTLVType_Identifier))) && memcmp(tlv8.buf(kTLVType_PublicKey),newCont->LTPK,32)){         // requested Controller already exists, but LTPKs don't match
-        LOG0("\n*** ERROR: Invalid request to update the LTPK of an exsiting Controller\n\n");
-        tlv8.clear();                                         // clear TLV records
-        tlv8.val(kTLVType_State,pairState_M2);                // set State=<M2>
-        tlv8.val(kTLVType_Error,tagError_Unknown);            // set Error=Unknown
-        break;
-      }
-
-      if(!addController(tlv8.buf(kTLVType_Identifier),tlv8.buf(kTLVType_PublicKey),tlv8.val(kTLVType_Permissions)==1?true:false)){
-        LOG0("\n*** ERROR: Can't pair more than %d Controllers\n\n",MAX_CONTROLLERS);
-        tlv8.clear();                                         // clear TLV records
-        tlv8.val(kTLVType_State,pairState_M2);                // set State=<M2>
-        tlv8.val(kTLVType_Error,tagError_MaxPeers);           // set Error=MaxPeers
-        break;         
+        tlv8.clear();
+        tlv8.val(kTLVType_Error,tagError_Authentication);
+        
+      } else {
+        tagError err=addController(tlv8.buf(kTLVType_Identifier),tlv8.buf(kTLVType_PublicKey),tlv8.val(kTLVType_Permissions));
+        tlv8.clear();
+        if(err!=tagError_None)
+          tlv8.val(kTLVType_Error,err);
       }
       
-      tlv8.clear();                                         // clear TLV records
-      tlv8.val(kTLVType_State,pairState_M2);                // set State=<M2>
-      break;
+      tlv8.val(kTLVType_State,pairState_M2);
+      tlvRespond();
+      return(1);
+    }
 
-    case 4:
+    case 4: {
       LOG1("Remove...\n");
 
-      if(!tlv8.buf(kTLVType_Identifier)){            
+      uint8_t id[36];
+
+      if(!tlv8.len(kTLVType_Identifier)){            
         LOG0("\n*** ERROR: Required 'Identifier' TLV record for this step is bad or missing\n\n");
-        tlv8.clear();                                         // clear TLV records
-        tlv8.val(kTLVType_State,pairState_M2);                // set State=<M2>
-        tlv8.val(kTLVType_Error,tagError_Unknown);           // set Error=Unknown (there is no specific error type for missing/bad TLV data)
-        break;
-      }
-
-      if(!cPair->admin){
+        tlv8.clear();
+        tlv8.val(kTLVType_Error,tagError_Unknown);
+        
+      } else if(!cPair->admin){
         LOG0("\n*** ERROR: Controller making request does not have admin privileges to remove Controllers\n\n");
-        tlv8.clear();                                         // clear TLV records
-        tlv8.val(kTLVType_State,pairState_M2);                // set State=<M2>
-        tlv8.val(kTLVType_Error,tagError_Authentication);    // set Error=Authentication
-        break;        
+        tlv8.clear();
+        tlv8.val(kTLVType_Error,tagError_Authentication);
+      } else {
+        memcpy(id,tlv8.buf(kTLVType_Identifier),36);
+        tlv8.clear();
       }
 
-      removeController(tlv8.buf(kTLVType_Identifier));
+      tlv8.val(kTLVType_State,pairState_M2);        
+      tlvRespond();     // must send response before removing Controller below
       
-      tlv8.clear();                                         // clear TLV records
-      tlv8.val(kTLVType_State,pairState_M2);                // set State=<M2>
-      break;
+      if(tlv8.val(kTLVType_Error)==-1)
+        removeController(id);
       
-    case 5:                     
+      return(1);
+    } 
+      
+    case 5: {
       LOG1("List...\n");
 
-      // NEEDS TO BE IMPLEMENTED - UNSURE IF THIS IS EVER USED BY HOMEKIT
+      TempBuffer <uint8_t> tBuf(listControllers(NULL));
 
-      tlv8.clear();                                         // clear TLV records
-      tlv8.val(kTLVType_State,pairState_M2);                // set State=<M2>
-      break;
+      char *body;
+      asprintf(&body,"HTTP/1.1 200 OK\r\nContent-Type: application/pairing+tlv8\r\nContent-Length: %d\r\n\r\n",tBuf.len());      // create Body with Content Length = size of TLV data
+  
+      LOG2("\n>>>>>>>>>> ");
+      LOG2(client.remoteIP());
+      LOG2(" >>>>>>>>>>\n");
+      LOG2(body);
+      listControllers(tBuf.get());
+      sendEncrypted(body,tBuf.get(),tBuf.len());
+      free(body);
+      
+      return(1);
+    }
 
-    default:
+    default: {
       LOG0("\n*** ERROR: 'Method' TLV record is either missing or not set to either 3, 4, or 5 as required\n\n");
       badRequestError();                                    // return with 400 error, which closes connection      
       return(0);
-      break;      
-  }
-
-  nvs_set_blob(hapNVS,"CONTROLLERS",controllers,sizeof(controllers));      // update Controller data
-  nvs_commit(hapNVS);                                                      // commit to NVS
-
-  tlvRespond();
-
-  // re-check connections and close any (or all) clients as a result of controllers that were removed above
-  // must be performed AFTER sending the TLV response, since that connection itself may be terminated below
-
-  for(int i=0;i<homeSpan.maxConnections;i++){     // loop over all connection slots
-    if(hap[i]->client){                    // if slot is connected
-      
-      if(!nAdminControllers() || (hap[i]->cPair && !hap[i]->cPair->allocated)){    // accessory unpaired, OR client connection is verified but points to a newly *unallocated* controller
-        LOG1("*** Terminating Client #");
-        LOG1(i);
-        LOG1("\n");
-        hap[i]->client.stop();
-      }
-      
-    } // if client connected
-  } // loop over all connection slots
+    }
+  } // switch
   
   return(1);
 }
@@ -1077,9 +1049,8 @@ int HAPClient::getCharacteristicsURL(char *urlBuf){
 
   boolean sFlag=strstr(jsonBuf,"status");          // status attribute found?
 
-  int nChars=snprintf(NULL,0,"HTTP/1.1 %s\r\nContent-Type: application/hap+json\r\nContent-Length: %d\r\n\r\n",!sFlag?"200 OK":"207 Multi-Status",nBytes);   
-  char body[nChars+1];    
-  sprintf(body,"HTTP/1.1 %s\r\nContent-Type: application/hap+json\r\nContent-Length: %d\r\n\r\n",!sFlag?"200 OK":"207 Multi-Status",nBytes);
+  char *body;
+  asprintf(&body,"HTTP/1.1 %s\r\nContent-Type: application/hap+json\r\nContent-Length: %d\r\n\r\n",!sFlag?"200 OK":"207 Multi-Status",nBytes);
     
   LOG2("\n>>>>>>>>>> ");
   LOG2(client.remoteIP());
@@ -1089,7 +1060,8 @@ int HAPClient::getCharacteristicsURL(char *urlBuf){
   LOG2("\n");
   
   sendEncrypted(body,(uint8_t *)jsonBuf,nBytes);        // note recasting of jsonBuf into uint8_t*
-      
+  free(body);
+        
   return(1);
 }
 
@@ -1138,9 +1110,8 @@ int HAPClient::putCharacteristicsURL(char *json){
     char jsonBuf[nBytes+1];
     homeSpan.sprintfAttributes(pObj,n,jsonBuf);
 
-    int nChars=snprintf(NULL,0,"HTTP/1.1 207 Multi-Status\r\nContent-Type: application/hap+json\r\nContent-Length: %d\r\n\r\n",nBytes);      // create Body with Content Length = size of JSON Buf
-    char body[nChars+1];
-    sprintf(body,"HTTP/1.1 207 Multi-Status\r\nContent-Type: application/hap+json\r\nContent-Length: %d\r\n\r\n",nBytes);
+    char *body;
+    asprintf(&body,"HTTP/1.1 207 Multi-Status\r\nContent-Type: application/hap+json\r\nContent-Length: %d\r\n\r\n",nBytes);
   
     LOG2("\n>>>>>>>>>> ");
     LOG2(client.remoteIP());
@@ -1150,6 +1121,7 @@ int HAPClient::putCharacteristicsURL(char *json){
     LOG2("\n");
   
     sendEncrypted(body,(uint8_t *)jsonBuf,nBytes);        // note recasting of jsonBuf into uint8_t*
+    free(body);
   
   }
 
@@ -1199,9 +1171,8 @@ int HAPClient::putPrepareURL(char *json){
 
   sprintf(jsonBuf,"{\"status\":%d}",(int)status);
   int nBytes=strlen(jsonBuf);
-  int nChars=snprintf(NULL,0,"HTTP/1.1 200 OK\r\nContent-Type: application/hap+json\r\nContent-Length: %d\r\n\r\n",nBytes);      // create Body with Content Length = size of JSON Buf
-  char body[nChars+1];
-  sprintf(body,"HTTP/1.1 200 OK\r\nContent-Type: application/hap+json\r\nContent-Length: %d\r\n\r\n",nBytes);
+  char *body;
+  asprintf(&body,"HTTP/1.1 200 OK\r\nContent-Type: application/hap+json\r\nContent-Length: %d\r\n\r\n",nBytes);
   
   LOG2("\n>>>>>>>>>> ");
   LOG2(client.remoteIP());
@@ -1211,6 +1182,7 @@ int HAPClient::putPrepareURL(char *json){
   LOG2("\n");
   
   sendEncrypted(body,(uint8_t *)jsonBuf,nBytes);        // note recasting of jsonBuf into uint8_t*
+  free(body);
     
   return(1);
 }
@@ -1302,9 +1274,13 @@ int HAPClient::getStatusURL(){
   char mbtlsv[64];
   mbedtls_version_get_string_full(mbtlsv);
   response+="<tr><td>MbedTLS Version:</td><td>" + String(mbtlsv) + "</td></tr>\n";
-
-  response+="<tr><td>HomeKit Status:</td><td>" + String(nAdminControllers()?"PAIRED":"NOT PAIRED") + "</td></tr>\n";   
+  
+  response+="<tr><td>HomeKit Status:</td><td>" + String(HAPClient::nAdminControllers()?"PAIRED":"NOT PAIRED") + "</td></tr>\n";   
   response+="<tr><td>Max Log Entries:</td><td>" + String(homeSpan.webLog.maxEntries) + "</td></tr>\n"; 
+
+  if(homeSpan.weblogCallback)
+    homeSpan.weblogCallback(response);
+
   response+="</table>\n";
   response+="<p></p>";
 
@@ -1393,9 +1369,8 @@ void HAPClient::eventNotify(SpanBuf *pObj, int nObj, int ignoreClient){
         char jsonBuf[nBytes+1];
         homeSpan.sprintfNotify(pObj,nObj,jsonBuf,cNum);
 
-        int nChars=snprintf(NULL,0,"EVENT/1.0 200 OK\r\nContent-Type: application/hap+json\r\nContent-Length: %d\r\n\r\n",nBytes);      // create Body with Content Length = size of JSON Buf
-        char body[nChars+1];
-        sprintf(body,"EVENT/1.0 200 OK\r\nContent-Type: application/hap+json\r\nContent-Length: %d\r\n\r\n",nBytes);
+        char *body;
+        asprintf(&body,"EVENT/1.0 200 OK\r\nContent-Type: application/hap+json\r\nContent-Length: %d\r\n\r\n",nBytes);
 
         LOG2("\n>>>>>>>>>> ");
         LOG2(hap[cNum]->client.remoteIP());
@@ -1405,6 +1380,7 @@ void HAPClient::eventNotify(SpanBuf *pObj, int nObj, int ignoreClient){
         LOG2("\n");
   
         hap[cNum]->sendEncrypted(body,(uint8_t *)jsonBuf,nBytes);        // note recasting of jsonBuf into uint8_t*
+        free(body);
 
       } // if there are characteristic updates to notify client cNum
     } // if client exists
@@ -1417,13 +1393,11 @@ void HAPClient::eventNotify(SpanBuf *pObj, int nObj, int ignoreClient){
 
 void HAPClient::tlvRespond(){
 
-  int nBytes=tlv8.pack(NULL);      // return number of bytes needed to pack TLV records into a buffer
-  uint8_t tlvData[nBytes];         // create buffer
-  tlv8.pack(tlvData);              // pack TLV records into buffer
+  TempBuffer <uint8_t> tBuf(tlv8.pack(NULL));         // create buffer to hold TLV data    
+  tlv8.pack(tBuf.get());                              // pack TLV records into buffer
 
-  int nChars=snprintf(NULL,0,"HTTP/1.1 200 OK\r\nContent-Type: application/pairing+tlv8\r\nContent-Length: %d\r\n\r\n",nBytes);      // create Body with Content Length = size of TLV data
-  char body[nChars+1];
-  sprintf(body,"HTTP/1.1 200 OK\r\nContent-Type: application/pairing+tlv8\r\nContent-Length: %d\r\n\r\n",nBytes);
+  char *body;
+  asprintf(&body,"HTTP/1.1 200 OK\r\nContent-Type: application/pairing+tlv8\r\nContent-Length: %d\r\n\r\n",tBuf.len());      // create Body with Content Length = size of TLV data
   
   LOG2("\n>>>>>>>>>> ");
   LOG2(client.remoteIP());
@@ -1433,36 +1407,40 @@ void HAPClient::tlvRespond(){
 
   if(!cPair){                       // unverified, unencrypted session
     client.print(body);
-    client.write(tlvData,nBytes);      
+    client.write(tBuf.get(),tBuf.len());      
     LOG2("------------ SENT! --------------\n");
   } else {
-    sendEncrypted(body,tlvData,nBytes);
+    sendEncrypted(body,tBuf.get(),tBuf.len());
   }
+
+  free(body);
 
 } // tlvRespond
 
 //////////////////////////////////////
 
-int HAPClient::receiveEncrypted(){
+int HAPClient::receiveEncrypted(uint8_t *httpBuf, int messageSize){
 
-  uint8_t buf[1042];               // maximum size of encoded message = 2+1024+16 bytes (HAP Section 6.5.2)
+  uint8_t aad[2];
   int nBytes=0;
 
-  while(client.read(buf,2)==2){    // read initial 2-byte AAD record
+  while(client.read(aad,2)==2){    // read initial 2-byte AAD record
 
-    int n=buf[0]+buf[1]*256;                // compute number of bytes expected in encoded message
+    int n=aad[0]+aad[1]*256;                // compute number of bytes expected in message after decoding
 
-    if(nBytes+n>MAX_HTTP){                  // exceeded maximum number of bytes allowed in plaintext message
-      LOG0("\n\n*** ERROR:  Exceeded maximum HTTP message length\n\n");
+    if(nBytes+n>messageSize){      // exceeded maximum number of bytes allowed in plaintext message
+      LOG0("\n\n*** ERROR:  Decrypted message of %d bytes exceeded maximum expected message length of %d bytes\n\n",nBytes+n,messageSize);
       return(0);
       }
 
-    if(client.read(buf+2,n+16)!=n+16){      // read expected number of total bytes = n bytes in encoded message + 16 bytes for appended authentication tag      
+    TempBuffer <uint8_t> tBuf(n+16);      // expected number of total bytes = n bytes in encoded message + 16 bytes for appended authentication tag      
+
+    if(client.read(tBuf.get(),tBuf.len())!=tBuf.len()){      
       LOG0("\n\n*** ERROR: Malformed encrypted message frame\n\n");
       return(0);      
     }                
 
-    if(crypto_aead_chacha20poly1305_ietf_decrypt(httpBuf+nBytes, NULL, NULL, buf+2, n+16, buf, 2, c2aNonce.get(), c2aKey)==-1){
+    if(crypto_aead_chacha20poly1305_ietf_decrypt(httpBuf+nBytes, NULL, NULL, tBuf.get(), tBuf.len(), aad, 2, c2aNonce.get(), c2aKey)==-1){
       LOG0("\n\n*** ERROR: Can't Decrypt Message\n\n");
       return(0);        
     }
@@ -1496,10 +1474,10 @@ void HAPClient::sendEncrypted(char *body, uint8_t *dataBuf, int dataLen){
 
   TempBuffer <uint8_t> tBuf(totalBytes);
   
-  tBuf.buf[count]=bodyLen%256;         // store number of bytes in first frame that encrypts the Body (AAD bytes)
-  tBuf.buf[count+1]=bodyLen/256;
+  tBuf.get()[count]=bodyLen%256;         // store number of bytes in first frame that encrypts the Body (AAD bytes)
+  tBuf.get()[count+1]=bodyLen/256;
   
-  crypto_aead_chacha20poly1305_ietf_encrypt(tBuf.buf+count+2,&nBytes,(uint8_t *)body,bodyLen,tBuf.buf+count,2,NULL,a2cNonce.get(),a2cKey);   // encrypt the Body with authentication tag appended
+  crypto_aead_chacha20poly1305_ietf_encrypt(tBuf.get()+count+2,&nBytes,(uint8_t *)body,bodyLen,tBuf.get()+count,2,NULL,a2cNonce.get(),a2cKey);   // encrypt the Body with authentication tag appended
 
   a2cNonce.inc();                 // increment nonce
   
@@ -1512,17 +1490,17 @@ void HAPClient::sendEncrypted(char *body, uint8_t *dataBuf, int dataLen){
     if(n>FRAME_SIZE)           // maximum number of bytes to encrypt=FRAME_SIZE
       n=FRAME_SIZE;                                     
     
-    tBuf.buf[count]=n%256;    // store number of bytes that encrypts this frame (AAD bytes)
-    tBuf.buf[count+1]=n/256;
+    tBuf.get()[count]=n%256;    // store number of bytes that encrypts this frame (AAD bytes)
+    tBuf.get()[count+1]=n/256;
 
-    crypto_aead_chacha20poly1305_ietf_encrypt(tBuf.buf+count+2,&nBytes,dataBuf+i,n,tBuf.buf+count,2,NULL,a2cNonce.get(),a2cKey);   // encrypt the next portion of dataBuf with authentication tag appended
+    crypto_aead_chacha20poly1305_ietf_encrypt(tBuf.get()+count+2,&nBytes,dataBuf+i,n,tBuf.get()+count,2,NULL,a2cNonce.get(),a2cKey);   // encrypt the next portion of dataBuf with authentication tag appended
 
     a2cNonce.inc();            // increment nonce
 
     count+=2+n+16;             // increment count by 2-byte AAD record + length of JSON + 16-byte authentication tag
   }
  
-  client.write(tBuf.buf,count);   // transmit all encrypted frames to Client
+  client.write(tBuf.get(),count);   // transmit all encrypted frames to Client
 
   LOG2("-------- SENT ENCRYPTED! --------\n");
       
@@ -1565,10 +1543,10 @@ void HAPClient::charPrintRow(uint8_t *buf, int n, int minLogLevel){
 //////////////////////////////////////
 
 Controller *HAPClient::findController(uint8_t *id){
-  
-  for(int i=0;i<MAX_CONTROLLERS;i++){                                    // loop over all controller slots
-    if(controllers[i].allocated && !memcmp(controllers[i].ID,id,36))     // found matching ID
-      return(controllers+i);                                             // return with pointer to matching controller
+
+  for(auto it=controllerList.begin();it!=controllerList.end();it++){
+    if(!memcmp((*it).ID,id,36))
+      return(&*it);
   }
 
   return(NULL);       // no match
@@ -1576,93 +1554,123 @@ Controller *HAPClient::findController(uint8_t *id){
 
 //////////////////////////////////////
 
-Controller *HAPClient::getFreeController(){
-  
-  for(int i=0;i<MAX_CONTROLLERS;i++){     // loop over all controller slots   
-    if(!controllers[i].allocated)         // found free slot
-      return(controllers+i);              // return with pointer to free slot
-  }
-
-  return(NULL);       // no free slots
-}
-
-//////////////////////////////////////
-
-Controller *HAPClient::addController(uint8_t *id, uint8_t *ltpk, boolean admin){
-
-  Controller *slot;
-
-  if((slot=findController(id))){               // found existing controller
-    memcpy(slot->LTPK,ltpk,32);
-    slot->admin=admin;
-    LOG2("\n*** Updated Controller: ");
-    charPrintRow(id,36,2);
-    LOG2(slot->admin?" (admin)\n\n":" (regular)\n\n");
-    return(slot);    
-  }
-
-  if((slot=getFreeController())){              // get slot for new controller, if available
-    slot->allocated=true;
-    memcpy(slot->ID,id,36);
-    memcpy(slot->LTPK,ltpk,32);
-    slot->admin=admin;
-    LOG2("\n*** Added Controller: ");
-    charPrintRow(id,36,2);
-    LOG2(slot->admin?" (admin)\n\n":" (regular)\n\n");
-    return(slot);       
-  }
-
-  return(NULL);
-}       
-  
-//////////////////////////////////////
-
 int HAPClient::nAdminControllers(){
 
   int n=0;
-  
-  for(int i=0;i<MAX_CONTROLLERS;i++){                         // loop over all controller slots
-    n+=(controllers[i].allocated && controllers[i].admin);    // count number of allocated controllers with admin privileges
-  }
-
+  for(auto it=controllerList.begin();it!=controllerList.end();it++)
+    n+=((*it).admin);
   return(n);
 }
-    
+
 //////////////////////////////////////
 
-void HAPClient::removeControllers(){
+tagError HAPClient::addController(uint8_t *id, uint8_t *ltpk, boolean admin){
+
+  Controller *cTemp=findController(id);
+
+  tagError err=tagError_None;
   
-  for(int i=0;i<MAX_CONTROLLERS;i++)
-    controllers[i].allocated=false;
-}    
+  if(!cTemp){                                            // new controller    
+    if(controllerList.size()<MAX_CONTROLLERS){
+      controllerList.emplace_back(id,ltpk,admin);        // create and store data
+      LOG2("\n*** Added Controller: ");
+      charPrintRow(id,36,2);
+      LOG2(admin?" (admin)\n\n":" (regular)\n\n");
+      saveControllers();
+    } else {
+      LOG0("\n*** ERROR: Can't pair more than %d Controllers\n\n",MAX_CONTROLLERS);
+      err=tagError_MaxPeers;
+    }    
+  } else if(!memcmp(ltpk,cTemp->LTPK,sizeof(cTemp->LTPK))){   // existing controller with same LTPK
+    LOG2("\n*** Updated Controller: ");
+    charPrintRow(id,36,2);
+    LOG2(" from %s to %s\n\n",cTemp->admin?"(admin)":"(regular)",admin?"(admin)":"(regular)");
+    cTemp->admin=admin;
+    saveControllers();    
+  } else {
+    LOG0("\n*** ERROR: Invalid request to update the LTPK of an existing Controller\n\n");
+    err=tagError_Unknown;    
+  }
+
+  return(err);
+}          
 
 //////////////////////////////////////
 
 void HAPClient::removeController(uint8_t *id){
 
-  Controller *slot;
+  auto it=std::find_if(controllerList.begin(), controllerList.end(), [id](const Controller& cTemp){return(!memcmp(cTemp.ID,id,sizeof(cTemp.ID)));});
 
-  if((slot=findController(id))){      // remove controller if found
-    LOG2("\n***Removed Controller: ");
+  if(it==controllerList.end()){
+    LOG2("\n*** Request to Remove Controller Ignored - Controller Not Found: ");
     charPrintRow(id,36,2);
-    LOG2(slot->admin?" (admin)\n":" (regular)\n");
-    slot->allocated=false;
-
-    if(nAdminControllers()==0){       // if no more admins, remove all controllers
-      removeControllers();
-      LOG1("That was last Admin Controller!  Removing any remaining Regular Controllers and unpairing Accessory\n");  
-      mdns_service_txt_item_set("_hap","_tcp","sf","1");           // set Status Flag = 1 (Table 6-8)
-
-      STATUS_UPDATE(start(LED_PAIRING_NEEDED),HS_PAIRING_NEEDED)
-
-      if(homeSpan.pairCallback)                                    // if set, invoke user-defined Pairing Callback to indicate device has been paired
-        homeSpan.pairCallback(false);
-    }
-
     LOG2("\n");
+    return;
   }
 
-}    
+  LOG1("\n*** Removing Controller: ");
+  charPrintRow((*it).ID,36,2);
+  LOG1((*it).admin?" (admin)\n":" (regular)\n");
+  
+  tearDown((*it).ID);         // teardown any connections using this Controller
+  controllerList.erase(it);   // remove Controller
+
+  if(!nAdminControllers()){   // no more admin Controllers
+    
+    LOG1("That was last Admin Controller!  Removing any remaining Regular Controllers and unpairing Accessory\n");    
+    
+    tearDown(NULL);                                              // teardown all remaining connections
+    controllerList.clear();                                      // remove all remaining Controllers
+    mdns_service_txt_item_set("_hap","_tcp","sf","1");           // set Status Flag = 1 (Table 6-8)
+    STATUS_UPDATE(start(LED_PAIRING_NEEDED),HS_PAIRING_NEEDED)   // set optional Status LED
+    if(homeSpan.pairCallback)                                    // if set, invoke user-defined Pairing Callback to indicate device has been un-paired
+      homeSpan.pairCallback(false);    
+  }
+
+  saveControllers();
+}
+
+//////////////////////////////////////
+
+void HAPClient::tearDown(uint8_t *id){
+  
+  for(int i=0;i<homeSpan.maxConnections;i++){     // loop over all connection slots
+    if(hap[i]->client && (id==NULL || (hap[i]->cPair && !memcmp(id,hap[i]->cPair->ID,36)))){
+      LOG1("*** Terminating Client #%d\n",i);
+      hap[i]->client.stop();
+    }
+  }
+}
+
+//////////////////////////////////////
+
+int HAPClient::listControllers(uint8_t *tlvBuf){
+
+  int nBytes=0;
+  int n;
+    
+  tlv8.clear();
+  tlv8.val(kTLVType_State,pairState_M2);      
+
+  for(auto it=controllerList.begin();it!=controllerList.end();it++){
+    if((*it).allocated){          
+      if(tlv8.val(kTLVType_State)==-1)                // if State is not set then this is not the first controller found
+        tlv8.val(kTLVType_Separator,1);                                        
+      tlv8.val(kTLVType_Permissions,(*it).admin);      
+      tlv8.buf(kTLVType_Identifier,(*it).ID,36);
+      tlv8.buf(kTLVType_PublicKey,(*it).LTPK,32);
+      n=tlv8.pack(tlvBuf);
+      nBytes+=n;
+      if(tlvBuf){
+        tlvBuf+=n;
+        tlv8.print();
+      }
+      tlv8.clear();
+    }
+  }
+
+  return(nBytes);       
+}
 
 //////////////////////////////////////
 
@@ -1670,23 +1678,37 @@ void HAPClient::printControllers(int minLogLevel){
 
   if(homeSpan.logLevel<minLogLevel)
     return;
-    
-  int n=0;
+
+  if(controllerList.empty()){
+    Serial.printf("No Paired Controllers\n");
+    return;    
+  }
   
-  for(int i=0;i<MAX_CONTROLLERS;i++){           // loop over all controller slots
-    if(controllers[i].allocated){
-      Serial.printf("Paired Controller: ");
-      charPrintRow(controllers[i].ID,36);
-      Serial.printf("%s  LTPK: ",controllers[i].admin?"   (admin)":" (regular)");
-      hexPrintRow(controllers[i].LTPK,32);
-      Serial.printf("\n");
-      n++;
-    }
+  for(auto it=controllerList.begin();it!=controllerList.end();it++){
+    Serial.printf("Paired Controller: ");
+    charPrintRow((*it).ID,36);
+    Serial.printf("%s  LTPK: ",(*it).admin?"   (admin)":" (regular)");
+    hexPrintRow((*it).LTPK,32);
+    Serial.printf("\n");    
+  }
+}
+
+//////////////////////////////////////
+
+void HAPClient::saveControllers(){
+
+  if(controllerList.empty()){
+    nvs_erase_key(hapNVS,"CONTROLLERS");
+    return;
   }
 
-  if(n==0)
-    Serial.printf("No Paired Controllers\n");
+  TempBuffer <Controller> tBuf(controllerList.size());                    // create temporary buffer to hold Controller data
+  std::copy(controllerList.begin(),controllerList.end(),tBuf.get());      // copy data from linked list to buffer
+  
+  nvs_set_blob(hapNVS,"CONTROLLERS",tBuf.get(),tBuf.len());      // update data
+  nvs_commit(hapNVS);                                            // commit to NVS  
 }
+
 
 //////////////////////////////////////
 
@@ -1719,14 +1741,13 @@ void Nonce::inc(){
 
 // instantiate all static HAP Client structures and data
 
-TLV<kTLVType,10> HAPClient::tlv8;
+TLV<kTLVType,11> HAPClient::tlv8;
 nvs_handle HAPClient::hapNVS;
 nvs_handle HAPClient::srpNVS;
-uint8_t HAPClient::httpBuf[MAX_HTTP+1];                 
 HKDF HAPClient::hkdf;                                   
 pairState HAPClient::pairStatus;                        
 Accessory HAPClient::accessory;                         
-Controller HAPClient::controllers[MAX_CONTROLLERS];    
+list<Controller> HAPClient::controllerList;
 SRP6A HAPClient::srp;
 int HAPClient::conNum;
  

@@ -39,28 +39,19 @@ struct LED_Service : Service::LightBulb {
   }
 
   boolean update(){            
-    digitalWrite(ledPin,power->getNewVal());   
+    digitalWrite(ledPin,power->getNewVal());
+    WEBLOG("Power = %s",power->getNewVal()?"ON":"OFF");
     return(true);  
   }
 
 };
-      
+
 //////////////////////////////////////
 
-struct invertedLED : Blinkable {        // create a child class derived from Blinkable
-
-  int pin;                              // variable to store the pin number
-  
-  invertedLED(int pin) : pin{pin} {     // constructor that initializes the pin parameter
-    pinMode(pin,OUTPUT);                // set the pin to OUTPUT
-    digitalWrite(pin,HIGH);             // set pin HIGH (which is off for an inverted LED)
-  }
-
-  void on() override { digitalWrite(pin,LOW); }        // required function on() - sets pin LOW
-  void off() override { digitalWrite(pin,HIGH); }      // required function off() - sets pin HIGH
-  int getPin() override { return(pin); }               // required function getPin() - returns pin number
-};
-
+void extraData(String &r){
+  r+="<tr><td>Free DRAM:</td><td>" + String(esp_get_free_internal_heap_size()) + " bytes</td></tr>\n"; 
+  r+="</table><p><a href=\"https://github.com/HomeSpan/HomeSpan\">Click Here to Access HomeSpan Repo</a><p>";
+}
 
 //////////////////////////////////////
 
@@ -68,12 +59,24 @@ void setup() {
   
   Serial.begin(115200);
 
-//  homeSpan.setLogLevel(-1);
-//  homeSpan.setSerialInputDisable(true);
-  homeSpan.enableOTA();
+//  homeSpan.setHostNameSuffix("");
 
-  homeSpan.setStatusDevice(new invertedLED(13));    // set Status LED to be a new Blinkable device attached to pin 13
-  homeSpan.setStatusAutoOff(30);
+//  homeSpan.setControlPin(21);
+  
+  homeSpan.setLogLevel(2).enableWebLog(20).setWebLogCallback(extraData);
+//  homeSpan.reserveSocketConnections(10);
+  
+//  homeSpan.setApSSID("HS_Setup");
+//  homeSpan.setApPassword("");
+
+//          .setStatusPin(13);
+//  homeSpan.setSerialInputDisable(true);
+//  homeSpan.enableOTA();
+
+  homeSpan.setWifiCallback(wifiCB);
+  homeSpan.setWifiCallbackAll(wifiCB_ALL);
+
+  new SpanUserCommand('D', " - disconnect WiFi", [](const char *buf){WiFi.disconnect();});
 
   homeSpan.begin(Category::Lighting,"HomeSpan LED");
   
@@ -90,3 +93,13 @@ void loop(){
 }
 
 //////////////////////////////////////
+
+void wifiCB(){
+  Serial.printf("\n\n****** IN WIFI CALLBACK *******\n\n");
+}
+
+//////////////////////////////////////
+
+void wifiCB_ALL(int n){
+  Serial.printf("\n\n****** IN WIFI CALLBACK ALL.  Count=%d *******\n\n",n);
+}
