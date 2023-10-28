@@ -64,8 +64,14 @@ HomeSpan requires version 2.0.0 or later of the [Arduino-ESP32 Board Manager](ht
     
 * **New Web Log Customizations**
 
-  * adds new method `setWebLogCallback(void (*f)(String &))` that provides a callback allowing you to extend the initial Web Log table with additional data of your own, as well as add an other custom HTML
+  * adds new method `setWebLogCallback(void (*func)(String &))` that provides a callback allowing you to extend the initial Web Log table with additional data of your own, as well as add an other custom HTML
   * see [Message Logging](docs/Logging.md) for details
+
+* **New WiFi Callback Mechanism**
+
+  * adds new method `setWifiCallbackAll(void (*func)(int))` that provides a callback every time WiFi is established, *or re-established after a disconnect*
+  * passes the number of times WiFi has been connected/re-connected as an argument
+  * see [API Reference](docs/Reference.md) for details  
     
 See [Releases](https://github.com/HomeSpan/HomeSpan/releases) for details on all changes and bug fixes included in this update.
 
