@@ -248,7 +248,7 @@ void loop(){
   // For example, if you were using an MCP I/O Port Expander with the Adafruit mcp library, you could create a triggerType function for a pin
   // on the MCP device that is connected to ground through a pushbutton as such:
   //
-  //    boolean MCP_READ(int mcpPin) { return ( !mcp.digitalRead(mcpPin); ) }
+  //    boolean MCP_READ(int mcpPin) { return ( !mcp.digitalRead(mcpPin) ); }
   //
   // And then simply pass MCP_READ to SpanButton as the triggerType parameter using any of the SpanButton constuctors:
   //
@@ -258,7 +258,7 @@ void loop(){
   //
   // Alternatively, you can use a lambda function as the triggerType parameter, thus creating your function on the fly when instantiating a SpanButton:
   //
-  //    new SpanButton(23,[](int mcpPin)->boolean{ return ( !mcp.digitalRead(mcpPin); ) }
+  //    new SpanButton(23,[](int mcpPin)->boolean{ return ( !mcp.digitalRead(mcpPin) ); });
   //
   // Note: If you create your own triggerType function, don't forget to perform any initialization of the "pin", or setup/configuration of a
   // pin extender, etc., prior to instantiating a SpanButton that uses your custom function.  HomeSpan cannot do this for you.
