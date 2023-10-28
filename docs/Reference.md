@@ -208,6 +208,12 @@ The following **optional** `homeSpan` methods enable additional features and pro
 * `Span& setWebLogCSS(const char *css)`
   * sets the format of the HomeSpan Web Log to the custom style sheet specified by *css*
   * see [Message Logging](Logging.md) for details on how to construct *css*
+
+* `Span& setWebLogCallback(void (*func)(String &htmlText))`
+  * sets an optional user-defined callback function, *func*, to be called by HomeSpan whenever the Web Log is produced
+  * allows user to add additional custom data to the initial table of the Web Log by **extending** the String *htmlText*, which is passed as a reference to *func*
+  * the function *func* must be of type *void* and accept one argument of type String
+  * see [Message Logging](Logging.md) for details on how to construct *htmlText*
  
 * `void processSerialCommand(const char *CLIcommand)`
   * processes the *CLIcommand* just as if were typed into the Serial Monitor
