@@ -49,8 +49,8 @@ struct LED_Service : Service::LightBulb {
 //////////////////////////////////////
 
 void extraData(String &r){
-  r+="<tr><td>Free RAM:</td><td>" + String((double)(esp_get_free_internal_heap_size() / 1024),2) + " Kb (" + String(esp_get_free_internal_heap_size()) + " bytes)</td></tr>\n"; 
-  r+="<tr><td>Free PSRAM:</td><td>" + String((double)(esp_get_free_heap_size() / 1024 / 1024),2) + " Mb (" + String(esp_get_free_heap_size()) + " bytes)</td></tr>\n";
+  r+="<tr><td>Free DRAM:</td><td>" + String(esp_get_free_internal_heap_size()) + " bytes</td></tr>\n"; 
+  r+="</table><p><a href=\"https://github.com/HomeSpan/HomeSpan\">Click Here to Access HomeSpan Repo</a><p>";
 }
 
 //////////////////////////////////////
@@ -73,6 +73,11 @@ void setup() {
 //  homeSpan.setSerialInputDisable(true);
 //  homeSpan.enableOTA();
 
+  homeSpan.setWifiCallback(wifiCB);
+  homeSpan.setWifiCallbackAll(wifiCB_ALL);
+
+  new SpanUserCommand('D', " - disconnect WiFi", [](const char *buf){WiFi.disconnect();});
+
   homeSpan.begin(Category::Lighting,"HomeSpan LED");
   
   new SpanAccessory();   
@@ -88,3 +93,13 @@ void loop(){
 }
 
 //////////////////////////////////////
+
+void wifiCB(){
+  Serial.printf("\n\n****** IN WIFI CALLBACK *******\n\n");
+}
+
+//////////////////////////////////////
+
+void wifiCB_ALL(int n){
+  Serial.printf("\n\n****** IN WIFI CALLBACK ALL.  Count=%d *******\n\n",n);
+}

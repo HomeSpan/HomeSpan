@@ -231,7 +231,8 @@ class Span{
   unsigned long comModeLife=DEFAULT_COMMAND_TIMEOUT*1000;     // length of time (in milliseconds) to keep Command Mode alive before resuming normal operations
   uint16_t tcpPortNum=DEFAULT_TCP_PORT;                       // port for TCP communications between HomeKit and HomeSpan
   char qrID[5]="";                                            // Setup ID used for pairing with QR Code
-  void (*wifiCallback)()=NULL;                                // optional callback function to invoke once WiFi connectivity is established
+  void (*wifiCallback)()=NULL;                                // optional callback function to invoke once WiFi connectivity is initially established
+  void (*wifiCallbackAll)(int)=NULL;                          // optional callback function to invoke every time WiFi connectivity is established or re-established
   void (*weblogCallback)(String &)=NULL;                      // optional callback function to invoke after header table in Web Log is produced
   void (*pairCallback)(boolean isPaired)=NULL;                // optional callback function to invoke when pairing is established (true) or lost (false)
   boolean autoStartAPEnabled=false;                           // enables auto start-up of Access Point when WiFi Credentials not found
@@ -321,7 +322,8 @@ class Span{
   Span& setQRID(const char *id);                                                         // sets the Setup ID for optional pairing with a QR Code
   Span& setSketchVersion(const char *sVer){sketchVersion=sVer;return(*this);}            // set optional sketch version number
   const char *getSketchVersion(){return sketchVersion;}                                  // get sketch version number
-  Span& setWifiCallback(void (*f)()){wifiCallback=f;return(*this);}                      // sets an optional user-defined function to call once WiFi connectivity is established
+  Span& setWifiCallback(void (*f)()){wifiCallback=f;return(*this);}                      // sets an optional user-defined function to call once WiFi connectivity is initially established
+  Span& setWifiCallbackAll(void (*f)(int)){wifiCallbackAll=f;return(*this);}             // sets an optional user-defined function to call every time WiFi connectivity is established or re-established
   Span& setPairCallback(void (*f)(boolean isPaired)){pairCallback=f;return(*this);}      // sets an optional user-defined function to call when Pairing is established (true) or lost (false)
   Span& setApFunction(void (*f)()){apFunction=f;return(*this);}                          // sets an optional user-defined function to call when activating the WiFi Access Point  
   Span& enableAutoStartAP(){autoStartAPEnabled=true;return(*this);}                      // enables auto start-up of Access Point when WiFi Credentials not found

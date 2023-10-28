@@ -422,8 +422,11 @@ void Span::checkConnect(){
 
   addWebLog(true,"WiFi Connected!  IP Address = %s",WiFi.localIP().toString().c_str());
 
-  if(connected>1)                           // Do not initialize everything below if this is only a reconnect
+  if(connected>1){                           // Do not initialize everything below if this is only a reconnect
+    if(wifiCallbackAll)
+      wifiCallbackAll((connected+1)/2);
     return;
+  }
     
   char id[18];                              // create string version of Accessory ID for MDNS broadcast
   memcpy(id,HAPClient::accessory.ID,17);    // copy ID bytes
@@ -529,6 +532,10 @@ void Span::checkConnect(){
   
   if(wifiCallback)
     wifiCallback();
+
+  if(wifiCallbackAll)
+    wifiCallbackAll((connected+1)/2);
+
 
   free(hostName);
   
