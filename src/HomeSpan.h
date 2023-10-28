@@ -246,7 +246,7 @@ class Span{
   Network network;                                  // configures WiFi and Setup Code via either serial monitor or temporary Access Point
   SpanWebLog webLog;                                // optional web status/log
   TaskHandle_t pollTaskHandle = NULL;               // optional task handle to use for poll() function
-  boolean verboseWiFiReconnect = true;              // Set to false to not print WiFi reconnect attempts messages
+  boolean verboseWifiReconnect = true;              // set to false to not print WiFi reconnect attempts messages
     
   SpanOTA spanOTA;                                  // manages OTA process
   SpanConfig hapConfig;                             // track configuration changes to the HAP Accessory database; used to increment the configuration number (c#) when changes found
@@ -353,7 +353,7 @@ class Span{
   Span& setWebLogCSS(const char *css){webLog.css="\n" + String(css) + "\n";return(*this);}
   Span& setWebLogCallback(void (*f)(String &)){weblogCallback=f;return(*this);}
 
-  void setVerboseWiFiReconnect(bool verbose) { verboseWiFiReconnect = verbose;}
+  Span& setVerboseWifiReconnect(bool verbose=true){verboseWifiReconnect=verbose;return(*this);}
 
   void autoPoll(uint32_t stackSize=8192, uint32_t priority=1, uint32_t cpu=0){     // start pollTask()
     xTaskCreateUniversal([](void *parms){for(;;)homeSpan.pollTask();}, "pollTask", stackSize, NULL, priority, &pollTaskHandle, cpu);

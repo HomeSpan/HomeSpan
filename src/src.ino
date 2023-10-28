@@ -74,7 +74,8 @@ void setup() {
 //  homeSpan.enableOTA();
 
   homeSpan.setWifiCallback(wifiCB);
-  homeSpan.setWifiCallbackAll(wifiCB_ALL);
+  homeSpan.setWifiCallbackAll(wifiCB_ALL).setVerboseWifiReconnect(false);
+  
 
   new SpanUserCommand('D', " - disconnect WiFi", [](const char *buf){WiFi.disconnect();});
 
