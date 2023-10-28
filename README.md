@@ -62,10 +62,9 @@ HomeSpan requires version 2.0.0 or later of the [Arduino-ESP32 Board Manager](ht
   * example: `homeSpan.setControlPin(21).setStatusPin(13);`
   * see [HomeSpan API Reference](docs/Reference.md) for details
     
-* **Upgrades to HomeSpan Web Log output**
+* **New Web Log Customizations**
 
-  * adds new method `void homeSpan.setWebLogCSS(const char *css)` that allows you to define *Custom Style Sheets (CSS)* for the Web Log text, tables, and background
-  * adds version numbers for the Sodium and MbedTLS libraries, HomeKit pairing status, and a text description of Reset Reason code
+  * adds new method `setWebLogCallback(void (*f)(String &))` that provides a callback allowing you to extend the initial Web Log table with additional data of your own, as well as add an other custom HTML
   * see [Message Logging](docs/Logging.md) for details
     
 See [Releases](https://github.com/HomeSpan/HomeSpan/releases) for details on all changes and bug fixes included in this update.
