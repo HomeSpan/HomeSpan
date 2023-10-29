@@ -55,17 +55,21 @@ HomeSpan requires version 2.0.0 or later of the [Arduino-ESP32 Board Manager](ht
   
   * reduced RAM usage by 30-50K (as well as reduced reliance on large stack-based buffers)
  
-* **Added ability to "chain" *homeSpan* methods**
+* **New ability to "chain" *homeSpan* methods**
 
   * converted various *homeSpan* methods that previously returned *void* to now return *Span &*
   * allows for chaining multiple *homeSpan* methods
   * example: `homeSpan.setControlPin(21).setStatusPin(13);`
   * see [HomeSpan API Reference](docs/Reference.md) for details
     
-* **New Web Log Customizations**
+* **New Message Logging Customizations**
 
-  * adds new *homeSpan* method `setWebLogCallback(void (*func)(String &))` that provides a callback allowing you to extend the initial Web Log table with additional data of your own, as well as add an other custom HTML
-  * see [Message Logging](docs/Logging.md) for details
+  * adds new *homeSpan* method `Span& setVerboseWifiReconnect(bool verbose)`
+    * set *verbose* to *false* to suppress WiFi "Trying to connect to..." messages from being logged to the Serial Monitor and Web Log
+  * adds new *homeSpan* method `setWebLogCallback(void (*func)(String &))`
+    * provides a callback allowing you to extend the initial Web Log table with additional data of your own
+    * also allows you to add custom HTML to be shown after the initial table
+    * see [Message Logging](docs/Logging.md) for details and examples
 
 * **New WiFi Callback Mechanism**
 
