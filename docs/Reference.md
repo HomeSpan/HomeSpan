@@ -157,7 +157,7 @@ The following **optional** `homeSpan` methods enable additional features and pro
   * :warning: SECURITY WARNING: The purpose of this function is to allow advanced users to *dynamically* set the device's WiFi Credentials using a customized Access Point function specified by `setApFunction(func)`. It it NOT recommended to use this function to hardcode your WiFi SSID and password directly into your sketch.  Instead, use one of the more secure methods provided by HomeSpan, such as typing 'W' from the CLI, or launching HomeSpan's Access Point, to set your WiFi credentials without hardcoding them into your sketch
  
 * `Span& setVerboseWifiReconnect(bool verbose)`
-  * when trying connecting to WiFi, HomeSpan normally logs "Trying to connect..." messages to the Serial Monitor and the Web Log
+  * when trying connecting to WiFi, HomeSpan normally logs "Trying to connect to..." messages to the Serial Monitor and the Web Log
   * calling this method with *verbose* set to *false* supresses these messages
   * calling this method a second time with *verbose* set to *true* re-activates these messages (default behavior)
 
