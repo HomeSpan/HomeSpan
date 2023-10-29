@@ -96,7 +96,7 @@ To add your own data to the table, simply extend the String *htmlText* by adding
 ```C++
 void extraData(String &r){
   r+="<tr><td>Free DRAM:</td><td>" + String(esp_get_free_internal_heap_size()) + " bytes</td></tr>\n"; 
-  r+="</table><p><a href=\"https://github.com/HomeSpan/HomeSpan\">Click Here to Access HomeSpan Repo</a><p>";
+  r+="</table><p><a href=\"https://github.com/HomeSpan/HomeSpan\">Click Here to Access HomeSpan Repo</a></p>";
 }
 ```
 
