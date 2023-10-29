@@ -155,6 +155,11 @@ The following **optional** `homeSpan` methods enable additional features and pro
   * *ssid* and *pwd* are automatically saved in HomeSpan's non-volatile storage (NVS) for retrieval when the device restarts
   * note that the saved values are truncated if they exceed the maximum allowable characters (ssid=32; pwd=64)
   * :warning: SECURITY WARNING: The purpose of this function is to allow advanced users to *dynamically* set the device's WiFi Credentials using a customized Access Point function specified by `setApFunction(func)`. It it NOT recommended to use this function to hardcode your WiFi SSID and password directly into your sketch.  Instead, use one of the more secure methods provided by HomeSpan, such as typing 'W' from the CLI, or launching HomeSpan's Access Point, to set your WiFi credentials without hardcoding them into your sketch
+ 
+* `Span& setVerboseWifiReconnect(bool verbose)`
+  * when trying connecting to WiFi, HomeSpan normally logs "Trying to connect..." messages to the Serial Monitor and the Web Log
+  * calling this method with *verbose* set to *false* supresses these messages
+  * calling this method a second time with *verbose* set to *true* re-activates these messages (default behavior)
 
 * `Span& setWifiCallback(void (*func)())`
   * sets an optional user-defined callback function, *func*, to be called by HomeSpan upon start-up just after WiFi connectivity has been initially established.  This one-time call to *func* is provided for users that are implementing other network-related services as part of their sketch, but that cannot be started until WiFi connectivity is established.  The function *func* must be of type *void* and have no arguments
