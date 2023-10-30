@@ -284,7 +284,7 @@ The following `homeSpan` methods are considered experimental, since not all use 
 Creating an instance of this **class** adds a new HAP Accessory to the HomeSpan HAP Database.
 
   * every HomeSpan sketch requires at least one Accessory
-  * a sketch can contain a maximum of 41 Accessories per sketch (if exceeded, a runtime error will the thrown and the sketch will halt)
+  * a sketch can contain a maximum of 150 Accessories per sketch (if exceeded, a runtime error will the thrown and the sketch will halt)
   * there are no associated methods
   * the argument *aid* is optional.
   
