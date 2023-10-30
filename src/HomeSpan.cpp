@@ -156,7 +156,7 @@ void Span::begin(Category catID, const char *displayName, const char *hostNameBa
 void Span::poll() {
 
   if(pollTaskHandle){
-    LOG0("\n** FATAL ERROR: Do not call homeSpan.poll() directly if homeSpan.start() is used!\n** PROGRAM HALTED **\n\n");
+    LOG0("\n** FATAL ERROR: Do not call homeSpan.poll() directly if homeSpan.autoPoll() is used!\n** PROGRAM HALTED **\n\n");
     vTaskDelete(pollTaskHandle);
     while(1);    
   }
@@ -305,7 +305,8 @@ void Span::pollTask() {
 
   statusLED->check();
 
-  vTaskDelay(5);
+  if(pollTaskHandle)
+    vTaskDelay(5);
     
 } // poll
 

@@ -84,26 +84,19 @@ void setup() {
   new SpanAccessory();   
     new Service::AccessoryInformation(); 
       new Characteristic::Identify();
-//    new LED_Service(13);
+    new LED_Service(13);
 
-  for(int i=0;i<50;i++){
-    new SpanAccessory();                            
-      new Service::AccessoryInformation();                
-        new Characteristic::Identify();                        
-      new Service::LightBulb();                      
-        new Characteristic::On(true);
-      new Service::Fan();                             
-        new Characteristic::Active();
-        new Characteristic::RotationDirection();
-        (new Characteristic::RotationSpeed(50))->setRange(0,100,25);
-  }
+  homeSpan.autoPoll();
 
 }
 
 //////////////////////////////////////
 
 void loop(){ 
-  homeSpan.poll();
+//  homeSpan.poll();
+delay(10000);
+Serial.println(millis());
+  
 }
 
 //////////////////////////////////////
