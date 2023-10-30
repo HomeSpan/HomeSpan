@@ -85,7 +85,7 @@ struct HAPClient {
 
   static const int MAX_HTTP=8096;                     // max number of bytes allowed for HTTP message
   static const int MAX_CONTROLLERS=16;                // maximum number of paired controllers (HAP requires at least 16)
-  static const int MAX_ACCESSORIES=41;                // maximum number of allowed Acessories (HAP limit=150, but not enough memory in ESP32 to run that many)
+  static const int MAX_ACCESSORIES=150;               // maximum number of allowed Accessories (HAP limit=150)
   
   static TLV<kTLVType,11> tlv8;                       // TLV8 structure (HAP Section 14.1) with space for 11 TLV records of type kTLVType (HAP Table 5-6)
   static nvs_handle hapNVS;                           // handle for non-volatile-storage of HAP data

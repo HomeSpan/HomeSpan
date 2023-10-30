@@ -178,6 +178,10 @@ void Span::pollTask() {
     processSerialCommand("i");        // print homeSpan configuration info
            
     HAPClient::init();                // read NVS and load HAP settings  
+    
+    if(heap_caps_get_minimum_free_size(MALLOC_CAP_DEFAULT)<DEFAULT_LOW_MEM_THRESHOLD)
+      LOG0("\n**** WARNING!  Low Memory Watermark of %d bytes is less than Low Threshold of %d bytes.  Device *may* run out of memory.\n\n",
+          heap_caps_get_minimum_free_size(MALLOC_CAP_DEFAULT),DEFAULT_LOW_MEM_THRESHOLD);
 
     if(!strlen(network.wifiData.ssid)){
       LOG0("*** WIFI CREDENTIALS DATA NOT FOUND.  ");
@@ -196,7 +200,7 @@ void Span::pollTask() {
       controlButton->reset();        
 
     LOG0("%s is READY!\n\n",displayName);
-    isInitialized=true;
+    isInitialized=true;    
     
   } // isInitialized
 
@@ -838,13 +842,7 @@ void Span::processSerialCommand(const char *c){
     break;
 
     case 'm': {
-      multi_heap_info_t heapInfo;
-      heap_caps_get_info(&heapInfo,MALLOC_CAP_INTERNAL);
-      LOG0("Total Heap=%d  (low=%d)  ",heapInfo.total_free_bytes,heapInfo.minimum_free_bytes);
-      heap_caps_get_info(&heapInfo,MALLOC_CAP_DEFAULT);
-      LOG0("DRAM-Capable=%d   ",heapInfo.total_free_bytes);
-      heap_caps_get_info(&heapInfo,MALLOC_CAP_EXEC);
-      LOG0("IRAM-Capable=%d\n",heapInfo.total_free_bytes);
+      LOG0("Free Heap=%d bytes  (low=%d)\n",heap_caps_get_free_size(MALLOC_CAP_DEFAULT),heap_caps_get_minimum_free_size(MALLOC_CAP_DEFAULT));
     }
     break;       
 

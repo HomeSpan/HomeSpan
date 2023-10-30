@@ -74,17 +74,30 @@ void setup() {
 //  homeSpan.enableOTA();
 
   homeSpan.setWifiCallback(wifiCB);
-  homeSpan.setWifiCallbackAll(wifiCB_ALL).setVerboseWifiReconnect(false);
+  homeSpan.setWifiCallbackAll(wifiCB_ALL).setVerboseWifiReconnect(true);
   
 
   new SpanUserCommand('D', " - disconnect WiFi", [](const char *buf){WiFi.disconnect();});
 
   homeSpan.begin(Category::Lighting,"HomeSpan LED");
-  
+
   new SpanAccessory();   
     new Service::AccessoryInformation(); 
       new Characteristic::Identify();
-    new LED_Service(13);  
+//    new LED_Service(13);
+
+  for(int i=0;i<50;i++){
+    new SpanAccessory();                            
+      new Service::AccessoryInformation();                
+        new Characteristic::Identify();                        
+      new Service::LightBulb();                      
+        new Characteristic::On(true);
+      new Service::Fan();                             
+        new Characteristic::Active();
+        new Characteristic::RotationDirection();
+        (new Characteristic::RotationSpeed(50))->setRange(0,100,25);
+  }
+
 }
 
 //////////////////////////////////////
