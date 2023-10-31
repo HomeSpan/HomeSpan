@@ -304,9 +304,6 @@ void Span::pollTask() {
   }
 
   statusLED->check();
-
-  if(pollTaskHandle)
-    vTaskDelay(5);
     
 } // poll
 
