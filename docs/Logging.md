@@ -100,7 +100,7 @@ void extraData(String &r){
 }
 ```
 
-To embed this custom HTML text in the Web Log, call `homeSpan.setWebLogCallback(extraWebData)` in your sketch.
+To embed this custom HTML text in the Web Log, call `homeSpan.setWebLogCallback(extraData)` in your sketch.
 
 Note that *r* is being passed as a reference and already includes all the HTML text the Web Log has produced to set up the page and create the initial table.  You should therefore *extend* this String using  `+=`.  Do not simple assign this variable to a new String with `=` or you will overwrite all the HTML already produced!
  
