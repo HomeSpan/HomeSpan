@@ -356,7 +356,13 @@ class Span{
   Span& setVerboseWifiReconnect(bool verbose=true){verboseWifiReconnect=verbose;return(*this);}
 
   void autoPoll(uint32_t stackSize=8192, uint32_t priority=1, uint32_t cpu=0){     // start pollTask()
-    xTaskCreateUniversal([](void *parms){for(;;)homeSpan.pollTask();vTaskDelay(5);}, "pollTask", stackSize, NULL, priority, &pollTaskHandle, cpu);
+    xTaskCreateUniversal([](void *parms){
+      for(;;){
+        homeSpan.pollTask();
+        vTaskDelay(5);
+        }
+      },
+      "pollTask", stackSize, NULL, priority, &pollTaskHandle, cpu);
     LOG0("\n*** AutoPolling Task started with priority=%d\n\n",uxTaskPriorityGet(pollTaskHandle)); 
   }
 
