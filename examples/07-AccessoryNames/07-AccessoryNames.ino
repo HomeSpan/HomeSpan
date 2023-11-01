@@ -77,6 +77,14 @@ void setup() {
   
     new DEV_DimmableLED(17);
 
+  new SpanAccessory(); 
+  
+    new Service::AccessoryInformation();    
+      new Characteristic::Identify();               
+      new Characteristic::Name(u8"Special chars ÄÖÜß");  // Use UTF-8 coded string for none ASCII characters    
+  
+    new DEV_DimmableLED(18);
+
 } // end of setup()
 
 //////////////////////////////////////
