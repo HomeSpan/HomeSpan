@@ -233,7 +233,7 @@ The following **optional** `homeSpan` methods enable additional features and pro
 * `Span& setRebootCallback(void (*func)(uint8_t count), uint32_t upTime)`
   * sets an optional user-defined callback function, *func*, that is called (just once) when *upTime* milliseconds after rebooting have elapsed (default *upTime*=5000 ms if not specified)
   * the function *func* must be of type *void* and accept one argument of type *uint8_t*
-  * the parameter *count*, which is passed to *func*, indicates that number of "short" reboots that have occured prior to the current reboot, where a "short" reboot is any that occurs **before** *upTime* milliseconds have elapsed
+  * the parameter *count*, which HomeSpan passes to *func*, indicates the number of "short" reboots that have occured prior to the current reboot, where a "short" reboot is any that occurs **before** *upTime* milliseconds have elapsed
   * this allows the user to provide a generic form of input to a sketch by rapidly turning on/off power to the device a specified number of times, typically to provide a method of resetting some aspect of a remote device
   * example using a lamba function:
     * `homeSpan.setRebootCallback( [](uint8_t c) {if(c==3) homeSpan.processSerialCommand("X");} );`
