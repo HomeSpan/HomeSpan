@@ -165,7 +165,7 @@ The following **optional** `homeSpan` methods enable additional features and pro
   * sets an optional user-defined callback function, *func*, to be called by HomeSpan upon start-up just after WiFi connectivity has been initially established.  This one-time call to *func* is provided for users that are implementing other network-related services as part of their sketch, but that cannot be started until WiFi connectivity is established.  The function *func* must be of type *void* and have no arguments
 
 * `Span& setWifiCallbackAll(void (*func)(int count))`
-  * similar to `setWiFiCallback()` above, but the user-defined callback function, *func*, is called by HomeSpan *every* time WiFi connectivity has been established or re-established after a disconnect.  The function *func* must be of type *void* and accept a single int argument, *count*, into which HomeSpan passes the number of times WiFi has been established or re-established (i.e. count=1 on initial WiFi connection; count=2 if re-established after the first disconnect, etc.)
+  * similar to `setWiFiCallback()` above, but the user-defined callback function, *func*, is called by HomeSpan *every* time WiFi connectivity has been established or re-established after a disconnect.  The function *func* must be of type *void* and accept a single *int* argument, *count*, into which HomeSpan passes the number of times WiFi has been established or re-established (i.e. *count*=1 on initial WiFi connection; *count*=2 if re-established after the first disconnect, etc.)
     
 * `Span& setPairCallback(void (*func)(boolean status))`
   * sets an optional user-defined callback function, *func*, to be called by HomeSpan upon completion of pairing to a controller (*status=true*) or unpairing from a controller (*status=false*)
@@ -220,7 +220,7 @@ The following **optional** `homeSpan` methods enable additional features and pro
 * `Span& setWebLogCallback(void (*func)(String &htmlText))`
   * sets an optional user-defined callback function, *func*, to be called by HomeSpan whenever the Web Log is produced
   * allows user to add additional custom data to the initial table of the Web Log by **extending** the String *htmlText*, which is passed as a reference to *func*
-  * the function *func* must be of type *void* and accept one argument of type String
+  * the function *func* must be of type *void* and accept one argument of type *String*
   * see [Message Logging](Logging.md) for details on how to construct *htmlText*
  
 * `void processSerialCommand(const char *CLIcommand)`
@@ -229,6 +229,16 @@ The following **optional** `homeSpan` methods enable additional features and pro
   * will work whether or not device is connected to a computer
   * example: `homeSpan.processSerialCommand("A");` starts the HomeSpan Setup Access Point
   * example: `homeSpan.processSerialCommand("Q HUB3");` changes the HomeKit Setup ID for QR Codes to "HUB3"
+
+* `Span& setRebootCallback(void (*func)(uint8_t count), uint32_t upTime)`
+  * sets an optional user-defined callback function, *func*, that is called (just once) when *upTime* milliseconds after rebooting have elapsed (default *upTime*=5000 ms if not specified)
+  * the function *func* must be of type *void* and accept one argument of type *uint8_t*
+  * the parameter *count*, which is passed to *func*, indicates that number of "short" reboots that have occured prior to the current reboot, where a "short" reboot is any that occurs **before** *upTime* milliseconds have elapsed
+  * this allows the user to provide a generic form of input to a sketch by rapidly turning on/off power to the device a specified number of times, typically to provide a method of resetting some aspect of a remote device
+  * example using a lamba function:
+    * `homeSpan.setRebootCallback( [](uint8_t c) {if(c==3) homeSpan.processSerialCommand("X");} );`
+    * causes HomeSpan to run the 'X' Serial Command, which erases WiFi data, if the device is "short" rebooted exactly 3 times, where each reboot is for less than 5 seconds
+    * note that creating 3 short reboots means you actually cycle the power (or press the reset button) a total of 4 times, since the last time you allow the sketch to run without rebooting
  
 * `Span& setSerialInputDisable(boolean val)`
    * if *val* is true, disables HomeSpan from reading input from the Serial port
