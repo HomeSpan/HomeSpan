@@ -49,7 +49,7 @@ HomeSpan requires version 2.0.0 or later of the [Arduino-ESP32 Board Manager](ht
   * Launch the WiFi Access Point
 * A standalone, detailed End-User Guide
 
-## ❗Latest Update - HomeSpan 1.8.1 (10/XX/2023)
+## ❗Latest Update - HomeSpan 1.8.1 (XX/YY/2023)
 
 * **Memory-Usage Improvements**
   
@@ -75,7 +75,14 @@ HomeSpan requires version 2.0.0 or later of the [Arduino-ESP32 Board Manager](ht
 
   * adds new *homeSpan* method `setWifiCallbackAll(void (*func)(int))` that provides a callback every time WiFi is established, *or re-established after a disconnect*
   * passes the number of times WiFi has been connected/re-connected as an argument
-  * see [API Reference](docs/Reference.md) for details  
+  * see [API Reference](docs/Reference.md) for details
+ 
+* **New Mechanism to trigger/reset HomeSpan by power-cycling or resetting the device a specified number of times**
+
+  * add new *homeSpan* method `Span& setRebootCallback(void (*func)(uint8_t), uint32_t upTime)` that provides a callback *upTime* milliseconds after rebooting
+  * passes the number of "short" reboots that have occured prior to the current reboot, where a "short" reboot is any that occurs **before** *upTime* milliseconds have elapsed
+  * can be used to reset WiFi Credentials, start the HomeSpan Access Point, perform a Factory Reset, or run any user-defined code, on a hard-to-access HomeSpan device by simply power-cycling the device a specified number of times
+  * see [API Reference](docs/Reference.md) for details
     
 See [Releases](https://github.com/HomeSpan/HomeSpan/releases) for details on all changes and bug fixes included in this update.
 
