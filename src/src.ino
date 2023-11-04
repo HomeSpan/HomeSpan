@@ -63,7 +63,7 @@ void setup() {
 
 //  homeSpan.setControlPin(21);
   
-  homeSpan.setLogLevel(2).enableWebLog(20).setWebLogCallback(extraData);
+  homeSpan.setLogLevel(2).enableWebLog(500).setWebLogCallback(extraData);
 //  homeSpan.reserveSocketConnections(10);
   
 //  homeSpan.setApSSID("HS_Setup");
@@ -86,16 +86,19 @@ void setup() {
       new Characteristic::Identify();
     new LED_Service(13);
 
-  homeSpan.autoPoll();
+//  homeSpan.autoPoll();
+
+  for(int i=0;i<300;i++)
+    WEBLOG("Here is some text of a log file %d",i);
 
 }
 
 //////////////////////////////////////
 
 void loop(){ 
-//  homeSpan.poll();
-delay(10000);
-Serial.println(millis());
+  homeSpan.poll();
+//delay(10000);
+//Serial.println(millis());
   
 }
 
