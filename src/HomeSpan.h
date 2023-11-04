@@ -213,11 +213,13 @@ class Span{
   const char *sketchVersion="n/a";              // version of the sketch
   nvs_handle charNVS;                           // handle for non-volatile-storage of Characteristics data
   nvs_handle wifiNVS=0;                         // handle for non-volatile-storage of WiFi data
-  nvs_handle otaNVS;                            // handle for non-volatile storaget of OTA data
+  nvs_handle otaNVS;                            // handle for non-volatile storage of OTA data
   char pairingCodeCommand[12]="";               // user-specified Pairing Code - only needed if Pairing Setup Code is specified in sketch using setPairingCode()
   String lastClientIP="0.0.0.0";                // IP address of last client accessing device through encrypted channel
   boolean newCode;                              // flag indicating new application code has been loaded (based on keeping track of app SHA256)
   boolean serialInputDisabled=false;            // flag indiating that serial input is disabled
+  uint8_t rebootCount=0;                        // counts number of times device was rebooted (used in optional Reboot callback)
+  uint32_t rebootCallbackTime;                  // length of time to wait (in milliseconds) before calling optional Reboot callback
   
   int connected=0;                              // WiFi connection status (increments upon each connect and disconnect)
   unsigned long waitTime=60000;                 // time to wait (in milliseconds) between WiFi connection attempts
@@ -238,6 +240,7 @@ class Span{
   boolean autoStartAPEnabled=false;                           // enables auto start-up of Access Point when WiFi Credentials not found
   void (*apFunction)()=NULL;                                  // optional function to invoke when starting Access Point
   void (*statusCallback)(HS_STATUS status)=NULL;              // optional callback when HomeSpan status changes
+  void (*rebootCallback)(uint8_t)=NULL;                       // optional callback when device reboots
   
   WiFiServer *hapServer;                            // pointer to the HAP Server connection
   Blinker *statusLED;                               // indicates HomeSpan status
@@ -354,6 +357,8 @@ class Span{
   Span& setWebLogCallback(void (*f)(String &)){weblogCallback=f;return(*this);}
 
   Span& setVerboseWifiReconnect(bool verbose=true){verboseWifiReconnect=verbose;return(*this);}
+
+  Span& setRebootCallback(void (*f)(uint8_t),uint32_t t=DEFAULT_REBOOT_CALLBACK_TIME){rebootCallback=f;rebootCallbackTime=t;return(*this);}
 
   void autoPoll(uint32_t stackSize=8192, uint32_t priority=1, uint32_t cpu=0){     // start pollTask()
     xTaskCreateUniversal([](void *parms){

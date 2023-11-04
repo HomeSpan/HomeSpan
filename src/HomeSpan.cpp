@@ -79,6 +79,11 @@ void Span::begin(Category catID, const char *displayName, const char *hostNameBa
   nvs_open("WIFI",NVS_READWRITE,&wifiNVS);      // open WIFI data namespace in NVS
   nvs_open("OTA",NVS_READWRITE,&otaNVS);        // open OTA data namespace in NVS
 
+  nvs_get_u8(wifiNVS,"REBOOTS",&rebootCount);
+  rebootCount++;
+  nvs_set_u8(wifiNVS,"REBOOTS",rebootCount);
+  nvs_commit(wifiNVS);
+  
   size_t len;
 
   if(strlen(network.wifiData.ssid)){                                                // if setWifiCredentials was already called
@@ -304,6 +309,14 @@ void Span::pollTask() {
   }
 
   statusLED->check();
+
+  if(rebootCallback && snapTime>rebootCallbackTime){
+    rebootCallback(rebootCount-1);
+    rebootCount=0;
+    rebootCallback=NULL;
+    nvs_set_u8(wifiNVS,"REBOOTS",rebootCount);
+    nvs_commit(wifiNVS);    
+  }
     
 } // poll
 

@@ -74,7 +74,7 @@ void setup() {
 //  homeSpan.enableOTA();
 
   homeSpan.setWifiCallback(wifiCB);
-  homeSpan.setWifiCallbackAll(wifiCB_ALL).setVerboseWifiReconnect(true);
+  homeSpan.setWifiCallbackAll(wifiCB_ALL).setVerboseWifiReconnect(true).setRebootCallback(rebootCB,10000);
   
 
   new SpanUserCommand('D', " - disconnect WiFi", [](const char *buf){WiFi.disconnect();});
@@ -88,8 +88,8 @@ void setup() {
 
 //  homeSpan.autoPoll();
 
-  for(int i=0;i<300;i++)
-    WEBLOG("Here is some text of a log file %d",i);
+//  for(int i=0;i<300;i++)
+//    WEBLOG("Here is some text of a log file %d",i);
 
 }
 
@@ -112,4 +112,10 @@ void wifiCB(){
 
 void wifiCB_ALL(int n){
   Serial.printf("\n\n****** IN WIFI CALLBACK ALL.  Count=%d *******\n\n",n);
+}
+
+//////////////////////////////////////
+
+void rebootCB(uint8_t count){
+  Serial.printf("\n\n******* IN REBOOT CALLBACK: %d\n\n",count);
 }
