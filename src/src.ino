@@ -74,7 +74,7 @@ void setup() {
 //  homeSpan.enableOTA();
 
   homeSpan.setWifiCallback(wifiCB);
-  homeSpan.setWifiCallbackAll(wifiCB_ALL).setVerboseWifiReconnect(true).setRebootCallback(rebootCB,10000);
+  homeSpan.setWifiCallbackAll(wifiCB_ALL).setVerboseWifiReconnect(true).setRebootCallback(rebootCB);
   
 
   new SpanUserCommand('D', " - disconnect WiFi", [](const char *buf){WiFi.disconnect();});
@@ -117,5 +117,8 @@ void wifiCB_ALL(int n){
 //////////////////////////////////////
 
 void rebootCB(uint8_t count){
-  Serial.printf("\n\n******* IN REBOOT CALLBACK: %d\n\n",count);
+  if(count>=3){
+    Serial.printf("\n*** Detected 3 or more short reboots.  Erasing WiFi data...\n");
+    homeSpan.processSerialCommand("X");
+  }
 }
