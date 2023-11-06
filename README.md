@@ -49,7 +49,7 @@ HomeSpan requires version 2.0.0 or later of the [Arduino-ESP32 Board Manager](ht
   * Launch the WiFi Access Point
 * A standalone, detailed End-User Guide
 
-## ❗Latest Update - HomeSpan 1.8.1 (XX/YY/2023)
+## ❗Current DEVELOPMENT Branch - HomeSpan 1.8.1
 
 * **Memory-Usage Improvements**
   
