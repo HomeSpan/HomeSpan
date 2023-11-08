@@ -87,3 +87,12 @@ enum class StatusCode {
   InvalidValue=-70410,  
   TBD=-1                       // status To-Be-Determined (TBD) once service.update() called - internal use only
 };
+
+// Based on HomeKit documentation for HMCharacteristicTypeCurrentSecuritySystemState
+typedef enum {
+  Stay=0,     // Armed for Stay, or Armed while at Home
+  Away=1,     // Armed for Away
+  Night=2,    // Armed for Night
+  Disarmed=3, // Disarmed, or Off
+  Alarm=4     // Alarm is triggered
+} HSSecuritySystemState;

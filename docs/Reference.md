@@ -378,6 +378,7 @@ This is a **base class** from which all HomeSpan Characteristics are derived, an
 * `void setVal(value [,boolean notify])`
   * sets the value of a numerical-based Characteristic to *value*, and, if *notify* is set to true, notifies all HomeKit Controllers of the change.  The *notify* flag is optional and will be set to true if not specified.  Setting the *notify* flag to false allows you to update a Characateristic without notifying any HomeKit Controllers, which is useful for Characteristics that HomeKit automatically adjusts (such as a countdown timer) but will be requested from the Accessory if the Home App closes and is then re-opened
   * works with any integer, boolean, or floating-based numerical *value*, though HomeSpan will convert *value* into the appropriate type for each Characteristic (e.g. calling `setValue(5.5)` on an integer-based Characteristic results in *value*=5)
+  * when setting a SecuritySystemState value, use the template form of `->setVal<int>(HSSecuritySystemState::Away)`
   * throws a runtime warning if *value* is outside of the min/max range for the Characteristic, where min/max is either the HAP default, or any new min/max range set via a prior call to `setRange()`
   * *value* is **not** restricted to being an increment of the step size; for example it is perfectly valid to call `setVal(43.5)` after calling `setRange(0,100,5)` on a floating-based Characteristic even though 43.5 does does not align with the step size specified.  The Home App will properly retain the value as 43.5, though it will round to the nearest step size increment (in this case 45) when used in a slider graphic (such as setting the temperature of a thermostat)
 
@@ -396,7 +397,7 @@ This is a **base class** from which all HomeSpan Characteristics are derived, an
   * works on Characteristics with UINT8, UINT16, UINT32, and INT formats only
     * a warning message is thrown, and the request is ignored, if this method is called on a Characteristic with any other format
   * returns a pointer to the Characteristic itself so that the method can be chained during instantiation
-  * example: `(new Characteristic::SecuritySystemTargetState())->setValidValues(3,0,1,3);` creates a new Valid Value list of length=3 containing the values 0, 1, and 3.  This has the effect of informing HomeKit that a SecuritySystemTargetState value of 2 (Night Arm) is not valid and should not be shown as a choice in the Home App
+  * example: `(new Characteristic::SecuritySystemTargetState())->setValidValues(3,Stay,Away,Disarmed);` creates a new Valid Value list of length=3 containing the values 0 (Stay), 1 (Away), and 3 (Disarmed).  This has the effect of informing HomeKit that a SecuritySystemTargetState value of 2 (Night) is not valid and should not be shown as a choice in the Home App
 
 #### The following methods are supported for string-based Characteristics (i.e. a null-terminated C-style array of characters):
 

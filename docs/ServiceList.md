@@ -145,8 +145,8 @@ RotationDirection|int|0|[0,1]|
 RotationSpeed|double|0|[0,100]|
 Saturation|double|0|[0,100]|
 SecuritySystemAlarmType|uint8_t|0|[0,1]|
-SecuritySystemCurrentState|uint8_t|3|[0,4]|
-SecuritySystemTargetState|uint8_t|3|[0,3]|
+SecuritySystemCurrentState|HSSecuritySystemState|HSSecuritySystemState::Disarmed|[0,4]<br>HSSecuritySystemState::Stay<br>HSSecuritySystemState::Away<br>HSSecuritySystemState::Night<br>HSSecuritySystemState::Disarmed<br>HSSecuritySystemState::Alarm|
+SecuritySystemTargetState|HSSecuritySystemState|HSSecuritySystemState::Disarmed|[0,3]<br>HSSecuritySystemState::Stay<br>HSSecuritySystemState::Away<br>HSSecuritySystemState::Night<br>HSSecuritySystemState::Disarmed|
 SerialNumber|char \*|"HS-12345"|||
 ServiceLabelIndex|uint8_t|1|[1,255]|
 ServiceLabelNamespace|uint8_t|1|[0,1]|
