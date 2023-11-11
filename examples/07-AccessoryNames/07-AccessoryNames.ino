@@ -54,8 +54,8 @@ void setup() {
   // Rather, the default name of the first Accessory Tile will always be shown by the Home App as the name specified in
   // homeSpan.begin() regardless of whether or not the Name Characteristic has been added to the Accessory Information Service.
 
-  // Below is a replay of Example 6 showing how the Name Characteristic can be used to change the default names of the second,
-  // but not the first, Accessory Tile.
+  // Below is a replay of Example 6 showing how the Name Characteristic can be used to change the default names of the second
+  // and third, but not the first, Accessory Tile.
   
   Serial.begin(115200);
 
