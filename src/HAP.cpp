@@ -1463,26 +1463,22 @@ void HAPClient::sendEncrypted(char *body, uint8_t *dataBuf, int dataLen){
   
   int bodyLen=strlen(body);
 
-  int count=0;
   unsigned long long nBytes;
 
-  int totalBytes=2+bodyLen+16;                            // 2-byte AAD + bodyLen + 16-byte authentication tag
-  totalBytes+=(dataLen/FRAME_SIZE)*(2+FRAME_SIZE+16);     // number of full frames * size of full frame with 2-byte AAD + 16-byte authentication tag
+  int maxFrameSize=bodyLen>dataLen?bodyLen:dataLen;       // set maxFrameSize to greater of bodyLen or dataLen
+  if(maxFrameSize>FRAME_SIZE)                             // cap maxFrameSize by FRAME_SIZE (HAP restriction)
+    maxFrameSize=FRAME_SIZE;
 
-  if(dataLen%FRAME_SIZE)                                  // if there is a residual last partial frame
-    totalBytes+=2+dataLen%FRAME_SIZE+16;                  // 2-byte AAD + residual of last partial frame + 16-byte authentication tag
-
-  TempBuffer <uint8_t> tBuf(totalBytes);
+  TempBuffer <uint8_t> tBuf(2+maxFrameSize+16);           // 2-byte AAD + encrytped data + 16-byte authentication tag
   
-  tBuf.get()[count]=bodyLen%256;         // store number of bytes in first frame that encrypts the Body (AAD bytes)
-  tBuf.get()[count+1]=bodyLen/256;
+  tBuf.get()[0]=bodyLen%256;         // store number of bytes in first frame that encrypts the Body (AAD bytes)
+  tBuf.get()[1]=bodyLen/256;
   
-  crypto_aead_chacha20poly1305_ietf_encrypt(tBuf.get()+count+2,&nBytes,(uint8_t *)body,bodyLen,tBuf.get()+count,2,NULL,a2cNonce.get(),a2cKey);   // encrypt the Body with authentication tag appended
+  crypto_aead_chacha20poly1305_ietf_encrypt(tBuf.get()+2,&nBytes,(uint8_t *)body,bodyLen,tBuf.get(),2,NULL,a2cNonce.get(),a2cKey);   // encrypt the Body with authentication tag appended
 
-  a2cNonce.inc();                 // increment nonce
+  client.write(tBuf.get(),nBytes+2);   // transmit encrypted frame
+  a2cNonce.inc();                      // increment nonce
   
-  count+=2+bodyLen+16;            // increment count by 2-byte AAD record + length of Body + 16-byte authentication tag
-
   for(int i=0;i<dataLen;i+=FRAME_SIZE){      // encrypt FRAME_SIZE number of bytes in dataBuf in sequential frames
     
     int n=dataLen-i;           // number of bytes remaining
@@ -1490,18 +1486,16 @@ void HAPClient::sendEncrypted(char *body, uint8_t *dataBuf, int dataLen){
     if(n>FRAME_SIZE)           // maximum number of bytes to encrypt=FRAME_SIZE
       n=FRAME_SIZE;                                     
     
-    tBuf.get()[count]=n%256;    // store number of bytes that encrypts this frame (AAD bytes)
-    tBuf.get()[count+1]=n/256;
+    tBuf.get()[0]=n%256;    // store number of bytes that encrypts this frame (AAD bytes)
+    tBuf.get()[1]=n/256;
 
-    crypto_aead_chacha20poly1305_ietf_encrypt(tBuf.get()+count+2,&nBytes,dataBuf+i,n,tBuf.get()+count,2,NULL,a2cNonce.get(),a2cKey);   // encrypt the next portion of dataBuf with authentication tag appended
+    crypto_aead_chacha20poly1305_ietf_encrypt(tBuf.get()+2,&nBytes,dataBuf+i,n,tBuf.get(),2,NULL,a2cNonce.get(),a2cKey);   // encrypt the next portion of dataBuf with authentication tag appended
 
-    a2cNonce.inc();            // increment nonce
+    client.write(tBuf.get(),nBytes+2);   // transmit encrypted frame
+    a2cNonce.inc();                      // increment nonce
 
-    count+=2+n+16;             // increment count by 2-byte AAD record + length of JSON + 16-byte authentication tag
   }
  
-  client.write(tBuf.get(),count);   // transmit all encrypted frames to Client
-
   LOG2("-------- SENT ENCRYPTED! --------\n");
       
 } // sendEncrypted
