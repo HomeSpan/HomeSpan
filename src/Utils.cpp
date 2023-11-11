@@ -279,3 +279,23 @@ void PushButton::reset(){
 //////////////////////////////////////
 
 touch_value_t PushButton::threshold=0;
+
+//////////////////////////////////////
+
+int TempBufferBase::maxUsedTempBufferSize = 0;
+
+//////////////////////////////////////
+
+int TempBufferBase::getMaxUsedTempBufferSize() {
+  return maxUsedTempBufferSize;
+}
+
+//////////////////////////////////////
+
+const char* TempBufferBase::nameOfBufferWithLargestBufferSize = "";
+
+//////////////////////////////////////
+
+const char* TempBufferBase::getNameOfBufferWithLargestBufferSize() {
+  return nameOfBufferWithLargestBufferSize;
+}

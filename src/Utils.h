@@ -41,19 +41,32 @@ String mask(char *c, int n);          // simply utility that creates a String fr
 // Creates a temporary buffer that is freed after
 // going out of scope
 
+class TempBufferBase
+{
+  protected:
+    static int maxUsedTempBufferSize; 
+    static const char* nameOfBufferWithLargestBufferSize;
+  public:
+  static int getMaxUsedTempBufferSize();
+  static const char* getNameOfBufferWithLargestBufferSize();
+};
+
 template <class bufType>
-class TempBuffer {
+class TempBuffer : TempBufferBase {
 
   private:
-  
   bufType *buf;
   int nBytes;
   int nElements;
 
   public:
-  
-  TempBuffer(int _nElements) : nElements(_nElements) {
+  TempBuffer(int _nElements, const char* nameOfBuffer) : nElements(_nElements) {
     nBytes=nElements*sizeof(bufType);
+    if (maxUsedTempBufferSize < nBytes)
+    {
+      maxUsedTempBufferSize = nBytes;
+      nameOfBufferWithLargestBufferSize = nameOfBuffer;
+    }
     buf=(bufType *)malloc(nBytes);
     if(buf==NULL){
       Serial.print("\n\n*** FATAL ERROR: Requested allocation of ");

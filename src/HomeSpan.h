@@ -730,7 +730,7 @@ class SpanCharacteristic{
 
     size_t olen;
     mbedtls_base64_encode(NULL,0,&olen,data,len);                    // get length of string buffer needed (mbedtls includes the trailing null in this size)
-    TempBuffer<char> tBuf(olen);                                     // create temporary string buffer, with room for trailing null
+    TempBuffer<char> tBuf(olen, "SpanCharacteristic::setData");                                     // create temporary string buffer, with room for trailing null
     mbedtls_base64_encode((uint8_t*)tBuf.get(),olen,&olen,data,len );  // encode data into string buf
     setString(tBuf.get());                                             // call setString to continue processing as if characteristic was a string
   }  

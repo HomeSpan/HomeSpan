@@ -580,7 +580,7 @@ void Span::processSerialCommand(const char *c){
     case 'Z': {
       HAPClient::saveControllers();
       break;
-      TempBuffer <uint8_t> tBuf(HAPClient::listControllers(NULL));
+      TempBuffer <uint8_t> tBuf(HAPClient::listControllers(NULL), "Span::processSerialCommand Z");
       HAPClient::listControllers(tBuf.get());
       Serial.printf("SIZE = %d\n",tBuf.len());
       HAPClient::hexPrintRow(tBuf.get(),tBuf.len());
@@ -628,7 +628,7 @@ void Span::processSerialCommand(const char *c){
 
     case 'd': {      
       
-      TempBuffer <char> qBuf(sprintfAttributes(NULL)+1);
+      TempBuffer <char> qBuf(sprintfAttributes(NULL)+1, "Span::processSerialCommand d");
       sprintfAttributes(qBuf.get());  
 
       LOG0("\n*** Attributes Database: size=%d  configuration=%d ***\n\n",qBuf.len()-1,hapConfig.configNumber);
@@ -854,6 +854,7 @@ void Span::processSerialCommand(const char *c){
 
     case 'm': {
       LOG0("Free Heap=%d bytes  (low=%d)\n",heap_caps_get_free_size(MALLOC_CAP_DEFAULT),heap_caps_get_minimum_free_size(MALLOC_CAP_DEFAULT));
+      LOG0("Max used TempBuffer size=%d bytes from %s\n", TempBufferBase::getMaxUsedTempBufferSize(), TempBufferBase::getNameOfBufferWithLargestBufferSize());
     }
     break;       
 
@@ -1023,7 +1024,7 @@ void Span::processSerialCommand(const char *c){
       
       LOG0("\n*** Pairing Data used for Cloning another Device\n\n");
       size_t olen;
-      TempBuffer<char> tBuf(256);
+      TempBuffer<char> tBuf(256, "Span::processSerialCommand P");
       mbedtls_base64_encode((uint8_t *)tBuf.get(),256,&olen,(uint8_t *)&HAPClient::accessory,sizeof(struct Accessory));
       LOG0("Accessory data:  %s\n",tBuf.get());
       for(const auto &cont : HAPClient::controllerList){
@@ -1037,7 +1038,7 @@ void Span::processSerialCommand(const char *c){
     case 'C': {
 
       LOG0("\n*** Clone Pairing Data from another Device\n\n");
-      TempBuffer<char> tBuf(200);
+      TempBuffer<char> tBuf(200, "Span::processSerialCommand C");
       size_t olen;
 
       tBuf.get()[0]='\0';
@@ -1591,7 +1592,7 @@ int Span::sprintfAttributes(char **ids, int numIDs, int flags, char *cBuf){
 boolean Span::updateDatabase(boolean updateMDNS){
 
   uint8_t tHash[48];
-  TempBuffer <char> tBuf(sprintfAttributes(NULL,GET_META|GET_PERMS|GET_TYPE|GET_DESC)+1);
+  TempBuffer <char> tBuf(sprintfAttributes(NULL,GET_META|GET_PERMS|GET_TYPE|GET_DESC)+1, "Span::updateDatabase");
   sprintfAttributes(tBuf.get(),GET_META|GET_PERMS|GET_TYPE|GET_DESC);  
   mbedtls_sha512_ret((uint8_t *)tBuf.get(),tBuf.len(),tHash,1);     // create SHA-384 hash of JSON (can be any hash - just looking for a unique key)
 

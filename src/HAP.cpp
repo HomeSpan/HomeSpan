@@ -96,7 +96,7 @@ void HAPClient::init(){
   }
 
   if(!nvs_get_blob(hapNVS,"CONTROLLERS",NULL,&len)){                // if found long-term Controller Pairings data from NVS
-    TempBuffer <Controller> tBuf(len/sizeof(Controller));
+    TempBuffer <Controller> tBuf(len/sizeof(Controller), "HAPClient::init");
     nvs_get_blob(hapNVS,"CONTROLLERS",tBuf.get(),&len);             // retrieve data
     for(int i=0;i<tBuf.size();i++){
       if(tBuf.get()[i].allocated)
@@ -157,7 +157,7 @@ void HAPClient::processRequest(){
     return;
   }
  
-  TempBuffer <uint8_t> httpBuf(messageSize+1);      // leave room for null character added below
+  TempBuffer <uint8_t> httpBuf(messageSize+1, "HAPClient::processRequest");      // leave room for null character added below
   
   if(cPair){                           // expecting encrypted message
     LOG2("<<<< #### ");
@@ -859,7 +859,7 @@ int HAPClient::getAccessoriesURL(){
   LOG1(")...\n");
 
   int nBytes = homeSpan.sprintfAttributes(NULL);        // get size of HAP attributes JSON
-  TempBuffer <char> jBuf(nBytes+1);
+  TempBuffer <char> jBuf(nBytes+1,"HAPClient::getAccessoriesURL");
   homeSpan.sprintfAttributes(jBuf.get());                  // create JSON database (will need to re-cast to uint8_t* below)
 
   char *body;
@@ -958,7 +958,7 @@ int HAPClient::postPairingsURL(){
     case 5: {
       LOG1("List...\n");
 
-      TempBuffer <uint8_t> tBuf(listControllers(NULL));
+      TempBuffer <uint8_t> tBuf(listControllers(NULL), "HAPClient::postPairingsURL listControllers");
 
       char *body;
       asprintf(&body,"HTTP/1.1 200 OK\r\nContent-Type: application/pairing+tlv8\r\nContent-Length: %d\r\n\r\n",tBuf.len());      // create Body with Content Length = size of TLV data
@@ -1393,7 +1393,7 @@ void HAPClient::eventNotify(SpanBuf *pObj, int nObj, int ignoreClient){
 
 void HAPClient::tlvRespond(){
 
-  TempBuffer <uint8_t> tBuf(tlv8.pack(NULL));         // create buffer to hold TLV data    
+  TempBuffer <uint8_t> tBuf(tlv8.pack(NULL), "HAPClient::tlvRespond");         // create buffer to hold TLV data    
   tlv8.pack(tBuf.get());                              // pack TLV records into buffer
 
   char *body;
@@ -1433,7 +1433,7 @@ int HAPClient::receiveEncrypted(uint8_t *httpBuf, int messageSize){
       return(0);
       }
 
-    TempBuffer <uint8_t> tBuf(n+16);      // expected number of total bytes = n bytes in encoded message + 16 bytes for appended authentication tag      
+    TempBuffer <uint8_t> tBuf(n+16, "HAPClient::receiveEncrypted");      // expected number of total bytes = n bytes in encoded message + 16 bytes for appended authentication tag      
 
     if(client.read(tBuf.get(),tBuf.len())!=tBuf.len()){      
       LOG0("\n\n*** ERROR: Malformed encrypted message frame\n\n");
@@ -1469,7 +1469,7 @@ void HAPClient::sendEncrypted(char *body, uint8_t *dataBuf, int dataLen){
   if(maxFrameSize>FRAME_SIZE)                             // cap maxFrameSize by FRAME_SIZE (HAP restriction)
     maxFrameSize=FRAME_SIZE;
 
-  TempBuffer <uint8_t> tBuf(2+maxFrameSize+16);           // 2-byte AAD + encrytped data + 16-byte authentication tag
+  TempBuffer <uint8_t> tBuf(2+maxFrameSize+16, "HAPClient::sendEncrypted");           // 2-byte AAD + encrytped data + 16-byte authentication tag
   
   tBuf.get()[0]=bodyLen%256;         // store number of bytes in first frame that encrypts the Body (AAD bytes)
   tBuf.get()[1]=bodyLen/256;
@@ -1696,7 +1696,7 @@ void HAPClient::saveControllers(){
     return;
   }
 
-  TempBuffer <Controller> tBuf(controllerList.size());                    // create temporary buffer to hold Controller data
+  TempBuffer <Controller> tBuf(controllerList.size(), "HAPClient::saveControllers");                    // create temporary buffer to hold Controller data
   std::copy(controllerList.begin(),controllerList.end(),tBuf.get());      // copy data from linked list to buffer
   
   nvs_set_blob(hapNVS,"CONTROLLERS",tBuf.get(),tBuf.len());      // update data
