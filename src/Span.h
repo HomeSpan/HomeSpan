@@ -406,6 +406,9 @@ namespace Service {
 // SPAN CHARACTERISTICS (HAP Chapter 9) //
 //////////////////////////////////////////
 
+#define CREATE_CHAR_ENUM(HAPCHAR, ...) \
+  typedef enum { __VA_ARGS__ } HAPCHAR;
+
 // Macro to define Span Characteristic structures based on name of HAP Characteristic, default value, and min/max value (not applicable for STRING or BOOL which default to min=0, max=1)
 
 #define CREATE_CHAR(TYPE,HAPCHAR,DEFVAL,MINVAL,MAXVAL) \
@@ -529,6 +532,12 @@ namespace Characteristic {
   CREATE_CHAR(uint8_t,VolumeControlType,0,0,3);
   CREATE_CHAR(uint8_t,VolumeSelector,0,0,1);
   CREATE_CHAR(double,WaterLevel,0,0,100);
+
+  // Macros to define enum values for specific characteristic states / values.
+  CREATE_CHAR_ENUM(ChargingStatus, NotCharging=0, Charging=1, NotChargeable=2);
+  CREATE_CHAR_ENUM(DoorState, Open=0, Closed=1);
+  CREATE_CHAR_ENUM(LeakStatus, NoLeak=0, LeakDetected=1);
+  CREATE_CHAR_ENUM(SecuritySystemState, Stay=0, Away=1, Night=2, Disarmed=3, Alarm=4);
 
 }
 
