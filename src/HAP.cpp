@@ -851,7 +851,6 @@ int HAPClient::getAccessoriesURL(){
     unauthorizedError();
     return(0);
   }
-
   LOG1("In Get Accessories #");
   LOG1(conNum);
   LOG1(" (");
@@ -859,22 +858,27 @@ int HAPClient::getAccessoriesURL(){
   LOG1(")...\n");
 
   int nBytes = homeSpan.sprintfAttributes(NULL);        // get size of HAP attributes JSON
-  TempBuffer <char> jBuf(nBytes+1,"HAPClient::getAccessoriesURL");
-  homeSpan.sprintfAttributes(jBuf.get());                  // create JSON database (will need to re-cast to uint8_t* below)
 
-  char *body;
-  asprintf(&body,"HTTP/1.1 200 OK\r\nContent-Type: application/hap+json\r\nContent-Length: %d\r\n\r\n",nBytes);
+  // TempBuffer <char> jBuf(nBytes+1,"HAPClient::getAccessoriesURL");
+  // homeSpan.sprintfAttributes(jBuf.get());                  // create JSON database (will need to re-cast to uint8_t* below)
+
+  // char *body;
+  // asprintf(&body,"HTTP/1.1 200 OK\r\nContent-Type: application/hap+json\r\nContent-Length: %d\r\n\r\n",nBytes);
   
-  LOG2("\n>>>>>>>>>> ");
-  LOG2(client.remoteIP());
-  LOG2(" >>>>>>>>>>\n");
-  LOG2(body);
-  LOG2(jBuf.get());
-  LOG2("\n");
+  // LOG2("\n>>>>>>>>>> ");
+  // LOG2(client.remoteIP());
+  // LOG2(" >>>>>>>>>>\n");
+  // LOG2(body);
+  // LOG2(jBuf.get());
+  // LOG2("\n");
   
-  sendEncrypted(body,(uint8_t *)jBuf.get(),nBytes);
-  free(body);
-         
+  // sendEncrypted(body,(uint8_t *)jBuf.get(),nBytes);
+  // free(body);
+
+
+  SendEncryptedContext context(*this);
+  context.printf("HTTP/1.1 200 OK\r\nContent-Type: application/hap+json\r\nContent-Length: %d\r\n\r\n",nBytes);
+  homeSpan.sprintfAttributes(NULL, GET_VALUE|GET_META|GET_PERMS|GET_TYPE|GET_DESC, &context);
   return(1);
   
 } // getAccessories

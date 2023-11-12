@@ -39,6 +39,7 @@
 
 #include "HomeSpan.h"
 #include "HAP.h"
+#include "SendEncryptedContext.h"
 
 const __attribute__((section(".rodata_custom_desc"))) SpanPartition spanPartition = {HOMESPAN_MAGIC_COOKIE,0};
 
@@ -1227,19 +1228,33 @@ Span& Span::setWifiCredentials(const char *ssid, const char *pwd){
 
 ///////////////////////////////
 
-int Span::sprintfAttributes(char *cBuf, int flags){
+int Span::sprintfAttributes(char *cBuf, int flags, SendEncryptedContext* sendEncryptedContext){
 
   int nBytes=0;
 
   nBytes+=snprintf(cBuf,cBuf?64:0,"{\"accessories\":[");
-
+  if (sendEncryptedContext != NULL)
+    sendEncryptedContext->print("{\"accessories\":[");
+  
   for(int i=0;i<Accessories.size();i++){
-    nBytes+=Accessories[i]->sprintfAttributes(cBuf?(cBuf+nBytes):NULL,flags);    
-    if(i+1<Accessories.size())
-      nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",");
+    SpanAccessory* accessory=Accessories[i];
+    int accessoryBytes=accessory->sprintfAttributes(cBuf?(cBuf+nBytes):NULL,flags); 
+    nBytes+= accessoryBytes;
+    if (sendEncryptedContext != NULL)   
+    {
+      char* buffer = sendEncryptedContext->reserveStringBuffer(accessoryBytes);
+      accessory->sprintfAttributes(buffer, flags);
     }
-    
+    if(i+1<Accessories.size())
+    {
+      nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",");
+      if (sendEncryptedContext != NULL)
+        sendEncryptedContext->print(",");
+    }
+  }
   nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,"]}");
+  if (sendEncryptedContext != NULL)
+    sendEncryptedContext->print("]}");  
   return(nBytes);
 }
 
