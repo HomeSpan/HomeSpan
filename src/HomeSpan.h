@@ -426,8 +426,8 @@ class SpanService{
   protected:
   
   virtual ~SpanService();                                 // destructor
-  unordered_set<HapChar *> req;                           // unordered set of pointers to all required HAP Characteristic Types for this Service
-  unordered_set<HapChar *> opt;                           // unordered set of pointers to all optional HAP Characteristic Types for this Service
+  vector<HapChar *> req;                                  // vector of pointers to all required HAP Characteristic Types for this Service
+  vector<HapChar *> opt;                                  // vector of pointers to all optional HAP Characteristic Types for this Service
 
   public:
   

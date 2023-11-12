@@ -35,8 +35,8 @@
 #define CREATE_SERV(NAME,UUID) struct NAME : SpanService { NAME() : SpanService{#UUID,#NAME}{
 #define END_SERV }};
 
-#define REQ(HAPCHAR) req.insert(&hapChars.HAPCHAR)
-#define OPT(HAPCHAR) opt.insert(&hapChars.HAPCHAR)
+#define REQ(HAPCHAR) req.push_back(&hapChars.HAPCHAR)
+#define OPT(HAPCHAR) opt.push_back(&hapChars.HAPCHAR)
 
 namespace Service {
 

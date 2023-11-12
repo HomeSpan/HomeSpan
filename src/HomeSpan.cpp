@@ -39,6 +39,7 @@
 
 #include "HomeSpan.h"
 #include "HAP.h"
+#include <algorithm>
 
 const __attribute__((section(".rodata_custom_desc"))) SpanPartition spanPartition = {HOMESPAN_MAGIC_COOKIE,0};
 
@@ -889,9 +890,7 @@ void Span::processSerialCommand(const char *c){
           }
           else if((*acc)->aid==1)            // this is an Accessory with aid=1, but it has more than just AccessoryInfo.  So...
             isBridge=false;                  // ...this is not a bridge device          
-
-          unordered_set<HapChar *> hapChar;
-        
+       
           for(auto chr=(*svc)->Characteristics.begin(); chr!=(*svc)->Characteristics.end(); chr++){
             LOG0("      \u21e8 Characteristic %s(%s):  IID=%d, %sUUID=\"%s\", %sPerms=",
               (*chr)->hapName,(*chr)->uvPrint((*chr)->value).c_str(),(*chr)->iid,(*chr)->isCustom?"Custom-":"",(*chr)->type,(*chr)->perms!=(*chr)->hapChar->perms?"Custom-":"");
@@ -915,13 +914,13 @@ void Span::processSerialCommand(const char *c){
               LOG0(" (nvs)");
             LOG0("\n");        
             
-            if(!(*chr)->isCustom && !(*svc)->isCustom  && (*svc)->req.find((*chr)->hapChar)==(*svc)->req.end() && (*svc)->opt.find((*chr)->hapChar)==(*svc)->opt.end())
+            if(!(*chr)->isCustom && !(*svc)->isCustom  && std::find((*svc)->req.begin(),(*svc)->req.end(),(*chr)->hapChar)==(*svc)->req.end() && std::find((*svc)->opt.begin(),(*svc)->opt.end(),(*chr)->hapChar)==(*svc)->opt.end())
               LOG0("          *** WARNING #%d!  Service does not support this Characteristic ***\n",++nWarnings);
             else
             if(invalidUUID((*chr)->type,(*chr)->isCustom))
               LOG0("          *** ERROR #%d!  Format of UUID is invalid ***\n",++nErrors);
             else       
-            if(hapChar.find((*chr)->hapChar)!=hapChar.end())
+              if(std::find_if((*svc)->Characteristics.begin(),chr,[chr](SpanCharacteristic *c)->boolean{return(c->hapChar==(*chr)->hapChar);})!=chr)
               LOG0("          *** ERROR #%d!  Characteristic already defined for this Service ***\n",++nErrors);
 
             if((*chr)->setRangeError)
@@ -932,13 +931,11 @@ void Span::processSerialCommand(const char *c){
 
             if((*chr)->format!=STRING && ((*chr)->uvGet<double>((*chr)->value) < (*chr)->uvGet<double>((*chr)->minValue) || (*chr)->uvGet<double>((*chr)->value) > (*chr)->uvGet<double>((*chr)->maxValue)))
               LOG0("          *** WARNING #%d!  Value of %g is out of range [%g,%g] ***\n",++nWarnings,(*chr)->uvGet<double>((*chr)->value),(*chr)->uvGet<double>((*chr)->minValue),(*chr)->uvGet<double>((*chr)->maxValue));
-
-            hapChar.insert((*chr)->hapChar);
           
           } // Characteristics
 
           for(auto req=(*svc)->req.begin(); req!=(*svc)->req.end(); req++){
-            if(hapChar.find(*req)==hapChar.end())
+            if(std::find_if((*svc)->Characteristics.begin(),(*svc)->Characteristics.end(),[req](SpanCharacteristic *c)->boolean{return(c->hapChar==*req);})==(*svc)->Characteristics.end())
               LOG0("          *** WARNING #%d!  Required '%s' Characteristic for this Service not found ***\n",++nWarnings,(*req)->hapName);
           }
 
