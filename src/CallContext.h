@@ -30,27 +30,57 @@
 
 struct HAPClient;
 
+/////////////////////////////////////////////////////////////////////////////////
+// CallContext class
+// Store strings off a call and call handlePage after the page limit was reached
 
-/////////////////////////////////////////////////
-// SendEncryptedContext class
-// Write encrypted data as response to a web call
-
-class SendEncryptedContext
+class CallContext
 {
-  const int FRAME_SIZE=1024;          // number of bytes to use in each ChaCha20-Poly1305 encrypted frame when sending encrypted JSON content to Client
-
+private:
   TempBuffer<char> stringBuffer;
   int usedStringLength = 0;
-  int sentLength = 0;
-  HAPClient& hapClient;
-  TempBuffer<uint8_t> sendBuffer;
 public:
-  SendEncryptedContext(HAPClient& hapClient);
-  ~SendEncryptedContext();
- 
+  CallContext();
   void printf(const char* format, ...);
   void print(const char* text);
   char* reserveStringBuffer(int stringLength);
+  void flush();
+protected:
+  virtual void handlePage(const char* buffer, int length) = 0;
+};
+
+/////////////////////////////////////////////////////////////////////////////////
+// SendEncryptedCallContext class
+// Sends the pages encrypted to the network
+
+class SendEncryptedCallContext : public CallContext
+{
+  static const int FRAME_SIZE=1024;          // number of bytes to use in each ChaCha20-Poly1305 encrypted frame when sending encrypted JSON content to Client
+
+  HAPClient& hapClient;
+  TempBuffer<uint8_t> sendBuffer;
+public:
+  SendEncryptedCallContext(HAPClient& hapClient);
+  ~SendEncryptedCallContext();
+ 
+ private:
+  virtual void handlePage(const char* buffer, int length) override;
+};
+
+/////////////////////////////////////////////////////////////////////////////////
+// CalcHashCallContext class
+// Calc an hash code out of the provided strings
+
+class CalcHashCallContext : public CallContext
+{
+public:
+  static const int HASH_SIZE=48;
+
 private:
-  void sendEncrypted(const char* buffer, int length);
+  uint8_t tHash[CalcHashCallContext::HASH_SIZE];
+public:
+  CalcHashCallContext();
+  const uint8_t* getHashCode();
+protected:
+  void handlePage(const char* buffer, int length) override;
 };

@@ -48,7 +48,7 @@
 #include "extras/Pixel.h"
 #include "Settings.h"
 #include "Utils.h"
-#include "SendEncryptedContext.h"
+#include "CallContext.h"
 #include "Network.h"
 #include "HAPConstants.h"
 #include "HapQR.h"
@@ -269,7 +269,7 @@ class Span{
   void resetStatus();                           // resets statusLED and calls statusCallback based on current HomeSpan status
   void reboot();                                // reboots device
 
-  int sprintfAttributes(char *cBuf, int flags=GET_VALUE|GET_META|GET_PERMS|GET_TYPE|GET_DESC, SendEncryptedContext* sendEncryptedContext = nullptr);   // prints Attributes JSON database into buf, unless buf=NULL; return number of characters printed, excluding null terminator
+  int sprintfAttributes(char *cBuf, int flags=GET_VALUE|GET_META|GET_PERMS|GET_TYPE|GET_DESC, CallContext* callContext = nullptr);   // prints Attributes JSON database into buf, unless buf=NULL; return number of characters printed, excluding null terminator
   
   void prettyPrint(char *buf, int nsp=2, int minLogLevel=0);              // print arbitrary JSON from buf to serial monitor, formatted with indentions of 'nsp' spaces, subject to specified minimum log level
   SpanCharacteristic *find(uint32_t aid, int iid);                        // return Characteristic with matching aid and iid (else NULL if not found)

@@ -39,7 +39,7 @@
 
 #include "HomeSpan.h"
 #include "HAP.h"
-#include "SendEncryptedContext.h"
+#include "CallContext.h"
 
 const __attribute__((section(".rodata_custom_desc"))) SpanPartition spanPartition = {HOMESPAN_MAGIC_COOKIE,0};
 
@@ -1228,33 +1228,33 @@ Span& Span::setWifiCredentials(const char *ssid, const char *pwd){
 
 ///////////////////////////////
 
-int Span::sprintfAttributes(char *cBuf, int flags, SendEncryptedContext* sendEncryptedContext){
+int Span::sprintfAttributes(char *cBuf, int flags, CallContext* callContext){
 
   int nBytes=0;
 
   nBytes+=snprintf(cBuf,cBuf?64:0,"{\"accessories\":[");
-  if (sendEncryptedContext != NULL)
-    sendEncryptedContext->print("{\"accessories\":[");
+  if (callContext != NULL)
+    callContext->print("{\"accessories\":[");
   
   for(int i=0;i<Accessories.size();i++){
     SpanAccessory* accessory=Accessories[i];
     int accessoryBytes=accessory->sprintfAttributes(cBuf?(cBuf+nBytes):NULL,flags); 
     nBytes+= accessoryBytes;
-    if (sendEncryptedContext != NULL)   
+    if (callContext != NULL)   
     {
-      char* buffer = sendEncryptedContext->reserveStringBuffer(accessoryBytes);
+      char* buffer = callContext->reserveStringBuffer(accessoryBytes);
       accessory->sprintfAttributes(buffer, flags);
     }
     if(i+1<Accessories.size())
     {
       nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",");
-      if (sendEncryptedContext != NULL)
-        sendEncryptedContext->print(",");
+      if (callContext != NULL)
+        callContext->print(",");
     }
   }
   nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,"]}");
-  if (sendEncryptedContext != NULL)
-    sendEncryptedContext->print("]}");  
+  if (callContext != NULL)
+    callContext->print("]}");  
   return(nBytes);
 }
 
@@ -1606,15 +1606,20 @@ int Span::sprintfAttributes(char **ids, int numIDs, int flags, char *cBuf){
 
 boolean Span::updateDatabase(boolean updateMDNS){
 
-  uint8_t tHash[48];
-  TempBuffer <char> tBuf(sprintfAttributes(NULL,GET_META|GET_PERMS|GET_TYPE|GET_DESC)+1, "Span::updateDatabase");
-  sprintfAttributes(tBuf.get(),GET_META|GET_PERMS|GET_TYPE|GET_DESC);  
-  mbedtls_sha512_ret((uint8_t *)tBuf.get(),tBuf.len(),tHash,1);     // create SHA-384 hash of JSON (can be any hash - just looking for a unique key)
+  // uint8_t tHash[48];
+  // TempBuffer <char> tBuf(sprintfAttributes(NULL,GET_META|GET_PERMS|GET_TYPE|GET_DESC)+1, "Span::updateDatabase");
+  // sprintfAttributes(tBuf.get(),GET_META|GET_PERMS|GET_TYPE|GET_DESC);  
+  // mbedtls_sha512_ret((uint8_t *)tBuf.get(),tBuf.len(),tHash,1);     // create SHA-384 hash of JSON (can be any hash - just looking for a unique key)
+
+ 
+  CalcHashCallContext callContext = CalcHashCallContext();
+  sprintfAttributes(NULL ,GET_META|GET_PERMS|GET_TYPE|GET_DESC, &callContext);  
+  const uint8_t* hash = callContext.getHashCode();
 
   boolean changed=false;
 
-  if(memcmp(tHash,hapConfig.hashCode,48)){           // if hash code of current HAP database does not match stored hash code
-    memcpy(hapConfig.hashCode,tHash,48);             // update stored hash code
+  if(memcmp(hash,hapConfig.hashCode,CalcHashCallContext::HASH_SIZE)){           // if hash code of current HAP database does not match stored hash code
+    memcpy(hapConfig.hashCode,hash,CalcHashCallContext::HASH_SIZE);             // update stored hash code
     hapConfig.configNumber++;                        // increment configuration number
     if(hapConfig.configNumber==65536)                // reached max value
       hapConfig.configNumber=1;                      // reset to 1

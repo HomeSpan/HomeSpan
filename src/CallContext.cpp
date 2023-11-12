@@ -26,23 +26,18 @@
  ********************************************************************************/
 
 #include <Arduino.h>
-#include "SendEncryptedContext.h"
+#include "CallContext.h"
 #include "HomeSpan.h"
 #include "HAP.h"
 #include "Settings.h"
 #include <sodium.h>
 
-SendEncryptedContext::SendEncryptedContext(HAPClient& hapClient)
-:   hapClient(hapClient),
-    stringBuffer(FRAME_SIZE + 1, "SendEncryptedContext dataBuffer"), 
-    sendBuffer(FRAME_SIZE + 2 + 16, "SendEncryptedContext sendBuffer") // FRAME_SIZE + AAD + Auth 
+CallContext::CallContext()
+    : stringBuffer(1024, "CallContext stringBuffer") 
 {
-    LOG2("\n>>>>>>>>>> ");
-    LOG2(hapClient.client.remoteIP());
-    LOG2(" >>>>>>>>>>\n");
 }
 
-void SendEncryptedContext::printf(const char* format, ...)
+void CallContext::printf(const char* format, ...)
 {
     va_list ap;
     va_start(ap, format);
@@ -53,28 +48,19 @@ void SendEncryptedContext::printf(const char* format, ...)
     va_end(ap);
 }
 
-void SendEncryptedContext::print(const char* text)
-{
-    auto len = strlen(text);
-    auto buffer = reserveStringBuffer(len);
-    memcpy(buffer, text, len);
-    LOG2(buffer);
-}
 
-char* SendEncryptedContext::reserveStringBuffer(int stringLength)
+char* CallContext::reserveStringBuffer(int stringLength)
 {
     int requiredNewBufferLength = stringLength + 1; // reserve buffer for characters and string terminator '\0'
     if (stringBuffer.len() - usedStringLength < requiredNewBufferLength)
     {
         // to less memory, send first exitsting buffer
         if (usedStringLength > 0)
-        {
-            sendEncrypted(stringBuffer.get(), usedStringLength);
-            usedStringLength = 0;
-        }
+            flush();
+
         // Check if still more memory is needed
         if (stringBuffer.len() < requiredNewBufferLength)
-            stringBuffer = TempBuffer<char>(requiredNewBufferLength, "SendEncryptedContext::reserveMemory");
+            stringBuffer = TempBuffer<char>(requiredNewBufferLength, "SendEncryptedCallContext::reserveMemory");
     }
     int alreadyInUse = usedStringLength;
     usedStringLength += stringLength;
@@ -83,11 +69,35 @@ char* SendEncryptedContext::reserveStringBuffer(int stringLength)
     return result;
 }
 
-void SendEncryptedContext::sendEncrypted(const char* buffer, int length)
+void CallContext::flush()
+{
+    handlePage(stringBuffer.get(), usedStringLength);
+    usedStringLength = 0;
+}
+
+void CallContext::print(const char* text)
+{
+    auto len = strlen(text);
+    auto buffer = reserveStringBuffer(len);
+    memcpy(buffer, text, len);
+    LOG2(buffer);
+}
+
+SendEncryptedCallContext::SendEncryptedCallContext(HAPClient& hapClient)
+:   hapClient(hapClient),
+    sendBuffer(FRAME_SIZE + 2 + 16, "SendEncryptedCallContext sendBuffer") // FRAME_SIZE + AAD + Auth 
+{
+    LOG2("\n>>>>>>>>>> ");
+    LOG2(hapClient.client.remoteIP());
+    LOG2(" >>>>>>>>>>\n");
+}
+
+
+
+void SendEncryptedCallContext::handlePage(const char* buffer, int length)
 {
     if (length == 0)
         return;
-    sentLength += length;
     LOG2(buffer);
 
     for(int i=0;i<length;i+=FRAME_SIZE){      // encrypt FRAME_SIZE number of bytes in dataBuf in sequential frames
@@ -108,9 +118,30 @@ void SendEncryptedContext::sendEncrypted(const char* buffer, int length)
     }
 }
 
-SendEncryptedContext::~SendEncryptedContext()
+SendEncryptedCallContext::~SendEncryptedCallContext()
 {
-    if (usedStringLength > 0)
-        sendEncrypted(stringBuffer.get(), usedStringLength);
+    flush();
     LOG2("-------- SENT ENCRYPTED! --------\n");
+}
+
+
+CalcHashCallContext::CalcHashCallContext()
+:   CallContext()
+{
+    memset(&tHash, 0, HASH_SIZE);
+}
+
+void CalcHashCallContext::handlePage(const char* buffer, int length)
+{
+    uint8_t newHash[HASH_SIZE];
+    // create SHA-384 hash of JSON and xor with previous part (can be any hash - just looking for a unique key)
+    mbedtls_sha512_ret((uint8_t *)buffer,length, newHash,1); 
+    for (int i=0; i<48; i++)
+        tHash[i] = tHash[i] ^ newHash[i];
+}
+
+const uint8_t* CalcHashCallContext::getHashCode()
+{
+    flush();
+    return tHash;
 }

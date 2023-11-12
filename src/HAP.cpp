@@ -876,9 +876,9 @@ int HAPClient::getAccessoriesURL(){
   // free(body);
 
 
-  SendEncryptedContext context(*this);
-  context.printf("HTTP/1.1 200 OK\r\nContent-Type: application/hap+json\r\nContent-Length: %d\r\n\r\n",nBytes);
-  homeSpan.sprintfAttributes(NULL, GET_VALUE|GET_META|GET_PERMS|GET_TYPE|GET_DESC, &context);
+  SendEncryptedCallContext callContext(*this);
+  callContext.printf("HTTP/1.1 200 OK\r\nContent-Type: application/hap+json\r\nContent-Length: %d\r\n\r\n",nBytes);
+  homeSpan.sprintfAttributes(NULL, GET_VALUE|GET_META|GET_PERMS|GET_TYPE|GET_DESC, &callContext);
   return(1);
   
 } // getAccessories
