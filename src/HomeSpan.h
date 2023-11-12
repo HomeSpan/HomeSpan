@@ -37,7 +37,6 @@
 #include <Arduino.h>
 #include <unordered_map>
 #include <vector>
-#include <unordered_set>
 #include <list>
 #include <nvs.h>
 #include <ArduinoOTA.h>
@@ -55,7 +54,6 @@
 
 using std::vector;
 using std::unordered_map;
-using std::unordered_set;
 using std::list;
 
 enum {

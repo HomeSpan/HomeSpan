@@ -865,7 +865,7 @@ void Span::processSerialCommand(const char *c){
       int nErrors=0;
       int nWarnings=0;
       
-      unordered_set<uint32_t> aidValues;
+      vector<uint32_t> aidValues;
       char pNames[][7]={"PR","PW","EV","AA","TW","HD","WR"};
 
       for(auto acc=Accessories.begin(); acc!=Accessories.end(); acc++){
@@ -875,10 +875,10 @@ void Span::processSerialCommand(const char *c){
         if(acc==Accessories.begin() && (*acc)->aid!=1)
           LOG0("   *** ERROR #%d!  AID of first Accessory must always be 1 ***\n",++nErrors);
 
-        if(aidValues.find((*acc)->aid)!=aidValues.end())
+        if(std::find(aidValues.begin(),aidValues.end(),(*acc)->aid)!=aidValues.end())
           LOG0("   *** ERROR #%d!  AID already in use for another Accessory ***\n",++nErrors);
         
-        aidValues.insert((*acc)->aid);
+        aidValues.push_back((*acc)->aid);
 
         for(auto svc=(*acc)->Services.begin(); svc!=(*acc)->Services.end(); svc++){
           LOG0("   \u279f Service %s:  IID=%d, %sUUID=\"%s\"\n",(*svc)->hapName,(*svc)->iid,(*svc)->isCustom?"Custom-":"",(*svc)->type);

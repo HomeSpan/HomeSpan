@@ -28,10 +28,7 @@
 #pragma once
 
 #include <WiFi.h>
-#include <unordered_set>
 #include "Settings.h"
-
-using std::unordered_set;
 
 const int MAX_SSID=32;                              // max number of characters in WiFi SSID
 const int MAX_PWD=64;                               // max number of characters in WiFi Password
