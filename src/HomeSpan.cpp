@@ -855,6 +855,9 @@ void Span::processSerialCommand(const char *c){
 
     case 'm': {
       LOG0("Free Heap=%d bytes  (low=%d)\n",heap_caps_get_free_size(MALLOC_CAP_DEFAULT),heap_caps_get_minimum_free_size(MALLOC_CAP_DEFAULT));
+      nvs_stats_t nvs_stats;
+      nvs_get_stats(NULL, &nvs_stats);
+      LOG0("NVS: %d of %d records used\n",nvs_stats.used_entries,nvs_stats.total_entries-126);      
     }
     break;       
 
@@ -1610,6 +1613,11 @@ boolean Span::updateDatabase(boolean updateMDNS){
       mdns_service_txt_item_set("_hap","_tcp","c#",cNum);      
     }
   }
+
+  nvs_stats_t nvs_stats;
+  nvs_get_stats(NULL, &nvs_stats);
+  if(nvs_stats.free_entries<=130)
+    LOG0("\n*** WARNING: NVS is running low on space.  Try erasing with 'E'.  If that fails, increase size of NVS partition or reduce NVS usage.\n\n");
 
   Loops.clear();
 
