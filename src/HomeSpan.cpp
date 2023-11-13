@@ -40,6 +40,7 @@
 #include "HomeSpan.h"
 #include "HAP.h"
 #include "CallContext.h"
+#include <algorithm>
 
 const __attribute__((section(".rodata_custom_desc"))) SpanPartition spanPartition = {HOMESPAN_MAGIC_COOKIE,0};
 
@@ -855,7 +856,9 @@ void Span::processSerialCommand(const char *c){
 
     case 'm': {
       LOG0("Free Heap=%d bytes  (low=%d)\n",heap_caps_get_free_size(MALLOC_CAP_DEFAULT),heap_caps_get_minimum_free_size(MALLOC_CAP_DEFAULT));
-      LOG0("Max used TempBuffer size=%d bytes from %s\n", TempBufferBase::getMaxUsedTempBufferSize(), TempBufferBase::getNameOfBufferWithLargestBufferSize());
+      nvs_stats_t nvs_stats;
+      nvs_get_stats(NULL, &nvs_stats);
+      LOG0("NVS: %d of %d records used\n",nvs_stats.used_entries,nvs_stats.total_entries-126);      
     }
     break;       
 
@@ -866,7 +869,7 @@ void Span::processSerialCommand(const char *c){
       int nErrors=0;
       int nWarnings=0;
       
-      unordered_set<uint32_t> aidValues;
+      vector<uint32_t> aidValues;
       char pNames[][7]={"PR","PW","EV","AA","TW","HD","WR"};
 
       for(auto acc=Accessories.begin(); acc!=Accessories.end(); acc++){
@@ -876,10 +879,10 @@ void Span::processSerialCommand(const char *c){
         if(acc==Accessories.begin() && (*acc)->aid!=1)
           LOG0("   *** ERROR #%d!  AID of first Accessory must always be 1 ***\n",++nErrors);
 
-        if(aidValues.find((*acc)->aid)!=aidValues.end())
+        if(std::find(aidValues.begin(),aidValues.end(),(*acc)->aid)!=aidValues.end())
           LOG0("   *** ERROR #%d!  AID already in use for another Accessory ***\n",++nErrors);
         
-        aidValues.insert((*acc)->aid);
+        aidValues.push_back((*acc)->aid);
 
         for(auto svc=(*acc)->Services.begin(); svc!=(*acc)->Services.end(); svc++){
           LOG0("   \u279f Service %s:  IID=%d, %sUUID=\"%s\"\n",(*svc)->hapName,(*svc)->iid,(*svc)->isCustom?"Custom-":"",(*svc)->type);
@@ -891,9 +894,7 @@ void Span::processSerialCommand(const char *c){
           }
           else if((*acc)->aid==1)            // this is an Accessory with aid=1, but it has more than just AccessoryInfo.  So...
             isBridge=false;                  // ...this is not a bridge device          
-
-          unordered_set<HapChar *> hapChar;
-        
+       
           for(auto chr=(*svc)->Characteristics.begin(); chr!=(*svc)->Characteristics.end(); chr++){
             LOG0("      \u21e8 Characteristic %s(%s):  IID=%d, %sUUID=\"%s\", %sPerms=",
               (*chr)->hapName,(*chr)->uvPrint((*chr)->value).c_str(),(*chr)->iid,(*chr)->isCustom?"Custom-":"",(*chr)->type,(*chr)->perms!=(*chr)->hapChar->perms?"Custom-":"");
@@ -917,13 +918,13 @@ void Span::processSerialCommand(const char *c){
               LOG0(" (nvs)");
             LOG0("\n");        
             
-            if(!(*chr)->isCustom && !(*svc)->isCustom  && (*svc)->req.find((*chr)->hapChar)==(*svc)->req.end() && (*svc)->opt.find((*chr)->hapChar)==(*svc)->opt.end())
+            if(!(*chr)->isCustom && !(*svc)->isCustom  && std::find((*svc)->req.begin(),(*svc)->req.end(),(*chr)->hapChar)==(*svc)->req.end() && std::find((*svc)->opt.begin(),(*svc)->opt.end(),(*chr)->hapChar)==(*svc)->opt.end())
               LOG0("          *** WARNING #%d!  Service does not support this Characteristic ***\n",++nWarnings);
             else
             if(invalidUUID((*chr)->type,(*chr)->isCustom))
               LOG0("          *** ERROR #%d!  Format of UUID is invalid ***\n",++nErrors);
             else       
-            if(hapChar.find((*chr)->hapChar)!=hapChar.end())
+              if(std::find_if((*svc)->Characteristics.begin(),chr,[chr](SpanCharacteristic *c)->boolean{return(c->hapChar==(*chr)->hapChar);})!=chr)
               LOG0("          *** ERROR #%d!  Characteristic already defined for this Service ***\n",++nErrors);
 
             if((*chr)->setRangeError)
@@ -934,13 +935,11 @@ void Span::processSerialCommand(const char *c){
 
             if((*chr)->format!=STRING && ((*chr)->uvGet<double>((*chr)->value) < (*chr)->uvGet<double>((*chr)->minValue) || (*chr)->uvGet<double>((*chr)->value) > (*chr)->uvGet<double>((*chr)->maxValue)))
               LOG0("          *** WARNING #%d!  Value of %g is out of range [%g,%g] ***\n",++nWarnings,(*chr)->uvGet<double>((*chr)->value),(*chr)->uvGet<double>((*chr)->minValue),(*chr)->uvGet<double>((*chr)->maxValue));
-
-            hapChar.insert((*chr)->hapChar);
           
           } // Characteristics
 
           for(auto req=(*svc)->req.begin(); req!=(*svc)->req.end(); req++){
-            if(hapChar.find(*req)==hapChar.end())
+            if(std::find_if((*svc)->Characteristics.begin(),(*svc)->Characteristics.end(),[req](SpanCharacteristic *c)->boolean{return(c->hapChar==*req);})==(*svc)->Characteristics.end())
               LOG0("          *** WARNING #%d!  Required '%s' Characteristic for this Service not found ***\n",++nWarnings,(*req)->hapName);
           }
 
@@ -1634,6 +1633,11 @@ boolean Span::updateDatabase(boolean updateMDNS){
       mdns_service_txt_item_set("_hap","_tcp","c#",cNum);      
     }
   }
+
+  nvs_stats_t nvs_stats;
+  nvs_get_stats(NULL, &nvs_stats);
+  if(nvs_stats.free_entries<=130)
+    LOG0("\n*** WARNING: NVS is running low on space.  Try erasing with 'E'.  If that fails, increase size of NVS partition or reduce NVS usage.\n\n");
 
   Loops.clear();
 
