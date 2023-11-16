@@ -482,7 +482,7 @@ void Span::checkConnect(){
 
   // add MDNS (Bonjour) TXT records for configurable as well as fixed values (HAP Table 6-7)
 
-  char cNum[16];
+  char cNum[6];
   sprintf(cNum,"%d",hapConfig.configNumber);
   
   mdns_service_txt_item_set("_hap","_tcp","c#",cNum);            // Accessory Current Configuration Number (updated whenever config of HAP Accessory Attribute Database is updated)
@@ -1600,7 +1600,7 @@ boolean Span::updateDatabase(boolean updateMDNS){
   if(memcmp(tHash,hapConfig.hashCode,48)){           // if hash code of current HAP database does not match stored hash code
     memcpy(hapConfig.hashCode,tHash,48);             // update stored hash code
     hapConfig.configNumber++;                        // increment configuration number
-    if(hapConfig.configNumber==65536)                // reached max value
+    if(hapConfig.configNumber==65536)                // reached max value. Update cNum everywhere if this number is ever increased
       hapConfig.configNumber=1;                      // reset to 1
                    
     nvs_set_blob(HAPClient::hapNVS,"HAPHASH",&hapConfig,sizeof(hapConfig));     // update data
@@ -1608,7 +1608,7 @@ boolean Span::updateDatabase(boolean updateMDNS){
     changed=true;
 
     if(updateMDNS){
-      char cNum[16];
+      char cNum[6];
       sprintf(cNum,"%d",hapConfig.configNumber);
       mdns_service_txt_item_set("_hap","_tcp","c#",cNum);      
     }
