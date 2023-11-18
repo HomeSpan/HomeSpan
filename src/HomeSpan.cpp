@@ -1643,8 +1643,10 @@ boolean Span::updateDatabase(boolean updateMDNS){
 
   for(auto acc=Accessories.begin(); acc!=Accessories.end(); acc++){                        // identify all services with over-ridden loop() methods
     for(auto svc=(*acc)->Services.begin(); svc!=(*acc)->Services.end(); svc++){
-      if((void(*)())((*svc)->*(&SpanService::loop)) != (void(*)())(&SpanService::loop))    // save pointers to services in Loops vector
+      if((void(*)())((*svc)->*(&SpanService::loop)) != (void(*)())(&SpanService::loop)) {  // save pointers to services in Loops vector
         homeSpan.Loops.push_back((*svc));
+        std::vector<SpanService*>(homeSpan.Loops).swap(homeSpan.Loops); // shrink vector to fit
+      }
     }
   }    
 
@@ -1727,6 +1729,7 @@ SpanService::SpanService(const char *type, const char *hapName, boolean isCustom
   this->isCustom=isCustom;
 
   homeSpan.Accessories.back()->Services.push_back(this);  
+  std::vector<SpanService*>(homeSpan.Accessories.back()->Services).swap(homeSpan.Accessories.back()->Services); // shrink vector to fit
   accessory=homeSpan.Accessories.back();
   iid=++(homeSpan.Accessories.back()->iidCount);
 }
@@ -1781,6 +1784,7 @@ SpanService *SpanService::setHidden(){
 
 SpanService *SpanService::addLink(SpanService *svc){
   linkedServices.push_back(svc);
+  std::vector<SpanService*>(linkedServices).swap(linkedServices); // shrink vector to fit
   return(this);
 }
 
@@ -1841,6 +1845,8 @@ SpanCharacteristic::SpanCharacteristic(HapChar *hapChar, boolean isCustom){
   }
 
   homeSpan.Accessories.back()->Services.back()->Characteristics.push_back(this);  
+  std::vector<SpanCharacteristic*>(homeSpan.Accessories.back()->Services.back()->Characteristics).swap(homeSpan.Accessories.back()->Services.back()->Characteristics); // shrink vector to fit
+
   iid=++(homeSpan.Accessories.back()->iidCount);
   service=homeSpan.Accessories.back()->Services.back();
   aid=homeSpan.Accessories.back()->aid;
