@@ -33,7 +33,7 @@
 #include <sodium.h>
 
 CallContext::CallContext()
-    : stringBuffer(1024, "CallContext stringBuffer") 
+    : stringBuffer(MINIMUM_STRING_BUFFER_SIZE, "CallContext stringBuffer") 
 {
 }
 
@@ -47,7 +47,6 @@ void CallContext::printf(const char* format, ...)
     LOG2(buffer);
     va_end(ap);
 }
-
 
 char* CallContext::reserveStringBuffer(int stringLength)
 {

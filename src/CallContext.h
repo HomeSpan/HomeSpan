@@ -36,6 +36,7 @@ struct HAPClient;
 
 class CallContext
 {
+  static const int MINIMUM_STRING_BUFFER_SIZE=1006;  // Same as framesize for SendEncryptedCallContext  
 private:
   TempBuffer<char> stringBuffer;
   int usedStringLength = 0;
@@ -55,7 +56,7 @@ protected:
 
 class SendEncryptedCallContext : public CallContext
 {
-  static const int FRAME_SIZE=1024;          // number of bytes to use in each ChaCha20-Poly1305 encrypted frame when sending encrypted JSON content to Client
+  static const int FRAME_SIZE=1006;  // 1024 - AAD - Auth  // number of bytes to use in each ChaCha20-Poly1305 encrypted frame when sending encrypted JSON content to Client
 
   HAPClient& hapClient;
   TempBuffer<uint8_t> sendBuffer;
