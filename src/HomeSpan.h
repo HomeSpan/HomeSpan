@@ -359,6 +359,10 @@ class Span{
 
   Span& setRebootCallback(void (*f)(uint8_t),uint32_t t=DEFAULT_REBOOT_CALLBACK_TIME){rebootCallback=f;rebootCallbackTime=t;return(*this);}
 
+  uint32_t getAutoPollMinFreeStack(){
+    return uxTaskGetStackHighWaterMark(pollTaskHandle);
+  }
+
   void autoPoll(uint32_t stackSize=8192, uint32_t priority=1, uint32_t cpu=0){     // start pollTask()
     xTaskCreateUniversal([](void *parms){
       for(;;){
