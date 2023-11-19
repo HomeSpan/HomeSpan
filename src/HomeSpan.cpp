@@ -923,9 +923,21 @@ void Span::processSerialCommand(const char *c){
             else
             if(invalidUUID((*chr)->type,(*chr)->isCustom))
               LOG0("          *** ERROR #%d!  Format of UUID is invalid ***\n",++nErrors);
-            else       
-              if(std::find_if((*svc)->Characteristics.begin(),chr,[chr](SpanCharacteristic *c)->boolean{return(c->hapChar==(*chr)->hapChar);})!=chr)
-              LOG0("          *** ERROR #%d!  Characteristic already defined for this Service ***\n",++nErrors);
+            else
+                         // if(std::find_if((*svc)->Characteristics.begin(),chr,[chr](SpanCharacteristic *c)->boolean{return(c->hapChar==(*chr)->hapChar);})!=chr)
+            {
+              bool hasHabChar = false;
+              for(auto chara=(*svc)->Characteristics.begin(); chara!=(*svc)->Characteristics.end(); chara++)
+              {
+                if ((*chara)->hapChar == (*chr)->hapChar && chara != chr)
+                {
+                  hasHabChar = true;
+                  break;
+                } 
+              }
+              if (hasHabChar)
+                LOG0("          *** ERROR #%d!  Characteristic already defined for this Service ***\n",++nErrors);
+            }
 
             if((*chr)->setRangeError)
               LOG0("          *** WARNING #%d!  Attempt to set Custom Range for this Characteristic ignored ***\n",++nWarnings);
@@ -938,9 +950,20 @@ void Span::processSerialCommand(const char *c){
           
           } // Characteristics
 
-          for(auto req=(*svc)->req.begin(); req!=(*svc)->req.end(); req++){
-            if(std::find_if((*svc)->Characteristics.begin(),(*svc)->Characteristics.end(),[req](SpanCharacteristic *c)->boolean{return(c->hapChar==*req);})==(*svc)->Characteristics.end())
-              LOG0("          *** WARNING #%d!  Required '%s' Characteristic for this Service not found ***\n",++nWarnings,(*req)->hapName);
+          for(auto req=(*svc)->req.begin(); req!=(*svc)->req.end(); req++)
+       //       if(std::find_if((*svc)->Characteristics.begin(),(*svc)->Characteristics.end(),[req](SpanCharacteristic *c)->boolean{return(c->hapChar==*req);})==(*svc)->Characteristics.end())
+          {   
+            bool hasHabChar = false;
+            for(auto chara=(*svc)->Characteristics.begin(); chara!=(*svc)->Characteristics.end(); chara++)
+            {
+              if ((*chara)->hapChar == *req)
+              {
+                hasHabChar = true;
+                break;
+              } 
+            }
+            if (!hasHabChar)
+               LOG0("          *** WARNING #%d!  Required '%s' Characteristic for this Service not found ***\n",++nWarnings,(*req)->hapName);
           }
 
           for(auto button=PushButtons.begin(); button!=PushButtons.end(); button++){
@@ -1645,7 +1668,6 @@ boolean Span::updateDatabase(boolean updateMDNS){
     for(auto svc=(*acc)->Services.begin(); svc!=(*acc)->Services.end(); svc++){
       if((void(*)())((*svc)->*(&SpanService::loop)) != (void(*)())(&SpanService::loop)) {  // save pointers to services in Loops vector
         homeSpan.Loops.push_back((*svc));
-        std::vector<SpanService*>(homeSpan.Loops).swap(homeSpan.Loops); // shrink vector to fit
       }
     }
   }    
@@ -1685,7 +1707,7 @@ SpanAccessory::SpanAccessory(uint32_t aid){
 SpanAccessory::~SpanAccessory(){
 
   while(Services.rbegin()!=Services.rend())           // delete all Services in this Accessory
-    delete *Services.rbegin();                       
+     delete *Services.rbegin();                       
   
   auto acc=homeSpan.Accessories.begin();              // find Accessory in homeSpan vector and erase entry
   while((*acc)!=this)
@@ -1729,7 +1751,6 @@ SpanService::SpanService(const char *type, const char *hapName, boolean isCustom
   this->isCustom=isCustom;
 
   homeSpan.Accessories.back()->Services.push_back(this);  
-  std::vector<SpanService*>(homeSpan.Accessories.back()->Services).swap(homeSpan.Accessories.back()->Services); // shrink vector to fit
   accessory=homeSpan.Accessories.back();
   iid=++(homeSpan.Accessories.back()->iidCount);
 }
@@ -1784,7 +1805,6 @@ SpanService *SpanService::setHidden(){
 
 SpanService *SpanService::addLink(SpanService *svc){
   linkedServices.push_back(svc);
-  std::vector<SpanService*>(linkedServices).swap(linkedServices); // shrink vector to fit
   return(this);
 }
 
@@ -1845,8 +1865,7 @@ SpanCharacteristic::SpanCharacteristic(HapChar *hapChar, boolean isCustom){
   }
 
   homeSpan.Accessories.back()->Services.back()->Characteristics.push_back(this);  
-  std::vector<SpanCharacteristic*>(homeSpan.Accessories.back()->Services.back()->Characteristics).swap(homeSpan.Accessories.back()->Services.back()->Characteristics); // shrink vector to fit
-
+ 
   iid=++(homeSpan.Accessories.back()->iidCount);
   service=homeSpan.Accessories.back()->Services.back();
   aid=homeSpan.Accessories.back()->aid;

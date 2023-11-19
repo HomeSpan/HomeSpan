@@ -52,6 +52,7 @@
 #include "HAPConstants.h"
 #include "HapQR.h"
 #include "Characteristics.h"
+#include "CallContext.h"
 
 using std::vector;
 using std::unordered_map;
@@ -247,13 +248,13 @@ class Span{
   PushButton *controlButton = NULL;                 // controls HomeSpan configuration and resets
   Network network;                                  // configures WiFi and Setup Code via either serial monitor or temporary Access Point
   SpanWebLog webLog;                                // optional web status/log
-  TaskHandle_t pollTaskHandle = NULL;               // optional task handle to use for poll() function
+  TaskHandle_t pollTaskHandle = pollTaskHandle;               // optional task handle to use for poll() function
   boolean verboseWifiReconnect = true;              // set to false to not print WiFi reconnect attempts messages
     
   SpanOTA spanOTA;                                  // manages OTA process
   SpanConfig hapConfig;                             // track configuration changes to the HAP Accessory database; used to increment the configuration number (c#) when changes found
-  vector<SpanAccessory *> Accessories;              // vector of pointers to all Accessories
-  vector<SpanService *> Loops;                      // vector of pointer to all Services that have over-ridden loop() methods
+  DynamicPointerArray<SpanAccessory> Accessories;              // vector of pointers to all Accessories
+  DynamicPointerArray<SpanService> Loops;                      // vector of pointer to all Services that have over-ridden loop() methods
   vector<SpanBuf> Notifications;                    // vector of SpanBuf objects that store info for Characteristics that are updated with setVal() and require a Notification Event
   vector<SpanButton *> PushButtons;                 // vector of pointer to all PushButtons
   unordered_map<uint64_t, uint32_t> TimedWrites;    // map of timed-write PIDs and Alarm Times (based on TTLs)
@@ -360,7 +361,7 @@ class Span{
   Span& setRebootCallback(void (*f)(uint8_t),uint32_t t=DEFAULT_REBOOT_CALLBACK_TIME){rebootCallback=f;rebootCallbackTime=t;return(*this);}
 
   uint32_t getAutoPollMinFreeStack(){
-    return uxTaskGetStackHighWaterMark(pollTaskHandle);
+    return pollTaskHandle != NULL ? uxTaskGetStackHighWaterMark(pollTaskHandle) : 0;
   }
 
   void autoPoll(uint32_t stackSize=8192, uint32_t priority=1, uint32_t cpu=0){     // start pollTask()
@@ -392,7 +393,7 @@ class SpanAccessory{
     
   uint32_t aid=0;                                         // Accessory Instance ID (HAP Table 6-1)
   int iidCount=0;                                         // running count of iid to use for Services and Characteristics associated with this Accessory                                 
-  vector<SpanService *> Services;                         // vector of pointers to all Services in this Accessory  
+  DynamicPointerArray<SpanService> Services;                         // vector of pointers to all Services in this Accessory  
 
   int sprintfAttributes(char *cBuf, int flags);           // prints Accessory JSON database into buf, unless buf=NULL; return number of characters printed, excluding null terminator, even if buf=NULL  
 
@@ -419,8 +420,8 @@ class SpanService{
   const char *hapName;                                    // HAP Name
   boolean hidden=false;                                   // optional property indicating service is hidden
   boolean primary=false;                                  // optional property indicating service is primary
-  vector<SpanCharacteristic *> Characteristics;           // vector of pointers to all Characteristics in this Service  
-  vector<SpanService *> linkedServices;                   // vector of pointers to any optional linked Services
+  DynamicPointerArray<SpanCharacteristic> Characteristics;           // vector of pointers to all Characteristics in this Service  
+  DynamicPointerArray<SpanService> linkedServices;                   // vector of pointers to any optional linked Services
   boolean isCustom;                                       // flag to indicate this is a Custom Service
   SpanAccessory *accessory=NULL;                          // pointer to Accessory containing this Service
   
@@ -438,7 +439,7 @@ class SpanService{
   SpanService *setPrimary();                                                      // sets the Service Type to be primary and returns pointer to self
   SpanService *setHidden();                                                       // sets the Service Type to be hidden and returns pointer to self
   SpanService *addLink(SpanService *svc);                                         // adds svc as a Linked Service and returns pointer to self
-  vector<SpanService *> getLinks(){return(linkedServices);}                       // returns linkedServices vector for use as range in "for-each" loops
+  DynamicPointerArray<SpanService>& getLinks(){return(linkedServices);}                       // returns linkedServices vector for use as range in "for-each" loops
 
   virtual boolean update() {return(true);}                // placeholder for code that is called when a Service is updated via a Controller.  Must return true/false depending on success of update
   virtual void loop(){}                                   // loops for each Service - called every cycle if over-ridden with user-defined code
