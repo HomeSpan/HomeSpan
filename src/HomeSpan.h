@@ -31,6 +31,14 @@
 #error ERROR: HOMESPAN IS ONLY AVAILABLE FOR ESP32 MICROCONTROLLERS!
 #endif
 
+#if defined(BOARD_HAS_PSRAM)
+#define HS_MALLOC ps_malloc
+#define HS_CALLOC ps_calloc
+#else
+#define HS_MALLOC malloc
+#define HS_CALLOC calloc
+#endif
+
 #pragma GCC diagnostic ignored "-Wpmf-conversions"                // eliminates warning messages from use of pointers to member functions to detect whether update() and loop() are overridden by user
 #pragma GCC diagnostic ignored "-Wunused-result"                  // eliminates warning message regarded unused result from call to crypto_scalarmult_curve25519()
 
@@ -66,6 +74,25 @@ enum {
   GET_NV=64,
   GET_VALUE=128
 };
+
+///////////////////////////////
+
+template <class T>
+struct Mallocator {
+  typedef T value_type;
+  Mallocator() = default;
+  template <class U> constexpr Mallocator(const Mallocator<U>&) noexcept {}
+  [[nodiscard]] T* allocate(std::size_t n) {
+    if(n > std::size_t(-1) / sizeof(T)) throw std::bad_alloc();
+    if(auto p = static_cast<T*>(HS_MALLOC(n*sizeof(T)))) return p;
+    throw std::bad_alloc();
+  }
+  void deallocate(T* p, std::size_t) noexcept { std::free(p); }
+};
+template <class T, class U>
+bool operator==(const Mallocator<T>&, const Mallocator<U>&) { return true; }
+template <class T, class U>
+bool operator!=(const Mallocator<T>&, const Mallocator<U>&) { return false; }
 
 ///////////////////////////////
 
@@ -251,10 +278,10 @@ class Span{
     
   SpanOTA spanOTA;                                  // manages OTA process
   SpanConfig hapConfig;                             // track configuration changes to the HAP Accessory database; used to increment the configuration number (c#) when changes found
-  vector<SpanAccessory *> Accessories;              // vector of pointers to all Accessories
-  vector<SpanService *> Loops;                      // vector of pointer to all Services that have over-ridden loop() methods
-  vector<SpanBuf> Notifications;                    // vector of SpanBuf objects that store info for Characteristics that are updated with setVal() and require a Notification Event
-  vector<SpanButton *> PushButtons;                 // vector of pointer to all PushButtons
+  vector<SpanAccessory *, Mallocator<SpanAccessory *>> Accessories;              // vector of pointers to all Accessories
+  vector<SpanService *, Mallocator<SpanService *>> Loops;                      // vector of pointer to all Services that have over-ridden loop() methods
+  vector<SpanBuf, Mallocator<SpanBuf>> Notifications;                    // vector of SpanBuf objects that store info for Characteristics that are updated with setVal() and require a Notification Event
+  vector<SpanButton *,  Mallocator<SpanButton *>> PushButtons;                 // vector of pointer to all PushButtons
   unordered_map<uint64_t, uint32_t> TimedWrites;    // map of timed-write PIDs and Alarm Times (based on TTLs)
   
   unordered_map<char, SpanUserCommand *> UserCommands;           // map of pointers to all UserCommands
@@ -387,7 +414,7 @@ class SpanAccessory{
     
   uint32_t aid=0;                                         // Accessory Instance ID (HAP Table 6-1)
   int iidCount=0;                                         // running count of iid to use for Services and Characteristics associated with this Accessory                                 
-  vector<SpanService *> Services;                         // vector of pointers to all Services in this Accessory  
+  vector<SpanService *, Mallocator<SpanService*>> Services;                         // vector of pointers to all Services in this Accessory  
 
   int sprintfAttributes(char *cBuf, int flags);           // prints Accessory JSON database into buf, unless buf=NULL; return number of characters printed, excluding null terminator, even if buf=NULL  
 
@@ -414,8 +441,8 @@ class SpanService{
   const char *hapName;                                    // HAP Name
   boolean hidden=false;                                   // optional property indicating service is hidden
   boolean primary=false;                                  // optional property indicating service is primary
-  vector<SpanCharacteristic *> Characteristics;           // vector of pointers to all Characteristics in this Service  
-  vector<SpanService *> linkedServices;                   // vector of pointers to any optional linked Services
+  vector<SpanCharacteristic *, Mallocator<SpanCharacteristic*>> Characteristics;           // vector of pointers to all Characteristics in this Service  
+  vector<SpanService *, Mallocator<SpanService *>> linkedServices;                   // vector of pointers to any optional linked Services
   boolean isCustom;                                       // flag to indicate this is a Custom Service
   SpanAccessory *accessory=NULL;                          // pointer to Accessory containing this Service
   
@@ -424,8 +451,8 @@ class SpanService{
   protected:
   
   virtual ~SpanService();                                 // destructor
-  vector<HapChar *> req;                                  // vector of pointers to all required HAP Characteristic Types for this Service
-  vector<HapChar *> opt;                                  // vector of pointers to all optional HAP Characteristic Types for this Service
+  vector<HapChar *, Mallocator<HapChar*>> req;                                  // vector of pointers to all required HAP Characteristic Types for this Service
+  vector<HapChar *, Mallocator<HapChar*>> opt;                                  // vector of pointers to all optional HAP Characteristic Types for this Service
 
   public:
   
@@ -433,7 +460,7 @@ class SpanService{
   SpanService *setPrimary();                                                      // sets the Service Type to be primary and returns pointer to self
   SpanService *setHidden();                                                       // sets the Service Type to be hidden and returns pointer to self
   SpanService *addLink(SpanService *svc);                                         // adds svc as a Linked Service and returns pointer to self
-  vector<SpanService *> getLinks(){return(linkedServices);}                       // returns linkedServices vector for use as range in "for-each" loops
+  vector<SpanService *, Mallocator<SpanService *>> getLinks(){return(linkedServices);}                       // returns linkedServices vector for use as range in "for-each" loops
 
   virtual boolean update() {return(true);}                // placeholder for code that is called when a Service is updated via a Controller.  Must return true/false depending on success of update
   virtual void loop(){}                                   // loops for each Service - called every cycle if over-ridden with user-defined code
@@ -589,7 +616,7 @@ class SpanCharacteristic{
     uvSet(value,val);
 
     if(nvsStore){
-      nvsKey=(char *)malloc(16);
+      nvsKey=(char *)HS_MALLOC(16);
       uint16_t t;
       sscanf(type,"%hx",&t);
       sprintf(nvsKey,"%04X%08X%03X",t,aid,iid&0xFFF);
@@ -901,7 +928,7 @@ class SpanPoint {
   static uint8_t lmk[16];
   static boolean initialized;
   static boolean isHub;
-  static vector<SpanPoint *> SpanPoints;
+  static vector<SpanPoint *, Mallocator<SpanPoint *>> SpanPoints;
   static uint16_t channelMask;                // channel mask (only used for remote devices)
   static QueueHandle_t statusQueue;           // queue for communication between SpanPoint::dataSend and SpanPoint::send
   static nvs_handle pointNVS;                 // NVS storage for channel number (only used for remote devices)

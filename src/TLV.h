@@ -88,7 +88,7 @@ int TLV<tagType, maxTags>::create(tagType tag, int maxLen, const char *name){
   tlv[numTags].maxLen=maxLen;
   tlv[numTags].name=name;
   tlv[numTags].len=-1;
-  tlv[numTags].val=(uint8_t *)malloc(maxLen);
+  tlv[numTags].val=(uint8_t *)HS_MALLOC(maxLen);
   numTags++;
 
   return(1);

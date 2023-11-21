@@ -1741,7 +1741,7 @@ nvs_handle HAPClient::srpNVS;
 HKDF HAPClient::hkdf;                                   
 pairState HAPClient::pairStatus;                        
 Accessory HAPClient::accessory;                         
-list<Controller> HAPClient::controllerList;
+list<Controller, Mallocator<Controller>> HAPClient::controllerList;
 SRP6A HAPClient::srp;
 int HAPClient::conNum;
  

@@ -30,6 +30,14 @@
 #include <Arduino.h>
 #include <driver/timer.h>
 
+#if defined(BOARD_HAS_PSRAM)
+#define HS_MALLOC ps_malloc
+#define HS_CALLOC ps_calloc
+#else
+#define HS_MALLOC malloc
+#define HS_CALLOC calloc
+#endif
+
 namespace Utils {
 
 char *readSerial(char *c, int max);   // read serial port into 'c' until <newline>, but storing only first 'max' characters (the rest are discarded)
@@ -54,7 +62,7 @@ class TempBuffer {
   
   TempBuffer(int _nElements) : nElements(_nElements) {
     nBytes=nElements*sizeof(bufType);
-    buf=(bufType *)malloc(nBytes);
+    buf=(bufType *)HS_MALLOC(nBytes);
     if(buf==NULL){
       Serial.print("\n\n*** FATAL ERROR: Requested allocation of ");
       Serial.print(nBytes);

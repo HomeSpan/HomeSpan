@@ -40,7 +40,7 @@ void Network::scan(){
   int n=WiFi.scanNetworks();
 
   free(ssidList);
-  ssidList=(char **)calloc(n,sizeof(char *));
+  ssidList=(char **)HS_CALLOC(n,sizeof(char *));
   numSSID=0;
 
   for(int i=0;i<n;i++){
@@ -50,7 +50,7 @@ void Network::scan(){
         found=true;
     }
     if(!found){
-      ssidList[numSSID]=(char *)calloc(WiFi.SSID(i).length()+1,sizeof(char));
+      ssidList[numSSID]=(char *)HS_CALLOC(WiFi.SSID(i).length()+1,sizeof(char));
       sprintf(ssidList[numSSID],"%s",WiFi.SSID(i).c_str());
       numSSID++;
     }

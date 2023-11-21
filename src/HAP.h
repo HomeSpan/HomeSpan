@@ -94,7 +94,7 @@ struct HAPClient {
   static pairState pairStatus;                        // tracks pair-setup status
   static SRP6A srp;                                   // stores all SRP-6A keys used for Pair-Setup
   static Accessory accessory;                         // Accessory ID and Ed25519 public and secret keys- permanently stored
-  static list<Controller> controllerList;             // linked-list of Paired Controller IDs and ED25519 long-term public keys - permanently stored
+  static list<Controller, Mallocator<Controller>> controllerList;             // linked-list of Paired Controller IDs and ED25519 long-term public keys - permanently stored
   static int conNum;                                  // connection number - used to keep track of per-connection EV notifications
 
   // individual structures and data defined for each Hap Client connection

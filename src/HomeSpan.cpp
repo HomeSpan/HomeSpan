@@ -69,7 +69,7 @@ void Span::begin(Category catID, const char *displayName, const char *hostNameBa
   if(requestedMaxCon<maxConnections)                          // if specific request for max connections is less than computed max connections
     maxConnections=requestedMaxCon;                           // over-ride max connections with requested value
     
-  hap=(HAPClient **)calloc(maxConnections,sizeof(HAPClient *));
+  hap=(HAPClient **)HS_CALLOC(maxConnections,sizeof(HAPClient *));
   for(int i=0;i<maxConnections;i++)
     hap[i]=new HAPClient;
 
@@ -854,10 +854,14 @@ void Span::processSerialCommand(const char *c){
     break;
 
     case 'm': {
-      LOG0("Free Heap=%d bytes  (low=%d)\n",heap_caps_get_free_size(MALLOC_CAP_DEFAULT),heap_caps_get_minimum_free_size(MALLOC_CAP_DEFAULT));
+      LOG0("Free Heap Internal RAM : %7d bytes.  Low: %7d\n",heap_caps_get_free_size(MALLOC_CAP_INTERNAL),heap_caps_get_minimum_free_size(MALLOC_CAP_INTERNAL));
+#if defined(BOARD_HAS_PSRAM)
+      LOG0("Free Heap SPI (PS) RAM : %7d bytes.  Low: %7d\n",heap_caps_get_free_size(MALLOC_CAP_SPIRAM),heap_caps_get_minimum_free_size(MALLOC_CAP_SPIRAM));
+#endif
+      LOG0("Lowest stack level     : %7d bytes\n",uxTaskGetStackHighWaterMark(NULL));
       nvs_stats_t nvs_stats;
       nvs_get_stats(NULL, &nvs_stats);
-      LOG0("NVS: %d of %d records used\n",nvs_stats.used_entries,nvs_stats.total_entries-126);      
+      LOG0("NVS Flash Partition    : %7d of %d records used\n\n",nvs_stats.used_entries,nvs_stats.total_entries-126);      
     }
     break;       
 
@@ -868,7 +872,7 @@ void Span::processSerialCommand(const char *c){
       int nErrors=0;
       int nWarnings=0;
       
-      vector<uint32_t> aidValues;
+      vector<uint32_t, Mallocator<uint32_t>> aidValues;
       char pNames[][7]={"PR","PW","EV","AA","TW","HD","WR"};
 
       for(auto acc=Accessories.begin(); acc!=Accessories.end(); acc++){
@@ -1825,7 +1829,7 @@ SpanCharacteristic::SpanCharacteristic(HapChar *hapChar, boolean isCustom){
   service=homeSpan.Accessories.back()->Services.back();
   aid=homeSpan.Accessories.back()->aid;
 
-  ev=(boolean *)calloc(homeSpan.maxConnections,sizeof(boolean));
+  ev=(boolean *)HS_CALLOC(homeSpan.maxConnections,sizeof(boolean));
 }
 
 ///////////////////////////////
@@ -2152,7 +2156,7 @@ void SpanWebLog::init(uint16_t maxEntries, const char *serv, const char *tz, con
   timeServer=serv;
   timeZone=tz;
   statusURL="GET /" + String(url) + " ";
-  log = (log_t *)calloc(maxEntries,sizeof(log_t));
+  log = (log_t *)HS_CALLOC(maxEntries,sizeof(log_t));
   if(timeServer)
     homeSpan.reserveSocketConnections(1);
 }
@@ -2492,7 +2496,7 @@ void SpanPoint::dataReceived(const uint8_t *mac, const uint8_t *incomingData, in
 uint8_t SpanPoint::lmk[16];
 boolean SpanPoint::initialized=false;
 boolean SpanPoint::isHub=false;
-vector<SpanPoint *> SpanPoint::SpanPoints;
+vector<SpanPoint *, Mallocator<SpanPoint *>> SpanPoint::SpanPoints;
 uint16_t SpanPoint::channelMask=0x3FFE;
 QueueHandle_t SpanPoint::statusQueue;
 nvs_handle SpanPoint::pointNVS;

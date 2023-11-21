@@ -25,101 +25,39 @@
  *  
  ********************************************************************************/
 
+
 #include "HomeSpan.h"
 
-struct LED_Service : Service::LightBulb {
-
-  int ledPin;
-  SpanCharacteristic *power;
-  
-  LED_Service(int ledPin) : Service::LightBulb(){
-    power=new Characteristic::On();
-    this->ledPin=ledPin;
-    pinMode(ledPin,OUTPUT);    
-  }
-
-  boolean update(){            
-    digitalWrite(ledPin,power->getNewVal());
-    WEBLOG("Power = %s",power->getNewVal()?"ON":"OFF");
-    return(true);  
-  }
-
-};
-
-//////////////////////////////////////
-
-void extraData(String &r){
-  r+="<tr><td>Free DRAM:</td><td>" + String(esp_get_free_internal_heap_size()) + " bytes</td></tr>\n"; 
-  r+="</table><p><a href=\"https://github.com/HomeSpan/HomeSpan\">Click Here to Access HomeSpan Repo</a><p>";
-}
-
-//////////////////////////////////////
-
 void setup() {
-  
+ 
   Serial.begin(115200);
 
-//  homeSpan.setHostNameSuffix("");
+  homeSpan.setLogLevel(2);
 
-//  homeSpan.setControlPin(21);
+  homeSpan.begin(Category::Lighting,"HomeSpan Max");
   
-  homeSpan.setLogLevel(2).enableWebLog(500).setWebLogCallback(extraData);
-//  homeSpan.reserveSocketConnections(10);
-  
-//  homeSpan.setApSSID("HS_Setup");
-//  homeSpan.setApPassword("");
+  new(HS_MALLOC(sizeof(SpanAccessory))) SpanAccessory();
+    new(HS_MALLOC(sizeof(SpanService))) Service::AccessoryInformation();  
+      new(HS_MALLOC(sizeof(SpanCharacteristic))) Characteristic::Identify();
 
-//          .setStatusPin(13);
-//  homeSpan.setSerialInputDisable(true);
-//  homeSpan.enableOTA();
-
-  homeSpan.setWifiCallback(wifiCB);
-  homeSpan.setWifiCallbackAll(wifiCB_ALL).setVerboseWifiReconnect(true);
-  homeSpan.setRebootCallback( [](uint8_t c) {if(c==3) homeSpan.processSerialCommand("X");} );
-  
-
-  new SpanUserCommand('D', " - disconnect WiFi", [](const char *buf){WiFi.disconnect();});
-
-  homeSpan.begin(Category::Lighting,"HomeSpan LED");
-
-  new SpanAccessory();   
-    new Service::AccessoryInformation(); 
-      new Characteristic::Identify();
-    new LED_Service(13);
-
-//  homeSpan.autoPoll();
-
-//  for(int i=0;i<300;i++)
-//    WEBLOG("Here is some text of a log file %d",i);
-
-}
-
-//////////////////////////////////////
-
-void loop(){ 
-  homeSpan.poll();
-//delay(10000);
-//Serial.println(millis());
-  
-}
-
-//////////////////////////////////////
-
-void wifiCB(){
-  Serial.printf("\n\n****** IN WIFI CALLBACK *******\n\n");
-}
-
-//////////////////////////////////////
-
-void wifiCB_ALL(int n){
-  Serial.printf("\n\n****** IN WIFI CALLBACK ALL.  Count=%d *******\n\n",n);
-}
-
-//////////////////////////////////////
-
-void rebootCB(uint8_t count){
-  if(count>=3){
-    Serial.printf("\n*** Detected 3 or more short reboots.  Erasing WiFi data...\n");
-    homeSpan.processSerialCommand("X");
+  for(int i=0;i<80;i++){
+    new(HS_MALLOC(sizeof(SpanAccessory))) SpanAccessory();
+      new(HS_MALLOC(sizeof(SpanService))) Service::AccessoryInformation();  
+        new(HS_MALLOC(sizeof(SpanCharacteristic))) Characteristic::Identify();
+        char c[30];
+        sprintf(c,"Light-%d",i);
+        new(HS_MALLOC(sizeof(SpanCharacteristic))) Characteristic::Name(c);
+      new(HS_MALLOC(sizeof(SpanService))) Service::LightBulb();
+        new(HS_MALLOC(sizeof(SpanCharacteristic))) Characteristic::On();
+        new(HS_MALLOC(sizeof(SpanCharacteristic))) Characteristic::Brightness();
   }
+      
+}
+
+//////////////////////////////////////
+
+void loop(){
+ 
+  homeSpan.poll();
+  
 }
