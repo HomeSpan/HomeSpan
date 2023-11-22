@@ -2071,7 +2071,7 @@ SpanCharacteristic *SpanCharacteristic::setValidValues(int n, ...){
   va_end(vl);
   s+="]";
 
-  validValues=(char *)realloc(validValues, strlen(s.c_str()) + 1);
+  validValues=(char *)HS_REALLOC(validValues, strlen(s.c_str()) + 1);
   strcpy(validValues,s.c_str());
 
   return(this);
@@ -2202,7 +2202,7 @@ void SpanWebLog::vLog(boolean sysMsg, const char *fmt, va_list ap){
     else
       log[index].clockTime.tm_year=0;
   
-    log[index].message=(char *)realloc(log[index].message, strlen(buf) + 1);
+    log[index].message=(char *)HS_REALLOC(log[index].message, strlen(buf) + 1);
     strcpy(log[index].message, buf);
     
     log[index].clientIP=homeSpan.lastClientIP;  

@@ -34,10 +34,12 @@
 #if defined(BOARD_HAS_PSRAM)
 #define HS_MALLOC ps_malloc
 #define HS_CALLOC ps_calloc
+#define HS_REALLOC ps_realloc
 #define ps_new(X) new(ps_malloc(sizeof(X)))X
 #else
 #define HS_MALLOC malloc
 #define HS_CALLOC calloc
+#define HS_REALLOC realloc
 #define ps_new(X) new X
 #endif
 
@@ -552,7 +554,7 @@ class SpanCharacteristic{
   }
 
   void uvSet(UVal &u, const char *val){
-    u.STRING = (char *)realloc(u.STRING, strlen(val) + 1);
+    u.STRING = (char *)HS_REALLOC(u.STRING, strlen(val) + 1);
     strcpy(u.STRING, val);
   }
 
@@ -830,13 +832,13 @@ class SpanCharacteristic{
   }
 
   SpanCharacteristic *setDescription(const char *c){
-    desc = (char *)realloc(desc, strlen(c) + 1);
+    desc = (char *)HS_REALLOC(desc, strlen(c) + 1);
     strcpy(desc, c);
     return(this);
   }  
 
   SpanCharacteristic *setUnit(const char *c){
-    unit = (char *)realloc(unit, strlen(c) + 1);
+    unit = (char *)HS_REALLOC(unit, strlen(c) + 1);
     strcpy(unit, c);
     return(this);
   }  

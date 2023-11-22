@@ -40,7 +40,7 @@ void setup() {
     ps_new(Service::AccessoryInformation)();  
       ps_new(Characteristic::Identify)();
 
-  for(int i=0;i<80;i++){
+  for(int i=0;i<100;i++){
     ps_new(SpanAccessory)();
       ps_new(Service::AccessoryInformation)();  
         ps_new(Characteristic::Identify)();
