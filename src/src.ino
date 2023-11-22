@@ -32,7 +32,10 @@ void setup() {
  
   Serial.begin(115200);
 
-  homeSpan.setLogLevel(2);
+  homeSpan.setLogLevel(2)
+           .enableWebLog(500,"pool.ntp.org","UTC")
+           .setWifiCallback(wifiEstablished)
+           ;
 
   homeSpan.begin(Category::Lighting,"HomeSpan Max");
 
@@ -51,7 +54,7 @@ void setup() {
         ps_new(Characteristic::On)();
         ps_new(Characteristic::Brightness)(50,false);
   }
-      
+
 }
 
 //////////////////////////////////////
@@ -60,4 +63,15 @@ void loop(){
  
   homeSpan.poll();
   
+}
+
+//////////////////////////////////////
+
+void wifiEstablished(){
+
+  for(int i=0;i<600;i++){
+  WEBLOG("Here is a lot of log file text that should take up a lot of space: %d",i);
+  delay(30);
+}
+
 }

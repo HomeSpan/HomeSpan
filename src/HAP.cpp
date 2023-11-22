@@ -1284,6 +1284,10 @@ int HAPClient::getStatusURL(){
   response+="</table>\n";
   response+="<p></p>";
 
+  LOG2("\n>>>>>>>>>> ");
+  LOG2(client.remoteIP());
+  LOG2(" >>>>>>>>>>\n");
+  
   if(homeSpan.webLog.maxEntries>0){
     response+="<table class=tab2><tr><th>Entry</th><th>Up Time</th><th>Log Time</th><th>Client</th><th>Message</th></tr>\n";
     int lastIndex=homeSpan.webLog.nEntries-homeSpan.webLog.maxEntries;
@@ -1305,15 +1309,19 @@ int HAPClient::getStatusURL(){
         sprintf(clocktime,"Unknown");        
       
       response+="<tr><td>" + String(i+1) + "</td><td>" + String(uptime) + "</td><td>" + String(clocktime) + "</td><td>" + homeSpan.webLog.log[index].clientIP + "</td><td>" + String(homeSpan.webLog.log[index].message) + "</td></tr>\n";
+
+      if(response.length()>1024){     // if response grows too big, transmit chunk and reset
+        LOG2(response);
+        client.print(response);
+        delay(1);                     // slight pause seems to be required
+        response.clear();
+      }
     }
     response+="</table>\n";
   }
   
   response+="</body></html>";
 
-  LOG2("\n>>>>>>>>>> ");
-  LOG2(client.remoteIP());
-  LOG2(" >>>>>>>>>>\n");
   LOG2(response);
   LOG2("\n");
   client.print(response);
