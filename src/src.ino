@@ -35,21 +35,21 @@ void setup() {
   homeSpan.setLogLevel(2);
 
   homeSpan.begin(Category::Lighting,"HomeSpan Max");
-  
-  new(HS_MALLOC(sizeof(SpanAccessory))) SpanAccessory();
-    new(HS_MALLOC(sizeof(SpanService))) Service::AccessoryInformation();  
-      new(HS_MALLOC(sizeof(SpanCharacteristic))) Characteristic::Identify();
+
+  ps_new(SpanAccessory)();
+    ps_new(Service::AccessoryInformation)();  
+      ps_new(Characteristic::Identify)();
 
   for(int i=0;i<80;i++){
-    new(HS_MALLOC(sizeof(SpanAccessory))) SpanAccessory();
-      new(HS_MALLOC(sizeof(SpanService))) Service::AccessoryInformation();  
-        new(HS_MALLOC(sizeof(SpanCharacteristic))) Characteristic::Identify();
+    ps_new(SpanAccessory)();
+      ps_new(Service::AccessoryInformation)();  
+        ps_new(Characteristic::Identify)();
         char c[30];
         sprintf(c,"Light-%d",i);
-        new(HS_MALLOC(sizeof(SpanCharacteristic))) Characteristic::Name(c);
-      new(HS_MALLOC(sizeof(SpanService))) Service::LightBulb();
-        new(HS_MALLOC(sizeof(SpanCharacteristic))) Characteristic::On();
-        new(HS_MALLOC(sizeof(SpanCharacteristic))) Characteristic::Brightness();
+        ps_new(Characteristic::Name)(c);
+      ps_new(Service::LightBulb)();
+        ps_new(Characteristic::On)();
+        ps_new(Characteristic::Brightness)(50,false);
   }
       
 }
