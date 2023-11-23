@@ -292,6 +292,7 @@ class Span{
   boolean deleteAccessory(uint32_t aid);             // deletes Accessory with matching aid; returns true if found, else returns false 
 
   void setControlPin(uint8_t pin){controlButton=new PushButton(pin);}     // sets Control Pin   
+  void setControlPinHigh(uint8_t pin) { controlButton = new PushButton(pin, PushButton::TRIGGER_ON_HIGH); } // sets Control Pin for pulled down push buttons
   void setStatusPin(uint8_t pin){statusDevice=new GenericLED(pin);}       // sets Status Device to a simple LED on specified pin
   void setStatusAutoOff(uint16_t duration){autoOffLED=duration;}          // sets Status LED auto off (seconds)  
   int getStatusPin(){return(statusLED->getPin());}                        // get Status Pin (getPin will return -1 if underlying statusDevice is undefined)
