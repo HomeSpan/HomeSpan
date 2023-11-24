@@ -184,7 +184,7 @@ void Network::apConfigure(){
         continue;
       } 
 
-      TempBuffer <uint8_t> httpBuf(messageSize+1);      // leave room for null character added below
+      TempBuffer<uint8_t> httpBuf(messageSize+1);      // leave room for null character added below
     
       int nBytes=client.read(httpBuf.get(),messageSize);       // read all available bytes up to maximum allowed+1
       

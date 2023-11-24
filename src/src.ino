@@ -32,10 +32,9 @@ void setup() {
  
   Serial.begin(115200);
 
-  homeSpan.setLogLevel(2)
-           .enableWebLog(500,"pool.ntp.org","UTC")
-           .setWifiCallback(wifiEstablished)
-           ;
+  homeSpan.setLogLevel(2);
+//  homeSpan.enableWebLog(500,"pool.ntp.org","UTC");
+//  homeSpan.setWifiCallback(wifiEstablished);
 
   homeSpan.begin(Category::Lighting,"HomeSpan Max");
 
@@ -43,7 +42,7 @@ void setup() {
     ps_new(Service::AccessoryInformation)();  
       ps_new(Characteristic::Identify)();
 
-  for(int i=0;i<100;i++){
+  for(int i=0;i<149;i++){
     ps_new(SpanAccessory)();
       ps_new(Service::AccessoryInformation)();  
         ps_new(Characteristic::Identify)();
@@ -51,8 +50,10 @@ void setup() {
         sprintf(c,"Light-%d",i);
         ps_new(Characteristic::Name)(c);
       ps_new(Service::LightBulb)();
-        ps_new(Characteristic::On)();
-        ps_new(Characteristic::Brightness)(50,false);
+        ps_new(Characteristic::On)(0,true);
+        ps_new(Characteristic::Brightness)(50,true);
+        ps_new(Characteristic::Hue)(120,true);
+        ps_new(Characteristic::Saturation)(100,true);
   }
 
 }

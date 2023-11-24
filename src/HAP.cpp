@@ -96,7 +96,7 @@ void HAPClient::init(){
   }
 
   if(!nvs_get_blob(hapNVS,"CONTROLLERS",NULL,&len)){                // if found long-term Controller Pairings data from NVS
-    TempBuffer <Controller> tBuf(len/sizeof(Controller));
+    TempBuffer<Controller> tBuf(len/sizeof(Controller));
     nvs_get_blob(hapNVS,"CONTROLLERS",tBuf.get(),&len);             // retrieve data
     for(int i=0;i<tBuf.size();i++){
       if(tBuf.get()[i].allocated)
@@ -157,7 +157,7 @@ void HAPClient::processRequest(){
     return;
   }
  
-  TempBuffer <uint8_t> httpBuf(messageSize+1);      // leave room for null character added below
+  TempBuffer<uint8_t> httpBuf(messageSize+1);      // leave room for null character added below
   
   if(cPair){                           // expecting encrypted message
     LOG2("<<<< #### ");
@@ -859,7 +859,7 @@ int HAPClient::getAccessoriesURL(){
   LOG1(")...\n");
 
   int nBytes = homeSpan.sprintfAttributes(NULL);        // get size of HAP attributes JSON
-  TempBuffer <char> jBuf(nBytes+1);
+  TempBuffer<char> jBuf(nBytes+1);
   homeSpan.sprintfAttributes(jBuf.get());                  // create JSON database (will need to re-cast to uint8_t* below)
 
   char *body;
@@ -958,7 +958,7 @@ int HAPClient::postPairingsURL(){
     case 5: {
       LOG1("List...\n");
 
-      TempBuffer <uint8_t> tBuf(listControllers(NULL));
+      TempBuffer<uint8_t> tBuf(listControllers(NULL));
 
       char *body;
       asprintf(&body,"HTTP/1.1 200 OK\r\nContent-Type: application/pairing+tlv8\r\nContent-Length: %d\r\n\r\n",tBuf.len());      // create Body with Content Length = size of TLV data
@@ -1006,9 +1006,10 @@ int HAPClient::getCharacteristicsURL(char *urlBuf){
     if(urlBuf[i]==',')
       numIDs++;
   
-  char *ids[numIDs];            // reserve space for number of IDs found
-  int flags=GET_VALUE|GET_AID;  // flags indicating which characteristic fields to include in response (HAP Table 6-13)
-  numIDs=0;                     // reset number of IDs found
+//  char *ids[numIDs];            // reserve space for number of IDs found
+  TempBuffer<char *> ids(numIDs);  // reserve space for number of IDs found
+  int flags=GET_VALUE|GET_AID;      // flags indicating which characteristic fields to include in response (HAP Table 6-13)
+  numIDs=0;                         // reset number of IDs found
 
   char *lastSpace=strchr(urlBuf,' ');
   if(lastSpace)
@@ -1035,7 +1036,7 @@ int HAPClient::getCharacteristicsURL(char *urlBuf){
       char *p2;
       while(char *t2=strtok_r(t1,",",&p2)){      // parse IDs
         t1=NULL;
-        ids[numIDs++]=t2;
+        ids.get()[numIDs++]=t2;
       }
     }
   } // parse URL
@@ -1043,11 +1044,12 @@ int HAPClient::getCharacteristicsURL(char *urlBuf){
   if(!numIDs)           // could not find any IDs
     return(0);
 
-  int nBytes=homeSpan.sprintfAttributes(ids,numIDs,flags,NULL);          // get JSON response - includes terminating null (will be recast to uint8_t* below)
-  char jsonBuf[nBytes+1];
-  homeSpan.sprintfAttributes(ids,numIDs,flags,jsonBuf);
+  int nBytes=homeSpan.sprintfAttributes(ids.get(),numIDs,flags,NULL);          // get JSON response - includes terminating null (will be recast to uint8_t* below)
+//  char jsonBuf[nBytes+1];
+  TempBuffer<char> jsonBuf(nBytes+1);
+  homeSpan.sprintfAttributes(ids.get(),numIDs,flags,jsonBuf.get());
 
-  boolean sFlag=strstr(jsonBuf,"status");          // status attribute found?
+  boolean sFlag=strstr(jsonBuf.get(),"status");          // status attribute found?
 
   char *body;
   asprintf(&body,"HTTP/1.1 %s\r\nContent-Type: application/hap+json\r\nContent-Length: %d\r\n\r\n",!sFlag?"200 OK":"207 Multi-Status",nBytes);
@@ -1056,10 +1058,10 @@ int HAPClient::getCharacteristicsURL(char *urlBuf){
   LOG2(client.remoteIP());
   LOG2(" >>>>>>>>>>\n");    
   LOG2(body);
-  LOG2(jsonBuf);
+  LOG2(jsonBuf.get());
   LOG2("\n");
   
-  sendEncrypted(body,(uint8_t *)jsonBuf,nBytes);        // note recasting of jsonBuf into uint8_t*
+  sendEncrypted(body,(uint8_t *)jsonBuf.get(),nBytes);        // note recasting of jsonBuf into uint8_t*
   free(body);
         
   return(1);
@@ -1401,7 +1403,7 @@ void HAPClient::eventNotify(SpanBuf *pObj, int nObj, int ignoreClient){
 
 void HAPClient::tlvRespond(){
 
-  TempBuffer <uint8_t> tBuf(tlv8.pack(NULL));         // create buffer to hold TLV data    
+  TempBuffer<uint8_t> tBuf(tlv8.pack(NULL));         // create buffer to hold TLV data    
   tlv8.pack(tBuf.get());                              // pack TLV records into buffer
 
   char *body;
@@ -1441,7 +1443,7 @@ int HAPClient::receiveEncrypted(uint8_t *httpBuf, int messageSize){
       return(0);
       }
 
-    TempBuffer <uint8_t> tBuf(n+16);      // expected number of total bytes = n bytes in encoded message + 16 bytes for appended authentication tag      
+    TempBuffer<uint8_t> tBuf(n+16);      // expected number of total bytes = n bytes in encoded message + 16 bytes for appended authentication tag      
 
     if(client.read(tBuf.get(),tBuf.len())!=tBuf.len()){      
       LOG0("\n\n*** ERROR: Malformed encrypted message frame\n\n");
@@ -1477,7 +1479,7 @@ void HAPClient::sendEncrypted(char *body, uint8_t *dataBuf, int dataLen){
   if(maxFrameSize>FRAME_SIZE)                             // cap maxFrameSize by FRAME_SIZE (HAP restriction)
     maxFrameSize=FRAME_SIZE;
 
-  TempBuffer <uint8_t> tBuf(2+maxFrameSize+16);           // 2-byte AAD + encrytped data + 16-byte authentication tag
+  TempBuffer<uint8_t> tBuf(2+maxFrameSize+16);           // 2-byte AAD + encrytped data + 16-byte authentication tag
   
   tBuf.get()[0]=bodyLen%256;         // store number of bytes in first frame that encrypts the Body (AAD bytes)
   tBuf.get()[1]=bodyLen/256;
@@ -1704,7 +1706,7 @@ void HAPClient::saveControllers(){
     return;
   }
 
-  TempBuffer <Controller> tBuf(controllerList.size());                    // create temporary buffer to hold Controller data
+  TempBuffer<Controller> tBuf(controllerList.size());                    // create temporary buffer to hold Controller data
   std::copy(controllerList.begin(),controllerList.end(),tBuf.get());      // copy data from linked list to buffer
   
   nvs_set_blob(hapNVS,"CONTROLLERS",tBuf.get(),tBuf.len());      // update data

@@ -581,7 +581,7 @@ void Span::processSerialCommand(const char *c){
     case 'Z': {
       HAPClient::saveControllers();
       break;
-      TempBuffer <uint8_t> tBuf(HAPClient::listControllers(NULL));
+      TempBuffer<uint8_t> tBuf(HAPClient::listControllers(NULL));
       HAPClient::listControllers(tBuf.get());
       Serial.printf("SIZE = %d\n",tBuf.len());
       HAPClient::hexPrintRow(tBuf.get(),tBuf.len());
@@ -629,7 +629,7 @@ void Span::processSerialCommand(const char *c){
 
     case 'd': {      
       
-      TempBuffer <char> qBuf(sprintfAttributes(NULL)+1);
+      TempBuffer<char> qBuf(sprintfAttributes(NULL)+1);
       sprintfAttributes(qBuf.get());  
 
       LOG0("\n*** Attributes Database: size=%d  configuration=%d ***\n\n",qBuf.len()-1,hapConfig.configNumber);
@@ -1452,7 +1452,7 @@ int Span::updateCharacteristics(char *buf, SpanBuf *pObj){
             pObj[j].characteristic->uvSet(pObj[j].characteristic->value,pObj[j].characteristic->newValue);               // update characteristic value with new value
             if(pObj[j].characteristic->nvsKey){                                                                                               // if storage key found
               if(pObj[j].characteristic->format!=FORMAT::STRING && pObj[j].characteristic->format!=FORMAT::DATA)
-                nvs_set_blob(charNVS,pObj[j].characteristic->nvsKey,&(pObj[j].characteristic->value),sizeof(pObj[j].characteristic->value));  // store data
+                nvs_set_u64(charNVS,pObj[j].characteristic->nvsKey,pObj[j].characteristic->value.UINT64);  // store data as uint64_t regardless of actual type (it will be read correctly when access through uvGet())         
               else
                 nvs_set_str(charNVS,pObj[j].characteristic->nvsKey,pObj[j].characteristic->value.STRING);                                     // store data
               nvs_commit(charNVS);
@@ -1595,7 +1595,7 @@ int Span::sprintfAttributes(char **ids, int numIDs, int flags, char *cBuf){
 boolean Span::updateDatabase(boolean updateMDNS){
 
   uint8_t tHash[48];
-  TempBuffer <char> tBuf(sprintfAttributes(NULL,GET_META|GET_PERMS|GET_TYPE|GET_DESC)+1);
+  TempBuffer<char> tBuf(sprintfAttributes(NULL,GET_META|GET_PERMS|GET_TYPE|GET_DESC)+1);
   sprintfAttributes(tBuf.get(),GET_META|GET_PERMS|GET_TYPE|GET_DESC);  
   mbedtls_sha512_ret((uint8_t *)tBuf.get(),tBuf.len(),tHash,1);     // create SHA-384 hash of JSON (can be any hash - just looking for a unique key)
 

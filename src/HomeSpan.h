@@ -627,12 +627,9 @@ class SpanCharacteristic{
       size_t len;    
 
       if(format!=FORMAT::STRING && format!=FORMAT::DATA){
-        if(!nvs_get_blob(homeSpan.charNVS,nvsKey,NULL,&len)){
-          nvs_get_blob(homeSpan.charNVS,nvsKey,&value,&len);          
-        }
-        else {
-          nvs_set_blob(homeSpan.charNVS,nvsKey,&value,sizeof(UVal));     // store data           
-          nvs_commit(homeSpan.charNVS);                                    // commit to NVS  
+        if(nvs_get_u64(homeSpan.charNVS,nvsKey,&(value.UINT64))!=ESP_OK) {
+          nvs_set_u64(homeSpan.charNVS,nvsKey,value.UINT64);                // store data as uint64_t regardless of actual type (it will be read correctly when access through uvGet())         
+          nvs_commit(homeSpan.charNVS);                                     // commit to NVS  
         }     
       } else {
         if(!nvs_get_str(homeSpan.charNVS,nvsKey,NULL,&len)){
@@ -641,7 +638,7 @@ class SpanCharacteristic{
           uvSet(value,(const char *)c);
         }
         else {
-          nvs_set_str(homeSpan.charNVS,nvsKey,value.STRING);             // store string data
+          nvs_set_str(homeSpan.charNVS,nvsKey,value.STRING);               // store string data
           nvs_commit(homeSpan.charNVS);                                    // commit to NVS  
         }
       }
@@ -790,7 +787,7 @@ class SpanCharacteristic{
       homeSpan.Notifications.push_back(sb);   // store SpanBuf in Notifications vector  
   
       if(nvsKey){
-        nvs_set_blob(homeSpan.charNVS,nvsKey,&value,sizeof(UVal));    // store data
+        nvs_set_u64(homeSpan.charNVS,nvsKey,value.UINT64);            // store data as uint64_t regardless of actual type (it will be read correctly when access through uvGet())         
         nvs_commit(homeSpan.charNVS);
       }
     }
