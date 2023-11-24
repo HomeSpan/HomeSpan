@@ -185,9 +185,9 @@ void Span::pollTask() {
            
     HAPClient::init();                // read NVS and load HAP settings  
     
-    if(heap_caps_get_minimum_free_size(MALLOC_CAP_DEFAULT)<DEFAULT_LOW_MEM_THRESHOLD)
-      LOG0("\n**** WARNING!  Low Memory Watermark of %d bytes is less than Low Threshold of %d bytes.  Device *may* run out of memory.\n\n",
-          heap_caps_get_minimum_free_size(MALLOC_CAP_DEFAULT),DEFAULT_LOW_MEM_THRESHOLD);
+    if(heap_caps_get_minimum_free_size(MALLOC_CAP_INTERNAL)<DEFAULT_LOW_MEM_THRESHOLD)
+      LOG0("\n**** WARNING!  Low Internal RAM Watermark of %d bytes is less than Low Threshold of %d bytes.  Device *may* run out of memory.\n\n",
+          heap_caps_get_minimum_free_size(MALLOC_CAP_INTERNAL),DEFAULT_LOW_MEM_THRESHOLD);
 
     if(!strlen(network.wifiData.ssid)){
       LOG0("*** WIFI CREDENTIALS DATA NOT FOUND.  ");

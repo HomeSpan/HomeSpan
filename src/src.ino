@@ -38,22 +38,22 @@ void setup() {
 
   homeSpan.begin(Category::Lighting,"HomeSpan Max");
 
-  ps_new(SpanAccessory)();
-    ps_new(Service::AccessoryInformation)();  
-      ps_new(Characteristic::Identify)();
+   new SpanAccessory();
+    new Service::AccessoryInformation();  
+      new Characteristic::Identify();
 
-  for(int i=0;i<149;i++){
-    ps_new(SpanAccessory)();
-      ps_new(Service::AccessoryInformation)();  
-        ps_new(Characteristic::Identify)();
+  for(int i=0;i<50;i++){
+    new SpanAccessory();
+      new Service::AccessoryInformation();
+        new Characteristic::Identify();
         char c[30];
         sprintf(c,"Light-%d",i);
-        ps_new(Characteristic::Name)(c);
-      ps_new(Service::LightBulb)();
-        ps_new(Characteristic::On)(0,true);
-        ps_new(Characteristic::Brightness)(50,true);
-        ps_new(Characteristic::Hue)(120,true);
-        ps_new(Characteristic::Saturation)(100,true);
+        new Characteristic::Name(c);
+      new Service::LightBulb();
+        new Characteristic::On(0,false);
+        new Characteristic::Brightness(50,false);
+        new Characteristic::Hue(120,false);
+        new Characteristic::Saturation(100,false);
   }
 
 }

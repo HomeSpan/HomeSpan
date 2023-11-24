@@ -427,8 +427,9 @@ class SpanAccessory{
   ~SpanAccessory();                                       // destructor
 
   public:
-  
-  SpanAccessory(uint32_t aid=0);                          // constructor
+
+  void *operator new(size_t size){return(HS_MALLOC(size));}     // override new operator to use PSRAM when available
+  SpanAccessory(uint32_t aid=0);                                // constructor
 };
 
 ///////////////////////////////
@@ -460,6 +461,7 @@ class SpanService{
 
   public:
   
+  void *operator new(size_t size){return(HS_MALLOC(size));}                       // override new operator to use PSRAM when available
   SpanService(const char *type, const char *hapName, boolean isCustom=false);     // constructor
   SpanService *setPrimary();                                                      // sets the Service Type to be primary and returns pointer to self
   SpanService *setHidden();                                                       // sets the Service Type to be hidden and returns pointer to self
@@ -656,6 +658,7 @@ class SpanCharacteristic{
 
   public:
 
+  void *operator new(size_t size){return(HS_MALLOC(size));}               // override new operator to use PSRAM when available
   SpanCharacteristic(HapChar *hapChar, boolean isCustom=false);           // constructor
 
   template <class T=int> T getVal(){

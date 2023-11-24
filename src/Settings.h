@@ -84,7 +84,7 @@
 
 #define     DEFAULT_WEBLOG_URL        "status"            // change with optional fourth argument in homeSpan.enableWebLog()
 
-#define     DEFAULT_LOW_MEM_THRESHOLD     80000           // default low watermark memory threshold that triggers warning
+#define     DEFAULT_LOW_MEM_THRESHOLD     80000           // default low watermark memory (for internal RAM) threshold that triggers warning
 
 #define     DEFAULT_REBOOT_CALLBACK_TIME  5000            // default time (in milliseconds) to check for reboot callback
 
