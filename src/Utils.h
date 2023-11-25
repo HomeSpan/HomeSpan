@@ -86,6 +86,10 @@ class TempBuffer {
   bufType *get(){
     return(buf);
   }
+
+  operator bufType*() const{
+    return(buf);
+  }
   
 };
 

@@ -42,7 +42,7 @@ void setup() {
     new Service::AccessoryInformation();  
       new Characteristic::Identify();
 
-  for(int i=0;i<50;i++){
+  for(int i=0;i<10;i++){
     new SpanAccessory();
       new Service::AccessoryInformation();
         new Characteristic::Identify();

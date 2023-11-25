@@ -630,10 +630,10 @@ void Span::processSerialCommand(const char *c){
     case 'd': {      
       
       TempBuffer<char> qBuf(sprintfAttributes(NULL)+1);
-      sprintfAttributes(qBuf.get());  
+      sprintfAttributes(qBuf);  
 
       LOG0("\n*** Attributes Database: size=%d  configuration=%d ***\n\n",qBuf.len()-1,hapConfig.configNumber);
-      prettyPrint(qBuf.get());
+      prettyPrint(qBuf);
       LOG0("\n*** End Database ***\n\n");
     }
     break;

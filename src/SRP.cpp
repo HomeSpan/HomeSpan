@@ -271,12 +271,13 @@ void SRP6A::print(mbedtls_mpi *mpi, int minLogLevel){
   if(homeSpan.getLogLevel()<minLogLevel)
     return;
       
-  char sBuf[2000];
   size_t sLen;
 
-  mbedtls_mpi_write_string(mpi,16,sBuf,2000,&sLen);
+  mbedtls_mpi_write_string(mpi,16,NULL,0,&sLen);
+  TempBuffer<char> sBuf(sLen);
+  mbedtls_mpi_write_string(mpi,16,sBuf.get(),sLen,&sLen);
   
-  Serial.printf("%d %s\n",(sLen-1)/2,sBuf);         // subtract 1 for null-terminator, and then divide by 2 to get number of bytes (e.g. 4F = 2 characters, but represents just one mpi byte)
+  Serial.printf("%d %s\n",(sLen-1)/2,sBuf.get());         // subtract 1 for null-terminator, and then divide by 2 to get number of bytes (e.g. 4F = 2 characters, but represents just one mpi byte)
 }
 
 //////////////////////////////////////

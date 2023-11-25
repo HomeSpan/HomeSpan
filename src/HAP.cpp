@@ -495,8 +495,8 @@ int HAPClient::postPairSetupURL(){
 
       hkdf.create(sessionKey, srp.sharedSecret,64,"Pair-Setup-Encrypt-Salt","Pair-Setup-Encrypt-Info");       // create SessionKey
 
-      uint8_t decrypted[1024];                    // temporary storage for decrypted data
-      unsigned long long decryptedLen;            // length (in bytes) of decrypted data
+      TempBuffer<uint8_t> decrypted(tlv8.len(kTLVType_EncryptedData));        // temporary storage for decrypted data
+      unsigned long long decryptedLen;                                        // length (in bytes) of decrypted data
       
       if(crypto_aead_chacha20poly1305_ietf_decrypt(                                  // use SessionKey to decrypt encryptedData TLV with padded nonce="PS-Msg05"
         decrypted, &decryptedLen, NULL,
@@ -542,7 +542,7 @@ int HAPClient::postPairSetupURL(){
 
       uint8_t iosDeviceX[32];
       hkdf.create(iosDeviceX,srp.sharedSecret,64,"Pair-Setup-Controller-Sign-Salt","Pair-Setup-Controller-Sign-Info");       // derive iosDeviceX from SRP Shared Secret using HKDF 
-      size_t iosDeviceXLen=32;
+      const size_t iosDeviceXLen=32;
 
       uint8_t *iosDevicePairingID = tlv8.buf(kTLVType_Identifier);        // set iosDevicePairingID from TLV record
       size_t iosDevicePairingIDLen = tlv8.len(kTLVType_Identifier);
@@ -575,15 +575,15 @@ int HAPClient::postPairSetupURL(){
 
       uint8_t accessoryX[32];
       hkdf.create(accessoryX,srp.sharedSecret,64,"Pair-Setup-Accessory-Sign-Salt","Pair-Setup-Accessory-Sign-Info");       // derive accessoryX from SRP Shared Secret using HKDF 
-      size_t accessoryXLen=32;
+      const size_t accessoryXLen=32;
       
       uint8_t *accessoryPairingID=accessory.ID;                    // set accessoryPairingID from storage
-      size_t accessoryPairingIDLen=17;
+      const size_t accessoryPairingIDLen=17;
 
       uint8_t *accessoryLTPK=accessory.LTPK;                       // set accessoryLTPK (Ed25519 long-term public key) from storage
-      size_t accessoryLTPKLen=32;
+      const size_t accessoryLTPKLen=32;
 
-      size_t accessoryInfoLen=accessoryXLen+accessoryPairingIDLen+accessoryLTPKLen;             // total size of accessoryInfo
+      const size_t accessoryInfoLen=accessoryXLen+accessoryPairingIDLen+accessoryLTPKLen;             // total size of accessoryInfo
       uint8_t accessoryInfo[accessoryInfoLen];
 
       memcpy(accessoryInfo,accessoryX,accessoryXLen);                                                      // accessoryInfo = accessoryX
@@ -694,9 +694,9 @@ int HAPClient::postPairVerifyURL(){
         crypto_scalarmult_curve25519(sharedCurveKey,secretCurveKey,iosCurveKey);      // generate (and persist) Pair Verify SharedSecret CurveKey from Accessory's Curve25519 secret key and Controller's Curve25519 public key (32 bytes)
 
         uint8_t *accessoryPairingID = accessory.ID;                    // set accessoryPairingID
-        size_t accessoryPairingIDLen = 17;
+        const size_t accessoryPairingIDLen = 17;
 
-        size_t accessoryInfoLen=32+accessoryPairingIDLen+32;           // total size of accessoryInfo
+        const size_t accessoryInfoLen=32+accessoryPairingIDLen+32;           // total size of accessoryInfo
         uint8_t accessoryInfo[accessoryInfoLen];           
 
         memcpy(accessoryInfo,publicCurveKey,32);                                        // accessoryInfo = Accessory's Curve25519 public key
@@ -750,8 +750,8 @@ int HAPClient::postPairVerifyURL(){
         return(0);
       };
 
-      uint8_t decrypted[1024];                    // temporary storage for decrypted data
-      unsigned long long decryptedLen;            // length (in bytes) of decrypted data
+      TempBuffer<uint8_t> decrypted(tlv8.len(kTLVType_EncryptedData));        // temporary storage for decrypted data
+      unsigned long long decryptedLen;                                        // length (in bytes) of decrypted data
       
       if(crypto_aead_chacha20poly1305_ietf_decrypt(                                            // use SessionKey to decrypt encrypytedData TLV with padded nonce="PV-Msg03"
         decrypted, &decryptedLen, NULL,
@@ -804,7 +804,7 @@ int HAPClient::postPairVerifyURL(){
       charPrintRow(tPair->ID,36,2);
       LOG2("...\n");
 
-      size_t iosDeviceInfoLen=32+36+32;
+      const size_t iosDeviceInfoLen=32+36+32;
       uint8_t iosDeviceInfo[iosDeviceInfoLen];
 
       memcpy(iosDeviceInfo,iosCurveKey,32);
@@ -1006,7 +1006,6 @@ int HAPClient::getCharacteristicsURL(char *urlBuf){
     if(urlBuf[i]==',')
       numIDs++;
   
-//  char *ids[numIDs];            // reserve space for number of IDs found
   TempBuffer<char *> ids(numIDs);  // reserve space for number of IDs found
   int flags=GET_VALUE|GET_AID;      // flags indicating which characteristic fields to include in response (HAP Table 6-13)
   numIDs=0;                         // reset number of IDs found
@@ -1045,7 +1044,6 @@ int HAPClient::getCharacteristicsURL(char *urlBuf){
     return(0);
 
   int nBytes=homeSpan.sprintfAttributes(ids.get(),numIDs,flags,NULL);          // get JSON response - includes terminating null (will be recast to uint8_t* below)
-//  char jsonBuf[nBytes+1];
   TempBuffer<char> jsonBuf(nBytes+1);
   homeSpan.sprintfAttributes(ids.get(),numIDs,flags,jsonBuf.get());
 
@@ -1109,8 +1107,8 @@ int HAPClient::putCharacteristicsURL(char *json){
   } else {                                                       // multicast respose is required
 
     int nBytes=homeSpan.sprintfAttributes(pObj,n,NULL);          // get JSON response - includes terminating null (will be recast to uint8_t* below)
-    char jsonBuf[nBytes+1];
-    homeSpan.sprintfAttributes(pObj,n,jsonBuf);
+    TempBuffer<char> jsonBuf(nBytes+1);
+    homeSpan.sprintfAttributes(pObj,n,jsonBuf.get());
 
     char *body;
     asprintf(&body,"HTTP/1.1 207 Multi-Status\r\nContent-Type: application/hap+json\r\nContent-Length: %d\r\n\r\n",nBytes);
@@ -1119,10 +1117,10 @@ int HAPClient::putCharacteristicsURL(char *json){
     LOG2(client.remoteIP());
     LOG2(" >>>>>>>>>>\n");    
     LOG2(body);
-    LOG2(jsonBuf);
+    LOG2(jsonBuf.get());
     LOG2("\n");
   
-    sendEncrypted(body,(uint8_t *)jsonBuf,nBytes);        // note recasting of jsonBuf into uint8_t*
+    sendEncrypted(body,(uint8_t *)jsonBuf.get(),nBytes);        // note recasting of jsonBuf into uint8_t*
     free(body);
   
   }
@@ -1376,8 +1374,8 @@ void HAPClient::eventNotify(SpanBuf *pObj, int nObj, int ignoreClient){
       int nBytes=homeSpan.sprintfNotify(pObj,nObj,NULL,cNum);          // get JSON response for notifications to client cNum - includes terminating null (will be recast to uint8_t* below)
 
       if(nBytes>0){                                                    // if there are notifications to send to client cNum
-        char jsonBuf[nBytes+1];
-        homeSpan.sprintfNotify(pObj,nObj,jsonBuf,cNum);
+        TempBuffer<char> jsonBuf(nBytes+1);
+        homeSpan.sprintfNotify(pObj,nObj,jsonBuf.get(),cNum);
 
         char *body;
         asprintf(&body,"EVENT/1.0 200 OK\r\nContent-Type: application/hap+json\r\nContent-Length: %d\r\n\r\n",nBytes);
@@ -1386,10 +1384,10 @@ void HAPClient::eventNotify(SpanBuf *pObj, int nObj, int ignoreClient){
         LOG2(hap[cNum]->client.remoteIP());
         LOG2(" >>>>>>>>>>\n");    
         LOG2(body);
-        LOG2(jsonBuf);
+        LOG2(jsonBuf.get());
         LOG2("\n");
   
-        hap[cNum]->sendEncrypted(body,(uint8_t *)jsonBuf,nBytes);        // note recasting of jsonBuf into uint8_t*
+        hap[cNum]->sendEncrypted(body,(uint8_t *)jsonBuf.get(),nBytes);        // note recasting of jsonBuf into uint8_t*
         free(body);
 
       } // if there are characteristic updates to notify client cNum
