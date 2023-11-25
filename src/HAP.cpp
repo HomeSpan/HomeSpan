@@ -97,10 +97,10 @@ void HAPClient::init(){
 
   if(!nvs_get_blob(hapNVS,"CONTROLLERS",NULL,&len)){                // if found long-term Controller Pairings data from NVS
     TempBuffer<Controller> tBuf(len/sizeof(Controller));
-    nvs_get_blob(hapNVS,"CONTROLLERS",tBuf.get(),&len);             // retrieve data
+    nvs_get_blob(hapNVS,"CONTROLLERS",tBuf,&len);             // retrieve data
     for(int i=0;i<tBuf.size();i++){
-      if(tBuf.get()[i].allocated)
-        controllerList.push_back(tBuf.get()[i]);
+      if(tBuf[i].allocated)
+        controllerList.push_back(tBuf[i]);
     }
   }
   
@@ -164,7 +164,7 @@ void HAPClient::processRequest(){
     LOG2(client.remoteIP());
     LOG2(" #### <<<<\n");
 
-    nBytes=receiveEncrypted(httpBuf.get(),messageSize);   // decrypt and return number of bytes read      
+    nBytes=receiveEncrypted(httpBuf,messageSize);   // decrypt and return number of bytes read      
         
     if(!nBytes){                           // decryption failed (error message already printed in function)
       badRequestError();              
@@ -176,7 +176,7 @@ void HAPClient::processRequest(){
     LOG2(client.remoteIP());
     LOG2(" <<<<<<<<<\n");
     
-    nBytes=client.read(httpBuf.get(),messageSize);   // read expected number of bytes
+    nBytes=client.read(httpBuf,messageSize);   // read expected number of bytes
 
     if(nBytes!=messageSize || client.available()!=0){
       badRequestError();
@@ -186,7 +186,7 @@ void HAPClient::processRequest(){
                
   } // encrypted/plaintext
       
-  httpBuf.get()[nBytes]='\0';   // add null character to enable string functions
+  httpBuf[nBytes]='\0';   // add null character to enable string functions
       
   char *body=(char *)httpBuf.get();   // char pointer to start of HTTP Body
   char *p;                            // char pointer used for searches
@@ -860,7 +860,7 @@ int HAPClient::getAccessoriesURL(){
 
   int nBytes = homeSpan.sprintfAttributes(NULL);        // get size of HAP attributes JSON
   TempBuffer<char> jBuf(nBytes+1);
-  homeSpan.sprintfAttributes(jBuf.get());                  // create JSON database (will need to re-cast to uint8_t* below)
+  homeSpan.sprintfAttributes(jBuf);                  // create JSON database (will need to re-cast to uint8_t* below)
 
   char *body;
   asprintf(&body,"HTTP/1.1 200 OK\r\nContent-Type: application/hap+json\r\nContent-Length: %d\r\n\r\n",nBytes);
@@ -967,8 +967,8 @@ int HAPClient::postPairingsURL(){
       LOG2(client.remoteIP());
       LOG2(" >>>>>>>>>>\n");
       LOG2(body);
-      listControllers(tBuf.get());
-      sendEncrypted(body,tBuf.get(),tBuf.len());
+      listControllers(tBuf);
+      sendEncrypted(body,tBuf,tBuf.len());
       free(body);
       
       return(1);
@@ -1035,7 +1035,7 @@ int HAPClient::getCharacteristicsURL(char *urlBuf){
       char *p2;
       while(char *t2=strtok_r(t1,",",&p2)){      // parse IDs
         t1=NULL;
-        ids.get()[numIDs++]=t2;
+        ids[numIDs++]=t2;
       }
     }
   } // parse URL
@@ -1043,11 +1043,11 @@ int HAPClient::getCharacteristicsURL(char *urlBuf){
   if(!numIDs)           // could not find any IDs
     return(0);
 
-  int nBytes=homeSpan.sprintfAttributes(ids.get(),numIDs,flags,NULL);          // get JSON response - includes terminating null (will be recast to uint8_t* below)
+  int nBytes=homeSpan.sprintfAttributes(ids,numIDs,flags,NULL);          // get JSON response - includes terminating null (will be recast to uint8_t* below)
   TempBuffer<char> jsonBuf(nBytes+1);
-  homeSpan.sprintfAttributes(ids.get(),numIDs,flags,jsonBuf.get());
+  homeSpan.sprintfAttributes(ids,numIDs,flags,jsonBuf);
 
-  boolean sFlag=strstr(jsonBuf.get(),"status");          // status attribute found?
+  boolean sFlag=strstr(jsonBuf,"status");          // status attribute found?
 
   char *body;
   asprintf(&body,"HTTP/1.1 %s\r\nContent-Type: application/hap+json\r\nContent-Length: %d\r\n\r\n",!sFlag?"200 OK":"207 Multi-Status",nBytes);
@@ -1108,7 +1108,7 @@ int HAPClient::putCharacteristicsURL(char *json){
 
     int nBytes=homeSpan.sprintfAttributes(pObj,n,NULL);          // get JSON response - includes terminating null (will be recast to uint8_t* below)
     TempBuffer<char> jsonBuf(nBytes+1);
-    homeSpan.sprintfAttributes(pObj,n,jsonBuf.get());
+    homeSpan.sprintfAttributes(pObj,n,jsonBuf);
 
     char *body;
     asprintf(&body,"HTTP/1.1 207 Multi-Status\r\nContent-Type: application/hap+json\r\nContent-Length: %d\r\n\r\n",nBytes);
@@ -1375,7 +1375,7 @@ void HAPClient::eventNotify(SpanBuf *pObj, int nObj, int ignoreClient){
 
       if(nBytes>0){                                                    // if there are notifications to send to client cNum
         TempBuffer<char> jsonBuf(nBytes+1);
-        homeSpan.sprintfNotify(pObj,nObj,jsonBuf.get(),cNum);
+        homeSpan.sprintfNotify(pObj,nObj,jsonBuf,cNum);
 
         char *body;
         asprintf(&body,"EVENT/1.0 200 OK\r\nContent-Type: application/hap+json\r\nContent-Length: %d\r\n\r\n",nBytes);
@@ -1402,7 +1402,7 @@ void HAPClient::eventNotify(SpanBuf *pObj, int nObj, int ignoreClient){
 void HAPClient::tlvRespond(){
 
   TempBuffer<uint8_t> tBuf(tlv8.pack(NULL));         // create buffer to hold TLV data    
-  tlv8.pack(tBuf.get());                              // pack TLV records into buffer
+  tlv8.pack(tBuf);                              // pack TLV records into buffer
 
   char *body;
   asprintf(&body,"HTTP/1.1 200 OK\r\nContent-Type: application/pairing+tlv8\r\nContent-Length: %d\r\n\r\n",tBuf.len());      // create Body with Content Length = size of TLV data
@@ -1415,10 +1415,10 @@ void HAPClient::tlvRespond(){
 
   if(!cPair){                       // unverified, unencrypted session
     client.print(body);
-    client.write(tBuf.get(),tBuf.len());      
+    client.write(tBuf,tBuf.len());      
     LOG2("------------ SENT! --------------\n");
   } else {
-    sendEncrypted(body,tBuf.get(),tBuf.len());
+    sendEncrypted(body,tBuf,tBuf.len());
   }
 
   free(body);
@@ -1443,12 +1443,12 @@ int HAPClient::receiveEncrypted(uint8_t *httpBuf, int messageSize){
 
     TempBuffer<uint8_t> tBuf(n+16);      // expected number of total bytes = n bytes in encoded message + 16 bytes for appended authentication tag      
 
-    if(client.read(tBuf.get(),tBuf.len())!=tBuf.len()){      
+    if(client.read(tBuf,tBuf.len())!=tBuf.len()){      
       LOG0("\n\n*** ERROR: Malformed encrypted message frame\n\n");
       return(0);      
     }                
 
-    if(crypto_aead_chacha20poly1305_ietf_decrypt(httpBuf+nBytes, NULL, NULL, tBuf.get(), tBuf.len(), aad, 2, c2aNonce.get(), c2aKey)==-1){
+    if(crypto_aead_chacha20poly1305_ietf_decrypt(httpBuf+nBytes, NULL, NULL, tBuf, tBuf.len(), aad, 2, c2aNonce.get(), c2aKey)==-1){
       LOG0("\n\n*** ERROR: Can't Decrypt Message\n\n");
       return(0);        
     }
@@ -1479,12 +1479,12 @@ void HAPClient::sendEncrypted(char *body, uint8_t *dataBuf, int dataLen){
 
   TempBuffer<uint8_t> tBuf(2+maxFrameSize+16);           // 2-byte AAD + encrytped data + 16-byte authentication tag
   
-  tBuf.get()[0]=bodyLen%256;         // store number of bytes in first frame that encrypts the Body (AAD bytes)
-  tBuf.get()[1]=bodyLen/256;
+  tBuf[0]=bodyLen%256;         // store number of bytes in first frame that encrypts the Body (AAD bytes)
+  tBuf[1]=bodyLen/256;
   
-  crypto_aead_chacha20poly1305_ietf_encrypt(tBuf.get()+2,&nBytes,(uint8_t *)body,bodyLen,tBuf.get(),2,NULL,a2cNonce.get(),a2cKey);   // encrypt the Body with authentication tag appended
+  crypto_aead_chacha20poly1305_ietf_encrypt(tBuf+2,&nBytes,(uint8_t *)body,bodyLen,tBuf,2,NULL,a2cNonce.get(),a2cKey);   // encrypt the Body with authentication tag appended
 
-  client.write(tBuf.get(),nBytes+2);   // transmit encrypted frame
+  client.write(tBuf,nBytes+2);   // transmit encrypted frame
   a2cNonce.inc();                      // increment nonce
   
   for(int i=0;i<dataLen;i+=FRAME_SIZE){      // encrypt FRAME_SIZE number of bytes in dataBuf in sequential frames
@@ -1494,12 +1494,12 @@ void HAPClient::sendEncrypted(char *body, uint8_t *dataBuf, int dataLen){
     if(n>FRAME_SIZE)           // maximum number of bytes to encrypt=FRAME_SIZE
       n=FRAME_SIZE;                                     
     
-    tBuf.get()[0]=n%256;    // store number of bytes that encrypts this frame (AAD bytes)
-    tBuf.get()[1]=n/256;
+    tBuf[0]=n%256;    // store number of bytes that encrypts this frame (AAD bytes)
+    tBuf[1]=n/256;
 
-    crypto_aead_chacha20poly1305_ietf_encrypt(tBuf.get()+2,&nBytes,dataBuf+i,n,tBuf.get(),2,NULL,a2cNonce.get(),a2cKey);   // encrypt the next portion of dataBuf with authentication tag appended
+    crypto_aead_chacha20poly1305_ietf_encrypt(tBuf+2,&nBytes,dataBuf+i,n,tBuf,2,NULL,a2cNonce.get(),a2cKey);   // encrypt the next portion of dataBuf with authentication tag appended
 
-    client.write(tBuf.get(),nBytes+2);   // transmit encrypted frame
+    client.write(tBuf,nBytes+2);   // transmit encrypted frame
     a2cNonce.inc();                      // increment nonce
 
   }
@@ -1707,7 +1707,7 @@ void HAPClient::saveControllers(){
   TempBuffer<Controller> tBuf(controllerList.size());                    // create temporary buffer to hold Controller data
   std::copy(controllerList.begin(),controllerList.end(),tBuf.get());      // copy data from linked list to buffer
   
-  nvs_set_blob(hapNVS,"CONTROLLERS",tBuf.get(),tBuf.len());      // update data
+  nvs_set_blob(hapNVS,"CONTROLLERS",tBuf,tBuf.len());      // update data
   nvs_commit(hapNVS);                                            // commit to NVS  
 }
 

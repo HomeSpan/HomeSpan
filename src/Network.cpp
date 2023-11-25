@@ -186,7 +186,7 @@ void Network::apConfigure(){
 
       TempBuffer<uint8_t> httpBuf(messageSize+1);      // leave room for null character added below
     
-      int nBytes=client.read(httpBuf.get(),messageSize);       // read all available bytes up to maximum allowed+1
+      int nBytes=client.read(httpBuf,messageSize);       // read all available bytes up to maximum allowed+1
       
       if(nBytes!=messageSize || client.available()!=0){
         badRequestError();
@@ -194,7 +194,7 @@ void Network::apConfigure(){
         continue;
       }
     
-      httpBuf.get()[nBytes]='\0';                       // add null character to enable string functions    
+      httpBuf[nBytes]='\0';                       // add null character to enable string functions    
       char *body=(char *)httpBuf.get();                 // char pointer to start of HTTP Body
       char *p;                                          // char pointer used for searches
       

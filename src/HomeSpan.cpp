@@ -582,9 +582,9 @@ void Span::processSerialCommand(const char *c){
       HAPClient::saveControllers();
       break;
       TempBuffer<uint8_t> tBuf(HAPClient::listControllers(NULL));
-      HAPClient::listControllers(tBuf.get());
+      HAPClient::listControllers(tBuf);
       Serial.printf("SIZE = %d\n",tBuf.len());
-      HAPClient::hexPrintRow(tBuf.get(),tBuf.len());
+      HAPClient::hexPrintRow(tBuf,tBuf.len());
       break;
     }
     
@@ -1044,14 +1044,14 @@ void Span::processSerialCommand(const char *c){
       TempBuffer<char> tBuf(200);
       size_t olen;
 
-      tBuf.get()[0]='\0';
+      tBuf[0]='\0';
       LOG0(">>> Accessory data:  ");
-      readSerial(tBuf.get(),199);
-      if(strlen(tBuf.get())==0){
+      readSerial(tBuf,199);
+      if(strlen(tBuf)==0){
         LOG0("(cancelled)\n\n");
         return;
       }
-      mbedtls_base64_decode((uint8_t *)&HAPClient::accessory,sizeof(struct Accessory),&olen,(uint8_t *)tBuf.get(),strlen(tBuf.get()));
+      mbedtls_base64_decode((uint8_t *)&HAPClient::accessory,sizeof(struct Accessory),&olen,(uint8_t *)tBuf.get(),strlen(tBuf));
       if(olen!=sizeof(struct Accessory)){
         LOG0("\n*** Error in size of Accessory data - cloning cancelled.  Restarting...\n\n");
         reboot();
@@ -1064,14 +1064,14 @@ void Span::processSerialCommand(const char *c){
       Controller tCont;
       
       while(HAPClient::controllerList.size()<16){
-        tBuf.get()[0]='\0';
+        tBuf[0]='\0';
         LOG0(">>> Controller data: ");
-        readSerial(tBuf.get(),199);
-        if(strlen(tBuf.get())==0){
+        readSerial(tBuf,199);
+        if(strlen(tBuf)==0){
           LOG0("(done)\n");
           break;
         } else {
-          mbedtls_base64_decode((uint8_t *)(&tCont),sizeof(struct Controller),&olen,(uint8_t *)tBuf.get(),strlen(tBuf.get()));
+          mbedtls_base64_decode((uint8_t *)(&tCont),sizeof(struct Controller),&olen,(uint8_t *)tBuf.get(),strlen(tBuf));
           if(olen!=sizeof(struct Controller)){
             LOG0("\n*** Error in size of Controller data - cloning cancelled.  Restarting...\n\n");
             reboot();
@@ -1596,7 +1596,7 @@ boolean Span::updateDatabase(boolean updateMDNS){
 
   uint8_t tHash[48];
   TempBuffer<char> tBuf(sprintfAttributes(NULL,GET_META|GET_PERMS|GET_TYPE|GET_DESC)+1);
-  sprintfAttributes(tBuf.get(),GET_META|GET_PERMS|GET_TYPE|GET_DESC);  
+  sprintfAttributes(tBuf,GET_META|GET_PERMS|GET_TYPE|GET_DESC);  
   mbedtls_sha512_ret((uint8_t *)tBuf.get(),tBuf.len(),tHash,1);     // create SHA-384 hash of JSON (can be any hash - just looking for a unique key)
 
   boolean changed=false;
