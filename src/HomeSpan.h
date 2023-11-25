@@ -635,9 +635,8 @@ class SpanCharacteristic{
         }     
       } else {
         if(!nvs_get_str(homeSpan.charNVS,nvsKey,NULL,&len)){
-          char c[len];
-          nvs_get_str(homeSpan.charNVS,nvsKey,c,&len);                    
-          uvSet(value,(const char *)c);
+          value.STRING = (char *)HS_REALLOC(value.STRING,len);
+          nvs_get_str(homeSpan.charNVS,nvsKey,value.STRING,&len);
         }
         else {
           nvs_set_str(homeSpan.charNVS,nvsKey,value.STRING);               // store string data
