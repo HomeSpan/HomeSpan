@@ -1,0 +1,14 @@
+#          --- Custom Partition Table for HomeSpan ---
+#
+# Similar to min_spiffs, except that the 128K SPIFF block at the end
+# is replaced by a 128K NVS block, and the initial 20K NVS block
+# is no longer used. Note this table is designed for use with 4MB Flash.
+# To use with 8MB Flash, increase app0 and app1 by 2048K to become 3968K each.
+# To use with 16MB Flash, increase app0 and app1 by 6144K to become 8064K each
+#
+unused_nvs,data,nvs,,20K,
+otadata,data,ota,,8K,
+app0,app,ota_0,,1920K,
+app1,app,ota_1,,1920K,
+nvs,data,nvs,,128K,
+coredump,data,coredump,,64K,
