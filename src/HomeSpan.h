@@ -610,7 +610,7 @@ class SpanCharacteristic{
       case FORMAT::DATA:
       break;
     }
-    return(0);       // included to prevent compiler warnings  
+    return((T)0);       // included to prevent compiler warnings  
   }
     
   protected:
@@ -771,7 +771,7 @@ class SpanCharacteristic{
     }
 
     if(val < uvGet<T>(minValue) || val > uvGet<T>(maxValue)){
-      LOG0("\n*** WARNING:  Attempt to update Characteristic::%s with setVal(%g) is out of range [%g,%g].  This may cause device to become non-reponsive!\n\n",
+      LOG0("\n*** WARNING:  Attempt to update Characteristic::%s with setVal(%g) is out of range [%g,%g].  This may cause device to become non-responsive!\n\n",
       hapName,(double)val,uvGet<double>(minValue),uvGet<double>(maxValue));
     }
    

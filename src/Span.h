@@ -520,7 +520,7 @@ namespace Characteristic {
   CREATE_CHAR(double,TargetRelativeHumidity,0,0,100);
   CREATE_CHAR(double,TargetTemperature,16,10,38);
   CREATE_CHAR(uint8_t,TargetVisibilityState,0,0,1);
-  CREATE_CHAR(uint8_t,TemperatureDisplayUnits,0,0,1);
+  CREATE_CHAR(uint8_t,TemperatureDisplayUnits,0,0,1,CELSIUS,FAHRENHEIT);
   CREATE_CHAR(int,TargetVerticalTiltAngle,0,-90,90);
   CREATE_CHAR(uint8_t,ValveType,0,0,3);
   CREATE_CHAR(const char *,Version,"1.0.0",0,1);

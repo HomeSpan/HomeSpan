@@ -32,8 +32,7 @@ void setup() {
   Serial.begin(115200);
 
   homeSpan.setLogLevel(2);
-//  homeSpan.enableWebLog(500,"pool.ntp.org","UTC");
-//  homeSpan.setWifiCallback(wifiEstablished);
+  homeSpan.enableWebLog(500);
 
   homeSpan.begin(Category::Lighting,"HomeSpan Max");
 
@@ -41,7 +40,7 @@ void setup() {
     new Service::AccessoryInformation();  
       new Characteristic::Identify();
 
-  for(int i=0;i<40;i++){
+  for(int i=0;i<139;i++){
     new SpanAccessory();
       new Service::AccessoryInformation();
         new Characteristic::Identify();
@@ -61,6 +60,5 @@ void setup() {
 
 void loop(){
  
-  homeSpan.poll();
-  
+  homeSpan.poll();  
 }
