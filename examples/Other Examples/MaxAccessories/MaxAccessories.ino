@@ -1,7 +1,7 @@
 /*********************************************************************************
  *  MIT License
  *  
- *  Copyright (c) 2020-2022 Gregg E. Berman
+ *  Copyright (c) 2020-2023 Gregg E. Berman
  *  
  *  https://github.com/HomeSpan/HomeSpan
  *  
@@ -25,7 +25,49 @@
  *  
  ********************************************************************************/
 
-#include "HomeSpan.h" 
+#include "HomeSpan.h"
+
+#define MAX_LIGHTS  2
+
+struct RGB_Light : Service::LightBulb {
+
+  Characteristic::On power{0,true};
+  Characteristic::Hue H{0,true};
+  Characteristic::Saturation S{0,true};
+  Characteristic::Brightness V{0,true};
+
+  int lightNumber;
+  
+  RGB_Light(int n) : Service::LightBulb(){
+
+    lightNumber=n;
+
+    WEBLOG("Configured RGB Light-%d",lightNumber);
+    WEBLOG("Light-%d: Saved Power Setting = %s",lightNumber,power.getVal()?"ON":"OFF");
+    WEBLOG("Light-%d: Saved Hue Setting = %d",lightNumber,H.getVal());
+    WEBLOG("Light-%d: Saved Saturation Setting = %d",lightNumber,S.getVal());
+    WEBLOG("Light-%d: Saved Brightness Setting = %d",lightNumber,V.getVal());    
+        
+  }
+
+  boolean update(){
+
+    if(power.updated())
+      WEBLOG("Light-%d: Power=%s",lightNumber,power.getNewVal()?"ON":"OFF");
+ 
+    if(H.updated())
+      WEBLOG("Light-%d: Hue=%d",lightNumber,H.getNewVal());
+
+    if(S.updated())
+      WEBLOG("Light-%d: Saturation=%d",lightNumber,S.getNewVal());
+
+    if(V.updated())
+      WEBLOG("Light-%d: Brightness=%d",lightNumber,V.getNewVal());    
+      
+    return(true);
+  
+  }
+};
 
 void setup() {
  
@@ -40,18 +82,16 @@ void setup() {
     new Service::AccessoryInformation();  
       new Characteristic::Identify();
 
-  for(int i=0;i<139;i++){
+  for(int i=1;i<=MAX_LIGHTS;i++){
+    char c[30];
+    sprintf(c,"Light-%d",i);
+    
     new SpanAccessory();
       new Service::AccessoryInformation();
         new Characteristic::Identify();
-        char c[30];
-        sprintf(c,"L%d",i);
-        new Characteristic::Name(c,true);
-      new Service::LightBulb();
-        new Characteristic::On(0,true);
-        new Characteristic::Brightness(50,true);
-        new Characteristic::Hue(120,true);
-        new Characteristic::Saturation(100,true);
+        new Characteristic::Name(c);
+        
+      new RGB_Light(i);
   }
 
 }
