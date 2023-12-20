@@ -83,7 +83,17 @@ HomeSpan requires version 2.0.0 or later of the [Arduino-ESP32 Board Manager](ht
   * passes the number of "short" reboots that have occured prior to the current reboot, where a "short" reboot is any that occurs **before** *upTime* milliseconds have elapsed
   * can be used to reset WiFi Credentials, start the HomeSpan Access Point, perform a Factory Reset, or run any user-defined code, on a hard-to-access HomeSpan device by simply power-cycling the device a specified number of times
   * see [API Reference](docs/Reference.md) for details
-    
+
+
+* **New ability to disable SpanPoint encryption**
+
+  * adds optional class-level method `SpanPoint::setEncryption(boolean encrypt)`
+  * enabling/disabling SpanPoint encryption changes the maximum number of connections that can be supported by a single device:
+    * with encryption, HomeSpan can support up to 7 SpanPoint connections to remote devices
+    * without encryption, HomeSpan can support up to 20 SpanPoint connections to remote devices
+  * if these limits are exceeded, HomeSpan will provide warning messages on the Serial Monitor during start-up
+  * see [SpanPoint](Now.md) for details
+      
 See [Releases](https://github.com/HomeSpan/HomeSpan/releases) for details on all changes and bug fixes included in this update.
 
 # HomeSpan Resources
