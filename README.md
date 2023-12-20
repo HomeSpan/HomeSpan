@@ -92,7 +92,7 @@ HomeSpan requires version 2.0.0 or later of the [Arduino-ESP32 Board Manager](ht
     * with encryption, HomeSpan can support up to 7 SpanPoint connections to remote devices
     * without encryption, HomeSpan can support up to 20 SpanPoint connections to remote devices
   * if these limits are exceeded, HomeSpan will provide warning messages on the Serial Monitor during start-up
-  * see [SpanPoint](Now.md) for details
+  * see [SpanPoint](docs/Now.md) for details
       
 See [Releases](https://github.com/HomeSpan/HomeSpan/releases) for details on all changes and bug fixes included in this update.
 
