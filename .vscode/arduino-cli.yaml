@@ -1,0 +1,27 @@
+board_manager:
+  additional_urls:
+  - https://downloads.arduino.cc/packages/package_staging_index.json
+build_cache:
+  compilations_before_purge: 0
+  ttl: 720h0m0s
+daemon:
+  port: "50051"
+directories:
+  data: ${{env.LOCALAPPDATA}}\Arduino15
+  downloads: ${{env.LOCALAPPDATA}}\staging
+  user: ${{env.USERPROFILE}}\Documents\Arduino
+library:
+  enable_unsafe_install: false
+logging:
+  file: ""
+  format: text
+  level: info
+metrics:
+  addr: :9090
+  enabled: true
+output:
+  no_color: false
+sketch:
+  always_export_binaries: false
+updater:
+  enable_notification: true

@@ -1,0 +1,147 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "Compile",
+        "type": "shell",
+        "command": "${config:arduino-cli-location}",
+        "args": [
+          "compile",
+          "--fqbn",
+          "${config:arduino-cli-fqbn}",
+          "--config-file",
+          "${workspaceFolder}\\.vscode\\arduino.yaml",
+          "--build-property",
+          "compiler.cpp.extra_flags=\"${config:arduino-cli-compile-flags}\"",
+          "--build-path",
+          "${config:arduino-cli-build-output}",
+          "--verbose",
+          "${workspaceFolder}\\src\\${config:projectName}.ino"
+        ],
+        "options": {
+          "shell": {
+            "executable": "cmd.exe",
+            "args": [
+              "/c"
+            ]
+          }
+        },
+        "group": {
+          "kind": "build",
+          "isDefault": true
+        },
+        "problemMatcher": {
+          "base": "$gcc",
+          "fileLocation": "absolute"
+        }
+      },
+      {
+        "label": "OTA Upload",
+        "type": "shell",
+        "command": "python",
+        "args": [
+          "%LOCALAPPDATA%\\Arduino15\\packages\\esp32\\hardware\\esp32\\${config:arduino-esp32-version}\\tools\\espota.py",
+          "-i",
+          "${config:ota-host}",
+          "-p",
+          "${config:ota-port}",
+          "-a",
+          "${config:ota-password}",
+          "-f",
+          "${config:arduino-cli-build-output}\\${config:projectName}.ino.bin",
+          "-r"
+        ],
+        "options": {
+          "shell": {
+            "executable": "cmd.exe",
+            "args": [
+              "/c"
+            ]
+          }
+        },
+        "problemMatcher": [
+          "$espIdf"
+        ]
+      },
+      {
+        "label": "COM Upload app only",
+        "type": "shell",
+        "command": "${config:esp-tool-location}",
+        "args": [
+          "--chip",
+          "esp32",
+          "--port",
+          "${config:idf.portWin}",
+          "--baud",
+          "115200",
+          "--before",
+          "default_reset",
+          "--after",
+          "hard_reset",
+          "write_flash",
+          "-z",
+          "--flash_mode",
+          "dio",
+          "--flash_size",
+          "detect",
+          "--flash_freq",
+          "keep",
+          "0x10000",
+          "${config:arduino-cli-build-output}\\${config:projectName}.ino.bin"
+        ],
+        "options": {
+          "shell": {
+            "executable": "cmd.exe",
+            "args": [
+              "/c"
+            ]
+          }
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "COM Upload with partitions",
+        "type": "shell",
+        "command": "${config:esp-tool-location}",
+        "args": [
+          "--chip",
+          "esp32",
+          "--port",
+          "${config:idf.portWin}",
+          "--baud",
+          "115200",
+          "--before",
+          "default_reset",
+          "--after",
+          "hard_reset",
+          "write_flash",
+          "-z",
+          "--flash_mode",
+          "dio",
+          "--flash_size",
+          "detect",
+          "--flash_freq",
+          "keep",
+          "0x1000",
+          "${config:arduino-cli-build-output}\\${config:projectName}.ino.bootloader.bin",
+          "0x8000",
+          "${config:arduino-cli-build-output}\\${config:projectName}.ino.partitions.bin",
+          "0xe000",
+          "%LOCALAPPDATA%\\Arduino15\\packages\\esp32\\hardware\\esp32\\${config:arduino-esp32-version}\\tools\\partitions\\boot_app0.bin",
+          "0x10000",
+          "${config:arduino-cli-build-output}\\${config:projectName}.ino.bin"
+        ],
+        "options": {
+          "shell": {
+            "executable": "cmd.exe",
+            "args": [
+              "/c"
+            ]
+          }
+        },
+        "problemMatcher": []
+      }
+    ]
+  }
