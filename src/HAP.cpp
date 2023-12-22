@@ -1744,6 +1744,7 @@ void Nonce::inc(){
 // instantiate all static HAP Client structures and data
 
 TLV<kTLVType,11> HAPClient::tlv8;
+TLV8 HAPClient::tlv8_new{tlvNames};
 nvs_handle HAPClient::hapNVS;
 nvs_handle HAPClient::srpNVS;
 HKDF HAPClient::hkdf;                                   

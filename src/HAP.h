@@ -34,6 +34,21 @@
 #include "HAPConstants.h"
 #include "HKDF.h"
 #include "SRP.h"
+#include "TLV8.h"
+
+const TLV8_names tlvNames[] = {
+  {kTLVType_Separator,"SEPARATOR"},
+  {kTLVType_State,"STATE"},
+  {kTLVType_PublicKey,"PUBKEY"},
+  {kTLVType_Method,"METHOD"},
+  {kTLVType_Salt,"SALT"},
+  {kTLVType_Error,"ERROR"},
+  {kTLVType_Proof,"PROOF"},
+  {kTLVType_EncryptedData,"ENC.DATA"},
+  {kTLVType_Signature,"SIGNATURE"},
+  {kTLVType_Identifier,"IDENTIFIER"},
+  {kTLVType_Permissions,"PERMISSION"}
+};
 
 /////////////////////////////////////////////////
 // NONCE Structure (HAP used last 64 of 96 bits)
@@ -88,6 +103,7 @@ struct HAPClient {
   static const int MAX_ACCESSORIES=150;               // maximum number of allowed Accessories (HAP limit=150)
   
   static TLV<kTLVType,11> tlv8;                       // TLV8 structure (HAP Section 14.1) with space for 11 TLV records of type kTLVType (HAP Table 5-6)
+  static TLV8 tlv8_new;                               // TLV8 structure (HAP Section 14.1) with space for 11 TLV records of type kTLVType (HAP Table 5-6)
   static nvs_handle hapNVS;                           // handle for non-volatile-storage of HAP data
   static nvs_handle srpNVS;                           // handle for non-volatile-storage of SRP data
   static HKDF hkdf;                                   // generates (and stores) HKDF-SHA-512 32-byte keys derived from an inputKey of arbitrary length, a salt string, and an info string

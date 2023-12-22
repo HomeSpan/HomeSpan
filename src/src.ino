@@ -25,16 +25,15 @@
  *  
  ********************************************************************************/
 
-
 #include "HomeSpan.h"
+
+#define MAX_LIGHTS  1
 
 void setup() {
  
   Serial.begin(115200);
 
   homeSpan.setLogLevel(2);
-//  homeSpan.enableWebLog(500,"pool.ntp.org","UTC");
-//  homeSpan.setWifiCallback(wifiEstablished);
 
   homeSpan.begin(Category::Lighting,"HomeSpan Max");
 
@@ -42,7 +41,7 @@ void setup() {
     new Service::AccessoryInformation();  
       new Characteristic::Identify();
 
-  for(int i=0;i<10;i++){
+  for(int i=0;i<MAX_LIGHTS;i++){
     new SpanAccessory();
       new Service::AccessoryInformation();
         new Characteristic::Identify();
@@ -67,12 +66,3 @@ void loop(){
 }
 
 //////////////////////////////////////
-
-void wifiEstablished(){
-
-  for(int i=0;i<600;i++){
-  WEBLOG("Here is a lot of log file text that should take up a lot of space: %d",i);
-  delay(30);
-}
-
-}
