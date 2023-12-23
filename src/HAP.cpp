@@ -233,16 +233,22 @@ void HAPClient::processRequest(){
       return;
     }
 
-    if(!strncmp(body,"POST /pair-verify ",18) &&                             // POST PAIR-VERIFY
-       strstr(body,"Content-Type: application/pairing+tlv8") &&              // check that content is TLV8
-       tlv8.unpack(content,cLen)){                                          // read TLV content
-       tlv8.print(2);                                                        // print TLV records in form "TAG(INT) LENGTH(INT) VALUES(HEX)"
-       tlv8_new.unpack(content,cLen);
-       tlv8_new.print();
-      LOG2("------------ END TLVS! ------------\n");
-               
-      postPairVerifyURL();                  // process URL
-      tlv8_new.clear();
+//    if(!strncmp(body,"POST /pair-verify ",18) &&                             // POST PAIR-VERIFY
+//       strstr(body,"Content-Type: application/pairing+tlv8") &&              // check that content is TLV8
+//       tlv8.unpack(content,cLen)){                                          // read TLV content
+//       tlv8.print(2);                                                        // print TLV records in form "TAG(INT) LENGTH(INT) VALUES(HEX)"
+//       tlv8_new.unpack(content,cLen);
+//       tlv8_new.print();
+//      LOG2("------------ END TLVS! ------------\n");
+//               
+//      postPairVerifyURL();                  // process URL
+//      tlv8_new.clear();
+//      return;
+//    }
+
+
+    if(!strncmp(body,"POST /pair-verify ",18) && strstr(body,"Content-Type: application/pairing+tlv8")){           // POST PAIR-VERIFY 
+      postPairVerifyURL(content,cLen);
       return;
     }
             
@@ -650,17 +656,21 @@ int HAPClient::postPairSetupURL(){
 
 //////////////////////////////////////
 
-int HAPClient::postPairVerifyURL(){
+int HAPClient::postPairVerifyURL(uint8_t *content, size_t len){
 
-  LOG2("In Pair Verify #");
-  LOG2(conNum);
-  LOG2(" (");
-  LOG2(client.remoteIP());
-  LOG2(")...");
-    
-  auto itState=tlv8_new.find(kTLVType_State);
+  HAPTLV iosTLV;
+  HAPTLV responseTLV;
+  HAPTLV subTLV;
 
-  if(itState==tlv8_new.end()){                          // missing STATE TLV
+  iosTLV.unpack(content,len);
+  iosTLV.print();
+  LOG2("------------ END TLVS! ------------\n");
+
+  LOG2("In Pair Verify #%d (%s)...",conNum,client.remoteIP().toString().c_str());
+  
+  auto itState=iosTLV.find(kTLVType_State);
+
+  if(itState==iosTLV.end()){                          // missing STATE TLV
     LOG0("\n*** ERROR: Missing <M#> State TLV\n\n");
     badRequestError();                                  // return with 400 error, which closes connection      
     return(0);
@@ -670,10 +680,9 @@ int HAPClient::postPairVerifyURL(){
 
   if(!nAdminControllers()){                             // error: Device not yet paired - we should not be receiving any requests for Pair-Verify!
     LOG0("\n*** ERROR: Device not yet paired!\n\n");
-    tlv8_new.clear();                                   // clear TLV records
-    tlv8_new.add(kTLVType_State,tlvState+1);            // set response STATE to requested state+1 (which should match the state that was expected by the controller)
-    tlv8_new.add(kTLVType_Error,tagError_Unknown);      // set Error=Unknown
-    tlvRespond();                                       // send response to client
+    responseTLV.add(kTLVType_State,tlvState+1);            // set response STATE to requested state+1 (which should match the state that was expected by the controller)
+    responseTLV.add(kTLVType_Error,tagError_Unknown);      // set Error=Unknown
+    tlvRespond(responseTLV);                                       // send response to client
     return(0);
   };
 
@@ -683,14 +692,13 @@ int HAPClient::postPairVerifyURL(){
 
     case pairState_M1:{                     // 'Verify Start Request'
 
-      auto itPublicKey=tlv8_new.find(kTLVType_PublicKey);
+      auto itPublicKey=iosTLV.find(kTLVType_PublicKey);
 
-      if(itPublicKey==tlv8_new.end() || (*itPublicKey).len!=32){            
+      if(itPublicKey==iosTLV.end() || (*itPublicKey).len!=32){            
         LOG0("\n*** ERROR: Required 'PublicKey' TLV record for this step is bad or missing\n\n");
-        tlv8_new.clear();                                 // clear TLV records
-        tlv8_new.add(kTLVType_State,pairState_M2);        // set State=<M2>
-        tlv8_new.add(kTLVType_Error,tagError_Unknown);    // set Error=Unknown (there is no specific error type for missing/bad TLV data)
-        tlvRespond();                                     // send response to client
+        responseTLV.add(kTLVType_State,pairState_M2);        // set State=<M2>
+        responseTLV.add(kTLVType_Error,tagError_Unknown);    // set Error=Unknown (there is no specific error type for missing/bad TLV data)
+        tlvRespond(responseTLV);                                     // send response to client
         return(0);        
       }
 
@@ -708,52 +716,49 @@ int HAPClient::postPairVerifyURL(){
       memcpy(accessoryInfo+32,accessory.ID,17);              // +accessoryPairingID
       memcpy(accessoryInfo+49,iosCurveKey,32);               // +Controller's Curve25519 public key
 
-      tlv8_new.clear();
-
-      auto itSignature=tlv8_new.add(kTLVType_Signature,64,NULL);           //create blank Signature TLV with space for 64 bytes
+      auto itSignature=subTLV.add(kTLVType_Signature,64,NULL);           //create blank Signature TLV with space for 64 bytes
 
       crypto_sign_detached(*itSignature,NULL,accessoryInfo,accessoryInfo.len(),accessory.LTSK);  // produce Signature of accessoryInfo using AccessoryLTSK (Ed25519 long-term secret key)
 
-      tlv8_new.add(kTLVType_Identifier,17,accessory.ID);   // set Identifier TLV record as accessoryPairingID
+      subTLV.add(kTLVType_Identifier,17,accessory.ID);   // set Identifier TLV record as accessoryPairingID
 
       LOG2("------- ENCRYPTING SUB-TLVS -------\n");
 
-      tlv8_new.print();
+      subTLV.print();
 
-      TempBuffer<uint8_t> subTLV(tlv8_new.pack_size());   // create sub-TLV by packing Identifier and Signature TLV records together
-      tlv8_new.pack(subTLV);                                
-
-      tlv8_new.clear();
+      TempBuffer<uint8_t> subPack(subTLV.pack_size());   // create sub-TLV by packing Identifier and Signature TLV records together
+      subTLV.pack(subPack);                                
 
       // create SessionKey from Curve25519 SharedSecret using HKDF-SHA-512, then encrypt subTLV data with SessionKey using ChaCha20-Poly1305.  Output stored in EncryptedData TLV
     
       hkdf.create(sessionKey,sharedCurveKey,32,"Pair-Verify-Encrypt-Salt","Pair-Verify-Encrypt-Info");       // create SessionKey (32 bytes)
 
-      auto itEncryptedData=tlv8_new.add(kTLVType_EncryptedData,subTLV.len()+crypto_aead_chacha20poly1305_IETF_ABYTES,NULL);           //create blank EncryptedData TLV with space for subTLV + Authentication Tag
+      auto itEncryptedData=responseTLV.add(kTLVType_EncryptedData,subPack.len()+crypto_aead_chacha20poly1305_IETF_ABYTES,NULL);           //create blank EncryptedData TLV with space for subTLV + Authentication Tag
 
-      crypto_aead_chacha20poly1305_ietf_encrypt(*itEncryptedData,NULL,subTLV,subTLV.len(),NULL,0,NULL,(unsigned char *)"\x00\x00\x00\x00PV-Msg02",sessionKey);
+      crypto_aead_chacha20poly1305_ietf_encrypt(*itEncryptedData,NULL,subPack,subPack.len(),NULL,0,NULL,(unsigned char *)"\x00\x00\x00\x00PV-Msg02",sessionKey);
                                             
       LOG2("---------- END SUB-TLVS! ----------\n");
       
-      tlv8_new.add(kTLVType_State,pairState_M2);                 // set State=<M2>
-      tlv8_new.add(kTLVType_PublicKey,32,publicCurveKey);        // set PublicKey to Accessory's Curve25519 public key
+      responseTLV.add(kTLVType_State,pairState_M2);                 // set State=<M2>
+      responseTLV.add(kTLVType_PublicKey,32,publicCurveKey);        // set PublicKey to Accessory's Curve25519 public key
     
-      tlvRespond();                        // send response to client  
+      tlvRespond(responseTLV);                        // send response to client  
     }
     break;  
    
     case pairState_M3:{                     // 'Verify Finish Request'
 
-      auto itEncryptedData=tlv8_new.find(kTLVType_EncryptedData);
+      auto itEncryptedData=iosTLV.find(kTLVType_EncryptedData);
 
-      if(itEncryptedData==tlv8_new.end() || (*itEncryptedData).len==0){            
+      if(itEncryptedData==iosTLV.end() || (*itEncryptedData).len==0){            
         LOG0("\n*** ERROR: Required 'EncryptedData' TLV record for this step is bad or missing\n\n");
-        tlv8_new.clear();                                         // clear TLV records
-        tlv8_new.add(kTLVType_State,pairState_M4);                // set State=<M4>
-        tlv8_new.add(kTLVType_Error,tagError_Unknown);           // set Error=Unknown (there is no specific error type for missing/bad TLV data)
-        tlvRespond();                                       // send response to client
+        responseTLV.add(kTLVType_State,pairState_M4);                // set State=<M4>
+        responseTLV.add(kTLVType_Error,tagError_Unknown);           // set Error=Unknown (there is no specific error type for missing/bad TLV data)
+        tlvRespond(responseTLV);                                       // send response to client
         return(0);
       };
+
+      LOG2("------- DECRYPTING SUB-TLVS -------\n");
 
       TempBuffer<uint8_t> decrypted((*itEncryptedData).len-crypto_aead_chacha20poly1305_IETF_ABYTES);        // temporary storage for decrypted data
       
@@ -763,28 +768,26 @@ int HAPClient::postPairVerifyURL(){
         (unsigned char *)"\x00\x00\x00\x00PV-Msg03", sessionKey)==-1){
           
         LOG0("\n*** ERROR: Verify Authentication Failed\n\n");
-        tlv8_new.clear();                                         // clear TLV records
-        tlv8_new.add(kTLVType_State,pairState_M4);                // set State=<M4>
-        tlv8_new.add(kTLVType_Error,tagError_Authentication);    // set Error=Authentication
-        tlvRespond();                                       // send response to client
+        responseTLV.add(kTLVType_State,pairState_M4);                // set State=<M4>
+        responseTLV.add(kTLVType_Error,tagError_Authentication);    // set Error=Authentication
+        tlvRespond(responseTLV);                                       // send response to client
         return(0);        
       }
 
-      tlv8_new.clear();
-      tlv8_new.unpack(decrypted,decrypted.len());
+      subTLV.unpack(decrypted,decrypted.len());
       
-      tlv8_new.print();             // print decrypted TLV data
-      LOG2("------- END DECRYPTED TLVS! -------\n");
+      subTLV.print();             // print decrypted TLV data
+      
+      LOG2("---------- END SUB-TLVS! ----------\n");
 
-      auto itIdentifier=tlv8_new.find(kTLVType_Identifier);
-      auto itSignature=tlv8_new.find(kTLVType_Signature);
+      auto itIdentifier=subTLV.find(kTLVType_Identifier);
+      auto itSignature=subTLV.find(kTLVType_Signature);
 
-      if(itIdentifier==tlv8_new.end() || (*itIdentifier).len!=36 || itSignature==tlv8_new.end() || (*itSignature).len!=crypto_sign_BYTES){ 
+      if(itIdentifier==subTLV.end() || (*itIdentifier).len!=36 || itSignature==subTLV.end() || (*itSignature).len!=crypto_sign_BYTES){ 
         LOG0("\n*** ERROR: One or more of required 'Identifier,' and 'Signature' TLV records for this step is bad or missing\n\n");
-        tlv8_new.clear();                                         // clear TLV records
-        tlv8_new.add(kTLVType_State,pairState_M4);                // set State=<M4>
-        tlv8_new.add(kTLVType_Error,tagError_Unknown);           // set Error=Unknown (there is no specific error type for missing/bad TLV data)
-        tlvRespond();                                       // send response to client
+        responseTLV.add(kTLVType_State,pairState_M4);                // set State=<M4>
+        responseTLV.add(kTLVType_Error,tagError_Unknown);           // set Error=Unknown (there is no specific error type for missing/bad TLV data)
+        tlvRespond(responseTLV);                                       // send response to client
         return(0);
       }
 
@@ -794,10 +797,9 @@ int HAPClient::postPairVerifyURL(){
         LOG0("\n*** ERROR: Unrecognized Controller ID: ");
         charPrintRow((*itIdentifier).val.get(),36,2);
         LOG0("\n\n");
-        tlv8_new.clear();                                         // clear TLV records
-        tlv8_new.add(kTLVType_State,pairState_M4);                // set State=<M4>
-        tlv8_new.add(kTLVType_Error,tagError_Authentication);    // set Error=Authentication
-        tlvRespond();                                       // send response to client
+        responseTLV.add(kTLVType_State,pairState_M4);                // set State=<M4>
+        responseTLV.add(kTLVType_Error,tagError_Authentication);    // set Error=Authentication
+        tlvRespond(responseTLV);                                       // send response to client
         return(0);
       }
 
@@ -813,16 +815,14 @@ int HAPClient::postPairVerifyURL(){
       
       if(crypto_sign_verify_detached((*itSignature).val.get(), iosDeviceInfo, iosDeviceInfo.len(), tPair->LTPK) != 0){         // verify signature of iosDeviceInfo using iosDeviceLTPK   
         LOG0("\n*** ERROR: LPTK Signature Verification Failed\n\n");
-        tlv8_new.clear();                                         // clear TLV records
-        tlv8_new.add(kTLVType_State,pairState_M4);                // set State=<M4>
-        tlv8_new.add(kTLVType_Error,tagError_Authentication);    // set Error=Authentication
-        tlvRespond();                                       // send response to client
+        responseTLV.add(kTLVType_State,pairState_M4);                // set State=<M4>
+        responseTLV.add(kTLVType_Error,tagError_Authentication);    // set Error=Authentication
+        tlvRespond(responseTLV);                                       // send response to client
         return(0);                
       }
 
-      tlv8_new.clear();                                         // clear TLV records
-      tlv8_new.add(kTLVType_State,pairState_M4);                // set State=<M4>
-      tlvRespond();                                       // send response to client (unencrypted since cPair=NULL)
+      responseTLV.add(kTLVType_State,pairState_M4);                // set State=<M4>
+      tlvRespond(responseTLV);                                       // send response to client (unencrypted since cPair=NULL)
 
       cPair=tPair;        // save Controller for this connection slot - connection is now verified and should be encrypted going forward
 
@@ -1397,6 +1397,32 @@ void HAPClient::eventNotify(SpanBuf *pObj, int nObj, int ignoreClient){
 
 /////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////
+
+void HAPClient::tlvRespond(TLV8 &tlv8){
+
+  TempBuffer<uint8_t> tBuf(tlv8.pack_size());    // create buffer to hold TLV data    
+  tlv8.pack(tBuf);                               // pack TLV records into buffer
+
+  char *body;
+  asprintf(&body,"HTTP/1.1 200 OK\r\nContent-Type: application/pairing+tlv8\r\nContent-Length: %d\r\n\r\n",tBuf.len());      // create Body with Content Length = size of TLV data
+  
+  LOG2("\n>>>>>>>>>> %s >>>>>>>>>>\n",client.remoteIP().toString().c_str());
+  LOG2(body);
+  tlv8.print();
+
+  if(!cPair){                       // unverified, unencrypted session
+    client.print(body);
+    client.write(tBuf,tBuf.len());      
+    LOG2("------------ SENT! --------------\n");
+  } else {
+    sendEncrypted(body,tBuf,tBuf.len());
+  }
+
+  free(body);
+
+} // tlvRespond
+
+//////////////////////////////////////
 
 void HAPClient::tlvRespond(){
 

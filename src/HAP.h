@@ -134,17 +134,18 @@ struct HAPClient {
 
   // define member methods
 
-  void processRequest();                       // process HAP request  
-  int postPairSetupURL();                      // POST /pair-setup (HAP Section 5.6)
-  int postPairVerifyURL();                     // POST /pair-verify (HAP Section 5.7)
-  int getAccessoriesURL();                     // GET /accessories (HAP Section 6.6)
-  int postPairingsURL();                       // POST /pairings (HAP Sections 5.10-5.12)  
-  int getCharacteristicsURL(char *urlBuf);     // GET /characteristics (HAP Section 6.7.4)  
-  int putCharacteristicsURL(char *json);       // PUT /characteristics (HAP Section 6.7.2)
-  int putPrepareURL(char *json);               // PUT /prepare (HAP Section 6.7.2.4)
-  int getStatusURL();                          // GET / status (an optional, non-HAP feature)
+  void processRequest();                                      // process HAP request  
+  int postPairSetupURL();                                     // POST /pair-setup (HAP Section 5.6)
+  int postPairVerifyURL(uint8_t *content, size_t len);        // POST /pair-verify (HAP Section 5.7)
+  int getAccessoriesURL();                                    // GET /accessories (HAP Section 6.6)
+  int postPairingsURL();                                      // POST /pairings (HAP Sections 5.10-5.12)  
+  int getCharacteristicsURL(char *urlBuf);                    // GET /characteristics (HAP Section 6.7.4)  
+  int putCharacteristicsURL(char *json);                      // PUT /characteristics (HAP Section 6.7.2)
+  int putPrepareURL(char *json);                              // PUT /prepare (HAP Section 6.7.2.4)
+  int getStatusURL();                                         // GET / status (an optional, non-HAP feature)
 
   void tlvRespond();                                                // respond to client with HTTP OK header and all defined TLV data records (those with length>0)
+  void tlvRespond(TLV8 &tlv8);                                      // respond to client with HTTP OK header and all defined TLV data records
   void sendEncrypted(char *body, uint8_t *dataBuf, int dataLen);    // send client complete ChaCha20-Poly1305 encrypted HTTP mesage comprising a null-terminated 'body' and 'dataBuf' with 'dataLen' bytes
   int receiveEncrypted(uint8_t *httpBuf, int messageSize);          // decrypt HTTP request (HAP Section 6.5)
 
@@ -171,6 +172,12 @@ struct HAPClient {
   static void checkNotifications();                                                    // checks for Event Notifications and reports to controllers as needed (HAP Section 6.8)
   static void checkTimedWrites();                                                      // checks for expired Timed Write PIDs, and clears any found (HAP Section 6.7.2.4)
   static void eventNotify(SpanBuf *pObj, int nObj, int ignoreClient=-1);               // transmits EVENT Notifications for nObj SpanBuf objects, pObj, with optional flag to ignore a specific client
+
+  class HAPTLV : public TLV8 {
+    public:
+      HAPTLV() : TLV8(tlvNames,11){}
+  };
+  
 };
 
 /////////////////////////////////////////////////
