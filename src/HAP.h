@@ -37,17 +37,17 @@
 #include "TLV8.h"
 
 const TLV8_names tlvNames[] = {
-  {kTLVType_Separator,"SEPARATOR"},
-  {kTLVType_State,"STATE"},
-  {kTLVType_PublicKey,"PUBKEY"},
-  {kTLVType_Method,"METHOD"},
-  {kTLVType_Salt,"SALT"},
-  {kTLVType_Error,"ERROR"},
-  {kTLVType_Proof,"PROOF"},
-  {kTLVType_EncryptedData,"ENC.DATA"},
-  {kTLVType_Signature,"SIGNATURE"},
-  {kTLVType_Identifier,"IDENTIFIER"},
-  {kTLVType_Permissions,"PERMISSION"}
+  {kTLVType_Separator,"*SEPARATOR"},
+  {kTLVType_State,"*STATE"},
+  {kTLVType_PublicKey,"*PUBKEY"},
+  {kTLVType_Method,"*METHOD"},
+  {kTLVType_Salt,"*SALT"},
+  {kTLVType_Error,"*ERROR"},
+  {kTLVType_Proof,"*PROOF"},
+  {kTLVType_EncryptedData,"*ENC.DATA"},
+  {kTLVType_Signature,"*SIGNATURE"},
+  {kTLVType_Identifier,"*IDENTIFIER"},
+  {kTLVType_Permissions,"*PERMISSION"}
 };
 
 /////////////////////////////////////////////////
@@ -121,7 +121,7 @@ struct HAPClient {
   // These keys are generated in the first call to pair-verify and used in the second call to pair-verify so must persist for a short period
     
   uint8_t publicCurveKey[32];     // public key for Curve25519 encryption
-  uint8_t sharedCurveKey[32];     // Pair-Verfied Shared Secret key derived from Accessory's epehmeral secretCurveKey and Controller's iosCurveKey
+  uint8_t sharedCurveKey[32];     // Pair-Verfied Shared Secret key derived from Accessory's ephemeral secretCurveKey and Controller's iosCurveKey
   uint8_t sessionKey[32];         // shared Session Key (derived with various HKDF calls)
   uint8_t iosCurveKey[32];        // Curve25519 public key for associated paired controller
 

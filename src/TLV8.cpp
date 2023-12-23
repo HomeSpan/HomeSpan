@@ -29,12 +29,14 @@
 
 /////////////////////////////////////
 
-void TLV8::add(uint8_t tag, size_t len, const uint8_t* val){
+TLV8_it TLV8::add(uint8_t tag, size_t len, const uint8_t* val){
 
   if(!empty() && back().tag==tag)
     back().update(len,val);
   else
     emplace_back(tag,len,val);
+
+  return(end()-1);
 }
 
 /////////////////////////////////////
@@ -165,7 +167,7 @@ const char *TLV8::getName(uint8_t tag){
   if(names==NULL)
     return(NULL);
 
-  for(int i=0;i<sizeof(names);i++){
+  for(int i=0;i<nNames;i++){
     if(names[i].tag==tag)
       return(names[i].name);
   }
@@ -177,6 +179,9 @@ const char *TLV8::getName(uint8_t tag){
 
 void TLV8::print(TLV8_it it1, TLV8_it it2){
 
+  if(homeSpan.getLogLevel()<2)
+    return;
+    
   while(it1!=it2){
     const char *name=getName((*it1).tag);
     if(name)
