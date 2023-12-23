@@ -36,7 +36,7 @@
 #include "SRP.h"
 #include "TLV8.h"
 
-const TLV8_names tlvNames[] = {
+const TLV8_names HAP_Names[] = {
   {kTLVType_Separator,"*SEPARATOR"},
   {kTLVType_State,"*STATE"},
   {kTLVType_PublicKey,"*PUBKEY"},
@@ -102,16 +102,15 @@ struct HAPClient {
   static const int MAX_CONTROLLERS=16;                // maximum number of paired controllers (HAP requires at least 16)
   static const int MAX_ACCESSORIES=150;               // maximum number of allowed Accessories (HAP limit=150)
   
-  static TLV<kTLVType,11> tlv8;                       // TLV8 structure (HAP Section 14.1) with space for 11 TLV records of type kTLVType (HAP Table 5-6)
-  static TLV8 tlv8_new;                               // TLV8 structure (HAP Section 14.1) with space for 11 TLV records of type kTLVType (HAP Table 5-6)
-  static nvs_handle hapNVS;                           // handle for non-volatile-storage of HAP data
-  static nvs_handle srpNVS;                           // handle for non-volatile-storage of SRP data
-  static HKDF hkdf;                                   // generates (and stores) HKDF-SHA-512 32-byte keys derived from an inputKey of arbitrary length, a salt string, and an info string
-  static pairState pairStatus;                        // tracks pair-setup status
-  static SRP6A srp;                                   // stores all SRP-6A keys used for Pair-Setup
-  static Accessory accessory;                         // Accessory ID and Ed25519 public and secret keys- permanently stored
-  static list<Controller, Mallocator<Controller>> controllerList;             // linked-list of Paired Controller IDs and ED25519 long-term public keys - permanently stored
-  static int conNum;                                  // connection number - used to keep track of per-connection EV notifications
+  static TLV<kTLVType,11> tlv8;                                     // TLV8 structure (HAP Section 14.1) with space for 11 TLV records of type kTLVType (HAP Table 5-6)
+  static nvs_handle hapNVS;                                         // handle for non-volatile-storage of HAP data
+  static nvs_handle srpNVS;                                         // handle for non-volatile-storage of SRP data
+  static HKDF hkdf;                                                 // generates (and stores) HKDF-SHA-512 32-byte keys derived from an inputKey of arbitrary length, a salt string, and an info string
+  static pairState pairStatus;                                      // tracks pair-setup status
+  static SRP6A srp;                                                 // stores all SRP-6A keys used for Pair-Setup
+  static Accessory accessory;                                       // Accessory ID and Ed25519 public and secret keys- permanently stored
+  static list<Controller, Mallocator<Controller>> controllerList;   // linked-list of Paired Controller IDs and ED25519 long-term public keys - permanently stored
+  static int conNum;                                                // connection number - used to keep track of per-connection EV notifications
 
   // individual structures and data defined for each Hap Client connection
   
@@ -155,7 +154,7 @@ struct HAPClient {
 
   // define static methods
     
-  static void init();                                  // initialize HAP after start-up
+  static void init();            // initialize HAP after start-up
     
   static void hexPrintColumn(uint8_t *buf, int n, int minLogLevel=0);     // prints 'n' bytes of *buf as HEX, one byte per row, subject to specified minimum log level
   static void hexPrintRow(uint8_t *buf, int n, int minLogLevel=0);        // prints 'n' bytes of *buf as HEX, all on one row, subject to specified minimum log level
@@ -173,9 +172,9 @@ struct HAPClient {
   static void checkTimedWrites();                                                      // checks for expired Timed Write PIDs, and clears any found (HAP Section 6.7.2.4)
   static void eventNotify(SpanBuf *pObj, int nObj, int ignoreClient=-1);               // transmits EVENT Notifications for nObj SpanBuf objects, pObj, with optional flag to ignore a specific client
 
-  class HAPTLV : public TLV8 {
+  class HAPTLV : public TLV8 {   // dedicated class for HAP TLV8 records
     public:
-      HAPTLV() : TLV8(tlvNames,11){}
+      HAPTLV() : TLV8(HAP_Names,11){}
   };
   
 };
