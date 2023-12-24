@@ -95,6 +95,8 @@ class TLV8 : public vector<tlv8_t, Mallocator<tlv8_t>> {
   TLV8_it find(uint8_t tag, TLV8_it it1){return(find(tag, it1, end()));}
   TLV8_it find(uint8_t tag){return(find(tag, begin(), end()));}
 
+  int len(TLV8_it it){return(it==end()?-1:(*it).len);} 
+
   size_t pack_size(TLV8_it it1, TLV8_it it2);
   size_t pack_size(TLV8_it it1){return(pack_size(it1, it1+1));}
   size_t pack_size(){return(pack_size(begin(), end()));}

@@ -380,7 +380,7 @@ int HAPClient::postPairSetupURL(uint8_t *content, size_t len){
   
   auto itState=iosTLV.find(kTLVType_State);
 
-  if(itState==iosTLV.end() || (*itState).len!=1){               // missing STATE TLV
+  if(iosTLV.len(itState)!=1){                                   // missing STATE TLV
     LOG0("\n*** ERROR: Missing or invalid <M#> State TLV\n\n");
     badRequestError();                                          // return with 400 error, which closes connection      
     return(0);
@@ -413,7 +413,7 @@ int HAPClient::postPairSetupURL(uint8_t *content, size_t len){
 
       auto itMethod=iosTLV.find(kTLVType_Method);
 
-      if(itMethod==iosTLV.end() || (*itMethod).len!=1 || (*itMethod)[0]!=1){    // error: "Pair Setup" method must always be 0 to indicate setup without MiFi Authentification (HAP Table 5-3)
+      if(iosTLV.len(itMethod)!=1 || (*itMethod)[0]!=1){                         // error: "Pair Setup" method must always be 0 to indicate setup without MiFi Authentification (HAP Table 5-3)
         LOG0("\n*** ERROR: Pair 'Method' missing or not set to 0\n\n");
         responseTLV.add(kTLVType_State,pairState_M2);                           // set State=<M2>
         responseTLV.add(kTLVType_Error,tagError_Unavailable);                   // set Error=Unavailable
@@ -436,12 +436,12 @@ int HAPClient::postPairSetupURL(uint8_t *content, size_t len){
     } 
     break;
 
-    case pairState_M3:{                     // 'SRP Verify Request'
+    case pairState_M3:{                                     // 'SRP Verify Request'
 
       auto itPublicKey=iosTLV.find(kTLVType_PublicKey);
       auto itClientProof=iosTLV.find(kTLVType_Proof);
 
-      if(itPublicKey==iosTLV.end() || (*itPublicKey).len==0 || itClientProof==iosTLV.end() || (*itClientProof).len==0){
+      if(iosTLV.len(itPublicKey)<=0 || iosTLV.len(itClientProof)<=0){
         LOG0("\n*** ERROR: One or both of the required 'PublicKey' and 'Proof' TLV records for this step is bad or missing\n\n");
         responseTLV.add(kTLVType_State,pairState_M4);                   // set State=<M4>
         responseTLV.add(kTLVType_Error,tagError_Unknown);               // set Error=Unknown (there is no specific error type for missing/bad TLV data)
@@ -476,15 +476,16 @@ int HAPClient::postPairSetupURL(uint8_t *content, size_t len){
     }
     break;
     
-    case pairState_M5:                     // 'Exchange Request'
+    case pairState_M5:{                                     // 'Exchange Request'
 
-      if(!tlv8.len(kTLVType_EncryptedData)){            
+      auto itEncryptedData=iosTLV.find(kTLVType_EncryptedData);
+
+      if(iosTLV.len(itEncryptedData)<=0){            
         LOG0("\n*** ERROR: Required 'EncryptedData' TLV record for this step is bad or missing\n\n");
-        tlv8.clear();                                         // clear TLV records
-        tlv8.val(kTLVType_State,pairState_M6);                // set State=<M6>
-        tlv8.val(kTLVType_Error,tagError_Unknown);           // set Error=Unknown (there is no specific error type for missing/bad TLV data)
-        tlvRespond();                                       // send response to client
-        pairStatus=pairState_M1;                            // reset pairStatus to first step of unpaired
+        responseTLV.add(kTLVType_State,pairState_M6);                   // set State=<M6>
+        responseTLV.add(kTLVType_Error,tagError_Unknown);               // set Error=Unknown (there is no specific error type for missing/bad TLV data)
+        tlvRespond(responseTLV);                                        // send response to client
+        pairStatus=pairState_M1;                                        // reset pairStatus to first step of unpaired
         return(0);
       };
 
@@ -496,45 +497,38 @@ int HAPClient::postPairSetupURL(uint8_t *content, size_t len){
       // Note the SALT and INFO text fields used by HKDF to create this Session Key are NOT the same as those for creating iosDeviceX.
       // The iosDeviceX HKDF calculations are separate and will be performed further below with the SALT and INFO as specified in the HAP docs.
 
-      hkdf.create(sessionKey, srp.sharedSecret,64,"Pair-Setup-Encrypt-Salt","Pair-Setup-Encrypt-Info");       // create SessionKey
+      hkdf.create(sessionKey,srp.sharedSecret,64,"Pair-Setup-Encrypt-Salt","Pair-Setup-Encrypt-Info");       // create SessionKey
 
-      TempBuffer<uint8_t> decrypted(tlv8.len(kTLVType_EncryptedData));        // temporary storage for decrypted data
-      unsigned long long decryptedLen;                                        // length (in bytes) of decrypted data
+      LOG2("------- DECRYPTING SUB-TLVS -------\n");
       
-      if(crypto_aead_chacha20poly1305_ietf_decrypt(                                  // use SessionKey to decrypt encryptedData TLV with padded nonce="PS-Msg05"
-        decrypted, &decryptedLen, NULL,
-        tlv8.buf(kTLVType_EncryptedData), tlv8.len(kTLVType_EncryptedData), NULL, 0,
-        (unsigned char *)"\x00\x00\x00\x00PS-Msg05", sessionKey)==-1){
-          
+      // use SessionKey to decrypt encryptedData TLV with padded nonce="PS-Msg05"
+                                  
+      TempBuffer<uint8_t> decrypted((*itEncryptedData).len-crypto_aead_chacha20poly1305_IETF_ABYTES);        // temporary storage for decrypted data
+       
+      if(crypto_aead_chacha20poly1305_ietf_decrypt(decrypted, NULL, NULL, *itEncryptedData, (*itEncryptedData).len, NULL, 0, (unsigned char *)"\x00\x00\x00\x00PS-Msg05", sessionKey)==-1){          
         LOG0("\n*** ERROR: Exchange-Request Authentication Failed\n\n");
-        tlv8.clear();                                         // clear TLV records
-        tlv8.val(kTLVType_State,pairState_M6);                // set State=<M6>
-        tlv8.val(kTLVType_Error,tagError_Authentication);    // set Error=Authentication
-        tlvRespond();                                       // send response to client
-        pairStatus=pairState_M1;                            // reset pairStatus to first step of unpaired
+        responseTLV.add(kTLVType_State,pairState_M6);                   // set State=<M6>
+        responseTLV.add(kTLVType_Error,tagError_Authentication);        // set Error=Authentication
+        tlvRespond(responseTLV);                                        // send response to client
+        pairStatus=pairState_M1;                                        // reset pairStatus to first step of unpaired
         return(0);        
       }
 
-      if(!tlv8.unpack(decrypted,decryptedLen)){
-        LOG0("\n*** ERROR: Can't parse decrypted data into separate TLV records\n\n");
-        tlv8.clear();                                         // clear TLV records
-        tlv8.val(kTLVType_State,pairState_M6);                // set State=<M6>
-        tlv8.val(kTLVType_Error,tagError_Unknown);           // set Error=Unknown (there is no specific error type for missing/bad TLV data)
-        tlvRespond();                                       // send response to client
-        pairStatus=pairState_M1;                            // reset pairStatus to first step of unpaired
-        return(0);
-      }
+      subTLV.unpack(decrypted,decrypted.len());                         // unpack TLV      
+      subTLV.print();                                                   // print decrypted TLV data
+      
+      LOG2("---------- END SUB-TLVS! ----------\n");
 
-      tlv8.print(2);             // print decrypted TLV data
-      LOG2("------- END DECRYPTED TLVS! -------\n");
-       
-      if(!tlv8.len(kTLVType_Identifier) || !tlv8.len(kTLVType_PublicKey) || !tlv8.len(kTLVType_Signature)){            
+      auto itIdentifier=subTLV.find(kTLVType_Identifier);
+      auto itSignature=subTLV.find(kTLVType_Signature);
+      auto itPublicKey=subTLV.find(kTLVType_PublicKey);
+
+      if(subTLV.len(itIdentifier)!=36 || subTLV.len(itSignature)!=crypto_sign_BYTES || subTLV.len(itPublicKey)<=0){ 
         LOG0("\n*** ERROR: One or more of required 'Identifier,' 'PublicKey,' and 'Signature' TLV records for this step is bad or missing\n\n");
-        tlv8.clear();                                         // clear TLV records
-        tlv8.val(kTLVType_State,pairState_M6);                // set State=<M6>
-        tlv8.val(kTLVType_Error,tagError_Unknown);           // set Error=Unknown (there is no specific error type for missing/bad TLV data)
-        tlvRespond();                                       // send response to client
-        pairStatus=pairState_M1;                            // reset pairStatus to first step of unpaired
+        responseTLV.add(kTLVType_State,pairState_M6);                   // set State=<M6>
+        responseTLV.add(kTLVType_Error,tagError_Unknown);               // set Error=Unknown (there is no specific error type for missing/bad TLV data)
+        tlvRespond(responseTLV);                                        // send response to client
+        pairStatus=pairState_M1;                                        // reset pairStatus to first step of unpaired
         return(0);
       };
 
@@ -633,7 +627,7 @@ int HAPClient::postPairSetupURL(uint8_t *content, size_t len){
         homeSpan.pairCallback(true);
       
       return(1);        
-             
+    }       
     break;
 
   } // switch
@@ -658,7 +652,7 @@ int HAPClient::postPairVerifyURL(uint8_t *content, size_t len){
   
   auto itState=iosTLV.find(kTLVType_State);
 
-  if(itState==iosTLV.end() || (*itState).len!=1){               // missing STATE TLV
+  if(iosTLV.len(itState)!=1){                                   // missing STATE TLV
     LOG0("\n*** ERROR: Missing or invalid <M#> State TLV\n\n");
     badRequestError();                                          // return with 400 error, which closes connection      
     return(0);
@@ -682,7 +676,7 @@ int HAPClient::postPairVerifyURL(uint8_t *content, size_t len){
 
       auto itPublicKey=iosTLV.find(kTLVType_PublicKey);
 
-      if(itPublicKey==iosTLV.end() || (*itPublicKey).len!=32){            
+      if(iosTLV.len(itPublicKey)!=32){            
         LOG0("\n*** ERROR: Required 'PublicKey' TLV record for this step is bad or missing\n\n");
         responseTLV.add(kTLVType_State,pairState_M2);        // set State=<M2>
         responseTLV.add(kTLVType_Error,tagError_Unknown);    // set Error=Unknown (there is no specific error type for missing/bad TLV data)
@@ -737,7 +731,7 @@ int HAPClient::postPairVerifyURL(uint8_t *content, size_t len){
 
       auto itEncryptedData=iosTLV.find(kTLVType_EncryptedData);
 
-      if(itEncryptedData==iosTLV.end() || (*itEncryptedData).len==0){            
+      if(iosTLV.len(itEncryptedData)<=0){            
         LOG0("\n*** ERROR: Required 'EncryptedData' TLV record for this step is bad or missing\n\n");
         responseTLV.add(kTLVType_State,pairState_M4);               // set State=<M4>
         responseTLV.add(kTLVType_Error,tagError_Unknown);           // set Error=Unknown (there is no specific error type for missing/bad TLV data)
@@ -747,13 +741,11 @@ int HAPClient::postPairVerifyURL(uint8_t *content, size_t len){
 
       LOG2("------- DECRYPTING SUB-TLVS -------\n");
 
+      // use SessionKey to decrypt encrypytedData TLV with padded nonce="PV-Msg03"
+
       TempBuffer<uint8_t> decrypted((*itEncryptedData).len-crypto_aead_chacha20poly1305_IETF_ABYTES);        // temporary storage for decrypted data
       
-      if(crypto_aead_chacha20poly1305_ietf_decrypt(                                            // use SessionKey to decrypt encrypytedData TLV with padded nonce="PV-Msg03"
-        decrypted, NULL, NULL,
-        (*itEncryptedData).val.get(), (*itEncryptedData).len, NULL, 0,
-        (unsigned char *)"\x00\x00\x00\x00PV-Msg03", sessionKey)==-1){
-          
+      if(crypto_aead_chacha20poly1305_ietf_decrypt(decrypted, NULL, NULL, *itEncryptedData, (*itEncryptedData).len, NULL, 0, (unsigned char *)"\x00\x00\x00\x00PV-Msg03", sessionKey)==-1){          
         LOG0("\n*** ERROR: Verify Authentication Failed\n\n");
         responseTLV.add(kTLVType_State,pairState_M4);               // set State=<M4>
         responseTLV.add(kTLVType_Error,tagError_Authentication);    // set Error=Authentication
@@ -761,16 +753,15 @@ int HAPClient::postPairVerifyURL(uint8_t *content, size_t len){
         return(0);        
       }
 
-      subTLV.unpack(decrypted,decrypted.len());
-      
-      subTLV.print();             // print decrypted TLV data
+      subTLV.unpack(decrypted,decrypted.len());                     // unpack TLV      
+      subTLV.print();                                               // print decrypted TLV data
       
       LOG2("---------- END SUB-TLVS! ----------\n");
 
       auto itIdentifier=subTLV.find(kTLVType_Identifier);
       auto itSignature=subTLV.find(kTLVType_Signature);
 
-      if(itIdentifier==subTLV.end() || (*itIdentifier).len!=36 || itSignature==subTLV.end() || (*itSignature).len!=crypto_sign_BYTES){ 
+      if(subTLV.len(itIdentifier)!=36 || subTLV.len(itSignature)!=crypto_sign_BYTES){ 
         LOG0("\n*** ERROR: One or more of required 'Identifier,' and 'Signature' TLV records for this step is bad or missing\n\n");
         responseTLV.add(kTLVType_State,pairState_M4);               // set State=<M4>
         responseTLV.add(kTLVType_Error,tagError_Unknown);           // set Error=Unknown (there is no specific error type for missing/bad TLV data)
@@ -780,9 +771,9 @@ int HAPClient::postPairVerifyURL(uint8_t *content, size_t len){
 
       Controller *tPair;                                            // temporary pointer to Controller
       
-      if(!(tPair=findController((*itIdentifier).val.get()))){
+      if(!(tPair=findController(*itIdentifier))){
         LOG0("\n*** ERROR: Unrecognized Controller ID: ");
-        charPrintRow((*itIdentifier).val.get(),36,2);
+        charPrintRow(*itIdentifier,36,2);
         LOG0("\n\n");
         responseTLV.add(kTLVType_State,pairState_M4);               // set State=<M4>
         responseTLV.add(kTLVType_Error,tagError_Authentication);    // set Error=Authentication
@@ -800,7 +791,7 @@ int HAPClient::postPairVerifyURL(uint8_t *content, size_t len){
       memcpy(iosDeviceInfo+32,tPair->ID,36);
       memcpy(iosDeviceInfo+68,publicCurveKey,32);
       
-      if(crypto_sign_verify_detached((*itSignature).val.get(), iosDeviceInfo, iosDeviceInfo.len(), tPair->LTPK) != 0){         // verify signature of iosDeviceInfo using iosDeviceLTPK   
+      if(crypto_sign_verify_detached(*itSignature, iosDeviceInfo, iosDeviceInfo.len(), tPair->LTPK) != 0){         // verify signature of iosDeviceInfo using iosDeviceLTPK   
         LOG0("\n*** ERROR: LPTK Signature Verification Failed\n\n");
         responseTLV.add(kTLVType_State,pairState_M4);               // set State=<M4>
         responseTLV.add(kTLVType_Error,tagError_Authentication);    // set Error=Authentication
