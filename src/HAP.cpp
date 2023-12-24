@@ -220,29 +220,10 @@ void HAPClient::processRequest(){
       return;      
     }
            
-    if(!strncmp(body,"POST /pair-setup ",17) &&                              // POST PAIR-SETUP
-       strstr(body,"Content-Type: application/pairing+tlv8") &&              // check that content is TLV8
-       tlv8.unpack(content,cLen)){                                          // read TLV content
-       tlv8.print(2);                                                        // print TLV records in form "TAG(INT) LENGTH(INT) VALUES(HEX)"
-      LOG2("------------ END TLVS! ------------\n");
-               
-      postPairSetupURL();                   // process URL
+    if(!strncmp(body,"POST /pair-setup ",17) && strstr(body,"Content-Type: application/pairing+tlv8")){            // POST PAIR-SETUP               
+      postPairSetupURL(content,cLen);
       return;
     }
-
-//    if(!strncmp(body,"POST /pair-verify ",18) &&                             // POST PAIR-VERIFY
-//       strstr(body,"Content-Type: application/pairing+tlv8") &&              // check that content is TLV8
-//       tlv8.unpack(content,cLen)){                                          // read TLV content
-//       tlv8.print(2);                                                        // print TLV records in form "TAG(INT) LENGTH(INT) VALUES(HEX)"
-//       tlv8_new.unpack(content,cLen);
-//       tlv8_new.print();
-//      LOG2("------------ END TLVS! ------------\n");
-//               
-//      postPairVerifyURL();                  // process URL
-//      tlv8_new.clear();
-//      return;
-//    }
-
 
     if(!strncmp(body,"POST /pair-verify ",18) && strstr(body,"Content-Type: application/pairing+tlv8")){           // POST PAIR-VERIFY 
       postPairVerifyURL(content,cLen);
@@ -385,101 +366,114 @@ int HAPClient::unauthorizedError(){
 
 //////////////////////////////////////
 
-int HAPClient::postPairSetupURL(){
+int HAPClient::postPairSetupURL(uint8_t *content, size_t len){
 
-  LOG1("In Pair Setup...");
+  HAPTLV iosTLV;
+  HAPTLV responseTLV;
+  HAPTLV subTLV;
+
+  iosTLV.unpack(content,len);
+  iosTLV.print();
+  LOG2("------------ END TLVS! ------------\n");
+
+  LOG2("In Pair Setup #%d (%s)...",conNum,client.remoteIP().toString().c_str());
   
-  int tlvState=tlv8.val(kTLVType_State);
-  char buf[64];
+  auto itState=iosTLV.find(kTLVType_State);
 
-  if(tlvState==-1){                                           // missing STATE TLV
-    LOG0("\n*** ERROR: Missing <M#> State TLV\n\n");
-    badRequestError();                                        // return with 400 error, which closes connection      
+  if(itState==iosTLV.end() || (*itState).len!=1){               // missing STATE TLV
+    LOG0("\n*** ERROR: Missing or invalid <M#> State TLV\n\n");
+    badRequestError();                                          // return with 400 error, which closes connection      
     return(0);
   }
 
-  if(nAdminControllers()){                              // error: Device already paired (i.e. there is at least one admin Controller). We should not be receiving any requests for Pair-Setup!
+  int tlvState=(*itState)[0];
+
+  if(nAdminControllers()){                                  // error: Device already paired (i.e. there is at least one admin Controller). We should not be receiving any requests for Pair-Setup!
     LOG0("\n*** ERROR: Device already paired!\n\n");
-    tlv8.clear();                                         // clear TLV records
-    tlv8.val(kTLVType_State,tlvState+1);                  // set response STATE to requested state+1 (which should match the state that was expected by the controller)
-    tlv8.val(kTLVType_Error,tagError_Unavailable);       // set Error=Unavailable
-    tlvRespond();                                       // send response to client
+    responseTLV.add(kTLVType_State,tlvState+1);             // set response STATE to requested state+1 (which should match the state that was expected by the controller)
+    responseTLV.add(kTLVType_Error,tagError_Unavailable);   // set Error=Unavailable
+    tlvRespond(responseTLV);                                // send response to client
     return(0);
   };
 
-  sprintf(buf,"Found <M%d>.  Expected <M%d>\n",tlvState,pairStatus);
-  LOG2(buf);
+  LOG2("Found <M%d>.  Expected <M%d>.\n",tlvState,pairStatus);
 
-  if(tlvState!=pairStatus){                             // error: Device is not yet paired, but out-of-sequence pair-setup STATE was received
+  if(tlvState!=pairStatus){                                         // error: Device is not yet paired, but out-of-sequence pair-setup STATE was received
     LOG0("\n*** ERROR: Out-of-Sequence Pair-Setup request!\n\n");
-    tlv8.clear();                                         // clear TLV records
-    tlv8.val(kTLVType_State,tlvState+1);                  // set response STATE to requested state+1 (which should match the state that was expected by the controller)
-    tlv8.val(kTLVType_Error,tagError_Unknown);           // set Error=Unknown (there is no specific error type for out-of-sequence steps)
-    tlvRespond();                                       // send response to client
-    pairStatus=pairState_M1;                            // reset pairStatus to first step of unpaired accessory (M1)
+    responseTLV.add(kTLVType_State,tlvState+1);                     // set response STATE to requested state+1 (which should match the state that was expected by the controller)
+    responseTLV.add(kTLVType_Error,tagError_Unknown);               // set Error=Unknown (there is no specific error type for out-of-sequence steps)
+    tlvRespond(responseTLV);                                        // send response to client
+    pairStatus=pairState_M1;                                        // reset pairStatus to first step of unpaired accessory (M1)
     return(0);
   };
    
-  switch(tlvState){          // valid and in-sequence Pair-Setup STATE received -- process request!  (HAP Section 5.6)
+  switch(tlvState){                                         // valid and in-sequence Pair-Setup STATE received -- process request!  (HAP Section 5.6)
 
-    case pairState_M1:                     // 'SRP Start Request'
+    case pairState_M1:{                                     // 'SRP Start Request'
 
-      if(tlv8.val(kTLVType_Method)!=0){                       // error: "Pair Setup" method must always be 0 to indicate setup without MiFi Authentification (HAP Table 5-3)
-        LOG0("\n*** ERROR: Pair Method not set to 0\n\n");
-        tlv8.clear();                                         // clear TLV records
-        tlv8.val(kTLVType_State,pairState_M2);                // set State=<M2>
-        tlv8.val(kTLVType_Error,tagError_Unavailable);       // set Error=Unavailable
-        tlvRespond();                                       // send response to client
+      auto itMethod=iosTLV.find(kTLVType_Method);
+
+      if(itMethod==iosTLV.end() || (*itMethod).len!=1 || (*itMethod)[0]!=1){    // error: "Pair Setup" method must always be 0 to indicate setup without MiFi Authentification (HAP Table 5-3)
+        LOG0("\n*** ERROR: Pair 'Method' missing or not set to 0\n\n");
+        responseTLV.add(kTLVType_State,pairState_M2);                           // set State=<M2>
+        responseTLV.add(kTLVType_Error,tagError_Unavailable);                   // set Error=Unavailable
+        tlvRespond(responseTLV);                                                // send response to client
         return(0);
       };
 
-      tlv8.clear();
-      tlv8.val(kTLVType_State,pairState_M2);            // set State=<M2>
-      srp.createPublicKey();                          // create accessory public key from random Pair-Setup code (displayed to user)
-      srp.loadTLV(kTLVType_PublicKey,&srp.B,384);         // load server public key, B
-      srp.loadTLV(kTLVType_Salt,&srp.s,16);              // load salt, s
-      tlvRespond();                                   // send response to client
+      auto itPublicKey=responseTLV.add(kTLVType_PublicKey,384,NULL);        // create blank PublicKey TLV with space for 384 bytes
+      auto itSalt=responseTLV.add(kTLVType_Salt,16,NULL);                   // create blank Salt TLV with space for 16 bytes
 
-      pairStatus=pairState_M3;                        // set next expected pair-state request from client
+      responseTLV.add(kTLVType_State,pairState_M2);                         // set State=<M2>
+      srp.createPublicKey();                                                // create accessory Public Key from Pair-Setup code (displayed to user)
+      mbedtls_mpi_write_binary(&srp.B,*itPublicKey,(*itPublicKey).len);     // load server PublicKey, B, into TLV
+      mbedtls_mpi_write_binary(&srp.s,*itSalt,(*itSalt).len);               // load Salt, s, into TLV
+//      srp.loadTLV(*itPublicKey,&srp.B,384);                                 // load server PublicKey, B
+//      srp.loadTLV(*itSalt,&srp.s,16);                                       // load Salt, s
+      tlvRespond(responseTLV);                                              // send response to client
+      pairStatus=pairState_M3;                                              // set next expected pair-state request from client
       return(1);
-      
+    } 
     break;
 
-    case pairState_M3:                     // 'SRP Verify Request'
+    case pairState_M3:{                     // 'SRP Verify Request'
 
-      if(!srp.writeTLV(kTLVType_PublicKey,&srp.A) ||    // try to write TLVs into mpi structures
-         !srp.writeTLV(kTLVType_Proof,&srp.M1)){
-            
+      auto itPublicKey=iosTLV.find(kTLVType_PublicKey);
+      auto itClientProof=iosTLV.find(kTLVType_Proof);
+
+      if(itPublicKey==iosTLV.end() || (*itPublicKey).len==0 || itClientProof==iosTLV.end() || (*itClientProof).len==0){
         LOG0("\n*** ERROR: One or both of the required 'PublicKey' and 'Proof' TLV records for this step is bad or missing\n\n");
-        tlv8.clear();                                         // clear TLV records
-        tlv8.val(kTLVType_State,pairState_M4);                // set State=<M4>
-        tlv8.val(kTLVType_Error,tagError_Unknown);           // set Error=Unknown (there is no specific error type for missing/bad TLV data)
-        tlvRespond();                                       // send response to client
-        pairStatus=pairState_M1;                            // reset pairStatus to first step of unpaired
+        responseTLV.add(kTLVType_State,pairState_M4);                   // set State=<M4>
+        responseTLV.add(kTLVType_Error,tagError_Unknown);               // set Error=Unknown (there is no specific error type for missing/bad TLV data)
+        tlvRespond(responseTLV);                                        // send response to client
+        pairStatus=pairState_M1;                                        // reset pairStatus to first step of unpaired
         return(0);
       };
 
-      srp.createSessionKey();                               // create session key, K, from receipt of HAP Client public key, A
+      mbedtls_mpi_read_binary(&srp.A,*itPublicKey,(*itPublicKey).len);          // load client PublicKey TLV into A
+      mbedtls_mpi_read_binary(&srp.M1,*itClientProof,(*itClientProof).len);     // load client Proof TLV into M1
 
-      if(!srp.verifyProof()){                               // verify proof, M1, received from HAP Client
+      srp.createSessionKey();                                           // create session key, K, from receipt of client Public Key, A
+
+      if(!srp.verifyProof()){                                           // verify client Proof, M1
         LOG0("\n*** ERROR: SRP Proof Verification Failed\n\n");
-        tlv8.clear();                                         // clear TLV records
-        tlv8.val(kTLVType_State,pairState_M4);                // set State=<M4>
-        tlv8.val(kTLVType_Error,tagError_Authentication);    // set Error=Authentication
-        tlvRespond();                                       // send response to client
-        pairStatus=pairState_M1;                            // reset pairStatus to first step of unpaired
+        responseTLV.add(kTLVType_State,pairState_M4);                   // set State=<M4>
+        responseTLV.add(kTLVType_Error,tagError_Authentication);        // set Error=Authentication
+        tlvRespond(responseTLV);                                        // send response to client
+        pairStatus=pairState_M1;                                        // reset pairStatus to first step of unpaired
         return(0);        
       };
 
-      srp.createProof();                                  // M1 has been successully verified; now create accessory proof M2
-      tlv8.clear();                                         // clear TLV records
-      tlv8.val(kTLVType_State,pairState_M4);                // set State=<M4>
-      srp.loadTLV(kTLVType_Proof,&srp.M2,64);               // load M2 counter-proof
-      tlvRespond();                                       // send response to client
+      auto itAccProof=responseTLV.add(kTLVType_Proof,64,NULL);              // create blank accessory Proof TLV with space for 64 bytes
 
-      pairStatus=pairState_M5;                            // set next expected pair-state request from client
+      responseTLV.add(kTLVType_State,pairState_M4);                         // set State=<M4>
+      srp.createProof();                                                    // M1 has been successully verified; now create accessory proof M2
+      mbedtls_mpi_write_binary(&srp.M2,*itAccProof,(*itAccProof).len);      // load accessory Proof, M2, into TLV
+//      srp.loadTLV(kTLVType_Proof,&srp.M2,64);                               // load accessory Proof, M2, into TLV
+      tlvRespond(responseTLV);                                              // send response to client
+      pairStatus=pairState_M5;                                              // set next expected pair-state request from client
       return(1);        
-        
+    }
     break;
     
     case pairState_M5:                     // 'Exchange Request'
@@ -664,9 +658,9 @@ int HAPClient::postPairVerifyURL(uint8_t *content, size_t len){
   
   auto itState=iosTLV.find(kTLVType_State);
 
-  if(itState==iosTLV.end()){                            // missing STATE TLV
-    LOG0("\n*** ERROR: Missing <M#> State TLV\n\n");
-    badRequestError();                                  // return with 400 error, which closes connection      
+  if(itState==iosTLV.end() || (*itState).len!=1){               // missing STATE TLV
+    LOG0("\n*** ERROR: Missing or invalid <M#> State TLV\n\n");
+    badRequestError();                                          // return with 400 error, which closes connection      
     return(0);
   }
 
@@ -709,7 +703,7 @@ int HAPClient::postPairVerifyURL(uint8_t *content, size_t len){
       memcpy(accessoryInfo+32,accessory.ID,17);              // +accessoryPairingID
       memcpy(accessoryInfo+49,iosCurveKey,32);               // +Controller's Curve25519 public key
 
-      auto itSignature=subTLV.add(kTLVType_Signature,64,NULL);                                   //create blank Signature TLV with space for 64 bytes
+      auto itSignature=subTLV.add(kTLVType_Signature,64,NULL);                                   // create blank Signature TLV with space for 64 bytes
 
       crypto_sign_detached(*itSignature,NULL,accessoryInfo,accessoryInfo.len(),accessory.LTSK);  // produce Signature of accessoryInfo using AccessoryLTSK (Ed25519 long-term secret key)
 
