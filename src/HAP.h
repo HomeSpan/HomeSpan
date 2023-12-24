@@ -65,10 +65,10 @@ struct Nonce {
 // Paired Controller Structure for Permanently-Stored Data
 
 struct Controller {                
-  boolean allocated=false;  // DEPRECATED (but needed for backwards compatability with original NVS storage of Controller info)
-  boolean admin;            // Controller has admin privileges
-  uint8_t ID[36];           // Pairing ID
-  uint8_t LTPK[32];         // Long Term Ed2519 Public Key
+  boolean allocated=false;                          // DEPRECATED (but needed for backwards compatability with original NVS storage of Controller info)
+  boolean admin;                                    // Controller has admin privileges
+  uint8_t ID[36];                                   // Pairing ID
+  uint8_t LTPK[crypto_sign_PUBLICKEYBYTES];         // Long Term Ed2519 Public Key
 
   Controller(){}
   
@@ -85,9 +85,9 @@ struct Controller {
 // Accessory Structure for Permanently-Stored Data
 
 struct Accessory {
-  uint8_t ID[17];          // Pairing ID in form "XX:XX:XX:XX:XX:XX"
-  uint8_t LTSK[64];        // secret key for Ed25519 signatures
-  uint8_t LTPK[32];        // public key for Ed25519 signatures
+  uint8_t ID[17];                                  // Pairing ID in form "XX:XX:XX:XX:XX:XX"
+  uint8_t LTSK[crypto_sign_SECRETKEYBYTES];        // secret key for Ed25519 signatures
+  uint8_t LTPK[crypto_sign_PUBLICKEYBYTES];        // public key for Ed25519 signatures
 };
 
 /////////////////////////////////////////////////

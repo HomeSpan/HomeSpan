@@ -523,7 +523,7 @@ int HAPClient::postPairSetupURL(uint8_t *content, size_t len){
       auto itSignature=subTLV.find(kTLVType_Signature);
       auto itPublicKey=subTLV.find(kTLVType_PublicKey);
 
-      if(subTLV.len(itIdentifier)!=36 || subTLV.len(itSignature)!=crypto_sign_BYTES || subTLV.len(itPublicKey)<=0){ 
+      if(subTLV.len(itIdentifier)!=36 || subTLV.len(itSignature)!=crypto_sign_BYTES || subTLV.len(itPublicKey)!=crypto_sign_PUBLICKEYBYTES){ 
         LOG0("\n*** ERROR: One or more of required 'Identifier,' 'PublicKey,' and 'Signature' TLV records for this step is bad or missing\n\n");
         responseTLV.add(kTLVType_State,pairState_M6);                   // set State=<M6>
         responseTLV.add(kTLVType_Error,tagError_Unknown);               // set Error=Unknown (there is no specific error type for missing/bad TLV data)
@@ -537,93 +537,70 @@ int HAPClient::postPairSetupURL(uint8_t *content, size_t len){
       // Rather, it purposely does not transmit "iosDeviceX", which is derived from the SRP Shared Secret that only the Client and this Server know.
       // Note that the SALT and INFO text fields now match those in HAP Section 5.6.6.1
 
-      uint8_t iosDeviceX[32];
-      hkdf.create(iosDeviceX,srp.sharedSecret,64,"Pair-Setup-Controller-Sign-Salt","Pair-Setup-Controller-Sign-Info");       // derive iosDeviceX from SRP Shared Secret using HKDF 
-      const size_t iosDeviceXLen=32;
+      TempBuffer<uint8_t> iosDeviceX(32);
+      hkdf.create(iosDeviceX,srp.sharedSecret,64,"Pair-Setup-Controller-Sign-Salt","Pair-Setup-Controller-Sign-Info");     // derive iosDeviceX (32 bytes) from SRP Shared Secret using HKDF 
 
-      uint8_t *iosDevicePairingID = tlv8.buf(kTLVType_Identifier);        // set iosDevicePairingID from TLV record
-      size_t iosDevicePairingIDLen = tlv8.len(kTLVType_Identifier);
+      // Concatenate iosDeviceX, IOS ID, and IOS PublicKey into iosDeviceInfo
+      
+      TempBuffer<uint8_t> iosDeviceInfo(iosDeviceX.len()+(*itIdentifier).len+(*itPublicKey).len);
+      Utils::memcat(iosDeviceInfo,3,iosDeviceX.get(),iosDeviceX.len(),(*itIdentifier).val.get(),(*itIdentifier).len,(*itPublicKey).val.get(),(*itPublicKey).len);
 
-      uint8_t *iosDeviceLTPK = tlv8.buf(kTLVType_PublicKey);              // set iosDeviceLTPK (Ed25519 long-term public key) from TLV record
-      size_t iosDeviceLTPKLen = tlv8.len(kTLVType_PublicKey);
-
-      size_t iosDeviceInfoLen=iosDeviceXLen+iosDevicePairingIDLen+iosDeviceLTPKLen;             // total size of re-constituted message, iosDeviceInfo
-      uint8_t iosDeviceInfo[iosDeviceInfoLen];
-
-      memcpy(iosDeviceInfo,iosDeviceX,iosDeviceXLen);                                                      // iosDeviceInfo = iosDeviceX
-      memcpy(iosDeviceInfo+iosDeviceXLen,iosDevicePairingID,iosDevicePairingIDLen);                        // +iosDevicePairingID
-      memcpy(iosDeviceInfo+iosDeviceXLen+iosDevicePairingIDLen,iosDeviceLTPK,iosDeviceLTPKLen);            // +iosDeviceLTPK
-
-      uint8_t *iosDeviceSignature = tlv8.buf(kTLVType_Signature);                               // set iosDeviceSignature from TLV record (an Ed25519 should always be 64 bytes)
-
-      if(crypto_sign_verify_detached(iosDeviceSignature, iosDeviceInfo, iosDeviceInfoLen, iosDeviceLTPK) != 0){         // verify signature of iosDeviceInfo using iosDeviceLTPK   
+      if(crypto_sign_verify_detached(*itSignature, iosDeviceInfo, iosDeviceInfo.len(), *itPublicKey) != 0){                // verify signature of iosDeviceInfo using iosDeviceLTPK   
         LOG0("\n*** ERROR: LPTK Signature Verification Failed\n\n");
-        tlv8.clear();                                         // clear TLV records
-        tlv8.val(kTLVType_State,pairState_M6);                // set State=<M6>
-        tlv8.val(kTLVType_Error,tagError_Authentication);    // set Error=Authentication
-        tlvRespond();                                       // send response to client
-        pairStatus=pairState_M1;                            // reset pairStatus to first step of unpaired
+        responseTLV.add(kTLVType_State,pairState_M6);                   // set State=<M6>
+        responseTLV.add(kTLVType_Error,tagError_Authentication);        // set Error=Authentication
+        tlvRespond(responseTLV);                                        // send response to client
+        pairStatus=pairState_M1;                                        // reset pairStatus to first step of unpaired
         return(0);                
       }
 
-      addController(iosDevicePairingID,iosDeviceLTPK,true);        // save Pairing ID and LTPK for this Controller with admin privileges
+      addController(*itIdentifier,*itPublicKey,true);                   // save Pairing ID and LTPK for this Controller with admin privileges
 
       // Now perform the above steps in reverse to securely transmit the AccessoryLTPK to the Controller (HAP Section 5.6.6.2)
 
-      uint8_t accessoryX[32];
+      TempBuffer<uint8_t> accessoryX(32);
       hkdf.create(accessoryX,srp.sharedSecret,64,"Pair-Setup-Accessory-Sign-Salt","Pair-Setup-Accessory-Sign-Info");       // derive accessoryX from SRP Shared Secret using HKDF 
-      const size_t accessoryXLen=32;
       
-      uint8_t *accessoryPairingID=accessory.ID;                    // set accessoryPairingID from storage
-      const size_t accessoryPairingIDLen=17;
+      // Concatenate accessoryX, Accessory ID, and Accessory PublicKey into accessoryInfo
 
-      uint8_t *accessoryLTPK=accessory.LTPK;                       // set accessoryLTPK (Ed25519 long-term public key) from storage
-      const size_t accessoryLTPKLen=32;
+      TempBuffer<uint8_t> accessoryInfo(accessoryX.len()+sizeof(accessory.ID)+sizeof(accessory.LTPK));
+      Utils::memcat(accessoryInfo,3,accessoryX.get(),accessoryX.len(),accessory.ID,sizeof(accessory.ID),accessory.LTPK,sizeof(accessory.LTPK));
 
-      const size_t accessoryInfoLen=accessoryXLen+accessoryPairingIDLen+accessoryLTPKLen;             // total size of accessoryInfo
-      uint8_t accessoryInfo[accessoryInfoLen];
+      subTLV.clear();                                                                            // clear existing SUBTLV records
 
-      memcpy(accessoryInfo,accessoryX,accessoryXLen);                                                      // accessoryInfo = accessoryX
-      memcpy(accessoryInfo+accessoryXLen,accessoryPairingID,accessoryPairingIDLen);                        // +accessoryPairingID
-      memcpy(accessoryInfo+accessoryXLen+accessoryPairingIDLen,accessoryLTPK,accessoryLTPKLen);            // +accessoryLTPK
+      itSignature=subTLV.add(kTLVType_Signature,64,NULL);                                        // create blank Signature TLV with space for 64 bytes
 
-      tlv8.clear();       // clear existing TLV records
+      crypto_sign_detached(*itSignature,NULL,accessoryInfo,accessoryInfo.len(),accessory.LTSK);  // produce signature of accessoryInfo using AccessoryLTSK (Ed25519 long-term secret key)
 
-      crypto_sign_detached(tlv8.buf(kTLVType_Signature,64),NULL,accessoryInfo,accessoryInfoLen,accessory.LTSK);  // produce signature of accessoryInfo using AccessoryLTSK (Ed25519 long-term secret key)
-
-      tlv8.buf(kTLVType_Identifier,accessoryPairingID,accessoryPairingIDLen);   // set Identifier TLV record as accessoryPairingID
-      tlv8.buf(kTLVType_PublicKey,accessoryLTPK,accessoryLTPKLen);              // set PublicKey TLV record as accessoryLTPK
+      subTLV.add(kTLVType_Identifier,sizeof(accessory.ID),accessory.ID);                         // set Identifier TLV record as accessoryPairingID
+      subTLV.add(kTLVType_PublicKey,sizeof(accessory.LTPK),accessory.LTPK);                      // set PublicKey TLV record as accessoryLTPK
 
       LOG2("------- ENCRYPTING SUB-TLVS -------\n");
 
-      tlv8.print(2);
+      subTLV.print();
 
-      size_t subTLVLen=tlv8.pack(NULL);                 // get size of buffer needed to store sub-TLV 
-      uint8_t subTLV[subTLVLen];
-      subTLVLen=tlv8.pack(subTLV);                      // create sub-TLV by packing Identifier, PublicKey, and Signature TLV records together
+      TempBuffer<uint8_t> subPack(subTLV.pack_size());                                          // create sub-TLV by packing Identifier, PublicKey and Signature TLV records together
+      subTLV.pack(subPack);      
 
-      tlv8.clear();         // clear existing TLV records
+      // Encrypt the subTLV data using the same sessionKey as above with ChaCha20-Poly1305
 
-      // Final step is to encrypt the subTLV data using the same sessionKey as above with ChaCha20-Poly1305 
-      
-      unsigned long long edLen;
+      itEncryptedData=responseTLV.add(kTLVType_EncryptedData,subPack.len()+crypto_aead_chacha20poly1305_IETF_ABYTES,NULL);     //create blank EncryptedData TLV with space for subTLV + Authentication Tag
 
-      crypto_aead_chacha20poly1305_ietf_encrypt(tlv8.buf(kTLVType_EncryptedData),&edLen,subTLV,subTLVLen,NULL,0,NULL,(unsigned char *)"\x00\x00\x00\x00PS-Msg06",sessionKey);
-                                              
+      crypto_aead_chacha20poly1305_ietf_encrypt(*itEncryptedData,NULL,subPack,subPack.len(),NULL,0,NULL,(unsigned char *)"\x00\x00\x00\x00PS-Msg06",sessionKey);
+                                                   
       LOG2("---------- END SUB-TLVS! ----------\n");
 
-      tlv8.buf(kTLVType_EncryptedData,edLen);       // set length of EncryptedData TLV record, which should now include the Authentication Tag at the end as required by HAP
-      tlv8.val(kTLVType_State,pairState_M6);        // set State=<M6>
+      responseTLV.add(kTLVType_State,pairState_M6);         // set State=<M6>
       
-      tlvRespond();                        // send response to client
+      tlvRespond(responseTLV);                              // send response to client
 
-      mdns_service_txt_item_set("_hap","_tcp","sf","0");           // broadcast new status
+      mdns_service_txt_item_set("_hap","_tcp","sf","0");    // broadcast new status
       
       LOG1("\n*** ACCESSORY PAIRED! ***\n");
 
       STATUS_UPDATE(on(),HS_PAIRED)      
             
-      if(homeSpan.pairCallback)                     // if set, invoke user-defined Pairing Callback to indicate device has been paired
+      if(homeSpan.pairCallback)                             // if set, invoke user-defined Pairing Callback to indicate device has been paired
         homeSpan.pairCallback(true);
       
       return(1);        
