@@ -28,6 +28,7 @@
 #pragma once
 
 #include "HomeSpan.h"
+#include <forward_list>
 
 struct tlv8_t {
   uint8_t tag;
@@ -61,12 +62,12 @@ struct tlv8_t {
 
 /////////////////////////////////////
 
-typedef vector<tlv8_t, Mallocator<tlv8_t>>::iterator TLV8_it;
+typedef std::forward_list<tlv8_t, Mallocator<tlv8_t>>::iterator TLV8_it;
 typedef struct { const uint8_t tag; const char *name; } TLV8_names;
 
 /////////////////////////////////////
 
-class TLV8 : public vector<tlv8_t, Mallocator<tlv8_t>> {
+class TLV8 : public std::forward_list<tlv8_t, Mallocator<tlv8_t>> {
 
   TLV8_it currentPackIt;
   TLV8_it endPackIt;
@@ -98,11 +99,10 @@ class TLV8 : public vector<tlv8_t, Mallocator<tlv8_t>> {
   int len(TLV8_it it){return(it==end()?-1:(*it).len);} 
 
   size_t pack_size(TLV8_it it1, TLV8_it it2);
-  size_t pack_size(TLV8_it it1){return(pack_size(it1, it1+1));}
   size_t pack_size(){return(pack_size(begin(), end()));}
 
   void pack_init(TLV8_it it1, TLV8_it it2){currentPackIt=it1; endPackIt=it2; currentPackPhase=0;}
-  void pack_init(TLV8_it it1){pack_init(it1, it1+1);}
+  void pack_init(TLV8_it it1){pack_init(it1, it1++);}
   void pack_init(){pack_init(begin(),end());}
   
   size_t pack(uint8_t *buf, size_t bufSize);
@@ -111,11 +111,11 @@ class TLV8 : public vector<tlv8_t, Mallocator<tlv8_t>> {
   const char *getName(uint8_t tag);
   
   void print(TLV8_it it1, TLV8_it it2);
-  void print(TLV8_it it1){print(it1, it1+1);}
+  void print(TLV8_it it1){print(it1, it1++);}
   void print(){print(begin(), end());}
 
   void unpack(uint8_t *buf, size_t bufSize);
 
-  void wipe(){vector<tlv8_t, Mallocator<tlv8_t>>().swap(*this);}
+  void wipe(){std::forward_list<tlv8_t, Mallocator<tlv8_t>>().swap(*this);}
 
 };

@@ -413,7 +413,7 @@ int HAPClient::postPairSetupURL(uint8_t *content, size_t len){
 
       auto itMethod=iosTLV.find(kTLVType_Method);
 
-      if(iosTLV.len(itMethod)!=1 || (*itMethod)[0]!=1){                         // error: "Pair Setup" method must always be 0 to indicate setup without MiFi Authentification (HAP Table 5-3)
+      if(iosTLV.len(itMethod)!=1 || (*itMethod)[0]!=0){                         // error: "Pair Setup" method must always be 0 to indicate setup without MiFi Authentification (HAP Table 5-3)
         LOG0("\n*** ERROR: Pair 'Method' missing or not set to 0\n\n");
         responseTLV.add(kTLVType_State,pairState_M2);                           // set State=<M2>
         responseTLV.add(kTLVType_Error,tagError_Unavailable);                   // set Error=Unavailable
@@ -428,8 +428,6 @@ int HAPClient::postPairSetupURL(uint8_t *content, size_t len){
       srp.createPublicKey();                                                // create accessory Public Key from Pair-Setup code (displayed to user)
       mbedtls_mpi_write_binary(&srp.B,*itPublicKey,(*itPublicKey).len);     // load server PublicKey, B, into TLV
       mbedtls_mpi_write_binary(&srp.s,*itSalt,(*itSalt).len);               // load Salt, s, into TLV
-//      srp.loadTLV(*itPublicKey,&srp.B,384);                                 // load server PublicKey, B
-//      srp.loadTLV(*itSalt,&srp.s,16);                                       // load Salt, s
       tlvRespond(responseTLV);                                              // send response to client
       pairStatus=pairState_M3;                                              // set next expected pair-state request from client
       return(1);
@@ -469,7 +467,6 @@ int HAPClient::postPairSetupURL(uint8_t *content, size_t len){
       responseTLV.add(kTLVType_State,pairState_M4);                         // set State=<M4>
       srp.createProof();                                                    // M1 has been successully verified; now create accessory proof M2
       mbedtls_mpi_write_binary(&srp.M2,*itAccProof,(*itAccProof).len);      // load accessory Proof, M2, into TLV
-//      srp.loadTLV(kTLVType_Proof,&srp.M2,64);                               // load accessory Proof, M2, into TLV
       tlvRespond(responseTLV);                                              // send response to client
       pairStatus=pairState_M5;                                              // set next expected pair-state request from client
       return(1);        
@@ -661,24 +658,23 @@ int HAPClient::postPairVerifyURL(uint8_t *content, size_t len){
         return(0);        
       }
 
-      uint8_t secretCurveKey[32];                            // Accessory's secret key for Curve25519 encryption (32 bytes).  Ephemeral usage - created below and used only in this block
+      TempBuffer<uint8_t> secretCurveKey(32);                // Accessory's secret key for Curve25519 encryption (32 bytes).  Ephemeral usage - created below and used only in this block
       crypto_box_keypair(publicCurveKey,secretCurveKey);     // generate Curve25519 public key pair (will persist until end of verification process)
 
       memcpy(iosCurveKey,*itPublicKey,32);                   // save iosCurveKey (will persist until end of verification process)
 
-      crypto_scalarmult_curve25519(sharedCurveKey,secretCurveKey,iosCurveKey);      // generate (and persist) Pair Verify SharedSecret CurveKey from Accessory's Curve25519 secret key and Controller's Curve25519 public key (32 bytes)
+      crypto_scalarmult_curve25519(sharedCurveKey,secretCurveKey,iosCurveKey);      // generate (and persist) Pair Verify SharedSecret CurveKey from Accessory's Curve25519 secret key and Controller's Curve25519 public key
 
-      TempBuffer<uint8_t> accessoryInfo(81);           
+      // concatenate Accessory's Curve25519 Public Key, Accessory's Pairing ID, and Controller's Curve25519 Public Key into accessoryInfo
+      
+      TempBuffer<uint8_t> accessoryInfo(sizeof(publicCurveKey)+sizeof(accessory.ID)+sizeof(iosCurveKey));
+      Utils::memcat(accessoryInfo,3,publicCurveKey,sizeof(publicCurveKey),accessory.ID,sizeof(accessory.ID),iosCurveKey,sizeof(iosCurveKey));
 
-      memcpy(accessoryInfo,publicCurveKey,32);               // accessoryInfo = Accessory's Curve25519 public key
-      memcpy(accessoryInfo+32,accessory.ID,17);              // +accessoryPairingID
-      memcpy(accessoryInfo+49,iosCurveKey,32);               // +Controller's Curve25519 public key
-
-      auto itSignature=subTLV.add(kTLVType_Signature,64,NULL);                                   // create blank Signature TLV with space for 64 bytes
+      auto itSignature=subTLV.add(kTLVType_Signature,crypto_sign_BYTES,NULL);                    // create blank Signature TLV
 
       crypto_sign_detached(*itSignature,NULL,accessoryInfo,accessoryInfo.len(),accessory.LTSK);  // produce Signature of accessoryInfo using AccessoryLTSK (Ed25519 long-term secret key)
 
-      subTLV.add(kTLVType_Identifier,17,accessory.ID);                                           // set Identifier TLV record as accessoryPairingID
+      subTLV.add(kTLVType_Identifier,sizeof(accessory.ID),accessory.ID);                         // set Identifier TLV record as accessoryPairingID
 
       LOG2("------- ENCRYPTING SUB-TLVS -------\n");
 
@@ -759,14 +755,11 @@ int HAPClient::postPairVerifyURL(uint8_t *content, size_t len){
       }
 
       LOG2("\n*** Verifying session with Controller ID: ");
-      charPrintRow(tPair->ID,36,2);
+      charPrintRow(tPair->ID,sizeof(tPair->ID),2);
       LOG2("...\n");
 
-      TempBuffer<uint8_t> iosDeviceInfo(100);
-
-      memcpy(iosDeviceInfo,iosCurveKey,32);
-      memcpy(iosDeviceInfo+32,tPair->ID,36);
-      memcpy(iosDeviceInfo+68,publicCurveKey,32);
+      TempBuffer<uint8_t> iosDeviceInfo(sizeof(iosCurveKey)+sizeof(tPair->ID)+sizeof(publicCurveKey));
+      Utils::memcat(iosDeviceInfo,3,iosCurveKey,sizeof(iosCurveKey),tPair->ID,sizeof(tPair->ID),publicCurveKey,sizeof(publicCurveKey));
       
       if(crypto_sign_verify_detached(*itSignature, iosDeviceInfo, iosDeviceInfo.len(), tPair->LTPK) != 0){         // verify signature of iosDeviceInfo using iosDeviceLTPK   
         LOG0("\n*** ERROR: LPTK Signature Verification Failed\n\n");

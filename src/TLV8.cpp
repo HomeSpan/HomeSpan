@@ -31,12 +31,12 @@
 
 TLV8_it TLV8::add(uint8_t tag, size_t len, const uint8_t* val){
 
-  if(!empty() && back().tag==tag)
-    back().update(len,val);
+  if(!empty() && front().tag==tag)
+    front().update(len,val);
   else
-    emplace_back(tag,len,val);
+    emplace_front(tag,len,val);
 
-  return(end()-1);
+  return(begin());
 }
 
 /////////////////////////////////////
@@ -46,7 +46,7 @@ TLV8_it TLV8::find(uint8_t tag, TLV8_it it1, TLV8_it it2){
   auto it=it1;
   while(it!=it2 && (*it).tag!=tag)
     it++;
-  return(it);
+  return(it==it2?end():it);
 }
 
 /////////////////////////////////////
