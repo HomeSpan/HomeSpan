@@ -112,18 +112,6 @@ void HAPClient::init(){
 
   printControllers();                                                         
 
-//  tlv8.create(kTLVType_Separator,0,"SEPARATOR");   // define the actual TLV records needed for the implementation of HAP; one for each kTLVType needed (HAP Table 5-6)
-//  tlv8.create(kTLVType_State,1,"STATE");
-//  tlv8.create(kTLVType_PublicKey,384,"PUBKEY");
-//  tlv8.create(kTLVType_Method,1,"METHOD");
-//  tlv8.create(kTLVType_Salt,16,"SALT");
-//  tlv8.create(kTLVType_Error,1,"ERROR");
-//  tlv8.create(kTLVType_Proof,64,"PROOF");
-//  tlv8.create(kTLVType_EncryptedData,1024,"ENC.DATA");
-//  tlv8.create(kTLVType_Signature,64,"SIGNATURE");
-//  tlv8.create(kTLVType_Identifier,64,"IDENTIFIER");
-//  tlv8.create(kTLVType_Permissions,1,"PERMISSION");
-
   if(!nvs_get_blob(hapNVS,"HAPHASH",NULL,&len)){                 // if found HAP HASH structure
     nvs_get_blob(hapNVS,"HAPHASH",&homeSpan.hapConfig,&len);     // retrieve data    
   } else {
@@ -782,42 +770,6 @@ int HAPClient::postPairVerifyURL(uint8_t *content, size_t len){
 
 //////////////////////////////////////
 
-int HAPClient::getAccessoriesURL(){
-
-  if(!cPair){                       // unverified, unencrypted session
-    unauthorizedError();
-    return(0);
-  }
-
-  LOG1("In Get Accessories #");
-  LOG1(conNum);
-  LOG1(" (");
-  LOG1(client.remoteIP());
-  LOG1(")...\n");
-
-  int nBytes = homeSpan.sprintfAttributes(NULL);        // get size of HAP attributes JSON
-  TempBuffer<char> jBuf(nBytes+1);
-  homeSpan.sprintfAttributes(jBuf);                  // create JSON database (will need to re-cast to uint8_t* below)
-
-  char *body;
-  asprintf(&body,"HTTP/1.1 200 OK\r\nContent-Type: application/hap+json\r\nContent-Length: %d\r\n\r\n",nBytes);
-  
-  LOG2("\n>>>>>>>>>> ");
-  LOG2(client.remoteIP());
-  LOG2(" >>>>>>>>>>\n");
-  LOG2(body);
-  LOG2(jBuf.get());
-  LOG2("\n");
-  
-  sendEncrypted(body,(uint8_t *)jBuf.get(),nBytes);
-  free(body);
-         
-  return(1);
-  
-} // getAccessories
-
-//////////////////////////////////////
-
 int HAPClient::postPairingsURL(uint8_t *content, size_t len){
 
   if(!cPair){                       // unverified, unencrypted session
@@ -951,8 +903,43 @@ int HAPClient::postPairingsURL(uint8_t *content, size_t len){
 
 //////////////////////////////////////
 
-int HAPClient::getCharacteristicsURL(char *urlBuf){
+int HAPClient::getAccessoriesURL(){
 
+  if(!cPair){                       // unverified, unencrypted session
+    unauthorizedError();
+    return(0);
+  }
+
+  LOG1("In Get Accessories #");
+  LOG1(conNum);
+  LOG1(" (");
+  LOG1(client.remoteIP());
+  LOG1(")...\n");
+
+  int nBytes = homeSpan.sprintfAttributes(NULL);        // get size of HAP attributes JSON
+  TempBuffer<char> jBuf(nBytes+1);
+  homeSpan.sprintfAttributes(jBuf);                  // create JSON database (will need to re-cast to uint8_t* below)
+
+  char *body;
+  asprintf(&body,"HTTP/1.1 200 OK\r\nContent-Type: application/hap+json\r\nContent-Length: %d\r\n\r\n",nBytes);
+  
+  LOG2("\n>>>>>>>>>> ");
+  LOG2(client.remoteIP());
+  LOG2(" >>>>>>>>>>\n");
+  LOG2(body);
+  LOG2(jBuf.get());
+  LOG2("\n");
+  
+  sendEncrypted(body,(uint8_t *)jBuf.get(),nBytes);
+  free(body);
+         
+  return(1);
+  
+} // getAccessories
+
+//////////////////////////////////////
+
+int HAPClient::getCharacteristicsURL(char *urlBuf){
 
   if(!cPair){                       // unverified, unencrypted session
     unauthorizedError();
@@ -1390,34 +1377,6 @@ void HAPClient::tlvRespond(TLV8 &tlv8){
 
 //////////////////////////////////////
 
-//void HAPClient::tlvRespond(){
-//
-//  TempBuffer<uint8_t> tBuf(tlv8.pack(NULL));    // create buffer to hold TLV data    
-//  tlv8.pack(tBuf);                                   // pack TLV records into buffer
-//
-//  char *body;
-//  asprintf(&body,"HTTP/1.1 200 OK\r\nContent-Type: application/pairing+tlv8\r\nContent-Length: %d\r\n\r\n",tBuf.len());      // create Body with Content Length = size of TLV data
-//  
-//  LOG2("\n>>>>>>>>>> ");
-//  LOG2(client.remoteIP());
-//  LOG2(" >>>>>>>>>>\n");
-//  LOG2(body);
-//  tlv8.print(2);
-//
-//  if(!cPair){                       // unverified, unencrypted session
-//    client.print(body);
-//    client.write(tBuf,tBuf.len());      
-//    LOG2("------------ SENT! --------------\n");
-//  } else {
-//    sendEncrypted(body,tBuf,tBuf.len());
-//  }
-//
-//  free(body);
-//
-//} // tlvRespond
-
-//////////////////////////////////////
-
 int HAPClient::receiveEncrypted(uint8_t *httpBuf, int messageSize){
 
   uint8_t aad[2];
@@ -1637,36 +1596,6 @@ void HAPClient::tearDown(uint8_t *id){
 
 //////////////////////////////////////
 
-//int HAPClient::listControllers(uint8_t *tlvBuf){
-//
-//  int nBytes=0;
-//  int n;
-//    
-//  tlv8.clear();
-//  tlv8.val(kTLVType_State,pairState_M2);      
-//
-//  for(auto it=controllerList.begin();it!=controllerList.end();it++){
-//    if((*it).allocated){          
-//      if(tlv8.val(kTLVType_State)==-1)                // if State is not set then this is not the first controller found
-//        tlv8.val(kTLVType_Separator,1);                                        
-//      tlv8.val(kTLVType_Permissions,(*it).admin);      
-//      tlv8.buf(kTLVType_Identifier,(*it).ID,36);
-//      tlv8.buf(kTLVType_PublicKey,(*it).LTPK,32);
-//      n=tlv8.pack(tlvBuf);
-//      nBytes+=n;
-//      if(tlvBuf){
-//        tlvBuf+=n;
-//        tlv8.print();
-//      }
-//      tlv8.clear();
-//    }
-//  }
-//
-//  return(nBytes);       
-//}
-
-//////////////////////////////////////
-
 void HAPClient::printControllers(int minLogLevel){
 
   if(homeSpan.logLevel<minLogLevel)
@@ -1734,7 +1663,6 @@ void Nonce::inc(){
 
 // instantiate all static HAP Client structures and data
 
-//TLV<kTLVType,11> HAPClient::tlv8;
 nvs_handle HAPClient::hapNVS;
 nvs_handle HAPClient::srpNVS;
 HKDF HAPClient::hkdf;                                   

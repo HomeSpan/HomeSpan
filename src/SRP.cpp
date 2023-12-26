@@ -239,33 +239,6 @@ void SRP6A::createProof(){
 
 //////////////////////////////////////
 
-//int SRP6A::loadTLV(kTLVType tag, mbedtls_mpi *mpi, int nBytes){
-//
-//  uint8_t *buf=HAPClient::tlv8.buf(tag,nBytes);
-//
-//  if(!buf)
-//    return(0);
-//
-//  mbedtls_mpi_write_binary(mpi,buf,nBytes);
-//  return(1);    
-//}
-//
-////////////////////////////////////////
-//
-//int SRP6A::writeTLV(kTLVType tag, mbedtls_mpi *mpi){
-//
-//  int nBytes=HAPClient::tlv8.len(tag);
-//
-//  if(nBytes>0){
-//    mbedtls_mpi_read_binary(mpi,HAPClient::tlv8.buf(tag),nBytes);
-//    return(1);
-//  };
-//
-//  return(0);
-//}
-
-//////////////////////////////////////
-
 void SRP6A::print(mbedtls_mpi *mpi, int minLogLevel){
 
   if(homeSpan.getLogLevel()<minLogLevel)

@@ -30,7 +30,6 @@
 #include <WiFi.h>
 
 #include "HomeSpan.h"
-//#include "TLV.h"
 #include "HAPConstants.h"
 #include "HKDF.h"
 #include "SRP.h"
@@ -105,7 +104,6 @@ struct HAPClient {
   static const int MAX_CONTROLLERS=16;                // maximum number of paired controllers (HAP requires at least 16)
   static const int MAX_ACCESSORIES=150;               // maximum number of allowed Accessories (HAP limit=150)
   
-//  static TLV<kTLVType,11> tlv8;                                     // TLV8 structure (HAP Section 14.1) with space for 11 TLV records of type kTLVType (HAP Table 5-6)
   static nvs_handle hapNVS;                                         // handle for non-volatile-storage of HAP data
   static nvs_handle srpNVS;                                         // handle for non-volatile-storage of SRP data
   static HKDF hkdf;                                                 // generates (and stores) HKDF-SHA-512 32-byte keys derived from an inputKey of arbitrary length, a salt string, and an info string
@@ -146,7 +144,6 @@ struct HAPClient {
   int putPrepareURL(char *json);                              // PUT /prepare (HAP Section 6.7.2.4)
   int getStatusURL();                                         // GET / status (an optional, non-HAP feature)
 
-//  void tlvRespond();                                                // respond to client with HTTP OK header and all defined TLV data records (those with length>0)
   void tlvRespond(TLV8 &tlv8);                                      // respond to client with HTTP OK header and all defined TLV data records
   void sendEncrypted(char *body, uint8_t *dataBuf, int dataLen);    // send client complete ChaCha20-Poly1305 encrypted HTTP mesage comprising a null-terminated 'body' and 'dataBuf' with 'dataLen' bytes
   int receiveEncrypted(uint8_t *httpBuf, int messageSize);          // decrypt HTTP request (HAP Section 6.5)
@@ -167,7 +164,6 @@ struct HAPClient {
   static tagError addController(uint8_t *id, uint8_t *ltpk, boolean admin);            // stores data for new Controller with specified data.  Returns tagError (if any)
   static void removeController(uint8_t *id);                                           // removes specific Controller.  If no remaining admin Controllers, remove all others (if any) as per HAP requirements.
   static void printControllers(int minLogLevel=0);                                     // prints IDs of all allocated (paired) Controller, subject to specified minimum log level
-//  static int listControllers(uint8_t *tlvBuf);                                         // creates and prints a multi-TLV list of Controllers (HAP Section 5.12)
   static void saveControllers();                                                       // saves Controller list in NVS
   static int nAdminControllers();                                                      // returns number of admin Controller
   static void tearDown(uint8_t *id);                                                   // tears down connections using Controller with ID=id; tears down all connections if id=NULL
