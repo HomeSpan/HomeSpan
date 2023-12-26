@@ -77,8 +77,8 @@ struct Controller {
   Controller(uint8_t *id, uint8_t *ltpk, boolean ad){
     allocated=true;
     admin=ad;
-    memcpy(ID,id,sizeof(ID));
-    memcpy(LTPK,ltpk,sizeof(LTPK));
+    memcpy(ID,id,hap_controller_IDBYTES);
+    memcpy(LTPK,ltpk,crypto_sign_PUBLICKEYBYTES);
   }
 
 };
@@ -118,12 +118,12 @@ struct HAPClient {
   WiFiClient client;              // handle to client
   Controller *cPair=NULL;         // pointer to info on current, session-verified Paired Controller (NULL=un-verified, and therefore un-encrypted, connection)
    
-  // These keys are generated in the first call to pair-verify and used in the second call to pair-verify so must persist for a short period
+  // These temporary Curve25519 keys are generated in the first call to pair-verify and used in the second call to pair-verify so must persist for a short period
     
-  uint8_t publicCurveKey[32];     // public key for Curve25519 encryption
-  uint8_t sharedCurveKey[32];     // Pair-Verfied Shared Secret key derived from Accessory's ephemeral secretCurveKey and Controller's iosCurveKey
-  uint8_t sessionKey[32];         // shared Session Key (derived with various HKDF calls)
-  uint8_t iosCurveKey[32];        // Curve25519 public key for associated paired controller
+  uint8_t *publicCurveKey;     // Accessory's Curve25519 Public Key
+  uint8_t *sharedCurveKey;     // Shared-Secret Curve25519 Key derived from Accessory's Secret Key and Controller's Public Key
+  uint8_t *sessionKey;         // Session Key Curve25519 (derived with various HKDF calls)
+  uint8_t *iosCurveKey;        // Controller's Curve25519 Public Key
 
   // CurveKey and CurveKey Nonces are created once each new session is verified in /pair-verify.  Keys persist for as long as connection is open
   
