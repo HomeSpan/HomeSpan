@@ -42,7 +42,6 @@ namespace Utils {
 
 char *readSerial(char *c, int max);   // read serial port into 'c' until <newline>, but storing only first 'max' characters (the rest are discarded)
 String mask(char *c, int n);          // simply utility that creates a String from 'c' with all except the first and last 'n' characters replaced by '*'
-void memcat(uint8_t *buf, size_t n...);
   
 }
 
@@ -55,29 +54,42 @@ class TempBuffer {
 
   private:
   
-  bufType *buf;
-  int nBytes;
-  int nElements;
+  bufType *buf=NULL;
+  size_t nElements;
 
   public:
   
-  TempBuffer(int _nElements) : nElements(_nElements) {
-    nBytes=nElements*sizeof(bufType);
-    buf=(bufType *)HS_MALLOC(nBytes);
+  TempBuffer(size_t _nElements) : nElements(_nElements) {
+    buf=(bufType *)HS_MALLOC(nElements*sizeof(bufType));
     if(buf==NULL){
-      Serial.print("\n\n*** FATAL ERROR: Requested allocation of ");
-      Serial.print(nBytes);
-      Serial.print(" bytes failed.  Program Halting.\n\n");
+      Serial.printf("\n\n*** FATAL ERROR: Requested allocation of %d bytes failed.  Program Halting.\n\n",nElements*sizeof(bufType));
       while(1);
     }
    }
 
+  TempBuffer(bufType *addBuf...) : nElements(0) {
+    va_list args;
+    va_start(args,addBuf);
+    while(addBuf!=NULL){
+      size_t addElements=va_arg(args,size_t);    
+      buf=(bufType *)HS_REALLOC(buf,(nElements+addElements)*sizeof(bufType));
+      if(buf==NULL){
+        Serial.printf("\n\n*** FATAL ERROR: Requested allocation of %d bytes failed.  Program Halting.\n\n",nElements*sizeof(bufType));
+        while(1);
+      }
+      memcpy(buf+nElements,addBuf,addElements*sizeof(bufType));
+      nElements+=addElements;
+      addBuf=va_arg(args,bufType *);
+    }
+    va_end(args);   
+   }
+   
   ~TempBuffer(){
     free(buf);
   }
 
   int len(){
-    return(nBytes);
+    return(nElements*sizeof(bufType));
   }
 
   int size(){

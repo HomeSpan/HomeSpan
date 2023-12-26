@@ -87,19 +87,6 @@ String Utils::mask(char *c, int n){
   return(s);  
 } // mask
 
-//////////////////////////////////////
-
-void Utils::memcat(uint8_t *buf, size_t n...){
-  va_list args;
-  va_start(args, n);
-  while(n-->0){
-    uint8_t *addBuf=va_arg(args,uint8_t *);
-    size_t len=va_arg(args,size_t);
-    memcpy(buf,addBuf,len);
-    buf+=len;    
-  }
-}
-
 ////////////////////////////////
 //         PushButton         //
 ////////////////////////////////

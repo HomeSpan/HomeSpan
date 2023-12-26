@@ -518,8 +518,7 @@ int HAPClient::postPairSetupURL(uint8_t *content, size_t len){
 
       // Concatenate iosDeviceX, IOS ID, and IOS PublicKey into iosDeviceInfo
       
-      TempBuffer<uint8_t> iosDeviceInfo(iosDeviceX.len()+(*itIdentifier).len+(*itPublicKey).len);
-      Utils::memcat(iosDeviceInfo,3,iosDeviceX.get(),iosDeviceX.len(),(*itIdentifier).val.get(),(*itIdentifier).len,(*itPublicKey).val.get(),(*itPublicKey).len);
+      TempBuffer<uint8_t> iosDeviceInfo(iosDeviceX,iosDeviceX.len(),(*itIdentifier).val.get(),(*itIdentifier).len,(*itPublicKey).val.get(),(*itPublicKey).len,NULL);
 
       if(crypto_sign_verify_detached(*itSignature, iosDeviceInfo, iosDeviceInfo.len(), *itPublicKey) != 0){                // verify signature of iosDeviceInfo using iosDeviceLTPK   
         LOG0("\n*** ERROR: LPTK Signature Verification Failed\n\n");
@@ -539,8 +538,7 @@ int HAPClient::postPairSetupURL(uint8_t *content, size_t len){
       
       // Concatenate accessoryX, Accessory ID, and Accessory PublicKey into accessoryInfo
 
-      TempBuffer<uint8_t> accessoryInfo(accessoryX.len()+hap_accessory_IDBYTES+crypto_sign_PUBLICKEYBYTES);
-      Utils::memcat(accessoryInfo,3,accessoryX.get(),accessoryX.len(),accessory.ID,hap_accessory_IDBYTES,accessory.LTPK,crypto_sign_PUBLICKEYBYTES);
+      TempBuffer<uint8_t> accessoryInfo(accessoryX,accessoryX.len(),accessory.ID,hap_accessory_IDBYTES,accessory.LTPK,crypto_sign_PUBLICKEYBYTES,NULL);
 
       subTLV.clear();                                                                            // clear existing SUBTLV records
 
@@ -646,8 +644,7 @@ int HAPClient::postPairVerifyURL(uint8_t *content, size_t len){
             
       // concatenate Accessory's Curve25519 Public Key, Accessory's Pairing ID, and Controller's Curve25519 Public Key into accessoryInfo
       
-      TempBuffer<uint8_t> accessoryInfo(crypto_box_PUBLICKEYBYTES+hap_accessory_IDBYTES+crypto_box_PUBLICKEYBYTES);
-      Utils::memcat(accessoryInfo,3,publicCurveKey,crypto_box_PUBLICKEYBYTES,accessory.ID,hap_accessory_IDBYTES,iosCurveKey,crypto_box_PUBLICKEYBYTES);
+      TempBuffer<uint8_t> accessoryInfo(publicCurveKey,crypto_box_PUBLICKEYBYTES,accessory.ID,hap_accessory_IDBYTES,iosCurveKey,crypto_box_PUBLICKEYBYTES,NULL);
 
       subTLV.add(kTLVType_Identifier,hap_accessory_IDBYTES,accessory.ID);                         // set Identifier subTLV record as Accessory's Pairing ID
       auto itSignature=subTLV.add(kTLVType_Signature,crypto_sign_BYTES,NULL);                     // create blank Signature subTLV
@@ -738,8 +735,7 @@ int HAPClient::postPairVerifyURL(uint8_t *content, size_t len){
 
       // concatenate Controller's Curve25519 Public Key (from previous step), Controller's Pairing ID, and Accessory's Curve25519 Public Key (from previous step) into iosDeviceInfo     
 
-      TempBuffer<uint8_t> iosDeviceInfo(crypto_box_PUBLICKEYBYTES+hap_controller_IDBYTES+crypto_box_PUBLICKEYBYTES);
-      Utils::memcat(iosDeviceInfo,3,iosCurveKey,crypto_box_PUBLICKEYBYTES,tPair->ID,hap_controller_IDBYTES,publicCurveKey,crypto_box_PUBLICKEYBYTES);
+      TempBuffer<uint8_t> iosDeviceInfo(iosCurveKey,crypto_box_PUBLICKEYBYTES,tPair->ID,hap_controller_IDBYTES,publicCurveKey,crypto_box_PUBLICKEYBYTES,NULL);
       
       if(crypto_sign_verify_detached(*itSignature, iosDeviceInfo, iosDeviceInfo.len(), tPair->LTPK) != 0){         // verify signature of iosDeviceInfo using Controller's LTPK   
         LOG0("\n*** ERROR: LPTK Signature Verification Failed\n\n");
