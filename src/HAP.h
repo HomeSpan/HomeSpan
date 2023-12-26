@@ -30,25 +30,28 @@
 #include <WiFi.h>
 
 #include "HomeSpan.h"
-#include "TLV.h"
+//#include "TLV.h"
 #include "HAPConstants.h"
 #include "HKDF.h"
 #include "SRP.h"
 #include "TLV8.h"
 
 const TLV8_names HAP_Names[] = {
-  {kTLVType_Separator,"*SEPARATOR"},
-  {kTLVType_State,"*STATE"},
-  {kTLVType_PublicKey,"*PUBKEY"},
-  {kTLVType_Method,"*METHOD"},
-  {kTLVType_Salt,"*SALT"},
-  {kTLVType_Error,"*ERROR"},
-  {kTLVType_Proof,"*PROOF"},
-  {kTLVType_EncryptedData,"*ENC.DATA"},
-  {kTLVType_Signature,"*SIGNATURE"},
-  {kTLVType_Identifier,"*IDENTIFIER"},
-  {kTLVType_Permissions,"*PERMISSION"}
+  {kTLVType_Separator,"SEPARATOR"},
+  {kTLVType_State,"STATE"},
+  {kTLVType_PublicKey,"PUBKEY"},
+  {kTLVType_Method,"METHOD"},
+  {kTLVType_Salt,"SALT"},
+  {kTLVType_Error,"ERROR"},
+  {kTLVType_Proof,"PROOF"},
+  {kTLVType_EncryptedData,"ENC.DATA"},
+  {kTLVType_Signature,"SIGNATURE"},
+  {kTLVType_Identifier,"IDENTIFIER"},
+  {kTLVType_Permissions,"PERMISSION"}
 };
+
+#define hap_controller_IDBYTES  36
+#define hap_accessory_IDBYTES   17
 
 /////////////////////////////////////////////////
 // NONCE Structure (HAP used last 64 of 96 bits)
@@ -67,7 +70,7 @@ struct Nonce {
 struct Controller {                
   boolean allocated=false;                          // DEPRECATED (but needed for backwards compatability with original NVS storage of Controller info)
   boolean admin;                                    // Controller has admin privileges
-  uint8_t ID[36];                                   // Pairing ID
+  uint8_t ID[hap_controller_IDBYTES];               // Pairing ID
   uint8_t LTPK[crypto_sign_PUBLICKEYBYTES];         // Long Term Ed2519 Public Key
 
   Controller(){}
@@ -85,9 +88,9 @@ struct Controller {
 // Accessory Structure for Permanently-Stored Data
 
 struct Accessory {
-  uint8_t ID[17];                                  // Pairing ID in form "XX:XX:XX:XX:XX:XX"
-  uint8_t LTSK[crypto_sign_SECRETKEYBYTES];        // secret key for Ed25519 signatures
-  uint8_t LTPK[crypto_sign_PUBLICKEYBYTES];        // public key for Ed25519 signatures
+  uint8_t ID[hap_accessory_IDBYTES];               // Pairing ID in form "XX:XX:XX:XX:XX:XX" (no null terminator)
+  uint8_t LTSK[crypto_sign_SECRETKEYBYTES];        // Long Term Ed2519 Secret Key
+  uint8_t LTPK[crypto_sign_PUBLICKEYBYTES];        // Long Term Ed2519 Public Key
 };
 
 /////////////////////////////////////////////////
@@ -102,7 +105,7 @@ struct HAPClient {
   static const int MAX_CONTROLLERS=16;                // maximum number of paired controllers (HAP requires at least 16)
   static const int MAX_ACCESSORIES=150;               // maximum number of allowed Accessories (HAP limit=150)
   
-  static TLV<kTLVType,11> tlv8;                                     // TLV8 structure (HAP Section 14.1) with space for 11 TLV records of type kTLVType (HAP Table 5-6)
+//  static TLV<kTLVType,11> tlv8;                                     // TLV8 structure (HAP Section 14.1) with space for 11 TLV records of type kTLVType (HAP Table 5-6)
   static nvs_handle hapNVS;                                         // handle for non-volatile-storage of HAP data
   static nvs_handle srpNVS;                                         // handle for non-volatile-storage of SRP data
   static HKDF hkdf;                                                 // generates (and stores) HKDF-SHA-512 32-byte keys derived from an inputKey of arbitrary length, a salt string, and an info string
@@ -136,14 +139,14 @@ struct HAPClient {
   void processRequest();                                      // process HAP request  
   int postPairSetupURL(uint8_t *content, size_t len);         // POST /pair-setup (HAP Section 5.6)
   int postPairVerifyURL(uint8_t *content, size_t len);        // POST /pair-verify (HAP Section 5.7)
+  int postPairingsURL(uint8_t *content, size_t len);          // POST /pairings (HAP Sections 5.10-5.12)  
   int getAccessoriesURL();                                    // GET /accessories (HAP Section 6.6)
-  int postPairingsURL();                                      // POST /pairings (HAP Sections 5.10-5.12)  
   int getCharacteristicsURL(char *urlBuf);                    // GET /characteristics (HAP Section 6.7.4)  
   int putCharacteristicsURL(char *json);                      // PUT /characteristics (HAP Section 6.7.2)
   int putPrepareURL(char *json);                              // PUT /prepare (HAP Section 6.7.2.4)
   int getStatusURL();                                         // GET / status (an optional, non-HAP feature)
 
-  void tlvRespond();                                                // respond to client with HTTP OK header and all defined TLV data records (those with length>0)
+//  void tlvRespond();                                                // respond to client with HTTP OK header and all defined TLV data records (those with length>0)
   void tlvRespond(TLV8 &tlv8);                                      // respond to client with HTTP OK header and all defined TLV data records
   void sendEncrypted(char *body, uint8_t *dataBuf, int dataLen);    // send client complete ChaCha20-Poly1305 encrypted HTTP mesage comprising a null-terminated 'body' and 'dataBuf' with 'dataLen' bytes
   int receiveEncrypted(uint8_t *httpBuf, int messageSize);          // decrypt HTTP request (HAP Section 6.5)
@@ -164,7 +167,7 @@ struct HAPClient {
   static tagError addController(uint8_t *id, uint8_t *ltpk, boolean admin);            // stores data for new Controller with specified data.  Returns tagError (if any)
   static void removeController(uint8_t *id);                                           // removes specific Controller.  If no remaining admin Controllers, remove all others (if any) as per HAP requirements.
   static void printControllers(int minLogLevel=0);                                     // prints IDs of all allocated (paired) Controller, subject to specified minimum log level
-  static int listControllers(uint8_t *tlvBuf);                                         // creates and prints a multi-TLV list of Controllers (HAP Section 5.12)
+//  static int listControllers(uint8_t *tlvBuf);                                         // creates and prints a multi-TLV list of Controllers (HAP Section 5.12)
   static void saveControllers();                                                       // saves Controller list in NVS
   static int nAdminControllers();                                                      // returns number of admin Controller
   static void tearDown(uint8_t *id);                                                   // tears down connections using Controller with ID=id; tears down all connections if id=NULL

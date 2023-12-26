@@ -81,8 +81,8 @@ struct SRP6A {
   void createPublicKey();                          // computes x, v, and B from random s, P, and b
   void createSessionKey();                         // computes u from A and B, and then S from A, v, u, and b
   
-  int loadTLV(kTLVType tag, mbedtls_mpi *mpi, int nBytes);     // load binary contents of mpi into a TLV record and set its length
-  int writeTLV(kTLVType tag, mbedtls_mpi *mpi);                // write binary contents of a TLV record into an mpi
+//  int loadTLV(kTLVType tag, mbedtls_mpi *mpi, int nBytes);     // load binary contents of mpi into a TLV record and set its length
+//  int writeTLV(kTLVType tag, mbedtls_mpi *mpi);                // write binary contents of a TLV record into an mpi
   
   int verifyProof();                               // verify M1 SRP6A Proof received from HAP client (return 1 on success, 0 on failure)
   void createProof();                              // create M2 server-side SRP6A Proof based on M1 as received from HAP Client

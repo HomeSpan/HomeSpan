@@ -112,17 +112,17 @@ void HAPClient::init(){
 
   printControllers();                                                         
 
-  tlv8.create(kTLVType_Separator,0,"SEPARATOR");   // define the actual TLV records needed for the implementation of HAP; one for each kTLVType needed (HAP Table 5-6)
-  tlv8.create(kTLVType_State,1,"STATE");
-  tlv8.create(kTLVType_PublicKey,384,"PUBKEY");
-  tlv8.create(kTLVType_Method,1,"METHOD");
-  tlv8.create(kTLVType_Salt,16,"SALT");
-  tlv8.create(kTLVType_Error,1,"ERROR");
-  tlv8.create(kTLVType_Proof,64,"PROOF");
-  tlv8.create(kTLVType_EncryptedData,1024,"ENC.DATA");
-  tlv8.create(kTLVType_Signature,64,"SIGNATURE");
-  tlv8.create(kTLVType_Identifier,64,"IDENTIFIER");
-  tlv8.create(kTLVType_Permissions,1,"PERMISSION");
+//  tlv8.create(kTLVType_Separator,0,"SEPARATOR");   // define the actual TLV records needed for the implementation of HAP; one for each kTLVType needed (HAP Table 5-6)
+//  tlv8.create(kTLVType_State,1,"STATE");
+//  tlv8.create(kTLVType_PublicKey,384,"PUBKEY");
+//  tlv8.create(kTLVType_Method,1,"METHOD");
+//  tlv8.create(kTLVType_Salt,16,"SALT");
+//  tlv8.create(kTLVType_Error,1,"ERROR");
+//  tlv8.create(kTLVType_Proof,64,"PROOF");
+//  tlv8.create(kTLVType_EncryptedData,1024,"ENC.DATA");
+//  tlv8.create(kTLVType_Signature,64,"SIGNATURE");
+//  tlv8.create(kTLVType_Identifier,64,"IDENTIFIER");
+//  tlv8.create(kTLVType_Permissions,1,"PERMISSION");
 
   if(!nvs_get_blob(hapNVS,"HAPHASH",NULL,&len)){                 // if found HAP HASH structure
     nvs_get_blob(hapNVS,"HAPHASH",&homeSpan.hapConfig,&len);     // retrieve data    
@@ -217,33 +217,23 @@ void HAPClient::processRequest(){
     if(cLen==0){
       badRequestError();
       LOG0("\n*** ERROR:  HTTP POST request contains no Content\n\n");
-      return;      
     }
            
-    if(!strncmp(body,"POST /pair-setup ",17) && strstr(body,"Content-Type: application/pairing+tlv8")){            // POST PAIR-SETUP               
+    else if(!strncmp(body,"POST /pair-setup ",17) && strstr(body,"Content-Type: application/pairing+tlv8"))            // POST PAIR-SETUP               
       postPairSetupURL(content,cLen);
-      return;
-    }
 
-    if(!strncmp(body,"POST /pair-verify ",18) && strstr(body,"Content-Type: application/pairing+tlv8")){           // POST PAIR-VERIFY 
+    else if(!strncmp(body,"POST /pair-verify ",18) && strstr(body,"Content-Type: application/pairing+tlv8"))           // POST PAIR-VERIFY 
       postPairVerifyURL(content,cLen);
-      return;
-    }
             
-    if(!strncmp(body,"POST /pairings ",15) &&                                // POST PAIRINGS
-       strstr(body,"Content-Type: application/pairing+tlv8") &&              // check that content is TLV8
-       tlv8.unpack(content,cLen)){                                          // read TLV content
-       tlv8.print(2);                                                        // print TLV records in form "TAG(INT) LENGTH(INT) VALUES(HEX)"
-      LOG2("------------ END TLVS! ------------\n");
-               
-      postPairingsURL();                  // process URL
-      return;
-    }
+    else if(!strncmp(body,"POST /pairings ",15) && strstr(body,"Content-Type: application/pairing+tlv8"))              // POST PAIRINGS                
+      postPairingsURL(content,cLen);
 
-    notFoundError();
-    LOG0("\n*** ERROR:  Bad POST request - URL not found\n\n");
-    return;                  
-        
+    else {
+      notFoundError();
+      LOG0("\n*** ERROR:  Bad POST request - URL not found\n\n");
+    }
+    
+    return;                          
   } // POST request
           
   if(!strncmp(body,"PUT ",4)){                       // this is a PUT request
@@ -381,7 +371,7 @@ int HAPClient::postPairSetupURL(uint8_t *content, size_t len){
   auto itState=iosTLV.find(kTLVType_State);
 
   if(iosTLV.len(itState)!=1){                                   // missing STATE TLV
-    LOG0("\n*** ERROR: Missing or invalid <M#> State TLV\n\n");
+    LOG0("\n*** ERROR: Missing or invalid 'State' TLV\n\n");
     badRequestError();                                          // return with 400 error, which closes connection      
     return(0);
   }
@@ -627,7 +617,7 @@ int HAPClient::postPairVerifyURL(uint8_t *content, size_t len){
   auto itState=iosTLV.find(kTLVType_State);
 
   if(iosTLV.len(itState)!=1){                                   // missing STATE TLV
-    LOG0("\n*** ERROR: Missing or invalid <M#> State TLV\n\n");
+    LOG0("\n*** ERROR: Missing or invalid 'State' TLV\n\n");
     badRequestError();                                          // return with 400 error, which closes connection      
     return(0);
   }
@@ -828,101 +818,129 @@ int HAPClient::getAccessoriesURL(){
 
 //////////////////////////////////////
 
-int HAPClient::postPairingsURL(){
+int HAPClient::postPairingsURL(uint8_t *content, size_t len){
 
   if(!cPair){                       // unverified, unencrypted session
     unauthorizedError();
     return(0);
   }
 
-  LOG1("In Post Pairings #");
-  LOG1(conNum);
-  LOG1(" (");  
-  LOG1(client.remoteIP());
-  LOG1(")...");
+  HAPTLV iosTLV;
+  HAPTLV responseTLV;
 
-  if(tlv8.val(kTLVType_State)!=1){
-    LOG0("\n*** ERROR: 'State' TLV record is either missing or not set to <M1> as required\n\n");
-    badRequestError();                                        // return with 400 error, which closes connection      
+  iosTLV.unpack(content,len);
+  iosTLV.print();
+  LOG2("------------ END TLVS! ------------\n");
+
+  LOG2("In Post Pairings #%d (%s)...",conNum,client.remoteIP().toString().c_str());
+  
+  auto itState=iosTLV.find(kTLVType_State);
+  auto itMethod=iosTLV.find(kTLVType_Method);
+    
+  if(iosTLV.len(itState)!=1 || (*itState)[0]!=1){               // missing STATE TLV
+    LOG0("\n*** ERROR: Parirings 'State' is either missing or not set to <M1>\n\n");
+    badRequestError();                                          // return with 400 error, which closes connection      
     return(0);
   }
-   
-  switch(tlv8.val(kTLVType_Method)){
+
+  if(iosTLV.len(itMethod)!=1){                                  // missing METHOD TLV
+    LOG0("\n*** ERROR: Missing or invalid 'Method' TLV\n\n");
+    badRequestError();                                          // return with 400 error, which closes connection      
+    return(0);
+  }
+
+  int tlvMethod=(*itMethod)[0];
+
+  responseTLV.add(kTLVType_State,pairState_M2);                 // all responses include State=M2
+  
+  switch(tlvMethod){                        // List-Pairings received -- process request!  (HAP Sections 5.10-5.12)
 
     case 3: {
       LOG1("Add...\n");
 
-      if(!tlv8.len(kTLVType_Identifier) || !tlv8.len(kTLVType_PublicKey) || !tlv8.len(kTLVType_Permissions)){            
+      auto itIdentifier=iosTLV.find(kTLVType_Identifier);
+      auto itPublicKey=iosTLV.find(kTLVType_PublicKey);
+      auto itPermissions=iosTLV.find(kTLVType_Permissions);
+      
+      if(iosTLV.len(itIdentifier)!=hap_controller_IDBYTES || iosTLV.len(itPublicKey)!=crypto_sign_PUBLICKEYBYTES || iosTLV.len(itPermissions)!=1){            
         LOG0("\n*** ERROR: One or more of required 'Identifier,' 'PublicKey,' and 'Permissions' TLV records for this step is bad or missing\n\n");
-        tlv8.clear();
-        tlv8.val(kTLVType_Error,tagError_Unknown);
-
-      } else if(!cPair->admin){
-        LOG0("\n*** ERROR: Controller making request does not have admin privileges to add/update other Controllers\n\n");
-        tlv8.clear();
-        tlv8.val(kTLVType_Error,tagError_Authentication);
-        
-      } else {
-        tagError err=addController(tlv8.buf(kTLVType_Identifier),tlv8.buf(kTLVType_PublicKey),tlv8.val(kTLVType_Permissions));
-        tlv8.clear();
-        if(err!=tagError_None)
-          tlv8.val(kTLVType_Error,err);
+        responseTLV.add(kTLVType_Error,tagError_Unknown);
+        tlvRespond(responseTLV);
+        return(0);
       }
       
-      tlv8.val(kTLVType_State,pairState_M2);
-      tlvRespond();
+      if(!cPair->admin){
+        LOG0("\n*** ERROR: Controller making request does not have admin privileges to add/update other Controllers\n\n");
+        responseTLV.add(kTLVType_Error,tagError_Authentication);
+        tlvRespond(responseTLV);
+        return(0);
+      } 
+             
+      tagError err=addController(*itIdentifier,*itPublicKey,(*itPermissions)[0]);
+      if(err!=tagError_None)
+        responseTLV.add(kTLVType_Error,err);
+      
+      tlvRespond(responseTLV);
       return(1);
     }
+    break;
 
     case 4: {
       LOG1("Remove...\n");
 
-      uint8_t id[36];
+      auto itIdentifier=iosTLV.find(kTLVType_Identifier);
 
-      if(!tlv8.len(kTLVType_Identifier)){            
+      if(iosTLV.len(itIdentifier)!=hap_controller_IDBYTES){            
         LOG0("\n*** ERROR: Required 'Identifier' TLV record for this step is bad or missing\n\n");
-        tlv8.clear();
-        tlv8.val(kTLVType_Error,tagError_Unknown);
-        
-      } else if(!cPair->admin){
-        LOG0("\n*** ERROR: Controller making request does not have admin privileges to remove Controllers\n\n");
-        tlv8.clear();
-        tlv8.val(kTLVType_Error,tagError_Authentication);
-      } else {
-        memcpy(id,tlv8.buf(kTLVType_Identifier),36);
-        tlv8.clear();
+        responseTLV.add(kTLVType_Error,tagError_Unknown);
+        tlvRespond(responseTLV);
+        return(0);
       }
-
-      tlv8.val(kTLVType_State,pairState_M2);        
-      tlvRespond();     // must send response before removing Controller below
       
-      if(tlv8.val(kTLVType_Error)==-1)
-        removeController(id);
+      if(!cPair->admin){
+        LOG0("\n*** ERROR: Controller making request does not have admin privileges to remove Controllers\n\n");
+        responseTLV.add(kTLVType_Error,tagError_Authentication);
+        tlvRespond(responseTLV);
+        return(0);
+      }
+      
+      tlvRespond(responseTLV);           // must send response before removing Controller     
+      removeController(*itIdentifier);
       
       return(1);
     } 
+    break;
       
     case 5: {
       LOG1("List...\n");
 
-      TempBuffer<uint8_t> tBuf(listControllers(NULL));
+      if(!cPair->admin){
+        LOG0("\n*** ERROR: Controller making request does not have admin privileges to remove Controllers\n\n");
+        responseTLV.add(kTLVType_Error,tagError_Authentication);
+        tlvRespond(responseTLV);
+        return(0);
+      }      
 
-      char *body;
-      asprintf(&body,"HTTP/1.1 200 OK\r\nContent-Type: application/pairing+tlv8\r\nContent-Length: %d\r\n\r\n",tBuf.len());      // create Body with Content Length = size of TLV data
-  
-      LOG2("\n>>>>>>>>>> ");
-      LOG2(client.remoteIP());
-      LOG2(" >>>>>>>>>>\n");
-      LOG2(body);
-      listControllers(tBuf);
-      sendEncrypted(body,tBuf,tBuf.len());
-      free(body);
+      boolean addSeparator=false;
       
+      for(auto it=controllerList.begin();it!=controllerList.end();it++){
+        if((*it).allocated){
+          if(addSeparator)         
+            responseTLV.add(kTLVType_Separator);                                        
+          responseTLV.add(kTLVType_Permissions,(*it).admin);      
+          responseTLV.add(kTLVType_Identifier,hap_controller_IDBYTES,(*it).ID);
+          responseTLV.add(kTLVType_PublicKey,crypto_sign_PUBLICKEYBYTES,(*it).LTPK);
+          addSeparator=true;
+        }
+      }
+
+      tlvRespond(responseTLV);
       return(1);
     }
+    break;
 
     default: {
-      LOG0("\n*** ERROR: 'Method' TLV record is either missing or not set to either 3, 4, or 5 as required\n\n");
+      LOG0("\n*** ERROR: Undefined List-Pairings Method: %d.  Must be 3, 4, or 5\n\n",tlvMethod);
       badRequestError();                                    // return with 400 error, which closes connection      
       return(0);
     }
@@ -1372,31 +1390,31 @@ void HAPClient::tlvRespond(TLV8 &tlv8){
 
 //////////////////////////////////////
 
-void HAPClient::tlvRespond(){
-
-  TempBuffer<uint8_t> tBuf(tlv8.pack(NULL));    // create buffer to hold TLV data    
-  tlv8.pack(tBuf);                                   // pack TLV records into buffer
-
-  char *body;
-  asprintf(&body,"HTTP/1.1 200 OK\r\nContent-Type: application/pairing+tlv8\r\nContent-Length: %d\r\n\r\n",tBuf.len());      // create Body with Content Length = size of TLV data
-  
-  LOG2("\n>>>>>>>>>> ");
-  LOG2(client.remoteIP());
-  LOG2(" >>>>>>>>>>\n");
-  LOG2(body);
-  tlv8.print(2);
-
-  if(!cPair){                       // unverified, unencrypted session
-    client.print(body);
-    client.write(tBuf,tBuf.len());      
-    LOG2("------------ SENT! --------------\n");
-  } else {
-    sendEncrypted(body,tBuf,tBuf.len());
-  }
-
-  free(body);
-
-} // tlvRespond
+//void HAPClient::tlvRespond(){
+//
+//  TempBuffer<uint8_t> tBuf(tlv8.pack(NULL));    // create buffer to hold TLV data    
+//  tlv8.pack(tBuf);                                   // pack TLV records into buffer
+//
+//  char *body;
+//  asprintf(&body,"HTTP/1.1 200 OK\r\nContent-Type: application/pairing+tlv8\r\nContent-Length: %d\r\n\r\n",tBuf.len());      // create Body with Content Length = size of TLV data
+//  
+//  LOG2("\n>>>>>>>>>> ");
+//  LOG2(client.remoteIP());
+//  LOG2(" >>>>>>>>>>\n");
+//  LOG2(body);
+//  tlv8.print(2);
+//
+//  if(!cPair){                       // unverified, unencrypted session
+//    client.print(body);
+//    client.write(tBuf,tBuf.len());      
+//    LOG2("------------ SENT! --------------\n");
+//  } else {
+//    sendEncrypted(body,tBuf,tBuf.len());
+//  }
+//
+//  free(body);
+//
+//} // tlvRespond
 
 //////////////////////////////////////
 
@@ -1619,33 +1637,33 @@ void HAPClient::tearDown(uint8_t *id){
 
 //////////////////////////////////////
 
-int HAPClient::listControllers(uint8_t *tlvBuf){
-
-  int nBytes=0;
-  int n;
-    
-  tlv8.clear();
-  tlv8.val(kTLVType_State,pairState_M2);      
-
-  for(auto it=controllerList.begin();it!=controllerList.end();it++){
-    if((*it).allocated){          
-      if(tlv8.val(kTLVType_State)==-1)                // if State is not set then this is not the first controller found
-        tlv8.val(kTLVType_Separator,1);                                        
-      tlv8.val(kTLVType_Permissions,(*it).admin);      
-      tlv8.buf(kTLVType_Identifier,(*it).ID,36);
-      tlv8.buf(kTLVType_PublicKey,(*it).LTPK,32);
-      n=tlv8.pack(tlvBuf);
-      nBytes+=n;
-      if(tlvBuf){
-        tlvBuf+=n;
-        tlv8.print();
-      }
-      tlv8.clear();
-    }
-  }
-
-  return(nBytes);       
-}
+//int HAPClient::listControllers(uint8_t *tlvBuf){
+//
+//  int nBytes=0;
+//  int n;
+//    
+//  tlv8.clear();
+//  tlv8.val(kTLVType_State,pairState_M2);      
+//
+//  for(auto it=controllerList.begin();it!=controllerList.end();it++){
+//    if((*it).allocated){          
+//      if(tlv8.val(kTLVType_State)==-1)                // if State is not set then this is not the first controller found
+//        tlv8.val(kTLVType_Separator,1);                                        
+//      tlv8.val(kTLVType_Permissions,(*it).admin);      
+//      tlv8.buf(kTLVType_Identifier,(*it).ID,36);
+//      tlv8.buf(kTLVType_PublicKey,(*it).LTPK,32);
+//      n=tlv8.pack(tlvBuf);
+//      nBytes+=n;
+//      if(tlvBuf){
+//        tlvBuf+=n;
+//        tlv8.print();
+//      }
+//      tlv8.clear();
+//    }
+//  }
+//
+//  return(nBytes);       
+//}
 
 //////////////////////////////////////
 
@@ -1716,7 +1734,7 @@ void Nonce::inc(){
 
 // instantiate all static HAP Client structures and data
 
-TLV<kTLVType,11> HAPClient::tlv8;
+//TLV<kTLVType,11> HAPClient::tlv8;
 nvs_handle HAPClient::hapNVS;
 nvs_handle HAPClient::srpNVS;
 HKDF HAPClient::hkdf;                                   

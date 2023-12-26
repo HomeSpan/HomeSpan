@@ -577,16 +577,6 @@ Span& Span::setQRID(const char *id){
 void Span::processSerialCommand(const char *c){
 
   switch(c[0]){
-
-    case 'Z': {
-      HAPClient::saveControllers();
-      break;
-      TempBuffer<uint8_t> tBuf(HAPClient::listControllers(NULL));
-      HAPClient::listControllers(tBuf);
-      Serial.printf("SIZE = %d\n",tBuf.len());
-      HAPClient::hexPrintRow(tBuf,tBuf.len());
-      break;
-    }
     
     case 's': {    
       
