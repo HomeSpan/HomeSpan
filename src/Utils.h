@@ -59,7 +59,7 @@ class TempBuffer {
 
   public:
   
-  TempBuffer(size_t _nElements) : nElements(_nElements) {
+  TempBuffer(size_t _nElements=1) : nElements(_nElements) {
     buf=(bufType *)HS_MALLOC(nElements*sizeof(bufType));
     if(buf==NULL){
       Serial.printf("\n\n*** FATAL ERROR: Requested allocation of %d bytes failed.  Program Halting.\n\n",nElements*sizeof(bufType));

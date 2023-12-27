@@ -364,7 +364,7 @@ class Span{
   Span& setStatusCallback(void (*f)(HS_STATUS status)){statusCallback=f;return(*this);}  // sets an optional user-defined function to call when HomeSpan status changes
   const char* statusString(HS_STATUS s);                                                 // returns char string for HomeSpan status change messages
   
-  Span& setPairingCode(const char *s){sprintf(pairingCodeCommand,"S %9s",s);return(*this);}    // sets the Pairing Code - use is NOT recommended.  Use 'S' from CLI instead
+  Span& setPairingCode(const char *s); // {sprintf(pairingCodeCommand,"S %9s",s);return(*this);}    // sets the Pairing Code - use is NOT recommended.  Use 'S' from CLI instead
   void deleteStoredValues(){processSerialCommand("V");}                                        // deletes stored Characteristic values from NVS  
 
   int enableOTA(boolean auth=true, boolean safeLoad=true){return(spanOTA.init(auth, safeLoad, NULL));}   // enables Over-the-Air updates, with (auth=true) or without (auth=false) authorization password  

@@ -53,6 +53,14 @@ const TLV8_names HAP_Names[] = {
 #define hap_accessory_IDBYTES   17
 
 /////////////////////////////////////////////////
+// Pair-Setup Code Verification Data and Salt
+
+struct Verification {
+  uint8_t salt[16];
+  uint8_t verifyCode[384];
+};
+  
+/////////////////////////////////////////////////
 // NONCE Structure (HAP used last 64 of 96 bits)
 
 struct Nonce {
@@ -108,7 +116,7 @@ struct HAPClient {
   static nvs_handle srpNVS;                                         // handle for non-volatile-storage of SRP data
   static HKDF hkdf;                                                 // generates (and stores) HKDF-SHA-512 32-byte keys derived from an inputKey of arbitrary length, a salt string, and an info string
   static pairState pairStatus;                                      // tracks pair-setup status
-  static SRP6A srp;                                                 // stores all SRP-6A keys used for Pair-Setup
+  static SRP6A *srp;                                                // stores all SRP-6A keys used for Pair-Setup (must persist through multiple calls to Pair-Setup)
   static Accessory accessory;                                       // Accessory ID and Ed25519 public and secret keys- permanently stored
   static list<Controller, Mallocator<Controller>> controllerList;   // linked-list of Paired Controller IDs and ED25519 long-term public keys - permanently stored
   static int conNum;                                                // connection number - used to keep track of per-connection EV notifications

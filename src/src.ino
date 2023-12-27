@@ -33,7 +33,7 @@ void setup() {
  
   Serial.begin(115200);
 
-  homeSpan.setLogLevel(2);
+  homeSpan.setLogLevel(2); // .setPairingCode("33344456");
 
   homeSpan.begin(Category::Lighting,"HomeSpan Max");
 

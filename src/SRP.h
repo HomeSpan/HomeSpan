@@ -31,7 +31,17 @@
 #include <mbedtls/bignum.h>
 #include <mbedtls/base64.h>
 
-#include "HAPConstants.h"
+#if defined(BOARD_HAS_PSRAM)
+#define HS_MALLOC ps_malloc
+#define HS_CALLOC ps_calloc
+#define HS_REALLOC ps_realloc
+#define ps_new(X) new(ps_malloc(sizeof(X)))X
+#else
+#define HS_MALLOC malloc
+#define HS_CALLOC calloc
+#define HS_REALLOC realloc
+#define ps_new(X) new X
+#endif
 
 /////////////////////////////////////////////////
 // SRP-6A Structure from RFC 5054 (Nov 2007)
@@ -40,6 +50,19 @@
 //
 // I = SRP-6A username, defined by HAP to be the word "Pair-Setup"
 // P = SRP-6A password, defined to be equal to the accessory's 8-digit setup code in the format "XXX-XX-XXX"
+
+const char N3072[]="FFFFFFFFFFFFFFFFC90FDAA22168C234C4C6628B80DC1CD129024E088A67CC74"
+                   "020BBEA63B139B22514A08798E3404DDEF9519B3CD3A431B302B0A6DF25F1437"
+                   "4FE1356D6D51C245E485B576625E7EC6F44C42E9A637ED6B0BFF5CB6F406B7ED"
+                   "EE386BFB5A899FA5AE9F24117C4B1FE649286651ECE45B3DC2007CB8A163BF05"
+                   "98DA48361C55D39A69163FA8FD24CF5F83655D23DCA3AD961C62F356208552BB"
+                   "9ED529077096966D670C354E4ABC9804F1746C08CA18217C32905E462E36CE3B"
+                   "E39E772C180E86039B2783A2EC07A28FB5C55DF06F4C52C9DE2BCBF695581718"
+                   "3995497CEA956AE515D2261898FA051015728E5A8AAAC42DAD33170D04507A33"
+                   "A85521ABDF1CBA64ECFB850458DBEF0A8AEA71575D060C7DB3970F85A6E1E4C7"
+                   "ABF5AE8CDB0933D71E8C94E04A25619DCEE3D2261AD2EE6BF12FFA06D98A0864"
+                   "D87602733EC86A64521F2B18177B200CBBE117577A615D6C770988C0BAD946E2"
+                   "08E24FA074E5AB3143DB5BFCE0FD108E4B82D120A93AD2CAFFFFFFFFFFFFFFFF";
 
 struct SRP6A {
 
@@ -71,6 +94,9 @@ struct SRP6A {
   uint8_t sharedSecret[64];                        // permanent storage for binary version of SHARED SECRET KEY for ease of use upstream
 
   SRP6A();                                         // initializes N, G, and computes k
+  ~SRP6A();
+
+  void *operator new(size_t size){return(HS_MALLOC(size));}     // override new operator to use PSRAM when available
   
   void createVerifyCode(const char *setupCode, uint8_t *verifyCode, uint8_t *salt);
   void loadVerifyCode(uint8_t *verifyCode, uint8_t *salt);

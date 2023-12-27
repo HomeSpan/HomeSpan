@@ -674,31 +674,8 @@ void Span::processSerialCommand(const char *c){
     break;
 
     case 'S': {
-      
-      char setupCode[10];
 
-      struct {                                      // temporary structure to hold SRP verification code and salt stored in NVS
-        uint8_t salt[16];
-        uint8_t verifyCode[384];
-      } verifyData;      
-
-      sscanf(c+1," %9[0-9]",setupCode);
-      
-      if(strlen(setupCode)!=8){
-        LOG0("\n*** Invalid request to change Setup Code.  Code must be exactly 8 digits.\n\n");
-      } else
-      
-      if(!network.allowedCode(setupCode)){
-        LOG0("\n*** Invalid request to change Setup Code.  Code too simple.\n\n");
-      } else {
-        
-        LOG0("\nGenerating SRP verification data for new Setup Code: %.3s-%.2s-%.3s ... ",setupCode,setupCode+3,setupCode+5);
-        HAPClient::srp.createVerifyCode(setupCode,verifyData.verifyCode,verifyData.salt);                         // create verification code from default Setup Code and random salt
-        nvs_set_blob(HAPClient::srpNVS,"VERIFYDATA",&verifyData,sizeof(verifyData));                              // update data
-        nvs_commit(HAPClient::srpNVS);                                                                            // commit to NVS
-        LOG0("New Code Saved!\n");
-        LOG0("Setup Payload for Optional QR Code: %s\n\n",qrCode.get(atoi(setupCode),qrID,atoi(category)));
-      }            
+      setPairingCode(c+1);          
     }
     break;
 
@@ -1203,6 +1180,40 @@ const char* Span::statusString(HS_STATUS s){
     case HS_OTA_STARTED: return("OTA Update Started");
     default: return("Unknown");
   }
+}
+
+///////////////////////////////
+
+Span& Span::setPairingCode(const char *s){
+   
+  char setupCode[10];
+
+  sscanf(s," %9[0-9]",setupCode);
+
+  if(strlen(setupCode)!=8){
+    LOG0("\n*** Invalid request to change Setup Code.  Code must be exactly 8 digits.\n\n");
+    return(*this);
+  }   
+
+  if(!network.allowedCode(setupCode)){
+    LOG0("\n*** Invalid request to change Setup Code.  Code too simple.\n\n");
+    return(*this);
+  }
+
+  TempBuffer<Verification> verifyData;       // temporary storage for verification data
+  SRP6A *srp=new SRP6A;                      // create instance of SRP
+  
+  LOG0("\nGenerating SRP verification data for new Setup Code: %.3s-%.2s-%.3s ... ",setupCode,setupCode+3,setupCode+5);
+  
+  srp->createVerifyCode(setupCode,verifyData.get()->verifyCode,verifyData.get()->salt);         // create verification code with random salt from specified Setup Code
+  nvs_set_blob(HAPClient::srpNVS,"VERIFYDATA",&verifyData,sizeof(verifyData));                  // update data
+  nvs_commit(HAPClient::srpNVS);                                                                // commit to NVS
+  
+  LOG0("New Code Saved!\n");
+  LOG0("Setup Payload for Optional QR Code: %s\n\n",qrCode.get(atoi(setupCode),qrID,atoi(category)));
+
+  delete srp;
+  return(*this);
 }
 
 ///////////////////////////////

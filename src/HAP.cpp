@@ -36,7 +36,7 @@
 
 void HAPClient::init(){
 
-  size_t len;             // not used but required to read blobs from NVS
+  size_t len;                                   // not used but required to read blobs from NVS
 
   nvs_open("SRP",NVS_READWRITE,&srpNVS);        // open SRP data namespace in NVS 
   nvs_open("HAP",NVS_READWRITE,&hapNVS);        // open HAP data namespace in NVS
@@ -48,37 +48,20 @@ void HAPClient::init(){
     homeSpan.spanOTA.setPassword(DEFAULT_OTA_PASSWORD);                   // ...use default password
     }
   }
+  
+  if(nvs_get_blob(srpNVS,"VERIFYDATA",NULL,&len))                         // if Pair-Setup verification code data not found in NVS
+    homeSpan.setPairingCode(DEFAULT_SETUP_CODE);                          // create and save verification from using Pairing Setup Code
 
-  if(strlen(homeSpan.pairingCodeCommand)){                          // load verification setup code if provided
-    homeSpan.processSerialCommand(homeSpan.pairingCodeCommand);     // if load failed due to invalid code, the logic below still runs and will pick up previous code or use the default one
-  } 
-
-  struct {                                      // temporary structure to hold SRP verification code and salt stored in NVS
-    uint8_t salt[16];
-    uint8_t verifyCode[384];
-  } verifyData;
- 
-  if(!nvs_get_blob(srpNVS,"VERIFYDATA",NULL,&len)){                   // if found verification code data in NVS
-    nvs_get_blob(srpNVS,"VERIFYDATA",&verifyData,&len);                  // retrieve data
-    srp.loadVerifyCode(verifyData.verifyCode,verifyData.salt);           // load verification code and salt into SRP structure
-  } else {
-    LOG0("Generating SRP verification data for default Setup Code: %.3s-%.2s-%.3s\n",homeSpan.defaultSetupCode,homeSpan.defaultSetupCode+3,homeSpan.defaultSetupCode+5);
-    srp.createVerifyCode(homeSpan.defaultSetupCode,verifyData.verifyCode,verifyData.salt);         // create verification code from default Setup Code and random salt
-    nvs_set_blob(srpNVS,"VERIFYDATA",&verifyData,sizeof(verifyData));                           // update data
-    nvs_commit(srpNVS);                                                                         // commit to NVS
-    LOG0("Setup Payload for Optional QR Code: %s\n\n",homeSpan.qrCode.get(atoi(homeSpan.defaultSetupCode),homeSpan.qrID,atoi(homeSpan.category)));
-  }
-
-  if(!strlen(homeSpan.qrID)){                                      // Setup ID has not been specified in sketch
-    if(!nvs_get_str(hapNVS,"SETUPID",NULL,&len)){                    // check for saved value
-      nvs_get_str(hapNVS,"SETUPID",homeSpan.qrID,&len);                 // retrieve data
+  if(!strlen(homeSpan.qrID)){                                             // is Setup ID has not been specified in sketch
+    if(!nvs_get_str(hapNVS,"SETUPID",NULL,&len)){                         // check for saved value
+      nvs_get_str(hapNVS,"SETUPID",homeSpan.qrID,&len);                   // retrieve data
     } else {
-      sprintf(homeSpan.qrID,"%s",DEFAULT_QR_ID);                     // use default
+      sprintf(homeSpan.qrID,"%s",DEFAULT_QR_ID);                          // use default
    }
   }
   
-  if(!nvs_get_blob(hapNVS,"ACCESSORY",NULL,&len)){                    // if found long-term Accessory data in NVS
-    nvs_get_blob(hapNVS,"ACCESSORY",&accessory,&len);                 // retrieve data
+  if(!nvs_get_blob(hapNVS,"ACCESSORY",NULL,&len)){                        // if found long-term Accessory data in NVS
+    nvs_get_blob(hapNVS,"ACCESSORY",&accessory,&len);                     // retrieve data
   } else {      
     LOG0("Generating new random Accessory ID and Long-Term Ed25519 Signature Keys...\n\n");
     uint8_t buf[6];
@@ -91,13 +74,13 @@ void HAPClient::init(){
     memcpy(accessory.ID,cBuf,17);                                        // copy into Accessory ID for permanent storage
     crypto_sign_keypair(accessory.LTPK,accessory.LTSK);                  // generate new random set of keys using libsodium public-key signature
     
-    nvs_set_blob(hapNVS,"ACCESSORY",&accessory,sizeof(accessory));    // update data
-    nvs_commit(hapNVS);                                               // commit to NVS
+    nvs_set_blob(hapNVS,"ACCESSORY",&accessory,sizeof(accessory));       // update data
+    nvs_commit(hapNVS);                                                  // commit to NVS
   }
 
-  if(!nvs_get_blob(hapNVS,"CONTROLLERS",NULL,&len)){                // if found long-term Controller Pairings data from NVS
+  if(!nvs_get_blob(hapNVS,"CONTROLLERS",NULL,&len)){                     // if found long-term Controller Pairings data from NVS
     TempBuffer<Controller> tBuf(len/sizeof(Controller));
-    nvs_get_blob(hapNVS,"CONTROLLERS",tBuf,&len);             // retrieve data
+    nvs_get_blob(hapNVS,"CONTROLLERS",tBuf,&len);                        // retrieve data
     for(int i=0;i<tBuf.size();i++){
       if(tBuf[i].allocated)
         controllerList.push_back(tBuf[i]);
@@ -403,9 +386,9 @@ int HAPClient::postPairSetupURL(uint8_t *content, size_t len){
       auto itSalt=responseTLV.add(kTLVType_Salt,16,NULL);                   // create blank Salt TLV with space for 16 bytes
 
       responseTLV.add(kTLVType_State,pairState_M2);                         // set State=<M2>
-      srp.createPublicKey();                                                // create accessory Public Key from Pair-Setup code (displayed to user)
-      mbedtls_mpi_write_binary(&srp.B,*itPublicKey,(*itPublicKey).len);     // load server PublicKey, B, into TLV
-      mbedtls_mpi_write_binary(&srp.s,*itSalt,(*itSalt).len);               // load Salt, s, into TLV
+      srp->createPublicKey();                                                // create accessory Public Key from Pair-Setup code (displayed to user)
+      mbedtls_mpi_write_binary(&srp->B,*itPublicKey,(*itPublicKey).len);     // load server PublicKey, B, into TLV
+      mbedtls_mpi_write_binary(&srp->s,*itSalt,(*itSalt).len);               // load Salt, s, into TLV
       tlvRespond(responseTLV);                                              // send response to client
       pairStatus=pairState_M3;                                              // set next expected pair-state request from client
       return(1);
@@ -426,12 +409,12 @@ int HAPClient::postPairSetupURL(uint8_t *content, size_t len){
         return(0);
       };
 
-      mbedtls_mpi_read_binary(&srp.A,*itPublicKey,(*itPublicKey).len);          // load client PublicKey TLV into A
-      mbedtls_mpi_read_binary(&srp.M1,*itClientProof,(*itClientProof).len);     // load client Proof TLV into M1
+      mbedtls_mpi_read_binary(&srp->A,*itPublicKey,(*itPublicKey).len);          // load client PublicKey TLV into A
+      mbedtls_mpi_read_binary(&srp->M1,*itClientProof,(*itClientProof).len);     // load client Proof TLV into M1
 
-      srp.createSessionKey();                                           // create session key, K, from receipt of client Public Key, A
+      srp->createSessionKey();                                           // create session key, K, from receipt of client Public Key, A
 
-      if(!srp.verifyProof()){                                           // verify client Proof, M1
+      if(!srp->verifyProof()){                                           // verify client Proof, M1
         LOG0("\n*** ERROR: SRP Proof Verification Failed\n\n");
         responseTLV.add(kTLVType_State,pairState_M4);                   // set State=<M4>
         responseTLV.add(kTLVType_Error,tagError_Authentication);        // set Error=Authentication
@@ -443,8 +426,8 @@ int HAPClient::postPairSetupURL(uint8_t *content, size_t len){
       auto itAccProof=responseTLV.add(kTLVType_Proof,64,NULL);              // create blank accessory Proof TLV with space for 64 bytes
 
       responseTLV.add(kTLVType_State,pairState_M4);                         // set State=<M4>
-      srp.createProof();                                                    // M1 has been successully verified; now create accessory proof M2
-      mbedtls_mpi_write_binary(&srp.M2,*itAccProof,(*itAccProof).len);      // load accessory Proof, M2, into TLV
+      srp->createProof();                                                    // M1 has been successully verified; now create accessory proof M2
+      mbedtls_mpi_write_binary(&srp->M2,*itAccProof,(*itAccProof).len);      // load accessory Proof, M2, into TLV
       tlvRespond(responseTLV);                                              // send response to client
       pairStatus=pairState_M5;                                              // set next expected pair-state request from client
       return(1);        
@@ -473,7 +456,7 @@ int HAPClient::postPairSetupURL(uint8_t *content, size_t len){
       // The iosDeviceX HKDF calculations are separate and will be performed further below with the SALT and INFO as specified in the HAP docs.
 
       TempBuffer<uint8_t> srpSessionKey(crypto_box_PUBLICKEYBYTES);                                          // temporary space - used only in this block     
-      hkdf.create(srpSessionKey,srp.sharedSecret,64,"Pair-Setup-Encrypt-Salt","Pair-Setup-Encrypt-Info");    // create SessionKey
+      hkdf.create(srpSessionKey,srp->sharedSecret,64,"Pair-Setup-Encrypt-Salt","Pair-Setup-Encrypt-Info");    // create SessionKey
 
       LOG2("------- DECRYPTING SUB-TLVS -------\n");
       
@@ -514,7 +497,7 @@ int HAPClient::postPairSetupURL(uint8_t *content, size_t len){
       // Note that the SALT and INFO text fields now match those in HAP Section 5.6.6.1
 
       TempBuffer<uint8_t> iosDeviceX(32);
-      hkdf.create(iosDeviceX,srp.sharedSecret,64,"Pair-Setup-Controller-Sign-Salt","Pair-Setup-Controller-Sign-Info");     // derive iosDeviceX (32 bytes) from SRP Shared Secret using HKDF 
+      hkdf.create(iosDeviceX,srp->sharedSecret,64,"Pair-Setup-Controller-Sign-Salt","Pair-Setup-Controller-Sign-Info");     // derive iosDeviceX (32 bytes) from SRP Shared Secret using HKDF 
 
       // Concatenate iosDeviceX, IOS ID, and IOS PublicKey into iosDeviceInfo
       
@@ -534,7 +517,7 @@ int HAPClient::postPairSetupURL(uint8_t *content, size_t len){
       // Now perform the above steps in reverse to securely transmit the AccessoryLTPK to the Controller (HAP Section 5.6.6.2)
 
       TempBuffer<uint8_t> accessoryX(32);
-      hkdf.create(accessoryX,srp.sharedSecret,64,"Pair-Setup-Accessory-Sign-Salt","Pair-Setup-Accessory-Sign-Info");       // derive accessoryX from SRP Shared Secret using HKDF 
+      hkdf.create(accessoryX,srp->sharedSecret,64,"Pair-Setup-Accessory-Sign-Salt","Pair-Setup-Accessory-Sign-Info");       // derive accessoryX from SRP Shared Secret using HKDF 
       
       // Concatenate accessoryX, Accessory ID, and Accessory PublicKey into accessoryInfo
 
@@ -1672,6 +1655,6 @@ HKDF HAPClient::hkdf;
 pairState HAPClient::pairStatus;                        
 Accessory HAPClient::accessory;                         
 list<Controller, Mallocator<Controller>> HAPClient::controllerList;
-SRP6A HAPClient::srp;
+SRP6A *HAPClient::srp;
 int HAPClient::conNum;
  
