@@ -372,25 +372,30 @@ int HAPClient::postPairSetupURL(uint8_t *content, size_t len){
 
     case pairState_M1:{                                     // 'SRP Start Request'
 
+      responseTLV.add(kTLVType_State,pairState_M2);                             // set State=<M2>
+
       auto itMethod=iosTLV.find(kTLVType_Method);
 
       if(iosTLV.len(itMethod)!=1 || (*itMethod)[0]!=0){                         // error: "Pair Setup" method must always be 0 to indicate setup without MiFi Authentification (HAP Table 5-3)
         LOG0("\n*** ERROR: Pair 'Method' missing or not set to 0\n\n");
-        responseTLV.add(kTLVType_State,pairState_M2);                           // set State=<M2>
         responseTLV.add(kTLVType_Error,tagError_Unavailable);                   // set Error=Unavailable
         tlvRespond(responseTLV);                                                // send response to client
         return(0);
       };
 
-      auto itPublicKey=responseTLV.add(kTLVType_PublicKey,384,NULL);        // create blank PublicKey TLV with space for 384 bytes
-      auto itSalt=responseTLV.add(kTLVType_Salt,16,NULL);                   // create blank Salt TLV with space for 16 bytes
+      auto itPublicKey=responseTLV.add(kTLVType_PublicKey,384,NULL);                // create blank PublicKey TLV with space for 384 bytes
+      auto itSalt=responseTLV.add(kTLVType_Salt,16,NULL);                           // create blank Salt TLV with space for 16 bytes
 
-      responseTLV.add(kTLVType_State,pairState_M2);                         // set State=<M2>
-      srp->createPublicKey();                                                // create accessory Public Key from Pair-Setup code (displayed to user)
-      mbedtls_mpi_write_binary(&srp->B,*itPublicKey,(*itPublicKey).len);     // load server PublicKey, B, into TLV
-      mbedtls_mpi_write_binary(&srp->s,*itSalt,(*itSalt).len);               // load Salt, s, into TLV
-      tlvRespond(responseTLV);                                              // send response to client
-      pairStatus=pairState_M3;                                              // set next expected pair-state request from client
+      srp=new SRP6A;                                                                // create instance of SRP to persist until Pairing is fully complete
+      TempBuffer<Verification> verifyData;                                          // temporary storage for verification data      
+      size_t len=sizeof(Verification);
+      nvs_get_blob(srpNVS,"VERIFYDATA",verifyData.get(),&len);                      // load verification data (should already be stored in NVS)
+      srp->createPublicKey(verifyData.get()->verifyCode,verifyData.get()->salt);    // create accessory Public Key from stored verification data (which was originally derived from Pair-Setup Code)
+      mbedtls_mpi_write_binary(&srp->B,*itPublicKey,(*itPublicKey).len);            // write resulting server PublicKey, B, into TLV
+      mbedtls_mpi_write_binary(&srp->s,*itSalt,(*itSalt).len);                      // write Salt, s, into TLV
+      
+      tlvRespond(responseTLV);                                                      // send response to client
+      pairStatus=pairState_M3;                                                      // set next expected pair-state request from client
       return(1);
     } 
     break;
@@ -411,7 +416,7 @@ int HAPClient::postPairSetupURL(uint8_t *content, size_t len){
 
       mbedtls_mpi_read_binary(&srp->A,*itPublicKey,(*itPublicKey).len);          // load client PublicKey TLV into A
       mbedtls_mpi_read_binary(&srp->M1,*itClientProof,(*itClientProof).len);     // load client Proof TLV into M1
-
+      
       srp->createSessionKey();                                           // create session key, K, from receipt of client Public Key, A
 
       if(!srp->verifyProof()){                                           // verify client Proof, M1
@@ -1655,6 +1660,6 @@ HKDF HAPClient::hkdf;
 pairState HAPClient::pairStatus;                        
 Accessory HAPClient::accessory;                         
 list<Controller, Mallocator<Controller>> HAPClient::controllerList;
-SRP6A *HAPClient::srp;
+SRP6A *HAPClient::srp=NULL;
 int HAPClient::conNum;
  

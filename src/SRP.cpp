@@ -36,9 +36,6 @@
 
 SRP6A::SRP6A(){
 
-  uint8_t tBuf[768];    // temporary buffer for staging
-  uint8_t tHash[64];    // temporary buffer for storing SHA-512 results
-
   // initialize MPI structures
   
   mbedtls_mpi_init(&N);     
@@ -61,18 +58,11 @@ SRP6A::SRP6A(){
   mbedtls_mpi_init(&t2);
   mbedtls_mpi_init(&t3);
 
-  // load N and g into mpi structures
+  // load N and g into MPI structures
   
   mbedtls_mpi_read_string(&N,16,N3072);
   mbedtls_mpi_lset(&g,5);
-
-  // compute k = SHA512( N | PAD(g) )
-  
-  mbedtls_mpi_write_binary(&N,tBuf,384);          // write N into first half of staging buffer
-  mbedtls_mpi_write_binary(&g,tBuf+384,384);      // write g into second half of staging buffer (fully padded with leading zeros)
-  mbedtls_sha512_ret(tBuf,768,tHash,0);           // create hash of data
-  mbedtls_mpi_read_binary(&k,tHash,64);           // load hash result into mpi structure k
-  
+    
 }
 
 //////////////////////////////////////
@@ -105,12 +95,13 @@ SRP6A::~SRP6A(){
 
 void SRP6A::createVerifyCode(const char *setupCode, uint8_t *verifyCode, uint8_t *salt){
 
-  TempBuffer<uint8_t> tBuf(80);     // temporary buffer for staging 
-  TempBuffer<uint8_t> tHash(64);    // temporary buffer for storing SHA-512 results 
-  char *icp;                        // storage for I:P
+  TempBuffer<uint8_t> tBuf(80);             // temporary buffer for staging 
+  TempBuffer<uint8_t> tHash(64);            // temporary buffer for storing SHA-512 results 
+  char *icp;                                // storage for I:P
 
-  randombytes_buf(salt,16);                 // generate 16 random bytes using libsodium (which uses the ESP32 hardware-based random number generator)    
-  mbedtls_mpi_read_binary(&s,salt,16);
+  randombytes_buf(salt,16);                 // generate 16 random bytes for salt
+  mbedtls_mpi_read_binary(&s,salt,16);      // load salt into s
+  Serial.printf("*** SALT GENERATION: ");print(&s);
 
   asprintf(&icp,"Pair-Setup:%.3s-%.2s-%.3s",setupCode,setupCode+3,setupCode+5);
 
@@ -119,9 +110,9 @@ void SRP6A::createVerifyCode(const char *setupCode, uint8_t *verifyCode, uint8_t
   mbedtls_mpi_write_binary(&s,tBuf,16);                          // write s into first 16 bytes of staging buffer            
   mbedtls_sha512_ret((uint8_t *)icp,strlen(icp),tBuf+16,0);      // create hash of username:password and write into last 64 bytes of staging buffer
   mbedtls_sha512_ret(tBuf,80,tHash,0);                           // create second hash of salted, hashed username:password 
-  mbedtls_mpi_read_binary(&x,tHash,64);                          // load hash result into mpi structure x
+  mbedtls_mpi_read_binary(&x,tHash,64);                          // load hash result into x
 
-  // compute v = g^x % N
+  // compute v = g^x %N
   
   mbedtls_mpi_exp_mod(&v,&g,&x,&N,&_rr);                         // create verifier, v (_rr is an internal "helper" structure that mbedtls uses to speed up subsequent exponential calculations)
   mbedtls_mpi_write_binary(&v,verifyCode,384);                   // write v into verifyCode
@@ -131,37 +122,54 @@ void SRP6A::createVerifyCode(const char *setupCode, uint8_t *verifyCode, uint8_t
 
 //////////////////////////////////////
 
-void SRP6A::loadVerifyCode(uint8_t *verifyCode, uint8_t *salt){
+//void SRP6A::loadVerifyCode(uint8_t *verifyCode, uint8_t *salt){
+//  
+//  mbedtls_mpi_read_binary(&s,salt,16);
+//  mbedtls_mpi_read_binary(&v,verifyCode,384);
+//
+//}
+
+//////////////////////////////////////
+
+void SRP6A::createPublicKey(const uint8_t *verifyCode, const uint8_t *salt){
+
+  TempBuffer<uint8_t> tBuf(768);                  // temporary buffer for staging
+  TempBuffer<uint8_t> tHash(64);                  // temporary buffer for storing SHA-512 results
+  TempBuffer<uint8_t> privateKey(32);             // temporary buffer for generating private key random numbers
+
+  mbedtls_mpi_read_binary(&s,salt,16);            // load salt into s for use in later steps
+  mbedtls_mpi_read_binary(&v,verifyCode,384);     // load verifyCode into v for use below
   
-  mbedtls_mpi_read_binary(&s,salt,16);
-  mbedtls_mpi_read_binary(&v,verifyCode,384);
+  randombytes_buf(privateKey,32);                 // generate 32 random bytes for private key                     
+  mbedtls_mpi_read_binary(&b,privateKey,32);      // load private key into b
+    
+  // compute k = SHA512( N | PAD(g) )
+  
+  mbedtls_mpi_write_binary(&N,tBuf,384);          // write N into first half of staging buffer
+  mbedtls_mpi_write_binary(&g,tBuf+384,384);      // write g into second half of staging buffer (fully padded with leading zeros)
+  mbedtls_sha512_ret(tBuf,768,tHash,0);           // create hash of data
+  mbedtls_mpi_read_binary(&k,tHash,64);           // load hash result into k  
+
+  // compute B = (kv + g^b) %N
+  
+  mbedtls_mpi_mul_mpi(&t1,&k,&v);                 // t1 = k*v
+  mbedtls_mpi_exp_mod(&t2,&g,&b,&N,&_rr);         // t2 = g^b %N
+  mbedtls_mpi_add_mpi(&t3,&t1,&t2);               // t3 = t1 + t2
+  mbedtls_mpi_mod_mpi(&B,&t3,&N);                 // B = t3 %N      = ACCESSORY PUBLIC KEY
+
+  print(&s);
 
 }
 
 //////////////////////////////////////
 
-void SRP6A::createPublicKey(){
-    
-  getPrivateKey();           // create and load b (random 32 bytes)
-    
-  // compute B = kv + g^b %N
-  
-  mbedtls_mpi_mul_mpi(&t1,&k,&v);                     // t1 = k*v
-  mbedtls_mpi_exp_mod(&t2,&g,&b,&N,&_rr);             // t2 = g^b %N
-  mbedtls_mpi_add_mpi(&t3,&t1,&t2);                   // t3 = t1 + t2
-  mbedtls_mpi_mod_mpi(&B,&t3,&N);                     // B = t3 %N      = ACCESSORY PUBLIC KEY
-
-}
-
-//////////////////////////////////////
-
-void SRP6A::getPrivateKey(){
-
-  uint8_t privateKey[32];
-  
-  randombytes_buf(privateKey,32);                     // generate 32 random bytes using libsodium (which uses the ESP32 hardware-based random number generator)
-  mbedtls_mpi_read_binary(&b,privateKey,32);
-}
+//void SRP6A::getPrivateKey(){
+//
+//  uint8_t privateKey[32];
+//  
+//  randombytes_buf(privateKey,32);                     // generate 32 random bytes using libsodium (which uses the ESP32 hardware-based random number generator)
+//  mbedtls_mpi_read_binary(&b,privateKey,32);
+//}
   
 //////////////////////////////////////
 
@@ -253,11 +261,8 @@ void SRP6A::createProof(){
 
 //////////////////////////////////////
 
-void SRP6A::print(mbedtls_mpi *mpi, int minLogLevel){
-
-  if(homeSpan.getLogLevel()<minLogLevel)
-    return;
-      
+void SRP6A::print(mbedtls_mpi *mpi){
+     
   size_t sLen;
 
   mbedtls_mpi_write_string(mpi,16,NULL,0,&sLen);

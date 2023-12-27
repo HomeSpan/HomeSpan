@@ -1201,12 +1201,12 @@ Span& Span::setPairingCode(const char *s){
   }
 
   TempBuffer<Verification> verifyData;       // temporary storage for verification data
-  SRP6A *srp=new SRP6A;                      // create instance of SRP
+  SRP6A *srp=new SRP6A;                      // create temporary instance of SRP
   
   LOG0("\nGenerating SRP verification data for new Setup Code: %.3s-%.2s-%.3s ... ",setupCode,setupCode+3,setupCode+5);
   
   srp->createVerifyCode(setupCode,verifyData.get()->verifyCode,verifyData.get()->salt);         // create verification code with random salt from specified Setup Code
-  nvs_set_blob(HAPClient::srpNVS,"VERIFYDATA",&verifyData,sizeof(verifyData));                  // update data
+  nvs_set_blob(HAPClient::srpNVS,"VERIFYDATA",verifyData,verifyData.len());                     // update data
   nvs_commit(HAPClient::srpNVS);                                                                // commit to NVS
   
   LOG0("New Code Saved!\n");

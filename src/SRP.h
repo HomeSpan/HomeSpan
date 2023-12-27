@@ -99,16 +99,15 @@ struct SRP6A {
   void *operator new(size_t size){return(HS_MALLOC(size));}     // override new operator to use PSRAM when available
   
   void createVerifyCode(const char *setupCode, uint8_t *verifyCode, uint8_t *salt);
-  void loadVerifyCode(uint8_t *verifyCode, uint8_t *salt);
+//  void loadVerifyCode(uint8_t *verifyCode, uint8_t *salt);
   
-  void getSalt();                                  // generates and stores random 16-byte salt, s
-  void getPrivateKey();                            // generates and stores random 32-byte private key, b
-  void getSetupCode(char *c);                      // generates and displays random 8-digit Pair-Setup code, P, in format XXX-XX-XXX
-  void createPublicKey();                          // computes x, v, and B from random s, P, and b
+//  void getPrivateKey();                            // generates and stores random 32-byte private key, b
+//  void getSetupCode(char *c);                      // generates and displays random 8-digit Pair-Setup code, P, in format XXX-XX-XXX
+  void createPublicKey(const uint8_t *verifyCode, const uint8_t *salt);                          // computes x, v, and B from random s, P, and b
   void createSessionKey();                         // computes u from A and B, and then S from A, v, u, and b   
   int verifyProof();                               // verify M1 SRP6A Proof received from HAP client (return 1 on success, 0 on failure)
   void createProof();                              // create M2 server-side SRP6A Proof based on M1 as received from HAP Client
 
-  void print(mbedtls_mpi *mpi, int minLogLevel=0);   // prints size of mpi (in bytes), followed by the mpi itself (as a hex charcter string), subject to specified minimum log level
+  void print(mbedtls_mpi *mpi);   // prints size of mpi (in bytes), followed by the mpi itself (as a hex charcter string)
   
 };
