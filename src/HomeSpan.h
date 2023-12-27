@@ -400,6 +400,10 @@ class Span{
     LOG0("\n*** AutoPolling Task started with priority=%d\n\n",uxTaskPriorityGet(pollTaskHandle)); 
   }
 
+  uint32_t getAutoPollMinFreeStack(){
+     return pollTaskHandle != NULL ? uxTaskGetStackHighWaterMark(pollTaskHandle) : 0;
+  }
+
   Span& setTimeServerTimeout(uint32_t tSec){webLog.waitTime=tSec*1000;return(*this);}    // sets wait time (in seconds) for optional web log time server to connect
  
   [[deprecated("Please use reserveSocketConnections(n) method instead.")]]
