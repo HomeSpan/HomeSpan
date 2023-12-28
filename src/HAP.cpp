@@ -404,24 +404,22 @@ int HAPClient::postPairSetupURL(uint8_t *content, size_t len){
 
     case pairState_M3:{                                     // 'SRP Verify Request'
 
-      responseTLV.add(kTLVType_State,pairState_M4);                   // set State=<M4>
+      responseTLV.add(kTLVType_State,pairState_M4);                     // set State=<M4>
 
       auto itPublicKey=iosTLV.find(kTLVType_PublicKey);
       auto itClientProof=iosTLV.find(kTLVType_Proof);
 
-      if(iosTLV.len(itPublicKey)<=0 || iosTLV.len(itClientProof)<=0){
+      if(iosTLV.len(itPublicKey)<=0 || iosTLV.len(itClientProof)!=64){
         LOG0("\n*** ERROR: One or both of the required 'PublicKey' and 'Proof' TLV records for this step is bad or missing\n\n");
         responseTLV.add(kTLVType_Error,tagError_Unknown);               // set Error=Unknown (there is no specific error type for missing/bad TLV data)
         tlvRespond(responseTLV);                                        // send response to client
         pairStatus=pairState_M1;                                        // reset pairStatus to first step of unpaired
         return(0);
       };
-
-//      mbedtls_mpi_read_binary(&srp->M1,*itClientProof,(*itClientProof).len);     // load client Proof TLV into M1
       
       srp->createSessionKey(*itPublicKey,(*itPublicKey).len);                 // create session key, K, from client Public Key, A
 
-      if(!srp->verifyClientProof(*itClientProof,(*itClientProof).len)){       // verify client Proof, M1
+      if(!srp->verifyClientProof(*itClientProof)){                            // verify client Proof, M1
         LOG0("\n*** ERROR: SRP Proof Verification Failed\n\n");
         responseTLV.add(kTLVType_Error,tagError_Authentication);              // set Error=Authentication
         tlvRespond(responseTLV);                                              // send response to client
@@ -431,8 +429,7 @@ int HAPClient::postPairSetupURL(uint8_t *content, size_t len){
 
       auto itAccProof=responseTLV.add(kTLVType_Proof,64,NULL);                // create blank accessory Proof TLV with space for 64 bytes
 
-      srp->createProof();                                                     // M1 has been successully verified; now create accessory proof M2
-      mbedtls_mpi_write_binary(&srp->M2,*itAccProof,(*itAccProof).len);       // load accessory Proof, M2, into TLV
+      srp->createAccProof(*itAccProof);                                       // M1 has been successully verified; now create accessory Proof M2
       tlvRespond(responseTLV);                                                // send response to client
       pairStatus=pairState_M5;                                                // set next expected pair-state request from client
       return(1);        

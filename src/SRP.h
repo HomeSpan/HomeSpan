@@ -106,11 +106,11 @@ struct SRP6A {
 
   void *operator new(size_t size){return(HS_MALLOC(size));}     // override new operator to use PSRAM when available
   
-  void createVerifyCode(const char *setupCode, Verification *vData);                    // generates random s and computes v; writes back resulting verification data
-  void createPublicKey(const Verification *vData, uint8_t *publicKey);                  // generates random b and computes k and B; writes back resulting accessory public key 
-  void createSessionKey(const uint8_t *publicKey, size_t len);                          // computes u, S, and K from controller public key, A
-  int verifyClientProof(const uint8_t *proof, size_t len);                              // verify M1 SRP6A Proof received from HAP client (return 1 on success, 0 on failure)
-  void createProof();                                                                   // create M2 server-side SRP6A Proof based on M1 as received from HAP Client
+  void createVerifyCode(const char *setupCode, Verification *vData);                    // generates random s and computes v; writes back resulting Verification Data
+  void createPublicKey(const Verification *vData, uint8_t *publicKey);                  // generates random b and computes k and B; writes back resulting Accessory Public Key 
+  void createSessionKey(const uint8_t *publicKey, size_t len);                          // computes u, S, and K from Client Public Key, A (of variable length)
+  int verifyClientProof(const uint8_t *proof);                                          // verifies Client Proof, M1, received from HAP client (return 1 on success, 0 on failure)
+  void createAccProof(uint8_t *proof);                                                  // computes M2; write back resulting Accessory Proof
 
   void print(mbedtls_mpi *mpi);   // prints size of mpi (in bytes), followed by the mpi itself (as a hex character string)
   
