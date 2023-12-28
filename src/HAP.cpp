@@ -385,7 +385,7 @@ int HAPClient::postPairSetupURL(uint8_t *content, size_t len){
 
       auto itPublicKey=responseTLV.add(kTLVType_PublicKey,384,NULL);                // create blank PublicKey TLV with space for 384 bytes
 
-      if(srp==NULL)                                                                 // create instance of SRP (if not already created) to persist until Pairing is fully complete
+      if(srp==NULL)                                                                 // create instance of SRP (if not already created) to persist until Pairing-Setup M5 completes
         srp=new SRP6A;
         
       TempBuffer<Verification> verifyData;                                          // retrieve verification data (should already be stored in NVS)
@@ -416,7 +416,7 @@ int HAPClient::postPairSetupURL(uint8_t *content, size_t len){
         pairStatus=pairState_M1;                                        // reset pairStatus to first step of unpaired
         return(0);
       };
-      
+
       srp->createSessionKey(*itPublicKey,(*itPublicKey).len);                 // create session key, K, from client Public Key, A
 
       if(!srp->verifyClientProof(*itClientProof)){                            // verify client Proof, M1
@@ -430,19 +430,22 @@ int HAPClient::postPairSetupURL(uint8_t *content, size_t len){
       auto itAccProof=responseTLV.add(kTLVType_Proof,64,NULL);                // create blank accessory Proof TLV with space for 64 bytes
 
       srp->createAccProof(*itAccProof);                                       // M1 has been successully verified; now create accessory Proof M2
+
       tlvRespond(responseTLV);                                                // send response to client
       pairStatus=pairState_M5;                                                // set next expected pair-state request from client
+     
       return(1);        
     }
     break;
     
     case pairState_M5:{                                     // 'Exchange Request'
 
+      responseTLV.add(kTLVType_State,pairState_M6);                     // set State=<M6>
+
       auto itEncryptedData=iosTLV.find(kTLVType_EncryptedData);
 
       if(iosTLV.len(itEncryptedData)<=0){            
         LOG0("\n*** ERROR: Required 'EncryptedData' TLV record for this step is bad or missing\n\n");
-        responseTLV.add(kTLVType_State,pairState_M6);                   // set State=<M6>
         responseTLV.add(kTLVType_Error,tagError_Unknown);               // set Error=Unknown (there is no specific error type for missing/bad TLV data)
         tlvRespond(responseTLV);                                        // send response to client
         pairStatus=pairState_M1;                                        // reset pairStatus to first step of unpaired
@@ -457,18 +460,17 @@ int HAPClient::postPairSetupURL(uint8_t *content, size_t len){
       // Note the SALT and INFO text fields used by HKDF to create this Session Key are NOT the same as those for creating iosDeviceX.
       // The iosDeviceX HKDF calculations are separate and will be performed further below with the SALT and INFO as specified in the HAP docs.
 
-      TempBuffer<uint8_t> srpSessionKey(crypto_box_PUBLICKEYBYTES);                                          // temporary space - used only in this block     
-      hkdf.create(srpSessionKey,srp->sharedSecret,64,"Pair-Setup-Encrypt-Salt","Pair-Setup-Encrypt-Info");    // create SessionKey
+      TempBuffer<uint8_t> sessionKey(crypto_box_PUBLICKEYBYTES);                                            // temporary space - used only in this block     
+      hkdf.create(sessionKey,srp->K,64,"Pair-Setup-Encrypt-Salt","Pair-Setup-Encrypt-Info");                // create SessionKey
 
       LOG2("------- DECRYPTING SUB-TLVS -------\n");
       
       // use SessionKey to decrypt encryptedData TLV with padded nonce="PS-Msg05"
                                   
-      TempBuffer<uint8_t> decrypted((*itEncryptedData).len-crypto_aead_chacha20poly1305_IETF_ABYTES);        // temporary storage for decrypted data
+      TempBuffer<uint8_t> decrypted((*itEncryptedData).len-crypto_aead_chacha20poly1305_IETF_ABYTES);       // temporary storage for decrypted data
        
-      if(crypto_aead_chacha20poly1305_ietf_decrypt(decrypted, NULL, NULL, *itEncryptedData, (*itEncryptedData).len, NULL, 0, (unsigned char *)"\x00\x00\x00\x00PS-Msg05", srpSessionKey)==-1){          
+      if(crypto_aead_chacha20poly1305_ietf_decrypt(decrypted, NULL, NULL, *itEncryptedData, (*itEncryptedData).len, NULL, 0, (unsigned char *)"\x00\x00\x00\x00PS-Msg05", sessionKey)==-1){          
         LOG0("\n*** ERROR: Exchange-Request Authentication Failed\n\n");
-        responseTLV.add(kTLVType_State,pairState_M6);                   // set State=<M6>
         responseTLV.add(kTLVType_Error,tagError_Authentication);        // set Error=Authentication
         tlvRespond(responseTLV);                                        // send response to client
         pairStatus=pairState_M1;                                        // reset pairStatus to first step of unpaired
@@ -486,7 +488,6 @@ int HAPClient::postPairSetupURL(uint8_t *content, size_t len){
 
       if(subTLV.len(itIdentifier)!=hap_controller_IDBYTES || subTLV.len(itSignature)!=crypto_sign_BYTES || subTLV.len(itPublicKey)!=crypto_sign_PUBLICKEYBYTES){ 
         LOG0("\n*** ERROR: One or more of required 'Identifier,' 'PublicKey,' and 'Signature' TLV records for this step is bad or missing\n\n");
-        responseTLV.add(kTLVType_State,pairState_M6);                   // set State=<M6>
         responseTLV.add(kTLVType_Error,tagError_Unknown);               // set Error=Unknown (there is no specific error type for missing/bad TLV data)
         tlvRespond(responseTLV);                                        // send response to client
         pairStatus=pairState_M1;                                        // reset pairStatus to first step of unpaired
@@ -499,15 +500,14 @@ int HAPClient::postPairSetupURL(uint8_t *content, size_t len){
       // Note that the SALT and INFO text fields now match those in HAP Section 5.6.6.1
 
       TempBuffer<uint8_t> iosDeviceX(32);
-      hkdf.create(iosDeviceX,srp->sharedSecret,64,"Pair-Setup-Controller-Sign-Salt","Pair-Setup-Controller-Sign-Info");     // derive iosDeviceX (32 bytes) from SRP Shared Secret using HKDF 
+      hkdf.create(iosDeviceX,srp->K,64,"Pair-Setup-Controller-Sign-Salt","Pair-Setup-Controller-Sign-Info");     // derive iosDeviceX (32 bytes) from SRP Shared Secret using HKDF 
 
       // Concatenate iosDeviceX, IOS ID, and IOS PublicKey into iosDeviceInfo
       
       TempBuffer<uint8_t> iosDeviceInfo(iosDeviceX,iosDeviceX.len(),(*itIdentifier).val.get(),(*itIdentifier).len,(*itPublicKey).val.get(),(*itPublicKey).len,NULL);
 
-      if(crypto_sign_verify_detached(*itSignature, iosDeviceInfo, iosDeviceInfo.len(), *itPublicKey) != 0){                // verify signature of iosDeviceInfo using iosDeviceLTPK   
+      if(crypto_sign_verify_detached(*itSignature, iosDeviceInfo, iosDeviceInfo.len(), *itPublicKey) != 0){      // verify signature of iosDeviceInfo using iosDeviceLTPK   
         LOG0("\n*** ERROR: LPTK Signature Verification Failed\n\n");
-        responseTLV.add(kTLVType_State,pairState_M6);                   // set State=<M6>
         responseTLV.add(kTLVType_Error,tagError_Authentication);        // set Error=Authentication
         tlvRespond(responseTLV);                                        // send response to client
         pairStatus=pairState_M1;                                        // reset pairStatus to first step of unpaired
@@ -519,7 +519,7 @@ int HAPClient::postPairSetupURL(uint8_t *content, size_t len){
       // Now perform the above steps in reverse to securely transmit the AccessoryLTPK to the Controller (HAP Section 5.6.6.2)
 
       TempBuffer<uint8_t> accessoryX(32);
-      hkdf.create(accessoryX,srp->sharedSecret,64,"Pair-Setup-Accessory-Sign-Salt","Pair-Setup-Accessory-Sign-Info");       // derive accessoryX from SRP Shared Secret using HKDF 
+      hkdf.create(accessoryX,srp->K,64,"Pair-Setup-Accessory-Sign-Salt","Pair-Setup-Accessory-Sign-Info");       // derive accessoryX from SRP Shared Secret using HKDF 
       
       // Concatenate accessoryX, Accessory ID, and Accessory PublicKey into accessoryInfo
 
@@ -531,27 +531,27 @@ int HAPClient::postPairSetupURL(uint8_t *content, size_t len){
 
       crypto_sign_detached(*itSignature,NULL,accessoryInfo,accessoryInfo.len(),accessory.LTSK);  // produce signature of accessoryInfo using AccessoryLTSK (Ed25519 long-term secret key)
 
-      subTLV.add(kTLVType_Identifier,hap_accessory_IDBYTES,accessory.ID);                         // set Identifier TLV record as accessoryPairingID
-      subTLV.add(kTLVType_PublicKey,crypto_sign_PUBLICKEYBYTES,accessory.LTPK);                   // set PublicKey TLV record as accessoryLTPK
+      subTLV.add(kTLVType_Identifier,hap_accessory_IDBYTES,accessory.ID);                        // set Identifier TLV record as accessoryPairingID
+      subTLV.add(kTLVType_PublicKey,crypto_sign_PUBLICKEYBYTES,accessory.LTPK);                  // set PublicKey TLV record as accessoryLTPK
 
       LOG2("------- ENCRYPTING SUB-TLVS -------\n");
 
       subTLV.print();
 
-      TempBuffer<uint8_t> subPack(subTLV.pack_size());                                          // create sub-TLV by packing Identifier, PublicKey and Signature TLV records together
+      TempBuffer<uint8_t> subPack(subTLV.pack_size());                                           // create sub-TLV by packing Identifier, PublicKey and Signature TLV records together
       subTLV.pack(subPack);      
 
       // Encrypt the subTLV data using the same SRP Session Key as above with ChaCha20-Poly1305
 
       itEncryptedData=responseTLV.add(kTLVType_EncryptedData,subPack.len()+crypto_aead_chacha20poly1305_IETF_ABYTES,NULL);     //create blank EncryptedData TLV with space for subTLV + Authentication Tag
 
-      crypto_aead_chacha20poly1305_ietf_encrypt(*itEncryptedData,NULL,subPack,subPack.len(),NULL,0,NULL,(unsigned char *)"\x00\x00\x00\x00PS-Msg06",srpSessionKey);
+      crypto_aead_chacha20poly1305_ietf_encrypt(*itEncryptedData,NULL,subPack,subPack.len(),NULL,0,NULL,(unsigned char *)"\x00\x00\x00\x00PS-Msg06",sessionKey);
                                                    
       LOG2("---------- END SUB-TLVS! ----------\n");
-
-      responseTLV.add(kTLVType_State,pairState_M6);         // set State=<M6>
       
       tlvRespond(responseTLV);                              // send response to client
+
+      delete srp;                                           // delete SRP - no longer needed once pairing is completed
 
       mdns_service_txt_item_set("_hap","_tcp","sf","0");    // broadcast new status
       

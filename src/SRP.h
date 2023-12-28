@@ -88,18 +88,13 @@ struct SRP6A {
   mbedtls_mpi A;          // A                            - public key RECEIVED from HAP Client (max 384 bytes)
   mbedtls_mpi u;          // u = H(PAD(A) | PAB(B))       - "u-factor" (64 bytes)
   mbedtls_mpi S;          // S = (A*v^u)^b %N             - SRP shared "premaster" key, based on accessory private key and client public key (max 384 bytes)
-  mbedtls_mpi K;          // K = H( S )                   - SRP SHARED SECRET KEY (64 bytes)
-  mbedtls_mpi M1;         // M1                           - proof RECEIVED from HAP Client (64 bytes)
-  mbedtls_mpi M1V;        // M1V                          - accessory's independent computation of M1 to verify proof (see code for details of computation)
-  mbedtls_mpi M2;         // M2                           - accessory's counter-proof to send to HAP Client after M1=M1V has been verified (64 bytes)
-  
-  mbedtls_mpi t1;         // temporary mpi structures for intermediate results
-  mbedtls_mpi t2;
-  mbedtls_mpi t3;
-
+  uint8_t K[64];          // K = H(S)                     - SRP SHARED SECRET KEY (64 bytes)
+  uint8_t M1[64];         // M1                           - proof RECEIVED from HAP Client (64 bytes)
+  mbedtls_mpi t1;         // temp1                        - temporary mpi structures for intermediate results
+  mbedtls_mpi t2;         // temp2                        - temporary mpi structures for intermediate results
+  mbedtls_mpi t3;         // temp3                        - temporary mpi structures for intermediate results
   mbedtls_mpi _rr;        // _rr                          - temporary "helper" for large exponential modulus calculations
 
-  uint8_t sharedSecret[64];                        // permanent storage for binary version of SHARED SECRET KEY for ease of use upstream
 
   SRP6A();                                         // initializes N, G, and computes k
   ~SRP6A();

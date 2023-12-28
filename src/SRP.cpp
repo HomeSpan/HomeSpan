@@ -49,10 +49,6 @@ SRP6A::SRP6A(){
   mbedtls_mpi_init(&S);
   mbedtls_mpi_init(&k);
   mbedtls_mpi_init(&u);
-  mbedtls_mpi_init(&K);
-  mbedtls_mpi_init(&M1);
-  mbedtls_mpi_init(&M1V);
-  mbedtls_mpi_init(&M2);
   mbedtls_mpi_init(&_rr);
   mbedtls_mpi_init(&t1);
   mbedtls_mpi_init(&t2);
@@ -80,10 +76,6 @@ SRP6A::~SRP6A(){
   mbedtls_mpi_free(&S);
   mbedtls_mpi_free(&k);
   mbedtls_mpi_free(&u);
-  mbedtls_mpi_free(&K);
-  mbedtls_mpi_free(&M1);
-  mbedtls_mpi_free(&M1V);
-  mbedtls_mpi_free(&M2);
   mbedtls_mpi_free(&_rr);
   mbedtls_mpi_free(&t1);
   mbedtls_mpi_free(&t2);
@@ -117,9 +109,10 @@ void SRP6A::createVerifyCode(const char *setupCode, Verification *vData){
   // compute v = g^x %N
   
   mbedtls_mpi_exp_mod(&v,&g,&x,&N,&_rr);                         // create verifier, v (_rr is an internal "helper" structure that mbedtls uses to speed up subsequent exponential calculations)
-  mbedtls_mpi_write_binary(&v,vData->verifyCode,384);            // write v into verifyCode
+  mbedtls_mpi_write_binary(&v,vData->verifyCode,384);            // write v into verifyCode (padding with initial zeros is less than 384 bytes)
 
   free(icp);
+
 }
 
 //////////////////////////////////////
@@ -147,14 +140,14 @@ void SRP6A::createPublicKey(const Verification *vData, uint8_t *publicKey){
   mbedtls_sha512_ret(tBuf,768,tHash,0);           // create hash of data
   mbedtls_mpi_read_binary(&k,tHash,64);           // load hash result into k  
 
-  // compute B = (kv + g^b) %N
+  // compute B = (k*v + g^b) %N
   
   mbedtls_mpi_mul_mpi(&t1,&k,&v);                 // t1 = k*v
   mbedtls_mpi_exp_mod(&t2,&g,&b,&N,&_rr);         // t2 = g^b %N
   mbedtls_mpi_add_mpi(&t3,&t1,&t2);               // t3 = t1 + t2
   mbedtls_mpi_mod_mpi(&B,&t3,&N);                 // B = t3 %N      = ACCESSORY PUBLIC KEY
 
-  mbedtls_mpi_write_binary(&B,publicKey,384);     // write B into publicKey
+  mbedtls_mpi_write_binary(&B,publicKey,384);     // write B into publicKey (padding with initial zeros is less than 384 bytes)
 
 }
 
@@ -169,25 +162,22 @@ void SRP6A::createSessionKey(const uint8_t *publicKey, size_t len){
 
   // compute u = SHA512( PAD(A) | PAD(B) )
   
-  mbedtls_mpi_write_binary(&A,tBuf,384);          // write A into first half of staging buffer (will pad to fill 384 bytes)
-  mbedtls_mpi_write_binary(&B,tBuf+384,384);      // write B into second half of staging buffer (will pad to fill 384 bytes)
+  mbedtls_mpi_write_binary(&A,tBuf,384);          // write A into first half of staging buffer (padding with initial zeros is less than 384 bytes)
+  mbedtls_mpi_write_binary(&B,tBuf+384,384);      // write B into second half of staging buffer (padding with initial zeros is less than 384 bytes)
   mbedtls_sha512_ret(tBuf,768,tHash,0);           // create hash of data
   mbedtls_mpi_read_binary(&u,tHash,64);           // load hash result into mpi structure u
 
-  // compute S = (Av^u)^b %N
+  // compute S = (A * v^u)^b %N
 
   mbedtls_mpi_exp_mod(&t1,&v,&u,&N,&_rr);         // t1 = v^u %N
   mbedtls_mpi_mul_mpi(&t2,&A,&t1);                // t2 = A*t1
   mbedtls_mpi_mod_mpi(&t1,&t2,&N);                // t1 = t2 %N  (this is needed to reduce size of t2 before next calculation)
   mbedtls_mpi_exp_mod(&S,&t1,&b,&N,&_rr);         // S = t1^b %N
 
-  // compute K = SHA512( S )
+  // compute K = SHA512( PAD(S) )
   
   mbedtls_mpi_write_binary(&S,tBuf,384);          // write S into staging buffer (only first half of buffer will be used)
-  mbedtls_sha512_ret(tBuf,384,tHash,0);           // create hash of data
-  mbedtls_mpi_read_binary(&K,tHash,64);           // load hash result into mpi structure K.  This is the SRP SHARED SECRET KEY
-
-  mbedtls_mpi_write_binary(&K,sharedSecret,64);   // store SHARED SECRET in easy-to-use binary (uint8_t) format
+  mbedtls_sha512_ret(tBuf,384,K,0);               // create hash of data - this is the SRP SHARED SESSION KEY, K
   
 }
 
@@ -199,12 +189,12 @@ int SRP6A::verifyClientProof(const uint8_t *proof){
   TempBuffer<uint8_t> tBuf(976);                     // temporary buffer for staging
   TempBuffer<uint8_t> tHash(64);                     // temporary buffer for storing SHA-512 results
 
-  mbedtls_mpi_read_binary(&M1,proof,64);            // load client Proof into M1
+  memcpy(M1,proof,64);                               // load client Proof into M1
 
   size_t count=0;                                    // total number of bytes for final hash  
   size_t sLen;
 
-  // compute M1V
+  // compute M1V = SHA512( SHA512(N) xor SHA512(g) | SHA512(I) | s | A | B | K )
 
   mbedtls_mpi_write_binary(&N,tBuf,384);             // write N into staging buffer
   mbedtls_sha512_ret(tBuf,384,tHash,0);              // create hash of data
@@ -225,15 +215,12 @@ int SRP6A::verifyClientProof(const uint8_t *proof){
   mbedtls_mpi_write_binary(&B,tBuf+count,sLen);       // concatenate B to staging buffer.  Note B is NOT padded with leading zeros (so may be less than 384 bytes)
   count+=sLen;                                        // increment total bytes written to staging buffer
   
-  mbedtls_mpi_write_binary(&K,tBuf+count,64);         // concatenate K to staging buffer (should always be 64 bytes since it is a hashed value)
+  memcpy(tBuf+count,K,64);                            // concatenate K to staging buffer (should always be 64 bytes since it is a hashed value)
   count+=64;                                          // final total of bytes written to staging buffer
 
-  mbedtls_sha512_ret(tBuf,count,tHash,0);             // create hash of data
-  mbedtls_mpi_read_binary(&M1V,tHash,64);             // load hash result into mpi structure M1V
+  mbedtls_sha512_ret(tBuf,count,tHash,0);             // create hash of data - this is M1V
 
-  // check that client Proof M1 matches M1V
-  
-  if(!mbedtls_mpi_cmp_mpi(&M1,&M1V))                  // cmp_mpi uses same logic as strcmp: returns 0 if EQUAL, otherwise +/- 1
+  if(!memcmp(M1,tHash,64))                            // check that client Proof M1 matches M1V
     return(1);                                        // success - proof from HAP Client is verified
     
   return(0);
@@ -243,18 +230,15 @@ int SRP6A::verifyClientProof(const uint8_t *proof){
 
 void SRP6A::createAccProof(uint8_t *proof){
 
-  uint8_t tBuf[512];    // temporary buffer for staging
+  TempBuffer<uint8_t> tBuf(512);    // temporary buffer for staging
 
-  // compute M2 = H( A | M1 | K )
+  // compute M2 = SHA512( A | M1 | K )
   
   mbedtls_mpi_write_binary(&A,tBuf,384);          // write A into staging buffer
-  mbedtls_mpi_write_binary(&M1,tBuf+384,64);      // concatenate M1 (now verified) to staging buffer
-  mbedtls_mpi_write_binary(&K,tBuf+448,64);       // concatenate K to staging buffer
-  mbedtls_sha512_ret(tBuf,512,tBuf,0);            // create hash of data
-  mbedtls_mpi_read_binary(&M2,tBuf,64);           // load hash results into mpi structure M2
-
-  mbedtls_mpi_write_binary(&M2,proof,64);         // write M2 into proof
-  
+  memcpy(tBuf+384,M1,64);                         // concatenate M1 (now verified) to staging buffer
+  memcpy(tBuf+448,K,64);                          // concatenate K to staging buffer
+  mbedtls_sha512_ret(tBuf,512,proof,0);           // create hash of data writing directly to proof - this is M2
+   
 }
 
 //////////////////////////////////////
