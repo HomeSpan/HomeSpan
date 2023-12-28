@@ -93,7 +93,7 @@ SRP6A::~SRP6A(){
 
 //////////////////////////////////////
 
-void SRP6A::createVerifyCode(const char *setupCode, uint8_t *verifyCode, uint8_t *salt){
+void SRP6A::createVerifyCode(const char *setupCode, Verification *vData){
 
   TempBuffer<uint8_t> tBuf(80);             // temporary buffer for staging 
   TempBuffer<uint8_t> tHash(64);            // temporary buffer for storing SHA-512 results 
@@ -101,7 +101,7 @@ void SRP6A::createVerifyCode(const char *setupCode, uint8_t *verifyCode, uint8_t
 
   // generate random salt, s
 
-  randombytes_buf(salt,16);                 // generate 16 random bytes for salt
+  randombytes_buf(vData->salt,16);          // generate 16 random bytes for salt
 
   // create I:P
   
@@ -109,7 +109,7 @@ void SRP6A::createVerifyCode(const char *setupCode, uint8_t *verifyCode, uint8_t
 
   // compute x = SHA512( s | SHA512( I | ":" | P ) )
 
-  memcpy(tBuf,salt,16);                                          // write salt into first 16 bytes of staging buffer            
+  memcpy(tBuf,vData->salt,16);                                   // write salt into first 16 bytes of staging buffer            
   mbedtls_sha512_ret((uint8_t *)icp,strlen(icp),tBuf+16,0);      // create hash of username:password and write into last 64 bytes of staging buffer
   mbedtls_sha512_ret(tBuf,80,tHash,0);                           // create second hash of salted, hashed username:password 
   mbedtls_mpi_read_binary(&x,tHash,64);                          // load hash result into x
@@ -117,14 +117,14 @@ void SRP6A::createVerifyCode(const char *setupCode, uint8_t *verifyCode, uint8_t
   // compute v = g^x %N
   
   mbedtls_mpi_exp_mod(&v,&g,&x,&N,&_rr);                         // create verifier, v (_rr is an internal "helper" structure that mbedtls uses to speed up subsequent exponential calculations)
-  mbedtls_mpi_write_binary(&v,verifyCode,384);                   // write v into verifyCode
+  mbedtls_mpi_write_binary(&v,vData->verifyCode,384);            // write v into verifyCode
 
   free(icp);
 }
 
 //////////////////////////////////////
 
-void SRP6A::createPublicKey(const uint8_t *verifyCode, const uint8_t *salt){
+void SRP6A::createPublicKey(const Verification *vData, uint8_t *publicKey){
 
   TempBuffer<uint8_t> tBuf(768);                  // temporary buffer for staging
   TempBuffer<uint8_t> tHash(64);                  // temporary buffer for storing SHA-512 results
@@ -132,8 +132,8 @@ void SRP6A::createPublicKey(const uint8_t *verifyCode, const uint8_t *salt){
 
   // load stored salt, s, and verification code, v
 
-  mbedtls_mpi_read_binary(&s,salt,16);            // load salt into s for use in later steps
-  mbedtls_mpi_read_binary(&v,verifyCode,384);     // load verifyCode into v for use below
+  mbedtls_mpi_read_binary(&s,vData->salt,16);            // load salt into s for use in later steps
+  mbedtls_mpi_read_binary(&v,vData->verifyCode,384);     // load verifyCode into v for use below
 
   // generate random private key, b
   
@@ -154,19 +154,23 @@ void SRP6A::createPublicKey(const uint8_t *verifyCode, const uint8_t *salt){
   mbedtls_mpi_add_mpi(&t3,&t1,&t2);               // t3 = t1 + t2
   mbedtls_mpi_mod_mpi(&B,&t3,&N);                 // B = t3 %N      = ACCESSORY PUBLIC KEY
 
+  mbedtls_mpi_write_binary(&B,publicKey,384);     // write B into publicKey
+
 }
 
 //////////////////////////////////////
 
-void SRP6A::createSessionKey(){
+void SRP6A::createSessionKey(const uint8_t *publicKey, size_t len){
 
-  uint8_t tBuf[768];    // temporary buffer for staging
-  uint8_t tHash[64];    // temporary buffer for storing SHA-512 results
+  TempBuffer<uint8_t> tBuf(768);                  // temporary buffer for staging
+  TempBuffer<uint8_t> tHash(64);                  // temporary buffer for storing SHA-512 results
+
+  mbedtls_mpi_read_binary(&A,publicKey,len);      // load client PublicKey into A
 
   // compute u = SHA512( PAD(A) | PAD(B) )
   
-  mbedtls_mpi_write_binary(&A,tBuf,384);          // write A into first half of staging buffer
-  mbedtls_mpi_write_binary(&B,tBuf+384,384);      // write B into second half of staging buffer
+  mbedtls_mpi_write_binary(&A,tBuf,384);          // write A into first half of staging buffer (will pad to fill 384 bytes)
+  mbedtls_mpi_write_binary(&B,tBuf+384,384);      // write B into second half of staging buffer (will pad to fill 384 bytes)
   mbedtls_sha512_ret(tBuf,768,tHash,0);           // create hash of data
   mbedtls_mpi_read_binary(&u,tHash,64);           // load hash result into mpi structure u
 
@@ -189,14 +193,19 @@ void SRP6A::createSessionKey(){
 
 //////////////////////////////////////
 
-int SRP6A::verifyProof(){
 
-  uint8_t tBuf[976];    // temporary buffer for staging
-  uint8_t tHash[64];    // temporary buffer for storing SHA-512 results
+int SRP6A::verifyClientProof(const uint8_t *proof, size_t len){
 
-  size_t count=0;       // total number of bytes for final hash  
+  TempBuffer<uint8_t> tBuf(976);                     // temporary buffer for staging
+  TempBuffer<uint8_t> tHash(64);                     // temporary buffer for storing SHA-512 results
+
+  mbedtls_mpi_read_binary(&M1,proof,len);            // load client Proof into M1
+
+  size_t count=0;                                    // total number of bytes for final hash  
   size_t sLen;
-  
+
+  // compute M1V
+
   mbedtls_mpi_write_binary(&N,tBuf,384);             // write N into staging buffer
   mbedtls_sha512_ret(tBuf,384,tHash,0);              // create hash of data
   mbedtls_sha512_ret(&g3072,1,tBuf,0);               // create hash of g, but place output directly into staging buffer
@@ -221,6 +230,8 @@ int SRP6A::verifyProof(){
 
   mbedtls_sha512_ret(tBuf,count,tHash,0);             // create hash of data
   mbedtls_mpi_read_binary(&M1V,tHash,64);             // load hash result into mpi structure M1V
+
+  // check that client Proof M1 matches M1V
   
   if(!mbedtls_mpi_cmp_mpi(&M1,&M1V))                  // cmp_mpi uses same logic as strcmp: returns 0 if EQUAL, otherwise +/- 1
     return(1);                                        // success - proof from HAP Client is verified

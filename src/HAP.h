@@ -51,15 +51,7 @@ const TLV8_names HAP_Names[] = {
 
 #define hap_controller_IDBYTES  36
 #define hap_accessory_IDBYTES   17
-
-/////////////////////////////////////////////////
-// Pair-Setup Code Verification Data and Salt
-
-struct Verification {
-  uint8_t salt[16];
-  uint8_t verifyCode[384];
-};
-  
+ 
 /////////////////////////////////////////////////
 // NONCE Structure (HAP used last 64 of 96 bits)
 

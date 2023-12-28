@@ -1205,7 +1205,7 @@ Span& Span::setPairingCode(const char *s){
   
   LOG0("\nGenerating SRP verification data for new Setup Code: %.3s-%.2s-%.3s ... ",setupCode,setupCode+3,setupCode+5);
   
-  srp->createVerifyCode(setupCode,verifyData.get()->verifyCode,verifyData.get()->salt);         // create verification code with random salt from specified Setup Code
+  srp->createVerifyCode(setupCode,verifyData);                                                  // create random salt and compute verification code from specified Setup Code
   nvs_set_blob(HAPClient::srpNVS,"VERIFYDATA",verifyData,verifyData.len());                     // update data
   nvs_commit(HAPClient::srpNVS);                                                                // commit to NVS
   

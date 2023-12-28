@@ -44,6 +44,14 @@
 #endif
 
 /////////////////////////////////////////////////
+// Pair-Setup Code Verification Data and Salt
+
+struct Verification {
+  uint8_t salt[16];
+  uint8_t verifyCode[384];
+};
+
+/////////////////////////////////////////////////
 // SRP-6A Structure from RFC 5054 (Nov 2007)
 // ** HAP uses N=3072-bit Group specified in RFC 5054 with Generator g=5
 // ** HAP replaces H=SHA-1 with H=SHA-512 (HAP Section 5.5)
@@ -98,10 +106,10 @@ struct SRP6A {
 
   void *operator new(size_t size){return(HS_MALLOC(size));}     // override new operator to use PSRAM when available
   
-  void createVerifyCode(const char *setupCode, uint8_t *verifyCode, uint8_t *salt);     // generates random s and computes v from specified 8-digit Pairing-Setup Code
-  void createPublicKey(const uint8_t *verifyCode, const uint8_t *salt);                 // generates random b and computes k and B from specified v and s
-  void createSessionKey();                                                              // computes u from A and B, and then S from A, v, u, and b   
-  int verifyProof();                                                                    // verify M1 SRP6A Proof received from HAP client (return 1 on success, 0 on failure)
+  void createVerifyCode(const char *setupCode, Verification *vData);                    // generates random s and computes v; writes back resulting verification data
+  void createPublicKey(const Verification *vData, uint8_t *publicKey);                  // generates random b and computes k and B; writes back resulting accessory public key 
+  void createSessionKey(const uint8_t *publicKey, size_t len);                          // computes u, S, and K from controller public key, A
+  int verifyClientProof(const uint8_t *proof, size_t len);                              // verify M1 SRP6A Proof received from HAP client (return 1 on success, 0 on failure)
   void createProof();                                                                   // create M2 server-side SRP6A Proof based on M1 as received from HAP Client
 
   void print(mbedtls_mpi *mpi);   // prints size of mpi (in bytes), followed by the mpi itself (as a hex character string)
