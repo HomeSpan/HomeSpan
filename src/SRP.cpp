@@ -61,7 +61,7 @@ SRP6A::SRP6A(){
   // load N and g into MPI structures
   
   mbedtls_mpi_read_string(&N,16,N3072);
-  mbedtls_mpi_lset(&g,5);
+  mbedtls_mpi_lset(&g,g3072);
     
 }
 
@@ -99,15 +99,17 @@ void SRP6A::createVerifyCode(const char *setupCode, uint8_t *verifyCode, uint8_t
   TempBuffer<uint8_t> tHash(64);            // temporary buffer for storing SHA-512 results 
   char *icp;                                // storage for I:P
 
-  randombytes_buf(salt,16);                 // generate 16 random bytes for salt
-  mbedtls_mpi_read_binary(&s,salt,16);      // load salt into s
-  Serial.printf("*** SALT GENERATION: ");print(&s);
+  // generate random salt, s
 
-  asprintf(&icp,"Pair-Setup:%.3s-%.2s-%.3s",setupCode,setupCode+3,setupCode+5);
+  randombytes_buf(salt,16);                 // generate 16 random bytes for salt
+
+  // create I:P
+  
+  asprintf(&icp,"%s:%.3s-%.2s-%.3s",I,setupCode,setupCode+3,setupCode+5);
 
   // compute x = SHA512( s | SHA512( I | ":" | P ) )
 
-  mbedtls_mpi_write_binary(&s,tBuf,16);                          // write s into first 16 bytes of staging buffer            
+  memcpy(tBuf,salt,16);                                          // write salt into first 16 bytes of staging buffer            
   mbedtls_sha512_ret((uint8_t *)icp,strlen(icp),tBuf+16,0);      // create hash of username:password and write into last 64 bytes of staging buffer
   mbedtls_sha512_ret(tBuf,80,tHash,0);                           // create second hash of salted, hashed username:password 
   mbedtls_mpi_read_binary(&x,tHash,64);                          // load hash result into x
@@ -122,23 +124,18 @@ void SRP6A::createVerifyCode(const char *setupCode, uint8_t *verifyCode, uint8_t
 
 //////////////////////////////////////
 
-//void SRP6A::loadVerifyCode(uint8_t *verifyCode, uint8_t *salt){
-//  
-//  mbedtls_mpi_read_binary(&s,salt,16);
-//  mbedtls_mpi_read_binary(&v,verifyCode,384);
-//
-//}
-
-//////////////////////////////////////
-
 void SRP6A::createPublicKey(const uint8_t *verifyCode, const uint8_t *salt){
 
   TempBuffer<uint8_t> tBuf(768);                  // temporary buffer for staging
   TempBuffer<uint8_t> tHash(64);                  // temporary buffer for storing SHA-512 results
   TempBuffer<uint8_t> privateKey(32);             // temporary buffer for generating private key random numbers
 
+  // load stored salt, s, and verification code, v
+
   mbedtls_mpi_read_binary(&s,salt,16);            // load salt into s for use in later steps
   mbedtls_mpi_read_binary(&v,verifyCode,384);     // load verifyCode into v for use below
+
+  // generate random private key, b
   
   randombytes_buf(privateKey,32);                 // generate 32 random bytes for private key                     
   mbedtls_mpi_read_binary(&b,privateKey,32);      // load private key into b
@@ -157,20 +154,8 @@ void SRP6A::createPublicKey(const uint8_t *verifyCode, const uint8_t *salt){
   mbedtls_mpi_add_mpi(&t3,&t1,&t2);               // t3 = t1 + t2
   mbedtls_mpi_mod_mpi(&B,&t3,&N);                 // B = t3 %N      = ACCESSORY PUBLIC KEY
 
-  print(&s);
-
 }
 
-//////////////////////////////////////
-
-//void SRP6A::getPrivateKey(){
-//
-//  uint8_t privateKey[32];
-//  
-//  randombytes_buf(privateKey,32);                     // generate 32 random bytes using libsodium (which uses the ESP32 hardware-based random number generator)
-//  mbedtls_mpi_read_binary(&b,privateKey,32);
-//}
-  
 //////////////////////////////////////
 
 void SRP6A::createSessionKey(){
@@ -209,12 +194,12 @@ int SRP6A::verifyProof(){
   uint8_t tBuf[976];    // temporary buffer for staging
   uint8_t tHash[64];    // temporary buffer for storing SHA-512 results
 
-  size_t count=0;                                // total number of bytes for final hash  
+  size_t count=0;       // total number of bytes for final hash  
   size_t sLen;
   
   mbedtls_mpi_write_binary(&N,tBuf,384);             // write N into staging buffer
   mbedtls_sha512_ret(tBuf,384,tHash,0);              // create hash of data
-  mbedtls_sha512_ret((uint8_t *)g3072,1,tBuf,0);     // create hash of g, but place output directly into staging buffer
+  mbedtls_sha512_ret(&g3072,1,tBuf,0);               // create hash of g, but place output directly into staging buffer
 
   for(int i=0;i<64;i++)                              // H(g) ->  H(g) XOR H(N), with results in first 64 bytes of staging buffer
     tBuf[i]^=tHash[i];
@@ -273,3 +258,7 @@ void SRP6A::print(mbedtls_mpi *mpi){
 }
 
 //////////////////////////////////////
+
+constexpr char SRP6A::N3072[];
+constexpr char SRP6A::I[];
+const uint8_t SRP6A::g3072;

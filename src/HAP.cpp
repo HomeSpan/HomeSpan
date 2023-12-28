@@ -388,8 +388,8 @@ int HAPClient::postPairSetupURL(uint8_t *content, size_t len){
 
       srp=new SRP6A;                                                                // create instance of SRP to persist until Pairing is fully complete
       TempBuffer<Verification> verifyData;                                          // temporary storage for verification data      
-      size_t len=sizeof(Verification);
-      nvs_get_blob(srpNVS,"VERIFYDATA",verifyData.get(),&len);                      // load verification data (should already be stored in NVS)
+      size_t len=verifyData.len();
+      nvs_get_blob(srpNVS,"VERIFYDATA",verifyData,&len);                            // load verification data (should already be stored in NVS)
       srp->createPublicKey(verifyData.get()->verifyCode,verifyData.get()->salt);    // create accessory Public Key from stored verification data (which was originally derived from Pair-Setup Code)
       mbedtls_mpi_write_binary(&srp->B,*itPublicKey,(*itPublicKey).len);            // write resulting server PublicKey, B, into TLV
       mbedtls_mpi_write_binary(&srp->s,*itSalt,(*itSalt).len);                      // write Salt, s, into TLV

@@ -45,26 +45,29 @@
 
 /////////////////////////////////////////////////
 // SRP-6A Structure from RFC 5054 (Nov 2007)
-// ** HAP uses N=3072-bit Group specified in RFC 5054
+// ** HAP uses N=3072-bit Group specified in RFC 5054 with Generator g=5
 // ** HAP replaces H=SHA-1 with H=SHA-512 (HAP Section 5.5)
 //
 // I = SRP-6A username, defined by HAP to be the word "Pair-Setup"
 // P = SRP-6A password, defined to be equal to the accessory's 8-digit setup code in the format "XXX-XX-XXX"
 
-const char N3072[]="FFFFFFFFFFFFFFFFC90FDAA22168C234C4C6628B80DC1CD129024E088A67CC74"
-                   "020BBEA63B139B22514A08798E3404DDEF9519B3CD3A431B302B0A6DF25F1437"
-                   "4FE1356D6D51C245E485B576625E7EC6F44C42E9A637ED6B0BFF5CB6F406B7ED"
-                   "EE386BFB5A899FA5AE9F24117C4B1FE649286651ECE45B3DC2007CB8A163BF05"
-                   "98DA48361C55D39A69163FA8FD24CF5F83655D23DCA3AD961C62F356208552BB"
-                   "9ED529077096966D670C354E4ABC9804F1746C08CA18217C32905E462E36CE3B"
-                   "E39E772C180E86039B2783A2EC07A28FB5C55DF06F4C52C9DE2BCBF695581718"
-                   "3995497CEA956AE515D2261898FA051015728E5A8AAAC42DAD33170D04507A33"
-                   "A85521ABDF1CBA64ECFB850458DBEF0A8AEA71575D060C7DB3970F85A6E1E4C7"
-                   "ABF5AE8CDB0933D71E8C94E04A25619DCEE3D2261AD2EE6BF12FFA06D98A0864"
-                   "D87602733EC86A64521F2B18177B200CBBE117577A615D6C770988C0BAD946E2"
-                   "08E24FA074E5AB3143DB5BFCE0FD108E4B82D120A93AD2CAFFFFFFFFFFFFFFFF";
-
 struct SRP6A {
+
+  static constexpr char N3072[]="FFFFFFFFFFFFFFFFC90FDAA22168C234C4C6628B80DC1CD129024E088A67CC74"
+                                "020BBEA63B139B22514A08798E3404DDEF9519B3CD3A431B302B0A6DF25F1437"
+                                "4FE1356D6D51C245E485B576625E7EC6F44C42E9A637ED6B0BFF5CB6F406B7ED"
+                                "EE386BFB5A899FA5AE9F24117C4B1FE649286651ECE45B3DC2007CB8A163BF05"
+                                "98DA48361C55D39A69163FA8FD24CF5F83655D23DCA3AD961C62F356208552BB"
+                                "9ED529077096966D670C354E4ABC9804F1746C08CA18217C32905E462E36CE3B"
+                                "E39E772C180E86039B2783A2EC07A28FB5C55DF06F4C52C9DE2BCBF695581718"
+                                "3995497CEA956AE515D2261898FA051015728E5A8AAAC42DAD33170D04507A33"
+                                "A85521ABDF1CBA64ECFB850458DBEF0A8AEA71575D060C7DB3970F85A6E1E4C7"
+                                "ABF5AE8CDB0933D71E8C94E04A25619DCEE3D2261AD2EE6BF12FFA06D98A0864"
+                                "D87602733EC86A64521F2B18177B200CBBE117577A615D6C770988C0BAD946E2"
+                                "08E24FA074E5AB3143DB5BFCE0FD108E4B82D120A93AD2CAFFFFFFFFFFFFFFFF";
+
+  static const uint8_t g3072=5;
+  static constexpr char I[]="Pair-Setup";
 
   mbedtls_mpi N;          // N                            - 3072-bit Group pre-defined prime used for all SRP-6A calculations (384 bytes)
   mbedtls_mpi g;          // g                            - pre-defined generator for the specified 3072-bit Group (g=5)
@@ -88,9 +91,6 @@ struct SRP6A {
 
   mbedtls_mpi _rr;        // _rr                          - temporary "helper" for large exponential modulus calculations
 
-  char I[11]="Pair-Setup";  // I                          - userName pre-defined by HAP pairing setup protocol
-  char g3072[2]="\x05";     // g                          - 3072-bit Group generator
-
   uint8_t sharedSecret[64];                        // permanent storage for binary version of SHARED SECRET KEY for ease of use upstream
 
   SRP6A();                                         // initializes N, G, and computes k
@@ -98,16 +98,12 @@ struct SRP6A {
 
   void *operator new(size_t size){return(HS_MALLOC(size));}     // override new operator to use PSRAM when available
   
-  void createVerifyCode(const char *setupCode, uint8_t *verifyCode, uint8_t *salt);
-//  void loadVerifyCode(uint8_t *verifyCode, uint8_t *salt);
-  
-//  void getPrivateKey();                            // generates and stores random 32-byte private key, b
-//  void getSetupCode(char *c);                      // generates and displays random 8-digit Pair-Setup code, P, in format XXX-XX-XXX
-  void createPublicKey(const uint8_t *verifyCode, const uint8_t *salt);                          // computes x, v, and B from random s, P, and b
-  void createSessionKey();                         // computes u from A and B, and then S from A, v, u, and b   
-  int verifyProof();                               // verify M1 SRP6A Proof received from HAP client (return 1 on success, 0 on failure)
-  void createProof();                              // create M2 server-side SRP6A Proof based on M1 as received from HAP Client
+  void createVerifyCode(const char *setupCode, uint8_t *verifyCode, uint8_t *salt);     // generates random s and computes v from specified 8-digit Pairing-Setup Code
+  void createPublicKey(const uint8_t *verifyCode, const uint8_t *salt);                 // generates random b and computes k and B from specified v and s
+  void createSessionKey();                                                              // computes u from A and B, and then S from A, v, u, and b   
+  int verifyProof();                                                                    // verify M1 SRP6A Proof received from HAP client (return 1 on success, 0 on failure)
+  void createProof();                                                                   // create M2 server-side SRP6A Proof based on M1 as received from HAP Client
 
-  void print(mbedtls_mpi *mpi);   // prints size of mpi (in bytes), followed by the mpi itself (as a hex charcter string)
+  void print(mbedtls_mpi *mpi);   // prints size of mpi (in bytes), followed by the mpi itself (as a hex character string)
   
 };
