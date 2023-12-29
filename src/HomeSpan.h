@@ -31,18 +31,6 @@
 #error ERROR: HOMESPAN IS ONLY AVAILABLE FOR ESP32 MICROCONTROLLERS!
 #endif
 
-#if defined(BOARD_HAS_PSRAM)
-#define HS_MALLOC ps_malloc
-#define HS_CALLOC ps_calloc
-#define HS_REALLOC ps_realloc
-#define ps_new(X) new(ps_malloc(sizeof(X)))X
-#else
-#define HS_MALLOC malloc
-#define HS_CALLOC calloc
-#define HS_REALLOC realloc
-#define ps_new(X) new X
-#endif
-
 #pragma GCC diagnostic ignored "-Wpmf-conversions"                // eliminates warning messages from use of pointers to member functions to detect whether update() and loop() are overridden by user
 #pragma GCC diagnostic ignored "-Wunused-result"                  // eliminates warning message regarded unused result from call to crypto_scalarmult_curve25519()
 
