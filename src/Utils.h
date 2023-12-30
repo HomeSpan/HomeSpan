@@ -27,6 +27,9 @@
  
 #pragma once
 
+#include <sstream>
+#include <WiFi.h>
+
 #include <Arduino.h>
 #include <driver/timer.h>
 
@@ -48,6 +51,65 @@ char *readSerial(char *c, int max);   // read serial port into 'c' until <newlin
 String mask(char *c, int n);          // simply utility that creates a String from 'c' with all except the first and last 'n' characters replaced by '*'
   
 }
+
+/////////////////////////////////////////////////
+
+class StreamBuffer : public std::streambuf {
+  
+  protected:
+  
+  char *buffer;
+  WiFiClient *client;
+      
+  public:
+    
+  StreamBuffer(WiFiClient *client, size_t bufSize=1024){
+    this->client=client;
+    buffer=(char *)HS_MALLOC(bufSize);
+    setp (buffer, buffer+bufSize-1);
+  }
+
+  virtual ~StreamBuffer() {
+    free(buffer);
+    sync();
+  }
+
+  protected:
+
+  int flushBuffer(){
+    int num=pptr()-pbase();
+
+//    if(write(1,buffer,num)!=num)
+//      return EOF;
+      
+    write(1,buffer,num);
+    client->write(buffer,num);
+    delay(1);
+    
+    pbump(-num);
+    return num;
+  }
+        
+  virtual int_type overflow(int_type c){      // buffer is full
+    if(c!=EOF){
+      *pptr() = c;
+      pbump(1);
+    }
+
+    if(flushBuffer()==EOF)
+      return EOF;
+      
+    return c;
+  }
+
+  virtual int sync(){
+    if(flushBuffer()==EOF)
+      return -1;
+      
+    return 0;
+  }
+ 
+};
 
 /////////////////////////////////////////////////
 // Creates a temporary buffer that is freed after

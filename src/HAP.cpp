@@ -1131,6 +1131,10 @@ int HAPClient::putPrepareURL(char *json){
 
 int HAPClient::getStatusURL(){
 
+//  StreamBuffer *sBuf = new StreamBuffer(&client);        // create buffered stream that will output to screen and client
+  StreamBuffer sBuf(&client);  
+  std::ostream out(&sBuf);                   
+  
   char clocktime[33];
 
   if(homeSpan.webLog.timeInit){
@@ -1150,86 +1154,81 @@ int HAPClient::getStatusURL(){
     
   sprintf(uptime,"%d:%02d:%02d:%02d",days,hours,mins,secs);
 
-  String response="HTTP/1.1 200 OK\r\nContent-type: text/html; charset=utf-8\r\n\r\n";
+  LOG2("\n>>>>>>>>>> %s >>>>>>>>>>\n",client.remoteIP().toString().c_str());
 
-  response+="<html><head><title>" + String(homeSpan.displayName) + "</title>\n";
-  response+="<style>body {background-color:lightblue;} th, td {padding-right: 10px; padding-left: 10px; border:1px solid black;}" + homeSpan.webLog.css + "</style></head>\n";
-  response+="<body class=bod1><h2>" + String(homeSpan.displayName) + "</h2>\n";
+  out << "HTTP/1.1 200 OK\r\nContent-type: text/html; charset=utf-8\r\n\r\n";
+  out << "<html><head><title>" << homeSpan.displayName << "</title>\n";
+  out << "<style>body {background-color:lightblue;} th, td {padding-right: 10px; padding-left: 10px; border:1px solid black;}" << homeSpan.webLog.css << "</style></head>\n";
+  out << "<body class=bod1><h2>" << homeSpan.displayName << "</h2>\n";
   
-  response+="<table class=tab1>\n";
-  response+="<tr><td>Up Time:</td><td>" + String(uptime) + "</td></tr>\n";
-  response+="<tr><td>Current Time:</td><td>" + String(clocktime) + "</td></tr>\n";
-  response+="<tr><td>Boot Time:</td><td>" + String(homeSpan.webLog.bootTime) + "</td></tr>\n";
+  out << "<table class=tab1>\n";
+  out << "<tr><td>Up Time:</td><td>" << uptime << "</td></tr>\n";
+  out << "<tr><td>Current Time:</td><td>" << clocktime << "</td></tr>\n";
+  out << "<tr><td>Boot Time:</td><td>" << homeSpan.webLog.bootTime << "</td></tr>\n"; 
+  out << "<tr><td>Reset Reason:</td><td>";
   
-  response+="<tr><td>Reset Reason:</td><td>";
   switch(esp_reset_reason()) {
     case ESP_RST_UNKNOWN:
-      response += "Cannot be determined";
+      out << "Cannot be determined";
       break;
     case ESP_RST_POWERON:
-      response += "Power-on event";
+      out << "Power-on event";
       break;
     case ESP_RST_EXT:
-      response += "External pin";
+      out << "External pin";
       break;
     case ESP_RST_SW:
-      response += "Software reboot via esp_restart";
+      out << "Software reboot via esp_restart";
       break;
     case ESP_RST_PANIC:
-      response += "Software Exception/Panic";
+      out << "Software Exception/Panic";
       break;
     case ESP_RST_INT_WDT:
-      response += "Interrupt watchdog";
+      out << "Interrupt watchdog";
       break;
     case ESP_RST_TASK_WDT:
-      response += "Task watchdog";
+      out << "Task watchdog";
       break;
     case ESP_RST_WDT:
-      response += "Other watchdogs";
+      out << "Other watchdogs";
       break;
     case ESP_RST_DEEPSLEEP:
-      response += "Exiting deep sleep mode";
+      out << "Exiting deep sleep mode";
       break;
     case ESP_RST_BROWNOUT:
-      response += "Brownout";
+      out << "Brownout";
       break;
     case ESP_RST_SDIO:
-      response += "SDIO";
+      out << "SDIO";
       break;
     default:
-      response += "Unknown Reset Code";
+      out << "Unknown Reset Code";
   }
-  response+=" (" + String(esp_reset_reason()) + ")</td></tr>\n";
   
-  response+="<tr><td>WiFi Disconnects:</td><td>" + String(homeSpan.connected/2) + "</td></tr>\n";
-  response+="<tr><td>WiFi Signal:</td><td>" + String(WiFi.RSSI()) + " dBm</td></tr>\n";
-  response+="<tr><td>WiFi Gateway:</td><td>" + WiFi.gatewayIP().toString() + "</td></tr>\n";
-  response+="<tr><td>ESP32 Board:</td><td>" + String(ARDUINO_BOARD) + "</td></tr>\n";
-  response+="<tr><td>Arduino-ESP Version:</td><td>" + String(ARDUINO_ESP_VERSION) + "</td></tr>\n";
-  response+="<tr><td>ESP-IDF Version:</td><td>" + String(ESP_IDF_VERSION_MAJOR) + "." + String(ESP_IDF_VERSION_MINOR) + "." + String(ESP_IDF_VERSION_PATCH) + "</td></tr>\n";
-  response+="<tr><td>HomeSpan Version:</td><td>" + String(HOMESPAN_VERSION) + "</td></tr>\n";
-  response+="<tr><td>Sketch Version:</td><td>" + String(homeSpan.getSketchVersion()) + "</td></tr>\n"; 
-  response+="<tr><td>Sodium Version:</td><td>" + String(sodium_version_string()) + " Lib " + String(sodium_library_version_major()) + "." + String(sodium_library_version_minor()) +"</td></tr>\n"; 
+  out << " (" << esp_reset_reason() << ")</td></tr>\n";
+  
+  out << "<tr><td>WiFi Disconnects:</td><td>" << homeSpan.connected/2 << "</td></tr>\n";
+  out << "<tr><td>WiFi Signal:</td><td>" << (int)WiFi.RSSI() << " dBm</td></tr>\n";
+  out << "<tr><td>WiFi Gateway:</td><td>" << WiFi.gatewayIP().toString().c_str() << "</td></tr>\n";
+  out << "<tr><td>ESP32 Board:</td><td>" << ARDUINO_BOARD << "</td></tr>\n";
+  out << "<tr><td>Arduino-ESP Version:</td><td>" << ARDUINO_ESP_VERSION << "</td></tr>\n";
+  out << "<tr><td>ESP-IDF Version:</td><td>" << ESP_IDF_VERSION_MAJOR << "." << ESP_IDF_VERSION_MINOR << "." << ESP_IDF_VERSION_PATCH << "</td></tr>\n";
+  out << "<tr><td>HomeSpan Version:</td><td>" << HOMESPAN_VERSION << "</td></tr>\n";
+  out << "<tr><td>Sketch Version:</td><td>" << homeSpan.getSketchVersion() << "</td></tr>\n"; 
+  out << "<tr><td>Sodium Version:</td><td>" << sodium_version_string() << " Lib " << sodium_library_version_major() << "." << sodium_library_version_minor() << "</td></tr>\n"; 
 
   char mbtlsv[64];
   mbedtls_version_get_string_full(mbtlsv);
-  response+="<tr><td>MbedTLS Version:</td><td>" + String(mbtlsv) + "</td></tr>\n";
+  out << "<tr><td>MbedTLS Version:</td><td>" << mbtlsv << "</td></tr>\n";
   
-  response+="<tr><td>HomeKit Status:</td><td>" + String(HAPClient::nAdminControllers()?"PAIRED":"NOT PAIRED") + "</td></tr>\n";   
-  response+="<tr><td>Max Log Entries:</td><td>" + String(homeSpan.webLog.maxEntries) + "</td></tr>\n"; 
+  out << "<tr><td>HomeKit Status:</td><td>" << (HAPClient::nAdminControllers()?"PAIRED":"NOT PAIRED") << "</td></tr>\n";   
+  out << "<tr><td>Max Log Entries:</td><td>" << homeSpan.webLog.maxEntries << "</td></tr>\n"; 
 
-  if(homeSpan.weblogCallback)
-    homeSpan.weblogCallback(response);
-
-  response+="</table>\n";
-  response+="<p></p>";
-
-  LOG2("\n>>>>>>>>>> ");
-  LOG2(client.remoteIP());
-  LOG2(" >>>>>>>>>>\n");
+  out << "</table>\n";
+  out << "<p></p>";
   
   if(homeSpan.webLog.maxEntries>0){
-    response+="<table class=tab2><tr><th>Entry</th><th>Up Time</th><th>Log Time</th><th>Client</th><th>Message</th></tr>\n";
+    out << "<table class=tab2><tr><th>Entry</th><th>Up Time</th><th>Log Time</th><th>Client</th><th>Message</th></tr>\n";
     int lastIndex=homeSpan.webLog.nEntries-homeSpan.webLog.maxEntries;
     if(lastIndex<0)
       lastIndex=0;
@@ -1248,28 +1247,16 @@ int HAPClient::getStatusURL(){
       else
         sprintf(clocktime,"Unknown");        
       
-      response+="<tr><td>" + String(i+1) + "</td><td>" + String(uptime) + "</td><td>" + String(clocktime) + "</td><td>" + homeSpan.webLog.log[index].clientIP + "</td><td>" + String(homeSpan.webLog.log[index].message) + "</td></tr>\n";
-
-      if(response.length()>1024){     // if response grows too big, transmit chunk and reset
-        LOG2(response);
-        client.print(response);
-        delay(1);                     // slight pause seems to be required
-        response.clear();
-      }
+      out << "<tr><td>" << i+1 << "</td><td>" << uptime << "</td><td>" << clocktime << "</td><td>" << homeSpan.webLog.log[index].clientIP << "</td><td>" << homeSpan.webLog.log[index].message << "</td></tr>\n";
     }
-    response+="</table>\n";
+    out << "</table>\n";
   }
   
-  response+="</body></html>";
+  out << "</body></html>" << std::endl;
 
-  LOG2(response);
-  LOG2("\n");
-  client.print(response);
   LOG2("------------ SENT! --------------\n");
   
-  delay(1);
-  client.stop();
-  
+  client.stop();  
   return(1);
 }
 
