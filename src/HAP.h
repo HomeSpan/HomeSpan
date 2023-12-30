@@ -27,6 +27,7 @@
  
 #pragma once
 
+#include <sstream>
 #include <WiFi.h>
 
 #include "HomeSpan.h"
@@ -179,6 +180,35 @@ struct HAPClient {
 };
 
 /////////////////////////////////////////////////
+// StreamBuffer Structure
+
+class StreamBuffer : public std::streambuf {
+  
+  private:
+
+  const size_t bufSize=1024;
+  char *buffer;
+  HAPClient *hapClient=NULL;
+  int logLevel=0;
+  boolean enablePrettyPrint=false;
+
+  int flushBuffer() ;       
+  int_type overflow(int_type c) override;
+  int sync() override; 
+
+  public:
+    
+  StreamBuffer();
+  ~StreamBuffer();
+
+  StreamBuffer& setHapClient(HAPClient *hapClient){this->hapClient=hapClient;return(*this);}
+  StreamBuffer& setLogLevel(int logLevel){this->logLevel=logLevel;return(*this);}
+  StreamBuffer& prettyPrint(){enablePrettyPrint=true;return(*this);}
+};
+
+/////////////////////////////////////////////////
 // Extern Variables
 
 extern HAPClient **hap;
+extern std::ostream hapOut;
+extern StreamBuffer hapStream;  

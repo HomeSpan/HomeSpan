@@ -38,7 +38,6 @@
 #include <unordered_map>
 #include <vector>
 #include <list>
-#include <sstream>
 #include <nvs.h>
 #include <ArduinoOTA.h>
 #include <esp_now.h>
@@ -67,27 +66,6 @@ enum {
   GET_NV=64,
   GET_VALUE=128
 };
-
-///////////////////////////////
-
-class StreamBuffer : public std::streambuf {
-  
-  private:
-  
-  char *buffer;
-  WiFiClient *client;
-
-  int flushBuffer() ;       
-  int_type overflow(int_type c) override;
-  int sync() override; 
-
-  public:
-    
-  StreamBuffer(WiFiClient *client, size_t bufSize=1024);
-  ~StreamBuffer();
-
-};
-
 
 ///////////////////////////////
 

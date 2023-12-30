@@ -1129,11 +1129,7 @@ int HAPClient::putPrepareURL(char *json){
 
 //////////////////////////////////////
 
-int HAPClient::getStatusURL(){
-
-//  StreamBuffer *sBuf = new StreamBuffer(&client);        // create buffered stream that will output to screen and client
-  StreamBuffer sBuf(&client);  
-  std::ostream out(&sBuf);                   
+int HAPClient::getStatusURL(){                 
   
   char clocktime[33];
 
@@ -1156,79 +1152,81 @@ int HAPClient::getStatusURL(){
 
   LOG2("\n>>>>>>>>>> %s >>>>>>>>>>\n",client.remoteIP().toString().c_str());
 
-  out << "HTTP/1.1 200 OK\r\nContent-type: text/html; charset=utf-8\r\n\r\n";
-  out << "<html><head><title>" << homeSpan.displayName << "</title>\n";
-  out << "<style>body {background-color:lightblue;} th, td {padding-right: 10px; padding-left: 10px; border:1px solid black;}" << homeSpan.webLog.css << "</style></head>\n";
-  out << "<body class=bod1><h2>" << homeSpan.displayName << "</h2>\n";
+  hapStream.setHapClient(this);
+
+  hapOut << "HTTP/1.1 200 OK\r\nContent-type: text/html; charset=utf-8\r\n\r\n";
+  hapOut << "<html><head><title>" << homeSpan.displayName << "</title>\n";
+  hapOut << "<style>body {background-color:lightblue;} th, td {padding-right: 10px; padding-left: 10px; border:1px solid black;}" << homeSpan.webLog.css << "</style></head>\n";
+  hapOut << "<body class=bod1><h2>" << homeSpan.displayName << "</h2>\n";
   
-  out << "<table class=tab1>\n";
-  out << "<tr><td>Up Time:</td><td>" << uptime << "</td></tr>\n";
-  out << "<tr><td>Current Time:</td><td>" << clocktime << "</td></tr>\n";
-  out << "<tr><td>Boot Time:</td><td>" << homeSpan.webLog.bootTime << "</td></tr>\n"; 
-  out << "<tr><td>Reset Reason:</td><td>";
+  hapOut << "<table class=tab1>\n";
+  hapOut << "<tr><td>Up Time:</td><td>" << uptime << "</td></tr>\n";
+  hapOut << "<tr><td>Current Time:</td><td>" << clocktime << "</td></tr>\n";
+  hapOut << "<tr><td>Boot Time:</td><td>" << homeSpan.webLog.bootTime << "</td></tr>\n"; 
+  hapOut << "<tr><td>Reset Reason:</td><td>";
   
   switch(esp_reset_reason()) {
     case ESP_RST_UNKNOWN:
-      out << "Cannot be determined";
+      hapOut << "Cannot be determined";
       break;
     case ESP_RST_POWERON:
-      out << "Power-on event";
+      hapOut << "Power-on event";
       break;
     case ESP_RST_EXT:
-      out << "External pin";
+      hapOut << "External pin";
       break;
     case ESP_RST_SW:
-      out << "Software reboot via esp_restart";
+      hapOut << "Software reboot via esp_restart";
       break;
     case ESP_RST_PANIC:
-      out << "Software Exception/Panic";
+      hapOut << "Software Exception/Panic";
       break;
     case ESP_RST_INT_WDT:
-      out << "Interrupt watchdog";
+      hapOut << "Interrupt watchdog";
       break;
     case ESP_RST_TASK_WDT:
-      out << "Task watchdog";
+      hapOut << "Task watchdog";
       break;
     case ESP_RST_WDT:
-      out << "Other watchdogs";
+      hapOut << "Other watchdogs";
       break;
     case ESP_RST_DEEPSLEEP:
-      out << "Exiting deep sleep mode";
+      hapOut << "Exiting deep sleep mode";
       break;
     case ESP_RST_BROWNOUT:
-      out << "Brownout";
+      hapOut << "Brownout";
       break;
     case ESP_RST_SDIO:
-      out << "SDIO";
+      hapOut << "SDIO";
       break;
     default:
-      out << "Unknown Reset Code";
+      hapOut << "Unknown Reset Code";
   }
   
-  out << " (" << esp_reset_reason() << ")</td></tr>\n";
+  hapOut << " (" << esp_reset_reason() << ")</td></tr>\n";
   
-  out << "<tr><td>WiFi Disconnects:</td><td>" << homeSpan.connected/2 << "</td></tr>\n";
-  out << "<tr><td>WiFi Signal:</td><td>" << (int)WiFi.RSSI() << " dBm</td></tr>\n";
-  out << "<tr><td>WiFi Gateway:</td><td>" << WiFi.gatewayIP().toString().c_str() << "</td></tr>\n";
-  out << "<tr><td>ESP32 Board:</td><td>" << ARDUINO_BOARD << "</td></tr>\n";
-  out << "<tr><td>Arduino-ESP Version:</td><td>" << ARDUINO_ESP_VERSION << "</td></tr>\n";
-  out << "<tr><td>ESP-IDF Version:</td><td>" << ESP_IDF_VERSION_MAJOR << "." << ESP_IDF_VERSION_MINOR << "." << ESP_IDF_VERSION_PATCH << "</td></tr>\n";
-  out << "<tr><td>HomeSpan Version:</td><td>" << HOMESPAN_VERSION << "</td></tr>\n";
-  out << "<tr><td>Sketch Version:</td><td>" << homeSpan.getSketchVersion() << "</td></tr>\n"; 
-  out << "<tr><td>Sodium Version:</td><td>" << sodium_version_string() << " Lib " << sodium_library_version_major() << "." << sodium_library_version_minor() << "</td></tr>\n"; 
+  hapOut << "<tr><td>WiFi Disconnects:</td><td>" << homeSpan.connected/2 << "</td></tr>\n";
+  hapOut << "<tr><td>WiFi Signal:</td><td>" << (int)WiFi.RSSI() << " dBm</td></tr>\n";
+  hapOut << "<tr><td>WiFi Gateway:</td><td>" << WiFi.gatewayIP().toString().c_str() << "</td></tr>\n";
+  hapOut << "<tr><td>ESP32 Board:</td><td>" << ARDUINO_BOARD << "</td></tr>\n";
+  hapOut << "<tr><td>Arduino-ESP Version:</td><td>" << ARDUINO_ESP_VERSION << "</td></tr>\n";
+  hapOut << "<tr><td>ESP-IDF Version:</td><td>" << ESP_IDF_VERSION_MAJOR << "." << ESP_IDF_VERSION_MINOR << "." << ESP_IDF_VERSION_PATCH << "</td></tr>\n";
+  hapOut << "<tr><td>HomeSpan Version:</td><td>" << HOMESPAN_VERSION << "</td></tr>\n";
+  hapOut << "<tr><td>Sketch Version:</td><td>" << homeSpan.getSketchVersion() << "</td></tr>\n"; 
+  hapOut << "<tr><td>Sodium Version:</td><td>" << sodium_version_string() << " Lib " << sodium_library_version_major() << "." << sodium_library_version_minor() << "</td></tr>\n"; 
 
   char mbtlsv[64];
   mbedtls_version_get_string_full(mbtlsv);
-  out << "<tr><td>MbedTLS Version:</td><td>" << mbtlsv << "</td></tr>\n";
+  hapOut << "<tr><td>MbedTLS Version:</td><td>" << mbtlsv << "</td></tr>\n";
   
-  out << "<tr><td>HomeKit Status:</td><td>" << (HAPClient::nAdminControllers()?"PAIRED":"NOT PAIRED") << "</td></tr>\n";   
-  out << "<tr><td>Max Log Entries:</td><td>" << homeSpan.webLog.maxEntries << "</td></tr>\n"; 
+  hapOut << "<tr><td>HomeKit Status:</td><td>" << (HAPClient::nAdminControllers()?"PAIRED":"NOT PAIRED") << "</td></tr>\n";   
+  hapOut << "<tr><td>Max Log Entries:</td><td>" << homeSpan.webLog.maxEntries << "</td></tr>\n"; 
 
-  out << "</table>\n";
-  out << "<p></p>";
+  hapOut << "</table>\n";
+  hapOut << "<p></p>";
   
   if(homeSpan.webLog.maxEntries>0){
-    out << "<table class=tab2><tr><th>Entry</th><th>Up Time</th><th>Log Time</th><th>Client</th><th>Message</th></tr>\n";
+    hapOut << "<table class=tab2><tr><th>Entry</th><th>Up Time</th><th>Log Time</th><th>Client</th><th>Message</th></tr>\n";
     int lastIndex=homeSpan.webLog.nEntries-homeSpan.webLog.maxEntries;
     if(lastIndex<0)
       lastIndex=0;
@@ -1247,12 +1245,12 @@ int HAPClient::getStatusURL(){
       else
         sprintf(clocktime,"Unknown");        
       
-      out << "<tr><td>" << i+1 << "</td><td>" << uptime << "</td><td>" << clocktime << "</td><td>" << homeSpan.webLog.log[index].clientIP << "</td><td>" << homeSpan.webLog.log[index].message << "</td></tr>\n";
+      hapOut << "<tr><td>" << i+1 << "</td><td>" << uptime << "</td><td>" << clocktime << "</td><td>" << homeSpan.webLog.log[index].clientIP << "</td><td>" << homeSpan.webLog.log[index].message << "</td></tr>\n";
     }
-    out << "</table>\n";
+    hapOut << "</table>\n";
   }
   
-  out << "</body></html>" << std::endl;
+  hapOut << "</body></html>" << std::endl;
 
   LOG2("------------ SENT! --------------\n");
   
@@ -1608,6 +1606,7 @@ void HAPClient::saveControllers(){
 
 
 //////////////////////////////////////
+//////////////////////////////////////
 
 Nonce::Nonce(){
   zero();
@@ -1633,6 +1632,65 @@ void Nonce::inc(){
     x[5]++;
 }
 
+//////////////////////////////////////
+//////////////////////////////////////
+
+StreamBuffer::StreamBuffer(){
+
+  buffer=(char *)HS_MALLOC(bufSize);
+  setp(buffer, buffer+bufSize-1);
+}
+
+//////////////////////////////////////
+
+StreamBuffer::~StreamBuffer(){
+  
+  sync();
+  free(buffer);
+}
+
+//////////////////////////////////////
+
+int StreamBuffer::flushBuffer(){
+  int num=pptr()-pbase();
+
+  if(logLevel<=homeSpan.getLogLevel()){
+    write(1,buffer,num);
+  }
+  
+  if(hapClient!=NULL){
+    hapClient->client.write(buffer,num);
+  }
+  
+  delay(1);
+  
+  pbump(-num);
+  return(num);
+}
+
+//////////////////////////////////////
+        
+StreamBuffer::int_type StreamBuffer::overflow(StreamBuffer::int_type c){
+  
+  if(c!=EOF){
+    *pptr() = c;
+    pbump(1);
+  }
+
+  if(flushBuffer()==EOF)
+    return(EOF);    
+  return(c);
+}
+
+//////////////////////////////////////
+
+int StreamBuffer::sync(){
+  
+  if(flushBuffer()==EOF)
+    return(-1);  
+  return(0);
+}
+ 
 /////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////
 

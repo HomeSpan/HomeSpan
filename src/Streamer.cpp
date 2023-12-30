@@ -24,58 +24,57 @@
  *  SOFTWARE.
  *  
  ********************************************************************************/
- 
-#include "HomeSpan.h"
-  
-StreamBuffer::StreamBuffer(WiFiClient *client, size_t bufSize){
-  
-  this->client=client;
-  buffer=(char *)HS_MALLOC(bufSize);
-  setp (buffer, buffer+bufSize-1);
-}
 
-//////////////////////////////////////
-
-StreamBuffer::~StreamBuffer(){
-  
-  free(buffer);
-  sync();
-}
-
-//////////////////////////////////////
-
-int StreamBuffer::flushBuffer(){
-  int num=pptr()-pbase();
-
-  write(1,buffer,num);
-  client->write(buffer,num);
-  delay(1);
-  
-  pbump(-num);
-  return num;
-}
-
-//////////////////////////////////////
-        
-StreamBuffer::int_type StreamBuffer::overflow(StreamBuffer::int_type c){
-  
-  if(c!=EOF){
-    *pptr() = c;
-    pbump(1);
-  }
-
-  if(flushBuffer()==EOF)
-    return EOF;    
-  return c;
-}
-
-//////////////////////////////////////
-
-int StreamBuffer::sync(){
-  
-  if(flushBuffer()==EOF)
-    return -1;  
-  return 0;
-}
- 
-//////////////////////////////////////
+//#include "HAP.h"
+//  
+//StreamBuffer::StreamBuffer(){
+//
+//  buffer=(char *)HS_MALLOC(bufSize);
+//  setp(buffer, buffer+bufSize-1);
+//}
+//
+////////////////////////////////////////
+//
+//StreamBuffer::~StreamBuffer(){
+//  
+//  free(buffer);
+//  sync();
+//}
+//
+////////////////////////////////////////
+//
+//int StreamBuffer::flushBuffer(){
+//  int num=pptr()-pbase();
+//
+//  write(1,buffer,num);
+//  client->write(buffer,num);
+//  delay(1);
+//  
+//  pbump(-num);
+//  return num;
+//}
+//
+////////////////////////////////////////
+//        
+//StreamBuffer::int_type StreamBuffer::overflow(StreamBuffer::int_type c){
+//  
+//  if(c!=EOF){
+//    *pptr() = c;
+//    pbump(1);
+//  }
+//
+//  if(flushBuffer()==EOF)
+//    return EOF;    
+//  return c;
+//}
+//
+////////////////////////////////////////
+//
+//int StreamBuffer::sync(){
+//  
+//  if(flushBuffer()==EOF)
+//    return -1;  
+//  return 0;
+//}
+// 
+////////////////////////////////////////
