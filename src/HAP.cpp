@@ -1638,7 +1638,7 @@ void Nonce::inc(){
 
 HapOut::HapStreamBuffer::HapStreamBuffer(){
 
-  buffer=(char *)HS_MALLOC(bufSize+1);        // add 1 for optional null terminator when printing text
+  buffer=(char *)HS_MALLOC(bufSize+1);        // add 1 for adding null terminator when printing text
   setp(buffer, buffer+bufSize-1);
 }
 
@@ -1652,8 +1652,11 @@ HapOut::HapStreamBuffer::~HapStreamBuffer(){
 
 //////////////////////////////////////
 
-int HapOut::HapStreamBuffer::flushBuffer(){
+void HapOut::HapStreamBuffer::flushBuffer(){
+  
   int num=pptr()-pbase();
+
+  byteCount+=num;
 
   if(logLevel<=homeSpan.getLogLevel()){
     buffer[num]='\0';
@@ -1662,12 +1665,10 @@ int HapOut::HapStreamBuffer::flushBuffer(){
   
   if(hapClient!=NULL){
     hapClient->client.write(buffer,num);
+    delay(1);
   }
   
-  delay(1);
-  
   pbump(-num);
-  return(num);
 }
 
 //////////////////////////////////////
@@ -1679,8 +1680,7 @@ std::streambuf::int_type HapOut::HapStreamBuffer::overflow(std::streambuf::int_t
     pbump(1);
   }
 
-  if(flushBuffer()==EOF)
-    return(EOF);    
+  flushBuffer();
   return(c);
 }
 
@@ -1688,14 +1688,13 @@ std::streambuf::int_type HapOut::HapStreamBuffer::overflow(std::streambuf::int_t
 
 int HapOut::HapStreamBuffer::sync(){
 
-  int_type c=flushBuffer();
+  flushBuffer();
   
-  enablePrettyPrint=false;
-  logLevel=0;
+  logLevel=255;
   hapClient=NULL;
+  enablePrettyPrint=false;
+  byteCount=0;
 
-  if(c==EOF)
-    return(-1);  
   return(0);
 }
  

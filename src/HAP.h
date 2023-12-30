@@ -191,12 +191,14 @@ class HapOut : public std::ostream {
     const size_t bufSize=1024;            // max allowed for HAP encrypted records
     char *buffer;
     HAPClient *hapClient=NULL;
-    int logLevel=0;
+    int logLevel=255;                     // default is NOT to print anything
     boolean enablePrettyPrint=false;
+    size_t byteCount=0;
   
-    int flushBuffer() ;       
+    void flushBuffer();
     int_type overflow(int_type c) override;
     int sync() override; 
+    size_t getSize(){return(byteCount+pptr()-pbase());}
         
     HapStreamBuffer();
     ~HapStreamBuffer();
@@ -210,7 +212,9 @@ class HapOut : public std::ostream {
 
   HapOut& setHapClient(HAPClient *hapClient){hapBuffer.hapClient=hapClient;return(*this);}
   HapOut& setLogLevel(int logLevel){hapBuffer.logLevel=logLevel;return(*this);}
-  HapOut& prettyPrint(){hapBuffer.enablePrettyPrint=true;return(*this);}  
+  HapOut& prettyPrint(){hapBuffer.enablePrettyPrint=true;hapBuffer.logLevel=0;return(*this);}
+
+  size_t getSize(){return(hapBuffer.getSize());}
 };
 
 /////////////////////////////////////////////////
