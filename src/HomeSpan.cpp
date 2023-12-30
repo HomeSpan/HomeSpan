@@ -45,9 +45,7 @@ const __attribute__((section(".rodata_custom_desc"))) SpanPartition spanPartitio
 
 using namespace Utils;
 
-StreamBuffer hapStream;  
-HapOut hapOut(&hapStream);
-
+HapOut hapOut;                      // Specialized output stream that can both print to serial monitor and encrypt/transmit to HAP Clients with minimal memory usage (global-scope)
 HAPClient **hap;                    // HAP Client structure containing HTTP client connections, parsing routines, and state variables (global-scoped variable)
 Span homeSpan;                      // HAP Attributes database and all related control functions for this Accessory (global-scoped variable)
 HapCharacteristics hapChars;        // Instantiation of all HAP Characteristics (used to create SpanCharacteristics)

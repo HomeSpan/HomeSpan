@@ -1152,7 +1152,6 @@ int HAPClient::getStatusURL(){
 
   LOG2("\n>>>>>>>>>> %s >>>>>>>>>>\n",client.remoteIP().toString().c_str());
 
-//  hapStream.setHapClient(this).setLogLevel(2);
   hapOut.setHapClient(this).setLogLevel(2);
 
   hapOut << "HTTP/1.1 200 OK\r\nContent-type: text/html; charset=utf-8\r\n\r\n";
@@ -1637,7 +1636,7 @@ void Nonce::inc(){
 //////////////////////////////////////
 //////////////////////////////////////
 
-StreamBuffer::StreamBuffer(){
+HapOut::HapStreamBuffer::HapStreamBuffer(){
 
   buffer=(char *)HS_MALLOC(bufSize+1);        // add 1 for optional null terminator when printing text
   setp(buffer, buffer+bufSize-1);
@@ -1645,7 +1644,7 @@ StreamBuffer::StreamBuffer(){
 
 //////////////////////////////////////
 
-StreamBuffer::~StreamBuffer(){
+HapOut::HapStreamBuffer::~HapStreamBuffer(){
   
   sync();
   free(buffer);
@@ -1653,7 +1652,7 @@ StreamBuffer::~StreamBuffer(){
 
 //////////////////////////////////////
 
-int StreamBuffer::flushBuffer(){
+int HapOut::HapStreamBuffer::flushBuffer(){
   int num=pptr()-pbase();
 
   if(logLevel<=homeSpan.getLogLevel()){
@@ -1673,7 +1672,7 @@ int StreamBuffer::flushBuffer(){
 
 //////////////////////////////////////
         
-StreamBuffer::int_type StreamBuffer::overflow(StreamBuffer::int_type c){
+std::streambuf::int_type HapOut::HapStreamBuffer::overflow(std::streambuf::int_type c){
   
   if(c!=EOF){
     *pptr() = c;
@@ -1687,7 +1686,7 @@ StreamBuffer::int_type StreamBuffer::overflow(StreamBuffer::int_type c){
 
 //////////////////////////////////////
 
-int StreamBuffer::sync(){
+int HapOut::HapStreamBuffer::sync(){
 
   int_type c=flushBuffer();
   

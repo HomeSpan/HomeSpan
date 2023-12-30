@@ -180,52 +180,41 @@ struct HAPClient {
 };
 
 /////////////////////////////////////////////////
-// StreamBuffer and HapOut Structures
-
-class HapOut;
-
-class StreamBuffer : public std::streambuf {
-
-  friend HapOut;
-  
-  private:
-
-  const size_t bufSize=1024;            // max allowed for HAP encrypted records
-  char *buffer;
-  HAPClient *hapClient=NULL;
-  int logLevel=0;
-  boolean enablePrettyPrint=false;
-
-  int flushBuffer() ;       
-  int_type overflow(int_type c) override;
-  int sync() override; 
-
-  public:
-    
-  StreamBuffer();
-  ~StreamBuffer();
-
-};
+// HapOut Structure
 
 class HapOut : public std::ostream {
 
   private:
+
+  struct HapStreamBuffer : public std::streambuf {
+
+    const size_t bufSize=1024;            // max allowed for HAP encrypted records
+    char *buffer;
+    HAPClient *hapClient=NULL;
+    int logLevel=0;
+    boolean enablePrettyPrint=false;
   
-  StreamBuffer *sBuf;
+    int flushBuffer() ;       
+    int_type overflow(int_type c) override;
+    int sync() override; 
+        
+    HapStreamBuffer();
+    ~HapStreamBuffer();
+  };
+
+  HapStreamBuffer hapBuffer;
 
   public:
 
-  HapOut(StreamBuffer *sBuf) : std::ostream(sBuf) {this->sBuf=sBuf;}
+  HapOut() : std::ostream(&hapBuffer){}
 
-  HapOut& setHapClient(HAPClient *hapClient){sBuf->hapClient=hapClient;return(*this);}
-  HapOut& setLogLevel(int logLevel){sBuf->logLevel=logLevel;return(*this);}
-  HapOut& prettyPrint(){sBuf->enablePrettyPrint=true;return(*this);}  
+  HapOut& setHapClient(HAPClient *hapClient){hapBuffer.hapClient=hapClient;return(*this);}
+  HapOut& setLogLevel(int logLevel){hapBuffer.logLevel=logLevel;return(*this);}
+  HapOut& prettyPrint(){hapBuffer.enablePrettyPrint=true;return(*this);}  
 };
 
 /////////////////////////////////////////////////
 // Extern Variables
 
 extern HAPClient **hap;
-//extern std::ostream hapOut;
 extern HapOut hapOut;
-extern StreamBuffer hapStream;  
