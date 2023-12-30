@@ -180,13 +180,17 @@ struct HAPClient {
 };
 
 /////////////////////////////////////////////////
-// StreamBuffer Structure
+// StreamBuffer and HapOut Structures
+
+class HapOut;
 
 class StreamBuffer : public std::streambuf {
+
+  friend HapOut;
   
   private:
 
-  const size_t bufSize=1024;
+  const size_t bufSize=1024;            // max allowed for HAP encrypted records
   char *buffer;
   HAPClient *hapClient=NULL;
   int logLevel=0;
@@ -201,14 +205,27 @@ class StreamBuffer : public std::streambuf {
   StreamBuffer();
   ~StreamBuffer();
 
-  StreamBuffer& setHapClient(HAPClient *hapClient){this->hapClient=hapClient;return(*this);}
-  StreamBuffer& setLogLevel(int logLevel){this->logLevel=logLevel;return(*this);}
-  StreamBuffer& prettyPrint(){enablePrettyPrint=true;return(*this);}
+};
+
+class HapOut : public std::ostream {
+
+  private:
+  
+  StreamBuffer *sBuf;
+
+  public:
+
+  HapOut(StreamBuffer *sBuf) : std::ostream(sBuf) {this->sBuf=sBuf;}
+
+  HapOut& setHapClient(HAPClient *hapClient){sBuf->hapClient=hapClient;return(*this);}
+  HapOut& setLogLevel(int logLevel){sBuf->logLevel=logLevel;return(*this);}
+  HapOut& prettyPrint(){sBuf->enablePrettyPrint=true;return(*this);}  
 };
 
 /////////////////////////////////////////////////
 // Extern Variables
 
 extern HAPClient **hap;
-extern std::ostream hapOut;
+//extern std::ostream hapOut;
+extern HapOut hapOut;
 extern StreamBuffer hapStream;  

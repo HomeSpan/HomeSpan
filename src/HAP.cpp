@@ -1152,7 +1152,8 @@ int HAPClient::getStatusURL(){
 
   LOG2("\n>>>>>>>>>> %s >>>>>>>>>>\n",client.remoteIP().toString().c_str());
 
-  hapStream.setHapClient(this);
+//  hapStream.setHapClient(this).setLogLevel(2);
+  hapOut.setHapClient(this).setLogLevel(2);
 
   hapOut << "HTTP/1.1 200 OK\r\nContent-type: text/html; charset=utf-8\r\n\r\n";
   hapOut << "<html><head><title>" << homeSpan.displayName << "</title>\n";
@@ -1250,7 +1251,8 @@ int HAPClient::getStatusURL(){
     hapOut << "</table>\n";
   }
   
-  hapOut << "</body></html>" << std::endl;
+  hapOut << "</body></html>\n";
+  hapOut.flush();
 
   LOG2("------------ SENT! --------------\n");
   
@@ -1637,7 +1639,7 @@ void Nonce::inc(){
 
 StreamBuffer::StreamBuffer(){
 
-  buffer=(char *)HS_MALLOC(bufSize);
+  buffer=(char *)HS_MALLOC(bufSize+1);        // add 1 for optional null terminator when printing text
   setp(buffer, buffer+bufSize-1);
 }
 
@@ -1655,7 +1657,8 @@ int StreamBuffer::flushBuffer(){
   int num=pptr()-pbase();
 
   if(logLevel<=homeSpan.getLogLevel()){
-    write(1,buffer,num);
+    buffer[num]='\0';
+    Serial.print(buffer);
   }
   
   if(hapClient!=NULL){
@@ -1685,8 +1688,14 @@ StreamBuffer::int_type StreamBuffer::overflow(StreamBuffer::int_type c){
 //////////////////////////////////////
 
 int StreamBuffer::sync(){
+
+  int_type c=flushBuffer();
   
-  if(flushBuffer()==EOF)
+  enablePrettyPrint=false;
+  logLevel=0;
+  hapClient=NULL;
+
+  if(c==EOF)
     return(-1);  
   return(0);
 }
