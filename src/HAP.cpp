@@ -1214,6 +1214,12 @@ int HAPClient::getStatusURL(){
   hapOut << "<tr><td>HomeKit Status:</td><td>" << (HAPClient::nAdminControllers()?"PAIRED":"NOT PAIRED") << "</td></tr>\n";   
   hapOut << "<tr><td>Max Log Entries:</td><td>" << homeSpan.webLog.maxEntries << "</td></tr>\n"; 
 
+  if(homeSpan.weblogCallback){
+    String usrString;
+    homeSpan.weblogCallback(usrString);
+    hapOut << usrString.c_str();    
+  }
+    
   hapOut << "</table>\n";
   hapOut << "<p></p>";
   
@@ -1237,7 +1243,7 @@ int HAPClient::getStatusURL(){
       else
         sprintf(clocktime,"Unknown");        
       
-      hapOut << "<tr><td>" << i+1 << "</td><td>" << uptime << "</td><td>" << clocktime << "</td><td>" << homeSpan.webLog.log[index].clientIP << "</td><td>" << homeSpan.webLog.log[index].message << "</td></tr>\n";
+      hapOut << "<tr><td>" << i+1 << "</td><td>" << uptime << "</td><td>" << clocktime << "</td><td>" << homeSpan.webLog.log[index].clientIP.c_str() << "</td><td>" << homeSpan.webLog.log[index].message << "</td></tr>\n";
     }
     hapOut << "</table>\n";
   }
