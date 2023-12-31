@@ -27,7 +27,7 @@
 
 #include "HomeSpan.h"
 
-#define MAX_LIGHTS  1
+#define MAX_LIGHTS  3
 
 void setup() {
  

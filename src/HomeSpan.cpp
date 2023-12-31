@@ -620,12 +620,20 @@ void Span::processSerialCommand(const char *c){
 
     case 'd': {      
       
-      TempBuffer<char> qBuf(sprintfAttributes(NULL)+1);
-      sprintfAttributes(qBuf);  
+//      TempBuffer<char> qBuf(sprintfAttributes(NULL)+1);
+//      sprintfAttributes(qBuf);  
 
-      LOG0("\n*** Attributes Database: size=%d  configuration=%d ***\n\n",qBuf.len()-1,hapConfig.configNumber);
-      prettyPrint(qBuf);
-      LOG0("\n*** End Database ***\n\n");
+      printfAttributes();
+      LOG0("\n*** Attributes Database: size=%d  configuration=%d ***\n\n",hapOut.getSize(),hapConfig.configNumber);
+      hapOut.flush();
+
+//      LOG0("\n*** Attributes Database: size=%d  configuration=%d ***\n\n",qBuf.len()-1,hapConfig.configNumber);
+//      prettyPrint(qBuf);
+
+      hapOut.setLogLevel(0);
+      printfAttributes();
+      hapOut.flush();
+      LOG0("\n\n*** End Database ***\n\n");
     }
     break;
 
@@ -1232,6 +1240,21 @@ Span& Span::setWifiCredentials(const char *ssid, const char *pwd){
 
 ///////////////////////////////
 
+void Span::printfAttributes(int flags){
+
+  hapOut << "{\"accessories\":[";
+
+  for(int i=0;i<Accessories.size();i++){
+    Accessories[i]->printfAttributes(flags);    
+    if(i+1<Accessories.size())
+      hapOut << "," ;
+  }
+    
+  hapOut << "]}";
+}
+
+///////////////////////////////
+
 int Span::sprintfAttributes(char *cBuf, int flags){
 
   int nBytes=0;
@@ -1680,6 +1703,21 @@ SpanAccessory::~SpanAccessory(){
 
 ///////////////////////////////
 
+void SpanAccessory::printfAttributes(int flags){
+
+  hapOut << "{\"aid\":" << aid << ",\"services\":[";
+
+  for(int i=0;i<Services.size();i++){
+    Services[i]->printfAttributes(flags);    
+    if(i+1<Services.size())
+      hapOut << ",";
+    }
+    
+  hapOut << "]}";
+}
+
+///////////////////////////////
+
 int SpanAccessory::sprintfAttributes(char *cBuf, int flags){
   int nBytes=0;
 
@@ -1772,6 +1810,39 @@ SpanService *SpanService::addLink(SpanService *svc){
 
 ///////////////////////////////
 
+void SpanService::printfAttributes(int flags){
+
+  hapOut << "{\"iid\":" << iid << ",\"type\":\"" << type << "\",";
+  
+  if(hidden)
+    hapOut << "\"hidden\":true,";
+    
+  if(primary)
+    hapOut << "\"primary\":true,";
+
+  if(!linkedServices.empty()){
+    hapOut << "\"linked\":[";
+    for(int i=0;i<linkedServices.size();i++){
+      hapOut << linkedServices[i]->iid;
+      if(i+1<linkedServices.size())
+        hapOut << ",";
+    }
+     hapOut << "],";
+  }
+    
+  hapOut << "\"characteristics\":[";
+  
+  for(int i=0;i<Characteristics.size();i++){
+    Characteristics[i]->printfAttributes(flags);    
+    if(i+1<Characteristics.size())
+      hapOut << ",";
+  }
+    
+  hapOut << "]}";
+}
+
+///////////////////////////////
+
 int SpanService::sprintfAttributes(char *cBuf, int flags){
   int nBytes=0;
 
@@ -1855,6 +1926,72 @@ SpanCharacteristic::~SpanCharacteristic(){
   }
   
   LOG1("Deleted Characteristic AID=%d IID=%d\n",aid,iid);  
+}
+
+///////////////////////////////
+
+void SpanCharacteristic::printfAttributes(int flags){
+
+  const char permCodes[][7]={"pr","pw","ev","aa","tw","hd","wr"};
+  const char formatCodes[][9]={"bool","uint8","uint16","uint32","uint64","int","float","string","data"};
+
+  hapOut << "{\"iid\":" << iid;
+
+  if(flags&GET_TYPE)
+    hapOut << ",\"type\":\"" << type << "\"";
+
+  if((perms&PR) && (flags&GET_VALUE)){    
+    if(perms&NV && !(flags&GET_NV))
+      hapOut << ",\"value\":null";
+    else
+      hapOut << ",\"value\":" << uvPrint(value).c_str();
+  }
+
+  if(flags&GET_META){
+    hapOut << ",\"format\":\"" << formatCodes[format] << "\"";
+    
+    if(customRange && (flags&GET_META)){
+      hapOut << ",\"minValue\":" << uvPrint(minValue).c_str() << "\"maxValue\":" << uvPrint(maxValue).c_str();
+        
+      if(uvGet<float>(stepValue)>0)
+        hapOut << ",\"minStep\":" << uvPrint(stepValue).c_str();
+    }
+
+    if(unit){
+      if(strlen(unit)>0)
+        hapOut << ",\"unit\":\"" << unit << "\"";
+     else
+        hapOut << ",\"unit\":null";
+    }
+
+    if(validValues){
+      hapOut << ",\"valid-values\":" << validValues;
+    }
+  }
+    
+  if(desc && (flags&GET_DESC)){
+    hapOut << ",\"description\":\"" << desc << "\"";
+  }
+
+  if(flags&GET_PERMS){
+    hapOut << ",\"perms\":[";
+    for(int i=0;i<7;i++){
+      if(perms&(1<<i)){
+        hapOut << "\"" << permCodes[i] <<"\"";
+        if(perms>=(1<<(i+1)))
+          hapOut << ",";
+      }
+    }
+    hapOut << "]";
+  }
+
+  if(flags&GET_AID)
+    hapOut << ",\"aid\":" << aid;
+  
+  if(flags&GET_EV)
+    hapOut << ",\"ev\":" << (ev[HAPClient::conNum]?"true":"false");
+
+  hapOut << "}";
 }
 
 ///////////////////////////////

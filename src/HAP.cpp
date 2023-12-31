@@ -337,7 +337,7 @@ int HAPClient::postPairSetupURL(uint8_t *content, size_t len){
   iosTLV.print();
   LOG2("------------ END TLVS! ------------\n");
 
-  LOG2("In Pair Setup #%d (%s)...",conNum,client.remoteIP().toString().c_str());
+  LOG1("In Pair Setup #%d (%s)...",conNum,client.remoteIP().toString().c_str());
   
   auto itState=iosTLV.find(kTLVType_State);
 
@@ -584,7 +584,7 @@ int HAPClient::postPairVerifyURL(uint8_t *content, size_t len){
   iosTLV.print();
   LOG2("------------ END TLVS! ------------\n");
 
-  LOG2("In Pair Verify #%d (%s)...",conNum,client.remoteIP().toString().c_str());
+  LOG1("In Pair Verify #%d (%s)...",conNum,client.remoteIP().toString().c_str());
   
   auto itState=iosTLV.find(kTLVType_State);
 
@@ -772,7 +772,7 @@ int HAPClient::postPairingsURL(uint8_t *content, size_t len){
   iosTLV.print();
   LOG2("------------ END TLVS! ------------\n");
 
-  LOG2("In Post Pairings #%d (%s)...",conNum,client.remoteIP().toString().c_str());
+  LOG1("In Post Pairings #%d (%s)...",conNum,client.remoteIP().toString().c_str());
   
   auto itState=iosTLV.find(kTLVType_State);
   auto itMethod=iosTLV.find(kTLVType_Method);
@@ -898,28 +898,38 @@ int HAPClient::getAccessoriesURL(){
     return(0);
   }
 
-  LOG1("In Get Accessories #");
-  LOG1(conNum);
-  LOG1(" (");
-  LOG1(client.remoteIP());
-  LOG1(")...\n");
+  LOG1("In Get Accessories #%d (%s)...",conNum,client.remoteIP().toString().c_str());
 
-  int nBytes = homeSpan.sprintfAttributes(NULL);        // get size of HAP attributes JSON
-  TempBuffer<char> jBuf(nBytes+1);
-  homeSpan.sprintfAttributes(jBuf);                  // create JSON database (will need to re-cast to uint8_t* below)
+  homeSpan.printfAttributes();
+  size_t nBytes=hapOut.getSize();
+  hapOut.flush();
 
-  char *body;
-  asprintf(&body,"HTTP/1.1 200 OK\r\nContent-Type: application/hap+json\r\nContent-Length: %d\r\n\r\n",nBytes);
+  LOG2("\n>>>>>>>>>> %s >>>>>>>>>>\n",client.remoteIP().toString().c_str());
+
+  hapOut.setLogLevel(2).setHapClient(this);    
+  hapOut << "HTTP/1.1 200 OK\r\nContent-Type: application/hap+json\r\nContent-Length: " << nBytes << "\r\n\r\n";
+  homeSpan.printfAttributes();
+  hapOut.flush();
+
+  LOG2("\n-------- SENT ENCRYPTED! --------\n");
+
+
+//  int nBytes = homeSpan.sprintfAttributes(NULL);        // get size of HAP attributes JSON
+//  TempBuffer<char> jBuf(nBytes+1);
+//  homeSpan.sprintfAttributes(jBuf);                  // create JSON database (will need to re-cast to uint8_t* below)
+
+//  char *body;
+//  asprintf(&body,"HTTP/1.1 200 OK\r\nContent-Type: application/hap+json\r\nContent-Length: %d\r\n\r\n",nBytes);
   
-  LOG2("\n>>>>>>>>>> ");
-  LOG2(client.remoteIP());
-  LOG2(" >>>>>>>>>>\n");
-  LOG2(body);
-  LOG2(jBuf.get());
-  LOG2("\n");
+//  LOG2("\n>>>>>>>>>> ");
+//  LOG2(client.remoteIP());
+//  LOG2(" >>>>>>>>>>\n");
+//  LOG2(body);
+//  LOG2(jBuf.get());
+//  LOG2("\n");
   
-  sendEncrypted(body,(uint8_t *)jBuf.get(),nBytes);
-  free(body);
+//  sendEncrypted(body,(uint8_t *)jBuf.get(),nBytes);
+//  free(body);
          
   return(1);
   
@@ -1638,7 +1648,8 @@ void Nonce::inc(){
 
 HapOut::HapStreamBuffer::HapStreamBuffer(){
 
-  buffer=(char *)HS_MALLOC(bufSize+1);        // add 1 for adding null terminator when printing text
+  buffer=(char *)HS_MALLOC(bufSize+1);           // add 1 for adding null terminator when printing text
+  encBuf=(uint8_t *)HS_MALLOC(bufSize+18);       // 2-byte AAD + encrypted data + 16-byte authentication tag 
   setp(buffer, buffer+bufSize-1);
 }
 
@@ -1664,7 +1675,19 @@ void HapOut::HapStreamBuffer::flushBuffer(){
   }
   
   if(hapClient!=NULL){
-    hapClient->client.write(buffer,num);
+    if(!hapClient->cPair){                        // if not encrypted 
+      hapClient->client.write(buffer,num);        // transmit data buffer
+      
+    } else {                                      // if encrypted
+      
+      encBuf[0]=num%256;                          // store number of bytes that encrypts this frame (AAD bytes)
+      encBuf[1]=num/256;
+      crypto_aead_chacha20poly1305_ietf_encrypt(encBuf+2,NULL,(uint8_t *)buffer,num,encBuf,2,NULL,hapClient->a2cNonce.get(),hapClient->a2cKey);   // encrypt buffer with AAD prepended and authentication tag appended
+      
+      hapClient->client.write(encBuf,num+18);     // transmit encrypted frame
+      hapClient->a2cNonce.inc();                  // increment nonce
+    }
+
     delay(1);
   }
   

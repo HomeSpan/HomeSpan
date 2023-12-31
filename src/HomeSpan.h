@@ -286,6 +286,7 @@ class Span{
   void reboot();                                // reboots device
 
   int sprintfAttributes(char *cBuf, int flags=GET_VALUE|GET_META|GET_PERMS|GET_TYPE|GET_DESC);   // prints Attributes JSON database into buf, unless buf=NULL; return number of characters printed, excluding null terminator
+  void printfAttributes(int flags=GET_VALUE|GET_META|GET_PERMS|GET_TYPE|GET_DESC);   // writes Attributes JSON database to hapOut stream
   
   void prettyPrint(char *buf, int nsp=2, int minLogLevel=0);              // print arbitrary JSON from buf to serial monitor, formatted with indentions of 'nsp' spaces, subject to specified minimum log level
   SpanCharacteristic *find(uint32_t aid, int iid);                        // return Characteristic with matching aid and iid (else NULL if not found)
@@ -409,6 +410,7 @@ class SpanAccessory{
   vector<SpanService *, Mallocator<SpanService*>> Services;                         // vector of pointers to all Services in this Accessory  
 
   int sprintfAttributes(char *cBuf, int flags);           // prints Accessory JSON database into buf, unless buf=NULL; return number of characters printed, excluding null terminator, even if buf=NULL  
+  void printfAttributes(int flags);                       // writes Accessory JSON to hapOut stream
 
   protected:
 
@@ -440,6 +442,7 @@ class SpanService{
   SpanAccessory *accessory=NULL;                          // pointer to Accessory containing this Service
   
   int sprintfAttributes(char *cBuf, int flags);           // prints Service JSON records into buf; return number of characters printed, excluding null terminator
+  void printfAttributes(int flags);                       // writes Service JSON to hapOut stream
 
   protected:
   
@@ -505,8 +508,10 @@ class SpanCharacteristic{
   unsigned long updateTime=0;              // last time value was updated (in millis) either by PUT /characteristic OR by setVal()
   UVal newValue;                           // the updated value requested by PUT /characteristic
   SpanService *service=NULL;               // pointer to Service containing this Characteristic
+
    
-  int sprintfAttributes(char *cBuf, int flags);   // prints Characteristic JSON records into buf, according to flags mask; return number of characters printed, excluding null terminator  
+  int sprintfAttributes(char *val, int flags);       // prints Characteristic JSON records into buf; return number of characters printed, excluding null terminator
+  void printfAttributes(int flags);               // writes Characteristic JSON to hapOut stream
   StatusCode loadUpdate(char *val, char *ev);     // load updated val/ev from PUT /characteristic JSON request.  Return intitial HAP status code (checks to see if characteristic is found, is writable, etc.)  
     
   String uvPrint(UVal &u){

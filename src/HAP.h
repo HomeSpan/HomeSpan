@@ -190,6 +190,7 @@ class HapOut : public std::ostream {
 
     const size_t bufSize=1024;            // max allowed for HAP encrypted records
     char *buffer;
+    uint8_t *encBuf;
     HAPClient *hapClient=NULL;
     int logLevel=255;                     // default is NOT to print anything
     boolean enablePrettyPrint=false;
