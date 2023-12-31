@@ -285,7 +285,6 @@ class Span{
   void resetStatus();                           // resets statusLED and calls statusCallback based on current HomeSpan status
   void reboot();                                // reboots device
 
-  int sprintfAttributes(char *cBuf, int flags=GET_VALUE|GET_META|GET_PERMS|GET_TYPE|GET_DESC);   // prints Attributes JSON database into buf, unless buf=NULL; return number of characters printed, excluding null terminator
   void printfAttributes(int flags=GET_VALUE|GET_META|GET_PERMS|GET_TYPE|GET_DESC);   // writes Attributes JSON database to hapOut stream
   
   void prettyPrint(char *buf, int nsp=2, int minLogLevel=0);              // print arbitrary JSON from buf to serial monitor, formatted with indentions of 'nsp' spaces, subject to specified minimum log level
@@ -409,7 +408,6 @@ class SpanAccessory{
   int iidCount=0;                                         // running count of iid to use for Services and Characteristics associated with this Accessory                                 
   vector<SpanService *, Mallocator<SpanService*>> Services;                         // vector of pointers to all Services in this Accessory  
 
-  int sprintfAttributes(char *cBuf, int flags);           // prints Accessory JSON database into buf, unless buf=NULL; return number of characters printed, excluding null terminator, even if buf=NULL  
   void printfAttributes(int flags);                       // writes Accessory JSON to hapOut stream
 
   protected:
@@ -441,7 +439,6 @@ class SpanService{
   boolean isCustom;                                       // flag to indicate this is a Custom Service
   SpanAccessory *accessory=NULL;                          // pointer to Accessory containing this Service
   
-  int sprintfAttributes(char *cBuf, int flags);           // prints Service JSON records into buf; return number of characters printed, excluding null terminator
   void printfAttributes(int flags);                       // writes Service JSON to hapOut stream
 
   protected:

@@ -618,17 +618,11 @@ void Span::processSerialCommand(const char *c){
     } 
     break;
 
-    case 'd': {      
-      
-//      TempBuffer<char> qBuf(sprintfAttributes(NULL)+1);
-//      sprintfAttributes(qBuf);  
+    case 'd': {            
 
       printfAttributes();
       LOG0("\n*** Attributes Database: size=%d  configuration=%d ***\n\n",hapOut.getSize(),hapConfig.configNumber);
       hapOut.flush();
-
-//      LOG0("\n*** Attributes Database: size=%d  configuration=%d ***\n\n",qBuf.len()-1,hapConfig.configNumber);
-//      prettyPrint(qBuf);
 
       hapOut.setLogLevel(0);
       printfAttributes();
@@ -638,6 +632,7 @@ void Span::processSerialCommand(const char *c){
     break;
 
     case 'Q': {
+      
       char tBuf[5];
       const char *s=c+1+strspn(c+1," ");
       sscanf(s," %4[0-9A-Za-z]",tBuf);
@@ -1255,24 +1250,6 @@ void Span::printfAttributes(int flags){
 
 ///////////////////////////////
 
-int Span::sprintfAttributes(char *cBuf, int flags){
-
-  int nBytes=0;
-
-  nBytes+=snprintf(cBuf,cBuf?64:0,"{\"accessories\":[");
-
-  for(int i=0;i<Accessories.size();i++){
-    nBytes+=Accessories[i]->sprintfAttributes(cBuf?(cBuf+nBytes):NULL,flags);    
-    if(i+1<Accessories.size())
-      nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",");
-    }
-    
-  nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,"]}");
-  return(nBytes);
-}
-
-///////////////////////////////
-
 void Span::prettyPrint(char *buf, int nsp, int minLogLevel){
 
   if(logLevel<minLogLevel)
@@ -1715,24 +1692,6 @@ void SpanAccessory::printfAttributes(int flags){
 }
 
 ///////////////////////////////
-
-int SpanAccessory::sprintfAttributes(char *cBuf, int flags){
-  int nBytes=0;
-
-  nBytes+=snprintf(cBuf,cBuf?64:0,"{\"aid\":%u,\"services\":[",aid);
-
-  for(int i=0;i<Services.size();i++){
-    nBytes+=Services[i]->sprintfAttributes(cBuf?(cBuf+nBytes):NULL,flags);    
-    if(i+1<Services.size())
-      nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",");
-    }
-    
-  nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,"]}");
-
-  return(nBytes);
-}
-
-///////////////////////////////
 //       SpanService         //
 ///////////////////////////////
 
@@ -1837,42 +1796,6 @@ void SpanService::printfAttributes(int flags){
   }
     
   hapOut << "]}";
-}
-
-///////////////////////////////
-
-int SpanService::sprintfAttributes(char *cBuf, int flags){
-  int nBytes=0;
-
-  nBytes+=snprintf(cBuf,cBuf?64:0,"{\"iid\":%d,\"type\":\"%s\",",iid,type);
-  
-  if(hidden)
-    nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,"\"hidden\":true,");
-    
-  if(primary)
-    nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,"\"primary\":true,");
-
-  if(!linkedServices.empty()){
-    nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,"\"linked\":[");
-    for(int i=0;i<linkedServices.size();i++){
-      nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,"%d",linkedServices[i]->iid);
-      if(i+1<linkedServices.size())
-        nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",");
-    }
-     nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,"],");
-  }
-    
-  nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,"\"characteristics\":[");
-  
-  for(int i=0;i<Characteristics.size();i++){
-    nBytes+=Characteristics[i]->sprintfAttributes(cBuf?(cBuf+nBytes):NULL,flags);    
-    if(i+1<Characteristics.size())
-      nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",");
-  }
-    
-  nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,"]}");
-
-  return(nBytes);
 }
 
 ///////////////////////////////
