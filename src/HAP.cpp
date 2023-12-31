@@ -912,24 +912,6 @@ int HAPClient::getAccessoriesURL(){
   hapOut.flush();
 
   LOG2("\n-------- SENT ENCRYPTED! --------\n");
-
-
-//  int nBytes = homeSpan.sprintfAttributes(NULL);        // get size of HAP attributes JSON
-//  TempBuffer<char> jBuf(nBytes+1);
-//  homeSpan.sprintfAttributes(jBuf);                  // create JSON database (will need to re-cast to uint8_t* below)
-
-//  char *body;
-//  asprintf(&body,"HTTP/1.1 200 OK\r\nContent-Type: application/hap+json\r\nContent-Length: %d\r\n\r\n",nBytes);
-  
-//  LOG2("\n>>>>>>>>>> ");
-//  LOG2(client.remoteIP());
-//  LOG2(" >>>>>>>>>>\n");
-//  LOG2(body);
-//  LOG2(jBuf.get());
-//  LOG2("\n");
-  
-//  sendEncrypted(body,(uint8_t *)jBuf.get(),nBytes);
-//  free(body);
          
   return(1);
   
@@ -1648,8 +1630,14 @@ void Nonce::inc(){
 
 HapOut::HapStreamBuffer::HapStreamBuffer(){
 
-  buffer=(char *)HS_MALLOC(bufSize+1);           // add 1 for adding null terminator when printing text
-  encBuf=(uint8_t *)HS_MALLOC(bufSize+18);       // 2-byte AAD + encrypted data + 16-byte authentication tag 
+  buffer=(char *)HS_MALLOC(bufSize+1);                                          // add 1 for adding null terminator when printing text
+  encBuf=(uint8_t *)HS_MALLOC(bufSize+18);                                      // 2-byte AAD + encrypted data + 16-byte authentication tag
+  
+  hash=(uint8_t *)HS_MALLOC(48);                                                // space for SHA-384 hash output
+  ctx = (mbedtls_sha512_context *)HS_MALLOC(sizeof(mbedtls_sha512_context));    // space for hash context
+  mbedtls_sha512_init(ctx);                                                     // initialize context
+  mbedtls_sha512_starts_ret(ctx,1);                                             // start SHA-384 hash (note second argument=1)
+  
   setp(buffer, buffer+bufSize-1);
 }
 
@@ -1670,7 +1658,7 @@ void HapOut::HapStreamBuffer::flushBuffer(){
   byteCount+=num;
 
   if(logLevel<=homeSpan.getLogLevel()){
-    buffer[num]='\0';
+    buffer[num]='\0';                             // add null terminator but DO NOT increment num (we don't want terminator considered as part of buffer)
     Serial.print(buffer);
   }
   
@@ -1687,11 +1675,12 @@ void HapOut::HapStreamBuffer::flushBuffer(){
       hapClient->client.write(encBuf,num+18);     // transmit encrypted frame
       hapClient->a2cNonce.inc();                  // increment nonce
     }
-
     delay(1);
   }
-  
-  pbump(-num);
+
+  mbedtls_sha512_update_ret(ctx,(uint8_t *)buffer,num);   // update hash
+
+  pbump(-num);                                            // reset buffer pointers
 }
 
 //////////////////////////////////////
@@ -1717,6 +1706,9 @@ int HapOut::HapStreamBuffer::sync(){
   hapClient=NULL;
   enablePrettyPrint=false;
   byteCount=0;
+
+  mbedtls_sha512_finish_ret(ctx,hash);    // finish SHA-384 and store hash
+  mbedtls_sha512_starts_ret(ctx,1);       // re-start hash for next time
 
   return(0);
 }

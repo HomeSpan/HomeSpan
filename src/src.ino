@@ -27,13 +27,13 @@
 
 #include "HomeSpan.h"
 
-#define MAX_LIGHTS  3
+#define MAX_LIGHTS  4
 
 void setup() {
  
   Serial.begin(115200);
 
-  homeSpan.setLogLevel(2);
+  homeSpan.setLogLevel(0);
   homeSpan.enableWebLog(200);
 
   homeSpan.begin(Category::Lighting,"HomeSpan Max");

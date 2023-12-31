@@ -1619,18 +1619,16 @@ int Span::sprintfAttributes(char **ids, int numIDs, int flags, char *cBuf){
 
 boolean Span::updateDatabase(boolean updateMDNS){
 
-  uint8_t tHash[48];
-  TempBuffer<char> tBuf(sprintfAttributes(NULL,GET_META|GET_PERMS|GET_TYPE|GET_DESC)+1);
-  sprintfAttributes(tBuf,GET_META|GET_PERMS|GET_TYPE|GET_DESC);  
-  mbedtls_sha512_ret((uint8_t *)tBuf.get(),tBuf.len(),tHash,1);     // create SHA-384 hash of JSON (can be any hash - just looking for a unique key)
+  printfAttributes(GET_META|GET_PERMS|GET_TYPE|GET_DESC);   // stream attributes database, which automtically produces a SHA-384 hash
+  hapOut.flush();  
 
   boolean changed=false;
 
-  if(memcmp(tHash,hapConfig.hashCode,48)){           // if hash code of current HAP database does not match stored hash code
-    memcpy(hapConfig.hashCode,tHash,48);             // update stored hash code
-    hapConfig.configNumber++;                        // increment configuration number
-    if(hapConfig.configNumber==65536)                // reached max value
-      hapConfig.configNumber=1;                      // reset to 1
+  if(memcmp(hapOut.getHash(),hapConfig.hashCode,48)){       // if hash code of current HAP database does not match stored hash code
+    memcpy(hapConfig.hashCode,hapOut.getHash(),48);         // update stored hash code
+    hapConfig.configNumber++;                               // increment configuration number
+    if(hapConfig.configNumber==65536)                       // reached max value
+      hapConfig.configNumber=1;                             // reset to 1
                    
     nvs_set_blob(HAPClient::hapNVS,"HAPHASH",&hapConfig,sizeof(hapConfig));     // update data
     nvs_commit(HAPClient::hapNVS);                                              // commit to NVS

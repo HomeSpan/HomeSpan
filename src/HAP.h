@@ -195,6 +195,8 @@ class HapOut : public std::ostream {
     int logLevel=255;                     // default is NOT to print anything
     boolean enablePrettyPrint=false;
     size_t byteCount=0;
+    uint8_t *hash;
+    mbedtls_sha512_context *ctx;
   
     void flushBuffer();
     int_type overflow(int_type c) override;
@@ -214,7 +216,8 @@ class HapOut : public std::ostream {
   HapOut& setHapClient(HAPClient *hapClient){hapBuffer.hapClient=hapClient;return(*this);}
   HapOut& setLogLevel(int logLevel){hapBuffer.logLevel=logLevel;return(*this);}
   HapOut& prettyPrint(){hapBuffer.enablePrettyPrint=true;hapBuffer.logLevel=0;return(*this);}
-
+  
+  uint8_t *getHash(){return(hapBuffer.hash);}
   size_t getSize(){return(hapBuffer.getSize());}
 };
 
