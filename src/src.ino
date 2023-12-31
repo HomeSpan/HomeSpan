@@ -33,7 +33,7 @@ void setup() {
  
   Serial.begin(115200);
 
-  homeSpan.setLogLevel(0);
+  homeSpan.setLogLevel(2);
   homeSpan.enableWebLog(200);
 
   homeSpan.begin(Category::Lighting,"HomeSpan Max");

@@ -1489,32 +1489,29 @@ void Span::clearNotify(int slotNum){
 
 ///////////////////////////////
 
-int Span::sprintfNotify(SpanBuf *pObj, int nObj, char *cBuf, int conNum){
+void Span::printfNotify(SpanBuf *pObj, int nObj, int conNum){
 
-  int nChars=0;
   boolean notifyFlag=false;
   
-  nChars+=snprintf(cBuf,cBuf?64:0,"{\"characteristics\":[");
-
-  for(int i=0;i<nObj;i++){                              // loop over all objects
+  for(int i=0;i<nObj;i++){                                       // loop over all objects
     
     if(pObj[i].status==StatusCode::OK && pObj[i].val){           // characteristic was successfully updated with a new value (i.e. not just an EV request)
       
-      if(pObj[i].characteristic->ev[conNum]){           // if notifications requested for this characteristic by specified connection number
-      
-        if(notifyFlag)                                                           // already printed at least one other characteristic
-          nChars+=snprintf(cBuf?(cBuf+nChars):NULL,cBuf?64:0,",");               // add preceeding comma before printing next characteristic
-        
-        nChars+=pObj[i].characteristic->sprintfAttributes(cBuf?(cBuf+nChars):NULL,GET_VALUE|GET_AID|GET_NV);    // get JSON attributes for characteristic
-        notifyFlag=true;
-        
-      } // notification requested
-    } // characteristic updated
-  } // loop over all objects
+      if(pObj[i].characteristic->ev[conNum]){                    // if notifications requested for this characteristic by specified connection number
 
-  nChars+=snprintf(cBuf?(cBuf+nChars):NULL,cBuf?64:0,"]}");
+        if(!notifyFlag)                                          // this is first notification for any characteristic
+          hapOut << "{\"characteristics\":[";                    // print start of JSON array
+        else                                                     // else already printed at least one other characteristic
+          hapOut << ",";                                         // add preceeding comma before printing this characteristic
+        
+        pObj[i].characteristic->printfAttributes(GET_VALUE|GET_AID|GET_NV);    // print JSON attributes for this characteristic
+        notifyFlag=true;        
+      }
+    }
+  }
 
-  return(notifyFlag?nChars:0);                          // if notifyFlag is not set, return 0, else return number of characters printed to cBuf
+  if(notifyFlag)
+    hapOut << "]}";
 }
 
 ///////////////////////////////
@@ -1872,7 +1869,7 @@ void SpanCharacteristic::printfAttributes(int flags){
     hapOut << ",\"format\":\"" << formatCodes[format] << "\"";
     
     if(customRange && (flags&GET_META)){
-      hapOut << ",\"minValue\":" << uvPrint(minValue).c_str() << "\"maxValue\":" << uvPrint(maxValue).c_str();
+      hapOut << ",\"minValue\":" << uvPrint(minValue).c_str() << ",\"maxValue\":" << uvPrint(maxValue).c_str();
         
       if(uvGet<float>(stepValue)>0)
         hapOut << ",\"minStep\":" << uvPrint(stepValue).c_str();

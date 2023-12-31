@@ -1286,32 +1286,26 @@ void HAPClient::checkTimedWrites(){
 
 void HAPClient::eventNotify(SpanBuf *pObj, int nObj, int ignoreClient){
   
-  for(int cNum=0;cNum<homeSpan.maxConnections;cNum++){        // loop over all connection slots
-    if(hap[cNum]->client && cNum!=ignoreClient){       // if there is a client connected to this slot and it is NOT flagged to be ignored (in cases where it is the client making a PUT request)
+  for(int cNum=0;cNum<homeSpan.maxConnections;cNum++){      // loop over all connection slots
+    if(hap[cNum]->client && cNum!=ignoreClient){            // if there is a client connected to this slot and it is NOT flagged to be ignored (in cases where it is the client making a PUT request)
 
-      int nBytes=homeSpan.sprintfNotify(pObj,nObj,NULL,cNum);          // get JSON response for notifications to client cNum - includes terminating null (will be recast to uint8_t* below)
+      homeSpan.printfNotify(pObj,nObj,cNum);                // create JSON (which may be of zero length if there are no applicable notifications for this cNum)
+      size_t nBytes=hapOut.getSize();
+      hapOut.flush();
 
-      if(nBytes>0){                                                    // if there are notifications to send to client cNum
-        TempBuffer<char> jsonBuf(nBytes+1);
-        homeSpan.sprintfNotify(pObj,nObj,jsonBuf,cNum);
+      if(nBytes>0){                                         // if there ARE notifications to send to client cNum
+        
+        LOG2("\n>>>>>>>>>> %s >>>>>>>>>>\n",hap[cNum]->client.remoteIP().toString().c_str());
 
-        char *body;
-        asprintf(&body,"EVENT/1.0 200 OK\r\nContent-Type: application/hap+json\r\nContent-Length: %d\r\n\r\n",nBytes);
+        hapOut.setLogLevel(2).setHapClient(hap[cNum]);    
+        hapOut << "EVENT/1.0 200 OK\r\nContent-Type: application/hap+json\r\nContent-Length: " << nBytes << "\r\n\r\n";
+        homeSpan.printfNotify(pObj,nObj,cNum);
+        hapOut.flush();
 
-        LOG2("\n>>>>>>>>>> ");
-        LOG2(hap[cNum]->client.remoteIP());
-        LOG2(" >>>>>>>>>>\n");    
-        LOG2(body);
-        LOG2(jsonBuf.get());
-        LOG2("\n");
-  
-        hap[cNum]->sendEncrypted(body,(uint8_t *)jsonBuf.get(),nBytes);        // note recasting of jsonBuf into uint8_t*
-        free(body);
-
-      } // if there are characteristic updates to notify client cNum
-    } // if client exists
-  }
-
+        LOG2("\n-------- SENT ENCRYPTED! --------\n");
+      }
+    }
+  }         
 }
 
 /////////////////////////////////////////////////////////////////////////////////

@@ -294,7 +294,7 @@ class Span{
   int sprintfAttributes(SpanBuf *pObj, int nObj, char *cBuf);             // prints SpanBuf object into buf, unless buf=NULL; return number of characters printed, excluding null terminator, even if buf=NULL
   int sprintfAttributes(char **ids, int numIDs, int flags, char *cBuf);   // prints accessory.characteristic ids into buf, unless buf=NULL; return number of characters printed, excluding null terminator, even if buf=NULL
   void clearNotify(int slotNum);                                          // set ev notification flags for connection 'slotNum' to false across all characteristics 
-  int sprintfNotify(SpanBuf *pObj, int nObj, char *cBuf, int conNum);     // prints notification JSON into buf based on SpanBuf objects and specified connection number
+  void printfNotify(SpanBuf *pObj, int nObj, int conNum);                 // writes notification JSON to hapOut stream based on SpanBuf objects and specified connection number
 
   static boolean invalidUUID(const char *uuid, boolean isCustom){
     int x=0;
@@ -506,7 +506,6 @@ class SpanCharacteristic{
   UVal newValue;                           // the updated value requested by PUT /characteristic
   SpanService *service=NULL;               // pointer to Service containing this Characteristic
 
-   
   int sprintfAttributes(char *val, int flags);       // prints Characteristic JSON records into buf; return number of characters printed, excluding null terminator
   void printfAttributes(int flags);               // writes Characteristic JSON to hapOut stream
   StatusCode loadUpdate(char *val, char *ev);     // load updated val/ev from PUT /characteristic JSON request.  Return intitial HAP status code (checks to see if characteristic is found, is writable, etc.)  
@@ -688,7 +687,7 @@ class SpanCharacteristic{
     sb.characteristic=this;                 // set characteristic          
     sb.status=StatusCode::OK;               // set status
     char dummy[]="";
-    sb.val=dummy;                           // set dummy "val" so that sprintfNotify knows to consider this "update"
+    sb.val=dummy;                           // set dummy "val" so that printfNotify knows to consider this "update"
     homeSpan.Notifications.push_back(sb);   // store SpanBuf in Notifications vector  
 
     if(nvsKey){
@@ -775,7 +774,7 @@ class SpanCharacteristic{
       sb.characteristic=this;                 // set characteristic          
       sb.status=StatusCode::OK;               // set status
       char dummy[]="";
-      sb.val=dummy;                           // set dummy "val" so that sprintfNotify knows to consider this "update"
+      sb.val=dummy;                           // set dummy "val" so that printfNotify knows to consider this "update"
       homeSpan.Notifications.push_back(sb);   // store SpanBuf in Notifications vector  
   
       if(nvsKey){
