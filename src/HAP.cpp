@@ -1633,7 +1633,10 @@ void HapOut::HapStreamBuffer::flushBuffer(){
 
   if(logLevel<=homeSpan.getLogLevel()){
     buffer[num]='\0';                             // add null terminator but DO NOT increment num (we don't want terminator considered as part of buffer)
-    Serial.print(buffer);
+    if(enablePrettyPrint)                         // if pretty print needed, use formatted method
+      printFormatted(buffer,num,2);
+    else                                          // if not, just print
+    Serial.print(buffer);         
   }
   
   if(hapClient!=NULL){
@@ -1680,11 +1683,48 @@ int HapOut::HapStreamBuffer::sync(){
   hapClient=NULL;
   enablePrettyPrint=false;
   byteCount=0;
+  indent=0;
 
   mbedtls_sha512_finish_ret(ctx,hash);    // finish SHA-384 and store hash
   mbedtls_sha512_starts_ret(ctx,1);       // re-start hash for next time
 
   return(0);
+}
+
+//////////////////////////////////////
+
+void HapOut::HapStreamBuffer::printFormatted(char *buf, size_t nChars, size_t nsp){
+  
+  for(int i=0;i<nChars;i++){
+    switch(buf[i]){
+      
+      case '{':
+      case '[':
+        Serial.printf("%c\n",buf[i]);
+        indent+=nsp;
+        for(int j=0;j<indent;j++)
+          Serial.printf(" ");
+        break;
+
+      case '}':
+      case ']':
+        Serial.printf("\n");
+        indent-=nsp;
+        for(int j=0;j<indent;j++)
+          Serial.printf(" ");
+        Serial.printf("%c",buf[i]);
+        break;
+
+      case ',':
+        Serial.printf("%c\n",buf[i]);
+        for(int j=0;j<indent;j++)
+          Serial.printf(" ");
+        break;
+
+      default:
+        Serial.printf("%c",buf[i]);           
+    }
+  }
 }
  
 /////////////////////////////////////////////////////////////////////////////////

@@ -195,6 +195,7 @@ class HapOut : public std::ostream {
     int logLevel=255;                     // default is NOT to print anything
     boolean enablePrettyPrint=false;
     size_t byteCount=0;
+    size_t indent=0;
     uint8_t *hash;
     mbedtls_sha512_context *ctx;
   
@@ -202,6 +203,7 @@ class HapOut : public std::ostream {
     int_type overflow(int_type c) override;
     int sync() override; 
     size_t getSize(){return(byteCount+pptr()-pbase());}
+    void printFormatted(char *buf, size_t nChars, size_t nsp);
         
     HapStreamBuffer();
     ~HapStreamBuffer();

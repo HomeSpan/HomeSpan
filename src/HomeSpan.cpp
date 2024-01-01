@@ -620,14 +620,12 @@ void Span::processSerialCommand(const char *c){
 
     case 'd': {            
 
+      LOG0("\n*** Attributes Database ***\n\n");
+      hapOut.prettyPrint();
       printfAttributes();
-      LOG0("\n*** Attributes Database: size=%d  configuration=%d ***\n\n",hapOut.getSize(),hapConfig.configNumber);
+      size_t nBytes=hapOut.getSize();
       hapOut.flush();
-
-      hapOut.setLogLevel(0);
-      printfAttributes();
-      hapOut.flush();
-      LOG0("\n\n*** End Database ***\n\n");
+      LOG0("\n\n*** End Database: size=%d  configuration=%d ***\n\n",nBytes,hapConfig.configNumber);      
     }
     break;
 
@@ -1249,52 +1247,6 @@ void Span::printfAttributes(int flags){
 }
 
 ///////////////////////////////
-
-void Span::prettyPrint(char *buf, int nsp, int minLogLevel){
-
-  if(logLevel<minLogLevel)
-    return;
-      
-  int s=strlen(buf);
-  int indent=0;
-  
-  for(int i=0;i<s;i++){
-    switch(buf[i]){
-      
-      case '{':
-      case '[':
-        Serial.printf("%c\n",buf[i]);
-        indent+=nsp;
-        for(int j=0;j<indent;j++)
-          Serial.printf(" ");
-        break;
-
-      case '}':
-      case ']':
-        Serial.printf("\n");
-        indent-=nsp;
-        for(int j=0;j<indent;j++)
-          Serial.printf(" ");
-        Serial.printf("%c",buf[i]);
-        break;
-
-      case ',':
-        Serial.printf("%c\n",buf[i]);
-        for(int j=0;j<indent;j++)
-          Serial.printf(" ");
-        break;
-
-      default:
-        Serial.printf("%c",buf[i]);
-           
-    } // switch
-  } // loop over all characters
-
-  Serial.printf("\n");
-}
-
-
-///////////////////////////
 
 boolean Span::deleteAccessory(uint32_t n){
   
