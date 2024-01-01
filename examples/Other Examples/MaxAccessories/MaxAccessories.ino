@@ -27,7 +27,7 @@
 
 #include "HomeSpan.h"
 
-#define MAX_LIGHTS  60
+#define MAX_LIGHTS  70
 
 struct RGB_Light : Service::LightBulb {
 
