@@ -1652,7 +1652,7 @@ void HapOut::HapStreamBuffer::flushBuffer(){
       hapClient->client.write(encBuf,num+18);     // transmit encrypted frame
       hapClient->a2cNonce.inc();                  // increment nonce
     }
-    delay(1);
+    delay(50);
   }
 
   mbedtls_sha512_update_ret(ctx,(uint8_t *)buffer,num);   // update hash

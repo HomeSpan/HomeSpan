@@ -27,7 +27,7 @@
 
 #include "HomeSpan.h"
 
-#define MAX_LIGHTS  2
+#define MAX_LIGHTS  60
 
 struct RGB_Light : Service::LightBulb {
 
@@ -73,7 +73,7 @@ void setup() {
  
   Serial.begin(115200);
 
-  homeSpan.setLogLevel(2);
+  homeSpan.setLogLevel(1);
   homeSpan.enableWebLog(500);
 
   homeSpan.begin(Category::Lighting,"HomeSpan Max");
