@@ -898,7 +898,7 @@ int HAPClient::getAccessoriesURL(){
     return(0);
   }
 
-  LOG1("In Get Accessories #%d (%s)...",conNum,client.remoteIP().toString().c_str());
+  LOG1("In Get Accessories #%d (%s)...\n",conNum,client.remoteIP().toString().c_str());
 
   homeSpan.printfAttributes();
   size_t nBytes=hapOut.getSize();
@@ -926,19 +926,15 @@ int HAPClient::getCharacteristicsURL(char *urlBuf){
     return(0);
   }
 
-  LOG1("In Get Characteristics #");
-  LOG1(conNum);
-  LOG1(" (");
-  LOG1(client.remoteIP());
-  LOG1(")...\n");
+  LOG1("In Get Characteristics #%d (%s)...\n",conNum,client.remoteIP().toString().c_str());
 
-  int len=strlen(urlBuf);       // determine number of IDs specificed by counting commas in URL
+  int len=strlen(urlBuf);           // determine number of IDs specified by counting commas in URL
   int numIDs=1;
   for(int i=0;i<len;i++)
     if(urlBuf[i]==',')
       numIDs++;
   
-  TempBuffer<char *> ids(numIDs);  // reserve space for number of IDs found
+  TempBuffer<char *> ids(numIDs);   // reserve space for number of IDs found
   int flags=GET_VALUE|GET_AID;      // flags indicating which characteristic fields to include in response (HAP Table 6-13)
   numIDs=0;                         // reset number of IDs found
 
@@ -975,24 +971,16 @@ int HAPClient::getCharacteristicsURL(char *urlBuf){
   if(!numIDs)           // could not find any IDs
     return(0);
 
-  int nBytes=homeSpan.sprintfAttributes(ids,numIDs,flags,NULL);          // get JSON response - includes terminating null (will be recast to uint8_t* below)
-  TempBuffer<char> jsonBuf(nBytes+1);
-  homeSpan.sprintfAttributes(ids,numIDs,flags,jsonBuf);
+  boolean statusFlag=homeSpan.printfAttributes(ids,numIDs,flags);     // get statusFlag returned to use below
+  size_t nBytes=hapOut.getSize();
+  hapOut.flush();
 
-  boolean sFlag=strstr(jsonBuf,"status");          // status attribute found?
+  hapOut.setLogLevel(2).setHapClient(this);
+  hapOut << "HTTP/1.1 " << (!statusFlag?"200 OK":"207 Multi-Status") << "\r\nContent-Type: application/hap+json\r\nContent-Length: " << nBytes << "\r\n\r\n";
+  homeSpan.printfAttributes(ids,numIDs,flags);
+  hapOut.flush();
 
-  char *body;
-  asprintf(&body,"HTTP/1.1 %s\r\nContent-Type: application/hap+json\r\nContent-Length: %d\r\n\r\n",!sFlag?"200 OK":"207 Multi-Status",nBytes);
-    
-  LOG2("\n>>>>>>>>>> ");
-  LOG2(client.remoteIP());
-  LOG2(" >>>>>>>>>>\n");    
-  LOG2(body);
-  LOG2(jsonBuf.get());
-  LOG2("\n");
-  
-  sendEncrypted(body,(uint8_t *)jsonBuf.get(),nBytes);        // note recasting of jsonBuf into uint8_t*
-  free(body);
+  LOG2("\n-------- SENT ENCRYPTED! --------\n");
         
   return(1);
 }
@@ -1006,11 +994,7 @@ int HAPClient::putCharacteristicsURL(char *json){
     return(0);
   }
 
-  LOG1("In Put Characteristics #");
-  LOG1(conNum);
-  LOG1(" (");
-  LOG1(client.remoteIP());
-  LOG1(")...\n");
+  LOG1("In Put Characteristics #%d (%s)...\n",conNum,client.remoteIP().toString().c_str());
 
   int n=homeSpan.countCharacteristics(json);    // count number of objects in JSON request
   if(n==0)                                      // if no objects found, return
@@ -1025,37 +1009,27 @@ int HAPClient::putCharacteristicsURL(char *json){
     if(pObj[i].status!=StatusCode::OK)
       multiCast=1;    
 
+  LOG2("\n>>>>>>>>>> %s >>>>>>>>>>\n",client.remoteIP().toString().c_str());
+
   if(!multiCast){                                         // JSON object has no content
-    
-    char body[]="HTTP/1.1 204 No Content\r\n\r\n";
-    
-    LOG2("\n>>>>>>>>>> ");
-    LOG2(client.remoteIP());
-    LOG2(" >>>>>>>>>>\n");
-    LOG2(body);  
 
-    sendEncrypted(body,NULL,0);  
+    hapOut.setLogLevel(2).setHapClient(this);    
+    hapOut << "HTTP/1.1 204 No Content\r\n\r\n";
+    hapOut.flush();
         
-  } else {                                                       // multicast respose is required
+  } else {                                                // multicast respose is required
 
-    int nBytes=homeSpan.sprintfAttributes(pObj,n,NULL);          // get JSON response - includes terminating null (will be recast to uint8_t* below)
-    TempBuffer<char> jsonBuf(nBytes+1);
-    homeSpan.sprintfAttributes(pObj,n,jsonBuf);
-
-    char *body;
-    asprintf(&body,"HTTP/1.1 207 Multi-Status\r\nContent-Type: application/hap+json\r\nContent-Length: %d\r\n\r\n",nBytes);
+    homeSpan.printfAttributes(pObj,n);
+    size_t nBytes=hapOut.getSize();
+    hapOut.flush();
   
-    LOG2("\n>>>>>>>>>> ");
-    LOG2(client.remoteIP());
-    LOG2(" >>>>>>>>>>\n");    
-    LOG2(body);
-    LOG2(jsonBuf.get());
-    LOG2("\n");
-  
-    sendEncrypted(body,(uint8_t *)jsonBuf.get(),nBytes);        // note recasting of jsonBuf into uint8_t*
-    free(body);
-  
+    hapOut.setLogLevel(2).setHapClient(this);
+    hapOut << "HTTP/1.1 207 Multi-Status\r\nContent-Type: application/hap+json\r\nContent-Length: " << nBytes << "\r\n\r\n";
+    homeSpan.printfAttributes(pObj,n);
+    hapOut.flush(); 
   }
+
+  LOG2("\n-------- SENT ENCRYPTED! --------\n");
 
   // Create and send Event Notifications if needed
 

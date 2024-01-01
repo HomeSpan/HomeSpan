@@ -1516,77 +1516,65 @@ void Span::printfNotify(SpanBuf *pObj, int nObj, int conNum){
 
 ///////////////////////////////
 
-int Span::sprintfAttributes(SpanBuf *pObj, int nObj, char *cBuf){
+void Span::printfAttributes(SpanBuf *pObj, int nObj){
 
-  int nChars=0;
-
-  nChars+=snprintf(cBuf,cBuf?64:0,"{\"characteristics\":[");
+  hapOut << "{\"characteristics\":[";
 
   for(int i=0;i<nObj;i++){
-      nChars+=snprintf(cBuf?(cBuf+nChars):NULL,cBuf?128:0,"{\"aid\":%u,\"iid\":%d,\"status\":%d}",pObj[i].aid,pObj[i].iid,(int)pObj[i].status);
-      if(i+1<nObj)
-        nChars+=snprintf(cBuf?(cBuf+nChars):NULL,cBuf?64:0,",");
+    hapOut << "{\"aid\":" << pObj[i].aid << ",\"iid\":" << pObj[i].iid << ",\"status\":" << (int)pObj[i].status << "}";
+    if(i+1<nObj)
+      hapOut << ",";
   }
 
-  nChars+=snprintf(cBuf?(cBuf+nChars):NULL,cBuf?64:0,"]}");
-
-  return(nChars);    
+  hapOut << "]}";
 }
 
 ///////////////////////////////
 
-int Span::sprintfAttributes(char **ids, int numIDs, int flags, char *cBuf){
+boolean Span::printfAttributes(char **ids, int numIDs, int flags){
 
-  int nChars=0;
   uint32_t aid;
   int iid;
   
   SpanCharacteristic *Characteristics[numIDs];
   StatusCode status[numIDs];
-  boolean sFlag=false;
 
   for(int i=0;i<numIDs;i++){              // PASS 1: loop over all ids requested to check status codes - only errors are if characteristic not found, or not readable
     sscanf(ids[i],"%u.%d",&aid,&iid);     // parse aid and iid
     Characteristics[i]=find(aid,iid);     // find matching chararacteristic
     
-    if(Characteristics[i]){                                          // if found
-      if(Characteristics[i]->perms&PERMS::PR){                       // if permissions allow reading
-        status[i]=StatusCode::OK;                                    // always set status to OK (since no actual reading of device is needed)
+    if(Characteristics[i]){                                         // if found
+      if(Characteristics[i]->perms&PERMS::PR){                      // if permissions allow reading
+        status[i]=StatusCode::OK;                                   // always set status to OK (since no actual reading of device is needed)
       } else {
-        Characteristics[i]=NULL;                                     
+        Characteristics[i]=NULL;                                    // set to NULL to trigger not-found in Pass 2 below                                     
         status[i]=StatusCode::WriteOnly;
-        sFlag=true;                                                  // set flag indicating there was an error
+        flags|=GET_STATUS;                                          // update flags to require status attribute for all characteristics
       }
     } else {
       status[i]=StatusCode::UnknownResource;
-      sFlag=true;                                                    // set flag indicating there was an error
+      flags|=GET_STATUS;                                            // update flags to require status attribute for all characteristics
     }
   }
 
-  nChars+=snprintf(cBuf,cBuf?64:0,"{\"characteristics\":[");  
+  hapOut << "{\"characteristics\":[";
 
-  for(int i=0;i<numIDs;i++){              // PASS 2: loop over all ids requested and create JSON for each (with or without status code base on sFlag set above)
+  for(int i=0;i<numIDs;i++){              // PASS 2: loop over all ids requested and create JSON for each (either all with, or all without, a status attribute based on final flags setting)
     
-    if(Characteristics[i])                                                                         // if found
-      nChars+=Characteristics[i]->sprintfAttributes(cBuf?(cBuf+nChars):NULL,flags);                // get JSON attributes for characteristic
-    else{
-      sscanf(ids[i],"%u.%d",&aid,&iid);     // parse aid and iid                        
-      nChars+=snprintf(cBuf?(cBuf+nChars):NULL,cBuf?64:0,"{\"iid\":%d,\"aid\":%u}",iid,aid);      // else create JSON attributes based on requested aid/iid
+    if(Characteristics[i])                                          // if found
+      Characteristics[i]->printfAttributes(flags);                  // get JSON attributes for characteristic (may or may not include status=0 attribute)
+    else{                                                           // else create JSON status attribute based on requested aid/iid
+      sscanf(ids[i],"%u.%d",&aid,&iid);                             
+      hapOut << "{\"iid\":" << iid << ",\"aid\":" << aid << ",\"status\":" << (int)status[i] << "}";     
     }
-    
-    if(sFlag){                                                                                    // status flag is needed - overlay at end
-      nChars--;
-      nChars+=snprintf(cBuf?(cBuf+nChars):NULL,cBuf?64:0,",\"status\":%d}",(int)status[i]);
-    }
-  
+      
     if(i+1<numIDs)
-      nChars+=snprintf(cBuf?(cBuf+nChars):NULL,cBuf?64:0,",");
-    
+      hapOut << ",";    
   }
 
-  nChars+=snprintf(cBuf?(cBuf+nChars):NULL,cBuf?64:0,"]}");
+  hapOut << "]}";
 
-  return(nChars);    
+  return(flags&GET_STATUS);    
 }
 
 ///////////////////////////////
@@ -1909,77 +1897,10 @@ void SpanCharacteristic::printfAttributes(int flags){
   if(flags&GET_EV)
     hapOut << ",\"ev\":" << (ev[HAPClient::conNum]?"true":"false");
 
+  if(flags&GET_STATUS)
+    hapOut << ",\"status\":0";    
+
   hapOut << "}";
-}
-
-///////////////////////////////
-
-int SpanCharacteristic::sprintfAttributes(char *cBuf, int flags){
-  int nBytes=0;
-
-  const char permCodes[][7]={"pr","pw","ev","aa","tw","hd","wr"};
-
-  const char formatCodes[][9]={"bool","uint8","uint16","uint32","uint64","int","float","string","data"};
-
-  nBytes+=snprintf(cBuf,cBuf?64:0,"{\"iid\":%d",iid);
-
-  if(flags&GET_TYPE)  
-    nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"type\":\"%s\"",type);
-
-  if((perms&PR) && (flags&GET_VALUE)){    
-    if(perms&NV && !(flags&GET_NV))
-      nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"value\":null");
-    else
-      nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"value\":%s",uvPrint(value).c_str());      
-  }
-
-  if(flags&GET_META){
-    nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"format\":\"%s\"",formatCodes[format]);
-    
-    if(customRange && (flags&GET_META)){
-      nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?128:0,",\"minValue\":%s,\"maxValue\":%s",uvPrint(minValue).c_str(),uvPrint(maxValue).c_str());
-        
-      if(uvGet<float>(stepValue)>0)
-        nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?128:0,",\"minStep\":%s",uvPrint(stepValue).c_str());
-    }
-
-    if(unit){
-      if(strlen(unit)>0)
-        nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?128:0,",\"unit\":\"%s\"",unit);
-     else
-        nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?128:0,",\"unit\":null");
-    }
-
-    if(validValues){
-      nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?128:0,",\"valid-values\":%s",validValues);      
-    }
-  }
-    
-  if(desc && (flags&GET_DESC)){
-    nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?128:0,",\"description\":\"%s\"",desc);    
-  }
-
-  if(flags&GET_PERMS){
-    nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"perms\":[");
-    for(int i=0;i<7;i++){
-      if(perms&(1<<i)){
-        nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,"\"%s\"",permCodes[i]);
-        if(perms>=(1<<(i+1)))
-          nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",");
-      }
-    }
-    nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,"]");
-  }
-
-  if(flags&GET_AID)
-    nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"aid\":%u",aid);
-  
-  if(flags&GET_EV)
-    nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"ev\":%s",ev[HAPClient::conNum]?"true":"false");
-
-  nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,"}");
-
-  return(nBytes);
 }
 
 ///////////////////////////////
