@@ -200,6 +200,17 @@ The following **optional** `homeSpan` methods enable additional features and pro
   * returns the version of a HomeSpan sketch, as set using `void setSketchVersion(const char *sVer)`, or "n/a" if not set
   * can by called from anywhere in a sketch
 
+* `Span& enableTLS()`
+  * Enable TLS (HTTPS) for weblogs, instead of unsecure (non-TLS / HTTP) connections. If weblogs have been enabled for a specific URI, end users will be redirected to the HTTPS port.
+  * Defaults to using port 443 (default HTTPS port)
+  * New ECDSA certificate generated at each reboot
+* `Span& enableTLS(u_int16_t port = 443, const char *ec_private_key_pem = NULL, const char *ec_server_cert_pem = NULL)`
+  * Enable TLS (HTTPS) for weblogs, instead of unsecure (non-TLS / HTTP) connections. If weblogs have been enabled for a specific URI, end users will be redirected to the HTTPS port.
+  * **port** Port for HTTPS connections. Defaults to 443 (default HTTPS port)
+   * **ec_private_key_pem** ECC private key, in PEM format, to use for HTTPS. NOTE: RSA keys are not supported given their larger key size for similar security strength. A 256-bit ECC key provides similar security strength as an RSA 4096-bit key. When NULL, HomeSpan will attempt to generate its own ECC keypair at EACH REBOOT.
+   * **ec_server_cert_pem** Matching EC certificate for the primate key. Keypair validation is not done.  When NULL, HomeSpan will attempt to generate its own ECDSA with NIST P-256 certificate at EACH REBOOT.
+   
+
 * `Span& enableWebLog(uint16_t maxEntries, const char *timeServerURL, const char *timeZone, const char *logURL)`
   * enables a rolling Web Log that displays the most recent *maxEntries* entries created by the user with the `WEBLOG()` macro.  Parameters, and their default values if unspecified, are as follows:
     * *maxEntries* - maximum number of (most recent) entries to save.  If unspecified, defaults to 0, in which case the Web Log will only display status without any log entries

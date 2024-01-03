@@ -2,6 +2,13 @@
 
 HomeSpan includes a variety of message logs with different levels of verbosity, as well built-in methods to create your own log messages and web logs.
 
+1. [HomeSpan Log Message](homespan-log-messages)
+1. [User-Defined Log Messages](user-defined-log-messages)
+1. [Web Logging](web-logging)
+   1. [Custom Style Sheets (CSS)](custom-style-sheets-css)
+   1. [Adding User-Defined Data and/or Custom HTML](adding-user-defined-data-and-or-custom-html)
+   1. [Enabling TLS Web Logs](enabling-tls-web-logs)
+
 ## HomeSpan Log Messages
 
 HomeSpan log messages are typically output directly to the Arduino Serial Monitor with three possible levels of verbosity:
@@ -104,6 +111,15 @@ To embed this custom HTML text in the Web Log, call `homeSpan.setWebLogCallback(
 
 Note that *r* is being passed as a reference and already includes all the HTML text the Web Log has produced to set up the page and create the initial table.  You should therefore *extend* this String using  `+=`.  Do not simple assign this variable to a new String with `=` or you will overwrite all the HTML already produced!
  
+### Enabling TLS Web Logs
+When Web Logs are enabled, HomeSpan shares the same web server instance to serve HomeKit controllers and web logs. Web logs are accessed via HTTP only, providing no security. If sensitive information is expected to be logged, web logs should be accessed via HTTPS, using Transport Security Layer (TLS).
+
+To enable TLS with default configuration, call `enableTLS()` prior to calling `homeSpan.begin()`. HomeSpan will then attempt to generate an ECDSA keypair and self-signed certificate using NIST P-256 curve. Since the RSA algorithm requires larger keys, the use of Elliptic Curve Cryptography (ECC) is preferred as it uses smaller key sizes while providing the same security strength. RSA keypairs are certificates are not currently supported.
+
+A new EC keypair and ECDSA certificate will be created after each boot unless developers want to use their own, using `enableTLS(port, ec_private_key_pem, ec_server_cert_pem)`. This ensures that no HomeSpan device ends up with the same keypair which would be considered a security vulnerability. HomeSpan developers should generate their own keypair and certificate, PEM-encoded, and pass their values to `enableTLS(port, ec_private_key_pem, ec_server_cert_pem)`. **Never log the private key.**
+
+When TLS is configured and web logs are accessed via the non-HTTPS port, HomeSpan will issue an HTTP 301 (Permanently Moved) to the HTTPS port, which defaults to 443.
+
 ---
 
 [↩️](../README.md) Back to the Welcome page

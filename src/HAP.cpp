@@ -305,7 +305,43 @@ void HAPClient::processRequest(){
     }
 
     if(homeSpan.webLog.isEnabled && !strncmp(body,homeSpan.webLog.statusURL.c_str(),homeSpan.webLog.statusURL.length())){       // GET STATUS - AN OPTIONAL, NON-HAP-R2 FEATURE
-      getStatusURL();
+
+      // if TLS server is not configured, business as usual, else redirect to it
+      if (!homeSpan.webLog.tls_server) {
+        getStatusURL();
+
+      } else {
+        char *line = strtok(body, "\n");
+        char *host = NULL;
+        while (line != NULL && host == NULL) {
+          if ((host = strstr(line, "Host:")) != NULL) {
+            host += 5; // Trim "Host:"
+            // Left-trim any white spaces the browser may put between "Host:" and the actual host
+            while(host[0] == ' ') host++;
+            // Trim the port number, if specified, as we have to redirect to a different port
+            for(int x=0; x<strlen(host); x++) {
+              switch(host[x]) {
+                case ':':
+                case '\r':
+                case '\n':
+                  host[x] = '\0';
+              }
+            } 
+          }
+          line = strtok(NULL, "\n");
+        }
+
+        // Send back an HTTP 301 redirect to the TLS server host (and port, if different than 443)
+        String resp = "HTTP/1.1 301 Moved Permanently\n";
+        resp += "Location: https://" + (host != NULL ? host : client.localIP().toString());
+        resp += homeSpan.webLog.tls_server_conf.port_secure != 443 ? ":" + String(homeSpan.webLog.tls_server_conf.port_secure) : "";
+        resp += String(homeSpan.webLog.statusURL.c_str() + 4) + "\n"; // statusURL contains "GET /status", so trim first 4 chars
+        LOG2("-------- HTTP Redirect -------\n%s\n---------------------\n", resp.c_str());
+        client.print(resp);
+        client.stop();
+
+      }
+
       return;
     }    
 
@@ -1189,7 +1225,7 @@ int HAPClient::putPrepareURL(char *json){
 
 //////////////////////////////////////
 
-int HAPClient::getStatusURL(){
+int HAPClient::getStatusURL(httpd_req_t *req){
 
   char clocktime[33];
 
@@ -1210,7 +1246,8 @@ int HAPClient::getStatusURL(){
     
   sprintf(uptime,"%d:%02d:%02d:%02d",days,hours,mins,secs);
 
-  String response="HTTP/1.1 200 OK\r\nContent-type: text/html; charset=utf-8\r\n\r\n";
+  // if req is set, HTTP response code and content type is set by httpd_resp_* APIs
+  String response=(req?"":"HTTP/1.1 200 OK\r\nContent-type: text/html; charset=utf-8\r\n\r\n");
 
   response+="<html><head><title>" + String(homeSpan.displayName) + "</title>\n";
   response+="<style>body {background-color:lightblue;} th, td {padding-right: 10px; padding-left: 10px; border:1px solid black;}" + homeSpan.webLog.css + "</style></head>\n";
@@ -1312,7 +1349,11 @@ int HAPClient::getStatusURL(){
 
       if(response.length()>1024){     // if response grows too big, transmit chunk and reset
         LOG2(response);
-        client.print(response);
+        if (req) {
+          httpd_resp_send_chunk(req, response.c_str(), HTTPD_RESP_USE_STRLEN);
+        } else {
+          client.print(response);
+        }
         delay(1);                     // slight pause seems to be required
         response.clear();
       }
@@ -1324,7 +1365,12 @@ int HAPClient::getStatusURL(){
 
   LOG2(response);
   LOG2("\n");
-  client.print(response);
+  if (req) {
+    httpd_resp_send_chunk(req, response.c_str(), HTTPD_RESP_USE_STRLEN);
+    httpd_resp_send_chunk(req, NULL, 0); // Required to complete the response.
+  } else {
+    client.print(response);
+  }
   LOG2("------------ SENT! --------------\n");
   
   delay(1);

@@ -154,7 +154,19 @@ void Span::begin(Category catID, const char *displayName, const char *hostNameBa
     delay(100);
     esp_ota_mark_app_invalid_rollback_and_reboot();
   }
-  
+
+  // If a private key has been set we can assume that TLS server is configured. TLS web server should be
+  // started/stopped when Wifi connects / disconnects
+  if (webLog.tls_server_conf.prvtkey_len > 0) {
+    WiFiEventId_t wifi_event_connect = WiFi.onEvent([](WiFiEvent_t event, WiFiEventInfo_t info){
+      homeSpan.startWeblogTLS();
+    }, WiFiEvent_t::ARDUINO_EVENT_WIFI_STA_GOT_IP);
+    
+    WiFiEventId_t wifi_event_disconnect = WiFi.onEvent([](WiFiEvent_t event, WiFiEventInfo_t info){
+      homeSpan.stopWeblogTLS();
+    }, WiFiEvent_t::ARDUINO_EVENT_WIFI_STA_LOST_IP);
+  }
+
 }  // begin
 
 ///////////////////////////////
@@ -1308,6 +1320,76 @@ boolean Span::deleteAccessory(uint32_t n){
 
 ///////////////////////////////
 
+Span& Span::enableTLS(u_int16_t port, 
+                const char *ec_private_key_pem, 
+                const char *ec_server_cert_pem) {
+  webLog.tls_server_conf = HTTPD_SSL_CONFIG_DEFAULT();
+  webLog.tls_server_conf.port_secure = port;
+  
+  if (ec_private_key_pem != NULL && ec_server_cert_pem != NULL) {
+    LOG2("Using custom certificate for TLS");
+    webLog.tls_server_conf.prvtkey_pem = (const uint8_t *) ec_private_key_pem;
+    webLog.tls_server_conf.prvtkey_len = strlen((char *) ec_private_key_pem) + 1;
+    webLog.tls_server_conf.cacert_pem = (const uint8_t *) ec_server_cert_pem;
+    webLog.tls_server_conf.cacert_len = strlen((char *) ec_server_cert_pem) + 1;
+
+  } else {
+    // Since version of mbedTLS can't do SAN, gotta use hostname
+    String subjectDN = "CN=";
+    subjectDN += (homeSpan.hostNameBase && strlen(homeSpan.hostNameBase) > 0 ? homeSpan.hostNameBase : "HomeSpan hostname base not set");
+    if (homeSpan.hostNameSuffix && strlen(homeSpan.hostNameSuffix) > 0) {
+      subjectDN += ".";
+      subjectDN += homeSpan.hostNameSuffix;
+    }
+    unsigned char private_key_pem[256];  // This will have to be increased if using RSA keys or EC keys bigger than P-256
+    unsigned char server_cert_pem[512];  // This will have to be increased if using RSA keys or EC keys bigger than P-256
+    memset(private_key_pem, 0, sizeof(private_key_pem));
+    memset(server_cert_pem, 0, sizeof(server_cert_pem));
+    
+    if (webLog.generate_certificate(subjectDN.c_str(), private_key_pem, sizeof(private_key_pem), server_cert_pem, sizeof(server_cert_pem))) {
+      LOG2("New certificate generated, lets use it");
+      
+      // TODO: Is this considered a leak if we actually have to keep the private key around
+      webLog.tls_server_conf.prvtkey_pem = (uint8_t *) strdup((char *)private_key_pem);
+      webLog.tls_server_conf.prvtkey_len = strlen((char *)private_key_pem) + 1;
+
+      // TODO: Is this considered a leak if we actually have to keep the certificate around
+      webLog.tls_server_conf.cacert_pem = (uint8_t *) strdup((char *)server_cert_pem);
+      webLog.tls_server_conf.cacert_len = strlen((char *)server_cert_pem) + 1;
+
+      LOG2("key size: %d, cert size: %d\n", webLog.tls_server_conf.prvtkey_len, webLog.tls_server_conf.cacert_len);
+
+    } else {
+      LOG0("*** Error generating new HomeSpan certificate. See serial logs for more details.");
+    }
+  }
+  return(*this);
+}
+
+Span& Span::startWeblogTLS(){
+  // If the private key is set, lets assume enableTLS() was called
+  if (webLog.tls_server_conf.prvtkey_len > 0) {
+    webLog.startTLS();
+  } else {
+    WEBLOG("TLS not configured. Call homeSpan.enableTLS() first");
+  }
+  
+  return(*this);
+}
+
+Span& Span::stopWeblogTLS(){
+  // If the private key is set, lets assume enableTLS() was called
+  if (webLog.tls_server_conf.prvtkey_len > 0) {
+    webLog.stopTLS();
+  } else {
+    WEBLOG("TLS not configured. Call homeSpan.enableTLS() first");
+  }
+  
+  return(*this);
+}
+
+///////////////////////////////
+
 SpanCharacteristic *Span::find(uint32_t aid, int iid){
 
   int index=-1;
@@ -2179,6 +2261,248 @@ void SpanWebLog::initTime(void *args){
 
   vTaskDelete(NULL);
   
+}
+
+bool SpanWebLog::generate_certificate(const char *subjectDN,
+                                      unsigned char *private_key, size_t private_key_len,
+                                      unsigned char *certificate, size_t certificate_len)
+{
+  int ret = 0;
+  const char *pers = "HomeSpan unique personalization string";
+
+  mbedtls_pk_context key;            // Private key creation object
+  mbedtls_x509write_cert crt;        // Certificate creation object
+  mbedtls_entropy_context entropy;   // Entropy object
+  mbedtls_ctr_drbg_context ctr_drbg; // DRBG, for random number generation
+  struct mbedtls_mpi serial_mpi;     // Used to store the serial number of the new certificate
+ 
+  char strerr[256];                 // Used to convert error code to str
+
+  // TODO - This method here needs to extra love.
+  // 1. The entire generate_certificate function will require around 4800 bytes, following 
+  //    some initial tests using uxTaskGetStackHighWaterMark().
+  //    Need to figure out the best way to fail this method if there is not enough stack available, and warn
+  //    the user to call 'SET_LOOP_TASK_STACK_SIZE( 16*1024 );' to prevent a stack overflow.
+  // 2. Look at the other TODO below
+  // 2.1 Dynamic dates instead of hardcoded dates when calling mbedtls_x509write_crt_set_validity()
+  // 2.2 Is this considered a leak if we strdup without never freeing, since we have to keep the buffer around forever?
+  // 3. Once the items above have been addressed, tidy up the logs
+
+  WEBLOG("Must find a way to check if stack size has been set to 16k, else this will crash");
+
+  LOG2("About to generate an EC key and certificate - stack high watermark:%d\n", uxTaskGetStackHighWaterMark(NULL));
+
+  mbedtls_mpi_init(&serial_mpi);
+  mbedtls_pk_init(&key);
+  mbedtls_x509write_crt_init(&crt);
+  mbedtls_ctr_drbg_init(&ctr_drbg);
+  memset(strerr, 0, sizeof(strerr));
+
+  // Initializing entropy and DRBG
+  mbedtls_entropy_init(&entropy);
+  if ((ret = mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy,
+                                    (const unsigned char *) pers,
+                                    strlen(pers))) != 0) {
+    mbedtls_strerror(ret, strerr, sizeof(strerr));
+    LOG0("Failed to seed DRBG ! mbedtls_ctr_drbg_seed returned -0x%04x - %s\n", (unsigned int) -ret, strerr);
+    goto err;
+  }
+
+  // Private key generation
+  LOG2("Generating SECP256R1 (NIST P-256) private key..\n");
+  if ((ret = mbedtls_pk_setup(&key,
+                              mbedtls_pk_info_from_type(MBEDTLS_PK_ECKEY))) != 0) {
+    mbedtls_strerror(ret, strerr, sizeof(strerr));
+    LOG0("Failed creating pkey object!  mbedtls_pk_setup returned -0x%04x - %s\n", (unsigned int) -ret, strerr);
+    goto err;
+  }
+  if((ret = mbedtls_ecp_gen_key(mbedtls_ecp_curve_info_from_grp_id(MBEDTLS_ECP_DP_SECP256R1)->grp_id,
+                            mbedtls_pk_ec(key),
+                            mbedtls_ctr_drbg_random, &ctr_drbg)) != 0) {
+    mbedtls_strerror(ret, strerr, sizeof(strerr));
+      LOG0("Failed generating private key!  mbedtls_ecp_gen_key returned -0x%04x - %s\n", (unsigned int) -ret, strerr);
+      goto err;
+  }
+  LOG2("Private key generated - stack high watermark:%d\n", uxTaskGetStackHighWaterMark(NULL));
+
+  
+  // Convert pkey to PEM
+  // NOTE: This will crash if SET_LOOP_TASK_STACK_SIZE( 16*1024 ) is not set
+  // This method alone will require ~4350 bytes
+  if ((ret = mbedtls_pk_write_key_pem(&key, private_key, private_key_len)) != 0) {
+    mbedtls_strerror(ret, strerr, sizeof(strerr));
+    LOG0("Failed to create PEM-encoded private key!  mbedtls_pk_write_key_pem returned -0x%04x - %s\n", (unsigned int) -ret, strerr);
+    goto err;
+  }
+
+  LOG2("Key generated - stack high watermark:%d\n", uxTaskGetStackHighWaterMark(NULL));
+
+  // Now that the private key is generated, lets create a self-signed certificate with it
+  mbedtls_x509write_crt_set_version(&crt, MBEDTLS_X509_CRT_VERSION_3); // v3 required to have extensions
+  mbedtls_x509write_crt_set_md_alg(&crt, MBEDTLS_MD_SHA256);           // SHA256 is ok for now
+  
+  // For a self-signed, issuer key = subject key
+  mbedtls_x509write_crt_set_subject_key(&crt, &key);
+  mbedtls_x509write_crt_set_issuer_key(&crt, &key);
+
+  // Same goes for the SubjectDN and IssuerDN, both should be the same for a self-signed certificate
+  if ((ret = mbedtls_x509write_crt_set_subject_name(&crt, subjectDN)) != 0) {
+    mbedtls_strerror(ret, strerr, sizeof(strerr));
+    LOG0("Failed to set subjectDN!  mbedtls_x509write_crt_set_subject_name returned -0x%04x - %s\n", (unsigned int) -ret, strerr);
+    goto err;
+  }
+  
+  // Setting issuer name
+  if ((ret = mbedtls_x509write_crt_set_issuer_name(&crt, subjectDN)) != 0) {
+    mbedtls_strerror(ret, strerr, sizeof(strerr));
+    LOG0("Failed to set IssuerDN!  mbedtls_x509write_crt_set_issuer_name returned -0x%04x - %s\n", (unsigned int) -ret, strerr);
+    goto err;
+  }
+
+  // Creating serial number. Hardcoded for now, not a security issue
+  if ((ret = mbedtls_mpi_read_binary(&serial_mpi, (const unsigned char *) "1", 1)) != 0) {
+    mbedtls_strerror(ret, strerr, sizeof(strerr));
+    LOG0("Failed to create serial number!  mbedtls_mpi_read_binary returned -0x%04x - %s\n", (unsigned int) -ret, strerr);
+    goto err;
+  }
+
+  // Setting serial number on the certificate object
+  if ((ret = mbedtls_x509write_crt_set_serial(&crt, &serial_mpi)) != 0) {
+    mbedtls_strerror(ret, strerr, sizeof(strerr));
+    LOG0("Failed to set serial number!  mbedtls_x509write_crt_set_serial returned -0x%04x - %s\n", (unsigned int) -ret, strerr);
+    goto err;
+  }
+
+  // Setting expiration dates for the certificate. Lets go for 2 years expiration
+  // TODO: change hardcoded dates to something more dynamic like now() + 2 years
+  if ((ret = mbedtls_x509write_crt_set_validity(&crt, "20231201143000", "20251201143000")) != 0) {
+    mbedtls_strerror(ret, strerr, sizeof(strerr));
+    LOG0("Failed to set certificate validity dates!  mbedtls_x509write_crt_set_validity returned -0x%04x - %s\n", (unsigned int) -ret, strerr);
+    goto err;
+  }
+
+  // Basic constraints, to tell this is not a CA cert
+  if ((ret = mbedtls_x509write_crt_set_basic_constraints(&crt, false, 0)) != 0) {
+      mbedtls_strerror(ret, strerr, sizeof(strerr));
+      LOG0("Failed to set BasicConstraints!  x509write_crt_set_basic_constraints returned -0x%04x - %s\n", (unsigned int) -ret, strerr);
+      goto err;
+  }
+
+  // Key Usage extension should be digitalSignature for TLS server certs
+  if ((ret = mbedtls_x509write_crt_set_key_usage(&crt, MBEDTLS_X509_KU_DIGITAL_SIGNATURE)) != 0) {
+      mbedtls_strerror(ret, strerr, sizeof(strerr));
+      LOG0("Failed setting keyUsage to digitalSignature!  mbedtls_x509write_crt_set_key_usage returned -0x%04x - %s\n", (unsigned int) -ret, strerr);
+      goto err;
+  }
+
+/*
+  mbedTLS 2.28 does not support Extended Key Usage. Once mbedTLS gets upgraded by Arduino-ESP,
+  the code below can be added
+  mbedtls_asn1_sequence *ext_key_usage = (mbedtls_asn1_sequence *) malloc(sizeof(mbedtls_asn1_sequence));
+  ext_key_usage->buf.tag = MBEDTLS_ASN1_OID;
+  SET_OID(ext_key_usage->buf, MBEDTLS_OID_SERVER_AUTH);
+  ret = mbedtls_x509write_crt_set_ext_key_usage(&crt, ext_key_usage);
+  if (ret != 0) {
+      mbedtls_strerror(ret, strerr, sizeof(strerr));
+      WEBLOG(" failed\n  !  mbedtls_x509write_crt_set_ext_key_usage returned -0x%04x - %s",
+             (unsigned int) -ret,
+             strerr);
+      goto err;
+  }
+  free(ext_key_usage);
+*/ 
+
+/*
+  Likewise, mbedTLS does not support subject Alternative Names.
+  This means the subjectDN CommonName MUST be the FQDN.
+
+  mbedtls_x509_san_list *san_list = (mbedtls_x509_san_list *) malloc(sizeof(mbedtls_x509_san_list));
+  if (san_list == NULL) {
+    WEBLOG("Not enough memory for subjectAltName list");
+    goto err;
+  }
+  san_list->next = NULL;
+  san_list->node.type = MBEDTLS_X509_SAN_DNS_NAME;
+  san_list->node.san.unstructured_name.p = (unsigned char *) "dsc.local";
+  san_list->node.san.unstructured_name.len = strlen("dsc.local");
+
+  ret = mbedtls_x509write_crt_set_subject_alternative_name(&crt, san_list);
+  free(san_list);
+
+  if (ret != 0) {
+    mbedtls_strerror(ret, strerr, sizeof(strerr));
+    WEBLOG(" failed\n  !  mbedtls_x509write_crt_set_subject_alternative_name returned -0x%04x - %s", -ret, strerr);
+    goto err;
+  }
+  */
+
+  LOG2("Creating PEM-encoded certificate - stack high watermark:%d\n", uxTaskGetStackHighWaterMark(NULL));
+
+  if ((ret = mbedtls_x509write_crt_pem(&crt, certificate, certificate_len, mbedtls_ctr_drbg_random, &ctr_drbg)) < 0) {
+    LOG0("Failed creating certificate!  mbedtls_x509write_crt_pem returned -0x%04x - %s\n", (unsigned int) -ret, strerr);
+    goto err;
+  }
+
+  LOG1("New certificate generated:\n%s\nstack high watermark:%d\n", certificate, uxTaskGetStackHighWaterMark(NULL));
+
+err:
+
+  mbedtls_pk_free(&key);
+  mbedtls_x509write_crt_free(&crt);
+  mbedtls_ctr_drbg_free(&ctr_drbg);
+  mbedtls_entropy_free(&entropy);
+  mbedtls_mpi_free(&serial_mpi);
+
+  return (ret == 0);
+}
+
+/* An HTTP GET handler */
+static esp_err_t weblog_tls_handler(httpd_req_t *req)
+{
+    httpd_resp_set_type(req, "text/html; charset=utf-8");
+
+    HAPClient client;
+
+    client.getStatusURL(req);
+
+    return ESP_OK;
+}
+
+String statusURI = "";
+httpd_uri_t weblog_tls_uri = {
+    .uri       = "/status",
+    .method    = HTTP_GET,
+    .handler   = weblog_tls_handler
+};
+
+httpd_handle_t SpanWebLog::startTLS(u_int16_t port, const char *ec_private_key_pem, const char *ec_server_cert_pem) {
+  httpd_ssl_config_t localconf = this->tls_server_conf;
+  esp_err_t ret = ESP_OK;
+
+  statusURI = this->statusURL;
+  statusURI.trim();
+  statusURI.replace("GET ", "");
+
+  weblog_tls_uri.uri = statusURI.c_str(); 
+  LOG1("Starting TLS webserver, serving [%s]\n", weblog_tls_uri.uri);
+  if ((ret = httpd_ssl_start(&this->tls_server, &localconf)) != ESP_OK) {
+      WEBLOG("Error starting server! %s", esp_err_to_name(ret));
+      return NULL;
+  
+  } else if ((ret = httpd_register_uri_handler(this->tls_server, &weblog_tls_uri)) != ESP_OK) {
+      WEBLOG("Error registering URI handlers! %s", esp_err_to_name(ret));
+      return NULL;
+  }
+  LOG1("TLS server started\n");
+  return this->tls_server;
+
+}
+
+void SpanWebLog::stopTLS() {
+  if (this->tls_server) {
+    httpd_ssl_stop(this->tls_server);
+    LOG1("TLS server stopped\n");
+  }
 }
 
 ///////////////////////////////

@@ -54,6 +54,7 @@
 #include <ArduinoOTA.h>
 #include <esp_now.h>
 #include <mbedtls/base64.h>
+#include <esp_https_server.h>
 
 #include "extras/Blinker.h"
 #include "extras/Pixel.h"
@@ -181,6 +182,8 @@ struct SpanWebLog{                            // optional web status/log data
   String statusURL;                           // URL of status log
   uint32_t waitTime=120000;                   // number of milliseconds to wait for initial connection to time server
   String css="";                              // optional user-defined style sheet for web log
+  httpd_handle_t tls_server = NULL;           // Optional TLS web server to serve weblogs
+  httpd_ssl_config_t tls_server_conf;         // Optional TLS web server configuration
     
   struct log_t {                              // log entry type
     uint64_t upTime;                          // number of seconds since booting
@@ -192,6 +195,37 @@ struct SpanWebLog{                            // optional web status/log data
   void init(uint16_t maxEntries, const char *serv, const char *tz, const char *url);
   static void initTime(void *args);  
   void vLog(boolean sysMsg, const char *fmr, va_list ap);
+
+  /**
+   * @brief Force weblogs to be served over TLS. A separate webserver than the one used by HomeSpan will 
+   *        be launched to serve weblogs.
+   * @param port HTTPS port to use, defaults to 443
+   * @param ec_private_key_pem Webserver private key, PEM-encoded. Use ECDSA keypairs only to keep memory usage low.
+   * @param ec_server_cert_pem Webserver certificate, PEM-encoded. Use ECDSA signature only to keep memory usage low.
+   * @return Pointer to running instance of httpd_handle_t to handle HTTPS requests. NULL on error. Turn on logging for error details.
+  */
+  httpd_handle_t startTLS(u_int16_t port = 443, 
+                          const char *ec_private_key_pem = NULL, 
+                          const char *ec_server_cert_pem = NULL);
+  
+  /**
+   * @brief Stops the TLS webserver, if started.
+  */
+  void stopTLS();
+  
+  /**
+  @brief Generates an EC keypair and creates an ECDSA certificate using NIST curve P-256.
+  @param subjectDN Certificate subjectDN, in a valid DN format such as "CN=myhost.local,O=My Company".
+  @param private_key Pointer to an initialized char array to store the new private key, PEM encoded
+  @param private_key_len Size of private_key
+  @param certificate Pointer to an initialized char array to store the new certificate, PEM encoded
+  @param certificate_len Size of certificate
+  @return true on successful generation, false otherwise
+  */
+  bool generate_certificate(const char *subjectDN,
+                            unsigned char *private_key, size_t private_key_len,
+                            unsigned char *certificate, size_t certificate_len);
+
 };
 
 ///////////////////////////////
@@ -403,6 +437,34 @@ class Span{
 
   Span& setTimeServerTimeout(uint32_t tSec){webLog.waitTime=tSec*1000;return(*this);}    // sets wait time (in seconds) for optional web log time server to connect
  
+  /**
+   * @brief Enable TLS (HTTPS) for weblogs, instead of unsecure (non-TLS / HTTP) connections.
+   *        If weblogs have been enabled for a specific URI, end users will be redirected to the HTTPS port
+   * @param port Port for HTTPS connections. Defaults to 443 (default HTTPS port)
+   * @param ec_private_key_pem ECC private key, in PEM format, to use for HTTPS. NOTE: RSA keys are not supported
+   *        given their larger key size for similar security strength. A 256-bit ECC key provides similar
+   *        security strength as an RSA 4096-bit key. When NULL, HomeSpan will attempt to generate its own ECC
+   *        keypair at EACH REBOOT.
+   * @param ec_server_cert_pem Matching EC certificate for the primate key. NOTE: Keypair validation is not done.
+   *        NOTE: When NULL, HomeSpan will attempt to generate its own ECDSA with NIST P-256 certificate at
+   *        EACH REBOOT.
+  */
+  Span& enableTLS(u_int16_t port = 443,
+                  const char *ec_private_key_pem = NULL,
+                  const char *ec_server_cert_pem = NULL);
+
+  /**
+   * @brief Start a HTTPS server using default configuration. homeSpan.enableTLS() has to have been called first
+   * @return HomeSpan instance
+  */
+  Span& startWeblogTLS();
+
+  /**
+   * @brief Stops previously started HTTPS server.
+   * @return HomeSpan instance.
+  */
+  Span& stopWeblogTLS();
+
   [[deprecated("Please use reserveSocketConnections(n) method instead.")]]
   void setMaxConnections(uint8_t n){requestedMaxCon=n;}                   // sets maximum number of simultaneous HAP connections
 };
