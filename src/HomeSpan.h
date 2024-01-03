@@ -350,6 +350,7 @@ class Span{
   Span& setSerialInputDisable(boolean val){serialInputDisabled=val;return(*this);}       // sets whether serial input is disabled (true) or enabled (false)
   boolean getSerialInputDisable(){return(serialInputDisabled);}                          // returns true if serial input is disabled, or false if serial input in enabled
   Span& reserveSocketConnections(uint8_t n){maxConnections-=n;return(*this);}            // reserves n socket connections *not* to be used for HAP
+  Span& setHostNameBase(const char *base){hostNameBase=base;return(*this);}              // sets the hostName base prior to begin(). Required when enabling TLS for certificate generation
   Span& setHostNameSuffix(const char *suffix){hostNameSuffix=suffix;return(*this);}      // sets the hostName suffix to be used instead of the 6-byte AccessoryID
   Span& setPortNum(uint16_t port){tcpPortNum=port;return(*this);}                        // sets the TCP port number to use for communications between HomeKit and HomeSpan
   Span& setQRID(const char *id);                                                         // sets the Setup ID for optional pairing with a QR Code
