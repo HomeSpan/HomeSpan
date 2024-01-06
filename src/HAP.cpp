@@ -1603,12 +1603,12 @@ void Nonce::inc(){
 //////////////////////////////////////
 
 HapOut::HapStreamBuffer::HapStreamBuffer(){
-
-  buffer=(char *)HS_MALLOC(bufSize+1);                                          // add 1 for adding null terminator when printing text
-  encBuf=(uint8_t *)HS_MALLOC(bufSize+18);                                      // 2-byte AAD + encrypted data + 16-byte authentication tag
+  // Do not use PRAM form stream buffer, it would fail sometimes
+  buffer=(char *)malloc(bufSize+1);                                          // add 1 for adding null terminator when printing text
+  encBuf=(uint8_t *)malloc(bufSize+18);                                      // 2-byte AAD + encrypted data + 16-byte authentication tag
   
-  hash=(uint8_t *)HS_MALLOC(48);                                                // space for SHA-384 hash output
-  ctx = (mbedtls_sha512_context *)HS_MALLOC(sizeof(mbedtls_sha512_context));    // space for hash context
+  hash=(uint8_t *)malloc(48);                                                // space for SHA-384 hash output
+  ctx = (mbedtls_sha512_context *)malloc(sizeof(mbedtls_sha512_context));    // space for hash context
   mbedtls_sha512_init(ctx);                                                     // initialize context
   mbedtls_sha512_starts_ret(ctx,1);                                             // start SHA-384 hash (note second argument=1)
   
