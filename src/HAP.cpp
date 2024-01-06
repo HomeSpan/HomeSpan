@@ -1604,15 +1604,19 @@ void Nonce::inc(){
 
 HapOut::HapStreamBuffer::HapStreamBuffer(){
 
-  buffer=(char *)HS_MALLOC(bufSize+1);                                          // add 1 for adding null terminator when printing text
-  encBuf=(uint8_t *)HS_MALLOC(bufSize+18);                                      // 2-byte AAD + encrypted data + 16-byte authentication tag
+  // note - must require all memory allocation to be pulled from INTERNAL heap only
+
+  const uint32_t caps=MALLOC_CAP_DEFAULT | MALLOC_CAP_INTERNAL;
+
+  buffer=(char *)heap_caps_malloc(bufSize+1,caps);                                          // add 1 for adding null terminator when printing text
+  encBuf=(uint8_t *)heap_caps_malloc(bufSize+18,caps);                                      // 2-byte AAD + encrypted data + 16-byte authentication tag 
+  hash=(uint8_t *)heap_caps_malloc(48,caps);                                                // space for SHA-384 hash output
+  ctx = (mbedtls_sha512_context *)heap_caps_malloc(sizeof(mbedtls_sha512_context),caps);    // space for hash context
   
-  hash=(uint8_t *)HS_MALLOC(48);                                                // space for SHA-384 hash output
-  ctx = (mbedtls_sha512_context *)HS_MALLOC(sizeof(mbedtls_sha512_context));    // space for hash context
-  mbedtls_sha512_init(ctx);                                                     // initialize context
-  mbedtls_sha512_starts_ret(ctx,1);                                             // start SHA-384 hash (note second argument=1)
+  mbedtls_sha512_init(ctx);                 // initialize context
+  mbedtls_sha512_starts_ret(ctx,1);         // start SHA-384 hash (note second argument=1)
   
-  setp(buffer, buffer+bufSize-1);
+  setp(buffer, buffer+bufSize-1);           // assign buffer pointers
 }
 
 //////////////////////////////////////

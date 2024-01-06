@@ -207,6 +207,7 @@ class HapOut : public std::ostream {
         
     HapStreamBuffer();
     ~HapStreamBuffer();
+    
   };
 
   HapStreamBuffer hapBuffer;
@@ -214,7 +215,7 @@ class HapOut : public std::ostream {
   public:
 
   HapOut() : std::ostream(&hapBuffer){}
-
+  
   HapOut& setHapClient(HAPClient *hapClient){hapBuffer.hapClient=hapClient;return(*this);}
   HapOut& setLogLevel(int logLevel){hapBuffer.logLevel=logLevel;return(*this);}
   HapOut& prettyPrint(){hapBuffer.enablePrettyPrint=true;hapBuffer.logLevel=0;return(*this);}

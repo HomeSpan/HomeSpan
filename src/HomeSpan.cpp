@@ -185,10 +185,10 @@ void Span::pollTask() {
     processSerialCommand("i");        // print homeSpan configuration info
            
     HAPClient::init();                // read NVS and load HAP settings  
-    
-    if(heap_caps_get_minimum_free_size(MALLOC_CAP_INTERNAL)<DEFAULT_LOW_MEM_THRESHOLD)
-      LOG0("\n**** WARNING!  Low Internal RAM Watermark of %d bytes is less than Low Threshold of %d bytes.  Device *may* run out of memory.\n\n",
-          heap_caps_get_minimum_free_size(MALLOC_CAP_INTERNAL),DEFAULT_LOW_MEM_THRESHOLD);
+
+    if(heap_caps_get_free_size(MALLOC_CAP_DEFAULT|MALLOC_CAP_INTERNAL)<DEFAULT_LOW_MEM_THRESHOLD)
+      LOG0("\n**** WARNING!  Internal Free Heap of %d bytes is less than Low-Memory Threshold of %d bytes.  Device *may* run out of Internal memory.\n\n",
+          heap_caps_get_free_size(MALLOC_CAP_DEFAULT|MALLOC_CAP_INTERNAL),DEFAULT_LOW_MEM_THRESHOLD);
 
     if(!strlen(network.wifiData.ssid)){
       LOG0("*** WIFI CREDENTIALS DATA NOT FOUND.  ");
@@ -823,14 +823,24 @@ void Span::processSerialCommand(const char *c){
     break;
 
     case 'm': {
-      LOG0("Free Heap Internal RAM : %7d bytes.  Low: %7d\n",heap_caps_get_free_size(MALLOC_CAP_INTERNAL),heap_caps_get_minimum_free_size(MALLOC_CAP_INTERNAL));
-#if defined(BOARD_HAS_PSRAM)
-      LOG0("Free Heap SPI (PS) RAM : %7d bytes.  Low: %7d\n",heap_caps_get_free_size(MALLOC_CAP_SPIRAM),heap_caps_get_minimum_free_size(MALLOC_CAP_SPIRAM));
-#endif
-      LOG0("Lowest stack level     : %7d bytes\n",uxTaskGetStackHighWaterMark(NULL));
+      multi_heap_info_t heapAll;
+      multi_heap_info_t heapInternal;
+      multi_heap_info_t heapPSRAM;
+    
+      heap_caps_get_info(&heapAll,MALLOC_CAP_DEFAULT);
+      heap_caps_get_info(&heapInternal,MALLOC_CAP_DEFAULT|MALLOC_CAP_INTERNAL);
+      heap_caps_get_info(&heapPSRAM,MALLOC_CAP_DEFAULT|MALLOC_CAP_SPIRAM);
+    
+      Serial.printf("\n            Allocated      Free   Largest       Low\n");
+      Serial.printf("            --------- --------- --------- ---------\n");
+      Serial.printf("Total Heap: %9d %9d %9d %9d\n",heapAll.total_allocated_bytes,heapAll.total_free_bytes,heapAll.largest_free_block,heapAll.minimum_free_bytes);
+      Serial.printf("  Internal: %9d %9d %9d %9d\n",heapInternal.total_allocated_bytes,heapInternal.total_free_bytes,heapInternal.largest_free_block,heapInternal.minimum_free_bytes);
+      Serial.printf("     PSRAM: %9d %9d %9d %9d\n\n",heapPSRAM.total_allocated_bytes,heapPSRAM.total_free_bytes,heapPSRAM.largest_free_block,heapPSRAM.minimum_free_bytes);
+      
+      LOG0("Lowest stack level: %d bytes\n",uxTaskGetStackHighWaterMark(NULL));
       nvs_stats_t nvs_stats;
       nvs_get_stats(NULL, &nvs_stats);
-      LOG0("NVS Flash Partition    : %7d of %d records used\n\n",nvs_stats.used_entries,nvs_stats.total_entries-126);      
+      LOG0("NVS Flash Partition: %d of %d records used\n\n",nvs_stats.used_entries,nvs_stats.total_entries-126);      
     }
     break;       
 
