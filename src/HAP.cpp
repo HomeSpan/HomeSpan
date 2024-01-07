@@ -1122,7 +1122,7 @@ int HAPClient::getStatusURL(){
 
   hapOut << "HTTP/1.1 200 OK\r\nContent-type: text/html; charset=utf-8\r\n\r\n";
   hapOut << "<html><head><title>" << homeSpan.displayName << "</title>\n";
-  hapOut << "<style>body {background-color:lightblue;} th, td {padding-right: 10px; padding-left: 10px; border:1px solid black;}" << homeSpan.webLog.css << "</style></head>\n";
+  hapOut << "<style>body {background-color:lightblue;} th, td {padding-right: 10px; padding-left: 10px; border:1px solid black;}" << homeSpan.webLog.css.c_str() << "</style></head>\n";
   hapOut << "<body class=bod1><h2>" << homeSpan.displayName << "</h2>\n";
   
   hapOut << "<table class=tab1>\n";
