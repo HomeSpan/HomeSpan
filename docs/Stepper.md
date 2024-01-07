@@ -136,7 +136,7 @@ Below is a simple sketch demonstrating the above methods:
 ```C++
 // StepperControl Example using TB6612-based Driver Board with HALF STEP PWM MODE
 
-#include "Stepper_TB6612.h"   // include the driver for a TB6612 chip
+#include "extras/Stepper_TB6612.h"   // include the driver for a TB6612 chip
 
 StepperControl *motor;        // create a global pointer to StepperControl so it can be accessed in both setup() and loop()
 
@@ -199,7 +199,7 @@ Only the first method, `onStep()`, is required to be defined.  You can leave any
 As an example, below is the complete code for the **Stepper_A3967** class:
 
 ```C++
-#include "StepperControl.h"
+#include "extras/StepperControl.h"
 
 //////////////////////////
  
