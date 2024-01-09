@@ -34,7 +34,7 @@ void setup() {
   Serial.begin(115200);
 
   homeSpan.setLogLevel(1);
-  homeSpan.enableWebLog(50,"pool.ntp.org","UCT");
+  homeSpan.enableWebLog(50,"pool.ntp.org","UTC");
 
   homeSpan.begin(Category::Lighting,"HomeSpan Max");
 
