@@ -222,6 +222,7 @@ class Span{
   const char *displayName;                      // display name for this device - broadcast as part of Bonjour MDNS
   const char *hostNameBase;                     // base of hostName of this device - full host name broadcast by Bonjour MDNS will have 6-byte accessoryID as well as '.local' automatically appended
   const char *hostNameSuffix=NULL;              // optional "suffix" of hostName of this device.  If specified, will be used as the hostName suffix instead of the 6-byte accessoryID
+  char *hostName=NULL;                          // derived full hostname
   const char *modelName;                        // model name of this device - broadcast as Bonjour field "md" 
   char category[3]="";                          // category ID of primary accessory - broadcast as Bonjour field "ci" (HAP Section 13)
   unsigned long snapTime;                       // current time (in millis) snapped before entering Service loops() or updates()
@@ -371,7 +372,8 @@ class Span{
   }
 
   Span& setWebLogCSS(const char *css){webLog.css="\n" + String(css) + "\n";return(*this);}
-  Span& setWebLogCallback(void (*f)(String &)){weblogCallback=f;return(*this);}
+  Span& setWebLogCallback(void (*f)(String &)){weblogCallback=f;return(*this);} 
+  void getWebLog(void (*f)(const char *));
 
   Span& setVerboseWifiReconnect(bool verbose=true){verboseWifiReconnect=verbose;return(*this);}
 

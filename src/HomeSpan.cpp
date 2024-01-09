@@ -451,8 +451,6 @@ void Span::checkConnect(){
   id[17]='\0';                              // add terminating null
 
   // create broadcast name from server base name plus accessory ID (without ':')
-
-  char *hostName;
   
   if(!hostNameSuffix)
     asprintf(&hostName,"%s-%.2s%.2s%.2s%.2s%.2s%.2s",hostNameBase,id,id+3,id+6,id+9,id+12,id+15);
@@ -553,9 +551,6 @@ void Span::checkConnect(){
 
   if(wifiCallbackAll)
     wifiCallbackAll((connected+1)/2);
-
-
-  free(hostName);
   
 } // initWiFi
 
@@ -583,8 +578,10 @@ void Span::processSerialCommand(const char *c){
       
       LOG0("\n*** HomeSpan Status ***\n\n");
 
-      LOG0("IP Address:        %s\n\n",WiFi.localIP().toString().c_str());
-      LOG0("Accessory ID:      ");
+      LOG0("IP Address:        %s\n",WiFi.localIP().toString().c_str());
+       if(webLog.isEnabled && hostName!=NULL)   
+        LOG0("Web Logging:       http://%s.local:%d%s\n",hostName,tcpPortNum,webLog.statusURL.c_str()+4);
+      LOG0("\nAccessory ID:      ");
       HAPClient::charPrintRow(HAPClient::accessory.ID,17);
       LOG0("                               LTPK: ");
       HAPClient::hexPrintRow(HAPClient::accessory.LTPK,32);
@@ -1142,6 +1139,12 @@ void Span::processSerialCommand(const char *c){
     break;
     
   } // switch
+}
+
+///////////////////////////////
+
+void Span::getWebLog(void (*f)(const char *)){
+  HAPClient::getStatusURL(NULL,f);
 }
 
 ///////////////////////////////

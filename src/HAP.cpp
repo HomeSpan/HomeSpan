@@ -256,7 +256,7 @@ void HAPClient::processRequest(){
     }
 
     if(homeSpan.webLog.isEnabled && !strncmp(body,homeSpan.webLog.statusURL.c_str(),homeSpan.webLog.statusURL.length())){       // GET STATUS - AN OPTIONAL, NON-HAP-R2 FEATURE
-      getStatusURL();
+      getStatusURL(this,NULL);
       return;
     }    
 
@@ -1095,7 +1095,7 @@ int HAPClient::putPrepareURL(char *json){
 
 //////////////////////////////////////
 
-int HAPClient::getStatusURL(){                 
+void HAPClient::getStatusURL(HAPClient *hapClient, void (*callBack)(const char *)){                 
   
   char clocktime[33];
 
@@ -1116,9 +1116,10 @@ int HAPClient::getStatusURL(){
     
   sprintf(uptime,"%d:%02d:%02d:%02d",days,hours,mins,secs);
 
-  LOG2("\n>>>>>>>>>> %s >>>>>>>>>>\n",client.remoteIP().toString().c_str());
-
-  hapOut.setHapClient(this).setLogLevel(2);
+  if(hapClient)
+    LOG2("\n>>>>>>>>>> %s >>>>>>>>>>\n",hapClient->client.remoteIP().toString().c_str());
+    
+  hapOut.setHapClient(hapClient).setLogLevel(2).setCallback(callBack);
 
   hapOut << "HTTP/1.1 200 OK\r\nContent-type: text/html; charset=utf-8\r\n\r\n";
   hapOut << "<html><head><title>" << homeSpan.displayName << "</title>\n";
@@ -1225,10 +1226,10 @@ int HAPClient::getStatusURL(){
   hapOut << "</body></html>\n";
   hapOut.flush();
 
-  LOG2("------------ SENT! --------------\n");
-  
-  client.stop();  
-  return(1);
+  if(hapClient){
+    hapClient->client.stop();
+    LOG2("------------ SENT! --------------\n");
+  }
 }
 
 //////////////////////////////////////
@@ -1635,8 +1636,12 @@ void HapOut::HapStreamBuffer::flushBuffer(){
 
   byteCount+=num;
 
+  buffer[num]='\0';                               // add null terminator but DO NOT increment num (we don't want terminator considered as part of buffer)
+
+  if(callBack)
+    callBack(buffer);    
+
   if(logLevel<=homeSpan.getLogLevel()){
-    buffer[num]='\0';                             // add null terminator but DO NOT increment num (we don't want terminator considered as part of buffer)
     if(enablePrettyPrint)                         // if pretty print needed, use formatted method
       printFormatted(buffer,num,2);
     else                                          // if not, just print
@@ -1688,6 +1693,11 @@ int HapOut::HapStreamBuffer::sync(){
   enablePrettyPrint=false;
   byteCount=0;
   indent=0;
+  
+  if(callBack){
+    callBack(NULL);
+    callBack=NULL;
+  }
 
   mbedtls_sha512_finish_ret(ctx,hash);    // finish SHA-384 and store hash
   mbedtls_sha512_starts_ret(ctx,1);       // re-start hash for next time

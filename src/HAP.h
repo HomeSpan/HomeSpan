@@ -143,7 +143,6 @@ struct HAPClient {
   int getCharacteristicsURL(char *urlBuf);                    // GET /characteristics (HAP Section 6.7.4)  
   int putCharacteristicsURL(char *json);                      // PUT /characteristics (HAP Section 6.7.2)
   int putPrepareURL(char *json);                              // PUT /prepare (HAP Section 6.7.2.4)
-  int getStatusURL();                                         // GET / status (an optional, non-HAP feature)
 
   void tlvRespond(TLV8 &tlv8);                                      // respond to client with HTTP OK header and all defined TLV data records
   void sendEncrypted(char *body, uint8_t *dataBuf, int dataLen);    // send client complete ChaCha20-Poly1305 encrypted HTTP mesage comprising a null-terminated 'body' and 'dataBuf' with 'dataLen' bytes
@@ -172,6 +171,8 @@ struct HAPClient {
   static void checkTimedWrites();                                                      // checks for expired Timed Write PIDs, and clears any found (HAP Section 6.7.2.4)
   static void eventNotify(SpanBuf *pObj, int nObj, int ignoreClient=-1);               // transmits EVENT Notifications for nObj SpanBuf objects, pObj, with optional flag to ignore a specific client
 
+  static void getStatusURL(HAPClient *, void (*)(const char *));          // GET / status (an optional, non-HAP feature)
+
   class HAPTLV : public TLV8 {   // dedicated class for HAP TLV8 records
     public:
       HAPTLV() : TLV8(HAP_Names,11){}
@@ -198,6 +199,7 @@ class HapOut : public std::ostream {
     size_t indent=0;
     uint8_t *hash;
     mbedtls_sha512_context *ctx;
+    void (*callBack)(const char *)=NULL;
   
     void flushBuffer();
     int_type overflow(int_type c) override;
@@ -219,6 +221,7 @@ class HapOut : public std::ostream {
   HapOut& setHapClient(HAPClient *hapClient){hapBuffer.hapClient=hapClient;return(*this);}
   HapOut& setLogLevel(int logLevel){hapBuffer.logLevel=logLevel;return(*this);}
   HapOut& prettyPrint(){hapBuffer.enablePrettyPrint=true;hapBuffer.logLevel=0;return(*this);}
+  HapOut& setCallback(void(*f)(const char *)){hapBuffer.callBack=f;return(*this);}
   
   uint8_t *getHash(){return(hapBuffer.hash);}
   size_t getSize(){return(hapBuffer.getSize());}

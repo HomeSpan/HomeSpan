@@ -27,14 +27,14 @@
 
 #include "HomeSpan.h"
 
-#define MAX_LIGHTS  4
+#define MAX_LIGHTS  2
 
 void setup() {
  
   Serial.begin(115200);
 
   homeSpan.setLogLevel(2);
-  homeSpan.enableWebLog(500);
+  homeSpan.enableWebLog(50);
 
   homeSpan.begin(Category::Lighting,"HomeSpan Max");
 
@@ -51,10 +51,12 @@ void setup() {
         new Characteristic::Name(c);
       new Service::LightBulb();
         new Characteristic::On(0,false);
-        new Characteristic::Brightness(50,false);
-        new Characteristic::Hue(120,false);
-        new Characteristic::Saturation(100,false);
+//        new Characteristic::Brightness(50,false);
+//       new Characteristic::Hue(120,false);
+//        new Characteristic::Saturation(100,false);
   }
+
+  new SpanUserCommand('w', " - get web log test",webLogTest);
 
 }
 
@@ -67,3 +69,13 @@ void loop(){
 }
 
 //////////////////////////////////////
+
+void webLogTest(const char *dummy){
+  Serial.printf("\n*** In Web Log Test.  Starting Custom Web Log Handler\n");
+  homeSpan.getWebLog(webLogHandler);
+  Serial.printf("\n**** Done!");
+}
+
+void webLogHandler(const char *buf){
+  Serial.print("Here I am\n");
+}
