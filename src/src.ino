@@ -33,8 +33,8 @@ void setup() {
  
   Serial.begin(115200);
 
-  homeSpan.setLogLevel(2);
-  homeSpan.enableWebLog(50);
+  homeSpan.setLogLevel(1);
+  homeSpan.enableWebLog(50,"pool.ntp.org","UCT");
 
   homeSpan.begin(Category::Lighting,"HomeSpan Max");
 
@@ -51,12 +51,10 @@ void setup() {
         new Characteristic::Name(c);
       new Service::LightBulb();
         new Characteristic::On(0,false);
-//        new Characteristic::Brightness(50,false);
-//       new Characteristic::Hue(120,false);
-//        new Characteristic::Saturation(100,false);
+     WEBLOG("Configuring %s\n",c);
   }
 
-  new SpanUserCommand('w', " - get web log test",webLogTest);
+  new SpanUserCommand('w', " - get web log test",webLogTest);     // simulate getting an HTTPS request for weblog
 
 }
 
@@ -71,11 +69,13 @@ void loop(){
 //////////////////////////////////////
 
 void webLogTest(const char *dummy){
-  Serial.printf("\n*** In Web Log Test.  Starting Custom Web Log Handler\n");
+  Serial.printf("\n*** In Web Log Test.  Starting Custom Web Log Handler\n");     // here is where you would perform any HTTPS initializations   
   homeSpan.getWebLog(webLogHandler);
-  Serial.printf("\n**** Done!");
 }
 
 void webLogHandler(const char *buf){
-  Serial.print("Here I am\n");
+  if(buf!=NULL)
+    Serial.printf("%s",buf);            // here is where you would transmit data to the HTTPS connection
+  else
+    Serial.print("*** DONE!\n\n");      // here is where you would close the HTTPS connection
 }
