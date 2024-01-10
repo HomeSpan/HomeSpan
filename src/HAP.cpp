@@ -34,6 +34,33 @@
 
 //////////////////////////////////////
 
+std::ostream& operator<<(std::ostream& os, tlv8_t &tlv){
+
+  uint8_t *p=tlv.val.get();       // starting pointer
+  uint8_t *pend=p+tlv.len;        // ending pointer (may equal starting if len=0)
+
+  do{
+    uint8_t nBytes=(pend-p)>255?255:(pend-p);   // max is 255 bytes per TLV record
+    os.write((char *)&tlv.tag,1);
+    os.write((char *)&nBytes,1);
+    os.write((char *)p,nBytes);
+    p+=nBytes;
+  } while(p<pend);
+  
+  return(os);
+}
+
+//////////////////////////////////////
+
+std::ostream& operator<<(std::ostream& os, TLV8 &tlv){
+
+  for(auto it=tlv.begin();it!=tlv.end();it++)
+    os << (*it);  
+  return(os);
+}
+
+//////////////////////////////////////
+
 void HAPClient::init(){
 
   size_t len;                                   // not used but required to read blobs from NVS
@@ -1222,6 +1249,19 @@ void HAPClient::getStatusURL(HAPClient *hapClient, void (*callBack)(const char *
     }
     hapOut << "</table>\n";
   }
+
+  HAPTLV tlv;
+
+  uint8_t x[400];
+  tlv.add(58);
+  memset(x,'A',400);
+  tlv.add(48,49,x);
+  memset(x,'B',400);
+  tlv.add(50,'B');
+  memset(x,'C',400);
+  tlv.add(52,256,x);
+
+  hapOut << tlv;
   
   hapOut << "</body></html>\n";
   hapOut.flush();
@@ -1740,7 +1780,7 @@ void HapOut::HapStreamBuffer::printFormatted(char *buf, size_t nChars, size_t ns
     }
   }
 }
- 
+
 /////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////
 
