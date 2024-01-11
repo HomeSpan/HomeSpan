@@ -29,6 +29,7 @@
 
 #include <sstream>
 #include <forward_list>
+#include <memory>
 
 #include "HomeSpan.h"
 

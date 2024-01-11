@@ -334,7 +334,8 @@ int HAPClient::postPairSetupURL(uint8_t *content, size_t len){
   HAPTLV subTLV;
 
   iosTLV.unpack(content,len);
-  iosTLV.print();
+  if(homeSpan.getLogLevel()>1)
+    iosTLV.print();
   LOG2("------------ END TLVS! ------------\n");
 
   LOG1("In Pair Setup #%d (%s)...",conNum,client.remoteIP().toString().c_str());
@@ -478,7 +479,8 @@ int HAPClient::postPairSetupURL(uint8_t *content, size_t len){
       }
 
       subTLV.unpack(decrypted,decrypted.len());                         // unpack TLV      
-      subTLV.print();                                                   // print decrypted TLV data
+      if(homeSpan.getLogLevel()>1)
+        subTLV.print();                                                 // print decrypted TLV data
       
       LOG2("---------- END SUB-TLVS! ----------\n");
 
@@ -536,7 +538,8 @@ int HAPClient::postPairSetupURL(uint8_t *content, size_t len){
 
       LOG2("------- ENCRYPTING SUB-TLVS -------\n");
 
-      subTLV.print();
+      if(homeSpan.getLogLevel()>1)
+        subTLV.print();
 
       TempBuffer<uint8_t> subPack(subTLV.pack_size());                                           // create sub-TLV by packing Identifier, PublicKey and Signature TLV records together
       subTLV.pack(subPack);      
@@ -581,7 +584,8 @@ int HAPClient::postPairVerifyURL(uint8_t *content, size_t len){
   HAPTLV subTLV;
 
   iosTLV.unpack(content,len);
-  iosTLV.print();
+  if(homeSpan.getLogLevel()>1)
+    iosTLV.print();
   LOG2("------------ END TLVS! ------------\n");
 
   LOG1("In Pair Verify #%d (%s)...",conNum,client.remoteIP().toString().c_str());
@@ -637,7 +641,8 @@ int HAPClient::postPairVerifyURL(uint8_t *content, size_t len){
 
       LOG2("------- ENCRYPTING SUB-TLVS -------\n");
 
-      subTLV.print();
+      if(homeSpan.getLogLevel()>1)
+        subTLV.print();
 
       TempBuffer<uint8_t> subPack(subTLV.pack_size());                                                    // create sub-TLV by packing Identifier and Signature TLV records together
       subTLV.pack(subPack);                                
@@ -686,8 +691,9 @@ int HAPClient::postPairVerifyURL(uint8_t *content, size_t len){
         return(0);        
       }
 
-      subTLV.unpack(decrypted,decrypted.len());                     // unpack TLV      
-      subTLV.print();                                               // print decrypted TLV data
+      subTLV.unpack(decrypted,decrypted.len());                     // unpack TLV     
+      if(homeSpan.getLogLevel()>1)
+        subTLV.print();                                             // print decrypted TLV data
       
       LOG2("---------- END SUB-TLVS! ----------\n");
 
@@ -769,7 +775,8 @@ int HAPClient::postPairingsURL(uint8_t *content, size_t len){
   HAPTLV responseTLV;
 
   iosTLV.unpack(content,len);
-  iosTLV.print();
+  if(homeSpan.getLogLevel()>1)
+    iosTLV.print();
   LOG2("------------ END TLVS! ------------\n");
 
   LOG1("In Post Pairings #%d (%s)...",conNum,client.remoteIP().toString().c_str());
@@ -1307,26 +1314,28 @@ void HAPClient::eventNotify(SpanBuf *pObj, int nObj, int ignoreClient){
 
 void HAPClient::tlvRespond(TLV8 &tlv8){
 
-  TempBuffer<uint8_t> tBuf(tlv8.pack_size());    // create buffer to hold TLV data    
-  tlv8.pack(tBuf);                               // pack TLV records into buffer
-
-  char *body;
-  asprintf(&body,"HTTP/1.1 200 OK\r\nContent-Type: application/pairing+tlv8\r\nContent-Length: %d\r\n\r\n",tBuf.len());      // create Body with Content Length = size of TLV data
+  tlv8.osprint(hapOut);
+  size_t nBytes=hapOut.getSize();
+  hapOut.flush();
   
+  char *body;
+  asprintf(&body,"HTTP/1.1 200 OK\r\nContent-Type: application/pairing+tlv8\r\nContent-Length: %d\r\n\r\n",nBytes);      // create Body with Content Length = size of TLV data
+
   LOG2("\n>>>>>>>>>> %s >>>>>>>>>>\n",client.remoteIP().toString().c_str());
   LOG2(body);
-  tlv8.print();
+  if(homeSpan.getLogLevel()>1)
+    tlv8.print();
 
-  if(!cPair){                       // unverified, unencrypted session
-    client.print(body);
-    client.write(tBuf,tBuf.len());      
+  hapOut.setHapClient(this);
+  hapOut << body;
+  tlv8.osprint(hapOut);
+  hapOut.flush();
+
+  if(!cPair)
     LOG2("------------ SENT! --------------\n");
-  } else {
-    sendEncrypted(body,tBuf,tBuf.len());
-  }
-
-  free(body);
-
+  else
+    LOG2("-------- SENT ENCRYPTED! --------\n");
+  
 } // tlvRespond
 
 //////////////////////////////////////
