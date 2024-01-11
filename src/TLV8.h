@@ -27,37 +27,24 @@
  
 #pragma once
 
-#include "HomeSpan.h"
+#include <sstream>
 #include <forward_list>
+
+#include "HomeSpan.h"
 
 struct tlv8_t {
   uint8_t tag;
   size_t len;
   std::unique_ptr<uint8_t> val;
 
-  tlv8_t(uint8_t tag, size_t len, const uint8_t* val) : tag{tag}, len{len} {       
-    if(len>0){
-      this->val=std::unique_ptr<uint8_t>((uint8_t *)HS_MALLOC(len));
-      if(val!=NULL)
-        memcpy((this->val).get(),val,len);      
-    }
-  }
-
-  void update(size_t addLen, const uint8_t *addVal){
-    if(addLen>0){
-      uint8_t *p=val.release();
-      p=(uint8_t *)HS_REALLOC(p,len+addLen);
-      val=std::unique_ptr<uint8_t>(p);
-      if(addVal!=NULL)
-        memcpy(p+len,addVal,addLen);
-      len+=addLen;        
-    }
-  }
+  tlv8_t(uint8_t tag, size_t len, const uint8_t* val);
+  void update(size_t addLen, const uint8_t *addVal);
+  void osprint(std::ostream& os);
 
   operator uint8_t*() const{
     return(val.get());
-  }  
-
+  }
+  
 };
 
 /////////////////////////////////////
@@ -114,8 +101,12 @@ class TLV8 : public std::forward_list<tlv8_t, Mallocator<tlv8_t>> {
   void print(TLV8_it it1){print(it1, it1++);}
   void print(){print(begin(), end());}
 
+  void osprint(std::ostream& os, TLV8_it it1, TLV8_it it2);
+  void osprint(std::ostream& os, TLV8_it it1){osprint(os, it1, it1++);}
+  void osprint(std::ostream& os){osprint(os, begin(), end());}
+
   void unpack(uint8_t *buf, size_t bufSize);
 
   void wipe(){std::forward_list<tlv8_t, Mallocator<tlv8_t>>().swap(*this);}
-
+  
 };

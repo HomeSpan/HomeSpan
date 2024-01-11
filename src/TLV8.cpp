@@ -27,6 +27,45 @@
 
 #include "TLV8.h"
 
+//////////////////////////////////////
+
+tlv8_t::tlv8_t(uint8_t tag, size_t len, const uint8_t* val) : tag{tag}, len{len} {       
+  if(len>0){
+    this->val=std::unique_ptr<uint8_t>((uint8_t *)HS_MALLOC(len));
+    if(val!=NULL)
+      memcpy((this->val).get(),val,len);      
+  }
+}
+
+//////////////////////////////////////
+
+void tlv8_t::update(size_t addLen, const uint8_t *addVal){
+  if(addLen>0){
+    uint8_t *p=val.release();
+    p=(uint8_t *)HS_REALLOC(p,len+addLen);
+    val=std::unique_ptr<uint8_t>(p);
+    if(addVal!=NULL)
+      memcpy(p+len,addVal,addLen);
+    len+=addLen;        
+  }
+}
+
+/////////////////////////////////////
+
+void tlv8_t::osprint(std::ostream& os){
+
+  uint8_t *p=val.get();       // starting pointer
+  uint8_t *pend=p+len;        // ending pointer (may equal starting if len=0)
+
+  do{
+    uint8_t nBytes=(pend-p)>255?255:(pend-p);   // max is 255 bytes per TLV record
+    os.write((char *)&tag,1);
+    os.write((char *)&nBytes,1);
+    os.write((char *)p,nBytes);
+    p+=nBytes;
+  } while(p<pend);
+}
+
 /////////////////////////////////////
 
 TLV8_it TLV8::add(uint8_t tag, size_t len, const uint8_t* val){
@@ -195,5 +234,13 @@ void TLV8::print(TLV8_it it1, TLV8_it it2){
     it1++;
   }
 }
+  
+//////////////////////////////////////
 
-/////////////////////////////////////
+void TLV8::osprint(std::ostream& os, TLV8_it it1, TLV8_it it2){
+
+  for(auto it=it1;it!=it2;it++)
+    (*it).osprint(os);
+}
+
+//////////////////////////////////////
