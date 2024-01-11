@@ -218,9 +218,6 @@ const char *TLV8::getName(uint8_t tag){
 
 void TLV8::print(TLV8_it it1, TLV8_it it2){
 
-  if(homeSpan.getLogLevel()<2)
-    return;
-    
   while(it1!=it2){
     const char *name=getName((*it1).tag);
     if(name)
