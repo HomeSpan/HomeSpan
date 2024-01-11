@@ -144,9 +144,8 @@ struct HAPClient {
   int putCharacteristicsURL(char *json);                      // PUT /characteristics (HAP Section 6.7.2)
   int putPrepareURL(char *json);                              // PUT /prepare (HAP Section 6.7.2.4)
 
-  void tlvRespond(TLV8 &tlv8);                                      // respond to client with HTTP OK header and all defined TLV data records
-  void sendEncrypted(char *body, uint8_t *dataBuf, int dataLen);    // send client complete ChaCha20-Poly1305 encrypted HTTP mesage comprising a null-terminated 'body' and 'dataBuf' with 'dataLen' bytes
-  int receiveEncrypted(uint8_t *httpBuf, int messageSize);          // decrypt HTTP request (HAP Section 6.5)
+  void tlvRespond(TLV8 &tlv8);                                // respond to client with HTTP OK header and all defined TLV data records
+  int receiveEncrypted(uint8_t *httpBuf, int messageSize);    // decrypt HTTP request (HAP Section 6.5)
 
   int notFoundError();           // return 404 error
   int badRequestError();         // return 400 error

@@ -1054,11 +1054,7 @@ int HAPClient::putPrepareURL(char *json){
     return(0);
   }
 
-  LOG1("In Put Prepare #");
-  LOG1(conNum);
-  LOG1(" (");
-  LOG1(client.remoteIP());
-  LOG1(")...\n");
+  LOG1("In Put Prepare #%d (%s)...\n",conNum,client.remoteIP().toString().c_str());
 
   char ttlToken[]="\"ttl\":";
   char pidToken[]="\"pid\":";
@@ -1073,7 +1069,6 @@ int HAPClient::putPrepareURL(char *json){
   if((cBuf=strstr(json,pidToken)))
     sscanf(cBuf+strlen(ttlToken),"%llu",&pid);
 
-  char jsonBuf[32];
   StatusCode status=StatusCode::OK;
 
   if(ttl>0 && pid>0){                           // found required elements
@@ -1082,21 +1077,19 @@ int HAPClient::putPrepareURL(char *json){
     status=StatusCode::InvalidValue;
   }
 
-  sprintf(jsonBuf,"{\"status\":%d}",(int)status);
-  int nBytes=strlen(jsonBuf);
-  char *body;
-  asprintf(&body,"HTTP/1.1 200 OK\r\nContent-Type: application/hap+json\r\nContent-Length: %d\r\n\r\n",nBytes);
-  
-  LOG2("\n>>>>>>>>>> ");
-  LOG2(client.remoteIP());
-  LOG2(" >>>>>>>>>>\n");    
-  LOG2(body);
-  LOG2(jsonBuf);
-  LOG2("\n");
-  
-  sendEncrypted(body,(uint8_t *)jsonBuf,nBytes);        // note recasting of jsonBuf into uint8_t*
-  free(body);
-    
+  LOG2("\n>>>>>>>>>> %s >>>>>>>>>>\n",client.remoteIP().toString().c_str());
+
+  hapOut << "{\"status\":" << (int)status << "}";
+  size_t nBytes=hapOut.getSize();
+  hapOut.flush();
+
+  hapOut.setLogLevel(2).setHapClient(this);    
+  hapOut << "HTTP/1.1 200 OK\r\nContent-Type: application/hap+json\r\nContent-Length: " << nBytes << "\r\n\r\n";
+  hapOut << "{\"status\":" << (int)status << "}";
+  hapOut.flush();
+
+  LOG2("\n-------- SENT ENCRYPTED! --------\n");
+         
   return(1);
 }
 
@@ -1229,20 +1222,7 @@ void HAPClient::getStatusURL(HAPClient *hapClient, void (*callBack)(const char *
     }
     hapOut << "</table>\n";
   }
-
-  HAPTLV tlv;
-
-  uint8_t x[400];
-  tlv.add(58);
-  memset(x,'A',400);
-  tlv.add(48,49,x);
-  memset(x,'B',400);
-  tlv.add(50,'B');
-  memset(x,'C',400);
-  tlv.add(52,256,x);
-
-  tlv.osprint(hapOut);
-  
+ 
   hapOut << "</body></html>\n";
   hapOut.flush();
 
@@ -1268,13 +1248,10 @@ void HAPClient::checkTimedWrites(){
 
   unsigned long cTime=millis();                                       // get current time
 
-  char c[64];
-
   auto tw=homeSpan.TimedWrites.begin();
   while(tw!=homeSpan.TimedWrites.end()){
-    if(cTime>tw->second){                                                               // timer has expired
-       sprintf(c,"Removing PID=%llu  ALARM=%u\n",tw->first,tw->second);
-       LOG2(c);
+    if(cTime>tw->second){                                             // timer has expired
+       LOG2("Removing PID=%llu  ALARM=%u\n",tw->first,tw->second);
        tw=homeSpan.TimedWrites.erase(tw);
       }
     else
@@ -1375,51 +1352,6 @@ int HAPClient::receiveEncrypted(uint8_t *httpBuf, int messageSize){
   return(nBytes);
     
 } // receiveEncrypted
-
-//////////////////////////////////////
-
-void HAPClient::sendEncrypted(char *body, uint8_t *dataBuf, int dataLen){
-
-  const int FRAME_SIZE=1024;          // number of bytes to use in each ChaCha20-Poly1305 encrypted frame when sending encrypted JSON content to Client
-  
-  int bodyLen=strlen(body);
-
-  unsigned long long nBytes;
-
-  int maxFrameSize=bodyLen>dataLen?bodyLen:dataLen;       // set maxFrameSize to greater of bodyLen or dataLen
-  if(maxFrameSize>FRAME_SIZE)                             // cap maxFrameSize by FRAME_SIZE (HAP restriction)
-    maxFrameSize=FRAME_SIZE;
-
-  TempBuffer<uint8_t> tBuf(2+maxFrameSize+16);           // 2-byte AAD + encrypted data + 16-byte authentication tag
-  
-  tBuf[0]=bodyLen%256;         // store number of bytes in first frame that encrypts the Body (AAD bytes)
-  tBuf[1]=bodyLen/256;
-  
-  crypto_aead_chacha20poly1305_ietf_encrypt(tBuf+2,&nBytes,(uint8_t *)body,bodyLen,tBuf,2,NULL,a2cNonce.get(),a2cKey);   // encrypt the Body with authentication tag appended
-
-  client.write(tBuf,nBytes+2);   // transmit encrypted frame
-  a2cNonce.inc();                      // increment nonce
-  
-  for(int i=0;i<dataLen;i+=FRAME_SIZE){      // encrypt FRAME_SIZE number of bytes in dataBuf in sequential frames
-    
-    int n=dataLen-i;           // number of bytes remaining
-    
-    if(n>FRAME_SIZE)           // maximum number of bytes to encrypt=FRAME_SIZE
-      n=FRAME_SIZE;                                     
-    
-    tBuf[0]=n%256;    // store number of bytes that encrypts this frame (AAD bytes)
-    tBuf[1]=n/256;
-
-    crypto_aead_chacha20poly1305_ietf_encrypt(tBuf+2,&nBytes,dataBuf+i,n,tBuf,2,NULL,a2cNonce.get(),a2cKey);   // encrypt the next portion of dataBuf with authentication tag appended
-
-    client.write(tBuf,nBytes+2);   // transmit encrypted frame
-    a2cNonce.inc();                      // increment nonce
-
-  }
- 
-  LOG2("-------- SENT ENCRYPTED! --------\n");
-      
-} // sendEncrypted
 
 /////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////

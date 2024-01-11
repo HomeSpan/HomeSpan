@@ -27,8 +27,6 @@
  
 #pragma once
 
-#include <Arduino.h>
-
 #ifndef HS_MALLOC
 
 #if defined(BOARD_HAS_PSRAM)

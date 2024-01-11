@@ -27,6 +27,7 @@
  
 #pragma once
 
+#include <Arduino.h>
 #include <sstream>
 #include <forward_list>
 #include <memory>
