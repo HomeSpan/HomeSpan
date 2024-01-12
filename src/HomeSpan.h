@@ -740,7 +740,7 @@ class SpanCharacteristic{
       return;
     }
 
-    if(val < uvGet<T>(minValue) || val > uvGet<T>(maxValue)){
+    if(!((val >= uvGet<T>(minValue)) && (val <= uvGet<T>(maxValue)))){
       LOG0("\n*** WARNING:  Attempt to update Characteristic::%s with setVal(%g) is out of range [%g,%g].  This may cause device to become non-responsive!\n\n",
       hapName,(double)val,uvGet<double>(minValue),uvGet<double>(maxValue));
     }

@@ -912,7 +912,7 @@ void Span::processSerialCommand(const char *c){
             if((*chr)->setValidValuesError)
               LOG0("          *** WARNING #%d!  Attempt to set Custom Valid Values for this Characteristic ignored ***\n",++nWarnings);
 
-            if((*chr)->format!=STRING && ((*chr)->uvGet<double>((*chr)->value) < (*chr)->uvGet<double>((*chr)->minValue) || (*chr)->uvGet<double>((*chr)->value) > (*chr)->uvGet<double>((*chr)->maxValue)))
+            if((*chr)->format!=STRING && (!(((*chr)->uvGet<double>((*chr)->value) >= (*chr)->uvGet<double>((*chr)->minValue)) && ((*chr)->uvGet<double>((*chr)->value) <= (*chr)->uvGet<double>((*chr)->maxValue)))))
               LOG0("          *** WARNING #%d!  Value of %g is out of range [%g,%g] ***\n",++nWarnings,(*chr)->uvGet<double>((*chr)->value),(*chr)->uvGet<double>((*chr)->minValue),(*chr)->uvGet<double>((*chr)->maxValue));
           
           } // Characteristics

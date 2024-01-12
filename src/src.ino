@@ -29,6 +29,8 @@
 
 #define MAX_LIGHTS  2
 
+SpanCharacteristic *brightness[2];
+
 void setup() {
  
   Serial.begin(115200);
@@ -50,11 +52,14 @@ void setup() {
         sprintf(c,"Light-%d",i);
         new Characteristic::Name(c);
       new Service::LightBulb();
-        new Characteristic::On(0,false);
+        new Characteristic::On(0,true);
+        brightness[i]=new Characteristic::Saturation(0,true);
      WEBLOG("Configuring %s\n",c);
   }
 
   new SpanUserCommand('w', " - get web log test",webLogTest);     // simulate getting an HTTPS request for weblog
+  new SpanUserCommand('b', " - change brightness to fraction",[](const char *buf){brightness[0]->setVal(atof(buf+1));});     // simulate getting an HTTPS request for weblog
+  new SpanUserCommand('c', " - change brightness to fraction",[](const char *buf){brightness[1]->setVal(atof(buf+1));});     // simulate getting an HTTPS request for weblog
 
 }
 
