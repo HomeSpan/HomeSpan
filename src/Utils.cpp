@@ -278,4 +278,4 @@ void PushButton::reset(){
 
 //////////////////////////////////////
 
-touch_value_t PushButton::threshold=0;
+PushButton::touch_value_t PushButton::threshold=0;

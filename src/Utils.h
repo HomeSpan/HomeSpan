@@ -103,15 +103,7 @@ class TempBuffer {
 //         PushButton         //
 ////////////////////////////////
 
-#if SOC_TOUCH_VERSION_2
-typedef uint32_t touch_value_t;
-#else
-typedef uint16_t touch_value_t;
-#endif
-
 class PushButton{
-
-  friend class Span;
   
   int status;
   int toggleStatus;
@@ -119,15 +111,23 @@ class PushButton{
   uint32_t singleAlarm;
   uint32_t doubleAlarm;
   uint32_t longAlarm;
+
+#if SOC_TOUCH_VERSION_2
+  typedef uint32_t touch_value_t;
+#else
+  typedef uint16_t touch_value_t;
+#endif  
   
   static touch_value_t threshold;
   static const int calibCount=20;
+
+  public:
+
+  typedef boolean (*triggerType_t)(int pin);
   
   protected:
 
   int pressType;
-  typedef boolean (*triggerType_t)(int pin);
-
   int pin;
   triggerType_t triggerType;
 

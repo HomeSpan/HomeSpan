@@ -33,7 +33,10 @@ void setup() {
  
   Serial.begin(115200);
 
-  homeSpan.setLogLevel(1).setControlPin(21,SpanButton::TRIGGER_ON_HIGH).setStatusPin(13);
+  homeSpan.setLogLevel(1).setStatusPin(13);
+  pinMode(21,OUTPUT);
+  homeSpan.setControlPin(21,SpanToggle::TRIGGER_ON_HIGH );
+  homeSpan.setControlPin(21,PushButton::TRIGGER_ON_HIGH );
   homeSpan.enableWebLog(50,"pool.ntp.org","UTC");  
 
   homeSpan.begin(Category::Lighting,"HomeSpan Max");
