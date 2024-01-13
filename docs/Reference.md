@@ -301,6 +301,9 @@ The following `homeSpan` methods are considered experimental, since not all use 
   * if this method is used, and you have no need to add your own code to the main Arduino `loop()`, you can safely skip defining a blank `void loop(){}` function in your sketch
   * warning: if any code you add to the Arduino `loop()` method tries to alter any HomeSpan settings or functions running in the background `poll()` task, race conditions may yield undefined results
  
+* `TaskHandle_t getAutoPollTask()`
+  * returns the task handle for the Auto Poll Task, or NULL if Auto Polling has not been used
+ 
 ## *SpanAccessory(uint32_t aid)*
 
 Creating an instance of this **class** adds a new HAP Accessory to the HomeSpan HAP Database.
