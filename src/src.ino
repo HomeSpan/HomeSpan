@@ -48,7 +48,7 @@ void setup() {
     new SpanAccessory();
       new Service::AccessoryInformation();
         new Characteristic::Identify();
-        char c[30];
+        char c[100];
         sprintf(c,"Light-%d",i);
         new Characteristic::Name(c);
       new Service::LightBulb();
