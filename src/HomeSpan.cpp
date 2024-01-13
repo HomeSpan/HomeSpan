@@ -55,6 +55,8 @@ HapCharacteristics hapChars;        // Instantiation of all HAP Characteristics 
 ///////////////////////////////
 
 void Span::begin(Category catID, const char *displayName, const char *hostNameBase, const char *modelName){
+
+  loopTaskHandle=xTaskGetCurrentTaskHandle();                 // a roundabout way of getting the current task handle
   
   this->displayName=displayName;
   this->hostNameBase=hostNameBase;
@@ -834,7 +836,9 @@ void Span::processSerialCommand(const char *c){
       Serial.printf("  Internal: %9d %9d %9d %9d\n",heapInternal.total_allocated_bytes,heapInternal.total_free_bytes,heapInternal.largest_free_block,heapInternal.minimum_free_bytes);
       Serial.printf("     PSRAM: %9d %9d %9d %9d\n\n",heapPSRAM.total_allocated_bytes,heapPSRAM.total_free_bytes,heapPSRAM.largest_free_block,heapPSRAM.minimum_free_bytes);
       
-      LOG0("Lowest stack level: %d bytes\n",uxTaskGetStackHighWaterMark(NULL));
+      if(getAutoPollTask())
+        LOG0("Lowest stack level: %d bytes (%s)\n",uxTaskGetStackHighWaterMark(getAutoPollTask()),pcTaskGetName(getAutoPollTask()));
+      LOG0("Lowest stack level: %d bytes (%s)\n",uxTaskGetStackHighWaterMark(loopTaskHandle),pcTaskGetName(loopTaskHandle));
       nvs_stats_t nvs_stats;
       nvs_get_stats(NULL, &nvs_stats);
       LOG0("NVS Flash Partition: %d of %d records used\n\n",nvs_stats.used_entries,nvs_stats.total_entries-126);      

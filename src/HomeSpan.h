@@ -249,6 +249,7 @@ class Span{
   Network network;                                  // configures WiFi and Setup Code via either serial monitor or temporary Access Point
   SpanWebLog webLog;                                // optional web status/log
   TaskHandle_t pollTaskHandle = NULL;               // optional task handle to use for poll() function
+  TaskHandle_t loopTaskHandle;                      // Arduino Loop Task handle
   boolean verboseWifiReconnect = true;              // set to false to not print WiFi reconnect attempts messages
     
   SpanOTA spanOTA;                                  // manages OTA process
@@ -369,6 +370,8 @@ class Span{
       "pollTask", stackSize, NULL, priority, &pollTaskHandle, cpu);
     LOG0("\n*** AutoPolling Task started with priority=%d\n\n",uxTaskPriorityGet(pollTaskHandle)); 
   }
+
+  TaskHandle_t getAutoPollTask(){return(pollTaskHandle);}
 
   Span& setTimeServerTimeout(uint32_t tSec){webLog.waitTime=tSec*1000;return(*this);}    // sets wait time (in seconds) for optional web log time server to connect
  
