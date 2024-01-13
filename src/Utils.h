@@ -110,6 +110,8 @@ typedef uint16_t touch_value_t;
 #endif
 
 class PushButton{
+
+  friend class Span;
   
   int status;
   int toggleStatus;

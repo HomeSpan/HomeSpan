@@ -298,19 +298,23 @@ class Span{
   boolean updateDatabase(boolean updateMDNS=true);   // updates HAP Configuration Number and Loop vector; if updateMDNS=true and config number has changed, re-broadcasts MDNS 'c#' record; returns true if config number changed
   boolean deleteAccessory(uint32_t aid);             // deletes Accessory with matching aid; returns true if found, else returns false 
 
-  Span& setControlPin(uint8_t pin){controlButton=new PushButton(pin);return(*this);}     // sets Control Pin   
-  Span& setStatusPin(uint8_t pin){statusDevice=new GenericLED(pin);return(*this);}       // sets Status Device to a simple LED on specified pin
-  Span& setStatusAutoOff(uint16_t duration){autoOffLED=duration;return(*this);}          // sets Status LED auto off (seconds)  
-  int getStatusPin(){return(statusLED->getPin());}                                       // get Status Pin (getPin will return -1 if underlying statusDevice is undefined)
+  Span& setControlPin(uint8_t pin, PushButton::triggerType_t triggerType=PushButton::TRIGGER_ON_LOW){            // sets Control Pin, with optional trigger type   
+    controlButton=new PushButton(pin, triggerType);
+    return(*this);
+    }
+    
   int getControlPin(){return(controlButton?controlButton->getPin():-1);}                 // get Control Pin (returns -1 if undefined)
-  
-  Span& setStatusPixel(uint8_t pin,float h=0,float s=100,float v=100){     // sets Status Device to an RGB Pixel on specified pin
+
+  Span& setStatusPin(uint8_t pin){statusDevice=new GenericLED(pin);return(*this);}       // sets Status Device to a simple LED on specified pin
+  Span& setStatusPixel(uint8_t pin,float h=0,float s=100,float v=100){                   // sets Status Device to an RGB Pixel on specified pin
     statusDevice=((new Pixel(pin))->setOnColor(Pixel::HSV(h,s,v)));
     return(*this);
   }
-
-  Span& setStatusDevice(Blinkable *sDev){statusDevice=sDev;return(*this);}
-  void refreshStatusDevice(){if(statusLED)statusLED->refresh();}
+  Span& setStatusDevice(Blinkable *sDev){statusDevice=sDev;return(*this);}               // sets Status Device to a generic Blinkable object
+  
+  Span& setStatusAutoOff(uint16_t duration){autoOffLED=duration;return(*this);}          // sets Status LED auto off (seconds)  
+  int getStatusPin(){return(statusLED->getPin());}                                       // get Status Pin (returns -1 if undefined)
+  void refreshStatusDevice(){if(statusLED)statusLED->refresh();}                         // refreshes state of Status LED
 
   Span& setApSSID(const char *ssid){network.apSSID=ssid;return(*this);}                  // sets Access Point SSID
   Span& setApPassword(const char *pwd){network.apPassword=pwd;return(*this);}            // sets Access Point Password
