@@ -29,19 +29,31 @@ At runtime HomeSpan will create a global **object** named `homeSpan` (of type *c
 The following **optional** `homeSpan` methods override various HomeSpan initialization parameters used in `begin()`, and therefore **should** be called before `begin()` to take effect.
 Methods with a return type of `Span&` return a reference to `homeSpan` itself and can thus be chained together (e.g. `homeSpan.setControlPin(21).setStatusPin(13);`).  If a method is *not* called, HomeSpan uses the default parameter indicated below:
 
-* `Span& setControlPin(uint8_t pin)`
-  * sets the ESP32 pin to use for the HomeSpan Control Button (which must connect the specified pin to **ground** when pushed).  If not specified, HomeSpan will assume there is no Control Button
+* `Span& setControlPin(uint8_t pin, triggerType=PushButton::TRIGGER_ON_LOW)`
+  * sets the ESP32 *pin* to use for the HomeSpan Control Button
+  * if this method is not called, HomeSpan will assume there is no Control Button
+  * the optional second argument, *triggerType*, configures the Control Button as follows:
+    * `PushButton::TRIGGER_ON_LOW`
+      * triggers when *pin* is driven LOW
+      * suitable for buttons that connect *pin* to GROUND (this is the default when *triggerType* is not specified)
+    * `PushButton::TRIGGER_ON_HIGH`
+      * triggers when *pin* is driven HIGH
+      * suitable for buttons that connect *pin* to VCC (typically 3.3V)
+    * `PushButton::TRIGGER_ON_TOUCH`
+      * uses the device's touch-sensor peripheral to trigger when a sensor attached to *pin* has been touched
+      * not available on ESP32-C3
+  * as an alternative, you can set *triggerType* to any user-defined function of the form `boolean(int arg)` to utilize any device as a Control Button.  See **SpanButton** below for details
 
 * `int getControlPin()`
    * returns the pin number of the HomeSpan Control Button as set by `setControlPin(pin)`, or -1 if no pin has been set
   
 * `Span& setStatusPin(uint8_t pin)`
-  * sets the ESP32 pin to use for the HomeSpan Status LED
+  * sets the ESP32 *pin* to use for the HomeSpan Status LED
   * assumes a standard LED will be connected to *pin*
   * if neither this method nor any equivalent method is called, HomeSpan will assume there is no Status LED
   
 * `Span& setStatusPixel(uint8_t pin, float h=0, float s=100, float v=100)`
-  * sets the ESP32 pin to use for the HomeSpan Status LED
+  * sets the ESP32 *pin* to use for the HomeSpan Status LED
   * this method is an *alternative* to using `setStatusPin()` above
   * assumes an RGB NeoPixel (or equivalent) will be connected to *pin*
   * works well with ESP32 boards that have a built-in NeoPixel LED, though adding an external NeoPixel is fine
