@@ -1,6 +1,6 @@
 # HomeSpan Tutorials
 
-The HomeSpan library includes 16 tutorial sketches of increasing complexity that take you through all the functions and features of HomeSpan.  The sketches are extensively annotated, and you'll even learn a lot about HomeKit itself by working through all the examples.  If you've already loaded HomeSpan into your Arduino IDE, the tutorials will be found under *File → Examples → HomeSpan*.  Each sketch is ready to be compiled and uploaded to your ESP32 device so you can see them in action.  Alternatively, you can explore just the code within GitHub by clicking on any of titles below.  Note: you may want to first read through the [HomeSpan API Overview](Overview.md) before exploring the tutorials.  They will probably make a lot more sense if you do!
+The HomeSpan library includes many tutorial sketches of increasing complexity that take you through all the functions and features of HomeSpan.  The sketches are extensively annotated, and you'll even learn a lot about HomeKit itself by working through all the examples.  If you've already loaded HomeSpan into your Arduino IDE, the tutorials will be found under *File → Examples → HomeSpan*.  Each sketch is ready to be compiled and uploaded to your ESP32 device so you can see them in action.  Alternatively, you can explore just the code within GitHub by clicking on any of titles below.  Note: you may want to first read through the [HomeSpan API Overview](Overview.md) before exploring the tutorials.  They will probably make a lot more sense if you do!
 
 > :heavy_check_mark: Each example is designed to be operated after pairing your ESP32 to HomeKit so you can control HomeSpan from the Home App on your iPhone, iPad, or Mac.  In principle, once you configure and pair your device to HomeKit, your Home App should automatically reflect all changes in your configuration whenever you upload a different tutorial.  However, in practice this is not always the case as it seems HomeKit sometimes caches information about devices, which means what you see in your Home App may not be fully in sync with your sketch.  If this occurs, unpairing and then re-pairing the ESP32 device usually fixes the issue.  If not, you may have to reset the ID on the ESP32 device so that HomeKit thinks it is a new device and will not use any cached data.  This is very easy to do - see the [HomeSpan Command-Line Interface (CLI)](CLI.md) page for details.
 
@@ -140,6 +140,9 @@ Demonstrates how the *LedPin* class can use the ESP32's built-in fading control 
 
 ### [MotorizedWindowShade](../examples/Other%20Examples/MotorizedWindowShade)
 Demonstrates how to use the *StepperControl* class to operate a stepper motor.  Implements a motorized window shade based on [Example&nbsp;13](../examples/13-TargetStates) above. See the [Stepper Motor Control](Stepper.md) page for full details
+
+### [CustomNVSPartition](../examples/Other%20Examples/CustomNVSPartition)
+Demonstrates how to create a Custom Partition Scheme for your sketch by adding a *partitions.csv* file to your sketch folder.  Can be used to expand the size of the non-volatile-storage (NVS) partition, which may be needed when creating a HomeSpan device with many Accessories whose Characteristics you want to save in NVS
 
 ---
 
