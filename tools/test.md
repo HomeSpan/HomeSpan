@@ -1,0 +1,357 @@
+### AccessoryInformation
+* Required:
+  * Identify
+* Optional:
+  * FirmwareRevision
+  * Manufacturer
+  * Model
+  * Name
+  * SerialNumber
+  * HardwareRevision
+  * AccessoryFlags
+### AirPurifier
+* Required:
+  * Active
+  * CurrentAirPurifierState
+  * TargetAirPurifierState
+* Optional:
+  * Name
+  * RotationSpeed
+  * SwingMode
+  * LockPhysicalControls
+### AirQualitySensor
+* Required:
+  * AirQuality
+* Optional:
+  * Name
+  * OzoneDensity
+  * NitrogenDioxideDensity
+  * SulphurDioxideDensity
+  * PM25Density
+  * PM10Density
+  * VOCDensity
+  * StatusActive
+  * StatusFault
+  * StatusTampered
+  * StatusLowBattery
+### BatteryService
+* Required:
+  * BatteryLevel
+  * ChargingState
+  * StatusLowBattery
+* Optional:
+  * Name
+### CarbonDioxideSensor
+* Required:
+  * CarbonDioxideDetected
+* Optional:
+  * Name
+  * StatusActive
+  * StatusFault
+  * StatusTampered
+  * StatusLowBattery
+  * CarbonDioxideLevel
+  * CarbonDioxidePeakLevel
+### CarbonMonoxideSensor
+* Required:
+  * CarbonMonoxideDetected
+* Optional:
+  * Name
+  * StatusActive
+  * StatusFault
+  * StatusTampered
+  * StatusLowBattery
+  * CarbonMonoxideLevel
+  * CarbonMonoxidePeakLevel
+### ContactSensor
+* Required:
+  * ContactSensorState
+* Optional:
+  * Name
+  * StatusActive
+  * StatusFault
+  * StatusTampered
+  * StatusLowBattery
+### Door
+* Required:
+  * CurrentPosition
+  * TargetPosition
+  * PositionState
+* Optional:
+  * Name
+  * HoldPosition
+  * ObstructionDetected
+### Doorbell
+* Required:
+  * ProgrammableSwitchEvent
+* Optional:
+  * Name
+  * Volume
+  * Brightness
+### Fan
+* Required:
+  * Active
+* Optional:
+  * Name
+  * CurrentFanState
+  * TargetFanState
+  * RotationDirection
+  * RotationSpeed
+  * SwingMode
+  * LockPhysicalControls
+### Faucet
+* Required:
+  * Active
+* Optional:
+  * StatusFault
+  * Name
+### FilterMaintenance
+* Required:
+  * FilterChangeIndication
+* Optional:
+  * Name
+  * FilterLifeLevel
+  * ResetFilterIndication
+### GarageDoorOpener
+* Required:
+  * CurrentDoorState
+  * TargetDoorState
+  * ObstructionDetected
+* Optional:
+  * LockCurrentState
+  * LockTargetState
+  * Name
+### HAPProtocolInformation
+* Required:
+  * Version
+### HeaterCooler
+* Required:
+  * Active
+  * CurrentTemperature
+  * CurrentHeaterCoolerState
+  * TargetHeaterCoolerState
+* Optional:
+  * Name
+  * RotationSpeed
+  * TemperatureDisplayUnits
+  * SwingMode
+  * CoolingThresholdTemperature
+  * HeatingThresholdTemperature
+  * LockPhysicalControls
+### HumidifierDehumidifier
+* Required:
+  * Active
+  * CurrentRelativeHumidity
+  * CurrentHumidifierDehumidifierState
+  * TargetHumidifierDehumidifierState
+* Optional:
+  * Name
+  * RelativeHumidityDehumidifierThreshold
+  * RelativeHumidityHumidifierThreshold
+  * RotationSpeed
+  * SwingMode
+  * WaterLevel
+  * LockPhysicalControls
+### HumiditySensor
+* Required:
+  * CurrentRelativeHumidity
+* Optional:
+  * Name
+  * StatusActive
+  * StatusFault
+  * StatusTampered
+  * StatusLowBattery
+### InputSource
+* Optional:
+  * ConfiguredName
+  * IsConfigured
+* Required:
+  * Identifier
+  * CurrentVisibilityState
+  * TargetVisibilityState
+### IrrigationSystem
+* Required:
+  * Active
+  * ProgramMode
+  * InUse
+* Optional:
+  * RemainingDuration
+  * StatusFault
+### LeakSensor
+* Required:
+  * LeakDetected
+* Optional:
+  * Name
+  * StatusActive
+  * StatusFault
+  * StatusTampered
+  * StatusLowBattery
+### LightBulb
+* Required:
+  * On
+* Optional:
+  * Brightness
+  * Hue
+  * Name
+  * Saturation
+  * ColorTemperature
+### LightSensor
+* Required:
+  * CurrentAmbientLightLevel
+* Optional:
+  * Name
+  * StatusActive
+  * StatusFault
+  * StatusTampered
+  * StatusLowBattery
+### LockMechanism
+* Required:
+  * LockCurrentState
+  * LockTargetState
+* Optional:
+  * Name
+### Microphone
+* Required:
+  * Mute
+* Optional:
+  * Name
+  * Volume
+### MotionSensor
+* Required:
+  * MotionDetected
+* Optional:
+  * Name
+  * StatusActive
+  * StatusFault
+  * StatusTampered
+  * StatusLowBattery
+### OccupancySensor
+* Required:
+  * OccupancyDetected
+* Optional:
+  * Name
+  * StatusActive
+  * StatusFault
+  * StatusTampered
+  * StatusLowBattery
+### Outlet
+* Required:
+  * On
+  * OutletInUse
+* Optional:
+  * Name
+### SecuritySystem
+* Required:
+  * SecuritySystemCurrentState
+  * SecuritySystemTargetState
+* Optional:
+  * Name
+  * SecuritySystemAlarmType
+  * StatusFault
+  * StatusTampered
+### ServiceLabel
+* Required:
+  * ServiceLabelNamespace
+### Slat
+* Required:
+  * CurrentSlatState
+  * SlatType
+* Optional:
+  * Name
+  * SwingMode
+  * CurrentTiltAngle
+  * TargetTiltAngle
+### SmokeSensor
+* Required:
+  * SmokeDetected
+* Optional:
+  * Name
+  * StatusActive
+  * StatusFault
+  * StatusTampered
+  * StatusLowBattery
+### Speaker
+* Required:
+  * Mute
+* Optional:
+  * Name
+  * Volume
+### StatelessProgrammableSwitch
+* Required:
+  * ProgrammableSwitchEvent
+* Optional:
+  * Name
+  * ServiceLabelIndex
+### Switch
+* Required:
+  * On
+* Optional:
+  * Name
+### Television
+* Required:
+  * Active
+* Optional:
+  * ConfiguredName
+  * ActiveIdentifier
+  * RemoteKey
+  * PowerModeSelection
+### TelevisionSpeaker
+* Required:
+  * VolumeControlType
+  * VolumeSelector
+### TemperatureSensor
+* Required:
+  * CurrentTemperature
+* Optional:
+  * Name
+  * StatusActive
+  * StatusFault
+  * StatusTampered
+  * StatusLowBattery
+### Thermostat
+* Required:
+  * CurrentHeatingCoolingState
+  * TargetHeatingCoolingState
+  * CurrentTemperature
+  * TargetTemperature
+  * TemperatureDisplayUnits
+* Optional:
+  * CoolingThresholdTemperature
+  * CurrentRelativeHumidity
+  * HeatingThresholdTemperature
+  * Name
+  * TargetRelativeHumidity
+### Valve
+* Required:
+  * Active
+  * InUse
+  * ValveType
+* Optional:
+  * SetDuration
+  * RemainingDuration
+  * IsConfigured
+  * ServiceLabelIndex
+  * StatusFault
+  * Name
+### Window
+* Required:
+  * CurrentPosition
+  * TargetPosition
+  * PositionState
+* Optional:
+  * Name
+  * HoldPosition
+  * ObstructionDetected
+### WindowCovering
+* Required:
+  * TargetPosition
+  * CurrentPosition
+  * PositionState
+* Optional:
+  * Name
+  * HoldPosition
+  * CurrentHorizontalTiltAngle
+  * TargetHorizontalTiltAngle
+  * CurrentVerticalTiltAngle
+  * TargetVerticalTiltAngle
+  * ObstructionDetected

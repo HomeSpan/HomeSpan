@@ -1,0 +1,35 @@
+#!/usr/bin/awk -f
+
+BEGIN {
+
+	while(getline < "../src/Span.h"){
+
+		gsub("^[ ]+","")								# strip out any leading spaces
+		split($0,x,"[,();]+")						# split line into separate words
+
+		if(x[1]=="CREATE_SERV"){
+			service=x[2]
+			print "### " service	
+		}
+
+  	else if(x[1]=="REQ"){
+			characteristic=x[2]
+			if(req[service]!=1){
+				print "* Required:"
+				req[service]=1
+			}
+			print "  * " characteristic
+		}
+
+  	else if(x[1]=="OPT"){
+			characteristic=x[2]
+			if(opt[service]!=1){
+				print "* Optional:"
+				opt[service]=1
+			}
+			print "  * " characteristic
+		}
+
+	}
+		
+}
