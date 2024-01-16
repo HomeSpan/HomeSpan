@@ -33,14 +33,11 @@ Methods with a return type of `Span&` return a reference to `homeSpan` itself an
   * sets the ESP32 *pin* to use for the HomeSpan Control Button
   * if this method is not called, HomeSpan will assume there is no Control Button
   * the optional second argument, *triggerType*, configures the Control Button as follows:
-    * `PushButton::TRIGGER_ON_LOW`
-      * triggers when *pin* is driven LOW
+    * `PushButton::TRIGGER_ON_LOW` - triggers when *pin* is driven LOW
       * suitable for buttons that connect *pin* to GROUND (this is the default when *triggerType* is not specified)
-    * `PushButton::TRIGGER_ON_HIGH`
-      * triggers when *pin* is driven HIGH
+    * `PushButton::TRIGGER_ON_HIGH` - triggers when *pin* is driven HIGH
       * suitable for buttons that connect *pin* to VCC (typically 3.3V)
-    * `PushButton::TRIGGER_ON_TOUCH`
-      * uses the device's touch-sensor peripheral to trigger when a sensor attached to *pin* has been touched
+    * `PushButton::TRIGGER_ON_TOUCH` - uses the device's touch-sensor peripheral to trigger when *pin* has been touched
       * not available on ESP32-C3
   * as an alternative, you can set *triggerType* to any user-defined function of the form `boolean(int arg)` to utilize any device as a Control Button.  See **SpanButton** below for details
 
