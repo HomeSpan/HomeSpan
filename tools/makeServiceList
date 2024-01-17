@@ -2,34 +2,43 @@
 
 BEGIN {
 
+	nServs=0
+
 	while(getline < "../src/Span.h"){
 
 		gsub("^[ ]+","")								# strip out any leading spaces
-		split($0,x,"[,();]+")						# split line into separate words
+		n=split($0,x,"[,();]+")					# split line into separate words
 
 		if(x[1]=="CREATE_SERV"){
-			service=x[2]
-			print "### " service	
+			currentService=x[2]
+			services[nServs++]=currentService
+			nReqs[currentService]=0
+			nOpts[currentService]=0
 		}
 
-  	else if(x[1]=="REQ"){
-			characteristic=x[2]
-			if(req[service]!=1){
-				print "* Required:"
-				req[service]=1
-			}
-			print "  * " characteristic
-		}
+  	else if(x[1]=="REQ")
+			reqs[currentService,nReqs[currentService]++]=x[2]
 
-  	else if(x[1]=="OPT"){
-			characteristic=x[2]
-			if(opt[service]!=1){
-				print "* Optional:"
-				opt[service]=1
-			}
-			print "  * " characteristic
+  	else if(x[1]=="OPT")
+			opts[currentService,nOpts[currentService]++]=x[2]
+
+		else if(x[1]=="CREATE_CHAR"){
+			for(i=2;i<n;i++)
+				printf("%s ",x[i])
+			printf("\n")
 		}
 
 	}
+
+	for(i=0;i<nServs;i++){
+		s=services[i]
+		print s
+		for(j=0;j<nReqs[s];j++)
+			print "  REQ:" reqs[s,j]
+		for(j=0;j<nOpts[s];j++)
+			print "  OPT:" opts[s,j]
+	}
 		
 }
+
+
