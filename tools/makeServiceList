@@ -2,9 +2,12 @@
 
 BEGIN {
 
+	servicesFile = "../src/Span.h"
+	charsFile = "../src/Characteristics.h"
+
 	nServs=0
 
-	while(getline < "../src/Span.h"){
+	while(getline < servicesFile ){
 
 		gsub("^[ ]+","")								# strip out any leading spaces
 		n=split($0,x,"[,();]+")					# split line into separate words
@@ -23,9 +26,13 @@ BEGIN {
 			opts[currentService,nOpts[currentService]++]=x[2]
 
 		else if(x[1]=="CREATE_CHAR"){
-			for(i=2;i<n;i++)
-				printf("%s ",x[i])
-			printf("\n")
+			char=x[3]
+			default[char]=x[4]
+			min[char]=x[5]
+			max[char]=x[6]
+			nVals[char]=n-6							# number of pre-defined constants
+			for(i=0;i<nVals[char];i++)
+				vals[char,i]=x[i+7]
 		}
 
 	}
@@ -33,10 +40,15 @@ BEGIN {
 	for(i=0;i<nServs;i++){
 		s=services[i]
 		print s
-		for(j=0;j<nReqs[s];j++)
+		for(j=0;j<nReqs[s];j++){
 			print "  REQ:" reqs[s,j]
-		for(j=0;j<nOpts[s];j++)
+			print default[reqs[s,j]], min[reqs[s,j]], max[reqs[s,j]]
+			for(k=0;k<nVals[reqs[s,j]];k++)
+				print vals[reqs[s,j],k]
+		}
+		for(j=0;j<nOpts[s];j++){
 			print "  OPT:" opts[s,j]
+		}
 	}
 		
 }
