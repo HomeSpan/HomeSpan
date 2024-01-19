@@ -51,7 +51,7 @@ BEGIN {
 			char=x[2]
 			uuid[char]=x[3]
 			perms[char]=x[4]
-			format[char]=x[5]
+			format[char]=tolower(x[5])
 			static[char]=x[6]
 		}
 
@@ -70,10 +70,11 @@ BEGIN {
 			printf("<td align=\"center\">%s</td>",uuid[char])
 			printf("<td align=\"center\">%s</td>",format[char])
 			printf("<td align=\"center\">%s</td>",perms[char])
-			if(format[char]=="STRING")
-				printf("<td colspan=2>(max 64 characters)</td>")
-			else
+
+			if(format[char]!="STRING")
 				printf("<td align=\"center\">%s</td><td align=\"center\">%s</td>",min[char],max[char])
+			else
+				printf("<td align=\"center\">-</td><td align=\"center\">-</td>")
 
 			printf("<td>")
 			for(k=0;k<nVals[char];k++){
