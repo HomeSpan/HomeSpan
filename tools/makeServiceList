@@ -10,7 +10,8 @@ BEGIN {
 	while(getline < servicesFile ){
 
 		gsub("^[ ]+","")								# strip out any leading spaces
-		n=split($0,x,"[,(); ]+")				# split line into separate words
+		n=split($0,x,"[,();]+")				# split line into separate words
+		print n,$0
 
 		if(x[1]=="CREATE_SERV"){
 			currentService=x[2]
@@ -59,15 +60,32 @@ BEGIN {
 
 	for(i=0;i<nServs;i++){
 		s=services[i]
-		printf("<details><summary>%s (%s)></summary><br><table>\n",s,uuid[s])
-		printf("<tr><td><i>Characteristic (UUID)</td><td><i>Format</td></tr>\n")
+		printf("<details><summary>%s (%s)</summary><br><table>\n",s,uuid[s])
+		printf("<tr><td><i>Characteristic (UUID)</td><td><i>Format</td><td><i>Perms</td><td><i>Values</td></tr>\n")
 		for(j=0;j<nChars[s];j++){
 			char=servChars[s,j]
 			printf("<tr>")
 			printf("<td>%s%s (%s)%s</td>",servReq[s,j]?"<b>":"",char,uuid[char],servReq[s,j]?"</b>":"")
 			printf("<td>%s</td>",format[char])
-			#for(k=0;k<nVals[reqs[s,j]];k++)
-				#print vals[reqs[s,j],k]
+			printf("<td>%s</td>",perms[char])
+			printf("*** %s ***",nVals[char])
+			if(format[char]=="STRING"){
+				printf("<td>(max 64 characters)</td>")
+			}
+			else if(format[char]=="BOOL"){
+				printf("<td>false (0)<br>true (1)</td>")
+			}
+			else if(nVals[char]==0){
+				printf("HELLO<td>%g-%g</td>",min[char],max[char])
+			}
+			else {
+				printf("<td>")
+				for(k=0;k<nVals[char];k++){
+					printf("%s",vals[char,k])
+					if(k+1!=nVals[char])
+						printf("<br>")
+				}
+			}
 			printf("</tr>\n")
 		}
 		print "</table><br></details>"
