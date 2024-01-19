@@ -10,11 +10,12 @@ BEGIN {
 	while(getline < servicesFile ){
 
 		gsub("^[ ]+","")								# strip out any leading spaces
-		n=split($0,x,"[,();]+")					# split line into separate words
+		n=split($0,x,"[,(); ]+")				# split line into separate words
 
 		if(x[1]=="CREATE_SERV"){
 			currentService=x[2]
 			services[nServs++]=currentService
+			uuid[currentService]=x[3]
 			nReqs[currentService]=0
 			nOpts[currentService]=0
 		}
@@ -35,11 +36,31 @@ BEGIN {
 				vals[char,i]=x[i+7]
 		}
 
+	} 
+
+	close(servicesFile)
+
+	while(getline < charsFile){
+
+		gsub("^[ ]+","")								# strip out any leading spaces
+		n=split($0,x,"[,(); ]+")				# split line into separate words
+
+		if(x[1]=="HAPCHAR"){
+			char=x[2]
+			uuid[char]=x[3]
+			perms[char]=x[4]
+			format[char]=x[5]
+			static[char]=x[6]
+		}
+
 	}
+
+	close(charsFile)
+	
 
 	for(i=0;i<nServs;i++){
 		s=services[i]
-		print s
+		printf("<detail><summary>%s (%s)</summary>\n",s,uuid[s])
 		for(j=0;j<nReqs[s];j++){
 			print "  REQ:" reqs[s,j]
 			print default[reqs[s,j]], min[reqs[s,j]], max[reqs[s,j]]
@@ -49,6 +70,7 @@ BEGIN {
 		for(j=0;j<nOpts[s];j++){
 			print "  OPT:" opts[s,j]
 		}
+		print "</detail>"
 	}
 		
 }
