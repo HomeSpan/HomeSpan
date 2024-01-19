@@ -62,18 +62,19 @@ BEGIN {
 	for(i=0;i<nServs;i++){
 		s=services[i]
 		printf("<details><summary>%s (%s)</summary><br><table>\n",s,uuid[s])
-		printf("<tr><td><i>Characteristic (UUID)</td><td><i>Format</td><td><i>Perms</td><td><i>Values</td></tr>\n")
+		printf("<tr><th>Characteristic</th<th>UUID</th><th>Format</th><th>Perms</th><th>Values</th></tr>\n")
 		for(j=0;j<nChars[s];j++){
 			char=servChars[s,j]
 			printf("<tr>")
-			printf("<td>%s%s (%s)%s</td>",servReq[s,j]?"<b>":"",char,uuid[char],servReq[s,j]?"</b>":"")
+			printf("<td>%s%s</td>",char,servReq[s,j]?" *":"")
+			printf("<td>%s</td>",uuid[char])
 			printf("<td>%s</td>",format[char])
 			printf("<td>%s</td>",perms[char])
 			if(format[char]=="STRING"){
 				printf("<td>(max 64 characters)</td>")
 			}
 			else if(format[char]=="BOOL"){
-				printf("<td>false (0)<br>true (1)</td>")
+				printf("<td>false (0) / true (1)</td>")
 			}
 			else if(nVals[char]==0){
 				printf("<td>%s-%s</td>",min[char],max[char])
@@ -81,7 +82,7 @@ BEGIN {
 			else {
 				printf("<td>")
 				for(k=0;k<nVals[char];k++){
-					printf("%s",vals[char,k])
+					printf("%s (%d)",vals[char,k],k)
 					if(k+1!=nVals[char])
 						printf("<br>")
 				}
