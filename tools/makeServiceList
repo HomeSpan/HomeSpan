@@ -59,11 +59,13 @@ BEGIN {
 
 	for(i=0;i<nServs;i++){
 		s=services[i]
-		printf("<details><summary>%s (%s)</summary>\n",s,uuid[s])
-		printf("<table>\n")
+		printf("<details><summary>%s (%s)</summary><table>\n",s,uuid[s])
+		printf("<tr><td>Characteristic</td><td>Format></td>\n")
 		for(j=0;j<nChars[s];j++){
 			char=servChars[s,j]
-			printf("<tr><td>%s%s%s</td>",servReq[s,j]?"<b>":"",char,servReq[s,j]?"</b>":"")
+			printf("<tr>")
+			printf("<td>%s%s (%s)%s</td>",servReq[s,j]?"<b>":"",char,uuid[char],servReq[s,j]?"</b>":"")
+			printf("<td>%s</td>",format[char])
 			#for(k=0;k<nVals[reqs[s,j]];k++)
 				#print vals[reqs[s,j],k]
 			printf("</tr>\n")

@@ -1,360 +1,360 @@
-<details><summary>AccessoryInformation (3E)</summary>
-<table>
-<tr><td><b>Identify</b></td></tr>
-<tr><td>FirmwareRevision</td></tr>
-<tr><td>Manufacturer</td></tr>
-<tr><td>Model</td></tr>
-<tr><td>Name</td></tr>
-<tr><td>SerialNumber</td></tr>
-<tr><td>HardwareRevision</td></tr>
-<tr><td>AccessoryFlags</td></tr>
+<details><summary>AccessoryInformation (3E)</summary><table>
+<tr><td>Characteristic</td><td>Format></td>
+<tr><td><b>Identify (14)</b></td><td>BOOL</td></tr>
+<tr><td>FirmwareRevision (52)</td><td>STRING</td></tr>
+<tr><td>Manufacturer (20)</td><td>STRING</td></tr>
+<tr><td>Model (21)</td><td>STRING</td></tr>
+<tr><td>Name (23)</td><td>STRING</td></tr>
+<tr><td>SerialNumber (30)</td><td>STRING</td></tr>
+<tr><td>HardwareRevision (53)</td><td>STRING</td></tr>
+<tr><td>AccessoryFlags (A6)</td><td>UINT32</td></tr>
 </table></details>
-<details><summary>AirPurifier (BB)</summary>
-<table>
-<tr><td><b>Active</b></td></tr>
-<tr><td><b>CurrentAirPurifierState</b></td></tr>
-<tr><td><b>TargetAirPurifierState</b></td></tr>
-<tr><td>Name</td></tr>
-<tr><td>RotationSpeed</td></tr>
-<tr><td>SwingMode</td></tr>
-<tr><td>LockPhysicalControls</td></tr>
+<details><summary>AirPurifier (BB)</summary><table>
+<tr><td>Characteristic</td><td>Format></td>
+<tr><td><b>Active (B0)</b></td><td>UINT8</td></tr>
+<tr><td><b>CurrentAirPurifierState (A9)</b></td><td>UINT8</td></tr>
+<tr><td><b>TargetAirPurifierState (A8)</b></td><td>UINT8</td></tr>
+<tr><td>Name (23)</td><td>STRING</td></tr>
+<tr><td>RotationSpeed (29)</td><td>FLOAT</td></tr>
+<tr><td>SwingMode (B6)</td><td>UINT8</td></tr>
+<tr><td>LockPhysicalControls (A7)</td><td>UINT8</td></tr>
 </table></details>
-<details><summary>AirQualitySensor (8D)</summary>
-<table>
-<tr><td><b>AirQuality</b></td></tr>
-<tr><td>Name</td></tr>
-<tr><td>OzoneDensity</td></tr>
-<tr><td>NitrogenDioxideDensity</td></tr>
-<tr><td>SulphurDioxideDensity</td></tr>
-<tr><td>PM25Density</td></tr>
-<tr><td>PM10Density</td></tr>
-<tr><td>VOCDensity</td></tr>
-<tr><td>StatusActive</td></tr>
-<tr><td>StatusFault</td></tr>
-<tr><td>StatusTampered</td></tr>
-<tr><td>StatusLowBattery</td></tr>
+<details><summary>AirQualitySensor (8D)</summary><table>
+<tr><td>Characteristic</td><td>Format></td>
+<tr><td><b>AirQuality (95)</b></td><td>UINT8</td></tr>
+<tr><td>Name (23)</td><td>STRING</td></tr>
+<tr><td>OzoneDensity (C3)</td><td>FLOAT</td></tr>
+<tr><td>NitrogenDioxideDensity (C4)</td><td>FLOAT</td></tr>
+<tr><td>SulphurDioxideDensity (C5)</td><td>FLOAT</td></tr>
+<tr><td>PM25Density (C6)</td><td>FLOAT</td></tr>
+<tr><td>PM10Density (C7)</td><td>FLOAT</td></tr>
+<tr><td>VOCDensity (C8)</td><td>FLOAT</td></tr>
+<tr><td>StatusActive (75)</td><td>BOOL</td></tr>
+<tr><td>StatusFault (77)</td><td>UINT8</td></tr>
+<tr><td>StatusTampered (7A)</td><td>UINT8</td></tr>
+<tr><td>StatusLowBattery (79)</td><td>UINT8</td></tr>
 </table></details>
-<details><summary>BatteryService (96)</summary>
-<table>
-<tr><td><b>BatteryLevel</b></td></tr>
-<tr><td><b>ChargingState</b></td></tr>
-<tr><td><b>StatusLowBattery</b></td></tr>
-<tr><td>Name</td></tr>
+<details><summary>BatteryService (96)</summary><table>
+<tr><td>Characteristic</td><td>Format></td>
+<tr><td><b>BatteryLevel (68)</b></td><td>UINT8</td></tr>
+<tr><td><b>ChargingState (8F)</b></td><td>UINT8</td></tr>
+<tr><td><b>StatusLowBattery (79)</b></td><td>UINT8</td></tr>
+<tr><td>Name (23)</td><td>STRING</td></tr>
 </table></details>
-<details><summary>CarbonDioxideSensor (97)</summary>
-<table>
-<tr><td><b>CarbonDioxideDetected</b></td></tr>
-<tr><td>Name</td></tr>
-<tr><td>StatusActive</td></tr>
-<tr><td>StatusFault</td></tr>
-<tr><td>StatusTampered</td></tr>
-<tr><td>StatusLowBattery</td></tr>
-<tr><td>CarbonDioxideLevel</td></tr>
-<tr><td>CarbonDioxidePeakLevel</td></tr>
+<details><summary>CarbonDioxideSensor (97)</summary><table>
+<tr><td>Characteristic</td><td>Format></td>
+<tr><td><b>CarbonDioxideDetected (92)</b></td><td>UINT8</td></tr>
+<tr><td>Name (23)</td><td>STRING</td></tr>
+<tr><td>StatusActive (75)</td><td>BOOL</td></tr>
+<tr><td>StatusFault (77)</td><td>UINT8</td></tr>
+<tr><td>StatusTampered (7A)</td><td>UINT8</td></tr>
+<tr><td>StatusLowBattery (79)</td><td>UINT8</td></tr>
+<tr><td>CarbonDioxideLevel (93)</td><td>FLOAT</td></tr>
+<tr><td>CarbonDioxidePeakLevel (94)</td><td>FLOAT</td></tr>
 </table></details>
-<details><summary>CarbonMonoxideSensor (7F)</summary>
-<table>
-<tr><td><b>CarbonMonoxideDetected</b></td></tr>
-<tr><td>Name</td></tr>
-<tr><td>StatusActive</td></tr>
-<tr><td>StatusFault</td></tr>
-<tr><td>StatusTampered</td></tr>
-<tr><td>StatusLowBattery</td></tr>
-<tr><td>CarbonMonoxideLevel</td></tr>
-<tr><td>CarbonMonoxidePeakLevel</td></tr>
+<details><summary>CarbonMonoxideSensor (7F)</summary><table>
+<tr><td>Characteristic</td><td>Format></td>
+<tr><td><b>CarbonMonoxideDetected (69)</b></td><td>UINT8</td></tr>
+<tr><td>Name (23)</td><td>STRING</td></tr>
+<tr><td>StatusActive (75)</td><td>BOOL</td></tr>
+<tr><td>StatusFault (77)</td><td>UINT8</td></tr>
+<tr><td>StatusTampered (7A)</td><td>UINT8</td></tr>
+<tr><td>StatusLowBattery (79)</td><td>UINT8</td></tr>
+<tr><td>CarbonMonoxideLevel (90)</td><td>FLOAT</td></tr>
+<tr><td>CarbonMonoxidePeakLevel (91)</td><td>FLOAT</td></tr>
 </table></details>
-<details><summary>ContactSensor (80)</summary>
-<table>
-<tr><td><b>ContactSensorState</b></td></tr>
-<tr><td>Name</td></tr>
-<tr><td>StatusActive</td></tr>
-<tr><td>StatusFault</td></tr>
-<tr><td>StatusTampered</td></tr>
-<tr><td>StatusLowBattery</td></tr>
+<details><summary>ContactSensor (80)</summary><table>
+<tr><td>Characteristic</td><td>Format></td>
+<tr><td><b>ContactSensorState (6A)</b></td><td>UINT8</td></tr>
+<tr><td>Name (23)</td><td>STRING</td></tr>
+<tr><td>StatusActive (75)</td><td>BOOL</td></tr>
+<tr><td>StatusFault (77)</td><td>UINT8</td></tr>
+<tr><td>StatusTampered (7A)</td><td>UINT8</td></tr>
+<tr><td>StatusLowBattery (79)</td><td>UINT8</td></tr>
 </table></details>
-<details><summary>Door (81)</summary>
-<table>
-<tr><td><b>CurrentPosition</b></td></tr>
-<tr><td><b>TargetPosition</b></td></tr>
-<tr><td><b>PositionState</b></td></tr>
-<tr><td>Name</td></tr>
-<tr><td>HoldPosition</td></tr>
-<tr><td>ObstructionDetected</td></tr>
+<details><summary>Door (81)</summary><table>
+<tr><td>Characteristic</td><td>Format></td>
+<tr><td><b>CurrentPosition (6D)</b></td><td>UINT8</td></tr>
+<tr><td><b>TargetPosition (7C)</b></td><td>UINT8</td></tr>
+<tr><td><b>PositionState (72)</b></td><td>UINT8</td></tr>
+<tr><td>Name (23)</td><td>STRING</td></tr>
+<tr><td>HoldPosition (6F)</td><td>BOOL</td></tr>
+<tr><td>ObstructionDetected (24)</td><td>BOOL</td></tr>
 </table></details>
-<details><summary>Doorbell (121)</summary>
-<table>
-<tr><td><b>ProgrammableSwitchEvent</b></td></tr>
-<tr><td>Name</td></tr>
-<tr><td>Volume</td></tr>
-<tr><td>Brightness</td></tr>
+<details><summary>Doorbell (121)</summary><table>
+<tr><td>Characteristic</td><td>Format></td>
+<tr><td><b>ProgrammableSwitchEvent (73)</b></td><td>UINT8</td></tr>
+<tr><td>Name (23)</td><td>STRING</td></tr>
+<tr><td>Volume (119)</td><td>UINT8</td></tr>
+<tr><td>Brightness (8)</td><td>INT</td></tr>
 </table></details>
-<details><summary>Fan (B7)</summary>
-<table>
-<tr><td><b>Active</b></td></tr>
-<tr><td>Name</td></tr>
-<tr><td>CurrentFanState</td></tr>
-<tr><td>TargetFanState</td></tr>
-<tr><td>RotationDirection</td></tr>
-<tr><td>RotationSpeed</td></tr>
-<tr><td>SwingMode</td></tr>
-<tr><td>LockPhysicalControls</td></tr>
+<details><summary>Fan (B7)</summary><table>
+<tr><td>Characteristic</td><td>Format></td>
+<tr><td><b>Active (B0)</b></td><td>UINT8</td></tr>
+<tr><td>Name (23)</td><td>STRING</td></tr>
+<tr><td>CurrentFanState (AF)</td><td>UINT8</td></tr>
+<tr><td>TargetFanState (BF)</td><td>UINT8</td></tr>
+<tr><td>RotationDirection (28)</td><td>INT</td></tr>
+<tr><td>RotationSpeed (29)</td><td>FLOAT</td></tr>
+<tr><td>SwingMode (B6)</td><td>UINT8</td></tr>
+<tr><td>LockPhysicalControls (A7)</td><td>UINT8</td></tr>
 </table></details>
-<details><summary>Faucet (D7)</summary>
-<table>
-<tr><td><b>Active</b></td></tr>
-<tr><td>StatusFault</td></tr>
-<tr><td>Name</td></tr>
+<details><summary>Faucet (D7)</summary><table>
+<tr><td>Characteristic</td><td>Format></td>
+<tr><td><b>Active (B0)</b></td><td>UINT8</td></tr>
+<tr><td>StatusFault (77)</td><td>UINT8</td></tr>
+<tr><td>Name (23)</td><td>STRING</td></tr>
 </table></details>
-<details><summary>FilterMaintenance (BA)</summary>
-<table>
-<tr><td><b>FilterChangeIndication</b></td></tr>
-<tr><td>Name</td></tr>
-<tr><td>FilterLifeLevel</td></tr>
-<tr><td>ResetFilterIndication</td></tr>
+<details><summary>FilterMaintenance (BA)</summary><table>
+<tr><td>Characteristic</td><td>Format></td>
+<tr><td><b>FilterChangeIndication (AC)</b></td><td>UINT8</td></tr>
+<tr><td>Name (23)</td><td>STRING</td></tr>
+<tr><td>FilterLifeLevel (AB)</td><td>FLOAT</td></tr>
+<tr><td>ResetFilterIndication (AD)</td><td>UINT8</td></tr>
 </table></details>
-<details><summary>GarageDoorOpener (41)</summary>
-<table>
-<tr><td><b>CurrentDoorState</b></td></tr>
-<tr><td><b>TargetDoorState</b></td></tr>
-<tr><td><b>ObstructionDetected</b></td></tr>
-<tr><td>LockCurrentState</td></tr>
-<tr><td>LockTargetState</td></tr>
-<tr><td>Name</td></tr>
+<details><summary>GarageDoorOpener (41)</summary><table>
+<tr><td>Characteristic</td><td>Format></td>
+<tr><td><b>CurrentDoorState (E)</b></td><td>UINT8</td></tr>
+<tr><td><b>TargetDoorState (32)</b></td><td>UINT8</td></tr>
+<tr><td><b>ObstructionDetected (24)</b></td><td>BOOL</td></tr>
+<tr><td>LockCurrentState (1D)</td><td>UINT8</td></tr>
+<tr><td>LockTargetState (1E)</td><td>UINT8</td></tr>
+<tr><td>Name (23)</td><td>STRING</td></tr>
 </table></details>
-<details><summary>HAPProtocolInformation (A2)</summary>
-<table>
-<tr><td><b>Version</b></td></tr>
+<details><summary>HAPProtocolInformation (A2)</summary><table>
+<tr><td>Characteristic</td><td>Format></td>
+<tr><td><b>Version (37)</b></td><td>STRING</td></tr>
 </table></details>
-<details><summary>HeaterCooler (BC)</summary>
-<table>
-<tr><td><b>Active</b></td></tr>
-<tr><td><b>CurrentTemperature</b></td></tr>
-<tr><td><b>CurrentHeaterCoolerState</b></td></tr>
-<tr><td><b>TargetHeaterCoolerState</b></td></tr>
-<tr><td>Name</td></tr>
-<tr><td>RotationSpeed</td></tr>
-<tr><td>TemperatureDisplayUnits</td></tr>
-<tr><td>SwingMode</td></tr>
-<tr><td>CoolingThresholdTemperature</td></tr>
-<tr><td>HeatingThresholdTemperature</td></tr>
-<tr><td>LockPhysicalControls</td></tr>
+<details><summary>HeaterCooler (BC)</summary><table>
+<tr><td>Characteristic</td><td>Format></td>
+<tr><td><b>Active (B0)</b></td><td>UINT8</td></tr>
+<tr><td><b>CurrentTemperature (11)</b></td><td>FLOAT</td></tr>
+<tr><td><b>CurrentHeaterCoolerState (B1)</b></td><td>UINT8</td></tr>
+<tr><td><b>TargetHeaterCoolerState (B2)</b></td><td>UINT8</td></tr>
+<tr><td>Name (23)</td><td>STRING</td></tr>
+<tr><td>RotationSpeed (29)</td><td>FLOAT</td></tr>
+<tr><td>TemperatureDisplayUnits (36)</td><td>UINT8</td></tr>
+<tr><td>SwingMode (B6)</td><td>UINT8</td></tr>
+<tr><td>CoolingThresholdTemperature (D)</td><td>FLOAT</td></tr>
+<tr><td>HeatingThresholdTemperature (12)</td><td>FLOAT</td></tr>
+<tr><td>LockPhysicalControls (A7)</td><td>UINT8</td></tr>
 </table></details>
-<details><summary>HumidifierDehumidifier (BD)</summary>
-<table>
-<tr><td><b>Active</b></td></tr>
-<tr><td><b>CurrentRelativeHumidity</b></td></tr>
-<tr><td><b>CurrentHumidifierDehumidifierState</b></td></tr>
-<tr><td><b>TargetHumidifierDehumidifierState</b></td></tr>
-<tr><td>Name</td></tr>
-<tr><td>RelativeHumidityDehumidifierThreshold</td></tr>
-<tr><td>RelativeHumidityHumidifierThreshold</td></tr>
-<tr><td>RotationSpeed</td></tr>
-<tr><td>SwingMode</td></tr>
-<tr><td>WaterLevel</td></tr>
-<tr><td>LockPhysicalControls</td></tr>
+<details><summary>HumidifierDehumidifier (BD)</summary><table>
+<tr><td>Characteristic</td><td>Format></td>
+<tr><td><b>Active (B0)</b></td><td>UINT8</td></tr>
+<tr><td><b>CurrentRelativeHumidity (10)</b></td><td>FLOAT</td></tr>
+<tr><td><b>CurrentHumidifierDehumidifierState (B3)</b></td><td>UINT8</td></tr>
+<tr><td><b>TargetHumidifierDehumidifierState (B4)</b></td><td>UINT8</td></tr>
+<tr><td>Name (23)</td><td>STRING</td></tr>
+<tr><td>RelativeHumidityDehumidifierThreshold (C9)</td><td>FLOAT</td></tr>
+<tr><td>RelativeHumidityHumidifierThreshold (CA)</td><td>FLOAT</td></tr>
+<tr><td>RotationSpeed (29)</td><td>FLOAT</td></tr>
+<tr><td>SwingMode (B6)</td><td>UINT8</td></tr>
+<tr><td>WaterLevel (B5)</td><td>FLOAT</td></tr>
+<tr><td>LockPhysicalControls (A7)</td><td>UINT8</td></tr>
 </table></details>
-<details><summary>HumiditySensor (82)</summary>
-<table>
-<tr><td><b>CurrentRelativeHumidity</b></td></tr>
-<tr><td>Name</td></tr>
-<tr><td>StatusActive</td></tr>
-<tr><td>StatusFault</td></tr>
-<tr><td>StatusTampered</td></tr>
-<tr><td>StatusLowBattery</td></tr>
+<details><summary>HumiditySensor (82)</summary><table>
+<tr><td>Characteristic</td><td>Format></td>
+<tr><td><b>CurrentRelativeHumidity (10)</b></td><td>FLOAT</td></tr>
+<tr><td>Name (23)</td><td>STRING</td></tr>
+<tr><td>StatusActive (75)</td><td>BOOL</td></tr>
+<tr><td>StatusFault (77)</td><td>UINT8</td></tr>
+<tr><td>StatusTampered (7A)</td><td>UINT8</td></tr>
+<tr><td>StatusLowBattery (79)</td><td>UINT8</td></tr>
 </table></details>
-<details><summary>InputSource (D9)</summary>
-<table>
-<tr><td>ConfiguredName</td></tr>
-<tr><td>IsConfigured</td></tr>
-<tr><td><b>Identifier</b></td></tr>
-<tr><td>CurrentVisibilityState</td></tr>
-<tr><td>TargetVisibilityState</td></tr>
+<details><summary>InputSource (D9)</summary><table>
+<tr><td>Characteristic</td><td>Format></td>
+<tr><td>ConfiguredName (E3)</td><td>STRING</td></tr>
+<tr><td>IsConfigured (D6)</td><td>UINT8</td></tr>
+<tr><td><b>Identifier (E6)</b></td><td>UINT32</td></tr>
+<tr><td>CurrentVisibilityState (135)</td><td>UINT8</td></tr>
+<tr><td>TargetVisibilityState (134)</td><td>UINT8</td></tr>
 </table></details>
-<details><summary>IrrigationSystem (CF)</summary>
-<table>
-<tr><td><b>Active</b></td></tr>
-<tr><td><b>ProgramMode</b></td></tr>
-<tr><td><b>InUse</b></td></tr>
-<tr><td>RemainingDuration</td></tr>
-<tr><td>StatusFault</td></tr>
+<details><summary>IrrigationSystem (CF)</summary><table>
+<tr><td>Characteristic</td><td>Format></td>
+<tr><td><b>Active (B0)</b></td><td>UINT8</td></tr>
+<tr><td><b>ProgramMode (D1)</b></td><td>UINT8</td></tr>
+<tr><td><b>InUse (D2)</b></td><td>UINT8</td></tr>
+<tr><td>RemainingDuration (D4)</td><td>UINT32</td></tr>
+<tr><td>StatusFault (77)</td><td>UINT8</td></tr>
 </table></details>
-<details><summary>LeakSensor (83)</summary>
-<table>
-<tr><td><b>LeakDetected</b></td></tr>
-<tr><td>Name</td></tr>
-<tr><td>StatusActive</td></tr>
-<tr><td>StatusFault</td></tr>
-<tr><td>StatusTampered</td></tr>
-<tr><td>StatusLowBattery</td></tr>
+<details><summary>LeakSensor (83)</summary><table>
+<tr><td>Characteristic</td><td>Format></td>
+<tr><td><b>LeakDetected (70)</b></td><td>UINT8</td></tr>
+<tr><td>Name (23)</td><td>STRING</td></tr>
+<tr><td>StatusActive (75)</td><td>BOOL</td></tr>
+<tr><td>StatusFault (77)</td><td>UINT8</td></tr>
+<tr><td>StatusTampered (7A)</td><td>UINT8</td></tr>
+<tr><td>StatusLowBattery (79)</td><td>UINT8</td></tr>
 </table></details>
-<details><summary>LightBulb (43)</summary>
-<table>
-<tr><td><b>On</b></td></tr>
-<tr><td>Brightness</td></tr>
-<tr><td>Hue</td></tr>
-<tr><td>Name</td></tr>
-<tr><td>Saturation</td></tr>
-<tr><td>ColorTemperature</td></tr>
+<details><summary>LightBulb (43)</summary><table>
+<tr><td>Characteristic</td><td>Format></td>
+<tr><td><b>On (25)</b></td><td>BOOL</td></tr>
+<tr><td>Brightness (8)</td><td>INT</td></tr>
+<tr><td>Hue (13)</td><td>FLOAT</td></tr>
+<tr><td>Name (23)</td><td>STRING</td></tr>
+<tr><td>Saturation (2F)</td><td>FLOAT</td></tr>
+<tr><td>ColorTemperature (CE)</td><td>UINT32</td></tr>
 </table></details>
-<details><summary>LightSensor (84)</summary>
-<table>
-<tr><td><b>CurrentAmbientLightLevel</b></td></tr>
-<tr><td>Name</td></tr>
-<tr><td>StatusActive</td></tr>
-<tr><td>StatusFault</td></tr>
-<tr><td>StatusTampered</td></tr>
-<tr><td>StatusLowBattery</td></tr>
+<details><summary>LightSensor (84)</summary><table>
+<tr><td>Characteristic</td><td>Format></td>
+<tr><td><b>CurrentAmbientLightLevel (6B)</b></td><td>FLOAT</td></tr>
+<tr><td>Name (23)</td><td>STRING</td></tr>
+<tr><td>StatusActive (75)</td><td>BOOL</td></tr>
+<tr><td>StatusFault (77)</td><td>UINT8</td></tr>
+<tr><td>StatusTampered (7A)</td><td>UINT8</td></tr>
+<tr><td>StatusLowBattery (79)</td><td>UINT8</td></tr>
 </table></details>
-<details><summary>LockMechanism (45)</summary>
-<table>
-<tr><td><b>LockCurrentState</b></td></tr>
-<tr><td><b>LockTargetState</b></td></tr>
-<tr><td>Name</td></tr>
+<details><summary>LockMechanism (45)</summary><table>
+<tr><td>Characteristic</td><td>Format></td>
+<tr><td><b>LockCurrentState (1D)</b></td><td>UINT8</td></tr>
+<tr><td><b>LockTargetState (1E)</b></td><td>UINT8</td></tr>
+<tr><td>Name (23)</td><td>STRING</td></tr>
 </table></details>
-<details><summary>Microphone (112)</summary>
-<table>
-<tr><td><b>Mute</b></td></tr>
-<tr><td>Name</td></tr>
-<tr><td>Volume</td></tr>
+<details><summary>Microphone (112)</summary><table>
+<tr><td>Characteristic</td><td>Format></td>
+<tr><td><b>Mute (11A)</b></td><td>BOOL</td></tr>
+<tr><td>Name (23)</td><td>STRING</td></tr>
+<tr><td>Volume (119)</td><td>UINT8</td></tr>
 </table></details>
-<details><summary>MotionSensor (85)</summary>
-<table>
-<tr><td><b>MotionDetected</b></td></tr>
-<tr><td>Name</td></tr>
-<tr><td>StatusActive</td></tr>
-<tr><td>StatusFault</td></tr>
-<tr><td>StatusTampered</td></tr>
-<tr><td>StatusLowBattery</td></tr>
+<details><summary>MotionSensor (85)</summary><table>
+<tr><td>Characteristic</td><td>Format></td>
+<tr><td><b>MotionDetected (22)</b></td><td>BOOL</td></tr>
+<tr><td>Name (23)</td><td>STRING</td></tr>
+<tr><td>StatusActive (75)</td><td>BOOL</td></tr>
+<tr><td>StatusFault (77)</td><td>UINT8</td></tr>
+<tr><td>StatusTampered (7A)</td><td>UINT8</td></tr>
+<tr><td>StatusLowBattery (79)</td><td>UINT8</td></tr>
 </table></details>
-<details><summary>OccupancySensor (86)</summary>
-<table>
-<tr><td><b>OccupancyDetected</b></td></tr>
-<tr><td>Name</td></tr>
-<tr><td>StatusActive</td></tr>
-<tr><td>StatusFault</td></tr>
-<tr><td>StatusTampered</td></tr>
-<tr><td>StatusLowBattery</td></tr>
+<details><summary>OccupancySensor (86)</summary><table>
+<tr><td>Characteristic</td><td>Format></td>
+<tr><td><b>OccupancyDetected (71)</b></td><td>UINT8</td></tr>
+<tr><td>Name (23)</td><td>STRING</td></tr>
+<tr><td>StatusActive (75)</td><td>BOOL</td></tr>
+<tr><td>StatusFault (77)</td><td>UINT8</td></tr>
+<tr><td>StatusTampered (7A)</td><td>UINT8</td></tr>
+<tr><td>StatusLowBattery (79)</td><td>UINT8</td></tr>
 </table></details>
-<details><summary>Outlet (47)</summary>
-<table>
-<tr><td><b>On</b></td></tr>
-<tr><td><b>OutletInUse</b></td></tr>
-<tr><td>Name</td></tr>
+<details><summary>Outlet (47)</summary><table>
+<tr><td>Characteristic</td><td>Format></td>
+<tr><td><b>On (25)</b></td><td>BOOL</td></tr>
+<tr><td><b>OutletInUse (26)</b></td><td>BOOL</td></tr>
+<tr><td>Name (23)</td><td>STRING</td></tr>
 </table></details>
-<details><summary>SecuritySystem (7E)</summary>
-<table>
-<tr><td><b>SecuritySystemCurrentState</b></td></tr>
-<tr><td><b>SecuritySystemTargetState</b></td></tr>
-<tr><td>Name</td></tr>
-<tr><td>SecuritySystemAlarmType</td></tr>
-<tr><td>StatusFault</td></tr>
-<tr><td>StatusTampered</td></tr>
+<details><summary>SecuritySystem (7E)</summary><table>
+<tr><td>Characteristic</td><td>Format></td>
+<tr><td><b>SecuritySystemCurrentState (66)</b></td><td>UINT8</td></tr>
+<tr><td><b>SecuritySystemTargetState (67)</b></td><td>UINT8</td></tr>
+<tr><td>Name (23)</td><td>STRING</td></tr>
+<tr><td>SecuritySystemAlarmType (8E)</td><td>UINT8</td></tr>
+<tr><td>StatusFault (77)</td><td>UINT8</td></tr>
+<tr><td>StatusTampered (7A)</td><td>UINT8</td></tr>
 </table></details>
-<details><summary>ServiceLabel (CC)</summary>
-<table>
-<tr><td><b>ServiceLabelNamespace</b></td></tr>
+<details><summary>ServiceLabel (CC)</summary><table>
+<tr><td>Characteristic</td><td>Format></td>
+<tr><td><b>ServiceLabelNamespace (CD)</b></td><td>UINT8</td></tr>
 </table></details>
-<details><summary>Slat (B9)</summary>
-<table>
-<tr><td><b>CurrentSlatState</b></td></tr>
-<tr><td><b>SlatType</b></td></tr>
-<tr><td>Name</td></tr>
-<tr><td>SwingMode</td></tr>
-<tr><td>CurrentTiltAngle</td></tr>
-<tr><td>TargetTiltAngle</td></tr>
+<details><summary>Slat (B9)</summary><table>
+<tr><td>Characteristic</td><td>Format></td>
+<tr><td><b>CurrentSlatState (AA)</b></td><td>UINT8</td></tr>
+<tr><td><b>SlatType (C0)</b></td><td>UINT8</td></tr>
+<tr><td>Name (23)</td><td>STRING</td></tr>
+<tr><td>SwingMode (B6)</td><td>UINT8</td></tr>
+<tr><td>CurrentTiltAngle (C1)</td><td>INT</td></tr>
+<tr><td>TargetTiltAngle (C2)</td><td>INT</td></tr>
 </table></details>
-<details><summary>SmokeSensor (87)</summary>
-<table>
-<tr><td><b>SmokeDetected</b></td></tr>
-<tr><td>Name</td></tr>
-<tr><td>StatusActive</td></tr>
-<tr><td>StatusFault</td></tr>
-<tr><td>StatusTampered</td></tr>
-<tr><td>StatusLowBattery</td></tr>
+<details><summary>SmokeSensor (87)</summary><table>
+<tr><td>Characteristic</td><td>Format></td>
+<tr><td><b>SmokeDetected (76)</b></td><td>UINT8</td></tr>
+<tr><td>Name (23)</td><td>STRING</td></tr>
+<tr><td>StatusActive (75)</td><td>BOOL</td></tr>
+<tr><td>StatusFault (77)</td><td>UINT8</td></tr>
+<tr><td>StatusTampered (7A)</td><td>UINT8</td></tr>
+<tr><td>StatusLowBattery (79)</td><td>UINT8</td></tr>
 </table></details>
-<details><summary>Speaker (113)</summary>
-<table>
-<tr><td><b>Mute</b></td></tr>
-<tr><td>Name</td></tr>
-<tr><td>Volume</td></tr>
+<details><summary>Speaker (113)</summary><table>
+<tr><td>Characteristic</td><td>Format></td>
+<tr><td><b>Mute (11A)</b></td><td>BOOL</td></tr>
+<tr><td>Name (23)</td><td>STRING</td></tr>
+<tr><td>Volume (119)</td><td>UINT8</td></tr>
 </table></details>
-<details><summary>StatelessProgrammableSwitch (89)</summary>
-<table>
-<tr><td><b>ProgrammableSwitchEvent</b></td></tr>
-<tr><td>Name</td></tr>
-<tr><td>ServiceLabelIndex</td></tr>
+<details><summary>StatelessProgrammableSwitch (89)</summary><table>
+<tr><td>Characteristic</td><td>Format></td>
+<tr><td><b>ProgrammableSwitchEvent (73)</b></td><td>UINT8</td></tr>
+<tr><td>Name (23)</td><td>STRING</td></tr>
+<tr><td>ServiceLabelIndex (CB)</td><td>UINT8</td></tr>
 </table></details>
-<details><summary>Switch (49)</summary>
-<table>
-<tr><td><b>On</b></td></tr>
-<tr><td>Name</td></tr>
+<details><summary>Switch (49)</summary><table>
+<tr><td>Characteristic</td><td>Format></td>
+<tr><td><b>On (25)</b></td><td>BOOL</td></tr>
+<tr><td>Name (23)</td><td>STRING</td></tr>
 </table></details>
-<details><summary>Television (D8)</summary>
-<table>
-<tr><td><b>Active</b></td></tr>
-<tr><td>ConfiguredName</td></tr>
-<tr><td>ActiveIdentifier</td></tr>
-<tr><td>RemoteKey</td></tr>
-<tr><td>PowerModeSelection</td></tr>
+<details><summary>Television (D8)</summary><table>
+<tr><td>Characteristic</td><td>Format></td>
+<tr><td><b>Active (B0)</b></td><td>UINT8</td></tr>
+<tr><td>ConfiguredName (E3)</td><td>STRING</td></tr>
+<tr><td>ActiveIdentifier (E7)</td><td>UINT32</td></tr>
+<tr><td>RemoteKey (E1)</td><td>UINT8</td></tr>
+<tr><td>PowerModeSelection (DF)</td><td>UINT8</td></tr>
 </table></details>
-<details><summary>TelevisionSpeaker (113)</summary>
-<table>
-<tr><td><b>VolumeControlType</b></td></tr>
-<tr><td><b>VolumeSelector</b></td></tr>
+<details><summary>TelevisionSpeaker (113)</summary><table>
+<tr><td>Characteristic</td><td>Format></td>
+<tr><td><b>VolumeControlType (E9)</b></td><td>UINT8</td></tr>
+<tr><td><b>VolumeSelector (EA)</b></td><td>UINT8</td></tr>
 </table></details>
-<details><summary>TemperatureSensor (8A)</summary>
-<table>
-<tr><td><b>CurrentTemperature</b></td></tr>
-<tr><td>Name</td></tr>
-<tr><td>StatusActive</td></tr>
-<tr><td>StatusFault</td></tr>
-<tr><td>StatusTampered</td></tr>
-<tr><td>StatusLowBattery</td></tr>
+<details><summary>TemperatureSensor (8A)</summary><table>
+<tr><td>Characteristic</td><td>Format></td>
+<tr><td><b>CurrentTemperature (11)</b></td><td>FLOAT</td></tr>
+<tr><td>Name (23)</td><td>STRING</td></tr>
+<tr><td>StatusActive (75)</td><td>BOOL</td></tr>
+<tr><td>StatusFault (77)</td><td>UINT8</td></tr>
+<tr><td>StatusTampered (7A)</td><td>UINT8</td></tr>
+<tr><td>StatusLowBattery (79)</td><td>UINT8</td></tr>
 </table></details>
-<details><summary>Thermostat (4A)</summary>
-<table>
-<tr><td><b>CurrentHeatingCoolingState</b></td></tr>
-<tr><td><b>TargetHeatingCoolingState</b></td></tr>
-<tr><td><b>CurrentTemperature</b></td></tr>
-<tr><td><b>TargetTemperature</b></td></tr>
-<tr><td><b>TemperatureDisplayUnits</b></td></tr>
-<tr><td>CoolingThresholdTemperature</td></tr>
-<tr><td>CurrentRelativeHumidity</td></tr>
-<tr><td>HeatingThresholdTemperature</td></tr>
-<tr><td>Name</td></tr>
-<tr><td>TargetRelativeHumidity</td></tr>
+<details><summary>Thermostat (4A)</summary><table>
+<tr><td>Characteristic</td><td>Format></td>
+<tr><td><b>CurrentHeatingCoolingState (F)</b></td><td>UINT8</td></tr>
+<tr><td><b>TargetHeatingCoolingState (33)</b></td><td>UINT8</td></tr>
+<tr><td><b>CurrentTemperature (11)</b></td><td>FLOAT</td></tr>
+<tr><td><b>TargetTemperature (35)</b></td><td>FLOAT</td></tr>
+<tr><td><b>TemperatureDisplayUnits (36)</b></td><td>UINT8</td></tr>
+<tr><td>CoolingThresholdTemperature (D)</td><td>FLOAT</td></tr>
+<tr><td>CurrentRelativeHumidity (10)</td><td>FLOAT</td></tr>
+<tr><td>HeatingThresholdTemperature (12)</td><td>FLOAT</td></tr>
+<tr><td>Name (23)</td><td>STRING</td></tr>
+<tr><td>TargetRelativeHumidity (34)</td><td>FLOAT</td></tr>
 </table></details>
-<details><summary>Valve (D0)</summary>
-<table>
-<tr><td><b>Active</b></td></tr>
-<tr><td><b>InUse</b></td></tr>
-<tr><td><b>ValveType</b></td></tr>
-<tr><td>SetDuration</td></tr>
-<tr><td>RemainingDuration</td></tr>
-<tr><td>IsConfigured</td></tr>
-<tr><td>ServiceLabelIndex</td></tr>
-<tr><td>StatusFault</td></tr>
-<tr><td>Name</td></tr>
+<details><summary>Valve (D0)</summary><table>
+<tr><td>Characteristic</td><td>Format></td>
+<tr><td><b>Active (B0)</b></td><td>UINT8</td></tr>
+<tr><td><b>InUse (D2)</b></td><td>UINT8</td></tr>
+<tr><td><b>ValveType (D5)</b></td><td>UINT8</td></tr>
+<tr><td>SetDuration (D3)</td><td>UINT32</td></tr>
+<tr><td>RemainingDuration (D4)</td><td>UINT32</td></tr>
+<tr><td>IsConfigured (D6)</td><td>UINT8</td></tr>
+<tr><td>ServiceLabelIndex (CB)</td><td>UINT8</td></tr>
+<tr><td>StatusFault (77)</td><td>UINT8</td></tr>
+<tr><td>Name (23)</td><td>STRING</td></tr>
 </table></details>
-<details><summary>Window (8B)</summary>
-<table>
-<tr><td><b>CurrentPosition</b></td></tr>
-<tr><td><b>TargetPosition</b></td></tr>
-<tr><td><b>PositionState</b></td></tr>
-<tr><td>Name</td></tr>
-<tr><td>HoldPosition</td></tr>
-<tr><td>ObstructionDetected</td></tr>
+<details><summary>Window (8B)</summary><table>
+<tr><td>Characteristic</td><td>Format></td>
+<tr><td><b>CurrentPosition (6D)</b></td><td>UINT8</td></tr>
+<tr><td><b>TargetPosition (7C)</b></td><td>UINT8</td></tr>
+<tr><td><b>PositionState (72)</b></td><td>UINT8</td></tr>
+<tr><td>Name (23)</td><td>STRING</td></tr>
+<tr><td>HoldPosition (6F)</td><td>BOOL</td></tr>
+<tr><td>ObstructionDetected (24)</td><td>BOOL</td></tr>
 </table></details>
-<details><summary>WindowCovering (8C)</summary>
-<table>
-<tr><td><b>TargetPosition</b></td></tr>
-<tr><td><b>CurrentPosition</b></td></tr>
-<tr><td><b>PositionState</b></td></tr>
-<tr><td>Name</td></tr>
-<tr><td>HoldPosition</td></tr>
-<tr><td>CurrentHorizontalTiltAngle</td></tr>
-<tr><td>TargetHorizontalTiltAngle</td></tr>
-<tr><td>CurrentVerticalTiltAngle</td></tr>
-<tr><td>TargetVerticalTiltAngle</td></tr>
-<tr><td>ObstructionDetected</td></tr>
+<details><summary>WindowCovering (8C)</summary><table>
+<tr><td>Characteristic</td><td>Format></td>
+<tr><td><b>TargetPosition (7C)</b></td><td>UINT8</td></tr>
+<tr><td><b>CurrentPosition (6D)</b></td><td>UINT8</td></tr>
+<tr><td><b>PositionState (72)</b></td><td>UINT8</td></tr>
+<tr><td>Name (23)</td><td>STRING</td></tr>
+<tr><td>HoldPosition (6F)</td><td>BOOL</td></tr>
+<tr><td>CurrentHorizontalTiltAngle (6C)</td><td>INT</td></tr>
+<tr><td>TargetHorizontalTiltAngle (7B)</td><td>INT</td></tr>
+<tr><td>CurrentVerticalTiltAngle (6E)</td><td>INT</td></tr>
+<tr><td>TargetVerticalTiltAngle (7D)</td><td>INT</td></tr>
+<tr><td>ObstructionDetected (24)</td><td>BOOL</td></tr>
 </table></details>
