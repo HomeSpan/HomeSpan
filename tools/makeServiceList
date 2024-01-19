@@ -20,6 +20,7 @@ BEGIN {
 			services[nServs++]=currentService
 			uuid[currentService]=x[3]
 			nChars[currentService]=0
+			desc[currentService]="Placeholder for description of Service"
 		}
 
   	else if(x[1]=="REQ" || x[1]=="OPT"){
@@ -61,7 +62,8 @@ BEGIN {
 	
 	for(i=0;i<nServs;i++){
 		s=services[i]
-		printf("<details><summary>%s (%s)</summary><br><table>\n",s,uuid[s])
+		printf("## %s (%s)\n",s,uuid[s])
+		printf("<details><summary>%s</summary><br><table>\n",desc[s])
 		printf("<tr><th>Characteristic</th><th>UUID</th><th>Format</th><th>Perms</th><th>Min</th><th>Max</th><th>Constants</th></tr>\n")
 		for(j=0;j<nChars[s];j++){
 			char=servChars[s,j]
