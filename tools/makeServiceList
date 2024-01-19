@@ -60,7 +60,7 @@ BEGIN {
 
 	for(i=0;i<nServs;i++){
 		s=services[i]
-		printf("<detail><summary>%s (%s)</summary>\n",s,uuid[s])
+		printf("<details><summary>## %s (%s)</summary>\n",s,uuid[s])
 		for(j=0;j<nReqs[s];j++){
 			print "  REQ:" reqs[s,j]
 			print default[reqs[s,j]], min[reqs[s,j]], max[reqs[s,j]]
@@ -70,7 +70,7 @@ BEGIN {
 		for(j=0;j<nOpts[s];j++){
 			print "  OPT:" opts[s,j]
 		}
-		print "</detail>"
+		print "</details>"
 	}
 		
 }

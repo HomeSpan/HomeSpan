@@ -1,4 +1,4 @@
-<detail><summary>AccessoryInformation (3E)</summary>
+<details><summary>## AccessoryInformation (3E)</summary>
   REQ:Identify
 false 0 1
 
@@ -9,8 +9,8 @@ false 0 1
   OPT:SerialNumber
   OPT:HardwareRevision
   OPT:AccessoryFlags
-</detail>
-<detail><summary>AirPurifier (BB)</summary>
+</details>
+<details><summary>## AirPurifier (BB)</summary>
   REQ:Active
 0 0 1
 INACTIVE
@@ -31,8 +31,8 @@ AUTO
   OPT:RotationSpeed
   OPT:SwingMode
   OPT:LockPhysicalControls
-</detail>
-<detail><summary>AirQualitySensor (8D)</summary>
+</details>
+<details><summary>## AirQualitySensor (8D)</summary>
   REQ:AirQuality
 0 0 5
 UNKNOWN
@@ -53,8 +53,8 @@ POOR
   OPT:StatusFault
   OPT:StatusTampered
   OPT:StatusLowBattery
-</detail>
-<detail><summary>BatteryService (96)</summary>
+</details>
+<details><summary>## BatteryService (96)</summary>
   REQ:BatteryLevel
 0 0 100
 
@@ -70,8 +70,8 @@ NOT_LOW_BATTERY
 LOW_BATTERY
 
   OPT:Name
-</detail>
-<detail><summary>CarbonDioxideSensor (97)</summary>
+</details>
+<details><summary>## CarbonDioxideSensor (97)</summary>
   REQ:CarbonDioxideDetected
 0 0 1
 NORMAL
@@ -84,8 +84,8 @@ ABNORMAL
   OPT:StatusLowBattery
   OPT:CarbonDioxideLevel
   OPT:CarbonDioxidePeakLevel
-</detail>
-<detail><summary>CarbonMonoxideSensor (7F)</summary>
+</details>
+<details><summary>## CarbonMonoxideSensor (7F)</summary>
   REQ:CarbonMonoxideDetected
 0 0 1
 NORMAL
@@ -98,8 +98,8 @@ ABNORMAL
   OPT:StatusLowBattery
   OPT:CarbonMonoxideLevel
   OPT:CarbonMonoxidePeakLevel
-</detail>
-<detail><summary>ContactSensor (80)</summary>
+</details>
+<details><summary>## ContactSensor (80)</summary>
   REQ:ContactSensorState
 1 0 1
 DETECTED
@@ -110,8 +110,8 @@ NOT_DETECTED
   OPT:StatusFault
   OPT:StatusTampered
   OPT:StatusLowBattery
-</detail>
-<detail><summary>Door (81)</summary>
+</details>
+<details><summary>## Door (81)</summary>
   REQ:CurrentPosition
 0 0 100
 
@@ -127,8 +127,8 @@ STOPPED
   OPT:Name
   OPT:HoldPosition
   OPT:ObstructionDetected
-</detail>
-<detail><summary>Doorbell (121)</summary>
+</details>
+<details><summary>## Doorbell (121)</summary>
   REQ:ProgrammableSwitchEvent
 0 0 2
 SINGLE_PRESS
@@ -138,8 +138,8 @@ LONG_PRESS
   OPT:Name
   OPT:Volume
   OPT:Brightness
-</detail>
-<detail><summary>Fan (B7)</summary>
+</details>
+<details><summary>## Fan (B7)</summary>
   REQ:Active
 0 0 1
 INACTIVE
@@ -152,8 +152,8 @@ ACIVE
   OPT:RotationSpeed
   OPT:SwingMode
   OPT:LockPhysicalControls
-</detail>
-<detail><summary>Faucet (D7)</summary>
+</details>
+<details><summary>## Faucet (D7)</summary>
   REQ:Active
 0 0 1
 INACTIVE
@@ -161,8 +161,8 @@ ACIVE
 
   OPT:StatusFault
   OPT:Name
-</detail>
-<detail><summary>FilterMaintenance (BA)</summary>
+</details>
+<details><summary>## FilterMaintenance (BA)</summary>
   REQ:FilterChangeIndication
 0 0 1
 NO_CHANGE_NEEDED
@@ -171,8 +171,8 @@ CHANGE_NEEDED
   OPT:Name
   OPT:FilterLifeLevel
   OPT:ResetFilterIndication
-</detail>
-<detail><summary>GarageDoorOpener (41)</summary>
+</details>
+<details><summary>## GarageDoorOpener (41)</summary>
   REQ:CurrentDoorState
 1 0 4
 OPEN
@@ -192,12 +192,12 @@ false 0 1
   OPT:LockCurrentState
   OPT:LockTargetState
   OPT:Name
-</detail>
-<detail><summary>HAPProtocolInformation (A2)</summary>
+</details>
+<details><summary>## HAPProtocolInformation (A2)</summary>
   REQ:Version
   
-</detail>
-<detail><summary>HeaterCooler (BC)</summary>
+</details>
+<details><summary>## HeaterCooler (BC)</summary>
   REQ:Active
 0 0 1
 INACTIVE
@@ -226,8 +226,8 @@ COOL
   OPT:CoolingThresholdTemperature
   OPT:HeatingThresholdTemperature
   OPT:LockPhysicalControls
-</detail>
-<detail><summary>HumidifierDehumidifier (BD)</summary>
+</details>
+<details><summary>## HumidifierDehumidifier (BD)</summary>
   REQ:Active
 0 0 1
 INACTIVE
@@ -256,8 +256,8 @@ DEHUMIDIFY
   OPT:SwingMode
   OPT:WaterLevel
   OPT:LockPhysicalControls
-</detail>
-<detail><summary>HumiditySensor (82)</summary>
+</details>
+<details><summary>## HumiditySensor (82)</summary>
   REQ:CurrentRelativeHumidity
 0 0 100
 
@@ -266,8 +266,8 @@ DEHUMIDIFY
   OPT:StatusFault
   OPT:StatusTampered
   OPT:StatusLowBattery
-</detail>
-<detail><summary>InputSource (D9)</summary>
+</details>
+<details><summary>## InputSource (D9)</summary>
   REQ:Identifier
 0 0 255
 
@@ -275,8 +275,8 @@ DEHUMIDIFY
   OPT:IsConfigured
   OPT:CurrentVisibilityState
   OPT:TargetVisibilityState
-</detail>
-<detail><summary>IrrigationSystem (CF)</summary>
+</details>
+<details><summary>## IrrigationSystem (CF)</summary>
   REQ:Active
 0 0 1
 INACTIVE
@@ -295,8 +295,8 @@ IN_USE
 
   OPT:RemainingDuration
   OPT:StatusFault
-</detail>
-<detail><summary>LeakSensor (83)</summary>
+</details>
+<details><summary>## LeakSensor (83)</summary>
   REQ:LeakDetected
 0 0 1
 NOT_DETECTED
@@ -307,8 +307,8 @@ DETECTED
   OPT:StatusFault
   OPT:StatusTampered
   OPT:StatusLowBattery
-</detail>
-<detail><summary>LightBulb (43)</summary>
+</details>
+<details><summary>## LightBulb (43)</summary>
   REQ:On
 false 0 1
 
@@ -317,8 +317,8 @@ false 0 1
   OPT:Name
   OPT:Saturation
   OPT:ColorTemperature
-</detail>
-<detail><summary>LightSensor (84)</summary>
+</details>
+<details><summary>## LightSensor (84)</summary>
   REQ:CurrentAmbientLightLevel
 1 0.0001 100000
 
@@ -327,8 +327,8 @@ false 0 1
   OPT:StatusFault
   OPT:StatusTampered
   OPT:StatusLowBattery
-</detail>
-<detail><summary>LockMechanism (45)</summary>
+</details>
+<details><summary>## LockMechanism (45)</summary>
   REQ:LockCurrentState
 0 0 3
 UNLOCKED
@@ -342,8 +342,8 @@ UNLOCK
 LOCK
 
   OPT:Name
-</detail>
-<detail><summary>Microphone (112)</summary>
+</details>
+<details><summary>## Microphone (112)</summary>
   REQ:Mute
 false 0 1
 OFF
@@ -351,8 +351,8 @@ ON
 
   OPT:Name
   OPT:Volume
-</detail>
-<detail><summary>MotionSensor (85)</summary>
+</details>
+<details><summary>## MotionSensor (85)</summary>
   REQ:MotionDetected
 false 0 1
 
@@ -361,8 +361,8 @@ false 0 1
   OPT:StatusFault
   OPT:StatusTampered
   OPT:StatusLowBattery
-</detail>
-<detail><summary>OccupancySensor (86)</summary>
+</details>
+<details><summary>## OccupancySensor (86)</summary>
   REQ:OccupancyDetected
 0 0 1
 NOT_DETECTED
@@ -373,8 +373,8 @@ DETECTED
   OPT:StatusFault
   OPT:StatusTampered
   OPT:StatusLowBattery
-</detail>
-<detail><summary>Outlet (47)</summary>
+</details>
+<details><summary>## Outlet (47)</summary>
   REQ:On
 false 0 1
 
@@ -382,8 +382,8 @@ false 0 1
 false 0 1
 
   OPT:Name
-</detail>
-<detail><summary>SecuritySystem (7E)</summary>
+</details>
+<details><summary>## SecuritySystem (7E)</summary>
   REQ:SecuritySystemCurrentState
 3 0 4
 ARMED_STAY
@@ -403,15 +403,15 @@ DISARM
   OPT:SecuritySystemAlarmType
   OPT:StatusFault
   OPT:StatusTampered
-</detail>
-<detail><summary>ServiceLabel (CC)</summary>
+</details>
+<details><summary>## ServiceLabel (CC)</summary>
   REQ:ServiceLabelNamespace
 1 0 1
 DOTS
 NUMERALS
 
-</detail>
-<detail><summary>Slat (B9)</summary>
+</details>
+<details><summary>## Slat (B9)</summary>
   REQ:CurrentSlatState
 0 0 2
 FIXED
@@ -427,8 +427,8 @@ VERTICAL
   OPT:SwingMode
   OPT:CurrentTiltAngle
   OPT:TargetTiltAngle
-</detail>
-<detail><summary>SmokeSensor (87)</summary>
+</details>
+<details><summary>## SmokeSensor (87)</summary>
   REQ:SmokeDetected
 0 0 1
 NOT_DETECTED
@@ -439,8 +439,8 @@ DETECTED
   OPT:StatusFault
   OPT:StatusTampered
   OPT:StatusLowBattery
-</detail>
-<detail><summary>Speaker (113)</summary>
+</details>
+<details><summary>## Speaker (113)</summary>
   REQ:Mute
 false 0 1
 OFF
@@ -448,8 +448,8 @@ ON
 
   OPT:Name
   OPT:Volume
-</detail>
-<detail><summary>StatelessProgrammableSwitch (89)</summary>
+</details>
+<details><summary>## StatelessProgrammableSwitch (89)</summary>
   REQ:ProgrammableSwitchEvent
 0 0 2
 SINGLE_PRESS
@@ -458,14 +458,14 @@ LONG_PRESS
 
   OPT:Name
   OPT:ServiceLabelIndex
-</detail>
-<detail><summary>Switch (49)</summary>
+</details>
+<details><summary>## Switch (49)</summary>
   REQ:On
 false 0 1
 
   OPT:Name
-</detail>
-<detail><summary>Television (D8)</summary>
+</details>
+<details><summary>## Television (D8)</summary>
   REQ:Active
 0 0 1
 INACTIVE
@@ -475,16 +475,16 @@ ACIVE
   OPT:ActiveIdentifier
   OPT:RemoteKey
   OPT:PowerModeSelection
-</detail>
-<detail><summary>TelevisionSpeaker (113)</summary>
+</details>
+<details><summary>## TelevisionSpeaker (113)</summary>
   REQ:VolumeControlType
 0 0 3
 
   REQ:VolumeSelector
 0 0 1
 
-</detail>
-<detail><summary>TemperatureSensor (8A)</summary>
+</details>
+<details><summary>## TemperatureSensor (8A)</summary>
   REQ:CurrentTemperature
 0 0 100
 
@@ -493,8 +493,8 @@ ACIVE
   OPT:StatusFault
   OPT:StatusTampered
   OPT:StatusLowBattery
-</detail>
-<detail><summary>Thermostat (4A)</summary>
+</details>
+<details><summary>## Thermostat (4A)</summary>
   REQ:CurrentHeatingCoolingState
 0 0 2
 OFF
@@ -524,8 +524,8 @@ FAHRENHEIT
   OPT:HeatingThresholdTemperature
   OPT:Name
   OPT:TargetRelativeHumidity
-</detail>
-<detail><summary>Valve (D0)</summary>
+</details>
+<details><summary>## Valve (D0)</summary>
   REQ:Active
 0 0 1
 INACTIVE
@@ -545,8 +545,8 @@ IN_USE
   OPT:ServiceLabelIndex
   OPT:StatusFault
   OPT:Name
-</detail>
-<detail><summary>Window (8B)</summary>
+</details>
+<details><summary>## Window (8B)</summary>
   REQ:CurrentPosition
 0 0 100
 
@@ -562,8 +562,8 @@ STOPPED
   OPT:Name
   OPT:HoldPosition
   OPT:ObstructionDetected
-</detail>
-<detail><summary>WindowCovering (8C)</summary>
+</details>
+<details><summary>## WindowCovering (8C)</summary>
   REQ:TargetPosition
 0 0 100
 
@@ -583,4 +583,4 @@ STOPPED
   OPT:CurrentVerticalTiltAngle
   OPT:TargetVerticalTiltAngle
   OPT:ObstructionDetected
-</detail>
+</details>
