@@ -6,13 +6,19 @@ BEGIN {
 	charsFile = "../src/Characteristics.h"
 
 	ws="[ \t,();]+"										# regexp of separators
-	ltws="^" ws "|" ws "$"						# regexp of leading and training separators
+	ltws="^" ws "|" ws "$"						# regexp of leading and trailing separators
 
 	nServs=0
 
 	while(getline < servicesFile ){
 
 		gsub(ltws,"")						# strip out leading or trailing separators
+
+		if(index($0,"//!")==1){
+			desc[currentService]=desc[currentService] " " substr($0,4)
+			continue
+		}
+
 		n=split($0,x,ws)				# split line by separators
 
 		if(x[1]=="CREATE_SERV"){
@@ -20,7 +26,6 @@ BEGIN {
 			services[nServs++]=currentService
 			uuid[currentService]=x[3]
 			nChars[currentService]=0
-			desc[currentService]="Placeholder for description of Service"
 		}
 
   	else if(x[1]=="REQ" || x[1]=="OPT"){
@@ -84,7 +89,7 @@ BEGIN {
 			
 			printf("</ul></td></tr>\n")
 		}
-		printf("</table>></details>\n\n")
+		printf("</table></details>\n\n")
 	}
 		
 }

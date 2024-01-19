@@ -48,8 +48,13 @@ namespace Service {
     OPT(Name);
     OPT(SerialNumber);
     OPT(HardwareRevision);
-    OPT(AccessoryFlags);    
+    OPT(AccessoryFlags);
   END_SERV
+
+//! Here is some important text you need to read.
+//! Spacing is not critical since this will be
+//! formated in HTML where spaces    are       ignored.
+//! You can use *standard* markdown elements as well.
 
   CREATE_SERV(AirPurifier,BB)
     REQ(Active);
