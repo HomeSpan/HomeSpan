@@ -40,7 +40,7 @@
 
 namespace Service {
 
-  CREATE_SERV(AccessoryInformation,3E)
+  CREATE_SERV(AccessoryInformation,3E)        // Required Identification Information.  For each Accessory in a HomeSpan device this <i>must be included as the first Service.</i>
     REQ(Identify);
     OPT(FirmwareRevision);
     OPT(Manufacturer);
@@ -50,11 +50,6 @@ namespace Service {
     OPT(HardwareRevision);
     OPT(AccessoryFlags);
   END_SERV
-
-//! Here is some important text you need to read.
-//! Spacing is not critical since this will be
-//! formated in HTML where spaces    are       ignored.
-//! You can use *standard* markdown elements as well.
 
   CREATE_SERV(AirPurifier,BB)
     REQ(Active);

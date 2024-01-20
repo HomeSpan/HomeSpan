@@ -2,77 +2,60 @@
 
 BEGIN {
 
-	servicesFile = "../src/Span.h"
-	charsFile = "../src/Characteristics.h"
+	ws="[ \t,();]+"									# regexp of separators
+	ltws="^" ws "|" ws "$"					# regexp of leading and trailing separators
 
-	ws="[ \t,();]+"										# regexp of separators
-	ltws="^" ws "|" ws "$"						# regexp of leading and trailing separators
+	nServs=0												# number of Services found
+}
 
-	nServs=0
+{
+	split($0,line,"//")							# separate line into program and (optional) comment
+	gsub(ltws,"",line[1])						# strip out leading or trailing separators
 
-	while(getline < servicesFile ){
+	n=split(line[1],x,ws)						# split program portion according to separators
 
-		split($0,line,"//")
-
-		gsub(ltws,"",line[1])						# strip out leading or trailing separators
-
-		if(index($0,"//!")==1){
-			desc[currentService]=desc[currentService] " " substr($0,4)
-			continue
-		}
-
-		n=split(line[1],x,ws)
-
-		if(x[1]=="CREATE_SERV"){
-			currentService=x[2]
-			services[nServs++]=currentService
-			uuid[currentService]=x[3]
-			nChars[currentService]=0
-		}
-
-  	else if(x[1]=="REQ" || x[1]=="OPT"){
-			servChars[currentService,nChars[currentService]]=x[2]
-			servReq[currentService,nChars[currentService]]=(x[1]=="REQ")
-			nChars[currentService]++
-		}
-
-		else if(x[1]=="CREATE_CHAR"){
-			char=x[3]
-			default[char]=x[4]
-			min[char]=x[5]
-			max[char]=x[6]
-			nVals[char]=n-6							# number of pre-defined constants
-			for(i=0;i<nVals[char];i++)
-				vals[char,i]=x[i+7]
-			notes[char]=line[2]
-		}
-
-	} 
-
-	close(servicesFile)
-
-	while(getline < charsFile){
-
-		gsub(ltws,"")						# strip out leading or trailing separators
-		n=split($0,x,ws)				# split line by separators
-
-		if(x[1]=="HAPCHAR"){
-			char=x[2]
-			uuid[char]=x[3]
-			perms[char]=x[4]
-			format[char]=tolower(x[5])
-			static[char]=x[6]
-		}
-
+	if(x[1]=="CREATE_SERV"){
+		currentService=x[2]
+		services[nServs++]=currentService
+		uuid[currentService]=x[3]
+		desc[currentService]=line[2]	# save optional comment as description of Service
+		nChars[currentService]=0
 	}
 
-	close(charsFile)
-	
+ 	else if(x[1]=="REQ" || x[1]=="OPT"){
+		servChars[currentService,nChars[currentService]]=x[2]
+		servReq[currentService,nChars[currentService]]=(x[1]=="REQ")
+		nChars[currentService]++
+	}
+
+	else if(x[1]=="CREATE_CHAR"){
+		char=x[3]
+		default[char]=x[4]
+		min[char]=x[5]
+		max[char]=x[6]
+		nVals[char]=n-6								# parse any pre-defined constants
+		for(i=0;i<nVals[char];i++)
+			vals[char,i]=x[i+7]
+		notes[char]=line[2]						# save optional comment as notes for Characteristic
+	}
+
+	else if(x[1]=="HAPCHAR"){
+		char=x[2]
+		uuid[char]=x[3]
+		perms[char]=x[4]
+		format[char]=tolower(x[5])
+		static[char]=x[6]
+	}
+} 
+
+END {
+
 	for(i=0;i<nServs;i++){
 		s=services[i]
 		printf("## %s (%s)\n",s,uuid[s])
 		printf("<details><summary>%s</summary><br><table>\n",desc[s])
 		printf("<tr><th>Characteristic</th><th>UUID</th><th>Format</th><th>Perms</th><th>Min</th><th>Max</th><th>Constants</th><th>Notes</th></tr>\n")
+
 		for(j=0;j<nChars[s];j++){
 			char=servChars[s,j]
 			printf("<tr>")
@@ -93,9 +76,9 @@ BEGIN {
 			printf("</ul></td>")
 			printf("<td>%s</td></tr>",notes[char])
 		}
+
 		printf("</table></details>\n\n")
 	}
-		
 }
 
 
