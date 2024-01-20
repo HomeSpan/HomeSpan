@@ -12,14 +12,16 @@ BEGIN {
 
 	while(getline < servicesFile ){
 
-		gsub(ltws,"")						# strip out leading or trailing separators
+		split($0,line,"//")
+
+		gsub(ltws,"",line[1])						# strip out leading or trailing separators
 
 		if(index($0,"//!")==1){
 			desc[currentService]=desc[currentService] " " substr($0,4)
 			continue
 		}
 
-		n=split($0,x,ws)				# split line by separators
+		n=split(line[1],x,ws)
 
 		if(x[1]=="CREATE_SERV"){
 			currentService=x[2]
@@ -42,6 +44,7 @@ BEGIN {
 			nVals[char]=n-6							# number of pre-defined constants
 			for(i=0;i<nVals[char];i++)
 				vals[char,i]=x[i+7]
+			notes[char]=line[2]
 		}
 
 	} 
@@ -69,7 +72,7 @@ BEGIN {
 		s=services[i]
 		printf("## %s (%s)\n",s,uuid[s])
 		printf("<details><summary>%s</summary><br><table>\n",desc[s])
-		printf("<tr><th>Characteristic</th><th>UUID</th><th>Format</th><th>Perms</th><th>Min</th><th>Max</th><th>Constants</th></tr>\n")
+		printf("<tr><th>Characteristic</th><th>UUID</th><th>Format</th><th>Perms</th><th>Min</th><th>Max</th><th>Constants</th><th>Notes</th></tr>\n")
 		for(j=0;j<nChars[s];j++){
 			char=servChars[s,j]
 			printf("<tr>")
@@ -87,7 +90,8 @@ BEGIN {
 			for(k=0;k<nVals[char];k++)
 				printf("<li>%s (%d)</li>",vals[char,k],k)
 			
-			printf("</ul></td></tr>\n")
+			printf("</ul></td>")
+			printf("<td>%s</td></tr>",notes[char])
 		}
 		printf("</table></details>\n\n")
 	}

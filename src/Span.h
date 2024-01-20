@@ -418,7 +418,7 @@ namespace Service {
 
 namespace Characteristic {
 
-  CREATE_CHAR(uint32_t,AccessoryFlags,1,1,1);
+  CREATE_CHAR(uint32_t,AccessoryFlags,1,1,1);   // This is not really used anywhere 1/3
   CREATE_CHAR(uint8_t,Active,0,0,1,INACTIVE,ACTIVE);
   CREATE_CHAR(uint32_t,ActiveIdentifier,0,0,255);
   CREATE_CHAR(uint8_t,AirQuality,0,0,5,UNKNOWN,EXCELLENT,GOOD,FAIR,INFERIOR,POOR);
