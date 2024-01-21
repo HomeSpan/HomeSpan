@@ -421,72 +421,72 @@ namespace Service {
 
 namespace Characteristic {
 
-  CREATE_CHAR(uint32_t,AccessoryFlags,1,1,1);   // This is not really used anywhere 1/3
-  CREATE_CHAR(uint8_t,Active,0,0,1,INACTIVE,ACTIVE);
-  CREATE_CHAR(uint32_t,ActiveIdentifier,0,0,255);
-  CREATE_CHAR(uint8_t,AirQuality,0,0,5,UNKNOWN,EXCELLENT,GOOD,FAIR,INFERIOR,POOR);
-  CREATE_CHAR(uint8_t,BatteryLevel,0,0,100);
-  CREATE_CHAR(int,Brightness,0,0,100);
-  CREATE_CHAR(double,CarbonMonoxideLevel,0,0,100);
-  CREATE_CHAR(double,CarbonMonoxidePeakLevel,0,0,100);
-  CREATE_CHAR(uint8_t,CarbonMonoxideDetected,0,0,1,NORMAL,ABNORMAL);
-  CREATE_CHAR(double,CarbonDioxideLevel,0,0,100000);
-  CREATE_CHAR(double,CarbonDioxidePeakLevel,0,0,100000);
-  CREATE_CHAR(uint8_t,CarbonDioxideDetected,0,0,1,NORMAL,ABNORMAL);
-  CREATE_CHAR(uint8_t,ChargingState,0,0,2,NOT_CHARGING,CHARGING,NOT_CHARGEABLE);
-  CREATE_CHAR(uint8_t,ClosedCaptions,0,0,1);
-  CREATE_CHAR(double,CoolingThresholdTemperature,10,10,35); 
-  CREATE_CHAR(uint32_t,ColorTemperature,200,140,500);
-  CREATE_CHAR(uint8_t,ContactSensorState,1,0,1,DETECTED,NOT_DETECTED);
+  CREATE_CHAR(uint32_t,AccessoryFlags,1,1,1);   // not applicable for HomeSpan
+  CREATE_CHAR(uint8_t,Active,0,0,1,INACTIVE,ACTIVE);  // indicates if the Service is active/on
+  CREATE_CHAR(uint32_t,ActiveIdentifier,0,0,255);     // the Identifier of the current Input Source
+  CREATE_CHAR(uint8_t,AirQuality,0,0,5,UNKNOWN,EXCELLENT,GOOD,FAIR,INFERIOR,POOR);   // a subjective description
+  CREATE_CHAR(uint8_t,BatteryLevel,0,0,100);  // measured as a percentage
+  CREATE_CHAR(int,Brightness,0,0,100);  // measured as a percentage
+  CREATE_CHAR(double,CarbonMonoxideLevel,0,0,100);  // measured in parts per million (ppm)
+  CREATE_CHAR(double,CarbonMonoxidePeakLevel,0,0,100);  // measured in parts per million (ppm)
+  CREATE_CHAR(uint8_t,CarbonMonoxideDetected,0,0,1,NORMAL,ABNORMAL);  // indicates if abnormal level is detected
+  CREATE_CHAR(double,CarbonDioxideLevel,0,0,100000);  // measured on parts per million (ppm)
+  CREATE_CHAR(double,CarbonDioxidePeakLevel,0,0,100000);  // measured in parts per million (ppm)
+  CREATE_CHAR(uint8_t,CarbonDioxideDetected,0,0,1,NORMAL,ABNORMAL); // indicates if abnormal level is detected
+  CREATE_CHAR(uint8_t,ChargingState,0,0,2,NOT_CHARGING,CHARGING,NOT_CHARGEABLE); // indicates state of battery charging
+  CREATE_CHAR(uint8_t,ClosedCaptions,0,0,1);  // unused by any Service
+  CREATE_CHAR(double,CoolingThresholdTemperature,10,10,35);   // cooling turns on when temperature (in Celsius) rises above this threshold
+  CREATE_CHAR(uint32_t,ColorTemperature,200,140,500);  // measured in inverse megaKelvin (= 1,000,000 / Kelvin)
+  CREATE_CHAR(uint8_t,ContactSensorState,1,0,1,DETECTED,NOT_DETECTED);  // indictates if contact is detected (i.e. closed)
   CREATE_CHAR(const char *,ConfiguredName,"unnamed",0,1);
-  CREATE_CHAR(double,CurrentAmbientLightLevel,1,0.0001,100000);
-  CREATE_CHAR(int,CurrentHorizontalTiltAngle,0,-90,90);
-  CREATE_CHAR(uint8_t,CurrentAirPurifierState,1,0,2,INACTIVE,IDLE,PURIFYING);
-  CREATE_CHAR(uint8_t,CurrentSlatState,0,0,2,FIXED,JAMMED,SWINGING);
-  CREATE_CHAR(uint8_t,CurrentPosition,0,0,100);
-  CREATE_CHAR(int,CurrentVerticalTiltAngle,0,-90,90);
+  CREATE_CHAR(double,CurrentAmbientLightLevel,1,0.0001,100000);   // measured in Lux (lumens/m<sup>2</sup>
+  CREATE_CHAR(int,CurrentHorizontalTiltAngle,0,-90,90);  // current angle (in degrees) of slats from fully up (-90) to fully open (0) to fully down (90) 
+  CREATE_CHAR(uint8_t,CurrentAirPurifierState,1,0,2,INACTIVE,IDLE,PURIFYING);  // indicates current state of air purification
+  CREATE_CHAR(uint8_t,CurrentSlatState,0,0,2,FIXED,JAMMED,SWINGING);  // indicates current state of slats
+  CREATE_CHAR(uint8_t,CurrentPosition,0,0,100); // current position (as a percentage) from fully closed (0) to full open (100)
+  CREATE_CHAR(int,CurrentVerticalTiltAngle,0,-90,90);  // current angle (in degrees) of slats from fully left (-90) to fully open (0) to fully right (90)
   CREATE_CHAR(uint8_t,CurrentVisibilityState,0,0,1);
-  CREATE_CHAR(uint8_t,CurrentHumidifierDehumidifierState,1,0,3,INACTIVE,IDLE,HUMIDIFYING,DEHUMIDIFYING);
-  CREATE_CHAR(uint8_t,CurrentDoorState,1,0,4,OPEN,CLOSED,OPENING,CLOSING,STOPPED);
-  CREATE_CHAR(uint8_t,CurrentFanState,1,0,2,INACTIVE,IDLE,BLOWING);
-  CREATE_CHAR(uint8_t,CurrentHeatingCoolingState,0,0,2,OFF,HEATING,COOLING);
-  CREATE_CHAR(uint8_t,CurrentHeaterCoolerState,1,0,3,INACTIVE,IDLE,HEATING,COOLING);
+  CREATE_CHAR(uint8_t,CurrentHumidifierDehumidifierState,1,0,3,INACTIVE,IDLE,HUMIDIFYING,DEHUMIDIFYING); // indicates current state of humidifier/dehumidifer
+  CREATE_CHAR(uint8_t,CurrentDoorState,1,0,4,OPEN,CLOSED,OPENING,CLOSING,STOPPED);  // indicates current state of a door
+  CREATE_CHAR(uint8_t,CurrentFanState,1,0,2,INACTIVE,IDLE,BLOWING);  // indicates current state of a fan
+  CREATE_CHAR(uint8_t,CurrentHeatingCoolingState,0,0,2,IDLE,HEATING,COOLING); // indicates whether appliance is currently heating, cooling, or just idle
+  CREATE_CHAR(uint8_t,CurrentHeaterCoolerState,1,0,3,INACTIVE,IDLE,HEATING,COOLING);  // indicates whether appliance is currently heating, cooling, idle, or off
   CREATE_CHAR(uint8_t,CurrentMediaState,0,0,5);
-  CREATE_CHAR(double,CurrentRelativeHumidity,0,0,100);
-  CREATE_CHAR(double,CurrentTemperature,0,0,100);
-  CREATE_CHAR(int,CurrentTiltAngle,0,-90,90);
-  CREATE_CHAR(double,FilterLifeLevel,0,0,100);
-  CREATE_CHAR(uint8_t,FilterChangeIndication,0,0,1,NO_CHANGE_NEEDED,CHANGE_NEEDED);
-  CREATE_CHAR(const char *,FirmwareRevision,"1.0.0",0,1);
-  CREATE_CHAR(const char *,HardwareRevision,"1.0.0",0,1);
-  CREATE_CHAR(double,HeatingThresholdTemperature,16,0,25);
-  CREATE_CHAR(boolean,HoldPosition,false,0,1);
-  CREATE_CHAR(double,Hue,0,0,360);
-  CREATE_CHAR(boolean,Identify,false,0,1);
+  CREATE_CHAR(double,CurrentRelativeHumidity,0,0,100);  //current humidity measured as a percentage
+  CREATE_CHAR(double,CurrentTemperature,0,0,100);   // current temperature measured in Celsius
+  CREATE_CHAR(int,CurrentTiltAngle,0,-90,90);  // angle (in degrees) of slats from fully up or left (-90) to fully open (0) to fully down or right (90)
+  CREATE_CHAR(double,FilterLifeLevel,0,0,100); // measures as a percentage of remaining life
+  CREATE_CHAR(uint8_t,FilterChangeIndication,0,0,1,NO_CHANGE_NEEDED,CHANGE_NEEDED);  // indicates state of filter
+  CREATE_CHAR(const char *,FirmwareRevision,"1.0.0",0,1);  // must be in form x[.y[.z]] - informational only
+  CREATE_CHAR(const char *,HardwareRevision,"1.0.0",0,1);  // must be in form x[.y[.z]] - informational only
+  CREATE_CHAR(double,HeatingThresholdTemperature,16,0,25); // heating turns on when temperature (in Celsius) falls below this threshold
+  CREATE_CHAR(boolean,HoldPosition,false,0,1);  // deprecated
+  CREATE_CHAR(double,Hue,0,0,360);  // color (in degrees) from red (0) to green (120) to blue (240) and back to red (360)
+  CREATE_CHAR(boolean,Identify,false,0,1,IDLE,RUN_ID);  // the Home App set this to RUN_ID when it wants the device to run its identification routine
   CREATE_CHAR(uint32_t,Identifier,0,0,255);
   CREATE_CHAR(uint8_t,InputDeviceType,0,0,6);
   CREATE_CHAR(uint8_t,InputSourceType,0,0,10);
-  CREATE_CHAR(uint8_t,InUse,0,0,1,NOT_IN_USE,IN_USE);
-  CREATE_CHAR(uint8_t,IsConfigured,0,0,1,NOT_CONFIGURED,CONFIGURED);
-  CREATE_CHAR(uint8_t,LeakDetected,0,0,1,NOT_DETECTED,DETECTED);
-  CREATE_CHAR(uint8_t,LockCurrentState,0,0,3,UNLOCKED,LOCKED,JAMMED,UNKNOWN);
-  CREATE_CHAR(uint8_t,LockPhysicalControls,0,0,1,CONTROL_LOCK_DISABLED,CONTROL_LOCK_ENABLED);
-  CREATE_CHAR(uint8_t,LockTargetState,0,0,1,UNLOCK,LOCK);
-  CREATE_CHAR(const char *,Manufacturer,"HomeSpan",0,1);
-  CREATE_CHAR(const char *,Model,"HomeSpan-ESP32",0,1);
-  CREATE_CHAR(boolean,MotionDetected,false,0,1);
-  CREATE_CHAR(boolean,Mute,false,0,1,OFF,ON);
-  CREATE_CHAR(const char *,Name,"unnamed",0,1);
-  CREATE_CHAR(double,NitrogenDioxideDensity,0,0,1000);
-  CREATE_CHAR(boolean,ObstructionDetected,false,0,1);
-  CREATE_CHAR(double,PM25Density,0,0,1000);
-  CREATE_CHAR(uint8_t,OccupancyDetected,0,0,1,NOT_DETECTED,DETECTED);
-  CREATE_CHAR(boolean,OutletInUse,false,0,1);
-  CREATE_CHAR(boolean,On,false,0,1);
-  CREATE_CHAR(double,OzoneDensity,0,0,1000);
+  CREATE_CHAR(uint8_t,InUse,0,0,1,NOT_IN_USE,IN_USE);   // if Service is set to active, this indictes whether it is currently in use
+  CREATE_CHAR(uint8_t,IsConfigured,0,0,1,NOT_CONFIGURED,CONFIGURED);  // indicates if a predefined Service has been configured
+  CREATE_CHAR(uint8_t,LeakDetected,0,0,1,NOT_DETECTED,DETECTED);  // indictates if a leak is detected
+  CREATE_CHAR(uint8_t,LockCurrentState,0,0,3,UNLOCKED,LOCKED,JAMMED,UNKNOWN);  // indictates state of a lock
+  CREATE_CHAR(uint8_t,LockPhysicalControls,0,0,1,CONTROL_LOCK_DISABLED,CONTROL_LOCK_ENABLED);  // indicates if local control lock is enabled
+  CREATE_CHAR(uint8_t,LockTargetState,0,0,1,UNLOCK,LOCK);   // indicates desired state of lock
+  CREATE_CHAR(const char *,Manufacturer,"HomeSpan",0,1);  // any string - informational only
+  CREATE_CHAR(const char *,Model,"HomeSpan-ESP32",0,1);  // any string - informational only
+  CREATE_CHAR(boolean,MotionDetected,false,0,1,NOT_DETECTED,DETECTED);  // indicates if motion is detected
+  CREATE_CHAR(boolean,Mute,false,0,1,OFF,ON); // not used
+  CREATE_CHAR(const char *,Name,"unnamed",0,1); // default name of a Service used <i>only</i> during initial pairing
+  CREATE_CHAR(double,NitrogenDioxideDensity,0,0,1000);  // measured in micrograms/m<sup>3</sup>
+  CREATE_CHAR(boolean,ObstructionDetected,false,0,1,NOT_DETECTED,DETECTED);  // indicates if obstruction is detected
+  CREATE_CHAR(double,PM25Density,0,0,1000); // 2.5-micron particulate density, measured in micrograms/m<sup>3</sup>
+  CREATE_CHAR(uint8_t,OccupancyDetected,0,0,1,NOT_DETECTED,DETECTED);  // indicates if occupanccy is detected
+  CREATE_CHAR(boolean,OutletInUse,false,0,1,NOT_IN_USE,IN_USE); // indicates if an appliance or light is plugged into the outlet, regardless of whether on or off 
+  CREATE_CHAR(boolean,On,false,0,1,OFF,ON);  // indicates if the Service is active/on
+  CREATE_CHAR(double,OzoneDensity,0,0,1000);  // measured in micrograms/m<sup>3</sup>
   CREATE_CHAR(uint8_t,PictureMode,0,0,13);
-  CREATE_CHAR(double,PM10Density,0,0,1000);
-  CREATE_CHAR(uint8_t,PositionState,2,0,2,GOING_TO_MINIMUM,GOING_TO_MAXIMUM,STOPPED);
+  CREATE_CHAR(double,PM10Density,0,0,1000);  // 10-micron particulate density, measured in micrograms/m<sup>3</sup>
+  CREATE_CHAR(uint8_t,PositionState,2,0,2,GOING_TO_MINIMUM,GOING_TO_MAXIMUM,STOPPED);  // deprecated
   CREATE_CHAR(uint8_t,PowerModeSelection,0,0,1);
   CREATE_CHAR(uint8_t,ProgramMode,0,0,2,NONE,SCHEDULED,SCHEDULE_OVERRIDEN);
   CREATE_CHAR(uint8_t,ProgrammableSwitchEvent,0,0,2,SINGLE_PRESS,DOUBLE_PRESS,LONG_PRESS);
