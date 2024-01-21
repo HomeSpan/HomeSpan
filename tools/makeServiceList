@@ -55,7 +55,7 @@ END {
 		s=services[i]
 		printf("## %s (%s)\n",s,uuid[s])
 		printf("<details><summary>%s</summary><br><table>\n",desc[s])
-		printf("<tr><th>Characteristic</th><th>UUID</th><th>Format</th><th>Perms</th><th>Min</th><th>Max</th><th>Constants</th><th>Notes</th></tr>\n")
+		printf("<tr><th>Characteristic</th><th>UUID</th><th>Format</th><th>Perms</th><th>Min</th><th>Max</th><th>Defaults</th><th>Notes</th></tr>\n")
 
 		for(j=0;j<nChars[s];j++){
 			char=servChars[s,j]
