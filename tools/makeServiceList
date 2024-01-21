@@ -60,7 +60,7 @@ END {
 		for(j=0;j<nChars[s];j++){
 			char=servChars[s,j]
 			printf("<tr>")
-			printf("<td>%s%s</td>",servReq[s,j]?"<b>":"",char)
+			printf("<td><details><summary>%s%s%s</summary>%s</details></td>",servReq[s,j]?"<b>":"",char,servReq[s,j]?"</b>":"",notes[char])
 			printf("<td align=\"center\">%s</td>",uuid[char])
 			printf("<td align=\"center\">%s</td>",format[char])
 			printf("<td align=\"center\">%s</td>",perms[char])
@@ -79,7 +79,8 @@ END {
 				printf("<td align=\"center\">%s</td>",default[char])
 			}
 
-			printf("<td>%s</td></tr>\n",notes[char])
+			printf("</tr>\n")
+			#printf("<td>%s</td></tr>\n",notes[char])
 		}
 
 		printf("</table></details>\n\n")
