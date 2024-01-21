@@ -462,7 +462,7 @@ namespace Characteristic {
   CREATE_CHAR(double,HeatingThresholdTemperature,16,0,25); // heating turns on when temperature (in Celsius) falls below this threshold
   CREATE_CHAR(boolean,HoldPosition,false,0,1);  // deprecated
   CREATE_CHAR(double,Hue,0,0,360);  // color (in degrees) from red (0) to green (120) to blue (240) and back to red (360)
-  CREATE_CHAR(boolean,Identify,false,0,1,IDLE,RUN_ID);  // the Home App set this to RUN_ID when it wants the device to run its identification routine
+  CREATE_CHAR(boolean,Identify,0,0,1,IDLE,RUN_ID);  // the Home App sets this to RUN_ID when it wants the device to run its identification routine
   CREATE_CHAR(uint32_t,Identifier,0,0,255);
   CREATE_CHAR(uint8_t,InputDeviceType,0,0,6);
   CREATE_CHAR(uint8_t,InputSourceType,0,0,10);
@@ -474,15 +474,15 @@ namespace Characteristic {
   CREATE_CHAR(uint8_t,LockTargetState,0,0,1,UNLOCK,LOCK);   // indicates desired state of lock
   CREATE_CHAR(const char *,Manufacturer,"HomeSpan",0,1);  // any string - informational only
   CREATE_CHAR(const char *,Model,"HomeSpan-ESP32",0,1);  // any string - informational only
-  CREATE_CHAR(boolean,MotionDetected,false,0,1,NOT_DETECTED,DETECTED);  // indicates if motion is detected
-  CREATE_CHAR(boolean,Mute,false,0,1,OFF,ON); // not used
+  CREATE_CHAR(boolean,MotionDetected,0,0,1,NOT_DETECTED,DETECTED);  // indicates if motion is detected
+  CREATE_CHAR(boolean,Mute,0,0,1,OFF,ON); // not used
   CREATE_CHAR(const char *,Name,"unnamed",0,1); // default name of a Service used <i>only</i> during initial pairing
   CREATE_CHAR(double,NitrogenDioxideDensity,0,0,1000);  // measured in &micro;g/m<sup>3</sup>
-  CREATE_CHAR(boolean,ObstructionDetected,false,0,1,NOT_DETECTED,DETECTED);  // indicates if obstruction is detected
+  CREATE_CHAR(boolean,ObstructionDetected,0,0,1,NOT_DETECTED,DETECTED);  // indicates if obstruction is detected
   CREATE_CHAR(double,PM25Density,0,0,1000); // 2.5-micron particulate density, measured in &micro;g/m<sup>3</sup>
   CREATE_CHAR(uint8_t,OccupancyDetected,0,0,1,NOT_DETECTED,DETECTED);  // indicates if occupanccy is detected
-  CREATE_CHAR(boolean,OutletInUse,false,0,1,NOT_IN_USE,IN_USE); // indicates if an appliance or light is plugged into the outlet, regardless of whether on or off 
-  CREATE_CHAR(boolean,On,false,0,1,OFF,ON);  // indicates if the Service is active/on
+  CREATE_CHAR(boolean,OutletInUse,0,0,1,NOT_IN_USE,IN_USE); // indicates if an appliance or light is plugged into the outlet, regardless of whether on or off 
+  CREATE_CHAR(boolean,On,0,0,1,OFF,ON);  // indicates if the Service is active/on
   CREATE_CHAR(double,OzoneDensity,0,0,1000);  // measured in &micro;g/m<sup>3</sup>
   CREATE_CHAR(uint8_t,PictureMode,0,0,13);
   CREATE_CHAR(double,PM10Density,0,0,1000);  // 10-micron particulate density, measured in &micro;g/m<sup>3</sup>
@@ -507,7 +507,7 @@ namespace Characteristic {
   CREATE_CHAR(uint8_t,SlatType,0,0,1,HORIZONTAL,VERTICAL);
   CREATE_CHAR(uint8_t,SleepDiscoveryMode,0,0,1);
   CREATE_CHAR(uint8_t,SmokeDetected,0,0,1,NOT_DETECTED,DETECTED);
-  CREATE_CHAR(boolean,StatusActive,true,0,1);
+  CREATE_CHAR(boolean,StatusActive,1,0,1);
   CREATE_CHAR(uint8_t,StatusFault,0,0,1,NO_FAULT,FAULT);
   CREATE_CHAR(uint8_t,StatusJammed,0,0,1,NOT_JAMMED,JAMMED);
   CREATE_CHAR(uint8_t,StatusLowBattery,0,0,1,NOT_LOW_BATTERY,LOW_BATTERY);
