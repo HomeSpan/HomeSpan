@@ -331,7 +331,7 @@ namespace Service {
   CREATE_SERV(StatelessProgrammableSwitch,89)   // Defines a "Stateless" Programmable Switch that can be used to trigger actions in the Home App.
     REQ(ProgrammableSwitchEvent);
     OPT(Name);
-    OPT_DEP(ServiceLabelIndex);
+    OPT(ServiceLabelIndex);
   END_SERV
 
   CREATE_SERV(Switch,49)    // Defines a generic Switch.
@@ -381,7 +381,7 @@ namespace Service {
     OPT(SetDuration);
     OPT(RemainingDuration);
     OPT(IsConfigured);
-    OPT_DEP(ServiceLabelIndex);
+    OPT(ServiceLabelIndex);
     OPT(StatusFault);
     OPT(Name);
   END_SERV
@@ -452,9 +452,9 @@ namespace Characteristic {
   CREATE_CHAR(uint8_t,CurrentHeatingCoolingState,0,0,2,IDLE,HEATING,COOLING); // indicates whether appliance is currently heating, cooling, or just idle
   CREATE_CHAR(uint8_t,CurrentHeaterCoolerState,1,0,3,INACTIVE,IDLE,HEATING,COOLING);  // indicates whether appliance is currently heating, cooling, idle, or off
   CREATE_CHAR(uint8_t,CurrentMediaState,0,0,5);
-  CREATE_CHAR(double,CurrentRelativeHumidity,0,0,100);  //current humidity measured as a percentage
+  CREATE_CHAR(double,CurrentRelativeHumidity,0,0,100);  // current humidity measured as a percentage
   CREATE_CHAR(double,CurrentTemperature,0,0,100);   // current temperature measured in Celsius
-  CREATE_CHAR(int,CurrentTiltAngle,0,-90,90);  // angle (in degrees) of slats from fully up or left (-90) to fully open (0) to fully down or right (90)
+  CREATE_CHAR(int,CurrentTiltAngle,0,-90,90);  // current angle (in degrees) of slats from fully up or left (-90) to fully open (0) to fully down or right (90)
   CREATE_CHAR(double,FilterLifeLevel,0,0,100); // measures as a percentage of remaining life
   CREATE_CHAR(uint8_t,FilterChangeIndication,0,0,1,NO_CHANGE_NEEDED,CHANGE_NEEDED);  // indicates state of filter
   CREATE_CHAR(const char *,FirmwareRevision,"1.0.0",0,1);  // must be in form x[.y[.z]] - informational only
@@ -462,7 +462,7 @@ namespace Characteristic {
   CREATE_CHAR(double,HeatingThresholdTemperature,16,0,25); // heating turns on when temperature (in Celsius) falls below this threshold
   CREATE_CHAR(boolean,HoldPosition,false,0,1);  // deprecated
   CREATE_CHAR(double,Hue,0,0,360);  // color (in degrees) from red (0) to green (120) to blue (240) and back to red (360)
-  CREATE_CHAR(boolean,Identify,0,0,1,IDLE,RUN_ID);  // the Home App sets this to RUN_ID when it wants the device to run its identification routine
+  CREATE_CHAR(boolean,Identify,0,0,1,UNUSED,RUN_ID);  // the Home App sets this to <b>RUN_ID</b> when it wants the device to run its identification routine
   CREATE_CHAR(uint32_t,Identifier,0,0,255);
   CREATE_CHAR(uint8_t,InputDeviceType,0,0,6);
   CREATE_CHAR(uint8_t,InputSourceType,0,0,10);
@@ -488,55 +488,55 @@ namespace Characteristic {
   CREATE_CHAR(double,PM10Density,0,0,1000);  // 10-micron particulate density, measured in &micro;g/m<sup>3</sup>
   CREATE_CHAR(uint8_t,PositionState,2,0,2,GOING_TO_MINIMUM,GOING_TO_MAXIMUM,STOPPED);  // deprecated
   CREATE_CHAR(uint8_t,PowerModeSelection,0,0,1);
-  CREATE_CHAR(uint8_t,ProgramMode,0,0,2,NONE,SCHEDULED,SCHEDULE_OVERRIDEN);
-  CREATE_CHAR(uint8_t,ProgrammableSwitchEvent,0,0,2,SINGLE_PRESS,DOUBLE_PRESS,LONG_PRESS);
-  CREATE_CHAR(double,RelativeHumidityDehumidifierThreshold,50,0,100);
-  CREATE_CHAR(double,RelativeHumidityHumidifierThreshold,50,0,100);
-  CREATE_CHAR(uint32_t,RemainingDuration,60,0,3600);
+  CREATE_CHAR(uint8_t,ProgramMode,0,0,2,NONE,SCHEDULED,SCHEDULE_OVERRIDEN);  // indicates if pre-scheduled program is running
+  CREATE_CHAR(uint8_t,ProgrammableSwitchEvent,0,0,2,SINGLE_PRESS,DOUBLE_PRESS,LONG_PRESS);  // specifies type of button press
+  CREATE_CHAR(double,RelativeHumidityDehumidifierThreshold,50,0,100);  // dehumidfier turns on when humidity rises above this threshold
+  CREATE_CHAR(double,RelativeHumidityHumidifierThreshold,50,0,100);  // humidfier turns on when humidity falls below this threshold
+  CREATE_CHAR(uint32_t,RemainingDuration,60,0,3600);  // duration (in seconds) remaining for Service to be active/on
   CREATE_CHAR(uint8_t,RemoteKey,0,0,16);
-  CREATE_CHAR(uint8_t,ResetFilterIndication,0,1,1);
-  CREATE_CHAR(int,RotationDirection,0,0,1,CLOCKWISE,COUNTERCLOCKWISE);
-  CREATE_CHAR(double,RotationSpeed,0,0,100);
-  CREATE_CHAR(double,Saturation,0,0,100);
-  CREATE_CHAR(uint8_t,SecuritySystemAlarmType,0,0,1,KNOWN,UNKNOWN);
-  CREATE_CHAR(uint8_t,SecuritySystemCurrentState,3,0,4,ARMED_STAY,ARMED_AWAY,ARMED_NIGHT,DISARMED,ALARM_TRIGGERED);
-  CREATE_CHAR(uint8_t,SecuritySystemTargetState,3,0,3,ARM_STAY,ARM_AWAY,ARM_NIGHT,DISARM); 
-  CREATE_CHAR(const char *,SerialNumber,"HS-12345",0,1);
-  CREATE_CHAR(uint8_t,ServiceLabelIndex,1,1,255);
-  CREATE_CHAR(uint8_t,ServiceLabelNamespace,1,0,1,DOTS,NUMERALS);
-  CREATE_CHAR(uint8_t,SlatType,0,0,1,HORIZONTAL,VERTICAL);
+  CREATE_CHAR(uint8_t,ResetFilterIndication,0,0,1,UNUSED,RESET_FILTER);  // the Home App sets this to <b>RESET_FILTER</b> when it wants to reset the <b>FilterChangeIndication</b>
+  CREATE_CHAR(int,RotationDirection,0,0,1,CLOCKWISE,COUNTERCLOCKWISE);  // indicates the rotation direction of a fan
+  CREATE_CHAR(double,RotationSpeed,0,0,100);  // measured as a percentage
+  CREATE_CHAR(double,Saturation,0,0,100);  // color saturation, measured as a percentage
+  CREATE_CHAR(uint8_t,SecuritySystemAlarmType,0,0,1,KNOWN,UNKNOWN);  // indicates whether alarm was triggered for known reason
+  CREATE_CHAR(uint8_t,SecuritySystemCurrentState,3,0,4,ARMED_STAY,ARMED_AWAY,ARMED_NIGHT,DISARMED,ALARM_TRIGGERED);  // indicates current state of the security system 
+  CREATE_CHAR(uint8_t,SecuritySystemTargetState,3,0,3,ARM_STAY,ARM_AWAY,ARM_NIGHT,DISARM); // indicates desired state of the security system
+  CREATE_CHAR(const char *,SerialNumber,"HS-12345",0,1);  // any string - informational only
+  CREATE_CHAR(uint8_t,ServiceLabelIndex,1,1,255);   // numerical index used to distinguish multiple copies of the same Service within an Accessory
+  CREATE_CHAR(uint8_t,ServiceLabelNamespace,1,0,1,DOTS,NUMERALS);  // unused
+  CREATE_CHAR(uint8_t,SlatType,0,0,1,HORIZONTAL,VERTICAL); // indicates the direction of a slat or group of slats
   CREATE_CHAR(uint8_t,SleepDiscoveryMode,0,0,1);
-  CREATE_CHAR(uint8_t,SmokeDetected,0,0,1,NOT_DETECTED,DETECTED);
-  CREATE_CHAR(boolean,StatusActive,1,0,1);
-  CREATE_CHAR(uint8_t,StatusFault,0,0,1,NO_FAULT,FAULT);
-  CREATE_CHAR(uint8_t,StatusJammed,0,0,1,NOT_JAMMED,JAMMED);
-  CREATE_CHAR(uint8_t,StatusLowBattery,0,0,1,NOT_LOW_BATTERY,LOW_BATTERY);
-  CREATE_CHAR(uint8_t,StatusTampered,0,0,1,NOT_TAMPERED,TAMPERED);
-  CREATE_CHAR(double,SulphurDioxideDensity,0,0,1000);
-  CREATE_CHAR(uint8_t,SwingMode,0,0,1,SWING_DISABLED,SWING_ENABLED);
-  CREATE_CHAR(uint8_t,TargetAirPurifierState,1,0,1,MANUAL,AUTO);
-  CREATE_CHAR(uint8_t,TargetFanState,1,0,1,MANUAL,AUTO);
-  CREATE_CHAR(int,TargetTiltAngle,0,-90,90);
-  CREATE_CHAR(uint8_t,TargetHeaterCoolerState,0,0,2,AUTO,HEAT,COOL);
-  CREATE_CHAR(uint32_t,SetDuration,60,0,3600);
-  CREATE_CHAR(int,TargetHorizontalTiltAngle,0,-90,90);
-  CREATE_CHAR(uint8_t,TargetHumidifierDehumidifierState,0,0,2,AUTO,HUMIDIFY,DEHUMIDIFY);
-  CREATE_CHAR(uint8_t,TargetPosition,0,0,100);
-  CREATE_CHAR(uint8_t,TargetDoorState,1,0,1,OPEN,CLOSED);
-  CREATE_CHAR(uint8_t,TargetHeatingCoolingState,0,0,3,OFF,HEAT,COOL,AUTO);
-  CREATE_CHAR(uint8_t,TargetMediaState,0,0,2);
-  CREATE_CHAR(double,TargetRelativeHumidity,0,0,100);
-  CREATE_CHAR(double,TargetTemperature,16,10,38);
+  CREATE_CHAR(uint8_t,SmokeDetected,0,0,1,NOT_DETECTED,DETECTED); // indicates if smoke is detected
+  CREATE_CHAR(boolean,StatusActive,1,0,1,NOT_FUNCTIONING,FUNCTIONING);  // indicates whether the Service is properly functioning 
+  CREATE_CHAR(uint8_t,StatusFault,0,0,1,NO_FAULT,FAULT);  // indicates whether the Service has a fault
+  CREATE_CHAR(uint8_t,StatusJammed,0,0,1,NOT_JAMMED,JAMMED);  // indicates whether the Service has been "jammed"
+  CREATE_CHAR(uint8_t,StatusLowBattery,0,0,1,NOT_LOW_BATTERY,LOW_BATTERY);  // indicates state of battery
+  CREATE_CHAR(uint8_t,StatusTampered,0,0,1,NOT_TAMPERED,TAMPERED);  // indicates whether the Service has been tampered with
+  CREATE_CHAR(double,SulphurDioxideDensity,0,0,1000);  // measured in &micro;g/m<sup>3</sup>
+  CREATE_CHAR(uint8_t,SwingMode,0,0,1,SWING_DISABLED,SWING_ENABLED);  // indicates whether swing-nmode is enabled
+  CREATE_CHAR(uint8_t,TargetAirPurifierState,1,0,1,MANUAL,AUTO);  // indicates desired state of air purifier
+  CREATE_CHAR(uint8_t,TargetFanState,1,0,1,MANUAL,AUTO);  // indicates desired state of fan
+  CREATE_CHAR(int,TargetTiltAngle,0,-90,90);  // indicated desired angle (in degrees) of slats from fully up or left (-90) to fully open (0) to fully down or right (90) 
+  CREATE_CHAR(uint8_t,TargetHeaterCoolerState,0,0,2,AUTO,HEAT,COOL); // indicates desired state of heater/cooler
+  CREATE_CHAR(uint32_t,SetDuration,60,0,3600);  // specifies the duration (in seconds) for a Service to remain on once activated
+  CREATE_CHAR(int,TargetHorizontalTiltAngle,0,-90,90);  // indicates desired angle (in degrees) of slats from fully up (-90) to fully open (0) to fully down (90)
+  CREATE_CHAR(uint8_t,TargetHumidifierDehumidifierState,0,0,2,AUTO,HUMIDIFY,DEHUMIDIFY);  // indicates desired state of humidifier/dehumidifier
+  CREATE_CHAR(uint8_t,TargetPosition,0,0,100);  // indicates target position (as a percentage) from fully closed (0) to full open (100)
+  CREATE_CHAR(uint8_t,TargetDoorState,1,0,1,OPEN,CLOSED);   // indicates desires state of door
+  CREATE_CHAR(uint8_t,TargetHeatingCoolingState,0,0,3,OFF,HEAT,COOL,AUTO);  // indicates desired state of appliance
+  CREATE_CHAR(uint8_t,TargetMediaState,0,0,2);  // unused
+  CREATE_CHAR(double,TargetRelativeHumidity,0,0,100);   // indicates desired humidity measured as a percentage
+  CREATE_CHAR(double,TargetTemperature,16,10,38);   // indicates desired temperature measure in Celsius
   CREATE_CHAR(uint8_t,TargetVisibilityState,0,0,1);
-  CREATE_CHAR(uint8_t,TemperatureDisplayUnits,0,0,1,CELSIUS,FAHRENHEIT);
-  CREATE_CHAR(int,TargetVerticalTiltAngle,0,-90,90);
-  CREATE_CHAR(uint8_t,ValveType,0,0,3);
-  CREATE_CHAR(const char *,Version,"1.0.0",0,1);
-  CREATE_CHAR(double,VOCDensity,0,0,1000);
-  CREATE_CHAR(uint8_t,Volume,0,0,100);
+  CREATE_CHAR(uint8_t,TemperatureDisplayUnits,0,0,1,CELSIUS,FAHRENHEIT);   // indicates the desired units to display the temperature on the device itself (has no effect on Home App)
+  CREATE_CHAR(int,TargetVerticalTiltAngle,0,-90,90);  // indicates desired angle (in degrees) of slats from fully left (-90) to fully open (0) to fully right (90)
+  CREATE_CHAR(uint8_t,ValveType,0,0,3,GENERIC,IRRIGATION,SHOWER_HEAD,FAUCET);  // indicates the type of valve
+  CREATE_CHAR(const char *,Version,"1.0.0",0,1);  // unused
+  CREATE_CHAR(double,VOCDensity,0,0,1000);  // measured in &micro;g/m<sup>3</sup>
+  CREATE_CHAR(uint8_t,Volume,0,0,100);  // unused
   CREATE_CHAR(uint8_t,VolumeControlType,0,0,3);
   CREATE_CHAR(uint8_t,VolumeSelector,0,0,1);
-  CREATE_CHAR(double,WaterLevel,0,0,100);
+  CREATE_CHAR(double,WaterLevel,0,0,100);  // measured as a percentage
 
 }
 
