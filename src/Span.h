@@ -149,7 +149,7 @@ namespace Service {
     OPT(LockPhysicalControls);
   END_SERV
 
-  CREATE_SERV(Faucet,D7)    // Defines the master control for one or more faucets or shower heads.  Linked Services: <b>Valve</b> (at least one <b>required</b>), and <b>HeaterCooler</b> (optional, <i>unless</i> only one linked Valve is defined).
+  CREATE_SERV(Faucet,D7)    // Defines the master control for a multi-Valve appliance.  Linked Services: <b>Valve</b> (at least one <i>required</i>), and <b>HeaterCooler</b> (optional).
     REQ(Active);
     OPT(StatusFault);
     OPT(Name);
