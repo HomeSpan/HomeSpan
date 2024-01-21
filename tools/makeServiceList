@@ -72,7 +72,7 @@ END {
 			if(nVals[char]>0){
 				printf("<td><ul>")
 				for(k=0;k<nVals[char];k++)
-					printf("<li><b>%s&nbsp(%d)&nbsp;</b> %s</li>",vals[char,k],k,default[char]==k?":small_orange_diamond:":"")
+					printf("<li><b>%s&nbsp(%d)&nbsp;</b>%s</li>",vals[char,k],k,default[char]==k?":heavy_check_mark:":"")
 				printf("</ul></td>")
 			} else {
 				printf("<td align=\"center\">%s</td>",default[char])
