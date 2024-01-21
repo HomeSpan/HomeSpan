@@ -118,8 +118,7 @@ struct DEV_WindowShade : Service::WindowCovering {     // A motorized Window Sha
     // the current state.
 
     // According to HAP, the Characteristic Position State is also required.  However, this seems duplicative and is NOT needed
-    // at all given the way HomeKit uses current position.  HomeSpan will warn you if Position State is not defined (since it 
-    // is technically required) but this works fine without it.
+    // at all given the way HomeKit uses current position.
     
   } // loop
   
