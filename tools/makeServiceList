@@ -72,7 +72,7 @@ END {
 
 			printf("<td><ul>")
 			for(k=0;k<nVals[char];k++)
-				printf("<li>%s (%d)</li>",vals[char,k],k)
+				printf("<li>%s&nbsp(%d)</li>",vals[char,k],k)
 			
 			printf("</ul></td>")
 			printf("<td>%s</td></tr>\n",notes[char])
