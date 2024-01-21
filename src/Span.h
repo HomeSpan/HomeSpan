@@ -477,15 +477,15 @@ namespace Characteristic {
   CREATE_CHAR(boolean,MotionDetected,false,0,1,NOT_DETECTED,DETECTED);  // indicates if motion is detected
   CREATE_CHAR(boolean,Mute,false,0,1,OFF,ON); // not used
   CREATE_CHAR(const char *,Name,"unnamed",0,1); // default name of a Service used <i>only</i> during initial pairing
-  CREATE_CHAR(double,NitrogenDioxideDensity,0,0,1000);  // measured in micrograms/m<sup>3</sup>
+  CREATE_CHAR(double,NitrogenDioxideDensity,0,0,1000);  // measured in &micro;g/m<sup>3</sup>
   CREATE_CHAR(boolean,ObstructionDetected,false,0,1,NOT_DETECTED,DETECTED);  // indicates if obstruction is detected
-  CREATE_CHAR(double,PM25Density,0,0,1000); // 2.5-micron particulate density, measured in micrograms/m<sup>3</sup>
+  CREATE_CHAR(double,PM25Density,0,0,1000); // 2.5-micron particulate density, measured in &micro;g/m<sup>3</sup>
   CREATE_CHAR(uint8_t,OccupancyDetected,0,0,1,NOT_DETECTED,DETECTED);  // indicates if occupanccy is detected
   CREATE_CHAR(boolean,OutletInUse,false,0,1,NOT_IN_USE,IN_USE); // indicates if an appliance or light is plugged into the outlet, regardless of whether on or off 
   CREATE_CHAR(boolean,On,false,0,1,OFF,ON);  // indicates if the Service is active/on
-  CREATE_CHAR(double,OzoneDensity,0,0,1000);  // measured in micrograms/m<sup>3</sup>
+  CREATE_CHAR(double,OzoneDensity,0,0,1000);  // measured in &micro;g/m<sup>3</sup>
   CREATE_CHAR(uint8_t,PictureMode,0,0,13);
-  CREATE_CHAR(double,PM10Density,0,0,1000);  // 10-micron particulate density, measured in micrograms/m<sup>3</sup>
+  CREATE_CHAR(double,PM10Density,0,0,1000);  // 10-micron particulate density, measured in &micro;g/m<sup>3</sup>
   CREATE_CHAR(uint8_t,PositionState,2,0,2,GOING_TO_MINIMUM,GOING_TO_MAXIMUM,STOPPED);  // deprecated
   CREATE_CHAR(uint8_t,PowerModeSelection,0,0,1);
   CREATE_CHAR(uint8_t,ProgramMode,0,0,2,NONE,SCHEDULED,SCHEDULE_OVERRIDEN);
