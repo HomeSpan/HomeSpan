@@ -32,17 +32,23 @@
 // Macros to define services, along with vectors of required and optional characteristics for each Span Service structure
 // The names of the macros are picked up by external scripts to help generate documentation
 
+// Note: These macros below are also parsed by an external awk script to auto-generate Services and Characteristics documentation.
+//
+// The CREATE_SERV_DEP() macro is the same as the CREATE_SERV() macro, except that it is used for deprecated Services that will not
+// be included in documentation. The OPT_DEP() macro is that same as the OPT() macro, except that it is used for deprecated Characteristics
+// that will not be included in documentation.
+
 #define CREATE_SERV(NAME,UUID) struct NAME : SpanService { NAME() : SpanService{#UUID,#NAME}{
 #define CREATE_SERV_DEP(NAME,UUID) struct NAME : SpanService { NAME() : SpanService{#UUID,#NAME}{
 #define END_SERV }};
 
 #define REQ(HAPCHAR) req.push_back(&hapChars.HAPCHAR)
 #define OPT(HAPCHAR) opt.push_back(&hapChars.HAPCHAR)
-#define DEP(HAPCHAR) opt.push_back(&hapChars.HAPCHAR)
+#define OPT_DEP(HAPCHAR) opt.push_back(&hapChars.HAPCHAR)
 
 namespace Service {
 
-  CREATE_SERV(AccessoryInformation,3E)  // Required Identification Information.  For each Accessory in a HomeSpan device this <i>must be included as the first Service.</i>
+  CREATE_SERV(AccessoryInformation,3E)  // Required Identification Information.  For each Accessory in a HomeSpan device this <i>must</i> be included as the first Service.
     REQ(Identify);
     OPT(FirmwareRevision);
     OPT(Manufacturer);
@@ -50,10 +56,10 @@ namespace Service {
     OPT(Name);
     OPT(SerialNumber);
     OPT(HardwareRevision);
-    DEP(AccessoryFlags);
+    OPT_DEP(AccessoryFlags);
   END_SERV
 
-  CREATE_SERV(AirPurifier,BB)   // Defines a basic Air Purifier with an optional fan.  Optional <i>Linked Services</i>: FilterMaintenance, AirQualitySensor, Fan, Slat
+  CREATE_SERV(AirPurifier,BB)   // Defines a basic Air Purifier with an optional fan.  Optional Linked Services: <b>FilterMaintenance</b>, <b>AirQualitySensor</b>, <b>Fan</b>, and <b>Slat</b>
     REQ(Active);
     REQ(CurrentAirPurifierState);
     REQ(TargetAirPurifierState);
@@ -63,7 +69,7 @@ namespace Service {
     OPT(LockPhysicalControls);
   END_SERV
 
-  CREATE_SERV(AirQualitySensor,8D)  // Defines an Air Quality Sensor with a variety of Air Quality Characteristics. 
+  CREATE_SERV(AirQualitySensor,8D)  // Defines an Air Quality Sensor. 
     REQ(AirQuality);
     OPT(Name);
     OPT(OzoneDensity);
@@ -119,20 +125,20 @@ namespace Service {
   CREATE_SERV(Door,81)    // Defines a motorized Door.
     REQ(CurrentPosition);
     REQ(TargetPosition);
-    DEP(PositionState);
+    OPT_DEP(PositionState);
     OPT(Name);
-    DEP(HoldPosition);
+    OPT_DEP(HoldPosition);
     OPT(ObstructionDetected);
   END_SERV
 
-  CREATE_SERV(Doorbell,121)   // Defines a Doorbell.
+  CREATE_SERV(Doorbell,121)   // Defines a Doorbell.  Can be used on a standalone basis or in conjunction with a <b>LockMechanism</b> Service.
     REQ(ProgrammableSwitchEvent);
     OPT(Name);
-    DEP(Volume);
-    DEP(Brightness);
+    OPT_DEP(Volume);
+    OPT_DEP(Brightness);
   END_SERV
 
-  CREATE_SERV(Fan,B7)     // Defines a Fan.  Can be used with a LightBulb Service to define a Lighted Ceiling Fan.
+  CREATE_SERV(Fan,B7)     // Defines a Fan.  Can be used in conjunction with a <b>LightBulb</b> Service to create a Lighted Ceiling Fan.
     REQ(Active);
     OPT(Name);
     OPT(CurrentFanState);
@@ -143,7 +149,7 @@ namespace Service {
     OPT(LockPhysicalControls);
   END_SERV
 
-  CREATE_SERV(Faucet,D7)    // Defines the master control for one or more faucets or shower heads.  <i>Linked Services:</i> Valve (at least one <b>required</b>) and HeaterCooler (optional, <i>unless</i> only one linked Valve defined).
+  CREATE_SERV(Faucet,D7)    // Defines the master control for one or more faucets or shower heads.  Linked Services: <b>Valve</b> (at least one <b>required</b>), and <b>HeaterCooler</b> (optional, <i>unless</i> only one linked Valve is defined).
     REQ(Active);
     OPT(StatusFault);
     OPT(Name);
@@ -169,7 +175,7 @@ namespace Service {
     REQ(Version);
   END_SERV
 
-  CREATE_SERV(HeaterCooler,BC)  // Defines a standalone Heater, Cooler, or combined Heater/Cooler.  Can be used with a separate Fan Service and/or Slat Service to extend functionality.
+  CREATE_SERV(HeaterCooler,BC)  // Defines a standalone Heater, Cooler, or combined Heater/Cooler.  Can be used with a separate <b>Fan</b> Service and/or <b>Slat</b> Service to extend functionality.
     REQ(Active);
     REQ(CurrentTemperature);
     REQ(CurrentHeaterCoolerState);
@@ -183,7 +189,7 @@ namespace Service {
     OPT(LockPhysicalControls);
   END_SERV
 
-  CREATE_SERV(HumidifierDehumidifier,BD)  // Defines a Humidifer, Dehumidifier, or combined Humidifer/Dehumidifier.  Can be used with a separate Fan Service and/or Slat Service to extend functionality.
+  CREATE_SERV(HumidifierDehumidifier,BD)  // Defines a Humidifer, Dehumidifier, or combined Humidifer/Dehumidifier.  Can be used with a separate <b>Fan</b> Service and/or <b>Slat</b> Service to extend functionality.
     REQ(Active);
     REQ(CurrentRelativeHumidity);
     REQ(CurrentHumidifierDehumidifierState);
@@ -206,7 +212,7 @@ namespace Service {
     OPT(StatusLowBattery);   
   END_SERV
 
-  CREATE_SERV(InputSource,D9)   // Defines an Input Source for a Television.  Use <b>only</b> as a <i>Linked Service</i> for the Television Service.
+  CREATE_SERV(InputSource,D9)   // Defines an Input Source for a TV.  Use <i>only</i> as a Linked Service for the <b>Television</b> Service.
       OPT(ConfiguredName);
       OPT(IsConfigured);
       REQ(Identifier);
@@ -214,7 +220,7 @@ namespace Service {
       OPT(TargetVisibilityState);
   END_SERV
 
-  CREATE_SERV(IrrigationSystem,CF)  // Defines an Irrigation System.  <i>Linked Services:</i> Valve Service (at least one <b>required</b>).
+  CREATE_SERV(IrrigationSystem,CF)  // Defines an Irrigation System.  Linked Services: <b>Valve</b> Service (at least one <i>required</i>).
     REQ(Active);
     REQ(ProgramMode);
     REQ(InUse);
@@ -231,7 +237,7 @@ namespace Service {
     OPT(StatusLowBattery);       
   END_SERV
 
-  CREATE_SERV(LightBulb,43)   // Defines a generic Light.
+  CREATE_SERV(LightBulb,43)   // Defines any type of Light.
     REQ(On);
     OPT(Brightness);
     OPT(Hue);
@@ -298,7 +304,7 @@ namespace Service {
     REQ(ServiceLabelNamespace);
   END_SERV  
 
-  CREATE_SERV(Slat,B9)    // Defines a motorized ventilation Slat (or group of Slats).
+  CREATE_SERV(Slat,B9)    // Defines a motorized ventilation Slat(s).
     REQ(CurrentSlatState);
     REQ(SlatType);
     OPT(Name);
@@ -325,7 +331,7 @@ namespace Service {
   CREATE_SERV(StatelessProgrammableSwitch,89)   // Defines a "Stateless" Programmable Switch that can be used to trigger actions in the Home App.
     REQ(ProgrammableSwitchEvent);
     OPT(Name);
-    DEP(ServiceLabelIndex);
+    OPT_DEP(ServiceLabelIndex);
   END_SERV
 
   CREATE_SERV(Switch,49)    // Defines a generic Switch.
@@ -333,7 +339,7 @@ namespace Service {
     OPT(Name);
   END_SERV
 
-  CREATE_SERV(Television,D8)    // Defines a Television.  Optional <i>Linked Service</i>: InputSource, TelevisionSpeaker
+  CREATE_SERV(Television,D8)    // Defines a TV.  Optional Linked Services: <b>InputSource</b> and <b>TelevisionSpeaker</b>.
       REQ(Active);
       OPT(ConfiguredName);
       OPT(ActiveIdentifier);
@@ -341,7 +347,7 @@ namespace Service {
       OPT(PowerModeSelection);      
   END_SERV
 
-  CREATE_SERV(TelevisionSpeaker,113)    // Defines a TelevisionSpeaker that can be controlled via the Remote Control widget on an iPhone.  Use <b>only</b> as a <i>Linked Service</i> for the Television Service.
+  CREATE_SERV(TelevisionSpeaker,113)    // Defines a Television Speaker that can be controlled via the Remote Control widget on an iPhone.  Use <i>only</i> as a Linked Service for the <b>Television</b> Service.
       REQ(VolumeControlType);
       REQ(VolumeSelector);      
   END_SERV
@@ -368,14 +374,14 @@ namespace Service {
     OPT(TargetRelativeHumidity);
   END_SERV
 
-  CREATE_SERV(Valve,D0)     // Defines an electronic Valve.  Can be used standalone or as a <i>Linked Service</i> in conjunction with the Faucet or IrrigationSystem Services.
+  CREATE_SERV(Valve,D0)     // Defines an electronic Valve.  Can be used standalone or as a Linked Service in conjunction with the <b>Faucet</b> and <b>IrrigationSystem</b> Services.
     REQ(Active);
     REQ(InUse);
     REQ(ValveType);
     OPT(SetDuration);
     OPT(RemainingDuration);
     OPT(IsConfigured);
-    DEP(ServiceLabelIndex);
+    OPT_DEP(ServiceLabelIndex);
     OPT(StatusFault);
     OPT(Name);
   END_SERV
@@ -383,18 +389,18 @@ namespace Service {
   CREATE_SERV(Window,8B)    // Defines a motorized Window.
     REQ(CurrentPosition);
     REQ(TargetPosition);
-    DEP(PositionState);
+    OPT_DEP(PositionState);
     OPT(Name);
-    DEP(HoldPosition);
+    OPT_DEP(HoldPosition);
     OPT(ObstructionDetected);
   END_SERV
 
   CREATE_SERV(WindowCovering,8C)  // Defines a motorized Window Shade, Screen, Awning, etc.
     REQ(TargetPosition);
     REQ(CurrentPosition);
-    DEP(PositionState);   
+    OPT_DEP(PositionState);   
     OPT(Name);
-    DEP(HoldPosition);
+    OPT_DEP(HoldPosition);
     OPT(CurrentHorizontalTiltAngle);
     OPT(TargetHorizontalTiltAngle);
     OPT(CurrentVerticalTiltAngle);
