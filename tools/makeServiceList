@@ -38,7 +38,6 @@ BEGIN {
 		for(i=0;i<nVals[char];i++)
 			vals[char,i]=x[i+7]
 		notes[char]=line[2]						# save optional comment as notes for Characteristic
-		print $0, "COM:", line[2]
 	}
 
 	else if(x[1]=="HAPCHAR"){
