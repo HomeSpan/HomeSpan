@@ -55,12 +55,13 @@ END {
 		s=services[i]
 		printf("## %s (%s)\n",s,uuid[s])
 		printf("<details><summary>%s</summary><br><table>\n",desc[s])
-		printf("<tr><th>Characteristic</th><th>UUID</th><th>Format</th><th>Perms</th><th>Min</th><th>Max</th><th>Defaults</th><th>Notes</th></tr>\n")
+		printf("<tr><th>Characteristic</th><th>UUID</th><th>Format</th><th>Perms</th><th>Min</th><th>Max</th><th>Defaults</th></tr>\n")
 
 		for(j=0;j<nChars[s];j++){
 			char=servChars[s,j]
 			printf("<tr>")
-			printf("<td><details><summary>%s%s%s</summary>%s</details></td>",servReq[s,j]?"<b>":"",char,servReq[s,j]?"</b>":"",notes[char])
+			#printf("<td><details><summary>%s%s%s</summary>%s</details></td>",servReq[s,j]?"<b>":"",char,servReq[s,j]?"</b>":"",notes[char])
+			printf("<td>%s%s%s<ul><li>%s</li></ul></td>",servReq[s,j]?"<b>":"",char,servReq[s,j]?"</b>":"",notes[char])
 			printf("<td align=\"center\">%s</td>",uuid[char])
 			printf("<td align=\"center\">%s</td>",format[char])
 			printf("<td align=\"center\">%s</td>",perms[char])
