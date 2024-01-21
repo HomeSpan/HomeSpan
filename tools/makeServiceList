@@ -55,7 +55,7 @@ END {
 		s=services[i]
 		printf("## %s (%s)\n",s,uuid[s])
 		printf("<details><summary>%s</summary><br><table>\n",desc[s])
-		printf("<tr><th>Characteristic</th><th>Format</th><th>Perms</th><th>Min</th><th>Max</th><th>Constants/Defaults</th></tr>\n")
+		printf("<tr><th>Characteristic</th><th>Format</th><th>Perms</th><th>Min</th><th>Max</th><th>Values</th></tr>\n")
 
 		for(j=0;j<nChars[s];j++){
 			char=servChars[s,j]
@@ -75,7 +75,7 @@ END {
 					printf("<li>%s%s&nbsp(%d)%s</li>",default[char]==k?"<b>":"",vals[char,k],k,default[char]==k?"</b>":"")
 				printf("</ul></td>")
 			} else {
-			#	printf("<td align=\"center\">%s</td>",default[char])
+			printf("<td>%s</td>",default[char])
 			}
 
 			printf("</tr>\n")
