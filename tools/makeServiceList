@@ -70,11 +70,15 @@ END {
 			else
 				printf("<td align=\"center\">-</td><td align=\"center\">-</td>")
 
-			printf("<td><ul>")
-			for(k=0;k<nVals[char];k++)
-				printf("<li>%s&nbsp(%d)</li>",vals[char,k],k)
-			
-			printf("</ul></td>")
+			if(nVals[char]>0){
+				printf("<td><ul>")
+				for(k=0;k<nVals[char];k++)
+					printf("<li>%s&nbsp(%d)</li>",vals[char,k],k)
+				printf("</ul></td>")
+			} else {
+				printf("<td>%s<\td>",default[char])
+			}
+
 			printf("<td>%s</td></tr>\n",notes[char])
 		}
 
