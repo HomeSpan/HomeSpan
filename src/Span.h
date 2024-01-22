@@ -425,7 +425,7 @@ namespace Characteristic {
   CREATE_CHAR(uint8_t,Active,0,0,1,INACTIVE,ACTIVE);  // indicates if the Service is active/on
   CREATE_CHAR(uint32_t,ActiveIdentifier,0,0,255);     // numerical Identifier of the <b>InputSource</b> selected in the Home App.
   CREATE_CHAR(uint8_t,AirQuality,0,0,5,UNKNOWN,EXCELLENT,GOOD,FAIR,INFERIOR,POOR);   // a subjective description
-  CREATE_CHAR(uint8_t,BatteryLevel,0,0,100);  // measured as a percentage
+  CREATE_CHAR(uint8_t,BatteryLevel,100,0,100);  // measured as a percentage
   CREATE_CHAR(int,Brightness,0,0,100);  // measured as a percentage
   CREATE_CHAR(double,CarbonMonoxideLevel,0,0,100);  // measured in parts per million (ppm)
   CREATE_CHAR(double,CarbonMonoxidePeakLevel,0,0,100);  // measured in parts per million (ppm)

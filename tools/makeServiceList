@@ -34,10 +34,13 @@ BEGIN {
 		default[char]=x[4]
 		min[char]=x[5]
 		max[char]=x[6]
-		nConstants[char]=n-6					# parse any pre-defined constants
-		value=0												# default starting value of constants
+		nConstants[char]=n-6								# parse any pre-defined constants
+		value=0															# default starting value of constants
 		for(i=0;i<nConstants[char];i++){
-			constantName[char,i]=x[i+7]
+			v=split(x[i+7],y,"=")							# split name of constant from (optional) value
+			constantName[char,i]=y[1]
+			if(v==2)													# override value if provided
+				value=y[2]
 			constantValue[char,i]=value
 			if(index(perms[char],"PR") && x[4]==value)
 				defaultMark[char,i]=":heavy_check_mark:"
