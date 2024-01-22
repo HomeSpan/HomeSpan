@@ -31,7 +31,7 @@ BEGIN {
 
 	else if(x[1]=="CREATE_CHAR"){
 		char=x[3]
-#		default[char]=x[4]
+		default[char]=x[4]
 		min[char]=x[5]
 		max[char]=x[6]
 		nConstants[char]=n-6					# parse any pre-defined constants
@@ -40,7 +40,7 @@ BEGIN {
 			constantName[char,i]=x[i+7]
 			constantValue[char,i]=value
 			if(index(perms[char],"PR") && x[4]==value)
-				default[char,i]=":heavy_check_mark:"
+				defaultMark[char,i]=":heavy_check_mark:"
 			value++
 		}
 		notes[char]=line[2]						# save optional comment as notes for Characteristic
@@ -78,7 +78,7 @@ END {
 			if(nConstants[char]>0){
 				printf("<td><ul>")
 				for(k=0;k<nConstants[char];k++)
-					printf("<li><b>%s&nbsp(%d)&nbsp;</b>%s</li>",constantName[char,k],constantValue[char,k],default[char,k])
+					printf("<li><b>%s&nbsp(%d)&nbsp;</b>%s</li>",constantName[char,k],constantValue[char,k],defaultMark[char,k])
 				printf("</ul></td>")
 			} else {
 				printf("<td align=\"center\">%s</td>",default[char])
