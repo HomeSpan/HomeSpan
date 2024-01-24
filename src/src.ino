@@ -27,8 +27,6 @@
 
 #include "HomeSpan.h"
 
-#define MAX_LIGHTS  2
-
 void setup() {
  
   Serial.begin(115200);
@@ -86,6 +84,11 @@ void setup() {
     new Service::Switch();
       new Characteristic::On(0);
       new Characteristic::ConfiguredName("Switch-B");
+
+    Characteristic::AirQuality *air = new Characteristic::AirQuality;
+    air->setVal(Characteristic::AirQuality::GOOD);
+    air->setVal(air->GOOD);
+      
 
 }
 
