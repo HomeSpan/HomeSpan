@@ -27,40 +27,69 @@
 
 #include "HomeSpan.h"
 
-#define MAX_LIGHTS  2
-
 void setup() {
  
   Serial.begin(115200);
 
-  homeSpan.setLogLevel(1).setStatusPin(13);
-  pinMode(21,OUTPUT);
-  homeSpan.setControlPin(21,SpanToggle::TRIGGER_ON_HIGH );
-  homeSpan.setControlPin(21,PushButton::TRIGGER_ON_HIGH );
-  homeSpan.enableWebLog(50,"pool.ntp.org","UTC");  
+  homeSpan.setLogLevel(2);
 
-  homeSpan.begin(Category::Lighting,"HomeSpan Max");
+  homeSpan.begin(Category::Lighting,"HomeSpan Test");
+  
+   new SpanAccessory();                       // start with Bridge Accessory
+    new Service::AccessoryInformation();  
+      new Characteristic::Identify(); 
+
+// First dual-light/dual-switch Accessory
 
    new SpanAccessory();
     new Service::AccessoryInformation();  
-      new Characteristic::Identify();
+      new Characteristic::Identify();  
+      new Characteristic::Name("Access-1");                 // the AccessoryInformation Service seems to require Name(), and will ignore ConfiguredName()
 
-  for(int i=0;i<MAX_LIGHTS;i++){
-    new SpanAccessory();
-      new Service::AccessoryInformation();
-        new Characteristic::Identify();
-        char c[100];
-        sprintf(c,"Light-%d",i);
-        new Characteristic::Name(c);
-      new Service::LightBulb();
-        new Characteristic::On(0,true);
-        new Characteristic::Saturation(0,true);
-     WEBLOG("Configuring %s\n",c);
-  }
+    new Service::LightBulb();
+      new Characteristic::On(0);
+      new Characteristic::ConfiguredName("Main Light");     // here we use ConfiguredName() instead of Name().  This is properly reflected in Home App during pairing
 
-  new SpanUserCommand('w', " - get web log test",webLogTest);     // simulate getting an HTTPS request for weblog
+    new Service::LightBulb();
+      new Characteristic::On(0);
+      new Characteristic::ConfiguredName("Night Light");
+      
+    new Service::Switch();
+      new Characteristic::On(0);
+      new Characteristic::ConfiguredName("Switch-A");
 
-//  homeSpan.autoPoll(8192+10000);
+    new Service::Switch();
+      new Characteristic::On(0);
+      new Characteristic::ConfiguredName("Switch-B");
+
+// Second dual-light/dual-switch Accessory
+
+   new SpanAccessory();
+    new Service::AccessoryInformation();  
+      new Characteristic::Identify();  
+      new Characteristic::Name("Access-2");               // note as above we use Name() instead of ConfiguredName() for the AccessoryInformation Service
+
+    new Service::LightBulb();
+      new Characteristic::On(0);
+      new Characteristic::ConfiguredName("Aux Light");
+
+    new Service::LightBulb();
+      new Characteristic::On(0);
+      new Characteristic::ConfiguredName("Night Light");
+      
+    new Service::Switch();
+      new Characteristic::On(0);
+      new Characteristic::ConfiguredName("Switch-A");
+
+    new Service::Switch();
+      new Characteristic::On(0);
+      new Characteristic::ConfiguredName("Switch-B");
+
+    Characteristic::AirQuality *air = new Characteristic::AirQuality;
+    air->setVal(Characteristic::AirQuality::GOOD);
+    air->setVal(air->GOOD);
+      
+
 }
 
 //////////////////////////////////////
@@ -69,18 +98,4 @@ void loop(){
  
   homeSpan.poll();
   
-}
-
-//////////////////////////////////////
-
-void webLogTest(const char *dummy){
-  Serial.printf("\n*** In Web Log Test.  Starting Custom Web Log Handler\n");     // here is where you would perform any HTTPS initializations   
-  homeSpan.getWebLog(webLogHandler);
-}
-
-void webLogHandler(const char *buf){
-  if(buf!=NULL)
-    Serial.printf("%s",buf);            // here is where you would transmit data to the HTTPS connection
-  else
-    Serial.print("*** DONE!\n\n");      // here is where you would close the HTTPS connection
 }
