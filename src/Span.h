@@ -300,7 +300,7 @@ namespace Service {
     OPT(StatusTampered);
   END_SERV  
 
-  CREATE_SERV_DEP(ServiceLabel,CC)
+  CREATE_SERV(ServiceLabel,CC)    // Groups together un-named (or un-nameable) Services by Linking them to this Service.  When used, those other Services must each include a <b>ServiceLabelIndex</b> Characteristic with a unique value.  Rarely needed.
     REQ(ServiceLabelNamespace);
   END_SERV  
 
@@ -503,7 +503,7 @@ namespace Characteristic {
   CREATE_CHAR(uint8_t,SecuritySystemTargetState,3,0,3,ARM_STAY,ARM_AWAY,ARM_NIGHT,DISARM); // indicates desired state of the security system
   CREATE_CHAR(const char *,SerialNumber,"HS-12345",0,1);  // any string - informational only
   CREATE_CHAR(uint8_t,ServiceLabelIndex,1,1,255);   // numerical index used to distinguish multiple copies of the same Service within an Accessory
-  CREATE_CHAR(uint8_t,ServiceLabelNamespace,1,0,1,DOTS,NUMERALS);  // unused
+  CREATE_CHAR(uint8_t,ServiceLabelNamespace,1,0,1,DOTS,NUMERALS);  // indicates how un-named Services linked together with a *ServiceLabel* Service should be displayed in the Home App  
   CREATE_CHAR(uint8_t,SlatType,0,0,1,HORIZONTAL,VERTICAL); // indicates the direction of a slat or group of slats
   CREATE_CHAR(uint8_t,SleepDiscoveryMode,0,0,1);  // not used
   CREATE_CHAR(uint8_t,SmokeDetected,0,0,1,NOT_DETECTED,DETECTED); // indicates if smoke is detected
