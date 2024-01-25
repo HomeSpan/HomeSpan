@@ -16,7 +16,7 @@
 </table></details>
 
 ## AirPurifier (BB)
-<details><summary> Defines a basic Air Purifier with an optional fan.  Optional Linked Services: <b>FilterMaintenance</b>, <b>AirQualitySensor</b>, <b>Fan</b>, and <b>Slat</b></summary><br><table>
+<details open><summary> Defines a basic Air Purifier with an optional fan.  Optional Linked Services: <b>FilterMaintenance</b>, <b>AirQualitySensor</b>, <b>Fan</b>, and <b>Slat</b></summary><br><table>
 <tr><th>Characteristic</th><th>Format</th><th>Perms</th><th>Min</th><th>Max</th><th>Constants/Defaults</th></tr>
 <tr><td><b>Active (B0) :small_blue_diamond:</b><ul><li> indicates if the Service is active/on</li></ul></td><td align="center">uint8</td><td align="center">PW+PR+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>INACTIVE&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>ACTIVE&nbsp(1)&nbsp;</span></li></ul></td></tr>
 <tr><td><b>CurrentAirPurifierState (A9) :small_blue_diamond:</b><ul><li> indicates current state of air purification</li></ul></td><td align="center">uint8</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">2</td><td><ul><li><span>INACTIVE&nbsp(0)&nbsp;</span></li><li><span>IDLE&nbsp(1)&nbsp;</span>:heavy_check_mark:</li><li><span>PURIFYING&nbsp(2)&nbsp;</span></li></ul></td></tr>
@@ -28,7 +28,7 @@
 </table></details>
 
 ## AirQualitySensor (8D)
-<details><summary> Defines an Air Quality Sensor. </summary><br><table>
+<details open><summary> Defines an Air Quality Sensor. </summary><br><table>
 <tr><th>Characteristic</th><th>Format</th><th>Perms</th><th>Min</th><th>Max</th><th>Constants/Defaults</th></tr>
 <tr><td><b>AirQuality (95) :small_blue_diamond:</b><ul><li> a subjective description</li></ul></td><td align="center">uint8</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">5</td><td><ul><li><span>UNKNOWN&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>EXCELLENT&nbsp(1)&nbsp;</span></li><li><span>GOOD&nbsp(2)&nbsp;</span></li><li><span>FAIR&nbsp(3)&nbsp;</span></li><li><span>INFERIOR&nbsp(4)&nbsp;</span></li><li><span>POOR&nbsp(5)&nbsp;</span></li></ul></td></tr>
 <tr><td><b>Name (23) </b><ul><li> default name of a Service used <i>only</i> during initial pairing</li></ul></td><td align="center">string</td><td align="center">PR</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
@@ -45,7 +45,7 @@
 </table></details>
 
 ## BatteryService (96)
-<details><summary> Defines a standalone Battery Service.</summary><br><table>
+<details open><summary> Defines a standalone Battery Service.</summary><br><table>
 <tr><th>Characteristic</th><th>Format</th><th>Perms</th><th>Min</th><th>Max</th><th>Constants/Defaults</th></tr>
 <tr><td><b>BatteryLevel (68) :small_blue_diamond:</b><ul><li> measured as a percentage</li></ul></td><td align="center">uint8</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">100</td><td align="center">100</td></tr>
 <tr><td><b>ChargingState (8F) :small_blue_diamond:</b><ul><li> indicates state of battery charging</li></ul></td><td align="center">uint8</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">2</td><td><ul><li><span>NOT_CHARGING&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>CHARGING&nbsp(1)&nbsp;</span></li><li><span>NOT_CHARGEABLE&nbsp(2)&nbsp;</span></li></ul></td></tr>
@@ -54,7 +54,7 @@
 </table></details>
 
 ## CarbonDioxideSensor (97)
-<details><summary> Defines a Carbon Dioxide Sensor.</summary><br><table>
+<details open><summary> Defines a Carbon Dioxide Sensor.</summary><br><table>
 <tr><th>Characteristic</th><th>Format</th><th>Perms</th><th>Min</th><th>Max</th><th>Constants/Defaults</th></tr>
 <tr><td><b>CarbonDioxideDetected (92) :small_blue_diamond:</b><ul><li> indicates if abnormal level is detected</li></ul></td><td align="center">uint8</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>NORMAL&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>ABNORMAL&nbsp(1)&nbsp;</span></li></ul></td></tr>
 <tr><td><b>Name (23) </b><ul><li> default name of a Service used <i>only</i> during initial pairing</li></ul></td><td align="center">string</td><td align="center">PR</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
@@ -67,7 +67,7 @@
 </table></details>
 
 ## CarbonMonoxideSensor (7F)
-<details><summary> Defines a Carbon Monoxide Sensor.</summary><br><table>
+<details open><summary> Defines a Carbon Monoxide Sensor.</summary><br><table>
 <tr><th>Characteristic</th><th>Format</th><th>Perms</th><th>Min</th><th>Max</th><th>Constants/Defaults</th></tr>
 <tr><td><b>CarbonMonoxideDetected (69) :small_blue_diamond:</b><ul><li> indicates if abnormal level is detected</li></ul></td><td align="center">uint8</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>NORMAL&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>ABNORMAL&nbsp(1)&nbsp;</span></li></ul></td></tr>
 <tr><td><b>Name (23) </b><ul><li> default name of a Service used <i>only</i> during initial pairing</li></ul></td><td align="center">string</td><td align="center">PR</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
@@ -80,7 +80,7 @@
 </table></details>
 
 ## ContactSensor (80)
-<details><summary> Defines a Contact Sensor.</summary><br><table>
+<details open><summary> Defines a Contact Sensor.</summary><br><table>
 <tr><th>Characteristic</th><th>Format</th><th>Perms</th><th>Min</th><th>Max</th><th>Constants/Defaults</th></tr>
 <tr><td><b>ContactSensorState (6A) :small_blue_diamond:</b><ul><li> indictates if contact is detected (i.e. closed)</li></ul></td><td align="center">uint8</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>DETECTED&nbsp(0)&nbsp;</span></li><li><span>NOT_DETECTED&nbsp(1)&nbsp;</span>:heavy_check_mark:</li></ul></td></tr>
 <tr><td><b>Name (23) </b><ul><li> default name of a Service used <i>only</i> during initial pairing</li></ul></td><td align="center">string</td><td align="center">PR</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
@@ -91,7 +91,7 @@
 </table></details>
 
 ## Door (81)
-<details><summary> Defines a motorized Door.</summary><br><table>
+<details open><summary> Defines a motorized Door.</summary><br><table>
 <tr><th>Characteristic</th><th>Format</th><th>Perms</th><th>Min</th><th>Max</th><th>Constants/Defaults</th></tr>
 <tr><td><b>CurrentPosition (6D) :small_blue_diamond:</b><ul><li> current position (as a percentage) from fully closed (0) to full open (100)</li></ul></td><td align="center">uint8</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">100</td><td align="center">0</td></tr>
 <tr><td><b>TargetPosition (7C) :small_blue_diamond:</b><ul><li> indicates target position (as a percentage) from fully closed (0) to full open (100)</li></ul></td><td align="center">uint8</td><td align="center">PW+PR+EV</td><td align="center">0</td><td align="center">100</td><td align="center">0</td></tr>
@@ -100,14 +100,14 @@
 </table></details>
 
 ## Doorbell (121)
-<details><summary> Defines a Doorbell.  Can be used on a standalone basis or in conjunction with a <b>LockMechanism</b> Service.</summary><br><table>
+<details open><summary> Defines a Doorbell.  Can be used on a standalone basis or in conjunction with a <b>LockMechanism</b> Service.</summary><br><table>
 <tr><th>Characteristic</th><th>Format</th><th>Perms</th><th>Min</th><th>Max</th><th>Constants/Defaults</th></tr>
 <tr><td><b>ProgrammableSwitchEvent (73) :small_blue_diamond:</b><ul><li> specifies type of button press</li></ul></td><td align="center">uint8</td><td align="center">PR+EV+NV</td><td align="center">0</td><td align="center">2</td><td><ul><li><span>SINGLE_PRESS&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>DOUBLE_PRESS&nbsp(1)&nbsp;</span></li><li><span>LONG_PRESS&nbsp(2)&nbsp;</span></li></ul></td></tr>
 <tr><td><b>Name (23) </b><ul><li> default name of a Service used <i>only</i> during initial pairing</li></ul></td><td align="center">string</td><td align="center">PR</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
 </table></details>
 
 ## Fan (B7)
-<details><summary> Defines a Fan.  Can be used in conjunction with a <b>LightBulb</b> Service to create a Lighted Ceiling Fan.</summary><br><table>
+<details open><summary> Defines a Fan.  Can be used in conjunction with a <b>LightBulb</b> Service to create a Lighted Ceiling Fan.</summary><br><table>
 <tr><th>Characteristic</th><th>Format</th><th>Perms</th><th>Min</th><th>Max</th><th>Constants/Defaults</th></tr>
 <tr><td><b>Active (B0) :small_blue_diamond:</b><ul><li> indicates if the Service is active/on</li></ul></td><td align="center">uint8</td><td align="center">PW+PR+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>INACTIVE&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>ACTIVE&nbsp(1)&nbsp;</span></li></ul></td></tr>
 <tr><td><b>Name (23) </b><ul><li> default name of a Service used <i>only</i> during initial pairing</li></ul></td><td align="center">string</td><td align="center">PR</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
@@ -120,7 +120,7 @@
 </table></details>
 
 ## Faucet (D7)
-<details><summary> Defines the master control for a multi-Valve appliance.  Linked Services: <b>Valve</b> (at least one <i>required</i>), and <b>HeaterCooler</b> (optional).</summary><br><table>
+<details open><summary> Defines the master control for a multi-Valve appliance.  Linked Services: <b>Valve</b> (at least one <i>required</i>), and <b>HeaterCooler</b> (optional).</summary><br><table>
 <tr><th>Characteristic</th><th>Format</th><th>Perms</th><th>Min</th><th>Max</th><th>Constants/Defaults</th></tr>
 <tr><td><b>Active (B0) :small_blue_diamond:</b><ul><li> indicates if the Service is active/on</li></ul></td><td align="center">uint8</td><td align="center">PW+PR+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>INACTIVE&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>ACTIVE&nbsp(1)&nbsp;</span></li></ul></td></tr>
 <tr><td><b>StatusFault (77) </b><ul><li> indicates whether the Service has a fault</li></ul></td><td align="center">uint8</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>NO_FAULT&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>FAULT&nbsp(1)&nbsp;</span></li></ul></td></tr>
@@ -128,7 +128,7 @@
 </table></details>
 
 ## FilterMaintenance (BA)
-<details><summary> Defines a Filter Maintainence check.</summary><br><table>
+<details open><summary> Defines a Filter Maintainence check.</summary><br><table>
 <tr><th>Characteristic</th><th>Format</th><th>Perms</th><th>Min</th><th>Max</th><th>Constants/Defaults</th></tr>
 <tr><td><b>FilterChangeIndication (AC) :small_blue_diamond:</b><ul><li> indicates state of filter</li></ul></td><td align="center">uint8</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>NO_CHANGE_NEEDED&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>CHANGE_NEEDED&nbsp(1)&nbsp;</span></li></ul></td></tr>
 <tr><td><b>Name (23) </b><ul><li> default name of a Service used <i>only</i> during initial pairing</li></ul></td><td align="center">string</td><td align="center">PR</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
@@ -137,7 +137,7 @@
 </table></details>
 
 ## GarageDoorOpener (41)
-<details><summary> Defines a motorized Garage Door Opener.</summary><br><table>
+<details open><summary> Defines a motorized Garage Door Opener.</summary><br><table>
 <tr><th>Characteristic</th><th>Format</th><th>Perms</th><th>Min</th><th>Max</th><th>Constants/Defaults</th></tr>
 <tr><td><b>CurrentDoorState (E) :small_blue_diamond:</b><ul><li> indicates current state of a door</li></ul></td><td align="center">uint8</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">4</td><td><ul><li><span>OPEN&nbsp(0)&nbsp;</span></li><li><span>CLOSED&nbsp(1)&nbsp;</span>:heavy_check_mark:</li><li><span>OPENING&nbsp(2)&nbsp;</span></li><li><span>CLOSING&nbsp(3)&nbsp;</span></li><li><span>STOPPED&nbsp(4)&nbsp;</span></li></ul></td></tr>
 <tr><td><b>TargetDoorState (32) :small_blue_diamond:</b><ul><li> indicates desired state of door</li></ul></td><td align="center">uint8</td><td align="center">PW+PR+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>OPEN&nbsp(0)&nbsp;</span></li><li><span>CLOSED&nbsp(1)&nbsp;</span>:heavy_check_mark:</li></ul></td></tr>
@@ -149,7 +149,7 @@
 </table></details>
 
 ## HeaterCooler (BC)
-<details><summary> Defines a standalone Heater, Cooler, or combined Heater/Cooler.  Can be used with a separate <b>Fan</b> Service and/or <b>Slat</b> Service to extend functionality.</summary><br><table>
+<details open><summary> Defines a standalone Heater, Cooler, or combined Heater/Cooler.  Can be used with a separate <b>Fan</b> Service and/or <b>Slat</b> Service to extend functionality.</summary><br><table>
 <tr><th>Characteristic</th><th>Format</th><th>Perms</th><th>Min</th><th>Max</th><th>Constants/Defaults</th></tr>
 <tr><td><b>Active (B0) :small_blue_diamond:</b><ul><li> indicates if the Service is active/on</li></ul></td><td align="center">uint8</td><td align="center">PW+PR+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>INACTIVE&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>ACTIVE&nbsp(1)&nbsp;</span></li></ul></td></tr>
 <tr><td><b>CurrentTemperature (11) :small_blue_diamond:</b><ul><li> current temperature measured in Celsius</li></ul></td><td align="center">float</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">100</td><td align="center">0</td></tr>
@@ -165,7 +165,7 @@
 </table></details>
 
 ## HumidifierDehumidifier (BD)
-<details><summary> Defines a Humidifer, Dehumidifier, or combined Humidifer/Dehumidifier.  Can be used with a separate <b>Fan</b> Service and/or <b>Slat</b> Service to extend functionality.</summary><br><table>
+<details open><summary> Defines a Humidifer, Dehumidifier, or combined Humidifer/Dehumidifier.  Can be used with a separate <b>Fan</b> Service and/or <b>Slat</b> Service to extend functionality.</summary><br><table>
 <tr><th>Characteristic</th><th>Format</th><th>Perms</th><th>Min</th><th>Max</th><th>Constants/Defaults</th></tr>
 <tr><td><b>Active (B0) :small_blue_diamond:</b><ul><li> indicates if the Service is active/on</li></ul></td><td align="center">uint8</td><td align="center">PW+PR+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>INACTIVE&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>ACTIVE&nbsp(1)&nbsp;</span></li></ul></td></tr>
 <tr><td><b>CurrentRelativeHumidity (10) :small_blue_diamond:</b><ul><li> current humidity measured as a percentage</li></ul></td><td align="center">float</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">100</td><td align="center">0</td></tr>
@@ -181,7 +181,7 @@
 </table></details>
 
 ## HumiditySensor (82)
-<details><summary> Defines a Humidity Sensor.</summary><br><table>
+<details open><summary> Defines a Humidity Sensor.</summary><br><table>
 <tr><th>Characteristic</th><th>Format</th><th>Perms</th><th>Min</th><th>Max</th><th>Constants/Defaults</th></tr>
 <tr><td><b>CurrentRelativeHumidity (10) :small_blue_diamond:</b><ul><li> current humidity measured as a percentage</li></ul></td><td align="center">float</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">100</td><td align="center">0</td></tr>
 <tr><td><b>Name (23) </b><ul><li> default name of a Service used <i>only</i> during initial pairing</li></ul></td><td align="center">string</td><td align="center">PR</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
@@ -192,7 +192,7 @@
 </table></details>
 
 ## InputSource (D9)
-<details><summary> Defines an Input Source for a TV.  Use <i>only</i> as a Linked Service for the <b>Television</b> Service.</summary><br><table>
+<details open><summary> Defines an Input Source for a TV.  Use <i>only</i> as a Linked Service for the <b>Television</b> Service.</summary><br><table>
 <tr><th>Characteristic</th><th>Format</th><th>Perms</th><th>Min</th><th>Max</th><th>Constants/Defaults</th></tr>
 <tr><td><b>ConfiguredName (E3) </b><ul><li> a "configurable" Service name - any updates made from within the Home App trigger an update in HomeSpan and vice versa.</li></ul></td><td align="center">string</td><td align="center">PW+PR+EV</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
 <tr><td><b>IsConfigured (D6) </b><ul><li> indicates if a predefined Service has been configured</li></ul></td><td align="center">uint8</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>NOT_CONFIGURED&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>CONFIGURED&nbsp(1)&nbsp;</span></li></ul></td></tr>
@@ -202,7 +202,7 @@
 </table></details>
 
 ## IrrigationSystem (CF)
-<details><summary> Defines an Irrigation System.  Linked Services: <b>Valve</b> Service (at least one <i>required</i>).</summary><br><table>
+<details open><summary> Defines an Irrigation System.  Linked Services: <b>Valve</b> Service (at least one <i>required</i>).</summary><br><table>
 <tr><th>Characteristic</th><th>Format</th><th>Perms</th><th>Min</th><th>Max</th><th>Constants/Defaults</th></tr>
 <tr><td><b>Active (B0) :small_blue_diamond:</b><ul><li> indicates if the Service is active/on</li></ul></td><td align="center">uint8</td><td align="center">PW+PR+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>INACTIVE&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>ACTIVE&nbsp(1)&nbsp;</span></li></ul></td></tr>
 <tr><td><b>ProgramMode (D1) :small_blue_diamond:</b><ul><li> indicates if pre-scheduled program is running</li></ul></td><td align="center">uint8</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">2</td><td><ul><li><span>NONE&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>SCHEDULED&nbsp(1)&nbsp;</span></li><li><span>SCHEDULE_OVERRIDEN&nbsp(2)&nbsp;</span></li></ul></td></tr>
@@ -212,7 +212,7 @@
 </table></details>
 
 ## LeakSensor (83)
-<details><summary> Defines a Leak Sensor.</summary><br><table>
+<details open><summary> Defines a Leak Sensor.</summary><br><table>
 <tr><th>Characteristic</th><th>Format</th><th>Perms</th><th>Min</th><th>Max</th><th>Constants/Defaults</th></tr>
 <tr><td><b>LeakDetected (70) :small_blue_diamond:</b><ul><li> indictates if a leak is detected</li></ul></td><td align="center">uint8</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>NOT_DETECTED&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>DETECTED&nbsp(1)&nbsp;</span></li></ul></td></tr>
 <tr><td><b>Name (23) </b><ul><li> default name of a Service used <i>only</i> during initial pairing</li></ul></td><td align="center">string</td><td align="center">PR</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
@@ -223,7 +223,7 @@
 </table></details>
 
 ## LightBulb (43)
-<details><summary> Defines any type of Light.</summary><br><table>
+<details open><summary> Defines any type of Light.</summary><br><table>
 <tr><th>Characteristic</th><th>Format</th><th>Perms</th><th>Min</th><th>Max</th><th>Constants/Defaults</th></tr>
 <tr><td><b>On (25) :small_blue_diamond:</b><ul><li> indicates if the Service is active/on</li></ul></td><td align="center">bool</td><td align="center">PR+PW+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>OFF&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>ON&nbsp(1)&nbsp;</span></li></ul></td></tr>
 <tr><td><b>Brightness (8) </b><ul><li> measured as a percentage</li></ul></td><td align="center">int</td><td align="center">PR+PW+EV</td><td align="center">0</td><td align="center">100</td><td align="center">0</td></tr>
@@ -234,7 +234,7 @@
 </table></details>
 
 ## LightSensor (84)
-<details><summary> Defines a Light Sensor.</summary><br><table>
+<details open><summary> Defines a Light Sensor.</summary><br><table>
 <tr><th>Characteristic</th><th>Format</th><th>Perms</th><th>Min</th><th>Max</th><th>Constants/Defaults</th></tr>
 <tr><td><b>CurrentAmbientLightLevel (6B) :small_blue_diamond:</b><ul><li> measured in Lux (lumens/m<sup>2</sup></li></ul></td><td align="center">float</td><td align="center">PR+EV</td><td align="center">0.0001</td><td align="center">100000</td><td align="center">1</td></tr>
 <tr><td><b>Name (23) </b><ul><li> default name of a Service used <i>only</i> during initial pairing</li></ul></td><td align="center">string</td><td align="center">PR</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
@@ -245,7 +245,7 @@
 </table></details>
 
 ## LockMechanism (45)
-<details><summary> Defines an electronic Lock.</summary><br><table>
+<details open><summary> Defines an electronic Lock.</summary><br><table>
 <tr><th>Characteristic</th><th>Format</th><th>Perms</th><th>Min</th><th>Max</th><th>Constants/Defaults</th></tr>
 <tr><td><b>LockCurrentState (1D) :small_blue_diamond:</b><ul><li> indicates state of a lock</li></ul></td><td align="center">uint8</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">3</td><td><ul><li><span>UNLOCKED&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>LOCKED&nbsp(1)&nbsp;</span></li><li><span>JAMMED&nbsp(2)&nbsp;</span></li><li><span>UNKNOWN&nbsp(3)&nbsp;</span></li></ul></td></tr>
 <tr><td><b>LockTargetState (1E) :small_blue_diamond:</b><ul><li> indicates desired state of lock</li></ul></td><td align="center">uint8</td><td align="center">PW+PR+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>UNLOCK&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>LOCK&nbsp(1)&nbsp;</span></li></ul></td></tr>
@@ -256,7 +256,7 @@
 </table></details>
 
 ## MotionSensor (85)
-<details><summary> Defines a Motion Sensor.</summary><br><table>
+<details open><summary> Defines a Motion Sensor.</summary><br><table>
 <tr><th>Characteristic</th><th>Format</th><th>Perms</th><th>Min</th><th>Max</th><th>Constants/Defaults</th></tr>
 <tr><td><b>MotionDetected (22) :small_blue_diamond:</b><ul><li> indicates if motion is detected</li></ul></td><td align="center">bool</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>NOT_DETECTED&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>DETECTED&nbsp(1)&nbsp;</span></li></ul></td></tr>
 <tr><td><b>Name (23) </b><ul><li> default name of a Service used <i>only</i> during initial pairing</li></ul></td><td align="center">string</td><td align="center">PR</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
@@ -267,7 +267,7 @@
 </table></details>
 
 ## OccupancySensor (86)
-<details><summary> Defines and Occupancy Sensor.</summary><br><table>
+<details open><summary> Defines and Occupancy Sensor.</summary><br><table>
 <tr><th>Characteristic</th><th>Format</th><th>Perms</th><th>Min</th><th>Max</th><th>Constants/Defaults</th></tr>
 <tr><td><b>OccupancyDetected (71) :small_blue_diamond:</b><ul><li> indicates if occupanccy is detected</li></ul></td><td align="center">uint8</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>NOT_DETECTED&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>DETECTED&nbsp(1)&nbsp;</span></li></ul></td></tr>
 <tr><td><b>Name (23) </b><ul><li> default name of a Service used <i>only</i> during initial pairing</li></ul></td><td align="center">string</td><td align="center">PR</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
@@ -278,7 +278,7 @@
 </table></details>
 
 ## Outlet (47)
-<details><summary> Defines an controllable Outlet used to power any light or appliance.</summary><br><table>
+<details open><summary> Defines an controllable Outlet used to power any light or appliance.</summary><br><table>
 <tr><th>Characteristic</th><th>Format</th><th>Perms</th><th>Min</th><th>Max</th><th>Constants/Defaults</th></tr>
 <tr><td><b>On (25) :small_blue_diamond:</b><ul><li> indicates if the Service is active/on</li></ul></td><td align="center">bool</td><td align="center">PR+PW+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>OFF&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>ON&nbsp(1)&nbsp;</span></li></ul></td></tr>
 <tr><td><b>OutletInUse (26) :small_blue_diamond:</b><ul><li> indicates if an appliance or light is plugged into the outlet, regardless of whether on or off </li></ul></td><td align="center">bool</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>NOT_IN_USE&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>IN_USE&nbsp(1)&nbsp;</span></li></ul></td></tr>
@@ -286,7 +286,7 @@
 </table></details>
 
 ## SecuritySystem (7E)
-<details><summary> Defines a Security System.</summary><br><table>
+<details open><summary> Defines a Security System.</summary><br><table>
 <tr><th>Characteristic</th><th>Format</th><th>Perms</th><th>Min</th><th>Max</th><th>Constants/Defaults</th></tr>
 <tr><td><b>SecuritySystemCurrentState (66) :small_blue_diamond:</b><ul><li> indicates current state of the security system </li></ul></td><td align="center">uint8</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">4</td><td><ul><li><span>ARMED_STAY&nbsp(0)&nbsp;</span></li><li><span>ARMED_AWAY&nbsp(1)&nbsp;</span></li><li><span>ARMED_NIGHT&nbsp(2)&nbsp;</span></li><li><span>DISARMED&nbsp(3)&nbsp;</span>:heavy_check_mark:</li><li><span>ALARM_TRIGGERED&nbsp(4)&nbsp;</span></li></ul></td></tr>
 <tr><td><b>SecuritySystemTargetState (67) :small_blue_diamond:</b><ul><li> indicates desired state of the security system</li></ul></td><td align="center">uint8</td><td align="center">PW+PR+EV</td><td align="center">0</td><td align="center">3</td><td><ul><li><span>ARM_STAY&nbsp(0)&nbsp;</span></li><li><span>ARM_AWAY&nbsp(1)&nbsp;</span></li><li><span>ARM_NIGHT&nbsp(2)&nbsp;</span></li><li><span>DISARM&nbsp(3)&nbsp;</span>:heavy_check_mark:</li></ul></td></tr>
@@ -297,13 +297,13 @@
 </table></details>
 
 ## ServiceLabel (CC)
-<details><summary> Groups together un-named (or un-nameable) Services by Linking them to this Service.  When used, those other Services must each include a <b>ServiceLabelIndex</b> Characteristic with a unique value.  Rarely needed.</summary><br><table>
+<details open><summary> Groups together un-named (or un-nameable) Services by Linking them to this Service.  When used, those other Services must each include a <b>ServiceLabelIndex</b> Characteristic with a unique value.  Rarely needed.</summary><br><table>
 <tr><th>Characteristic</th><th>Format</th><th>Perms</th><th>Min</th><th>Max</th><th>Constants/Defaults</th></tr>
 <tr><td><b>ServiceLabelNamespace (CD) :small_blue_diamond:</b><ul><li> indicates how un-named Services linked together with a <b>ServiceLabel</b> Service should be displayed in the Home App  </li></ul></td><td align="center">uint8</td><td align="center">PR</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>DOTS&nbsp(0)&nbsp;</span></li><li><span>NUMERALS&nbsp(1)&nbsp;</span>:heavy_check_mark:</li></ul></td></tr>
 </table></details>
 
 ## Slat (B9)
-<details><summary> Defines a motorized ventilation Slat(s).</summary><br><table>
+<details open><summary> Defines a motorized ventilation Slat(s).</summary><br><table>
 <tr><th>Characteristic</th><th>Format</th><th>Perms</th><th>Min</th><th>Max</th><th>Constants/Defaults</th></tr>
 <tr><td><b>CurrentSlatState (AA) :small_blue_diamond:</b><ul><li> indicates current state of slats</li></ul></td><td align="center">uint8</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">2</td><td><ul><li><span>FIXED&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>JAMMED&nbsp(1)&nbsp;</span></li><li><span>SWINGING&nbsp(2)&nbsp;</span></li></ul></td></tr>
 <tr><td><b>SlatType (C0) :small_blue_diamond:</b><ul><li> indicates the direction of a slat or group of slats</li></ul></td><td align="center">uint8</td><td align="center">PR</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>HORIZONTAL&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>VERTICAL&nbsp(1)&nbsp;</span></li></ul></td></tr>
@@ -314,7 +314,7 @@
 </table></details>
 
 ## SmokeSensor (87)
-<details><summary> Defines a Smoke Sensor.</summary><br><table>
+<details open><summary> Defines a Smoke Sensor.</summary><br><table>
 <tr><th>Characteristic</th><th>Format</th><th>Perms</th><th>Min</th><th>Max</th><th>Constants/Defaults</th></tr>
 <tr><td><b>SmokeDetected (76) :small_blue_diamond:</b><ul><li> indicates if smoke is detected</li></ul></td><td align="center">uint8</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>NOT_DETECTED&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>DETECTED&nbsp(1)&nbsp;</span></li></ul></td></tr>
 <tr><td><b>Name (23) </b><ul><li> default name of a Service used <i>only</i> during initial pairing</li></ul></td><td align="center">string</td><td align="center">PR</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
@@ -328,7 +328,7 @@
 </table></details>
 
 ## StatelessProgrammableSwitch (89)
-<details><summary> Defines a "Stateless" Programmable Switch that can be used to trigger actions in the Home App.</summary><br><table>
+<details open><summary> Defines a "Stateless" Programmable Switch that can be used to trigger actions in the Home App.</summary><br><table>
 <tr><th>Characteristic</th><th>Format</th><th>Perms</th><th>Min</th><th>Max</th><th>Constants/Defaults</th></tr>
 <tr><td><b>ProgrammableSwitchEvent (73) :small_blue_diamond:</b><ul><li> specifies type of button press</li></ul></td><td align="center">uint8</td><td align="center">PR+EV+NV</td><td align="center">0</td><td align="center">2</td><td><ul><li><span>SINGLE_PRESS&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>DOUBLE_PRESS&nbsp(1)&nbsp;</span></li><li><span>LONG_PRESS&nbsp(2)&nbsp;</span></li></ul></td></tr>
 <tr><td><b>Name (23) </b><ul><li> default name of a Service used <i>only</i> during initial pairing</li></ul></td><td align="center">string</td><td align="center">PR</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
@@ -336,14 +336,14 @@
 </table></details>
 
 ## Switch (49)
-<details><summary> Defines a generic Switch.</summary><br><table>
+<details open><summary> Defines a generic Switch.</summary><br><table>
 <tr><th>Characteristic</th><th>Format</th><th>Perms</th><th>Min</th><th>Max</th><th>Constants/Defaults</th></tr>
 <tr><td><b>On (25) :small_blue_diamond:</b><ul><li> indicates if the Service is active/on</li></ul></td><td align="center">bool</td><td align="center">PR+PW+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>OFF&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>ON&nbsp(1)&nbsp;</span></li></ul></td></tr>
 <tr><td><b>Name (23) </b><ul><li> default name of a Service used <i>only</i> during initial pairing</li></ul></td><td align="center">string</td><td align="center">PR</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
 </table></details>
 
 ## Television (D8)
-<details><summary> Defines a TV.  Optional Linked Services: <b>InputSource</b> and <b>TelevisionSpeaker</b>.</summary><br><table>
+<details open><summary> Defines a TV.  Optional Linked Services: <b>InputSource</b> and <b>TelevisionSpeaker</b>.</summary><br><table>
 <tr><th>Characteristic</th><th>Format</th><th>Perms</th><th>Min</th><th>Max</th><th>Constants/Defaults</th></tr>
 <tr><td><b>Active (B0) :small_blue_diamond:</b><ul><li> indicates if the Service is active/on</li></ul></td><td align="center">uint8</td><td align="center">PW+PR+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>INACTIVE&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>ACTIVE&nbsp(1)&nbsp;</span></li></ul></td></tr>
 <tr><td><b>ConfiguredName (E3) </b><ul><li> a "configurable" Service name - any updates made from within the Home App trigger an update in HomeSpan and vice versa.</li></ul></td><td align="center">string</td><td align="center">PW+PR+EV</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
@@ -353,14 +353,14 @@
 </table></details>
 
 ## TelevisionSpeaker (113)
-<details><summary> Defines a Television Speaker that can be controlled via the Remote Control widget on an iPhone.  Use <i>only</i> as a Linked Service for the <b>Television</b> Service.</summary><br><table>
+<details open><summary> Defines a Television Speaker that can be controlled via the Remote Control widget on an iPhone.  Use <i>only</i> as a Linked Service for the <b>Television</b> Service.</summary><br><table>
 <tr><th>Characteristic</th><th>Format</th><th>Perms</th><th>Min</th><th>Max</th><th>Constants/Defaults</th></tr>
 <tr><td><b>VolumeControlType (E9) :small_blue_diamond:</b><ul><li> indicates the type of volume control</li></ul></td><td align="center">uint8</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">3</td><td><ul><li><span>NONE&nbsp(0)&nbsp;</span></li><li><span>RELATIVE&nbsp(1)&nbsp;</span></li><li><span>RELATIVE_CURRENT&nbsp(2)&nbsp;</span></li><li><span>ABSOLUTE&nbsp(3)&nbsp;</span>:heavy_check_mark:</li></ul></td></tr>
 <tr><td><b>VolumeSelector (EA) :small_blue_diamond:</b><ul><li> triggered by presses to the iPhone's volume up/down buttons when TV is selected in the Remote Control widget</li></ul></td><td align="center">uint8</td><td align="center">PW</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>VOLUME_UP&nbsp(0)&nbsp;</span></li><li><span>VOLUME_DOWN&nbsp(1)&nbsp;</span></li></ul></td></tr>
 </table></details>
 
 ## TemperatureSensor (8A)
-<details><summary> Defines a Temperature Sensor.</summary><br><table>
+<details open><summary> Defines a Temperature Sensor.</summary><br><table>
 <tr><th>Characteristic</th><th>Format</th><th>Perms</th><th>Min</th><th>Max</th><th>Constants/Defaults</th></tr>
 <tr><td><b>CurrentTemperature (11) :small_blue_diamond:</b><ul><li> current temperature measured in Celsius</li></ul></td><td align="center">float</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">100</td><td align="center">0</td></tr>
 <tr><td><b>Name (23) </b><ul><li> default name of a Service used <i>only</i> during initial pairing</li></ul></td><td align="center">string</td><td align="center">PR</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
@@ -371,7 +371,7 @@
 </table></details>
 
 ## Thermostat (4A)
-<details><summary> Defines a Thermostat used to control a furnace, air conditioner, or both.</summary><br><table>
+<details open><summary> Defines a Thermostat used to control a furnace, air conditioner, or both.</summary><br><table>
 <tr><th>Characteristic</th><th>Format</th><th>Perms</th><th>Min</th><th>Max</th><th>Constants/Defaults</th></tr>
 <tr><td><b>CurrentHeatingCoolingState (F) :small_blue_diamond:</b><ul><li> indicates whether appliance is currently heating, cooling, or just idle</li></ul></td><td align="center">uint8</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">2</td><td><ul><li><span>IDLE&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>HEATING&nbsp(1)&nbsp;</span></li><li><span>COOLING&nbsp(2)&nbsp;</span></li></ul></td></tr>
 <tr><td><b>TargetHeatingCoolingState (33) :small_blue_diamond:</b><ul><li> indicates desired state of appliance</li></ul></td><td align="center">uint8</td><td align="center">PW+PR+EV</td><td align="center">0</td><td align="center">3</td><td><ul><li><span>OFF&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>HEAT&nbsp(1)&nbsp;</span></li><li><span>COOL&nbsp(2)&nbsp;</span></li><li><span>AUTO&nbsp(3)&nbsp;</span></li></ul></td></tr>
@@ -386,7 +386,7 @@
 </table></details>
 
 ## Valve (D0)
-<details><summary> Defines an electronic Valve.  Can be used standalone or as a Linked Service in conjunction with the <b>Faucet</b> and <b>IrrigationSystem</b> Services.</summary><br><table>
+<details open><summary> Defines an electronic Valve.  Can be used standalone or as a Linked Service in conjunction with the <b>Faucet</b> and <b>IrrigationSystem</b> Services.</summary><br><table>
 <tr><th>Characteristic</th><th>Format</th><th>Perms</th><th>Min</th><th>Max</th><th>Constants/Defaults</th></tr>
 <tr><td><b>Active (B0) :small_blue_diamond:</b><ul><li> indicates if the Service is active/on</li></ul></td><td align="center">uint8</td><td align="center">PW+PR+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>INACTIVE&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>ACTIVE&nbsp(1)&nbsp;</span></li></ul></td></tr>
 <tr><td><b>InUse (D2) :small_blue_diamond:</b><ul><li> if Service is set to active, this indictes whether it is currently in use</li></ul></td><td align="center">uint8</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>NOT_IN_USE&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>IN_USE&nbsp(1)&nbsp;</span></li></ul></td></tr>
@@ -400,7 +400,7 @@
 </table></details>
 
 ## Window (8B)
-<details><summary> Defines a motorized Window.</summary><br><table>
+<details open><summary> Defines a motorized Window.</summary><br><table>
 <tr><th>Characteristic</th><th>Format</th><th>Perms</th><th>Min</th><th>Max</th><th>Constants/Defaults</th></tr>
 <tr><td><b>CurrentPosition (6D) :small_blue_diamond:</b><ul><li> current position (as a percentage) from fully closed (0) to full open (100)</li></ul></td><td align="center">uint8</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">100</td><td align="center">0</td></tr>
 <tr><td><b>TargetPosition (7C) :small_blue_diamond:</b><ul><li> indicates target position (as a percentage) from fully closed (0) to full open (100)</li></ul></td><td align="center">uint8</td><td align="center">PW+PR+EV</td><td align="center">0</td><td align="center">100</td><td align="center">0</td></tr>
@@ -409,7 +409,7 @@
 </table></details>
 
 ## WindowCovering (8C)
-<details><summary> Defines a motorized Window Shade, Screen, Awning, etc.</summary><br><table>
+<details open><summary> Defines a motorized Window Shade, Screen, Awning, etc.</summary><br><table>
 <tr><th>Characteristic</th><th>Format</th><th>Perms</th><th>Min</th><th>Max</th><th>Constants/Defaults</th></tr>
 <tr><td><b>TargetPosition (7C) :small_blue_diamond:</b><ul><li> indicates target position (as a percentage) from fully closed (0) to full open (100)</li></ul></td><td align="center">uint8</td><td align="center">PW+PR+EV</td><td align="center">0</td><td align="center">100</td><td align="center">0</td></tr>
 <tr><td><b>CurrentPosition (6D) :small_blue_diamond:</b><ul><li> current position (as a percentage) from fully closed (0) to full open (100)</li></ul></td><td align="center">uint8</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">100</td><td align="center">0</td></tr>
@@ -424,3 +424,4 @@
 ---
 
 [↩️](../README.md) Back to the Welcome page
+
