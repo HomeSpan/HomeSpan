@@ -145,7 +145,7 @@ Demonstrates how to use the *StepperControl* class to operate a stepper motor.  
 Demonstrates how to create a Custom Partition Scheme for your sketch by adding a *partitions.csv* file to your sketch folder.  Can be used to expand the size of the non-volatile-storage (NVS) partition, which may be needed when creating a HomeSpan device with many Accessories whose Characteristics you want to save in NVS
 
 ### [ExternalReference](../examples/Other%20Examples/ExternalReference)
-Demonstrates how to access Characteristics of Services from outside those Services, such as from within the main Arduino `loop()`.  In this sketch we re-create the two LEDs in Example 5 with an added function in the main Arduino `loop()` that checks if both LEDs are on at the same time, and if so, they are automtically turned off.
+Demonstrates how to access Characteristics of Services from outside those Services, such as from within the main Arduino `loop()`.  In this sketch we re-create the two LEDs in Example 5 with an added function in the main Arduino `loop()` that checks if both LEDs are on at the same time, and if so, they are automatically turned off.
 
 ---
 
