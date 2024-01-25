@@ -83,7 +83,7 @@ END {
 			if(nConstants[char]>0){
 				printf("<td><ul>")
 				for(k=0;k<nConstants[char];k++)
-					printf("<li>%s&nbsp(%d)&nbsp;%s</li>",constantName[char,k],constantValue[char,k],defaultMark[char,k])
+					printf("<li>%s&nbsp(%d)&nbsp; %s</li>",constantName[char,k],constantValue[char,k],defaultMark[char,k])
 				printf("</ul></td>")
 			} else {
 				printf("<td align=\"center\">%s</td>",default[char])
