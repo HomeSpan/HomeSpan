@@ -325,7 +325,7 @@ The pre-defined constant expressions for enumerated Characteristics are in names
 ## ServiceLabel (CC)
 <details><summary> Groups together un-named (or un-nameable) Services by Linking them to this Service.  When used, those other Services must each include a <b>ServiceLabelIndex</b> Characteristic with a unique value.  Rarely needed.</summary><br><table>
 <tr><th>Characteristic</th><th>Format</th><th>Perms</th><th>Min</th><th>Max</th><th>Constants/Defaults</th></tr>
-<tr><td><b>ServiceLabelNamespace (CD) :small_blue_diamond:</b><ul><li> indicates how un-named Services linked together with a *ServiceLabel* Service should be displayed in the Home App  </li></ul></td><td align="center">uint8</td><td align="center">PR</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>DOTS&nbsp(0)&nbsp;</span></li><li><span>NUMERALS&nbsp(1)&nbsp;</span>:heavy_check_mark:</li></ul></td></tr>
+<tr><td><b>ServiceLabelNamespace (CD) :small_blue_diamond:</b><ul><li> indicates how un-named Services linked together with a <b>ServiceLabel</b> Service should be displayed in the Home App  </li></ul></td><td align="center">uint8</td><td align="center">PR</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>DOTS&nbsp(0)&nbsp;</span></li><li><span>NUMERALS&nbsp(1)&nbsp;</span>:heavy_check_mark:</li></ul></td></tr>
 </table></details>
 
 ## Slat (B9)
