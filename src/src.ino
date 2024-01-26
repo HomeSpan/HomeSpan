@@ -33,7 +33,7 @@ void setup() {
 
   homeSpan.setLogLevel(2);
 
-  homeSpan.begin(Category::Lighting,"HomeSpan Test");
+  homeSpan.begin(Category::Sensors,"HomeSpan Test");
   
    new SpanAccessory();                       // start with Bridge Accessory
     new Service::AccessoryInformation();  
@@ -44,51 +44,28 @@ void setup() {
    new SpanAccessory();
     new Service::AccessoryInformation();  
       new Characteristic::Identify();  
-      new Characteristic::Name("Access-1");                 // the AccessoryInformation Service seems to require Name(), and will ignore ConfiguredName()
+      new Characteristic::Name("air-1");
 
-    new Service::LightBulb();
-      new Characteristic::On(0);
-      new Characteristic::ConfiguredName("Main Light");     // here we use ConfiguredName() instead of Name().  This is properly reflected in Home App during pairing
-
-    new Service::LightBulb();
-      new Characteristic::On(0);
-      new Characteristic::ConfiguredName("Night Light");
-      
-    new Service::Switch();
-      new Characteristic::On(0);
-      new Characteristic::ConfiguredName("Switch-A");
-
-    new Service::Switch();
-      new Characteristic::On(0);
-      new Characteristic::ConfiguredName("Switch-B");
-
-// Second dual-light/dual-switch Accessory
+    new Service::AirQualitySensor();
+      new Characteristic::AirQuality(Characteristic::AirQuality::GOOD);
+      new Characteristic::ConfiguredName("AQ-1");
+      new Characteristic::StatusActive(1);
+      new Characteristic::StatusFault(0);
+      new Characteristic::StatusTampered(0);
+      new Characteristic::StatusLowBattery(0);
 
    new SpanAccessory();
     new Service::AccessoryInformation();  
       new Characteristic::Identify();  
-      new Characteristic::Name("Access-2");               // note as above we use Name() instead of ConfiguredName() for the AccessoryInformation Service
+      new Characteristic::Name("air-2");
 
-    new Service::LightBulb();
-      new Characteristic::On(0);
-      new Characteristic::ConfiguredName("Aux Light");
-
-    new Service::LightBulb();
-      new Characteristic::On(0);
-      new Characteristic::ConfiguredName("Night Light");
-      
-    new Service::Switch();
-      new Characteristic::On(0);
-      new Characteristic::ConfiguredName("Switch-A");
-
-    new Service::Switch();
-      new Characteristic::On(0);
-      new Characteristic::ConfiguredName("Switch-B");
-
-    Characteristic::AirQuality *air = new Characteristic::AirQuality;
-    air->setVal(Characteristic::AirQuality::GOOD);
-    air->setVal(air->GOOD);
-      
+    new Service::AirQualitySensor();
+      new Characteristic::AirQuality(Characteristic::AirQuality::EXCELLENT);
+      new Characteristic::ConfiguredName("AQ-2");
+      new Characteristic::StatusActive(0);
+      new Characteristic::StatusFault(1);
+      new Characteristic::StatusTampered(1);
+      new Characteristic::StatusLowBattery(1);      
 
 }
 

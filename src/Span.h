@@ -239,9 +239,10 @@ namespace Service {
 
   CREATE_SERV(LightBulb,43)   // Defines any type of Light.
     REQ(On);
+    OPT_DEP(Name);
+    OPT(ConfiguredName);
     OPT(Brightness);
     OPT(Hue);
-    OPT(Name);
     OPT(Saturation);
     OPT(ColorTemperature);
   END_SERV
@@ -336,7 +337,8 @@ namespace Service {
 
   CREATE_SERV(Switch,49)    // Defines a generic Switch.
     REQ(On);
-    OPT(Name);
+    OPT_DEP(Name);
+    OPT(ConfiguredName);
   END_SERV
 
   CREATE_SERV(Television,D8)    // Defines a TV.  Optional Linked Services: <b>InputSource</b> and <b>TelevisionSpeaker</b>.
