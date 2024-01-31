@@ -496,7 +496,7 @@ namespace Characteristic {
   CREATE_CHAR(double,RelativeHumidityHumidifierThreshold,50,0,100);  // humidfier turns on when humidity falls below this threshold
   CREATE_CHAR(uint32_t,RemainingDuration,60,0,3600);  // duration (in seconds) remaining for Service to be active/on
   CREATE_CHAR(uint8_t,RemoteKey,4,4,15,UP=4,DOWN,LEFT,RIGHT,CENTER,BACK,PLAY_PAUSE=11,INFO=15);  // triggers an update when the corresponding key is pressed in the Remote Control widget on an iPhone 
-  CREATE_CHAR(uint8_t,ResetFilterIndication,1,1,1,RESET_FILTER=1);  // triggers and update when the user chooses to reset the <b>FilterChangeIndication</b> from the Home App
+  CREATE_CHAR(uint8_t,ResetFilterIndication,1,1,1,RESET_FILTER=1);  // triggers an update when the user chooses to reset the <b>FilterChangeIndication</b> from the Home App
   CREATE_CHAR(int,RotationDirection,0,0,1,CLOCKWISE,COUNTERCLOCKWISE);  // indicates the rotation direction of a fan
   CREATE_CHAR(double,RotationSpeed,0,0,100);  // measured as a percentage
   CREATE_CHAR(double,Saturation,0,0,100);  // color saturation, measured as a percentage

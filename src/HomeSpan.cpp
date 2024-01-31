@@ -956,15 +956,10 @@ void Span::processSerialCommand(const char *c){
         if(!foundInfo)
           LOG0("   *** ERROR #%d!  Required 'AccessoryInformation' Service not found ***\n",++nErrors);
           
-      } // Accessories
-      
-      LOG0("\nConfigured as Bridge: %s\n",isBridge?"YES":"NO");
-      if(hapConfig.configNumber>0)
-        LOG0("Configuration Number: %d\n",hapConfig.configNumber);
-      LOG0("\nDatabase Validation:  Warnings=%d, Errors=%d\n\n",nWarnings,nErrors);    
+      } // Accessories   
 
       char d[]="------------------------------";
-      LOG0("%-30s  %8s  %10s  %s  %s  %s  %s  %s\n","Service","UUID","AID","IID","Update","Loop","Button","Linked Services");
+      LOG0("\n%-30s  %8s  %10s  %s  %s  %s  %s  %s\n","Service","UUID","AID","IID","Update","Loop","Button","Linked Services");
       LOG0("%.30s  %.8s  %.10s  %.3s  %.6s  %.4s  %.6s  %.15s\n",d,d,d,d,d,d,d,d);
       for(int i=0;i<Accessories.size();i++){                             // identify all services with over-ridden loop() methods
         for(int j=0;j<Accessories[i]->Services.size();j++){
@@ -998,9 +993,14 @@ void Span::processSerialCommand(const char *c){
                  (*it)->sendSize,(*it)->receiveSize,uxQueueSpacesAvailable((*it)->receiveQueue),esp_now_is_peer_exist((*it)->peerInfo.peer_addr)?"":"(max connections exceeded!)");           
         LOG0("\nSpanPoint using WiFi Channel %d%s\n",channel,WiFi.status()!=WL_CONNECTED?" (subject to change once WiFi connection established)":"");
       }
-      
+
+      LOG0("\nConfigured as Bridge: %s\n",isBridge?"YES":"NO");
+      if(hapConfig.configNumber>0)
+        LOG0("Configuration Number: %d\n",hapConfig.configNumber);
+      LOG0("\nDatabase Validation:  Warnings=%d, Errors=%d\n",nWarnings,nErrors);      
       LOG0("\n*** End Info ***\n\n");
     }
+    
     break;
 
     case 'P': {
