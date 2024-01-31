@@ -583,6 +583,9 @@ void Span::processSerialCommand(const char *c){
       LOG0("IP Address:        %s\n",WiFi.localIP().toString().c_str());
        if(webLog.isEnabled && hostName!=NULL)   
         LOG0("Web Logging:       http://%s.local:%d%s\n",hostName,tcpPortNum,webLog.statusURL.c_str()+4);
+#ifdef HS_NO_DETAILED_STATUS
+      LOG0("\nFor extra details, rebuild without -DHS_NO_DETAILED_STATUS\n");
+#else     
       LOG0("\nAccessory ID:      ");
       HAPClient::charPrintRow(HAPClient::accessory.ID,17);
       LOG0("                               LTPK: ");
@@ -614,6 +617,7 @@ void Span::processSerialCommand(const char *c){
       }
 
       LOG0("\n*** End Status ***\n\n");
+#endif
     } 
     break;
 
@@ -822,6 +826,9 @@ void Span::processSerialCommand(const char *c){
     break;
 
     case 'm': {
+#ifdef HS_NO_MEM_INFO
+      LOG0("HomeSpan memory info disable. Rebuild without -DHS_NO_MEM_INFO\n");
+#else
       multi_heap_info_t heapAll;
       multi_heap_info_t heapInternal;
       multi_heap_info_t heapPSRAM;
@@ -842,11 +849,15 @@ void Span::processSerialCommand(const char *c){
       nvs_stats_t nvs_stats;
       nvs_get_stats(NULL, &nvs_stats);
       LOG0("NVS Flash Partition: %d of %d records used\n\n",nvs_stats.used_entries,nvs_stats.total_entries-126);      
+#endif      
     }
     break;       
 
     case 'i':{
 
+#ifdef HS_NO_INFO
+      LOG0("\nHomeSpan Info and database error & warning checks disable. Rebuild without -DHS_NO_INFO to re-enable.\n");
+#else
       LOG0("\n*** HomeSpan Info ***\n\n");
 
       int nErrors=0;
@@ -999,12 +1010,15 @@ void Span::processSerialCommand(const char *c){
         LOG0("Configuration Number: %d\n",hapConfig.configNumber);
       LOG0("\nDatabase Validation:  Warnings=%d, Errors=%d\n",nWarnings,nErrors);      
       LOG0("\n*** End Info ***\n\n");
+#endif // HS_NO_INFO
     }
     
     break;
 
     case 'P': {
-      
+#ifdef HS_NO_PAIRING_DATA
+      LOG0("\nPairing data disabled. Rebuild without -DHS_NO_PAIRING_DATA\n");
+#else      
       LOG0("\n*** Pairing Data used for Cloning another Device\n\n");
       size_t olen;
       TempBuffer<char> tBuf(256);
@@ -1015,11 +1029,14 @@ void Span::processSerialCommand(const char *c){
         LOG0("Controller data: %s\n",tBuf.get());        
       }
       LOG0("\n*** End Pairing Data\n\n");
+#endif
     }
     break;
 
     case 'C': {
-
+#ifdef HS_NO_CLONING
+      LOG0("\nHomeSpan clone of pairing data disable. Rebuild without -DHS_NO_CLONING\n");
+#else
       LOG0("\n*** Clone Pairing Data from another Device\n\n");
       TempBuffer<char> tBuf(200);
       size_t olen;
@@ -1080,11 +1097,15 @@ void Span::processSerialCommand(const char *c){
         }
         LOG0("\n");
       }
+#endif
     }
     break;   
 
     case '?': {    
-      
+
+#ifdef HS_NO_HELP
+      LOG0("\nHomeSpan serial help disable. Rebuild without -DHS_NOHELP\n");
+#else      
       LOG0("\n*** HomeSpan Commands ***\n\n");
       LOG0("  s - print connection status\n");
       LOG0("  i - print summary information about the HAP Database\n");
@@ -1120,6 +1141,7 @@ void Span::processSerialCommand(const char *c){
         
       LOG0("  ? - print this list of commands\n\n");     
       LOG0("*** End Commands ***\n\n");
+#endif
     }
     break;
 
