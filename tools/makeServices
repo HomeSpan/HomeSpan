@@ -56,6 +56,11 @@ BEGIN {
 		format[char]=tolower(x[5])
 		static[char]=x[6]
 	}
+
+	else if(x[1]=="SERVICES_GROUP"){
+		group[nServs]=line[2]
+	}
+		
 } 
 
 END {
@@ -63,9 +68,11 @@ END {
 	printf("\n\n");
 
 	for(i=0;i<nServs;i++){
+		if(group[i]!="")
+			printf("## %s\n",group[i])
 		s=services[i]
 		printf("### %s (%s)\n",s,uuid[s])
-		printf("%s<br><table>\n",desc[s])
+		printf("<i>%s</i><br><table>\n",desc[s])
 		printf("<tr><th>Characteristic</th><th>Format</th><th>Perms</th><th>Min</th><th>Max</th><th>Constants/Defaults</th></tr>\n")
 
 		for(j=0;j<nChars[s];j++){
