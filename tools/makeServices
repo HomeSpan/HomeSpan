@@ -69,7 +69,7 @@ END {
 
 	for(i=0;i<nServs;i++){
 		if(group[i]!="")
-			printf("## %s\n",group[i])
+			printf("## %s\n",toupper(group[i]))
 		s=services[i]
 		printf("### %s (%s)\n",s,uuid[s])
 		printf("<i>%s</i><br><table>\n",desc[s])

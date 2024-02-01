@@ -43,6 +43,7 @@
 #define END_SERV }};
 
 #define REQ(HAPCHAR) req.push_back(&hapChars.HAPCHAR)
+#define REQ_DEP(HAPCHAR) req.push_back(&hapChars.HAPCHAR)
 #define OPT(HAPCHAR) opt.push_back(&hapChars.HAPCHAR)
 #define OPT_DEP(HAPCHAR) opt.push_back(&hapChars.HAPCHAR)
 
@@ -448,20 +449,20 @@ namespace Service {
   // Deprecated or unsupported Services
   
   CREATE_SERV_DEP(HAPProtocolInformation,A2)
-    REQ(Version);
+    REQ_DEP(Version);
   END_SERV
 
   CREATE_SERV_DEP(Microphone,112)
-    REQ(Mute);
-    OPT(Volume);
-    OPT(ConfiguredName);
+    REQ_DEP(Mute);
+    OPT_DEP(Volume);
+    OPT_DEP(ConfiguredName);
     OPT_DEP(Name);
   END_SERV
 
   CREATE_SERV_DEP(Speaker,113)
-    REQ(Mute);
-    OPT(Volume);
-    OPT(ConfiguredName);
+    REQ_DEP(Mute);
+    OPT_DEP(Volume);
+    OPT_DEP(ConfiguredName);
     OPT_DEP(Name);
   END_SERV
 
