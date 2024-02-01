@@ -496,7 +496,7 @@ namespace Characteristic {
   CREATE_CHAR(double,CoolingThresholdTemperature,10,10,35);   // cooling turns on when temperature (in Celsius) rises above this threshold
   CREATE_CHAR(uint32_t,ColorTemperature,200,140,500);  // measured in inverse megaKelvin (= 1,000,000 / Kelvin)
   CREATE_CHAR(uint8_t,ContactSensorState,1,0,1,DETECTED,NOT_DETECTED);  // indictates if contact is detected (i.e. closed)
-  CREATE_CHAR(const char *,ConfiguredName,"unnamed",0,1);   // a "configurable" Service name - any updates made from within the Home App trigger an update in HomeSpan and vice versa.
+  CREATE_CHAR(const char *,ConfiguredName,"unnamed",0,1);   // name of the Service when displayed in the Home App
   CREATE_CHAR(double,CurrentAmbientLightLevel,1,0.0001,100000);   // measured in Lux (lumens/m<sup>2</sup>
   CREATE_CHAR(int,CurrentHorizontalTiltAngle,0,-90,90);  // current angle (in degrees) of slats from fully up (-90) to fully open (0) to fully down (90) 
   CREATE_CHAR(uint8_t,CurrentAirPurifierState,1,0,2,INACTIVE,IDLE,PURIFYING);  // indicates current state of air purification
@@ -534,7 +534,7 @@ namespace Characteristic {
   CREATE_CHAR(const char *,Model,"HomeSpan-ESP32",0,1);  // any string - informational only
   CREATE_CHAR(boolean,MotionDetected,0,0,1,NOT_DETECTED,DETECTED);  // indicates if motion is detected
   CREATE_CHAR(boolean,Mute,0,0,1,OFF,ON); // not used
-  CREATE_CHAR(const char *,Name,"unnamed",0,1); // default name of a Service used only during initial pairing
+  CREATE_CHAR(const char *,Name,"unnamed",0,1); // name of the Accessory when displayed in the Home App
   CREATE_CHAR(double,NitrogenDioxideDensity,0,0,1000);  // measured in &micro;g/m<sup>3</sup>
   CREATE_CHAR(boolean,ObstructionDetected,0,0,1,NOT_DETECTED,DETECTED);  // indicates if obstruction is detected
   CREATE_CHAR(double,PM25Density,0,0,1000); // 2.5-micron particulate density, measured in &micro;g/m<sup>3</sup>

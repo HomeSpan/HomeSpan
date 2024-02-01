@@ -32,7 +32,7 @@ The pre-defined constant expressions for enumerated Characteristics are in names
 <i> Required Identification Information.  For each Accessory in a HomeSpan device this must be included as the first Service.</i><br><table>
 <tr><th>Characteristic</th><th>Format</th><th>Perms</th><th>Min</th><th>Max</th><th>Constants/Defaults</th></tr>
 <tr><td><b>Identify (14) :small_blue_diamond:</b><ul><li> triggers an update when HomeKit wants HomeSpan to run its identification routine for an Accessory</li></ul></td><td align="center">bool</td><td align="center">PW</td><td align="center">1</td><td align="center">1</td><td><ul><li><span>RUN_ID&nbsp(1)&nbsp;</span></li></ul></td></tr>
-<tr><td><b>Name (23) </b><ul><li> default name of a Service used only during initial pairing</li></ul></td><td align="center">string</td><td align="center">PR</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
+<tr><td><b>Name (23) </b><ul><li> name of the Accessory when displayed in the Home App</li></ul></td><td align="center">string</td><td align="center">PR</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
 <tr><td><b>FirmwareRevision (52) </b><ul><li> must be in form x[.y[.z]] - informational only</li></ul></td><td align="center">string</td><td align="center">PR+EV</td><td align="center">-</td><td align="center">-</td><td align="center">"1.0.0"</td></tr>
 <tr><td><b>Manufacturer (20) </b><ul><li> any string - informational only</li></ul></td><td align="center">string</td><td align="center">PR</td><td align="center">-</td><td align="center">-</td><td align="center">"HomeSpan"</td></tr>
 <tr><td><b>Model (21) </b><ul><li> any string - informational only</li></ul></td><td align="center">string</td><td align="center">PR</td><td align="center">-</td><td align="center">-</td><td align="center">"HomeSpan-ESP32"</td></tr>
@@ -47,7 +47,7 @@ The pre-defined constant expressions for enumerated Characteristics are in names
 <tr><td><b>BatteryLevel (68) :small_blue_diamond:</b><ul><li> measured as a percentage</li></ul></td><td align="center">uint8</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">100</td><td align="center">100</td></tr>
 <tr><td><b>ChargingState (8F) :small_blue_diamond:</b><ul><li> indicates state of battery charging</li></ul></td><td align="center">uint8</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">2</td><td><ul><li><span>NOT_CHARGING&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>CHARGING&nbsp(1)&nbsp;</span></li><li><span>NOT_CHARGEABLE&nbsp(2)&nbsp;</span></li></ul></td></tr>
 <tr><td><b>StatusLowBattery (79) :small_blue_diamond:</b><ul><li> indicates state of battery</li></ul></td><td align="center">uint8</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>NOT_LOW_BATTERY&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>LOW_BATTERY&nbsp(1)&nbsp;</span></li></ul></td></tr>
-<tr><td><b>ConfiguredName (E3) </b><ul><li> a "configurable" Service name - any updates made from within the Home App trigger an update in HomeSpan and vice versa.</li></ul></td><td align="center">string</td><td align="center">PW+PR+EV</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
+<tr><td><b>ConfiguredName (E3) </b><ul><li> name of the Service when displayed in the Home App</li></ul></td><td align="center">string</td><td align="center">PW+PR+EV</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
 </table><br>
 
 ### LightBulb (43)
@@ -58,7 +58,7 @@ The pre-defined constant expressions for enumerated Characteristics are in names
 <tr><td><b>Hue (13) </b><ul><li> color (in degrees) from red (0) to green (120) to blue (240) and back to red (360)</li></ul></td><td align="center">float</td><td align="center">PR+PW+EV</td><td align="center">0</td><td align="center">360</td><td align="center">0</td></tr>
 <tr><td><b>Saturation (2F) </b><ul><li> color saturation, measured as a percentage</li></ul></td><td align="center">float</td><td align="center">PR+PW+EV</td><td align="center">0</td><td align="center">100</td><td align="center">0</td></tr>
 <tr><td><b>ColorTemperature (CE) </b><ul><li> measured in inverse megaKelvin (= 1,000,000 / Kelvin)</li></ul></td><td align="center">uint32</td><td align="center">PR+PW+EV</td><td align="center">140</td><td align="center">500</td><td align="center">200</td></tr>
-<tr><td><b>ConfiguredName (E3) </b><ul><li> a "configurable" Service name - any updates made from within the Home App trigger an update in HomeSpan and vice versa.</li></ul></td><td align="center">string</td><td align="center">PW+PR+EV</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
+<tr><td><b>ConfiguredName (E3) </b><ul><li> name of the Service when displayed in the Home App</li></ul></td><td align="center">string</td><td align="center">PW+PR+EV</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
 </table><br>
 
 ### Outlet (47)
@@ -66,7 +66,7 @@ The pre-defined constant expressions for enumerated Characteristics are in names
 <tr><th>Characteristic</th><th>Format</th><th>Perms</th><th>Min</th><th>Max</th><th>Constants/Defaults</th></tr>
 <tr><td><b>On (25) :small_blue_diamond:</b><ul><li> indicates if the Service is active/on</li></ul></td><td align="center">bool</td><td align="center">PR+PW+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>OFF&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>ON&nbsp(1)&nbsp;</span></li></ul></td></tr>
 <tr><td><b>OutletInUse (26) :small_blue_diamond:</b><ul><li> indicates if an appliance or light is plugged into the outlet, regardless of whether on or off </li></ul></td><td align="center">bool</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>NOT_IN_USE&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>IN_USE&nbsp(1)&nbsp;</span></li></ul></td></tr>
-<tr><td><b>ConfiguredName (E3) </b><ul><li> a "configurable" Service name - any updates made from within the Home App trigger an update in HomeSpan and vice versa.</li></ul></td><td align="center">string</td><td align="center">PW+PR+EV</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
+<tr><td><b>ConfiguredName (E3) </b><ul><li> name of the Service when displayed in the Home App</li></ul></td><td align="center">string</td><td align="center">PW+PR+EV</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
 </table><br>
 
 ### StatelessProgrammableSwitch (89)
@@ -80,7 +80,7 @@ The pre-defined constant expressions for enumerated Characteristics are in names
 <i> Defines a generic Switch.</i><br><table>
 <tr><th>Characteristic</th><th>Format</th><th>Perms</th><th>Min</th><th>Max</th><th>Constants/Defaults</th></tr>
 <tr><td><b>On (25) :small_blue_diamond:</b><ul><li> indicates if the Service is active/on</li></ul></td><td align="center">bool</td><td align="center">PR+PW+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>OFF&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>ON&nbsp(1)&nbsp;</span></li></ul></td></tr>
-<tr><td><b>ConfiguredName (E3) </b><ul><li> a "configurable" Service name - any updates made from within the Home App trigger an update in HomeSpan and vice versa.</li></ul></td><td align="center">string</td><td align="center">PW+PR+EV</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
+<tr><td><b>ConfiguredName (E3) </b><ul><li> name of the Service when displayed in the Home App</li></ul></td><td align="center">string</td><td align="center">PW+PR+EV</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
 </table><br>
 
 ##  HEATING, VENTILATION, AND AIR CONDITIONING (HVAC)
@@ -93,7 +93,7 @@ The pre-defined constant expressions for enumerated Characteristics are in names
 <tr><td><b>RotationSpeed (29) </b><ul><li> measured as a percentage</li></ul></td><td align="center">float</td><td align="center">PR+PW+EV</td><td align="center">0</td><td align="center">100</td><td align="center">0</td></tr>
 <tr><td><b>SwingMode (B6) </b><ul><li> indicates whether swing-mode is enabled</li></ul></td><td align="center">uint8</td><td align="center">PR+EV+PW</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>SWING_DISABLED&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>SWING_ENABLED&nbsp(1)&nbsp;</span></li></ul></td></tr>
 <tr><td><b>LockPhysicalControls (A7) </b><ul><li> indicates if local control lock is enabled</li></ul></td><td align="center">uint8</td><td align="center">PW+PR+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>CONTROL_LOCK_DISABLED&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>CONTROL_LOCK_ENABLED&nbsp(1)&nbsp;</span></li></ul></td></tr>
-<tr><td><b>ConfiguredName (E3) </b><ul><li> a "configurable" Service name - any updates made from within the Home App trigger an update in HomeSpan and vice versa.</li></ul></td><td align="center">string</td><td align="center">PW+PR+EV</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
+<tr><td><b>ConfiguredName (E3) </b><ul><li> name of the Service when displayed in the Home App</li></ul></td><td align="center">string</td><td align="center">PW+PR+EV</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
 </table><br>
 
 ### Fan (B7)
@@ -106,7 +106,7 @@ The pre-defined constant expressions for enumerated Characteristics are in names
 <tr><td><b>RotationSpeed (29) </b><ul><li> measured as a percentage</li></ul></td><td align="center">float</td><td align="center">PR+PW+EV</td><td align="center">0</td><td align="center">100</td><td align="center">0</td></tr>
 <tr><td><b>SwingMode (B6) </b><ul><li> indicates whether swing-mode is enabled</li></ul></td><td align="center">uint8</td><td align="center">PR+EV+PW</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>SWING_DISABLED&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>SWING_ENABLED&nbsp(1)&nbsp;</span></li></ul></td></tr>
 <tr><td><b>LockPhysicalControls (A7) </b><ul><li> indicates if local control lock is enabled</li></ul></td><td align="center">uint8</td><td align="center">PW+PR+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>CONTROL_LOCK_DISABLED&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>CONTROL_LOCK_ENABLED&nbsp(1)&nbsp;</span></li></ul></td></tr>
-<tr><td><b>ConfiguredName (E3) </b><ul><li> a "configurable" Service name - any updates made from within the Home App trigger an update in HomeSpan and vice versa.</li></ul></td><td align="center">string</td><td align="center">PW+PR+EV</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
+<tr><td><b>ConfiguredName (E3) </b><ul><li> name of the Service when displayed in the Home App</li></ul></td><td align="center">string</td><td align="center">PW+PR+EV</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
 </table><br>
 
 ### FilterMaintenance (BA)
@@ -115,7 +115,7 @@ The pre-defined constant expressions for enumerated Characteristics are in names
 <tr><td><b>FilterChangeIndication (AC) :small_blue_diamond:</b><ul><li> indicates state of filter</li></ul></td><td align="center">uint8</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>NO_CHANGE_NEEDED&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>CHANGE_NEEDED&nbsp(1)&nbsp;</span></li></ul></td></tr>
 <tr><td><b>FilterLifeLevel (AB) </b><ul><li> measures as a percentage of remaining life</li></ul></td><td align="center">float</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">100</td><td align="center">0</td></tr>
 <tr><td><b>ResetFilterIndication (AD) </b><ul><li> triggers and update when the user chooses to reset the <b>FilterChangeIndication</b> from the Home App</li></ul></td><td align="center">uint8</td><td align="center">PW</td><td align="center">1</td><td align="center">1</td><td><ul><li><span>RESET_FILTER&nbsp(1)&nbsp;</span></li></ul></td></tr>
-<tr><td><b>ConfiguredName (E3) </b><ul><li> a "configurable" Service name - any updates made from within the Home App trigger an update in HomeSpan and vice versa.</li></ul></td><td align="center">string</td><td align="center">PW+PR+EV</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
+<tr><td><b>ConfiguredName (E3) </b><ul><li> name of the Service when displayed in the Home App</li></ul></td><td align="center">string</td><td align="center">PW+PR+EV</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
 </table><br>
 
 ### HeaterCooler (BC)
@@ -131,7 +131,7 @@ The pre-defined constant expressions for enumerated Characteristics are in names
 <tr><td><b>CoolingThresholdTemperature (D) </b><ul><li> cooling turns on when temperature (in Celsius) rises above this threshold</li></ul></td><td align="center">float</td><td align="center">PR+PW+EV</td><td align="center">10</td><td align="center">35</td><td align="center">10</td></tr>
 <tr><td><b>HeatingThresholdTemperature (12) </b><ul><li> heating turns on when temperature (in Celsius) falls below this threshold</li></ul></td><td align="center">float</td><td align="center">PR+PW+EV</td><td align="center">0</td><td align="center">25</td><td align="center">16</td></tr>
 <tr><td><b>LockPhysicalControls (A7) </b><ul><li> indicates if local control lock is enabled</li></ul></td><td align="center">uint8</td><td align="center">PW+PR+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>CONTROL_LOCK_DISABLED&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>CONTROL_LOCK_ENABLED&nbsp(1)&nbsp;</span></li></ul></td></tr>
-<tr><td><b>ConfiguredName (E3) </b><ul><li> a "configurable" Service name - any updates made from within the Home App trigger an update in HomeSpan and vice versa.</li></ul></td><td align="center">string</td><td align="center">PW+PR+EV</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
+<tr><td><b>ConfiguredName (E3) </b><ul><li> name of the Service when displayed in the Home App</li></ul></td><td align="center">string</td><td align="center">PW+PR+EV</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
 </table><br>
 
 ### HumidifierDehumidifier (BD)
@@ -147,7 +147,7 @@ The pre-defined constant expressions for enumerated Characteristics are in names
 <tr><td><b>SwingMode (B6) </b><ul><li> indicates whether swing-mode is enabled</li></ul></td><td align="center">uint8</td><td align="center">PR+EV+PW</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>SWING_DISABLED&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>SWING_ENABLED&nbsp(1)&nbsp;</span></li></ul></td></tr>
 <tr><td><b>WaterLevel (B5) </b><ul><li> measured as a percentage</li></ul></td><td align="center">float</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">100</td><td align="center">0</td></tr>
 <tr><td><b>LockPhysicalControls (A7) </b><ul><li> indicates if local control lock is enabled</li></ul></td><td align="center">uint8</td><td align="center">PW+PR+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>CONTROL_LOCK_DISABLED&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>CONTROL_LOCK_ENABLED&nbsp(1)&nbsp;</span></li></ul></td></tr>
-<tr><td><b>ConfiguredName (E3) </b><ul><li> a "configurable" Service name - any updates made from within the Home App trigger an update in HomeSpan and vice versa.</li></ul></td><td align="center">string</td><td align="center">PW+PR+EV</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
+<tr><td><b>ConfiguredName (E3) </b><ul><li> name of the Service when displayed in the Home App</li></ul></td><td align="center">string</td><td align="center">PW+PR+EV</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
 </table><br>
 
 ### Slat (B9)
@@ -158,7 +158,7 @@ The pre-defined constant expressions for enumerated Characteristics are in names
 <tr><td><b>SwingMode (B6) </b><ul><li> indicates whether swing-mode is enabled</li></ul></td><td align="center">uint8</td><td align="center">PR+EV+PW</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>SWING_DISABLED&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>SWING_ENABLED&nbsp(1)&nbsp;</span></li></ul></td></tr>
 <tr><td><b>CurrentTiltAngle (C1) </b><ul><li> current angle (in degrees) of slats from fully up or left (-90) to fully open (0) to fully down or right (90)</li></ul></td><td align="center">int</td><td align="center">PR+EV</td><td align="center">-90</td><td align="center">90</td><td align="center">0</td></tr>
 <tr><td><b>TargetTiltAngle (C2) </b><ul><li> indicated desired angle (in degrees) of slats from fully up or left (-90) to fully open (0) to fully down or right (90) </li></ul></td><td align="center">int</td><td align="center">PW+PR+EV</td><td align="center">-90</td><td align="center">90</td><td align="center">0</td></tr>
-<tr><td><b>ConfiguredName (E3) </b><ul><li> a "configurable" Service name - any updates made from within the Home App trigger an update in HomeSpan and vice versa.</li></ul></td><td align="center">string</td><td align="center">PW+PR+EV</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
+<tr><td><b>ConfiguredName (E3) </b><ul><li> name of the Service when displayed in the Home App</li></ul></td><td align="center">string</td><td align="center">PW+PR+EV</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
 </table><br>
 
 ### Thermostat (4A)
@@ -173,7 +173,7 @@ The pre-defined constant expressions for enumerated Characteristics are in names
 <tr><td><b>CurrentRelativeHumidity (10) </b><ul><li> current humidity measured as a percentage</li></ul></td><td align="center">float</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">100</td><td align="center">0</td></tr>
 <tr><td><b>HeatingThresholdTemperature (12) </b><ul><li> heating turns on when temperature (in Celsius) falls below this threshold</li></ul></td><td align="center">float</td><td align="center">PR+PW+EV</td><td align="center">0</td><td align="center">25</td><td align="center">16</td></tr>
 <tr><td><b>TargetRelativeHumidity (34) </b><ul><li> indicates desired humidity measured as a percentage</li></ul></td><td align="center">float</td><td align="center">PW+PR+EV</td><td align="center">0</td><td align="center">100</td><td align="center">0</td></tr>
-<tr><td><b>ConfiguredName (E3) </b><ul><li> a "configurable" Service name - any updates made from within the Home App trigger an update in HomeSpan and vice versa.</li></ul></td><td align="center">string</td><td align="center">PW+PR+EV</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
+<tr><td><b>ConfiguredName (E3) </b><ul><li> name of the Service when displayed in the Home App</li></ul></td><td align="center">string</td><td align="center">PW+PR+EV</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
 </table><br>
 
 ##  STANDALONE SENSORS
@@ -191,7 +191,7 @@ The pre-defined constant expressions for enumerated Characteristics are in names
 <tr><td><b>StatusFault (77) </b><ul><li> indicates whether the Service has a fault</li></ul></td><td align="center">uint8</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>NO_FAULT&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>FAULT&nbsp(1)&nbsp;</span></li></ul></td></tr>
 <tr><td><b>StatusTampered (7A) </b><ul><li> indicates whether the Service has been tampered with</li></ul></td><td align="center">uint8</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>NOT_TAMPERED&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>TAMPERED&nbsp(1)&nbsp;</span></li></ul></td></tr>
 <tr><td><b>StatusLowBattery (79) </b><ul><li> indicates state of battery</li></ul></td><td align="center">uint8</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>NOT_LOW_BATTERY&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>LOW_BATTERY&nbsp(1)&nbsp;</span></li></ul></td></tr>
-<tr><td><b>ConfiguredName (E3) </b><ul><li> a "configurable" Service name - any updates made from within the Home App trigger an update in HomeSpan and vice versa.</li></ul></td><td align="center">string</td><td align="center">PW+PR+EV</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
+<tr><td><b>ConfiguredName (E3) </b><ul><li> name of the Service when displayed in the Home App</li></ul></td><td align="center">string</td><td align="center">PW+PR+EV</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
 </table><br>
 
 ### CarbonDioxideSensor (97)
@@ -204,7 +204,7 @@ The pre-defined constant expressions for enumerated Characteristics are in names
 <tr><td><b>StatusFault (77) </b><ul><li> indicates whether the Service has a fault</li></ul></td><td align="center">uint8</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>NO_FAULT&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>FAULT&nbsp(1)&nbsp;</span></li></ul></td></tr>
 <tr><td><b>StatusTampered (7A) </b><ul><li> indicates whether the Service has been tampered with</li></ul></td><td align="center">uint8</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>NOT_TAMPERED&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>TAMPERED&nbsp(1)&nbsp;</span></li></ul></td></tr>
 <tr><td><b>StatusLowBattery (79) </b><ul><li> indicates state of battery</li></ul></td><td align="center">uint8</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>NOT_LOW_BATTERY&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>LOW_BATTERY&nbsp(1)&nbsp;</span></li></ul></td></tr>
-<tr><td><b>ConfiguredName (E3) </b><ul><li> a "configurable" Service name - any updates made from within the Home App trigger an update in HomeSpan and vice versa.</li></ul></td><td align="center">string</td><td align="center">PW+PR+EV</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
+<tr><td><b>ConfiguredName (E3) </b><ul><li> name of the Service when displayed in the Home App</li></ul></td><td align="center">string</td><td align="center">PW+PR+EV</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
 </table><br>
 
 ### CarbonMonoxideSensor (7F)
@@ -217,7 +217,7 @@ The pre-defined constant expressions for enumerated Characteristics are in names
 <tr><td><b>StatusFault (77) </b><ul><li> indicates whether the Service has a fault</li></ul></td><td align="center">uint8</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>NO_FAULT&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>FAULT&nbsp(1)&nbsp;</span></li></ul></td></tr>
 <tr><td><b>StatusTampered (7A) </b><ul><li> indicates whether the Service has been tampered with</li></ul></td><td align="center">uint8</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>NOT_TAMPERED&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>TAMPERED&nbsp(1)&nbsp;</span></li></ul></td></tr>
 <tr><td><b>StatusLowBattery (79) </b><ul><li> indicates state of battery</li></ul></td><td align="center">uint8</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>NOT_LOW_BATTERY&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>LOW_BATTERY&nbsp(1)&nbsp;</span></li></ul></td></tr>
-<tr><td><b>ConfiguredName (E3) </b><ul><li> a "configurable" Service name - any updates made from within the Home App trigger an update in HomeSpan and vice versa.</li></ul></td><td align="center">string</td><td align="center">PW+PR+EV</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
+<tr><td><b>ConfiguredName (E3) </b><ul><li> name of the Service when displayed in the Home App</li></ul></td><td align="center">string</td><td align="center">PW+PR+EV</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
 </table><br>
 
 ### ContactSensor (80)
@@ -228,7 +228,7 @@ The pre-defined constant expressions for enumerated Characteristics are in names
 <tr><td><b>StatusFault (77) </b><ul><li> indicates whether the Service has a fault</li></ul></td><td align="center">uint8</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>NO_FAULT&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>FAULT&nbsp(1)&nbsp;</span></li></ul></td></tr>
 <tr><td><b>StatusTampered (7A) </b><ul><li> indicates whether the Service has been tampered with</li></ul></td><td align="center">uint8</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>NOT_TAMPERED&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>TAMPERED&nbsp(1)&nbsp;</span></li></ul></td></tr>
 <tr><td><b>StatusLowBattery (79) </b><ul><li> indicates state of battery</li></ul></td><td align="center">uint8</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>NOT_LOW_BATTERY&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>LOW_BATTERY&nbsp(1)&nbsp;</span></li></ul></td></tr>
-<tr><td><b>ConfiguredName (E3) </b><ul><li> a "configurable" Service name - any updates made from within the Home App trigger an update in HomeSpan and vice versa.</li></ul></td><td align="center">string</td><td align="center">PW+PR+EV</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
+<tr><td><b>ConfiguredName (E3) </b><ul><li> name of the Service when displayed in the Home App</li></ul></td><td align="center">string</td><td align="center">PW+PR+EV</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
 </table><br>
 
 ### HumiditySensor (82)
@@ -239,7 +239,7 @@ The pre-defined constant expressions for enumerated Characteristics are in names
 <tr><td><b>StatusFault (77) </b><ul><li> indicates whether the Service has a fault</li></ul></td><td align="center">uint8</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>NO_FAULT&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>FAULT&nbsp(1)&nbsp;</span></li></ul></td></tr>
 <tr><td><b>StatusTampered (7A) </b><ul><li> indicates whether the Service has been tampered with</li></ul></td><td align="center">uint8</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>NOT_TAMPERED&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>TAMPERED&nbsp(1)&nbsp;</span></li></ul></td></tr>
 <tr><td><b>StatusLowBattery (79) </b><ul><li> indicates state of battery</li></ul></td><td align="center">uint8</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>NOT_LOW_BATTERY&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>LOW_BATTERY&nbsp(1)&nbsp;</span></li></ul></td></tr>
-<tr><td><b>ConfiguredName (E3) </b><ul><li> a "configurable" Service name - any updates made from within the Home App trigger an update in HomeSpan and vice versa.</li></ul></td><td align="center">string</td><td align="center">PW+PR+EV</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
+<tr><td><b>ConfiguredName (E3) </b><ul><li> name of the Service when displayed in the Home App</li></ul></td><td align="center">string</td><td align="center">PW+PR+EV</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
 </table><br>
 
 ### LeakSensor (83)
@@ -250,7 +250,7 @@ The pre-defined constant expressions for enumerated Characteristics are in names
 <tr><td><b>StatusFault (77) </b><ul><li> indicates whether the Service has a fault</li></ul></td><td align="center">uint8</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>NO_FAULT&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>FAULT&nbsp(1)&nbsp;</span></li></ul></td></tr>
 <tr><td><b>StatusTampered (7A) </b><ul><li> indicates whether the Service has been tampered with</li></ul></td><td align="center">uint8</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>NOT_TAMPERED&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>TAMPERED&nbsp(1)&nbsp;</span></li></ul></td></tr>
 <tr><td><b>StatusLowBattery (79) </b><ul><li> indicates state of battery</li></ul></td><td align="center">uint8</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>NOT_LOW_BATTERY&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>LOW_BATTERY&nbsp(1)&nbsp;</span></li></ul></td></tr>
-<tr><td><b>ConfiguredName (E3) </b><ul><li> a "configurable" Service name - any updates made from within the Home App trigger an update in HomeSpan and vice versa.</li></ul></td><td align="center">string</td><td align="center">PW+PR+EV</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
+<tr><td><b>ConfiguredName (E3) </b><ul><li> name of the Service when displayed in the Home App</li></ul></td><td align="center">string</td><td align="center">PW+PR+EV</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
 </table><br>
 
 ### LightSensor (84)
@@ -261,7 +261,7 @@ The pre-defined constant expressions for enumerated Characteristics are in names
 <tr><td><b>StatusFault (77) </b><ul><li> indicates whether the Service has a fault</li></ul></td><td align="center">uint8</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>NO_FAULT&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>FAULT&nbsp(1)&nbsp;</span></li></ul></td></tr>
 <tr><td><b>StatusTampered (7A) </b><ul><li> indicates whether the Service has been tampered with</li></ul></td><td align="center">uint8</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>NOT_TAMPERED&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>TAMPERED&nbsp(1)&nbsp;</span></li></ul></td></tr>
 <tr><td><b>StatusLowBattery (79) </b><ul><li> indicates state of battery</li></ul></td><td align="center">uint8</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>NOT_LOW_BATTERY&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>LOW_BATTERY&nbsp(1)&nbsp;</span></li></ul></td></tr>
-<tr><td><b>ConfiguredName (E3) </b><ul><li> a "configurable" Service name - any updates made from within the Home App trigger an update in HomeSpan and vice versa.</li></ul></td><td align="center">string</td><td align="center">PW+PR+EV</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
+<tr><td><b>ConfiguredName (E3) </b><ul><li> name of the Service when displayed in the Home App</li></ul></td><td align="center">string</td><td align="center">PW+PR+EV</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
 </table><br>
 
 ### MotionSensor (85)
@@ -272,7 +272,7 @@ The pre-defined constant expressions for enumerated Characteristics are in names
 <tr><td><b>StatusFault (77) </b><ul><li> indicates whether the Service has a fault</li></ul></td><td align="center">uint8</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>NO_FAULT&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>FAULT&nbsp(1)&nbsp;</span></li></ul></td></tr>
 <tr><td><b>StatusTampered (7A) </b><ul><li> indicates whether the Service has been tampered with</li></ul></td><td align="center">uint8</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>NOT_TAMPERED&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>TAMPERED&nbsp(1)&nbsp;</span></li></ul></td></tr>
 <tr><td><b>StatusLowBattery (79) </b><ul><li> indicates state of battery</li></ul></td><td align="center">uint8</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>NOT_LOW_BATTERY&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>LOW_BATTERY&nbsp(1)&nbsp;</span></li></ul></td></tr>
-<tr><td><b>ConfiguredName (E3) </b><ul><li> a "configurable" Service name - any updates made from within the Home App trigger an update in HomeSpan and vice versa.</li></ul></td><td align="center">string</td><td align="center">PW+PR+EV</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
+<tr><td><b>ConfiguredName (E3) </b><ul><li> name of the Service when displayed in the Home App</li></ul></td><td align="center">string</td><td align="center">PW+PR+EV</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
 </table><br>
 
 ### OccupancySensor (86)
@@ -283,7 +283,7 @@ The pre-defined constant expressions for enumerated Characteristics are in names
 <tr><td><b>StatusFault (77) </b><ul><li> indicates whether the Service has a fault</li></ul></td><td align="center">uint8</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>NO_FAULT&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>FAULT&nbsp(1)&nbsp;</span></li></ul></td></tr>
 <tr><td><b>StatusTampered (7A) </b><ul><li> indicates whether the Service has been tampered with</li></ul></td><td align="center">uint8</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>NOT_TAMPERED&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>TAMPERED&nbsp(1)&nbsp;</span></li></ul></td></tr>
 <tr><td><b>StatusLowBattery (79) </b><ul><li> indicates state of battery</li></ul></td><td align="center">uint8</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>NOT_LOW_BATTERY&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>LOW_BATTERY&nbsp(1)&nbsp;</span></li></ul></td></tr>
-<tr><td><b>ConfiguredName (E3) </b><ul><li> a "configurable" Service name - any updates made from within the Home App trigger an update in HomeSpan and vice versa.</li></ul></td><td align="center">string</td><td align="center">PW+PR+EV</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
+<tr><td><b>ConfiguredName (E3) </b><ul><li> name of the Service when displayed in the Home App</li></ul></td><td align="center">string</td><td align="center">PW+PR+EV</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
 </table><br>
 
 ### SmokeSensor (87)
@@ -294,7 +294,7 @@ The pre-defined constant expressions for enumerated Characteristics are in names
 <tr><td><b>StatusFault (77) </b><ul><li> indicates whether the Service has a fault</li></ul></td><td align="center">uint8</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>NO_FAULT&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>FAULT&nbsp(1)&nbsp;</span></li></ul></td></tr>
 <tr><td><b>StatusTampered (7A) </b><ul><li> indicates whether the Service has been tampered with</li></ul></td><td align="center">uint8</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>NOT_TAMPERED&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>TAMPERED&nbsp(1)&nbsp;</span></li></ul></td></tr>
 <tr><td><b>StatusLowBattery (79) </b><ul><li> indicates state of battery</li></ul></td><td align="center">uint8</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>NOT_LOW_BATTERY&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>LOW_BATTERY&nbsp(1)&nbsp;</span></li></ul></td></tr>
-<tr><td><b>ConfiguredName (E3) </b><ul><li> a "configurable" Service name - any updates made from within the Home App trigger an update in HomeSpan and vice versa.</li></ul></td><td align="center">string</td><td align="center">PW+PR+EV</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
+<tr><td><b>ConfiguredName (E3) </b><ul><li> name of the Service when displayed in the Home App</li></ul></td><td align="center">string</td><td align="center">PW+PR+EV</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
 </table><br>
 
 ### TemperatureSensor (8A)
@@ -305,7 +305,7 @@ The pre-defined constant expressions for enumerated Characteristics are in names
 <tr><td><b>StatusFault (77) </b><ul><li> indicates whether the Service has a fault</li></ul></td><td align="center">uint8</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>NO_FAULT&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>FAULT&nbsp(1)&nbsp;</span></li></ul></td></tr>
 <tr><td><b>StatusTampered (7A) </b><ul><li> indicates whether the Service has been tampered with</li></ul></td><td align="center">uint8</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>NOT_TAMPERED&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>TAMPERED&nbsp(1)&nbsp;</span></li></ul></td></tr>
 <tr><td><b>StatusLowBattery (79) </b><ul><li> indicates state of battery</li></ul></td><td align="center">uint8</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>NOT_LOW_BATTERY&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>LOW_BATTERY&nbsp(1)&nbsp;</span></li></ul></td></tr>
-<tr><td><b>ConfiguredName (E3) </b><ul><li> a "configurable" Service name - any updates made from within the Home App trigger an update in HomeSpan and vice versa.</li></ul></td><td align="center">string</td><td align="center">PW+PR+EV</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
+<tr><td><b>ConfiguredName (E3) </b><ul><li> name of the Service when displayed in the Home App</li></ul></td><td align="center">string</td><td align="center">PW+PR+EV</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
 </table><br>
 
 ##  DOORS, LOCKS, AND WINDOWS
@@ -315,14 +315,14 @@ The pre-defined constant expressions for enumerated Characteristics are in names
 <tr><td><b>CurrentPosition (6D) :small_blue_diamond:</b><ul><li> current position (as a percentage) from fully closed (0) to full open (100)</li></ul></td><td align="center">uint8</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">100</td><td align="center">0</td></tr>
 <tr><td><b>TargetPosition (7C) :small_blue_diamond:</b><ul><li> indicates target position (as a percentage) from fully closed (0) to full open (100)</li></ul></td><td align="center">uint8</td><td align="center">PW+PR+EV</td><td align="center">0</td><td align="center">100</td><td align="center">0</td></tr>
 <tr><td><b>ObstructionDetected (24) </b><ul><li> indicates if obstruction is detected</li></ul></td><td align="center">bool</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>NOT_DETECTED&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>DETECTED&nbsp(1)&nbsp;</span></li></ul></td></tr>
-<tr><td><b>ConfiguredName (E3) </b><ul><li> a "configurable" Service name - any updates made from within the Home App trigger an update in HomeSpan and vice versa.</li></ul></td><td align="center">string</td><td align="center">PW+PR+EV</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
+<tr><td><b>ConfiguredName (E3) </b><ul><li> name of the Service when displayed in the Home App</li></ul></td><td align="center">string</td><td align="center">PW+PR+EV</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
 </table><br>
 
 ### Doorbell (121)
 <i> Defines a Doorbell.  Can be used on a standalone basis or in conjunction with a <b>LockMechanism</b> Service.</i><br><table>
 <tr><th>Characteristic</th><th>Format</th><th>Perms</th><th>Min</th><th>Max</th><th>Constants/Defaults</th></tr>
 <tr><td><b>ProgrammableSwitchEvent (73) :small_blue_diamond:</b><ul><li> specifies type of button press</li></ul></td><td align="center">uint8</td><td align="center">PR+EV+NV</td><td align="center">0</td><td align="center">2</td><td><ul><li><span>SINGLE_PRESS&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>DOUBLE_PRESS&nbsp(1)&nbsp;</span></li><li><span>LONG_PRESS&nbsp(2)&nbsp;</span></li></ul></td></tr>
-<tr><td><b>ConfiguredName (E3) </b><ul><li> a "configurable" Service name - any updates made from within the Home App trigger an update in HomeSpan and vice versa.</li></ul></td><td align="center">string</td><td align="center">PW+PR+EV</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
+<tr><td><b>ConfiguredName (E3) </b><ul><li> name of the Service when displayed in the Home App</li></ul></td><td align="center">string</td><td align="center">PW+PR+EV</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
 </table><br>
 
 ### GarageDoorOpener (41)
@@ -333,7 +333,7 @@ The pre-defined constant expressions for enumerated Characteristics are in names
 <tr><td><b>ObstructionDetected (24) :small_blue_diamond:</b><ul><li> indicates if obstruction is detected</li></ul></td><td align="center">bool</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>NOT_DETECTED&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>DETECTED&nbsp(1)&nbsp;</span></li></ul></td></tr>
 <tr><td><b>LockCurrentState (1D) </b><ul><li> indicates state of a lock</li></ul></td><td align="center">uint8</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">3</td><td><ul><li><span>UNLOCKED&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>LOCKED&nbsp(1)&nbsp;</span></li><li><span>JAMMED&nbsp(2)&nbsp;</span></li><li><span>UNKNOWN&nbsp(3)&nbsp;</span></li></ul></td></tr>
 <tr><td><b>LockTargetState (1E) </b><ul><li> indicates desired state of lock</li></ul></td><td align="center">uint8</td><td align="center">PW+PR+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>UNLOCK&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>LOCK&nbsp(1)&nbsp;</span></li></ul></td></tr>
-<tr><td><b>ConfiguredName (E3) </b><ul><li> a "configurable" Service name - any updates made from within the Home App trigger an update in HomeSpan and vice versa.</li></ul></td><td align="center">string</td><td align="center">PW+PR+EV</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
+<tr><td><b>ConfiguredName (E3) </b><ul><li> name of the Service when displayed in the Home App</li></ul></td><td align="center">string</td><td align="center">PW+PR+EV</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
 </table><br>
 
 ### LockMechanism (45)
@@ -341,7 +341,7 @@ The pre-defined constant expressions for enumerated Characteristics are in names
 <tr><th>Characteristic</th><th>Format</th><th>Perms</th><th>Min</th><th>Max</th><th>Constants/Defaults</th></tr>
 <tr><td><b>LockCurrentState (1D) :small_blue_diamond:</b><ul><li> indicates state of a lock</li></ul></td><td align="center">uint8</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">3</td><td><ul><li><span>UNLOCKED&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>LOCKED&nbsp(1)&nbsp;</span></li><li><span>JAMMED&nbsp(2)&nbsp;</span></li><li><span>UNKNOWN&nbsp(3)&nbsp;</span></li></ul></td></tr>
 <tr><td><b>LockTargetState (1E) :small_blue_diamond:</b><ul><li> indicates desired state of lock</li></ul></td><td align="center">uint8</td><td align="center">PW+PR+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>UNLOCK&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>LOCK&nbsp(1)&nbsp;</span></li></ul></td></tr>
-<tr><td><b>ConfiguredName (E3) </b><ul><li> a "configurable" Service name - any updates made from within the Home App trigger an update in HomeSpan and vice versa.</li></ul></td><td align="center">string</td><td align="center">PW+PR+EV</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
+<tr><td><b>ConfiguredName (E3) </b><ul><li> name of the Service when displayed in the Home App</li></ul></td><td align="center">string</td><td align="center">PW+PR+EV</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
 </table><br>
 
 ### Window (8B)
@@ -350,7 +350,7 @@ The pre-defined constant expressions for enumerated Characteristics are in names
 <tr><td><b>CurrentPosition (6D) :small_blue_diamond:</b><ul><li> current position (as a percentage) from fully closed (0) to full open (100)</li></ul></td><td align="center">uint8</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">100</td><td align="center">0</td></tr>
 <tr><td><b>TargetPosition (7C) :small_blue_diamond:</b><ul><li> indicates target position (as a percentage) from fully closed (0) to full open (100)</li></ul></td><td align="center">uint8</td><td align="center">PW+PR+EV</td><td align="center">0</td><td align="center">100</td><td align="center">0</td></tr>
 <tr><td><b>ObstructionDetected (24) </b><ul><li> indicates if obstruction is detected</li></ul></td><td align="center">bool</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>NOT_DETECTED&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>DETECTED&nbsp(1)&nbsp;</span></li></ul></td></tr>
-<tr><td><b>ConfiguredName (E3) </b><ul><li> a "configurable" Service name - any updates made from within the Home App trigger an update in HomeSpan and vice versa.</li></ul></td><td align="center">string</td><td align="center">PW+PR+EV</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
+<tr><td><b>ConfiguredName (E3) </b><ul><li> name of the Service when displayed in the Home App</li></ul></td><td align="center">string</td><td align="center">PW+PR+EV</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
 </table><br>
 
 ### WindowCovering (8C)
@@ -363,7 +363,7 @@ The pre-defined constant expressions for enumerated Characteristics are in names
 <tr><td><b>CurrentVerticalTiltAngle (6E) </b><ul><li> current angle (in degrees) of slats from fully left (-90) to fully open (0) to fully right (90)</li></ul></td><td align="center">int</td><td align="center">PR+EV</td><td align="center">-90</td><td align="center">90</td><td align="center">0</td></tr>
 <tr><td><b>TargetVerticalTiltAngle (7D) </b><ul><li> indicates desired angle (in degrees) of slats from fully left (-90) to fully open (0) to fully right (90)</li></ul></td><td align="center">int</td><td align="center">PW+PR+EV</td><td align="center">-90</td><td align="center">90</td><td align="center">0</td></tr>
 <tr><td><b>ObstructionDetected (24) </b><ul><li> indicates if obstruction is detected</li></ul></td><td align="center">bool</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>NOT_DETECTED&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>DETECTED&nbsp(1)&nbsp;</span></li></ul></td></tr>
-<tr><td><b>ConfiguredName (E3) </b><ul><li> a "configurable" Service name - any updates made from within the Home App trigger an update in HomeSpan and vice versa.</li></ul></td><td align="center">string</td><td align="center">PW+PR+EV</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
+<tr><td><b>ConfiguredName (E3) </b><ul><li> name of the Service when displayed in the Home App</li></ul></td><td align="center">string</td><td align="center">PW+PR+EV</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
 </table><br>
 
 ##  WATER SYSTEMS
@@ -372,7 +372,7 @@ The pre-defined constant expressions for enumerated Characteristics are in names
 <tr><th>Characteristic</th><th>Format</th><th>Perms</th><th>Min</th><th>Max</th><th>Constants/Defaults</th></tr>
 <tr><td><b>Active (B0) :small_blue_diamond:</b><ul><li> indicates if the Service is active/on</li></ul></td><td align="center">uint8</td><td align="center">PW+PR+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>INACTIVE&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>ACTIVE&nbsp(1)&nbsp;</span></li></ul></td></tr>
 <tr><td><b>StatusFault (77) </b><ul><li> indicates whether the Service has a fault</li></ul></td><td align="center">uint8</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>NO_FAULT&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>FAULT&nbsp(1)&nbsp;</span></li></ul></td></tr>
-<tr><td><b>ConfiguredName (E3) </b><ul><li> a "configurable" Service name - any updates made from within the Home App trigger an update in HomeSpan and vice versa.</li></ul></td><td align="center">string</td><td align="center">PW+PR+EV</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
+<tr><td><b>ConfiguredName (E3) </b><ul><li> name of the Service when displayed in the Home App</li></ul></td><td align="center">string</td><td align="center">PW+PR+EV</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
 </table><br>
 
 ### IrrigationSystem (CF)
@@ -383,7 +383,7 @@ The pre-defined constant expressions for enumerated Characteristics are in names
 <tr><td><b>InUse (D2) :small_blue_diamond:</b><ul><li> if Service is set to active, this indictes whether it is currently in use</li></ul></td><td align="center">uint8</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>NOT_IN_USE&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>IN_USE&nbsp(1)&nbsp;</span></li></ul></td></tr>
 <tr><td><b>RemainingDuration (D4) </b><ul><li> duration (in seconds) remaining for Service to be active/on</li></ul></td><td align="center">uint32</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">3600</td><td align="center">60</td></tr>
 <tr><td><b>StatusFault (77) </b><ul><li> indicates whether the Service has a fault</li></ul></td><td align="center">uint8</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>NO_FAULT&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>FAULT&nbsp(1)&nbsp;</span></li></ul></td></tr>
-<tr><td><b>ConfiguredName (E3) </b><ul><li> a "configurable" Service name - any updates made from within the Home App trigger an update in HomeSpan and vice versa.</li></ul></td><td align="center">string</td><td align="center">PW+PR+EV</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
+<tr><td><b>ConfiguredName (E3) </b><ul><li> name of the Service when displayed in the Home App</li></ul></td><td align="center">string</td><td align="center">PW+PR+EV</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
 </table><br>
 
 ### Valve (D0)
@@ -397,7 +397,7 @@ The pre-defined constant expressions for enumerated Characteristics are in names
 <tr><td><b>IsConfigured (D6) </b><ul><li> indicates if a predefined Service has been configured</li></ul></td><td align="center">uint8</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>NOT_CONFIGURED&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>CONFIGURED&nbsp(1)&nbsp;</span></li></ul></td></tr>
 <tr><td><b>ServiceLabelIndex (CB) </b><ul><li> numerical index used to distinguish multiple copies of the same Service within an Accessory</li></ul></td><td align="center">uint8</td><td align="center">PR</td><td align="center">1</td><td align="center">255</td><td align="center">1</td></tr>
 <tr><td><b>StatusFault (77) </b><ul><li> indicates whether the Service has a fault</li></ul></td><td align="center">uint8</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>NO_FAULT&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>FAULT&nbsp(1)&nbsp;</span></li></ul></td></tr>
-<tr><td><b>ConfiguredName (E3) </b><ul><li> a "configurable" Service name - any updates made from within the Home App trigger an update in HomeSpan and vice versa.</li></ul></td><td align="center">string</td><td align="center">PW+PR+EV</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
+<tr><td><b>ConfiguredName (E3) </b><ul><li> name of the Service when displayed in the Home App</li></ul></td><td align="center">string</td><td align="center">PW+PR+EV</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
 </table><br>
 
 ##  SECURITY SYSTEMS
@@ -409,7 +409,7 @@ The pre-defined constant expressions for enumerated Characteristics are in names
 <tr><td><b>SecuritySystemAlarmType (8E) </b><ul><li> indicates whether alarm was triggered for known reason</li></ul></td><td align="center">uint8</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>KNOWN&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>UNKNOWN&nbsp(1)&nbsp;</span></li></ul></td></tr>
 <tr><td><b>StatusFault (77) </b><ul><li> indicates whether the Service has a fault</li></ul></td><td align="center">uint8</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>NO_FAULT&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>FAULT&nbsp(1)&nbsp;</span></li></ul></td></tr>
 <tr><td><b>StatusTampered (7A) </b><ul><li> indicates whether the Service has been tampered with</li></ul></td><td align="center">uint8</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>NOT_TAMPERED&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>TAMPERED&nbsp(1)&nbsp;</span></li></ul></td></tr>
-<tr><td><b>ConfiguredName (E3) </b><ul><li> a "configurable" Service name - any updates made from within the Home App trigger an update in HomeSpan and vice versa.</li></ul></td><td align="center">string</td><td align="center">PW+PR+EV</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
+<tr><td><b>ConfiguredName (E3) </b><ul><li> name of the Service when displayed in the Home App</li></ul></td><td align="center">string</td><td align="center">PW+PR+EV</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
 </table><br>
 
 ##  TELEVISIONS
@@ -417,7 +417,7 @@ The pre-defined constant expressions for enumerated Characteristics are in names
 <i> Defines an Input Source for a TV.  Use only as a Linked Service for the <b>Television</b> Service.</i><br><table>
 <tr><th>Characteristic</th><th>Format</th><th>Perms</th><th>Min</th><th>Max</th><th>Constants/Defaults</th></tr>
 <tr><td><b>Identifier (E6) :small_blue_diamond:</b><ul><li> numerical Identifer of the <b>InputSource</b>.</li></ul></td><td align="center">uint32</td><td align="center">PR</td><td align="center">0</td><td align="center">255</td><td align="center">0</td></tr>
-<tr><td><b>ConfiguredName (E3) </b><ul><li> a "configurable" Service name - any updates made from within the Home App trigger an update in HomeSpan and vice versa.</li></ul></td><td align="center">string</td><td align="center">PW+PR+EV</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
+<tr><td><b>ConfiguredName (E3) </b><ul><li> name of the Service when displayed in the Home App</li></ul></td><td align="center">string</td><td align="center">PW+PR+EV</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
 <tr><td><b>IsConfigured (D6) </b><ul><li> indicates if a predefined Service has been configured</li></ul></td><td align="center">uint8</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>NOT_CONFIGURED&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>CONFIGURED&nbsp(1)&nbsp;</span></li></ul></td></tr>
 <tr><td><b>CurrentVisibilityState (135) </b><ul><li> current visibility of the Service, as selectable on the Settings Page of the Home App</li></ul></td><td align="center">uint8</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>VISIBLE&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>NOT_VISIBLE&nbsp(1)&nbsp;</span></li></ul></td></tr>
 <tr><td><b>TargetVisibilityState (134) </b><ul><li> indicates desired visibility of the Service, as selectable on the Settings Page of the Home App</li></ul></td><td align="center">uint8</td><td align="center">PW+PR+EV</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>VISIBLE&nbsp(0)&nbsp;</span>:heavy_check_mark:</li><li><span>NOT_VISIBLE&nbsp(1)&nbsp;</span></li></ul></td></tr>
@@ -430,7 +430,7 @@ The pre-defined constant expressions for enumerated Characteristics are in names
 <tr><td><b>ActiveIdentifier (E7) </b><ul><li> numerical Identifier of the <b>InputSource</b> selected in the Home App.</li></ul></td><td align="center">uint32</td><td align="center">PW+PR+EV</td><td align="center">0</td><td align="center">255</td><td align="center">0</td></tr>
 <tr><td><b>RemoteKey (E1) </b><ul><li> triggers an update when the corresponding key is pressed in the Remote Control widget on an iPhone </li></ul></td><td align="center">uint8</td><td align="center">PW</td><td align="center">4</td><td align="center">15</td><td><ul><li><span>UP&nbsp(4)&nbsp;</span></li><li><span>DOWN&nbsp(5)&nbsp;</span></li><li><span>LEFT&nbsp(6)&nbsp;</span></li><li><span>RIGHT&nbsp(7)&nbsp;</span></li><li><span>CENTER&nbsp(8)&nbsp;</span></li><li><span>BACK&nbsp(9)&nbsp;</span></li><li><span>PLAY_PAUSE&nbsp(11)&nbsp;</span></li><li><span>INFO&nbsp(15)&nbsp;</span></li></ul></td></tr>
 <tr><td><b>PowerModeSelection (DF) </b><ul><li> when defined, creates a "View TV Settings" button in the Home App that triggers an update to this Characteristic when pressed </li></ul></td><td align="center">uint8</td><td align="center">PW</td><td align="center">0</td><td align="center">0</td><td><ul><li><span>VIEW_SETTINGS&nbsp(0)&nbsp;</span></li></ul></td></tr>
-<tr><td><b>ConfiguredName (E3) </b><ul><li> a "configurable" Service name - any updates made from within the Home App trigger an update in HomeSpan and vice versa.</li></ul></td><td align="center">string</td><td align="center">PW+PR+EV</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
+<tr><td><b>ConfiguredName (E3) </b><ul><li> name of the Service when displayed in the Home App</li></ul></td><td align="center">string</td><td align="center">PW+PR+EV</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
 </table><br>
 
 ### TelevisionSpeaker (113)
@@ -438,7 +438,7 @@ The pre-defined constant expressions for enumerated Characteristics are in names
 <tr><th>Characteristic</th><th>Format</th><th>Perms</th><th>Min</th><th>Max</th><th>Constants/Defaults</th></tr>
 <tr><td><b>VolumeControlType (E9) :small_blue_diamond:</b><ul><li> indicates the type of volume control</li></ul></td><td align="center">uint8</td><td align="center">PR+EV</td><td align="center">0</td><td align="center">3</td><td><ul><li><span>NONE&nbsp(0)&nbsp;</span></li><li><span>RELATIVE&nbsp(1)&nbsp;</span></li><li><span>RELATIVE_CURRENT&nbsp(2)&nbsp;</span></li><li><span>ABSOLUTE&nbsp(3)&nbsp;</span>:heavy_check_mark:</li></ul></td></tr>
 <tr><td><b>VolumeSelector (EA) :small_blue_diamond:</b><ul><li> triggered by presses to the iPhone's volume up/down buttons when TV is selected in the Remote Control widget</li></ul></td><td align="center">uint8</td><td align="center">PW</td><td align="center">0</td><td align="center">1</td><td><ul><li><span>VOLUME_UP&nbsp(0)&nbsp;</span></li><li><span>VOLUME_DOWN&nbsp(1)&nbsp;</span></li></ul></td></tr>
-<tr><td><b>ConfiguredName (E3) </b><ul><li> a "configurable" Service name - any updates made from within the Home App trigger an update in HomeSpan and vice versa.</li></ul></td><td align="center">string</td><td align="center">PW+PR+EV</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
+<tr><td><b>ConfiguredName (E3) </b><ul><li> name of the Service when displayed in the Home App</li></ul></td><td align="center">string</td><td align="center">PW+PR+EV</td><td align="center">-</td><td align="center">-</td><td align="center">"unnamed"</td></tr>
 </table><br>
 
 ##  MISCELLANEOUS
