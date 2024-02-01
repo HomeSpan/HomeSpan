@@ -33,35 +33,40 @@ void setup() {
 
   homeSpan.setLogLevel(2);
 
-  homeSpan.begin(Category::Sensors,"HomeSpan Test");
+  homeSpan.begin(Category::Sensors,"HomeSpan Sensors");
   
    new SpanAccessory();                       // start with Bridge Accessory
     new Service::AccessoryInformation();  
       new Characteristic::Identify(); 
 
-// First dual-light/dual-switch Accessory
-
    new SpanAccessory();
     new Service::AccessoryInformation();  
       new Characteristic::Identify();  
-      new Characteristic::Name("air-1");
+      new Characteristic::Name("Air-1");
 
+    new Service::CarbonDioxideSensor();
+      new Characteristic::CarbonDioxideDetected(Characteristic::CarbonDioxideDetected::NORMAL);
+      new Characteristic::ConfiguredName("CO-1");
+      new Characteristic::StatusActive(1);
+      new Characteristic::StatusFault(1);
+      new Characteristic::StatusTampered(1);
+      new Characteristic::StatusLowBattery(0); 
+      
     new Service::AirQualitySensor();
       new Characteristic::AirQuality(Characteristic::AirQuality::GOOD);
       new Characteristic::ConfiguredName("AQ-1");
       new Characteristic::StatusActive(1);
       new Characteristic::StatusFault(0);
       new Characteristic::StatusTampered(0);
-      new Characteristic::StatusLowBattery(0);
+      new Characteristic::StatusLowBattery(0);     
 
    new SpanAccessory();
     new Service::AccessoryInformation();  
       new Characteristic::Identify();  
-      new Characteristic::Name("air-2");
+      new Characteristic::Name("Air-2");
 
     new Service::AirQualitySensor();
       new Characteristic::AirQuality(Characteristic::AirQuality::EXCELLENT);
-      new Characteristic::ConfiguredName("AQ-2");
       new Characteristic::StatusActive(0);
       new Characteristic::StatusFault(1);
       new Characteristic::StatusTampered(1);

@@ -50,10 +50,10 @@ namespace Service {
 
   CREATE_SERV(AccessoryInformation,3E)  // Required Identification Information.  For each Accessory in a HomeSpan device this <i>must</i> be included as the first Service.
     REQ(Identify);
+    OPT(Name);
     OPT(FirmwareRevision);
     OPT(Manufacturer);
     OPT(Model);
-    OPT(Name);
     OPT(SerialNumber);
     OPT(HardwareRevision);
     OPT_DEP(AccessoryFlags);
@@ -63,15 +63,15 @@ namespace Service {
     REQ(Active);
     REQ(CurrentAirPurifierState);
     REQ(TargetAirPurifierState);
-    OPT(Name);
     OPT(RotationSpeed);
     OPT(SwingMode);
     OPT(LockPhysicalControls);
+    OPT(ConfiguredName);
+    OPT_DEP(Name);
   END_SERV
 
   CREATE_SERV(AirQualitySensor,8D)  // Defines an Air Quality Sensor. 
     REQ(AirQuality);
-    OPT(Name);
     OPT(OzoneDensity);
     OPT(NitrogenDioxideDensity);
     OPT(SulphurDioxideDensity);
@@ -82,84 +82,95 @@ namespace Service {
     OPT(StatusFault);
     OPT(StatusTampered);
     OPT(StatusLowBattery);
+    OPT(ConfiguredName);
+    OPT_DEP(Name);
   END_SERV
 
   CREATE_SERV(BatteryService,96)  // Defines a standalone Battery Service.
     REQ(BatteryLevel);
     REQ(ChargingState);
     REQ(StatusLowBattery);
-    OPT(Name);
+    OPT(ConfiguredName);
+    OPT_DEP(Name);
   END_SERV
 
   CREATE_SERV(CarbonDioxideSensor,97) // Defines a Carbon Dioxide Sensor.
     REQ(CarbonDioxideDetected);
-    OPT(Name);
+    OPT(CarbonDioxideLevel);
+    OPT(CarbonDioxidePeakLevel);
     OPT(StatusActive);
     OPT(StatusFault);
     OPT(StatusTampered);
     OPT(StatusLowBattery);
-    OPT(CarbonDioxideLevel);
-    OPT(CarbonDioxidePeakLevel);
+    OPT(ConfiguredName);
+    OPT_DEP(Name);
   END_SERV
 
   CREATE_SERV(CarbonMonoxideSensor,7F)  // Defines a Carbon Monoxide Sensor.
     REQ(CarbonMonoxideDetected);
-    OPT(Name);
+    OPT(CarbonMonoxideLevel);
+    OPT(CarbonMonoxidePeakLevel);
     OPT(StatusActive);
     OPT(StatusFault);
     OPT(StatusTampered);
     OPT(StatusLowBattery);
-    OPT(CarbonMonoxideLevel);
-    OPT(CarbonMonoxidePeakLevel);
+    OPT(ConfiguredName);
+    OPT_DEP(Name);
     END_SERV
 
   CREATE_SERV(ContactSensor,80)   // Defines a Contact Sensor.
     REQ(ContactSensorState);
-    OPT(Name);
     OPT(StatusActive);
     OPT(StatusFault);
     OPT(StatusTampered);
     OPT(StatusLowBattery);
+    OPT(ConfiguredName);
+    OPT_DEP(Name);
   END_SERV
 
   CREATE_SERV(Door,81)    // Defines a motorized Door.
     REQ(CurrentPosition);
     REQ(TargetPosition);
-    OPT_DEP(PositionState);
-    OPT(Name);
-    OPT_DEP(HoldPosition);
     OPT(ObstructionDetected);
+    OPT(ConfiguredName);
+    OPT_DEP(Name);
+    OPT_DEP(PositionState);
+    OPT_DEP(HoldPosition);
   END_SERV
 
   CREATE_SERV(Doorbell,121)   // Defines a Doorbell.  Can be used on a standalone basis or in conjunction with a <b>LockMechanism</b> Service.
     REQ(ProgrammableSwitchEvent);
-    OPT(Name);
     OPT_DEP(Volume);
     OPT_DEP(Brightness);
+    OPT(ConfiguredName);
+    OPT_DEP(Name);
   END_SERV
 
   CREATE_SERV(Fan,B7)     // Defines a Fan.  Can be used in conjunction with a <b>LightBulb</b> Service to create a Lighted Ceiling Fan.
     REQ(Active);
-    OPT(Name);
     OPT(CurrentFanState);
     OPT(TargetFanState);
     OPT(RotationDirection);
     OPT(RotationSpeed);
     OPT(SwingMode);
     OPT(LockPhysicalControls);
+    OPT(ConfiguredName);
+    OPT_DEP(Name);
   END_SERV
 
   CREATE_SERV(Faucet,D7)    // Defines the master control for a multi-Valve appliance.  Linked Services: <b>Valve</b> (at least one <i>required</i>), and <b>HeaterCooler</b> (optional).
     REQ(Active);
     OPT(StatusFault);
-    OPT(Name);
+    OPT(ConfiguredName);
+    OPT_DEP(Name);
   END_SERV
 
   CREATE_SERV(FilterMaintenance,BA)   // Defines a Filter Maintainence check.
     REQ(FilterChangeIndication);
-    OPT(Name);
     OPT(FilterLifeLevel);
     OPT(ResetFilterIndication);
+    OPT(ConfiguredName);
+    OPT_DEP(Name);
   END_SERV
 
   CREATE_SERV(GarageDoorOpener,41)  // Defines a motorized Garage Door Opener.
@@ -168,7 +179,8 @@ namespace Service {
     REQ(ObstructionDetected);
     OPT(LockCurrentState);
     OPT(LockTargetState);
-    OPT(Name);
+    OPT(ConfiguredName);
+    OPT_DEP(Name);
   END_SERV
 
   CREATE_SERV_DEP(HAPProtocolInformation,A2)
@@ -180,13 +192,14 @@ namespace Service {
     REQ(CurrentTemperature);
     REQ(CurrentHeaterCoolerState);
     REQ(TargetHeaterCoolerState);
-    OPT(Name);
     OPT(RotationSpeed);
     OPT(TemperatureDisplayUnits);
     OPT(SwingMode);
     OPT(CoolingThresholdTemperature);
     OPT(HeatingThresholdTemperature);
     OPT(LockPhysicalControls);
+    OPT(ConfiguredName);
+    OPT_DEP(Name);
   END_SERV
 
   CREATE_SERV(HumidifierDehumidifier,BD)  // Defines a Humidifer, Dehumidifier, or combined Humidifer/Dehumidifier.  Can be used with a separate <b>Fan</b> Service and/or <b>Slat</b> Service to extend functionality.
@@ -194,28 +207,30 @@ namespace Service {
     REQ(CurrentRelativeHumidity);
     REQ(CurrentHumidifierDehumidifierState);
     REQ(TargetHumidifierDehumidifierState);
-    OPT(Name);
     OPT(RelativeHumidityDehumidifierThreshold);
     OPT(RelativeHumidityHumidifierThreshold);
     OPT(RotationSpeed);
     OPT(SwingMode);
     OPT(WaterLevel);
     OPT(LockPhysicalControls);
+    OPT(ConfiguredName);
+    OPT_DEP(Name);
   END_SERV
 
   CREATE_SERV(HumiditySensor,82)    // Defines a Humidity Sensor.
     REQ(CurrentRelativeHumidity);
-    OPT(Name);
     OPT(StatusActive);
     OPT(StatusFault);
     OPT(StatusTampered);
     OPT(StatusLowBattery);   
+    OPT(ConfiguredName);
+    OPT_DEP(Name);
   END_SERV
 
   CREATE_SERV(InputSource,D9)   // Defines an Input Source for a TV.  Use <i>only</i> as a Linked Service for the <b>Television</b> Service.
+      REQ(Identifier);
       OPT(ConfiguredName);
       OPT(IsConfigured);
-      REQ(Identifier);
       OPT(CurrentVisibilityState);
       OPT(TargetVisibilityState);
   END_SERV
@@ -226,79 +241,89 @@ namespace Service {
     REQ(InUse);
     OPT(RemainingDuration);
     OPT(StatusFault);
+    OPT(ConfiguredName);
+    OPT_DEP(Name);
   END_SERV
 
   CREATE_SERV(LeakSensor,83)    // Defines a Leak Sensor.
     REQ(LeakDetected);
-    OPT(Name);
     OPT(StatusActive);
     OPT(StatusFault);
     OPT(StatusTampered);
     OPT(StatusLowBattery);       
+    OPT(ConfiguredName);
+    OPT_DEP(Name);
   END_SERV
 
   CREATE_SERV(LightBulb,43)   // Defines any type of Light.
     REQ(On);
-    OPT_DEP(Name);
-    OPT(ConfiguredName);
     OPT(Brightness);
     OPT(Hue);
     OPT(Saturation);
     OPT(ColorTemperature);
+    OPT(ConfiguredName);
+    OPT_DEP(Name);
   END_SERV
 
   CREATE_SERV(LightSensor,84)   // Defines a Light Sensor.
     REQ(CurrentAmbientLightLevel);
-    OPT(Name);
     OPT(StatusActive);
     OPT(StatusFault);
     OPT(StatusTampered);
     OPT(StatusLowBattery);          
+    OPT(ConfiguredName);
+    OPT_DEP(Name);
   END_SERV
 
   CREATE_SERV(LockMechanism,45)   // Defines an electronic Lock.
     REQ(LockCurrentState);
     REQ(LockTargetState);
-    OPT(Name);
+    OPT(ConfiguredName);
+    OPT_DEP(Name);
   END_SERV
 
   CREATE_SERV_DEP(Microphone,112)
     REQ(Mute);
-    OPT(Name);
     OPT(Volume);
+    OPT(ConfiguredName);
+    OPT_DEP(Name);
   END_SERV
 
   CREATE_SERV(MotionSensor,85)    // Defines a Motion Sensor.
     REQ(MotionDetected);
-    OPT(Name);
     OPT(StatusActive);
     OPT(StatusFault);
     OPT(StatusTampered);
     OPT(StatusLowBattery);       
+    OPT(ConfiguredName);
+    OPT_DEP(Name);
   END_SERV
 
   CREATE_SERV(OccupancySensor,86)   // Defines and Occupancy Sensor.
     REQ(OccupancyDetected);
-    OPT(Name);
     OPT(StatusActive);
     OPT(StatusFault);
     OPT(StatusTampered);
     OPT(StatusLowBattery);         
+    OPT(ConfiguredName);
+    OPT_DEP(Name);
   END_SERV
 
   CREATE_SERV(Outlet,47)    // Defines an controllable Outlet used to power any light or appliance.
     REQ(On);
     REQ(OutletInUse);
-    OPT(Name);
+    OPT(ConfiguredName);
+    OPT_DEP(Name);
   END_SERV
 
   CREATE_SERV(SecuritySystem,7E)    // Defines a Security System.
     REQ(SecuritySystemCurrentState);
     REQ(SecuritySystemTargetState);
-    OPT(Name);
     OPT(SecuritySystemAlarmType);
     OPT(StatusFault);
     OPT(StatusTampered);
+    OPT(ConfiguredName);
+    OPT_DEP(Name);
   END_SERV  
 
   CREATE_SERV(ServiceLabel,CC)    // Groups together un-named (or un-nameable) Services by Linking them to this Service.  When used, those other Services must each include a <b>ServiceLabelIndex</b> Characteristic with a unique value.  Rarely needed.
@@ -308,59 +333,63 @@ namespace Service {
   CREATE_SERV(Slat,B9)    // Defines a motorized ventilation Slat(s).
     REQ(CurrentSlatState);
     REQ(SlatType);
-    OPT(Name);
     OPT(SwingMode);
     OPT(CurrentTiltAngle);
     OPT(TargetTiltAngle);
+    OPT(ConfiguredName);
+    OPT_DEP(Name);
   END_SERV
 
   CREATE_SERV(SmokeSensor,87)   // Defines a Smoke Sensor.
     REQ(SmokeDetected);
-    OPT(Name);
     OPT(StatusActive);
     OPT(StatusFault);
     OPT(StatusTampered);
     OPT(StatusLowBattery);             
+    OPT(ConfiguredName);
+    OPT_DEP(Name);
   END_SERV
 
   CREATE_SERV_DEP(Speaker,113)
     REQ(Mute);
-    OPT(Name);
     OPT(Volume);
+    OPT(ConfiguredName);
+    OPT_DEP(Name);
   END_SERV
 
   CREATE_SERV(StatelessProgrammableSwitch,89)   // Defines a "Stateless" Programmable Switch that can be used to trigger actions in the Home App.
     REQ(ProgrammableSwitchEvent);
-    OPT(Name);
     OPT(ServiceLabelIndex);
+    OPT_DEP(Name);
   END_SERV
 
   CREATE_SERV(Switch,49)    // Defines a generic Switch.
     REQ(On);
-    OPT_DEP(Name);
     OPT(ConfiguredName);
+    OPT_DEP(Name);
   END_SERV
 
   CREATE_SERV(Television,D8)    // Defines a TV.  Optional Linked Services: <b>InputSource</b> and <b>TelevisionSpeaker</b>.
-      REQ(Active);
-      OPT(ConfiguredName);
-      OPT(ActiveIdentifier);
-      OPT(RemoteKey);
-      OPT(PowerModeSelection);      
+    REQ(Active);
+    OPT(ActiveIdentifier);
+    OPT(RemoteKey);
+    OPT(PowerModeSelection);      
+    OPT(ConfiguredName);
   END_SERV
 
   CREATE_SERV(TelevisionSpeaker,113)    // Defines a Television Speaker that can be controlled via the Remote Control widget on an iPhone.  Use <i>only</i> as a Linked Service for the <b>Television</b> Service.
-      REQ(VolumeControlType);
-      REQ(VolumeSelector);      
+    REQ(VolumeControlType);
+    REQ(VolumeSelector);      
+    OPT(ConfiguredName);
   END_SERV
 
   CREATE_SERV(TemperatureSensor,8A)   // Defines a Temperature Sensor.
     REQ(CurrentTemperature);
-    OPT(Name);
     OPT(StatusActive);
     OPT(StatusFault);
     OPT(StatusTampered);
     OPT(StatusLowBattery);
+    OPT(ConfiguredName);
   END_SERV
 
   CREATE_SERV(Thermostat,4A)      // Defines a Thermostat used to control a furnace, air conditioner, or both.
@@ -372,8 +401,9 @@ namespace Service {
     OPT(CoolingThresholdTemperature);
     OPT(CurrentRelativeHumidity);
     OPT(HeatingThresholdTemperature);
-    OPT(Name);
     OPT(TargetRelativeHumidity);
+    OPT(ConfiguredName);
+    OPT_DEP(Name);
   END_SERV
 
   CREATE_SERV(Valve,D0)     // Defines an electronic Valve.  Can be used standalone or as a Linked Service in conjunction with the <b>Faucet</b> and <b>IrrigationSystem</b> Services.
@@ -385,29 +415,32 @@ namespace Service {
     OPT(IsConfigured);
     OPT(ServiceLabelIndex);
     OPT(StatusFault);
-    OPT(Name);
+    OPT(ConfiguredName);
+    OPT_DEP(Name);
   END_SERV
 
   CREATE_SERV(Window,8B)    // Defines a motorized Window.
     REQ(CurrentPosition);
     REQ(TargetPosition);
-    OPT_DEP(PositionState);
-    OPT(Name);
-    OPT_DEP(HoldPosition);
     OPT(ObstructionDetected);
+    OPT(ConfiguredName);
+    OPT_DEP(Name);
+    OPT_DEP(PositionState);
+    OPT_DEP(HoldPosition);
   END_SERV
 
   CREATE_SERV(WindowCovering,8C)  // Defines a motorized Window Shade, Screen, Awning, etc.
     REQ(TargetPosition);
     REQ(CurrentPosition);
-    OPT_DEP(PositionState);   
-    OPT(Name);
-    OPT_DEP(HoldPosition);
     OPT(CurrentHorizontalTiltAngle);
     OPT(TargetHorizontalTiltAngle);
     OPT(CurrentVerticalTiltAngle);
     OPT(TargetVerticalTiltAngle);
     OPT(ObstructionDetected);
+    OPT(ConfiguredName);
+    OPT_DEP(Name);
+    OPT_DEP(PositionState);   
+    OPT_DEP(HoldPosition);
   END_SERV
 
 }
@@ -496,7 +529,7 @@ namespace Characteristic {
   CREATE_CHAR(double,RelativeHumidityHumidifierThreshold,50,0,100);  // humidfier turns on when humidity falls below this threshold
   CREATE_CHAR(uint32_t,RemainingDuration,60,0,3600);  // duration (in seconds) remaining for Service to be active/on
   CREATE_CHAR(uint8_t,RemoteKey,4,4,15,UP=4,DOWN,LEFT,RIGHT,CENTER,BACK,PLAY_PAUSE=11,INFO=15);  // triggers an update when the corresponding key is pressed in the Remote Control widget on an iPhone 
-  CREATE_CHAR(uint8_t,ResetFilterIndication,1,1,1,RESET_FILTER=1);  // triggers an update when the user chooses to reset the <b>FilterChangeIndication</b> from the Home App
+  CREATE_CHAR(uint8_t,ResetFilterIndication,1,1,1,RESET_FILTER=1);  // triggers and update when the user chooses to reset the <b>FilterChangeIndication</b> from the Home App
   CREATE_CHAR(int,RotationDirection,0,0,1,CLOCKWISE,COUNTERCLOCKWISE);  // indicates the rotation direction of a fan
   CREATE_CHAR(double,RotationSpeed,0,0,100);  // measured as a percentage
   CREATE_CHAR(double,Saturation,0,0,100);  // color saturation, measured as a percentage
@@ -515,7 +548,7 @@ namespace Characteristic {
   CREATE_CHAR(uint8_t,StatusLowBattery,0,0,1,NOT_LOW_BATTERY,LOW_BATTERY);  // indicates state of battery
   CREATE_CHAR(uint8_t,StatusTampered,0,0,1,NOT_TAMPERED,TAMPERED);  // indicates whether the Service has been tampered with
   CREATE_CHAR(double,SulphurDioxideDensity,0,0,1000);  // measured in &micro;g/m<sup>3</sup>
-  CREATE_CHAR(uint8_t,SwingMode,0,0,1,SWING_DISABLED,SWING_ENABLED);  // indicates whether swing-nmode is enabled
+  CREATE_CHAR(uint8_t,SwingMode,0,0,1,SWING_DISABLED,SWING_ENABLED);  // indicates whether swing-mode is enabled
   CREATE_CHAR(uint8_t,TargetAirPurifierState,1,0,1,MANUAL,AUTO);  // indicates desired state of air purifier
   CREATE_CHAR(uint8_t,TargetFanState,1,0,1,MANUAL,AUTO);  // indicates desired state of fan
   CREATE_CHAR(int,TargetTiltAngle,0,-90,90);  // indicated desired angle (in degrees) of slats from fully up or left (-90) to fully open (0) to fully down or right (90) 
