@@ -99,7 +99,7 @@ END {
 			printf("</tr>\n")
 		}
 
-		printf("</table>\n\n")
+		printf("</table><br>\n\n")
 	}
 
 	printf("---\n\n")
