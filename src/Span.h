@@ -84,7 +84,7 @@ namespace Service {
     OPT_DEP(Name);
   END_SERV
 
-  CREATE_SERV(Outlet,47)    // Defines an controllable Outlet used to power any light or appliance.
+  CREATE_SERV(Outlet,47)    // Defines a controllable Outlet used to power any light or appliance.
     REQ(On);
     REQ(OutletInUse);
     OPT(ConfiguredName);
@@ -105,7 +105,7 @@ namespace Service {
  
   SERVICES_GROUP // Heating, Ventilation, and Air Conditioning (HVAC)
   
-  CREATE_SERV(AirPurifier,BB)   // Defines a basic Air Purifier with an optional fan.  Optional Linked Services: <b>FilterMaintenance</b>, <b>AirQualitySensor</b>, <b>Fan</b>, and <b>Slat</b>
+  CREATE_SERV(AirPurifier,BB)   // Defines a basic Air Purifier with an optional fan and swing mode.  Optional Linked Services: <b>FilterMaintenance</b>.  Combine with an <b>AirSensor</b> Service for automated operations.
     REQ(Active);
     REQ(CurrentAirPurifierState);
     REQ(TargetAirPurifierState);
@@ -116,7 +116,7 @@ namespace Service {
     OPT_DEP(Name);
   END_SERV  
 
-  CREATE_SERV(Fan,B7)     // Defines a Fan.  Can be used in conjunction with a <b>LightBulb</b> Service to create a Lighted Ceiling Fan.
+  CREATE_SERV(Fan,B7)     // Defines a Fan.  Combine with a <b>LightBulb</b> Service to create a Lighted Ceiling Fan.
     REQ(Active);
     OPT(CurrentFanState);
     OPT(TargetFanState);
@@ -128,7 +128,7 @@ namespace Service {
     OPT_DEP(Name);
   END_SERV
 
-  CREATE_SERV(FilterMaintenance,BA)   // Defines a Filter Maintainence check.
+  CREATE_SERV(FilterMaintenance,BA)   // Defines a Filter Maintainence check.  Use only as a Linked Service for the <b>AirPurifier</b> Service.
     REQ(FilterChangeIndication);
     OPT(FilterLifeLevel);
     OPT(ResetFilterIndication);
@@ -136,7 +136,7 @@ namespace Service {
     OPT_DEP(Name);
   END_SERV  
 
-  CREATE_SERV(HeaterCooler,BC)  // Defines a standalone Heater, Cooler, or combined Heater/Cooler.  Can be used with a separate <b>Fan</b> Service and/or <b>Slat</b> Service to extend functionality.
+  CREATE_SERV(HeaterCooler,BC)  // Defines a standalone Heater, Cooler, or combined Heater/Cooler.
     REQ(Active);
     REQ(CurrentTemperature);
     REQ(CurrentHeaterCoolerState);
@@ -151,7 +151,7 @@ namespace Service {
     OPT_DEP(Name);
   END_SERV
 
-  CREATE_SERV(HumidifierDehumidifier,BD)  // Defines a Humidifer, Dehumidifier, or combined Humidifer/Dehumidifier.  Can be used with a separate <b>Fan</b> Service and/or <b>Slat</b> Service to extend functionality.
+  CREATE_SERV(HumidifierDehumidifier,BD)  // Defines a Humidifer, Dehumidifier, or combined Humidifer/Dehumidifier.
     REQ(Active);
     REQ(CurrentRelativeHumidity);
     REQ(CurrentHumidifierDehumidifierState);
@@ -391,7 +391,7 @@ namespace Service {
     OPT_DEP(Name);
   END_SERV
 
-  CREATE_SERV(Valve,D0)     // Defines an electronic Valve.  Can be used standalone or as a Linked Service in conjunction with the <b>Faucet</b> and <b>IrrigationSystem</b> Services.
+  CREATE_SERV(Valve,D0)     // Defines an electronic Valve.  Can be used standalone or as a Linked Service for either a <b>Faucet</b> or <b>IrrigationSystem</b> Service.
     REQ(Active);
     REQ(InUse);
     REQ(ValveType);
@@ -406,7 +406,7 @@ namespace Service {
 
   SERVICES_GROUP // Security Systems
 
-  CREATE_SERV(SecuritySystem,7E)    // Defines a Security System.  Often combined with <b>MotionSensor</b> and <b>ContactSensor</b> Services.
+  CREATE_SERV(SecuritySystem,7E)    // Defines a Security System.  Often used in combination with <b>MotionSensor</b> and <b>ContactSensor</b> Services.
     REQ(SecuritySystemCurrentState);
     REQ(SecuritySystemTargetState);
     OPT(SecuritySystemAlarmType);
@@ -442,7 +442,7 @@ namespace Service {
 
   SERVICES_GROUP // Miscellaneous
 
-  CREATE_SERV(ServiceLabel,CC)    // Groups together un-named (or un-nameable) Services by Linking them to this Service.  When used, those other Services must each include a <b>ServiceLabelIndex</b> Characteristic with a unique value.  Rarely needed.
+  CREATE_SERV(ServiceLabel,CC)    // Defines a naming scheme for un-nameable Services, such as a <b>StatelessProgrammableSwitch</b>, by Linking them to this Service.  When used, those other Services must each include a <b>ServiceLabelIndex</b> Characteristic with a unique value.
     REQ(ServiceLabelNamespace);
   END_SERV     
 
@@ -496,10 +496,10 @@ namespace Characteristic {
   CREATE_CHAR(double,CoolingThresholdTemperature,10,10,35);   // cooling turns on when temperature (in Celsius) rises above this threshold
   CREATE_CHAR(uint32_t,ColorTemperature,200,140,500);  // measured in inverse megaKelvin (= 1,000,000 / Kelvin)
   CREATE_CHAR(uint8_t,ContactSensorState,1,0,1,DETECTED,NOT_DETECTED);  // indictates if contact is detected (i.e. closed)
-  CREATE_CHAR(const char *,ConfiguredName,"unnamed",0,1);   // name of the Service when displayed in the Home App
+  CREATE_CHAR(const char *,ConfiguredName,"unnamed",0,1);   // default display name of this Service
   CREATE_CHAR(double,CurrentAmbientLightLevel,1,0.0001,100000);   // measured in Lux (lumens/m<sup>2</sup>
   CREATE_CHAR(int,CurrentHorizontalTiltAngle,0,-90,90);  // current angle (in degrees) of slats from fully up (-90) to fully open (0) to fully down (90) 
-  CREATE_CHAR(uint8_t,CurrentAirPurifierState,1,0,2,INACTIVE,IDLE,PURIFYING);  // indicates current state of air purification
+  CREATE_CHAR(uint8_t,CurrentAirPurifierState,0,0,2,INACTIVE,IDLE,PURIFYING);  // indicates current state of air purification
   CREATE_CHAR(uint8_t,CurrentSlatState,0,0,2,FIXED,JAMMED,SWINGING);  // indicates current state of slats
   CREATE_CHAR(uint8_t,CurrentPosition,0,0,100); // current position (as a percentage) from fully closed (0) to full open (100)
   CREATE_CHAR(int,CurrentVerticalTiltAngle,0,-90,90);  // current angle (in degrees) of slats from fully left (-90) to fully open (0) to fully right (90)
@@ -513,7 +513,7 @@ namespace Characteristic {
   CREATE_CHAR(double,CurrentRelativeHumidity,0,0,100);  // current humidity measured as a percentage
   CREATE_CHAR(double,CurrentTemperature,0,0,100);   // current temperature measured in Celsius
   CREATE_CHAR(int,CurrentTiltAngle,0,-90,90);  // current angle (in degrees) of slats from fully up or left (-90) to fully open (0) to fully down or right (90)
-  CREATE_CHAR(double,FilterLifeLevel,0,0,100); // measures as a percentage of remaining life
+  CREATE_CHAR(double,FilterLifeLevel,100,0,100); // measured as a percentage of remaining life
   CREATE_CHAR(uint8_t,FilterChangeIndication,0,0,1,NO_CHANGE_NEEDED,CHANGE_NEEDED);  // indicates state of filter
   CREATE_CHAR(const char *,FirmwareRevision,"1.0.0",0,1);  // must be in form x[.y[.z]] - informational only
   CREATE_CHAR(const char *,HardwareRevision,"1.0.0",0,1);  // must be in form x[.y[.z]] - informational only
@@ -534,7 +534,7 @@ namespace Characteristic {
   CREATE_CHAR(const char *,Model,"HomeSpan-ESP32",0,1);  // any string - informational only
   CREATE_CHAR(boolean,MotionDetected,0,0,1,NOT_DETECTED,DETECTED);  // indicates if motion is detected
   CREATE_CHAR(boolean,Mute,0,0,1,OFF,ON); // not used
-  CREATE_CHAR(const char *,Name,"unnamed",0,1); // name of the Accessory when displayed in the Home App
+  CREATE_CHAR(const char *,Name,"unnamed",0,1); // default display name of the Accessory
   CREATE_CHAR(double,NitrogenDioxideDensity,0,0,1000);  // measured in &micro;g/m<sup>3</sup>
   CREATE_CHAR(boolean,ObstructionDetected,0,0,1,NOT_DETECTED,DETECTED);  // indicates if obstruction is detected
   CREATE_CHAR(double,PM25Density,0,0,1000); // 2.5-micron particulate density, measured in &micro;g/m<sup>3</sup>
@@ -552,7 +552,7 @@ namespace Characteristic {
   CREATE_CHAR(double,RelativeHumidityHumidifierThreshold,50,0,100);  // humidfier turns on when humidity falls below this threshold
   CREATE_CHAR(uint32_t,RemainingDuration,60,0,3600);  // duration (in seconds) remaining for Service to be active/on
   CREATE_CHAR(uint8_t,RemoteKey,4,4,15,UP=4,DOWN,LEFT,RIGHT,CENTER,BACK,PLAY_PAUSE=11,INFO=15);  // triggers an update when the corresponding key is pressed in the Remote Control widget on an iPhone 
-  CREATE_CHAR(uint8_t,ResetFilterIndication,1,1,1,RESET_FILTER=1);  // triggers and update when the user chooses to reset the <b>FilterChangeIndication</b> from the Home App
+  CREATE_CHAR(uint8_t,ResetFilterIndication,1,1,1,RESET_FILTER=1);  // triggers an update when the user chooses to reset the <b>FilterChangeIndication</b> (only appears in Eve App, not Home App)
   CREATE_CHAR(int,RotationDirection,0,0,1,CLOCKWISE,COUNTERCLOCKWISE);  // indicates the rotation direction of a fan
   CREATE_CHAR(double,RotationSpeed,0,0,100);  // measured as a percentage
   CREATE_CHAR(double,Saturation,0,0,100);  // color saturation, measured as a percentage
@@ -566,7 +566,7 @@ namespace Characteristic {
   CREATE_CHAR(uint8_t,SleepDiscoveryMode,0,0,1);  // not used
   CREATE_CHAR(uint8_t,SmokeDetected,0,0,1,NOT_DETECTED,DETECTED); // indicates if smoke is detected
   CREATE_CHAR(boolean,StatusActive,1,0,1,NOT_FUNCTIONING,FUNCTIONING);  // indicates whether the Service is properly functioning 
-  CREATE_CHAR(uint8_t,StatusFault,0,0,1,NO_FAULT,FAULT);  // indicates whether the Service has a fault
+  CREATE_CHAR(uint8_t,StatusFault,0,0,1,NO_FAULT,FAULT);  // indicates whether the Service has a fault (only appears in Eve App, not Home App)
   CREATE_CHAR(uint8_t,StatusJammed,0,0,1,NOT_JAMMED,JAMMED);  // indicates whether the Service has been "jammed"
   CREATE_CHAR(uint8_t,StatusLowBattery,0,0,1,NOT_LOW_BATTERY,LOW_BATTERY);  // indicates state of battery
   CREATE_CHAR(uint8_t,StatusTampered,0,0,1,NOT_TAMPERED,TAMPERED);  // indicates whether the Service has been tampered with

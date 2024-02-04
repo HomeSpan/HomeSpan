@@ -70,7 +70,18 @@ void setup() {
       new Characteristic::StatusActive(0);
       new Characteristic::StatusFault(1);
       new Characteristic::StatusTampered(1);
-      new Characteristic::StatusLowBattery(1);      
+      new Characteristic::StatusLowBattery(1);
+
+   new SpanAccessory();
+    new Service::AccessoryInformation();  
+      new Characteristic::Identify();  
+      new Characteristic::Name("Furnace Filter");
+
+    new Service::FilterMaintenance();
+      new Characteristic::FilterChangeIndication(Characteristic::FilterChangeIndication::CHANGE_NEEDED);
+      new Characteristic::FilterLifeLevel(5);
+//      new Characteristic::ResetFilterIndication();
+
 
 }
 
