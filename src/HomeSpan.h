@@ -358,7 +358,7 @@ class Span{
 
   Span& setWebLogCSS(const char *css){webLog.css="\n" + String(css) + "\n";return(*this);}
   Span& setWebLogCallback(void (*f)(String &)){weblogCallback=f;return(*this);} 
-  void getWebLog(void (*f)(const char *));
+  void getWebLog(void (*f)(const char *, void *), void *);
 
   Span& setVerboseWifiReconnect(bool verbose=true){verboseWifiReconnect=verbose;return(*this);}
 
