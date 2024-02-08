@@ -52,6 +52,8 @@
 #include "HapQR.h"
 #include "Characteristics.h"
 
+#include "extras/StepperControl.h"
+
 using std::vector;
 using std::unordered_map;
 using std::list;

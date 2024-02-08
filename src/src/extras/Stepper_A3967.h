@@ -37,10 +37,6 @@
 // disabled (no current / high impedence).  The EasyDriver board does NOT support
 // the short brake mode.
 
-#pragma once
-
-#include "StepperControl.h"
-
 //////////////////////////
  
 struct Stepper_A3967 : StepperControl {

@@ -44,11 +44,6 @@
 // In either configuration the motor outputs can be enabled (current running through the coils)
 // disabled (no current / high impedence) or set to a short brake.
 
-#pragma once
-
-#include "StepperControl.h"
-#include "PwmPin.h"
-
 //////////////////////////
 
 struct Stepper_TB6612 : StepperControl {

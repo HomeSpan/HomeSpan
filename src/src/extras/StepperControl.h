@@ -28,6 +28,7 @@
 #pragma once
 
 #include <Arduino.h>
+#include "PwmPin.h"
 
 [[maybe_unused]] static const char* STEPPER_TAG = "StepperControl";
 
@@ -103,3 +104,11 @@ class StepperControl {
 };
 
 //////////////////////////
+
+#include "Stepper_UNIPOLAR.h"
+#include "Stepper_TB6612.h"
+#include "Stepper_A3967.h"
+
+struct Stepper_UNL2003 : Stepper_UNIPOLAR {
+  Stepper_UNL2003(int IN1, int IN2, int IN3, int IN4, std::pair<uint32_t, uint32_t> taskParams = {1,0}) : Stepper_UNIPOLAR(IN1,IN3,IN2,IN4,taskParams){}
+};
