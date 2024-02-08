@@ -25,6 +25,8 @@
  *  
  ********************************************************************************/
 
+#pragma once
+
 // Implementation of StepperControl for a Sparkfun A3967 EasyDriver Stepper Motor Driver
 // Breakout Board (https://www.sparkfun.com/products/12779)
 

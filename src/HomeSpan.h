@@ -45,14 +45,16 @@
 
 #include "extras/Blinker.h"
 #include "extras/Pixel.h"
+#include "extras/RFControl.h"
+#include "extras/PwmPin.h"
+#include "extras/StepperControl.h"
+
 #include "Settings.h"
 #include "Utils.h"
 #include "Network.h"
 #include "HAPConstants.h"
 #include "HapQR.h"
 #include "Characteristics.h"
-
-#include "extras/StepperControl.h"
 
 using std::vector;
 using std::unordered_map;

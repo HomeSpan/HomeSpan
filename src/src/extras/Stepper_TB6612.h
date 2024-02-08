@@ -25,6 +25,8 @@
  *  
  ********************************************************************************/
 
+#pragma once
+
 // Implementation of StepperControl for an Adafruit TB6612 1.2A DC/Stepper Motor Driver
 // Breakout Board (https://www.adafruit.com/product/2448)
 

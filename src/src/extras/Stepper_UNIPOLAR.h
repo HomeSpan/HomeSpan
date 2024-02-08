@@ -25,6 +25,8 @@
  *  
  ********************************************************************************/
 
+#pragma once
+
 //  Implementation of a basic 4-wire controller for a center-tapped Unipolar Stepper Motor
 //  with two coils (Coil 1 and Coil 2) each having two driving inputs (A and B).
 //
