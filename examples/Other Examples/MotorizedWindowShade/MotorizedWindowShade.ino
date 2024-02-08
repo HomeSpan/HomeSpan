@@ -40,8 +40,6 @@
 // as well as for instructions on how you can easily extend StepperControl to create a custom driver for any board.
 
 #include "HomeSpan.h"
-#include "extras/Stepper_TB6612.h"     // this contains HomeSpan's StepperControl Class for the Adafruit TB6612 driver board
-#include "extras/Stepper_A3967.h"      // this contains HomeSpan's StepperControl Class for the Sparkfun A3967 driver board
 
 ////////////////////////////////////
 

@@ -61,7 +61,6 @@
 #endif
  
 #include "HomeSpan.h"
-#include "extras/Pixel.h"                       // include the HomeSpan Pixel class
 
 ///////////////////////////////
 

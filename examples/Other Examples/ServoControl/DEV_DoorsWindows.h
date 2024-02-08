@@ -3,10 +3,6 @@
 //   DEVICE-SPECIFIC LED SERVICES //
 ////////////////////////////////////
 
-#include <extras/PwmPin.h>
-
-////////////////////////////////////
-
 struct DEV_WindowShade : Service::WindowCovering {     // A motorized Window Shade with Hold Feature
 
   SpanCharacteristic *current;                     // reference to a "generic" Current Position Characteristic (used by a variety of different Service)
