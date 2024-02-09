@@ -6,10 +6,6 @@ Both classes allow you to individually set each of the "pixels" in a multi-pixel
 
 The methods for both classes are nearly identical, which allows you to readily interchange code written for single-wire devices to use with two-wire devices (and vice-versa) with only minor modifications.
 
-Both classes are provided in a standalone header file that is accessed by placing the following near the top of your sketch:
-
-`#include "extras/Pixel.h"`
-
 ## *Pixel(uint8_t pin, [boolean isRGBW])*
 
 Creating an instance of this **class** configures the specified *pin* to output a waveform signal suitable for controlling a single-wire, addressable RGB or RGBW LED device with an arbitrary number of pixels.  Such devices typically contain SK6812 or WS2812 LEDs.  Arguments, along with their defaults if left unspecified, are as follows:
