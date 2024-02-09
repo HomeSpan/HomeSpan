@@ -1,6 +1,6 @@
 # Remote Control Radio Frequency / Infrared Signal Generation
 
-The ESP32 has an on-chip Remote Control (RMT) signal-generator designed to drive an RF or IR transmitter.  HomeSpan includes a dedicated, easy-to-use class, **RFControl**, that interfaces with the ESP32 RMT peripheral so that with a few additional electronic components you can create a HomeSpan device that controls an RF or IR appliance directly from the Home App on your iPhone, or via Siri.
+The ESP32 has an on-chip Remote Control (RMT) signal-generator designed to drive an RF or IR transmitter.  HomeSpan includes a dedicated, easy-to-use class, **RFControl()**, that interfaces with the ESP32 RMT peripheral so that with a few additional electronic components you can create a HomeSpan device that controls an RF or IR appliance directly from the Home App on your iPhone, or via Siri.
 
 ## *RFControl(int pin, boolean refClock=true)*
 
