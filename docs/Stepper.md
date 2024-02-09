@@ -136,7 +136,7 @@ Below is a simple sketch demonstrating the above methods:
 ```C++
 // StepperControl Example using TB6612-based Driver Board with HALF STEP PWM MODE
 
-#include "extras/Stepper_TB6612.h"   // include the driver for a TB6612 chip
+#include "HomeSpan.h"         // HomeSpan includes all the StepperControl classes
 
 StepperControl *motor;        // create a global pointer to StepperControl so it can be accessed in both setup() and loop()
 
@@ -186,7 +186,7 @@ A fully worked example showing how to use the *StepperControl* class within a co
 
 ## Creating your own **StepperControl** Driver
 
-If neither of the above motor driver classes works for your specific chip or driver board, it is relatively straightfoward to create a new driver to use in your sketch.  This is because all the logic to operate a stepper motor in the background is already embedded in the abstract **StepperControl** class.  To create your own driver, start by creating a child class derived from **StepperControl**.  Next, add a constructor that defines the pins and performs any initializations if needed.  Finally, define the following methods that **StepperControl** calls to operate the motor:
+If none of the above motor driver classes works for your specific chip or driver board, it is relatively straightfoward to create a new driver to use in your sketch.  This is because all the logic to operate a stepper motor in the background is already embedded in the abstract **StepperControl** class.  To create your own driver, start by creating a child class derived from **StepperControl**.  Next, add a constructor that defines the pins and performs any initializations if needed.  Finally, define the following methods that **StepperControl** calls to operate the motor:
 
 * `void onStep(boolean direction)` - contains the logic to advance the motor by a single step based on the *direction* parameter
 * `void onEnable()` - contains the logic that enables the motor driver
@@ -199,7 +199,7 @@ Only the first method, `onStep()`, is required to be defined.  You can leave any
 As an example, below is the complete code for the **Stepper_A3967** class:
 
 ```C++
-#include "extras/StepperControl.h"
+#include "HomeSpan.h"
 
 //////////////////////////
  
