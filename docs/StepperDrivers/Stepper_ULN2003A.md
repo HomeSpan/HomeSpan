@@ -1,8 +1,12 @@
 # Stepper_ULN2003A
 
-This is a derived class of **StepperControl** designed to operate stepper motors driven by a [Toshiba TB6612](https://cdn-shop.adafruit.com/datasheets/TB6612FNG_datasheet_en_20121101.pdf) chip, either with or without the use of ESP32 PWM pins.
+This is a derived class of **StepperControl** designed to operate stepper motors driven by a [Texas Instruments ULN2003A](https://www.ti.com/lit/ds/symlink/uln2003a.pdf) (or equivalent) chip.
 
-The Toshiba TB6612 is a generic motor driver providing direct control of two full H-bridges.  Wiring for the [Adafruit TB6612 1.2A DC/Stepper Motor Driver Breakout Board](https://learn.adafruit.com/adafruit-tb6612-h-bridge-dc-stepper-motor-driver-breakout) that uses this chip is as follows:
+The Texas Instruments ULN2003A chip containins an array of seven Darlington transistor pairs each capable of converting low-voltage/low-current digital signals into higher-voltage/higher-current outputs suitable for driving a stepper motor.[^1]
+
+[^1]: Only four of the seven Darlington transistor pairs in the ULN2003A are needed to drive a typical unipolar stepper motor.
+
+Various manufacturers have incorporated this chip into a dedicated stepper motor board designed to drive unipolar motors such as these [28BYJ-48 5-Volt](https://opencircuit.shop/product/28byj-48-5v-stepper-motor-4-phase-5-wire) and [28BYJ-48 12-Volt](https://opencircuit.shop/product/28byj-48-12v-stepper-motor-4-phase-5-wire) Stepper Motors.  Wiring for the [Opencircuit ULN2003 Stepper Motor Driver Board](https://opencircuit.shop/product/uln2003-stepper-motor-driver-module) that uses this chip is as follows:
 
 #### **Power Connections**
   * *VCC* - connect to +3.3V on ESP32
