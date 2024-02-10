@@ -7,7 +7,8 @@ The HomeSpan class that contains all the methods to control a stepper motor is c
 The following drivers are currently included in HomeSpan:
 
 * **[Stepper_TB6612](StepperDrivers/Stepper_TB6612.md)**
-  * This class is used to operate stepper motors driven by a [Toshiba TB6612](https://cdn-shop.adafruit.com/datasheets/TB6612FNG_datasheet_en_20121101.pdf) (or equivalent) chip, either with or without the use of ESP32 PWM pins
+  * This class is used to operate stepper motors driven by a [Toshiba TB6612](https://cdn-shop.adafruit.com/datasheets/TB6612FNG_datasheet_en_20121101.pdf) (or equivalent) chip
+  * Can be used either with or without ESP32 PWM pins
   * See, for example, the [Adafruit TB6612 1.2A DC/Stepper Motor Driver Breakout Board](https://www.adafruit.com/product/2448)
    
 * **[Stepper_A3967](StepperDrivers/Stepper_A3967.md)**
