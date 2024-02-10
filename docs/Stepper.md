@@ -7,13 +7,21 @@ The HomeSpan class that contains all the methods to control a stepper motor is c
 The following drivers are currently included in HomeSpan:
 
 * **[Stepper_TB6612](StepperDrivers/Stepper_TB6612.md)**
-  * This class is used to operate stepper motors driven by a [Toshiba TB6612](https://cdn-shop.adafruit.com/datasheets/TB6612FNG_datasheet_en_20121101.pdf) chip, either with or without the use of ESP32 PWM pins
+  * This class is used to operate stepper motors driven by a [Toshiba TB6612](https://cdn-shop.adafruit.com/datasheets/TB6612FNG_datasheet_en_20121101.pdf) (or equivalent) chip, either with or without the use of ESP32 PWM pins
   * See, for example, the [Adafruit TB6612 1.2A DC/Stepper Motor Driver Breakout Board](https://www.adafruit.com/product/2448)
    
 * **[Stepper_A3967](StepperDrivers/Stepper_A3967.md)**
-  * This class is used to operate stepper motors driven by an [Allegro A3967](https://cdn.sparkfun.com/datasheets/Robotics/A3967-Datasheet.pdf) chip
+  * This class is used to operate stepper motors driven by an [Allegro A3967](https://cdn.sparkfun.com/datasheets/Robotics/A3967-Datasheet.pdf) (or equivalent) chip
   * See, for example, the [Sparkfun EasyDriver Stepper Motor Board](https://www.sparkfun.com/products/12779)
 
+* **[Stepper_ULN2003A](StepperDrivers/Stepper_ULN2003A.md)**
+  * This class is used to operate stepper motors driven by a [Texas Instruments ULN2003A](https://www.ti.com/lit/ds/symlink/uln2003a.pdf) (or equivalent) chip
+  * See, for example, the [Open Circuit ULN2003 Stepper Motor Driver Board](https://opencircuit.shop/product/uln2003-stepper-motor-driver-module)
+
+* **[Stepper_UNIPOLAR](StepperDrivers/Stepper_UNIPOLAR.md)**
+  * This class provides a generic driver for use with any center-tapped unipolar stepper motor
+  * Use requires a driver board that can convert the low-voltage/low-current digital signals from 4 pins on the ESP32 to higher-voltage/higher-current signals suitable for operating the stepper motor
+  
 Click on any of the driver-specific classes above for complete details on how to wire and configure a particular driver board.
 
 ## StepperControl Methods
