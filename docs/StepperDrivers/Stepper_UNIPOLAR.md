@@ -24,8 +24,49 @@ It does *not* matter which coil is defined as *1* or *2*, nor which side is call
 The patterns by which this class sets the specified pins HIGH and LOW depend on the *step mode* chosen as follows:
 
 #### FULL_STEP_ONE_PHASE
+
+* 4-step cycles where in each step current flows only through **one** phase of **one** of the coils
+
+<table>
+<tr><th></th><th colspan="2">Phase A</th><th colspan="2">Phase B</th></tr>
+<tr><th></th><th>Coil 1</th><th>Coil 2</th><th>Coil 1</th><th>Coil 2</th></th></tr>
+<tr><th>Step 1</th><td align="center">HIGH</td><td align="center">-</td><td align="center">-</td><td align="center">-</td></td></tr>
+<tr><th>Step 2</th><td align="center">-</td><td align="center">HIGH</td><td align="center">-</td><td align="center">-</td></td></tr>
+<tr><th>Step 3</th><td align="center">-</td><td align="center">-</td><td align="center">HIGH</td><td align="center">-</td></td></tr>
+<tr><th>Step 4</th><td align="center">-</td><td align="center">-</td><td align="center">-</td><td align="center">HIGH</td></td></tr>
+</table>
+<br>
+
 #### FULL_STEP_TWO_PHASE
+
+* 4-step cycles where in each step current flows through **one** phase of **each** of the coils
+
+<table>
+<tr><th></th><th colspan="2">Phase A</th><th colspan="2">Phase B</th></tr>
+<tr><th></th><th>Coil 1</th><th>Coil 2</th><th>Coil 1</th><th>Coil 2</th></th></tr>
+<tr><th>Step 1</th><td align="center">HIGH</td><td align="center">HIGH</td><td align="center">-</td><td align="center">-</td></td></tr>
+<tr><th>Step 2</th><td align="center">-</td><td align="center">HIGH</td><td align="center">HIGH</td><td align="center">-</td></td></tr>
+<tr><th>Step 3</th><td align="center">-</td><td align="center">-</td><td align="center">HIGH</td><td align="center">HIGH</td></td></tr>
+<tr><th>Step 4</th><td align="center">HIGH</td><td align="center">-</td><td align="center">-</td><td align="center">HIGH</td></td></tr>
+</table>
+<br>
+
 #### HALF_STEP
+
+* 8-step cycles formed by interleaving the 4 steps of the FULL_STEP_ONE_PHASE mode with the 4 steps of the FULL_STEP_TWO_PHASE mode
+
+<table>
+<tr><th></th><th colspan="2">Phase A</th><th colspan="2">Phase B</th></tr>
+<tr><th></th><th>Coil 1</th><th>Coil 2</th><th>Coil 1</th><th>Coil 2</th></th></tr>
+<tr><th>Step 1</th><td align="center">HIGH</td><td align="center">-</td><td align="center">-</td><td align="center">-</td></td></tr>
+<tr><th>Step 2</th><td align="center">HIGH</td><td align="center">HIGH</td><td align="center">-</td><td align="center">-</td></td></tr>
+<tr><th>Step 3</th><td align="center">-</td><td align="center">HIGH</td><td align="center">-</td><td align="center">-</td></td></tr>
+<tr><th>Step 4</th><td align="center">-</td><td align="center">HIGH</td><td align="center">HIGH</td><td align="center">-</td></td></tr>
+<tr><th>Step 5</th><td align="center">-</td><td align="center">-</td><td align="center">HIGH</td><td align="center">-</td></td></tr>
+<tr><th>Step 6</th><td align="center">-</td><td align="center">-</td><td align="center">HIGH</td><td align="center">HIGH</td></td></tr>
+<tr><th>Step 7</th><td align="center">-</td><td align="center">-</td><td align="center">-</td><td align="center">HIGH</td></td></tr>
+<tr><th>Step 8</th><td align="center">HIGH</td><td align="center">-</td><td align="center">-</td><td align="center">HIGH</td></td></tr> 
+</table>
 
 ---
 
