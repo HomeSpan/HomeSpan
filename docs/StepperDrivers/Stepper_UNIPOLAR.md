@@ -4,7 +4,9 @@ This class provides a generic driver for use with any center-tapped unipolar ste
  
 The **Stepper_UNIPOLAR** class includes the following constructors:
   * `Stepper_UNIPOLAR(int coil1A, int coil1B, int coil2A, int coil2B)`
-    * controls the driver board using only 4 digital pins from the ESP32, where the parameters specify the pin numbers.  Supports the following step type modes:
+    * controls the driver board using 4 digital pins from the ESP32, where the parameters specify the pin numbers
+    * the driver circuit should be connected and configured such that when any of ESP32 pins specified above are set to are HIGH, current flows through the corresponding coil/phase. Similarly, when a pin is set LOW, the driver circuit should stop the flow of current through the corresponding coil/phase.
+    * supported modes are as follows:
       
       * FULL_STEP_ONE_PHASE
       * FULL_STEP_TWO_PHASE
