@@ -110,6 +110,6 @@ class StepperControl {
 #include "Stepper_A3967.h"      // https://www.sparkfun.com/products/12779
 
 
-struct Stepper_UNL2003 : Stepper_UNIPOLAR {
-  Stepper_UNL2003(int IN1, int IN2, int IN3, int IN4, std::pair<uint32_t, uint32_t> taskParams = {1,0}) : Stepper_UNIPOLAR(IN1,IN3,IN2,IN4,taskParams){}
+struct Stepper_ULN2003A : Stepper_UNIPOLAR {
+  Stepper_ULN2003A(int IN1, int IN2, int IN3, int IN4, std::pair<uint32_t, uint32_t> taskParams = {1,0}) : Stepper_UNIPOLAR(IN1,IN3,IN2,IN4,taskParams){}
 };
