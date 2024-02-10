@@ -17,7 +17,7 @@ The following drivers are currently included in HomeSpan:
 
 * **[Stepper_ULN2003A](StepperDrivers/Stepper_ULN2003A.md)**
   * This class is used to operate stepper motors driven by a [Texas Instruments ULN2003A](https://www.ti.com/lit/ds/symlink/uln2003a.pdf) (or equivalent) chip
-  * See, for example, the [Open Circuit ULN2003 Stepper Motor Driver Board](https://opencircuit.shop/product/uln2003-stepper-motor-driver-module)
+  * See, for example, the [Opencircuit ULN2003 Stepper Motor Driver Board](https://opencircuit.shop/product/uln2003-stepper-motor-driver-module)
 
 * **[Stepper_UNIPOLAR](StepperDrivers/Stepper_UNIPOLAR.md)**
   * This class provides a generic driver for use with any center-tapped unipolar stepper motor
