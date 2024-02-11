@@ -148,7 +148,7 @@ struct SpanWebLog{                            // optional web status/log data
   boolean isEnabled=false;                    // flag to inidicate WebLog has been enabled
   uint16_t maxEntries=0;                      // max number of log entries;
   int nEntries=0;                             // total cumulative number of log entries
-  const char *timeServer;                     // optional time server to use for acquiring clock time
+  const char *timeServer=NULL;                // optional time server to use for acquiring clock time
   const char *timeZone;                       // optional time-zone specification
   boolean timeInit=false;                     // flag to indicate time has been initialized
   char bootTime[33]="Unknown";                // boot time

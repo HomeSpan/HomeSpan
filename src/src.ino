@@ -1,7 +1,7 @@
 /*********************************************************************************
  *  MIT License
  *  
- *  Copyright (c) 2020-2023 Gregg E. Berman
+ *  Copyright (c) 2020-2024 Gregg E. Berman
  *  
  *  https://github.com/HomeSpan/HomeSpan
  *  
@@ -27,61 +27,36 @@
 
 #include "HomeSpan.h"
 
+#define MAX_LIGHTS  2
+
 void setup() {
  
   Serial.begin(115200);
 
-  homeSpan.setLogLevel(2);
+  homeSpan.setLogLevel(1);
+//  homeSpan.enableWebLog(50,"pool.ntp.org","UTC",NULL);
+//  homeSpan.enableWebLog(50,"pool.ntp.org","UTC","myStatus");
+//  homeSpan.enableWebLog(50,NULL,NULL,NULL);
 
-  homeSpan.begin(Category::Sensors,"HomeSpan Sensors");
-  
-   new SpanAccessory();                       // start with Bridge Accessory
-    new Service::AccessoryInformation();  
-      new Characteristic::Identify(); 
-
-   new SpanAccessory();
-    new Service::AccessoryInformation();  
-      new Characteristic::Identify();  
-      new Characteristic::Name("Air-1");
-
-    new Service::CarbonDioxideSensor();
-      new Characteristic::CarbonDioxideDetected(Characteristic::CarbonDioxideDetected::NORMAL);
-      new Characteristic::ConfiguredName("CO-1");
-      new Characteristic::StatusActive(1);
-      new Characteristic::StatusFault(1);
-      new Characteristic::StatusTampered(1);
-      new Characteristic::StatusLowBattery(0); 
-      
-    new Service::AirQualitySensor();
-      new Characteristic::AirQuality(Characteristic::AirQuality::GOOD);
-      new Characteristic::ConfiguredName("AQ-1");
-      new Characteristic::StatusActive(1);
-      new Characteristic::StatusFault(0);
-      new Characteristic::StatusTampered(0);
-      new Characteristic::StatusLowBattery(0);     
+  homeSpan.begin(Category::Lighting,"HomeSpan Max");
 
    new SpanAccessory();
     new Service::AccessoryInformation();  
-      new Characteristic::Identify();  
-      new Characteristic::Name("Air-2");
+      new Characteristic::Identify();
 
-    new Service::AirQualitySensor();
-      new Characteristic::AirQuality(Characteristic::AirQuality::EXCELLENT);
-      new Characteristic::StatusActive(0);
-      new Characteristic::StatusFault(1);
-      new Characteristic::StatusTampered(1);
-      new Characteristic::StatusLowBattery(1);
+  for(int i=0;i<MAX_LIGHTS;i++){
+    new SpanAccessory();
+      new Service::AccessoryInformation();
+        new Characteristic::Identify();
+        char c[30];
+        sprintf(c,"Light-%d",i);
+        new Characteristic::Name(c);
+      new Service::LightBulb();
+        new Characteristic::On(0,false);
+     WEBLOG("Configuring %s",c);
+  }
 
-   new SpanAccessory();
-    new Service::AccessoryInformation();  
-      new Characteristic::Identify();  
-      new Characteristic::Name("Furnace Filter");
-
-    new Service::FilterMaintenance();
-      new Characteristic::FilterChangeIndication(Characteristic::FilterChangeIndication::CHANGE_NEEDED);
-      new Characteristic::FilterLifeLevel(5);
-//      new Characteristic::ResetFilterIndication();
-
+  new SpanUserCommand('w', " - get web log test",webLogTest);     // simulate getting an HTTPS request for weblog
 
 }
 
@@ -91,4 +66,18 @@ void loop(){
  
   homeSpan.poll();
   
+}
+
+//////////////////////////////////////
+
+void webLogTest(const char *dummy){
+  Serial.printf("\n*** In Web Log Test.  Starting Custom Web Log Handler\n");     // here is where you would perform any HTTPS initializations   
+  homeSpan.getWebLog(webLogHandler);      // this starts the normal weblog with output redirected to the specified handler (below)
+}
+
+void webLogHandler(const char *buf){
+  if(buf!=NULL)
+    Serial.printf("%s",buf);            // here is where you would transmit data to the HTTPS connection
+  else
+    Serial.print("*** DONE!\n\n");      // here is where you would close the HTTPS connection
 }

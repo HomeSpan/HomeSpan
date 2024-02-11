@@ -535,9 +535,10 @@ void Span::checkConnect(){
     mdns_service_txt_item_set("_hap","_tcp","logURL",webLog.statusURL.c_str()+4);           // Web Log status (info only - NOT used by HAP)
     
     LOG0("Web Logging enabled at http://%s.local:%d%swith max number of entries=%d\n\n",hostName,tcpPortNum,webLog.statusURL.c_str()+4,webLog.maxEntries);
-    if(webLog.timeServer)
-      xTaskCreateUniversal(webLog.initTime, "timeSeverTaskHandle", 8096, &webLog, 1, NULL, 0);
   }
+
+  if(webLog.timeServer)
+    xTaskCreateUniversal(webLog.initTime, "timeSeverTaskHandle", 8096, &webLog, 1, NULL, 0);  
   
   LOG0("Starting HAP Server on port %d supporting %d simultaneous HomeKit Controller Connections...\n\n",tcpPortNum,maxConnections);
 
@@ -2098,11 +2099,13 @@ SpanUserCommand::SpanUserCommand(char c, const char *s, void (*f)(const char *, 
 ///////////////////////////////
 
 void SpanWebLog::init(uint16_t maxEntries, const char *serv, const char *tz, const char *url){
-  isEnabled=true;
   this->maxEntries=maxEntries;
   timeServer=serv;
   timeZone=tz;
-  statusURL="GET /" + String(url) + " ";
+  if(url){
+    statusURL="GET /" + String(url) + " ";
+    isEnabled=true;
+  }
   log = (log_t *)HS_CALLOC(maxEntries,sizeof(log_t));
   if(timeServer)
     homeSpan.reserveSocketConnections(1);
