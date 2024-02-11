@@ -170,7 +170,7 @@ struct HAPClient {
   static void checkTimedWrites();                                                      // checks for expired Timed Write PIDs, and clears any found (HAP Section 6.7.2.4)
   static void eventNotify(SpanBuf *pObj, int nObj, int ignoreClient=-1);               // transmits EVENT Notifications for nObj SpanBuf objects, pObj, with optional flag to ignore a specific client
 
-  static void getStatusURL(HAPClient *, void (*)(const char *));          // GET / status (an optional, non-HAP feature)
+  static void getStatusURL(HAPClient *, void (*)(const char *, void *), void *);       // GET / status (an optional, non-HAP feature)
 
   class HAPTLV : public TLV8 {   // dedicated class for HAP TLV8 records
     public:
@@ -198,7 +198,8 @@ class HapOut : public std::ostream {
     size_t indent=0;
     uint8_t *hash;
     mbedtls_sha512_context *ctx;
-    void (*callBack)(const char *)=NULL;
+    void (*callBack)(const char *, void *)=NULL;
+    void *callBackUserData = NULL;
   
     void flushBuffer();
     int_type overflow(int_type c) override;
@@ -220,7 +221,8 @@ class HapOut : public std::ostream {
   HapOut& setHapClient(HAPClient *hapClient){hapBuffer.hapClient=hapClient;return(*this);}
   HapOut& setLogLevel(int logLevel){hapBuffer.logLevel=logLevel;return(*this);}
   HapOut& prettyPrint(){hapBuffer.enablePrettyPrint=true;hapBuffer.logLevel=0;return(*this);}
-  HapOut& setCallback(void(*f)(const char *)){hapBuffer.callBack=f;return(*this);}
+  HapOut& setCallback(void(*f)(const char *, void *)){hapBuffer.callBack=f;return(*this);}
+  HapOut& setCallbackUserData(void *userData){hapBuffer.callBackUserData=userData;return(*this);}
   
   uint8_t *getHash(){return(hapBuffer.hash);}
   size_t getSize(){return(hapBuffer.getSize());}

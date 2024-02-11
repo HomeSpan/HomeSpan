@@ -1148,8 +1148,8 @@ void Span::processSerialCommand(const char *c){
 
 ///////////////////////////////
 
-void Span::getWebLog(void (*f)(const char *)){
-  HAPClient::getStatusURL(NULL,f);
+void Span::getWebLog(void (*f)(const char *, void *), void *user_data){
+  HAPClient::getStatusURL(NULL,f,user_data);
 }
 
 ///////////////////////////////

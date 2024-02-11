@@ -256,7 +256,7 @@ void HAPClient::processRequest(){
     }
 
     if(homeSpan.webLog.isEnabled && !strncmp(body,homeSpan.webLog.statusURL.c_str(),homeSpan.webLog.statusURL.length())){       // GET STATUS - AN OPTIONAL, NON-HAP-R2 FEATURE
-      getStatusURL(this,NULL);
+      getStatusURL(this,NULL,NULL);
       return;
     }    
 
@@ -1095,7 +1095,7 @@ int HAPClient::putPrepareURL(char *json){
 
 //////////////////////////////////////
 
-void HAPClient::getStatusURL(HAPClient *hapClient, void (*callBack)(const char *)){                 
+void HAPClient::getStatusURL(HAPClient *hapClient, void (*callBack)(const char *, void *), void *user_data){
   
   char clocktime[33];
 
@@ -1119,9 +1119,9 @@ void HAPClient::getStatusURL(HAPClient *hapClient, void (*callBack)(const char *
   if(hapClient)
     LOG2("\n>>>>>>>>>> %s >>>>>>>>>>\n",hapClient->client.remoteIP().toString().c_str());
     
-  hapOut.setHapClient(hapClient).setLogLevel(2).setCallback(callBack);
+  hapOut.setHapClient(hapClient).setLogLevel(2).setCallback(callBack).setCallbackUserData(user_data);
 
-  hapOut << "HTTP/1.1 200 OK\r\nContent-type: text/html; charset=utf-8\r\n\r\n";
+  if(!callBack) hapOut << "HTTP/1.1 200 OK\r\nContent-type: text/html; charset=utf-8\r\n\r\n";
   hapOut << "<html><head><title>" << homeSpan.displayName << "</title>\n";
   hapOut << "<style>body {background-color:lightblue;} th, td {padding-right: 10px; padding-left: 10px; border:1px solid black;}" << homeSpan.webLog.css.c_str() << "</style></head>\n";
   hapOut << "<body class=bod1><h2>" << homeSpan.displayName << "</h2>\n";
@@ -1191,7 +1191,7 @@ void HAPClient::getStatusURL(HAPClient *hapClient, void (*callBack)(const char *
 
   if(homeSpan.weblogCallback){
     String usrString;
-    homeSpan.weblogCallback(usrString);
+    homeSpan.weblogCallback(usrString); // Callback to add user-defined html in top table.
     hapOut << usrString.c_str();    
   }
     
@@ -1593,7 +1593,7 @@ void HapOut::HapStreamBuffer::flushBuffer(){
   buffer[num]='\0';                               // add null terminator but DO NOT increment num (we don't want terminator considered as part of buffer)
 
   if(callBack)
-    callBack(buffer);    
+    callBack(buffer,callBackUserData);
 
   if(logLevel<=homeSpan.getLogLevel()){
     if(enablePrettyPrint)                         // if pretty print needed, use formatted method
@@ -1649,8 +1649,9 @@ int HapOut::HapStreamBuffer::sync(){
   indent=0;
   
   if(callBack){
-    callBack(NULL);
+    callBack(NULL,callBackUserData);
     callBack=NULL;
+    callBackUserData=NULL;
   }
 
   mbedtls_sha512_finish_ret(ctx,hash);    // finish SHA-384 and store hash
