@@ -34,7 +34,7 @@ void setup() {
   Serial.begin(115200);
 
   homeSpan.setLogLevel(1);
-//  homeSpan.enableWebLog(50,"pool.ntp.org","UTC",NULL);
+  homeSpan.enableWebLog(50,"pool.ntp.org","UTC",NULL);
 //  homeSpan.enableWebLog(50,"pool.ntp.org","UTC","myStatus");
 //  homeSpan.enableWebLog(50,NULL,NULL,NULL);
 
@@ -72,12 +72,15 @@ void loop(){
 
 void webLogTest(const char *dummy){
   Serial.printf("\n*** In Web Log Test.  Starting Custom Web Log Handler\n");     // here is where you would perform any HTTPS initializations   
-  homeSpan.getWebLog(webLogHandler);      // this starts the normal weblog with output redirected to the specified handler (below)
+  homeSpan.getWebLog(webLogHandler,NULL);      // this starts the normal weblog with output redirected to the specified handler (below)
 }
 
-void webLogHandler(const char *buf){
-  if(buf!=NULL)
+void webLogHandler(const char *buf, void *args){
+  if(buf!=NULL){
+    Serial.printf("--------\n");
     Serial.printf("%s",buf);            // here is where you would transmit data to the HTTPS connection
+    Serial.printf("********\n");
+  }
   else
     Serial.print("*** DONE!\n\n");      // here is where you would close the HTTPS connection
 }

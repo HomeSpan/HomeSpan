@@ -122,7 +122,7 @@ void HAPClient::processRequest(){
 
   messageSize=client.available();        
 
-  if(messageSize>MAX_HTTP){            // exceeded maximum number of bytes allowed
+  if(messageSize>MAX_HTTP){                         // exceeded maximum number of bytes allowed
     badRequestError();
     LOG0("\n*** ERROR:  HTTP message of %d bytes exceeds maximum allowed (%d)\n\n",messageSize,MAX_HTTP);
     return;
@@ -130,24 +130,24 @@ void HAPClient::processRequest(){
  
   TempBuffer<uint8_t> httpBuf(messageSize+1);      // leave room for null character added below
   
-  if(cPair){                           // expecting encrypted message
+  if(cPair){                                       // expecting encrypted message
     LOG2("<<<< #### ");
     LOG2(client.remoteIP());
     LOG2(" #### <<<<\n");
 
-    nBytes=receiveEncrypted(httpBuf,messageSize);   // decrypt and return number of bytes read      
+    nBytes=receiveEncrypted(httpBuf,messageSize);  // decrypt and return number of bytes read      
         
-    if(!nBytes){                           // decryption failed (error message already printed in function)
+    if(!nBytes){                                   // decryption failed (error message already printed in function)
       badRequestError();              
       return;          
     }
         
-  } else {                                            // expecting plaintext message  
+  } else {                                         // expecting plaintext message  
     LOG2("<<<<<<<<< ");
     LOG2(client.remoteIP());
     LOG2(" <<<<<<<<<\n");
     
-    nBytes=client.read(httpBuf,messageSize);   // read expected number of bytes
+    nBytes=client.read(httpBuf,messageSize);       // read expected number of bytes
 
     if(nBytes!=messageSize || client.available()!=0){
       badRequestError();
@@ -183,7 +183,7 @@ void HAPClient::processRequest(){
   LOG2(body);
   LOG2("\n------------ END BODY! ------------\n");
 
-  if(!strncmp(body,"POST ",5)){                       // this is a POST request
+  if(!strncmp(body,"POST ",5)){                                                                                        // this is a POST request
 
     if(cLen==0){
       badRequestError();
@@ -207,61 +207,48 @@ void HAPClient::processRequest(){
     return;                          
   } // POST request
           
-  if(!strncmp(body,"PUT ",4)){                       // this is a PUT request
+  if(!strncmp(body,"PUT ",4)){                                                                                         // this is a PUT request
 
     if(cLen==0){
       badRequestError();
       LOG0("\n*** ERROR:  HTTP PUT request contains no Content\n\n");
-      return;      
+      return;
     }
+
+    LOG2((char *)content);
+    LOG2("\n------------ END JSON! ------------\n");    
            
-    if(!strncmp(body,"PUT /characteristics ",21) &&                          // PUT CHARACTERISTICS
-       strstr(body,"Content-Type: application/hap+json")){                   // check that content is JSON
+    if(!strncmp(body,"PUT /characteristics ",21) && strstr(body,"Content-Type: application/hap+json"))                 // PUT CHARACTERISTICS              
+      putCharacteristicsURL((char *)content);
 
-      content[cLen]='\0';                                                    // add a trailing null on end of JSON
-      LOG2((char *)content);                                         // print JSON
-      LOG2("\n------------ END JSON! ------------\n");
-               
-      putCharacteristicsURL((char *)content);                           // process URL
-      return;
+    else if(!strncmp(body,"PUT /prepare ",13) && strstr(body,"Content-Type: application/hap+json"))                    // PUT PREPARE
+      putPrepareURL((char *)content);
+
+    else {
+      notFoundError();
+      LOG0("\n*** ERROR:  Bad PUT request - URL not found\n\n");
     }
-
-    if(!strncmp(body,"PUT /prepare ",13) &&                          // PUT PREPARE
-       strstr(body,"Content-Type: application/hap+json")){                   // check that content is JSON
-
-      content[cLen]='\0';                                                    // add a trailing null on end of JSON
-      LOG2((char *)content);                                         // print JSON
-      LOG2("\n------------ END JSON! ------------\n");
-               
-      putPrepareURL((char *)content);                           // process URL
-      return;
-    }
-      
-    notFoundError();
-    LOG0("\n*** ERROR:  Bad PUT request - URL not found\n\n");
+    
     return;                  
         
   } // PUT request           
       
-  if(!strncmp(body,"GET ",4)){                       // this is a GET request
+  if(!strncmp(body,"GET ",4)){                                                                                         // this is a GET request
                     
-    if(!strncmp(body,"GET /accessories ",17)){       // GET ACCESSORIES
+    if(!strncmp(body,"GET /accessories ",17))                                                                          // GET ACCESSORIES
       getAccessoriesURL();
-      return;
-    }
 
-    if(!strncmp(body,"GET /characteristics?",21)){   // GET CHARACTERISTICS
+    else if(!strncmp(body,"GET /characteristics?",21))                                                                 // GET CHARACTERISTICS
       getCharacteristicsURL(body+21);
-      return;
-    }
 
-    if(homeSpan.webLog.isEnabled && !strncmp(body,homeSpan.webLog.statusURL.c_str(),homeSpan.webLog.statusURL.length())){       // GET STATUS - AN OPTIONAL, NON-HAP-R2 FEATURE
+    else if(homeSpan.webLog.isEnabled && !strncmp(body,homeSpan.webLog.statusURL.c_str(),homeSpan.webLog.statusURL.length()))       // GET STATUS - AN OPTIONAL, NON-HAP-R2 FEATURE
       getStatusURL(this,NULL,NULL);
-      return;
-    }    
 
-    notFoundError();
-    LOG0("\n*** ERROR:  Bad GET request - URL not found\n\n");
+    else {
+      notFoundError();
+      LOG0("\n*** ERROR:  Bad GET request - URL not found\n\n");
+    }
+    
     return;                  
 
   } // GET request
@@ -1121,7 +1108,9 @@ void HAPClient::getStatusURL(HAPClient *hapClient, void (*callBack)(const char *
     
   hapOut.setHapClient(hapClient).setLogLevel(2).setCallback(callBack).setCallbackUserData(user_data);
 
-  if(!callBack) hapOut << "HTTP/1.1 200 OK\r\nContent-type: text/html; charset=utf-8\r\n\r\n";
+  if(!callBack)
+    hapOut << "HTTP/1.1 200 OK\r\nContent-type: text/html; charset=utf-8\r\n\r\n";
+    
   hapOut << "<html><head><title>" << homeSpan.displayName << "</title>\n";
   hapOut << "<style>body {background-color:lightblue;} th, td {padding-right: 10px; padding-left: 10px; border:1px solid black;}" << homeSpan.webLog.css.c_str() << "</style></head>\n";
   hapOut << "<body class=bod1><h2>" << homeSpan.displayName << "</h2>\n";
