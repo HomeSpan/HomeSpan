@@ -69,25 +69,25 @@ HomeSpan requires version 2.0.0 or later of the [Arduino-ESP32 Board Manager](ht
     * example:  `if(target.getNewVal()==target.ARM_STAY) {...}`
   * added ability to properly name individual Services within a single Accessory using new **Characteristic::ConfiguredName()**
     * see revised [Example 11 - ServiceNames](docs/Tutorials.md#example-11---servicenames) for details
-  * new [docs/Services and Characteristics](ServiceList.md) page now provides functional descriptions and detailed specifications for every Service and Characteristic supported by HomeSpan, including a list of the enumerated constants available for every Characteristic
+  * new [Services and Characteristics](docs/ServiceList.md) page now provides functional descriptions and detailed specifications for every Service and Characteristic supported by HomeSpan, including a list of the enumerated constants available for every Characteristic
    
 * **New ability to use *Inverted Buttons* and *Touch Sensors* as a Control Button**
 
   * adds *triggerType* as a second, optional argument to `Span& setControlPin(uint8_t pin, triggerType_t triggerType)`
     * supports TRIGGER_ON_LOW, TRIGGER_ON_HIGH, TRIGGER_ON_TOUCH, or any user-defined function
-  * see [API Reference](Reference.md) for details
+  * see [API Reference](docs/Reference.md) for details
 
 * **New ability to "remotely" trigger user-defined actions by repeatedly power-cycling the device**
 
   * adds new homeSpan method `Span& setRebootCallback(void (*func)(uint8_t count), uint32_t upTime=5000)`
   * the parameter *count*, which is passed by HomeSpan to *func*, indicates the number of "short" reboots that have occurred prior to the current reboot, where a "short" reboot is any that occurs before *upTime* milliseconds have elapsed
   * can be use to remotely restore a device that is not easily accessible to a pre-defined state
-  * see [API Reference](Reference.md) for details
+  * see [API Reference](docs/Reference.md) for details
 
 * **Added two new Stepper Motor Drivers**
   * **Stepper_UNIPOLAR**: a generic driver for any 4-wire center-tapped unipolar motor
   * **Stepper_UNL2003**: support for the UNL2003 driver board
-  * see [Stepper Motor Control Stepper](Stepper.md) for details
+  * see [Stepper Motor Control Stepper](docs/Stepper.md) for details
 
 * **Additional Web Log functionality**
 
@@ -96,18 +96,18 @@ HomeSpan requires version 2.0.0 or later of the [Arduino-ESP32 Board Manager](ht
   * adds new homeSpan method `getWebLog(void (*f)(const char *, void *), void *args)`
     * allows users to retrieve the underlying Web Log HTML from within sketch
   * modified `enableWebLog()` so that it can be used to set the time from an NTP server without actually serving Web Log pages
-  * see [Message Logging](Logging.md) for details
+  * see [Message Logging](docs/Logging.md) for details
 
 * **Added ability to "chain" *homeSpan* methods**
 
   * converted various *homeSpan* methods that previously returned *void* to now return *Span &*
   * example: `homeSpan.setControlPin(21).setStatusPin(13);`
-  * see [API Reference](Reference.md) for details
+  * see [API Reference](docs/Reference.md) for details
 
 * **Added ability to disable SpanPoint encryption**
 
   * without encryption increases the maximum number of allowed SpanPoint devices from 7 to 20
-  * see [SpanPoint](NOW.md) for details
+  * see [SpanPoint](docs/NOW.md) for details
       
 See [Releases](https://github.com/HomeSpan/HomeSpan/releases) for details on all changes and bug fixes included in this update.
 
