@@ -12,7 +12,7 @@ HomeSpan requires version 2.0.0 or later of the [Arduino-ESP32 Board Manager](ht
 * Utilizes a unique *Service-Centric* approach to creating HomeKit devices
 * Takes full advantage of the widely-popular Arduino IDE
 * 100% HAP-R2 compliance
-* 41 integrated HomeKit Services
+* 38 integrated HomeKit Services
 * Operates in either Accessory or Bridge mode
 * Supports pairing with Setup Codes or QR Codes
 
@@ -49,50 +49,127 @@ HomeSpan requires version 2.0.0 or later of the [Arduino-ESP32 Board Manager](ht
   * Launch the WiFi Access Point
 * A standalone, detailed End-User Guide
 
-## ❗Current DEVELOPMENT Branch - HomeSpan 1.8.1
+## ❗Latest Update - HomeSpan 1.9.0 (2/XX/2024)
 
-* **Memory-Usage Improvements**
-  
-  * reduced RAM usage by 30-50K (as well as reduced reliance on large stack-based buffers)
- 
 * **New ability to "chain" *homeSpan* methods**
 
   * converted various *homeSpan* methods that previously returned *void* to now return *Span &*
-  * allows for chaining multiple *homeSpan* methods
   * example: `homeSpan.setControlPin(21).setStatusPin(13);`
-  * see [HomeSpan API Reference](docs/Reference.md) for details
-    
-* **New Message Logging Customizations**
+  * see [API Reference](Reference.md) for details
 
-  * adds new *homeSpan* method `Span& setVerboseWifiReconnect(bool verbose)`
-    * set *verbose* to *false* to suppress WiFi "Trying to connect to..." messages from being logged to the Serial Monitor and Web Log
-  * adds new *homeSpan* method `setWebLogCallback(void (*func)(String &))`
-    * provides a callback allowing you to extend the initial Web Log table with additional data of your own
-    * also allows you to add custom HTML to be shown after the initial table
-    * see [Message Logging](docs/Logging.md) for details and examples
+* **Additional Web Log functionality**
 
-* **New WiFi Callback Mechanism**
+  * adds new homeSpan method `Span& setWebLogCallback(void (*func)(String &))` to allow user to add custom HTML to the Web Log
+  * adds new homeSpan method `getWebLog(void (*f)(const char *, void *), void *args)` to retrieve Web Log HTML from within sketch
+  * modified `enableWebLog()` so that it can be used to set the time from an NTP server without actually serving Web Log pages
+  * see [Message Logging](Logging.md) for details
 
-  * adds new *homeSpan* method `setWifiCallbackAll(void (*func)(int))` that provides a callback every time WiFi is established, *or re-established after a disconnect*
-  * passes the number of times WiFi has been connected/re-connected as an argument
-  * see [API Reference](docs/Reference.md) for details
+* **New WiFi reporting customizations**
  
-* **New Mechanism to trigger/reset HomeSpan by power-cycling or resetting the device a specified number of times**
+  * adds new homeSpan method `Span& setVerboseWifiReconnect(bool verbose=true)` to suppress reconnection messages
+  * adds new homeSpan method `Span& setWifiCallbackAll(void (*func)(int count))` to cal WiFI Callback function every time WiFi reconnects
+  * see [API Reference](Reference.md) for details
 
-  * add new *homeSpan* method `Span& setRebootCallback(void (*func)(uint8_t), uint32_t upTime)` that provides a callback *upTime* milliseconds after rebooting
-  * passes the number of "short" reboots that have occured prior to the current reboot, where a "short" reboot is any that occurs **before** *upTime* milliseconds have elapsed
-  * can be used to reset WiFi Credentials, start the HomeSpan Access Point, perform a Factory Reset, or run any user-defined code, on a hard-to-access HomeSpan device by simply power-cycling the device a specified number of times
-  * see [API Reference](docs/Reference.md) for details
+* **New ability to trigger HomeSpan actions by power-cycling (or resetting) the device one or more times**
 
+  * adds new homeSpan method `Span& setRebootCallback(void (*func)(uint8_t count), uint32_t upTime=5000)`
+  * the parameter *count*, which is passed by HomeSpan to *func*, indicates the number of "short" reboots that have occurred prior to the current reboot, where a "short" reboot is any that occurs before *upTime* milliseconds have elapsed
+  * see [API Reference](Reference.md) for details
 
 * **New ability to disable SpanPoint encryption**
 
-  * adds optional class-level method `SpanPoint::setEncryption(boolean encrypt)`
+  * adds new class-level method `SpanPoint::setEncryption(boolean encrypt)`
   * enabling/disabling SpanPoint encryption changes the maximum number of connections that can be supported by a single device:
-    * with encryption, HomeSpan can support up to 7 SpanPoint connections to remote devices
-    * without encryption, HomeSpan can support up to 20 SpanPoint connections to remote devices
-  * if these limits are exceeded, HomeSpan will provide warning messages on the Serial Monitor during start-up
-  * see [SpanPoint](docs/NOW.md) for details
+    * with encryption, max=7 remote devices
+    * without encryption, max=20 remote devices
+  * see [SpanPoint](NOW.md) for details
+
+* **New ability to get handle of HomeSpan Auto Poll task**
+
+  * adds homeSpan method `TaskHandle_t getAutoPollTask()`
+  * see [API Reference](Reference.md) for details
+
+* **New ability to use Inverted or Touch Buttons as a Control Button**
+
+  * adds *triggerType* as a second, optional argument to `Span& setControlPin(uint8_t pin, triggerType_t triggerType)`
+    support TRIGGER_ON_LOW, TRIGGER_ON_HIGH, TRIGGER_ON_TOUCH, or any user-defined function
+  * see [API Reference](Reference.md) for details
+
+* **New Services and Characteristics features**
+  * HomeSpan constants can be used instead of integers when reading and writing values of applicable Characteristics
+    * very helpful since Apple is no longer publishing its non-commercial HAP document that provided a list and description of the states for each Characteristic
+    * example:  `if(target.getNewVal()==target.ARM_STAY) {...}`
+  * new ability to name individual Services using new **Characteristic::ConfiguredName()**
+  * updated Services and Characteristics page now provides functional descriptions and detailed specifications for every Service and Characteristic supported by HomeSpan
+  * see [Services and Characteristics](ServiceList.md) for details
+
+* **New Stepper Motor Drivers**
+  * **Stepper_UNIPOLAR**: a generic driver for any 4-wire center-tapped unipolar motor
+  * **Stepper_UNL2003**: support for the UNL2003 driver board
+  * see [Stepper Motor Control Stepper](Stepper.md) for details
+
+    
+### Significant Refactoring to Optimize Memory Use
+
+* HomeSpan can now support approximately TWICE the number of Accessories using the same amount of memory
+* Minimized memory use also means much more room for users to add non-HomeSpan features to their sketch without running out of memory, especially if the non-HomeSpan code consumes a lot of stack space
+* HomeSpan now automatically detects the presence of PSRAM (SPIRAM) and will utilize that extra memory to the largest extent possible to keep internal RAM free for certain HomeSpan functions and ESP32 functions (e.g. WiFi) that require internal RAM.  Also keeps internal RAM free for use by any non-HomeSpan code that does not (or cannot) use PSRAM
+* Changed HomeSpan's 41-Accessory limit to a 150-Accessory Limit (as specified by HAP) since it is now possible to create a device with many more than 41 Accessories without running out of memory, especially if PSRAM is used (#619)
+* HomeSpan will print a warning to the Serial Monitor at boot-up if free internal RAM seems to be getting too low based on memory use before WiFi is started
+* Refactoring included:
+  * converted all large fixed-size stack-based buffers to dynamically-sized heap-based buffers
+  * ensure applicable heap-based buffers use PSRAM when available
+  * added custom allocators to containers, and custom constructors to objects, to ensure they use PSRAM when available
+  * converted the static array that stored all pairing info for 16 Controllers to a linked-list only storing data for Controllers as needed
+    * HomeKit typically only assigns a few Controllers, so no need always reserve space for 16
+    * also frees up a lot of NVS space (since Controller pairing info is stored there)
+  * converted the containers holding the lists of required and optional Characteristics for each Service to a much more efficient storage class 
+  * re-wrote the TLV8 class from being a large, fixed-size, globally-scoped, HAP-specific object to a completely generic TLV8 class supporting the simultaneous dynamic creation of multiple TLV8 objects, each with arbitrary tags sized dynamically as needed-sized
+    * provides an opportunity to *potentially* add TLV-based Characteristics in the future
+  * updated the SRP6A class to minimize memory use, as well as delete itself after pairing is completed and it is no longer needed
+  * created new hapOut stream with a custom buffer that can simultaneously output text to the Serial Monitor, compute hash codes for any block of data, and transmit data to HAP clients, either in plain text, or encrypted on the fly
+    * automatically chunks data on the fly into blocks of 1024 bytes, and, if needed, encrypts those blocks before transmitting  
+    * dramatically reduces memory usage when transmitting or printing large blocks of text (e.g. the JSON response to a HAP getAccessories request)
+
+### Refactoring to Optimize NVS Use
+
+* NVS memory needed for the (optional) storage of Characteristic values has been reworked to take up a much smaller number of NVS records, allowing for the NVS storage of many more Characteristic values
+  * added check at start-up informing user if NVS space is running low
+* Added new CustomNVSPartition Example demonstrating how to create your own Partition Scheme to expand the size of the NVS partition and store a very large number of Characteristics (needed for sketches that create many Accessories, each with lots of stored Characteristics)
+  
+### Other Internal Updates
+
+* **Added internal support for listing controllers in HAP /postPairing**
+    * this HAP request was never used by iOS until recent updates, so is now needed 
+
+* **Moved `vTaskDelay(5)` from `pollTask()` into `autoPoll()` (#668)**
+  * this 5 ms delay is now called *only* when using `autoPoll()` (it is needed to allow the polling task to yield to other tasks)
+  * the delay is no longer used when directly calling `poll()` from within the main `loop()` (it is not needed)
+
+* **Updated *Pixel Example* to allow for strands of longer than 255 LEDs (#654)**
+  * the Pixel library already allows for this - it was *only* the example that limited the number by inadvertently using *uint8_t* as the parameter for the number of pixels specified in a strand
+
+* **Added support to properly display UTF-8 WiFi names when running HomeSpan Setup Access Point  (#631)**
+
+* **Limit the internal storage of all string-based Characteristics to 64 characters to prevent buffer overflows (#659)**
+  * this equates to the default limit specified by HAP
+
+* **Updated *RemoteDevice* Example to show MAC Address for Remote Devices on Serial Monitor during boot-up (#660)**
+
+* **Removed dependency on *core_version.h* (#744)**
+  * the Arduino-ESP32 version is now sourced instead from *esp_arduino_version.h*
+
+
+
+
+
+
+
+
+
+
+
+
       
 See [Releases](https://github.com/HomeSpan/HomeSpan/releases) for details on all changes and bug fixes included in this update.
 
