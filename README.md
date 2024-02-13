@@ -61,15 +61,15 @@ HomeSpan requires version 2.0.0 or later of the [Arduino-ESP32 Board Manager](ht
 * **HomeSpan optimized to use significantly less Non-Volatile Storage (NVS)**
 
   * allows you to use NVS to save the values of a many more Characteristics 
-  * see the newly-added [CustomNVSPartition](Tutorials.md#customnvspartition) example that demonstrates how to create your own Partition Scheme to further expand the size of the NVS partition beyond the ESP32 default to support sketches with a large number of Accessories each configured to use NVS to save the values of many Characteristics
+  * see the newly-added [CustomNVSPartition](docs/Tutorials.md#customnvspartition) example that demonstrates how to create your own Partition Scheme to further expand the size of the NVS partition beyond the ESP32 default to support sketches with a large number of Accessories each configured to use NVS to save the values of many Characteristics
 
 * **New features and documentation for Services and Characteristics**
   * created "enumerated constants" (e.g. *SWING_ENABLED*, *HUMIDIFYING*, etc.) for every applicable Characteristic that can be used instead of integers when reading and writing values
     * very helpful since Apple is no longer publishing its non-commercial HAP document that provided a list and description of the states for each Characteristic
     * example:  `if(target.getNewVal()==target.ARM_STAY) {...}`
   * added ability to properly name individual Services within a single Accessory using new **Characteristic::ConfiguredName()**
-    * see revised [Example 11 - ServiceNames](Tutorials.md#example-11---servicenames) for details
-  * new [Services and Characteristics](ServiceList.md) page now provides functional descriptions and detailed specifications for every Service and Characteristic supported by HomeSpan, including a list of the enumerated constants available for every Characteristic
+    * see revised [Example 11 - ServiceNames](docs/Tutorials.md#example-11---servicenames) for details
+  * new [docs/Services and Characteristics](ServiceList.md) page now provides functional descriptions and detailed specifications for every Service and Characteristic supported by HomeSpan, including a list of the enumerated constants available for every Characteristic
    
 * **New ability to use *Inverted Buttons* and *Touch Sensors* as a Control Button**
 
