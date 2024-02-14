@@ -101,7 +101,12 @@ void extraData(String &r){
 ```
 
 To embed this custom HTML text in the Web Log, call `homeSpan.setWebLogCallback(extraData)` in your sketch.
- 
+
+### Accessing Web Log HTML from within your sketch
+
+In addition to (or as an alternative to) serving an HTML Web Log page in response to HTTP requests, users can access the HTML for such page from within their sketch.  Since the HTML for a Web Log page can be very large, in order to avoid consuming too much RAM, HomeSpan generates the HTML on demand and streams the page in sequential chunks of 1024 bytes in response to an HTTP request for the Web Log.  It is therefore not possible for HomeSpan to simply provide the user with a `char *` pointing the HTML for a complete Web Log.  Instead, HomeSpan provides the user method with the following method that triggers the production of the HTML for a Web Log page and streams the resulting 1024-byte chubnks of HTML to a user-defined function for further processing and handling:
+
+ TBD
 ---
 
 [↩️](../README.md) Back to the Welcome page
