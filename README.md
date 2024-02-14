@@ -51,14 +51,14 @@ HomeSpan requires version 2.0.0 or later of the [Arduino-ESP32 Board Manager](ht
 
 ## ❗Latest Update - HomeSpan 1.9.0 (2/XX/2024)
 
-* **HomeSpan optimized to use significantly less RAM**
+* **HomeSpan has been optimized to use significantly less RAM!**
 
   * supports approximately **TWICE** the number of Accessories using the same amount of memory
   * minimized memory use also means much more room for users to add non-HomeSpan features to their sketch without running out of memory, especially if the non-HomeSpan code consumes a lot of stack space
   * HomeSpan now automatically detects the presence of **PSRAM** (SPIRAM) and will utilize that extra memory to the largest extent possible to keep internal RAM free for certain HomeSpan functions and ESP32 functions (e.g. WiFi) that require internal RAM.  Also keeps internal RAM free for use by any non-HomeSpan code that does not (or cannot) use PSRAM
   * increased HomeSpan's 41-Accessory limit to a 150-Accessory Limit (as specified by HAP) since it is now possible to create a device with many more than 41 Accessories without running out of memory, especially if PSRAM is used
 
-* **HomeSpan optimized to use significantly less Non-Volatile Storage (NVS)**
+* **HomeSpan has been optimized to use significantly less Non-Volatile Storage (NVS)**
 
   * allows you to use NVS to save the values of a many more Characteristics 
   * see the newly-added [CustomNVSPartition](docs/Tutorials.md#customnvspartition) example that demonstrates how to create your own Partition Scheme to further expand the size of the NVS partition beyond the ESP32 default to support sketches with a large number of Accessories each configured to use NVS to save the values of many Characteristics
