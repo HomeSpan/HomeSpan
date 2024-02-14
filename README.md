@@ -74,7 +74,7 @@ HomeSpan requires version 2.0.0 or later of the [Arduino-ESP32 Board Manager](ht
 * **New ability to use *Inverted Buttons* and *Touch Sensors* as a Control Button**
 
   * adds *triggerType* as a second, optional argument to `Span& setControlPin(uint8_t pin, triggerType_t triggerType)`
-    * supports TRIGGER_ON_LOW, TRIGGER_ON_HIGH, TRIGGER_ON_TOUCH, or any user-defined function
+  * supports TRIGGER_ON_LOW, TRIGGER_ON_HIGH, TRIGGER_ON_TOUCH, or any user-defined function
   * see [API Reference](docs/Reference.md) for details
 
 * **New ability to "remotely" trigger user-defined actions by repeatedly power-cycling the device**
