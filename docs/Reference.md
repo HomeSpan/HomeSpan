@@ -214,7 +214,7 @@ The following **optional** `homeSpan` methods enable additional features and pro
     * *maxEntries* - maximum number of (most recent) entries to save.  If unspecified, defaults to 0, in which case the Web Log will only display status without any log entries
     * *timeServerURL* - the URL of a time server that HomeSpan will use to set its clock upon startup after a WiFi connection has been established. HomeSpan will reserve one extra socket connection when a time server is specified. If unspecified, defaults to NULL, in which case HomeSpan skips setting the device clock
     * *timeZone* - specifies the time zone to use for setting the clock.  Uses POSIX.1 format only and does not support the *Time Zone Database*, or *tzdata*. As per [GNU libc documentation for TZ](https://www.gnu.org/software/libc/manual/html_node/TZ-Variable.html), *the offset specifies the time value you must **add to the local time** to get a Coordinated Universal Time value*. "UTC+5:00" means that local time + 5 hours give UTC time. See the GNU libc documentation for some examples, including how to specify North American Eastern Standard Time (EST) and Eastern Daylight Time (EDT) with start and end dates of EDT. If *serverURL=NULL* this field is ignored; if *serverURL!=NULL* this field is required
-    * *logURL* - the URL of the Web Log page for this device.  If unspecified, defaults to "status"
+    * *logURL* - the URL of the Web Log page for this device.  If unspecified, defaults to "status".  If *logURL* is set to NULL HomeSpan will use the *timeServerURL* and *timeZone* parameters to set the clock, but it will *not* serve any Web Log pages in response to any HTTP requests.  However, Web Log data is still accumulated internally and the resulting HTML can be accessed anytime by calling the `homeSpan.getWebLog()` method (see below)  
   * example: `homeSpan.enableWebLog(50,"pool.ntp.org","UTC-1:00","myLog");` creates a web log at the URL *http<nolink>://HomeSpan-\[DEVICE-ID\].local:\[TCP-PORT\]/myLog* that will display the 50 most-recent log messages produced with the WEBLOG() macro.  Upon start-up (after a WiFi connection has been established) HomeSpan will attempt to set the device clock by calling the server "pool.ntp.org" and adjusting the time to be 1 hour ahead of UTC.
   * when attemping to connect to *timeServerURL*, HomeSpan waits 120 seconds for a response.  This is done in the background and does not block HomeSpan from running as usual while it tries to set the time.  If no response is received after the 120-second timeout period, HomeSpan assumes the server is unreachable and skips the clock-setting procedure.  Use `setTimeServerTimeout()` to re-configure the 120-second timeout period to another value
   * see [Message Logging](Logging.md) for complete details
@@ -231,7 +231,16 @@ The following **optional** `homeSpan` methods enable additional features and pro
   * allows user to add additional custom data to the initial table of the Web Log by **extending** the String *htmlText*, which is passed as a reference to *func*
   * the function *func* must be of type *void* and accept one argument of type *String*
   * see [Message Logging](Logging.md) for details on how to construct *htmlText*
- 
+
+* `void getWebLog(void (*f)(const char *htmlBuf, void *args), void *userData)`
+   * when called, HomeSpan *streams* the current Web Log HTML text, and any optionally-specified *userData*, directly to the user-defined function, *f()*, which should return a *void* and accept the following two arguments:
+     *  *htmlBuf* - pointer to part of the HTML text for the Web Log page
+     *  *args* - a pass-through of the *userData* argument
+   *  if user-defined data is not needed, set *userData* to NULL
+   * to avoid creating a single large text buffer, HomeSpan splits the HTML for the Web Log into chunks of 1024 bytes and repeatedly calls *f()* until all the HTML has been streamed; HomeSpan then makes a final call to *f()* with *htmlBuf* set to NULL indicating to the user that the end of the HTML text has been reached
+   * this command is primarily used to redirect Web Log pages to a user-defined process for alternative handling, display, or transmission
+   * see [Message Logging](Logging.md) for more details
+  
 * `void processSerialCommand(const char *CLIcommand)`
   * processes the *CLIcommand* just as if were typed into the Serial Monitor
   * allows for programmatic access to all CLI commands, included any custom commands defined by the user
