@@ -53,7 +53,7 @@ To enable Web Logging (it's turned off by default), call the method `homeSpan.en
 * the total number of WEBLOG() messages to be stored - older messages are discarded in favor of newer ones once the limit you set is reached
 * the URL of an NTP time server - this is optional and only needed if you want to set the clock of the device at start-up
 * the time zone for the device - this is only needed if an NTP time server has been specified
-* the URL of the Web Log page - if unspecified, HomeSpan will serve the Web Log at a page named "status"
+* the URL of the Web Log page - if unspecified, HomeSpan will serve the Web Log at a page named "status".  If set to NULL, HomeSpan will process Web Log data but will *not* serve any Web Log pages to any HTTP requests.  However, Web Log data in the form of a finished HTML page can still be accessed by the user by calling `homeSpan.getWebLog()` as described further below
  
 Additional notes:
  
