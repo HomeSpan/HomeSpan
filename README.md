@@ -89,7 +89,7 @@ HomeSpan requires version 2.0.0 or later of the [Arduino-ESP32 Board Manager](ht
 
 * **Added two new Stepper Motor Drivers**
   * **Stepper_UNIPOLAR**: a generic driver for any 4-wire center-tapped unipolar motor
-  * **Stepper_ULN2003**: support for the ULN2003 driver board
+  * **Stepper_ULN2003A**: support for the ULN2003A driver board
   * see [Stepper Motor Control Stepper](docs/Stepper.md) for details
 
 * **Additional Web Log functionality**
