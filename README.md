@@ -6,6 +6,9 @@ HomeSpan provides a microcontroller-focused implementation of Apple's HomeKit Ac
 
 HomeSpan requires version 2.0.0 or later of the [Arduino-ESP32 Board Manager](https://github.com/espressif/arduino-esp32), and has been tested up through version 2.0.14 (recommended).  HomeSpan can be run on the original ESP32 as well as Espressif's ESP32-S2, ESP32-C3, and ESP32-S3 chips.
 
+> [!NOTE]
+> Apple's new HomeKit architecture [requires the use of a Home Hub](https://support.apple.com/en-us/HT207057) (either a HomePod or Apple TV) for full and proper operation of any HomeKit device, include those based on HomeSpan.  Without a Home Hub, HomeSpan cannot send notifications to the Home App - things like pushbuttons and temperature sensors will not be able to transmit updates to the Home App.
+
 ### HomeSpan Highlights
 
 * Provides a natural, intuitive, and **very** easy-to-use framework
@@ -114,6 +117,16 @@ HomeSpan requires version 2.0.0 or later of the [Arduino-ESP32 Board Manager](ht
   * `Span& setVerboseWifiReconnect()` - optionally suppresses "Trying to connect to..." messages
   * `Span& setWifiCallbackAll()` - provides an optional callback every time WiFi is connected *or re-connected*
   * `TaskHandle_t getAutoPollTask()` - returns the Task Handle for the HomeSpan Auto Poll Task
+ 
+* **Removed dependencies on various "extra" `#include` files**
+  * the following \#include files are now embedded in *HomeSpan.h* and **should not be specified in any sketch:**
+    * *extras/Pixel.h*
+    * *extras/RFControl.h*
+    * *extras/PwmPin.h*
+    * *extras/StepperControl.h*
+
+> [!IMPORTANT]
+> At present it is okay to include the above `#include` files in your sketch (they have no effect on the compiled code), but they will be deleted at some point in the future so please remove them from your sketches now to ensure forward compatibility with subsequent releases. 
       
 See [Releases](https://github.com/HomeSpan/HomeSpan/releases) for details on all changes and bug fixes included in this update.
 
