@@ -43,11 +43,11 @@
 #include <esp_now.h>
 #include <mbedtls/base64.h>
 
-#include "extras/Blinker.h"
-#include "extras/Pixel.h"
-#include "extras/RFControl.h"
-#include "extras/PwmPin.h"
-#include "extras/StepperControl.h"
+#include "src/extras/Blinker.h"
+#include "src/extras/Pixel.h"
+#include "src/extras/RFControl.h"
+#include "src/extras/PwmPin.h"
+#include "src/extras/StepperControl.h"
 
 #include "Settings.h"
 #include "Utils.h"
