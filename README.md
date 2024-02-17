@@ -108,6 +108,12 @@ HomeSpan requires version 2.0.0 or later of the [Arduino-ESP32 Board Manager](ht
 
   * without encryption increases the maximum number of allowed SpanPoint devices from 7 to 20
   * see [SpanPoint](docs/NOW.md) for details
+ 
+* **Other new *homeSpan* methods included in this release:**
+
+  * `Span& setVerboseWifiReconnect()` - optionally suppresses "Trying to connect to..." messages
+  * `Span& setWifiCallbackAll()` - provides an optional callback every time WiFi is connected *or re-connected*
+  * `TaskHandle_t getAutoPollTask()` - returns the Task Handle for the HomeSpan Auto Poll Task
       
 See [Releases](https://github.com/HomeSpan/HomeSpan/releases) for details on all changes and bug fixes included in this update.
 
