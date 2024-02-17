@@ -8,7 +8,7 @@ The HomeSpan Library is invoked by including *HomeSpan.h* in your Arduino sketch
 
 ## *homeSpan*
 
-At runtime HomeSpan will create a global **object** named `homeSpan` that supports the following methods:
+At runtime HomeSpan will create a global **object** named `homeSpan` (of type *class Span*) that supports the following methods:
 
 * `void begin(Category catID, const char *displayName, const char *hostNameBase, const char *modelName)` 
   * initializes HomeSpan
@@ -26,21 +26,31 @@ At runtime HomeSpan will create a global **object** named `homeSpan` that suppor
 
 ---
 
-The following **optional** `homeSpan` methods override various HomeSpan initialization parameters used in `begin()`, and therefore **should** be called before `begin()` to take effect.  If a method is *not* called, HomeSpan uses the default parameter indicated below:
+The following **optional** `homeSpan` methods override various HomeSpan initialization parameters used in `begin()`, and therefore **should** be called before `begin()` to take effect.
+Methods with a return type of `Span&` return a reference to `homeSpan` itself and can thus be chained together (e.g. `homeSpan.setControlPin(21).setStatusPin(13);`).  If a method is *not* called, HomeSpan uses the default parameter indicated below:
 
-* `void setControlPin(uint8_t pin)`
-  * sets the ESP32 pin to use for the HomeSpan Control Button (which must connect the specified pin to **ground** when pushed).  If not specified, HomeSpan will assume there is no Control Button
+* `Span& setControlPin(uint8_t pin, triggerType=PushButton::TRIGGER_ON_LOW)`
+  * sets the ESP32 *pin* to use for the HomeSpan Control Button
+  * if this method is not called, HomeSpan will assume there is no Control Button
+  * the optional second argument, *triggerType*, configures the Control Button as follows:
+    * `PushButton::TRIGGER_ON_LOW` - triggers when *pin* is driven LOW
+      * suitable for buttons that connect *pin* to GROUND (this is the default when *triggerType* is not specified)
+    * `PushButton::TRIGGER_ON_HIGH` - triggers when *pin* is driven HIGH
+      * suitable for buttons that connect *pin* to VCC (typically 3.3V)
+    * `PushButton::TRIGGER_ON_TOUCH` - uses the device's touch-sensor peripheral to trigger when *pin* has been touched
+      * not available on ESP32-C3
+  * as an alternative, you can set *triggerType* to any user-defined function of the form `boolean(int arg)` to utilize any device as a Control Button.  See **SpanButton** below for details
 
 * `int getControlPin()`
    * returns the pin number of the HomeSpan Control Button as set by `setControlPin(pin)`, or -1 if no pin has been set
   
-* `void setStatusPin(uint8_t pin)`
-  * sets the ESP32 pin to use for the HomeSpan Status LED
+* `Span& setStatusPin(uint8_t pin)`
+  * sets the ESP32 *pin* to use for the HomeSpan Status LED
   * assumes a standard LED will be connected to *pin*
   * if neither this method nor any equivalent method is called, HomeSpan will assume there is no Status LED
   
-* `void setStatusPixel(uint8_t pin, float h=0, float s=100, float v=100)`
-  * sets the ESP32 pin to use for the HomeSpan Status LED
+* `Span& setStatusPixel(uint8_t pin, float h=0, float s=100, float v=100)`
+  * sets the ESP32 *pin* to use for the HomeSpan Status LED
   * this method is an *alternative* to using `setStatusPin()` above
   * assumes an RGB NeoPixel (or equivalent) will be connected to *pin*
   * works well with ESP32 boards that have a built-in NeoPixel LED, though adding an external NeoPixel is fine
@@ -52,14 +62,14 @@ The following **optional** `homeSpan` methods override various HomeSpan initiali
   * example: `homeSpan.setStatusPixel(8,120,100,20)` sets the Status LED to light green using a NeoPixel attached to pin 8 
   * if neither this method nor any equivalent method is called, HomeSpan will assume there is no Status LED
 
-* `void setStatusDevice(Blinkable *sDev)`
+* `Span& setStatusDevice(Blinkable *sDev)`
   * sets the Status LED to a user-specified Blinkable device, *sDev*
   * this method is an *alternative* to using either `setStatusPin()` or `setStatusPixel()` above
   * see [Blinkable](Blinkable.md) for details on how to create generic Blinkable devices
   * useful when using an LED connected to a pin expander, or other specialized driver, as the Status LED
   * if neither this method nor any equivalent method is called, HomeSpan will assume there is no Status LED
 
-* `void setStatusAutoOff(uint16_t duration)`
+* `Span& setStatusAutoOff(uint16_t duration)`
   * sets Status LED to automatically turn off after *duration* seconds
   * Status LED will automatically turn on, and duration timer will be reset, whenever HomeSpan activates a new blinking pattern
   * if *duration* is set to zero, auto-off is disabled (Status LED will remain on indefinitely)
@@ -67,19 +77,19 @@ The following **optional** `homeSpan` methods override various HomeSpan initiali
 * `int getStatusPin()`
    * returns the pin number of the Status LED as set by `setStatusPin(pin)`, or -1 if no pin has been set
 
-* `void setApSSID(const char *ssid)`
+* `Span& setApSSID(const char *ssid)`
   * sets the SSID (network name) of the HomeSpan Setup Access Point (default="HomeSpan-Setup")
   
-* `void setApPassword(const char *pwd)`
+* `Span& setApPassword(const char *pwd)`
   * sets the password of the HomeSpan Setup Access Point (default="homespan")
   
-* `void setApTimeout(uint16_t nSec)`
+* `Span& setApTimeout(uint16_t nSec)`
   * sets the duration (in seconds) that the HomeSpan Setup Access Point, once activated, stays alive before timing out (default=300 seconds)
   
-* `void setCommandTimeout(uint16_t nSec)`
+* `Span& setCommandTimeout(uint16_t nSec)`
   * sets the duration (in seconds) that the HomeSpan End-User Command Mode, once activated, stays alive before timing out (default=120 seconds)
   
-* `void setLogLevel(int level)`
+* `Span& setLogLevel(int level)`
   * sets the logging level for diagnostic messages, where:
     * 0 = top-level HomeSpan status messages, and any `LOG0()` messages specified in the sketch by the user (default)
     * 1 = all HomeSpan status messages, and any `LOG1()` messages specified in the sketch by the user
@@ -93,7 +103,7 @@ The following **optional** `homeSpan` methods override various HomeSpan initiali
 * `int getLogLevel()`
   * returns the current Log Level as set by `setLogLevel(level)`
   
-* `void reserveSocketConnections(uint8_t nSockets)`
+* `Span& reserveSocketConnections(uint8_t nSockets)`
   * reserves *nSockets* network sockets for uses **other than** by the HomeSpan HAP Server for HomeKit Controller Connections
     * for sketches compiled under Arduino-ESP32 v2.0.1 or later, HomeSpan reserves 14 sockets for HAP Controller Connections
     * each call to `reserveSocketConnections(nSockets)` reduces this number by *nSockets*
@@ -102,16 +112,16 @@ The following **optional** `homeSpan` methods override various HomeSpan initiali
   * note you do not need to separately reserve sockets for built-in HomeSpan functionality
     * for example, `enableOTA()` already contains an embedded call to `reserveSocketConnections(1)` since HomeSpan knows one socket must be reserved to support OTA
   
-* `void setPortNum(uint16_t port)`
+* `Span& setPortNum(uint16_t port)`
   * sets the TCP port number used for communication between HomeKit and HomeSpan (default=80)
   
-* `void setHostNameSuffix(const char *suffix)`
+* `Span& setHostNameSuffix(const char *suffix)`
   * sets the suffix HomeSpan appends to *hostNameBase* to create the full hostName
   * if not specified, the default is for HomeSpan to append a dash "-" followed the 6-byte Accessory ID of the HomeSpan device
   * setting *suffix* to a null string "" is permitted
   * example: `homeSpan.begin(Category::Fans, "Living Room Ceiling Fan", "LivingRoomFan");` will yield a default *hostName* of the form *LivingRoomFan-A1B2C3D4E5F6.local*.  Calling `homeSpan.setHostNameSuffix("v2")` prior to `homeSpan.begin()` will instead yield a *hostName* of *LivingRoomFanv2.local*
   
-* `void setQRID(const char *id)`
+* `Span& setQRID(const char *id)`
   * changes the Setup ID, which is used for pairing a device with a [QR Code](QRCodes.md), from the HomeSpan default to *id*
   * the HomeSpan default is "HSPN" unless permanently changed for the device via the [HomeSpan CLI](CLI.md) using the 'Q' command
   * *id* must be exactly 4 alphanumeric characters (0-9, A-Z, and a-z).  If not, the request to change the Setup ID is silently ignored and the default is used instead
@@ -135,11 +145,11 @@ The following **optional** `homeSpan` methods enable additional features and pro
   * this command causes HomeSpan to ignore, but does not otherwise alter, any password stored using the 'O' command 
   * returns 0 if enabling OTA was successful, or -1 and reports an error to the Serial Monitor if not
 
-* `void enableAutoStartAP()`
+* `Span& enableAutoStartAP()`
   * enables automatic start-up of WiFi Access Point if WiFi Credentials are **not** found at boot time
   * methods to alter the behavior of HomeSpan's Access Point, such as `setApTimeout()`, must be called prior to `enableAutoStartAP()` to have an effect  
   
-* `void setApFunction(void (*func)())`
+* `Span& setApFunction(void (*func)())`
   * replaces HomeSpan's built-in WiFi Access Point with user-defined function *func*
   * *func* must be of type *void* and have no arguments
   * *func* will be called instead of HomeSpan's built-in WiFi Access Point whenever the Access Point is launched:
@@ -149,22 +159,30 @@ The following **optional** `homeSpan` methods enable additional features and pro
   * after identifying the SSID and password of the desired network, *func* must call `setWifiCredentials()` to save and use these values
   * it is recommended that *func* terminates by restarting the device using `ESP.restart()`. Upon restart HomeSpan will use the SSID and password just saved
   
-* `void setWifiCredentials(const char *ssid, const char *pwd)`
+* `Span& setWifiCredentials(const char *ssid, const char *pwd)`
   * sets the SSID (*ssid*) and password (*pwd*) of the WiFi network to which HomeSpan will connect
   * *ssid* and *pwd* are automatically saved in HomeSpan's non-volatile storage (NVS) for retrieval when the device restarts
   * note that the saved values are truncated if they exceed the maximum allowable characters (ssid=32; pwd=64)
   * :warning: SECURITY WARNING: The purpose of this function is to allow advanced users to *dynamically* set the device's WiFi Credentials using a customized Access Point function specified by `setApFunction(func)`. It it NOT recommended to use this function to hardcode your WiFi SSID and password directly into your sketch.  Instead, use one of the more secure methods provided by HomeSpan, such as typing 'W' from the CLI, or launching HomeSpan's Access Point, to set your WiFi credentials without hardcoding them into your sketch
+ 
+* `Span& setVerboseWifiReconnect(bool verbose)`
+  * when trying connecting to WiFi, HomeSpan normally logs "Trying to connect to..." messages to the Serial Monitor and the Web Log
+  * calling this method with *verbose* set to *false* supresses these messages
+  * calling this method a second time with *verbose* set to *true* re-activates these messages (default behavior)
 
-* `void setWifiCallback(void (*func)())`
-  * sets an optional user-defined callback function, *func*, to be called by HomeSpan upon start-up just after WiFi connectivity has been established.  This one-time call to *func* is provided for users that are implementing other network-related services as part of their sketch, but that cannot be started until WiFi connectivity is established.  The function *func* must be of type *void* and have no arguments
+* `Span& setWifiCallback(void (*func)())`
+  * sets an optional user-defined callback function, *func*, to be called by HomeSpan upon start-up just after WiFi connectivity has been initially established.  This one-time call to *func* is provided for users that are implementing other network-related services as part of their sketch, but that cannot be started until WiFi connectivity is established.  The function *func* must be of type *void* and have no arguments
 
-* `void setPairCallback(void (*func)(boolean status))`
+* `Span& setWifiCallbackAll(void (*func)(int count))`
+  * similar to `setWiFiCallback()` above, but the user-defined callback function, *func*, is called by HomeSpan *every* time WiFi connectivity has been established or re-established after a disconnect.  The function *func* must be of type *void* and accept a single *int* argument, *count*, into which HomeSpan passes the number of times WiFi has been established or re-established (i.e. *count*=1 on initial WiFi connection; *count*=2 if re-established after the first disconnect, etc.)
+    
+* `Span& setPairCallback(void (*func)(boolean status))`
   * sets an optional user-defined callback function, *func*, to be called by HomeSpan upon completion of pairing to a controller (*status=true*) or unpairing from a controller (*status=false*)
   *   this one-time call to *func* is provided for users that would like to trigger additional actions when the device is first paired, or the device is later unpaired
   *   note this *func* is **not** called upon start-up and should not be used to simply check whether a device is paired or unpaired.  It is only called when pairing status changes
   *   the function *func* must be of type *void* and accept one *boolean* argument
 
-* `void setStatusCallback(void (*func)(HS_STATUS status))`
+* `Span& setStatusCallback(void (*func)(HS_STATUS status))`
   * sets an optional user-defined callback function, *func*, to be called by HomeSpan whenever its running state (e.g. WiFi Connecting, Pairing Needed...) changes in way that would alter the blinking pattern of the (optional) Status LED
   * if *func* is set, it will be called regardless of whether or not a Status LED has actually been defined
   * this allows users to reflect changes to the current state of HomeSpan using alternative methods, such as outputting messages to an embedded LCD or E-Ink display
@@ -174,14 +192,14 @@ The following **optional** `homeSpan` methods enable additional features and pro
   * returns a pre-defined character string message representing *s*, which must be of enum type [HS_STATUS](HS_STATUS.md)
   * typically used in conjunction with `setStatusCallback()` above
 
-* `void setPairingCode(const char *s)`
+* `Span& setPairingCode(const char *s)`
   * sets the Setup Pairing Code to *s*, which **must** be exactly eight numerical digits (no dashes)
   * example: `homeSpan.setPairingCode("46637726");`
   * a hashed version of the Pairing Code will be saved to the device's non-volatile storage, overwriting any currently-stored Pairing Code
   * if *s* contains an invalid code, an error will be reported and the code will *not* be saved.  Instead, the currently-stored Pairing Code (or the HomeSpan default Pairing Code if no code has been stored) will be used
   * :warning: SECURTY WARNING: Hardcoding a device's Pairing Code into your sketch is considered a security risk and is **not** recommended.  Instead, use one of the more secure methods provided by HomeSpan, such as typing 'S \<code\>' from the CLI, or launching HomeSpan's Access Point, to set your Pairing Code without hardcoding it into your sketch
 
-* `void setSketchVersion(const char *sVer)`
+* `Span& setSketchVersion(const char *sVer)`
   * sets the version of a HomeSpan sketch to *sVer*, which can be any arbitrary character string
   * if unspecified, HomeSpan uses "n/a" as the default version text
   * HomeSpan displays the version of the sketch in the Arduino IDE Serial Monitor upon start-up
@@ -191,31 +209,56 @@ The following **optional** `homeSpan` methods enable additional features and pro
   * returns the version of a HomeSpan sketch, as set using `void setSketchVersion(const char *sVer)`, or "n/a" if not set
   * can by called from anywhere in a sketch
 
-* `void enableWebLog(uint16_t maxEntries, const char *timeServerURL, const char *timeZone, const char *logURL)`
+* `Span& enableWebLog(uint16_t maxEntries, const char *timeServerURL, const char *timeZone, const char *logURL)`
   * enables a rolling Web Log that displays the most recent *maxEntries* entries created by the user with the `WEBLOG()` macro.  Parameters, and their default values if unspecified, are as follows:
     * *maxEntries* - maximum number of (most recent) entries to save.  If unspecified, defaults to 0, in which case the Web Log will only display status without any log entries
-    * *timeServerURL* - the URL of a time server that HomeSpan will use to set its clock upon startup after a WiFi connection has been established.  If unspecified, defaults to NULL, in which case HomeSpan skips setting the device clock
-    * *timeZone* - specifies the time zone to use for setting the clock.  Uses standard Unix timezone formatting as interpreted by Espressif IDF.  Note the IDF uses a somewhat non-intuitive convention such that a timezone of "UTC+5:00" *subtracts* 5 hours from UTC time, and "UTC-5:00" *adds* 5 hours to UTC time.  If *serverURL=NULL* this field is ignored; if *serverURL!=NULL* this field is required
-    * *logURL* - the URL of the Web Log page for this device.  If unspecified, defaults to "status"
+    * *timeServerURL* - the URL of a time server that HomeSpan will use to set its clock upon startup after a WiFi connection has been established. HomeSpan will reserve one extra socket connection when a time server is specified. If unspecified, defaults to NULL, in which case HomeSpan skips setting the device clock
+    * *timeZone* - specifies the time zone to use for setting the clock.  Uses POSIX.1 format only and does not support the *Time Zone Database*, or *tzdata*. As per [GNU libc documentation for TZ](https://www.gnu.org/software/libc/manual/html_node/TZ-Variable.html), *the offset specifies the time value you must **add to the local time** to get a Coordinated Universal Time value*. "UTC+5:00" means that local time + 5 hours give UTC time. See the GNU libc documentation for some examples, including how to specify North American Eastern Standard Time (EST) and Eastern Daylight Time (EDT) with start and end dates of EDT. If *serverURL=NULL* this field is ignored; if *serverURL!=NULL* this field is required
+    * *logURL* - the URL of the Web Log page for this device.  If unspecified, defaults to "status".  If *logURL* is set to NULL HomeSpan will use the *timeServerURL* and *timeZone* parameters to set the clock, but it will *not* serve any Web Log pages in response to any HTTP requests.  However, Web Log data is still accumulated internally and the resulting HTML can be accessed anytime by calling the `homeSpan.getWebLog()` method (see below)  
   * example: `homeSpan.enableWebLog(50,"pool.ntp.org","UTC-1:00","myLog");` creates a web log at the URL *http<nolink>://HomeSpan-\[DEVICE-ID\].local:\[TCP-PORT\]/myLog* that will display the 50 most-recent log messages produced with the WEBLOG() macro.  Upon start-up (after a WiFi connection has been established) HomeSpan will attempt to set the device clock by calling the server "pool.ntp.org" and adjusting the time to be 1 hour ahead of UTC.
   * when attemping to connect to *timeServerURL*, HomeSpan waits 120 seconds for a response.  This is done in the background and does not block HomeSpan from running as usual while it tries to set the time.  If no response is received after the 120-second timeout period, HomeSpan assumes the server is unreachable and skips the clock-setting procedure.  Use `setTimeServerTimeout()` to re-configure the 120-second timeout period to another value
   * see [Message Logging](Logging.md) for complete details
 
-* `void setTimeServerTimeout(uint32_t tSec)`
+* `Span& setTimeServerTimeout(uint32_t tSec)`
   * changes the default 120-second timeout period HomeSpan uses when `enableWebLog()` tries set the device clock from an internet time server to *tSec* seconds
  
-* `void setWebLogCSS(const char *css)`
+* `Span& setWebLogCSS(const char *css)`
   * sets the format of the HomeSpan Web Log to the custom style sheet specified by *css*
   * see [Message Logging](Logging.md) for details on how to construct *css*
- 
+
+* `Span& setWebLogCallback(void (*func)(String &htmlText))`
+  * sets an optional user-defined callback function, *func*, to be called by HomeSpan whenever the Web Log is produced
+  * allows user to add additional custom data to the initial table of the Web Log by **extending** the String *htmlText*, which is passed as a reference to *func*
+  * the function *func* must be of type *void* and accept one argument of type *String*
+  * see [Message Logging](Logging.md) for details on how to construct *htmlText*
+
+* `void getWebLog(void (*f)(const char *htmlBuf, void *args), void *userData)`
+   * when called, HomeSpan *streams* the current Web Log HTML text, and any optionally-specified *userData*, directly to the user-defined function, *f()*, which should return a *void* and accept the following two arguments:
+     *  *htmlBuf* - pointer to part of the HTML text for the Web Log page
+     *  *args* - a pass-through of the *userData* argument
+   *  if user-defined data is not needed, set *userData* to NULL
+   * to avoid creating a single large text buffer, HomeSpan splits the HTML for the Web Log into chunks of 1024 bytes and repeatedly calls *f()* until all the HTML has been streamed; HomeSpan then makes a final call to *f()* with *htmlBuf* set to NULL indicating to the user that the end of the HTML text has been reached
+   * this command is primarily used to redirect Web Log pages to a user-defined process for alternative handling, display, or transmission
+   * see [Message Logging](Logging.md) for more details
+  
 * `void processSerialCommand(const char *CLIcommand)`
   * processes the *CLIcommand* just as if were typed into the Serial Monitor
   * allows for programmatic access to all CLI commands, included any custom commands defined by the user
   * will work whether or not device is connected to a computer
   * example: `homeSpan.processSerialCommand("A");` starts the HomeSpan Setup Access Point
   * example: `homeSpan.processSerialCommand("Q HUB3");` changes the HomeKit Setup ID for QR Codes to "HUB3"
+
+* `Span& setRebootCallback(void (*func)(uint8_t count), uint32_t upTime)`
+  * sets an optional user-defined callback function, *func*, that is called (just once) when *upTime* milliseconds after rebooting have elapsed (default *upTime*=5000 ms if not specified)
+  * the function *func* must be of type *void* and accept one argument of type *uint8_t*
+  * the parameter *count*, which HomeSpan passes to *func*, indicates the number of "short" reboots that have occured prior to the current reboot, where a "short" reboot is any that occurs **before** *upTime* milliseconds have elapsed
+  * this allows the user to provide a generic form of input to a sketch by rapidly turning on/off power to the device a specified number of times, typically to provide a method of resetting some aspect of a remote device
+  * example using a lamba function:
+    * `homeSpan.setRebootCallback( [](uint8_t c) {if(c==3) homeSpan.processSerialCommand("X");} );`
+    * causes HomeSpan to run the 'X' Serial Command, which erases WiFi data, if the device is "short" rebooted exactly 3 times, where each reboot is for less than 5 seconds
+    * note that creating 3 short reboots means you actually cycle the power (or press the reset button) a total of 4 times, since the last time you allow the sketch to run without rebooting
  
-* `void setSerialInputDisable(boolean val)`
+* `Span& setSerialInputDisable(boolean val)`
    * if *val* is true, disables HomeSpan from reading input from the Serial port
    * if *val* is false, re-enables HomeSpan reading input from the Serial port
    * useful when the main USB Serial port is needed for reading data from an external Serial peripheral, rather than being used to read input from the Arduino Serial Monitor
@@ -258,18 +301,21 @@ The following `homeSpan` methods are considered experimental, since not all use 
  
     * *stackSize* - size of stack, in bytes, used by the polling task.  Default=8192 if unspecified
     * *priority* - priority at which task runs.  Minimum is 1.  Maximum is typically 24, but it depends on how the ESP32 operating system is configured. If you set it to an arbitrarily high value (e.g. 999), it will be set to the maximum priority allowed.  Default=1 if unspecified
-    * *cpu* - specifies the CPU on which the polling task will run.  Valid values are 0 and 1.  This paramater is ignored on single-cpu boards.  Default=0 if unspecified
+    * *cpu* - specifies the CPU on which the polling task will run.  Valid values are 0 and 1.  This parameter is ignored on single-cpu boards.  Default=0 if unspecified
   * if used, **must** be placed in a sketch as the last line in the Arduino `setup()` method
   * HomeSpan will throw and error and halt if both `poll()`and `autoPoll()` are used in the same sketch - either place `poll()` in the Arduino `loop()` method **or** place `autoPoll()` at the the end of the Arduino `setup()` method
   * if this method is used, and you have no need to add your own code to the main Arduino `loop()`, you can safely skip defining a blank `void loop(){}` function in your sketch
   * warning: if any code you add to the Arduino `loop()` method tries to alter any HomeSpan settings or functions running in the background `poll()` task, race conditions may yield undefined results
+ 
+* `TaskHandle_t getAutoPollTask()`
+  * returns the task handle for the Auto Poll Task, or NULL if Auto Polling has not been used
  
 ## *SpanAccessory(uint32_t aid)*
 
 Creating an instance of this **class** adds a new HAP Accessory to the HomeSpan HAP Database.
 
   * every HomeSpan sketch requires at least one Accessory
-  * a sketch can contain a maximum of 41 Accessories per sketch (if exceeded, a runtime error will the thrown and the sketch will halt)
+  * a sketch can contain a maximum of 150 Accessories per sketch (if exceeded, a runtime error will the thrown and the sketch will halt)
   * there are no associated methods
   * the argument *aid* is optional.
   
@@ -496,7 +542,7 @@ Creating an instance of this **class** attaches a toggle-switch handler to the E
   * 3=switch is closed (`SpanToggle::CLOSED`)
   * 4=switch is open (`SpanToggle::OPEN`)
  
-Note there are no *singleTime*, *longTime*, or *doubleTime* paramaters in the constructor since you can't single-press, double-press, or long-press a toggle switch.  Instead, the constructor supports the single parameter *toggleTime* (default=5ms if left unspecified) that sets the minimum time at which the switch needs to be moved to the closed position in order to trigger a call to the `button()` method.  This effectively "debounces" the toggle switch.
+Note there are no *singleTime*, *longTime*, or *doubleTime* parameters in the constructor since you can't single-press, double-press, or long-press a toggle switch.  Instead, the constructor supports the single parameter *toggleTime* (default=5ms if left unspecified) that sets the minimum time at which the switch needs to be moved to the closed position in order to trigger a call to the `button()` method.  This effectively "debounces" the toggle switch.
  
 SpanToggle also supports the following additional method:
  
@@ -548,7 +594,7 @@ To create more than one user-defined command, simply create multiple instances o
 
 Creates a custom Characteristic that can be added to any Service.  Custom Characteristics are generally ignored by the Home App but may be used by other third-party applications (such as *Eve for HomeKit*).  The first form should be used create numerical Characterstics (e.g., UINT8, BOOL...). The second form is used to STRING-based Characteristics. The third form is used for DATA-based (i.e. byte-array) Characteristics.  Parameters are as follows (note that quotes should NOT be used in any of the macro parameters, except for *defaultValue* when applied to a STRING-based Characteristic):
 
-* *name* - the name of the custom Characteristic.  This will be added to the Characteristic namespace so that it is accessed the same as any HomeSpan Characteristic
+* *name* - the name of the custom Characteristic.  This will be added to the Characteristic namespace so that it is accessed the same as any HomeSpan Characteristic.  Use UTF-8 coded string for non-ASCII characters.
 * *uuid* - the UUID of the Characteristic as defined by the manufacturer.  Must be *exactly* 36 characters in the form XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX, where *X* represent a valid hexidecimal digit.  Leading zeros are required if needed as described more fully in HAP-R2 Section 6.6.1
 * *perms* - additive list of permissions as described in HAP-R2 Table 6-4.  Valid values are PR, PW, EV, AA, TW, HD, and WR
 * *format* - specifies the format of the Characteristic value, as described in HAP-R2 Table 6-5.  Valid value are BOOL, UINT8, UINT16, UNIT32, UINT64, INT, and FLOAT (note that the HomeSpan does not presently support the TLV8 formats).  Not applicable for the STRING or DATA Characteristic macros

@@ -1,7 +1,7 @@
 /*********************************************************************************
  *  MIT License
  *  
- *  Copyright (c) 2020-2023 Gregg E. Berman
+ *  Copyright (c) 2020-2024 Gregg E. Berman
  *  
  *  https://github.com/HomeSpan/HomeSpan
  *  
@@ -28,8 +28,7 @@
 // This is a placeholder .ino file that allows you to easily edit the contents of this files using the Arduino IDE,
 // as well as compile and test from this point.  This file is ignored when the library is included in other sketches.
 
-#include "Stepper_TB6612.h"   // include the driver for a TB6612 chip
-#include "Stepper_A3967.h"
+#include "StepperControl.h"
 
 StepperControl *bigMotor;
 StepperControl *smallMotor;

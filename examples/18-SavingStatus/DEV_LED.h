@@ -3,10 +3,6 @@
 //   DEVICE-SPECIFIC LED SERVICES //
 ////////////////////////////////////
 
-#include "extras/PwmPin.h"                          // library of various PWM functions
-
-////////////////////////////////////
-
 struct DEV_DimmableLED : Service::LightBulb {       // Dimmable LED
 
   // This version of the Dimmable LED Service includes a PushButton that can be used to turn on/off the LED.  Status of both the
