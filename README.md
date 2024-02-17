@@ -52,7 +52,7 @@ HomeSpan requires version 2.0.0 or later of the [Arduino-ESP32 Board Manager](ht
   * Launch the WiFi Access Point
 * A standalone, detailed End-User Guide
 
-## ❗Latest Update - HomeSpan 1.9.0 (2/XX/2024)
+## ❗Latest Update - HomeSpan 1.9.0 (2/17/2024)
 
 * **HomeSpan has been optimized to use significantly less RAM!**
 
@@ -89,7 +89,7 @@ HomeSpan requires version 2.0.0 or later of the [Arduino-ESP32 Board Manager](ht
 
 * **Added two new Stepper Motor Drivers**
   * **Stepper_UNIPOLAR**: a generic driver for any 4-wire center-tapped unipolar motor
-  * **Stepper_UNL2003**: support for the UNL2003 driver board
+  * **Stepper_ULN2003**: support for the ULN2003 driver board
   * see [Stepper Motor Control Stepper](docs/Stepper.md) for details
 
 * **Additional Web Log functionality**
