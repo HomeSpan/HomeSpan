@@ -3,8 +3,6 @@
 //   DEVICE-SPECIFIC LED SERVICES //
 ////////////////////////////////////
 
-#include "extras/PwmPin.h"                          // NEW! Include this HomeSpan "extra" to create LED-compatible PWM signals on one or more pins
-
 struct DEV_LED : Service::LightBulb {               // ON/OFF LED
 
   int ledPin;                                       // pin number defined for this LED

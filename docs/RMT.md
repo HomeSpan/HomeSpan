@@ -1,8 +1,6 @@
 # Remote Control Radio Frequency / Infrared Signal Generation
 
-The ESP32 has an on-chip signal-generator peripheral designed to drive an RF or IR transmitter.  HomeSpan includes an easy-to-use library that interfaces with this peripheral so that with a few additional electronic components you can create a HomeSpan device that controls an RF or IR appliance directly from the Home App on your iPhone, or via Siri.  The library is accessed by placing the following near the top of your sketch:
-
-`#include "extras/RFControl.h"`
+The ESP32 has an on-chip Remote Control (RMT) signal-generator designed to drive an RF or IR transmitter.  HomeSpan includes a dedicated, easy-to-use class, **RFControl()**, that interfaces with the ESP32 RMT peripheral so that with a few additional electronic components you can create a HomeSpan device that controls an RF or IR appliance directly from the Home App on your iPhone, or via Siri.
 
 ## *RFControl(int pin, boolean refClock=true)*
 
@@ -93,7 +91,6 @@ Below is a complete sketch that produces two different pulse trains with the sig
 /* HomeSpan Remote Control Example */
 
 #include "HomeSpan.h"             // include the HomeSpan library
-#include "extras/RFControl.h"     // include RF Control Library
 
 void setup() {     
  

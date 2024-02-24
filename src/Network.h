@@ -1,7 +1,7 @@
 /*********************************************************************************
  *  MIT License
  *  
- *  Copyright (c) 2020-2023 Gregg E. Berman
+ *  Copyright (c) 2020-2024 Gregg E. Berman
  *  
  *  https://github.com/HomeSpan/HomeSpan
  *  
@@ -28,10 +28,7 @@
 #pragma once
 
 #include <WiFi.h>
-#include <unordered_set>
 #include "Settings.h"
-
-using std::unordered_set;
 
 const int MAX_SSID=32;                              // max number of characters in WiFi SSID
 const int MAX_PWD=64;                               // max number of characters in WiFi Password
@@ -43,7 +40,7 @@ struct Network {
   const int MAX_HTTP=4095;                            // max number of bytes in HTTP message
 
   const char *apSSID=DEFAULT_AP_SSID;                 // Access Point SSID
-  const char *apPassword=DEFAULT_AP_PASSWORD;         // Access Point password (does not need to be secret - only used to ensure excrypted WiFi connection)
+  const char *apPassword=DEFAULT_AP_PASSWORD;         // Access Point password (does not need to be secret - only used to ensure encrypted WiFi connection)
   unsigned long lifetime=DEFAULT_AP_TIMEOUT*1000;     // length of time (in milliseconds) to keep Access Point alive before shutting down and restarting
   
   char **ssidList=NULL;

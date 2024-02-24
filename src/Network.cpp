@@ -1,7 +1,7 @@
 /*********************************************************************************
  *  MIT License
  *  
- *  Copyright (c) 2020-2023 Gregg E. Berman
+ *  Copyright (c) 2020-2024 Gregg E. Berman
  *  
  *  https://github.com/HomeSpan/HomeSpan
  *  
@@ -40,7 +40,7 @@ void Network::scan(){
   int n=WiFi.scanNetworks();
 
   free(ssidList);
-  ssidList=(char **)calloc(n,sizeof(char *));
+  ssidList=(char **)HS_CALLOC(n,sizeof(char *));
   numSSID=0;
 
   for(int i=0;i<n;i++){
@@ -50,7 +50,7 @@ void Network::scan(){
         found=true;
     }
     if(!found){
-      ssidList[numSSID]=(char *)calloc(WiFi.SSID(i).length()+1,sizeof(char));
+      ssidList[numSSID]=(char *)HS_CALLOC(WiFi.SSID(i).length()+1,sizeof(char));
       sprintf(ssidList[numSSID],"%s",WiFi.SSID(i).c_str());
       numSSID++;
     }
@@ -116,10 +116,7 @@ void Network::apConfigure(){
 
   WiFiServer apServer(80);
   client=0;
-  
-  TempBuffer <uint8_t> tempBuffer(MAX_HTTP+1);
-  uint8_t *httpBuf=tempBuffer.buf;
-  
+    
   const byte DNS_PORT = 53;
   DNSServer dnsServer;
   IPAddress apIP(192, 168, 4, 1);
@@ -178,20 +175,30 @@ void Network::apConfigure(){
       LOG2("<<<<<<<<< ");
       LOG2(client.remoteIP());
       LOG2(" <<<<<<<<<\n");
-    
-      int nBytes=client.read(httpBuf,MAX_HTTP+1);       // read all available bytes up to maximum allowed+1
-       
-      if(nBytes>MAX_HTTP){                              // exceeded maximum number of bytes allowed
+
+      int messageSize=client.available();        
+
+      if(messageSize>MAX_HTTP){            // exceeded maximum number of bytes allowed
         badRequestError();
-        LOG0("\n*** ERROR:  Exceeded maximum HTTP message length\n\n");
+        LOG0("\n*** ERROR:  HTTP message of %d bytes exceeds maximum allowed (%d)\n\n",messageSize,MAX_HTTP);
+        continue;
+      } 
+
+      TempBuffer<uint8_t> httpBuf(messageSize+1);      // leave room for null character added below
+    
+      int nBytes=client.read(httpBuf,messageSize);       // read all available bytes up to maximum allowed+1
+      
+      if(nBytes!=messageSize || client.available()!=0){
+        badRequestError();
+        LOG0("\n*** ERROR:  HTTP message not read correctly.  Expected %d bytes, read %d bytes, %d bytes remaining\n\n",messageSize,nBytes,client.available());
         continue;
       }
-
-      httpBuf[nBytes]='\0';                             // add null character to enable string functions    
-      char *body=(char *)httpBuf;                       // char pointer to start of HTTP Body
+    
+      httpBuf[nBytes]='\0';                       // add null character to enable string functions    
+      char *body=(char *)httpBuf.get();                 // char pointer to start of HTTP Body
       char *p;                                          // char pointer used for searches
       
-      if(!(p=strstr((char *)httpBuf,"\r\n\r\n"))){
+      if(!(p=strstr((char *)httpBuf.get(),"\r\n\r\n"))){
         badRequestError();
         LOG0("\n*** ERROR:  Malformed HTTP request (can't find blank line indicating end of BODY)\n\n");
         continue;      
@@ -230,7 +237,7 @@ void Network::processRequest(char *body, char *formData){
   
   String responseHead="HTTP/1.1 200 OK\r\nContent-type: text/html\r\n";
   
-  String responseBody="<html><head><style>"
+  String responseBody="<html><meta charset=\"utf-8\"><head><style>"
                         "p{font-size:300%; margin:1em}"
                         "label{font-size:300%; margin:1em}"
                         "input{font-size:250%; margin:1em}"

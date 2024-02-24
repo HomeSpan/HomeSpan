@@ -4,7 +4,10 @@ Welcome to HomeSpan - a robust and extremely easy-to-use Arduino library for cre
 
 HomeSpan provides a microcontroller-focused implementation of Apple's HomeKit Accessory Protocol Specification Release R2 (HAP-R2) designed specifically for the Espressif ESP32 microcontroller running within the Arduino IDE.  HomeSpan pairs directly to HomeKit via your home WiFi network without the need for any external bridges or components.  With HomeSpan you can use the full power of the ESP32's I/O functionality to create custom control software and/or hardware to automatically operate external devices from the Home App on your iPhone, iPad, or Mac, or with Siri.
 
-HomeSpan requires version 2.0.0 or later of the [Arduino-ESP32 Board Manager](https://github.com/espressif/arduino-esp32), and has been tested up through version 2.0.11 (recommended).  HomeSpan can be run on the original ESP32 as well as Espressif's ESP32-S2, ESP32-C3, and ESP32-S3 chips.
+HomeSpan requires version 2.0.0 or later of the [Arduino-ESP32 Board Manager](https://github.com/espressif/arduino-esp32), and has been tested up through version 2.0.14 (recommended).  HomeSpan can be run on the original ESP32 as well as Espressif's ESP32-S2, ESP32-C3, and ESP32-S3 chips.
+
+> [!NOTE]
+> Apple's new HomeKit architecture [requires the use of a Home Hub](https://support.apple.com/en-us/HT207057) (either a HomePod or Apple TV) for full and proper operation of any HomeKit device, including those based on HomeSpan.  Without a Home Hub, HomeSpan cannot send notifications to the Home App - things like pushbuttons and temperature sensors will not be able to transmit updates to the Home App.
 
 ### HomeSpan Highlights
 
@@ -12,7 +15,7 @@ HomeSpan requires version 2.0.0 or later of the [Arduino-ESP32 Board Manager](ht
 * Utilizes a unique *Service-Centric* approach to creating HomeKit devices
 * Takes full advantage of the widely-popular Arduino IDE
 * 100% HAP-R2 compliance
-* 41 integrated HomeKit Services
+* 38 integrated HomeKit Services
 * Operates in either Accessory or Bridge mode
 * Supports pairing with Setup Codes or QR Codes
 
@@ -49,40 +52,82 @@ HomeSpan requires version 2.0.0 or later of the [Arduino-ESP32 Board Manager](ht
   * Launch the WiFi Access Point
 * A standalone, detailed End-User Guide
 
-## ❗Latest Update - HomeSpan 1.8.0 (7/8/2023)
+## ❗Latest Update - HomeSpan 1.9.0 (2/17/2024)
 
-* **New Stepper Motor Control!**
+* **HomeSpan has been optimized to use significantly less RAM!**
 
-  * adds new **StepperControl** class that allows for smooth, uninterrupted operation of one or more stepper motors running in the background while HomeSpan continues to run simultaneously in the foreground
-  * supports driver boards with or without PWM, including microstepping modes
-  * supports automatic acceleration and deceleration for smooth starts and stops
-  * motors can be set to an absolute position or instructucted to move a specified number of steps
-  * provides options to automatically enter into a "brake" state after motor stops to conserve power
-  * includes a fully worked example of a motorized window shade
-  * see [Stepper Motor Control](docs/Stepper.md) for details
-    
-* **Upgrades to HomeSpan Web Log output**
+  * supports approximately **TWICE** the number of Accessories using the same amount of memory
+  * minimized memory use also means much more room for users to add non-HomeSpan features to their sketch without running out of memory, especially if the non-HomeSpan code consumes a lot of stack space
+  * HomeSpan now automatically detects the presence of **PSRAM** (SPIRAM) and will utilize that extra memory to the largest extent possible to keep internal RAM free for certain HomeSpan functions and ESP32 functions (e.g. WiFi) that require internal RAM.  Also keeps internal RAM free for use by any non-HomeSpan code that does not (or cannot) use PSRAM
+  * increased HomeSpan's 41-Accessory limit to a 150-Accessory Limit (as specified by HAP) since it is now possible to create a device with many more than 41 Accessories without running out of memory, especially if PSRAM is used
 
-  * adds new method `void homeSpan.setWebLogCSS(const char *css)` that allows you to define *Custom Style Sheets (CSS)* for the Web Log text, tables, and background
-  * adds version numbers for the Sodium and MbedTLS libraries, HomeKit pairing status, and a text description of Reset Reason code
+* **HomeSpan has been optimized to use significantly less Non-Volatile Storage (NVS)**
+
+  * allows you to use NVS to save the values of a many more Characteristics 
+  * see the newly-added [CustomNVSPartition](docs/Tutorials.md#customnvspartition) example that demonstrates how to create your own Partition Scheme to further expand the size of the NVS partition beyond the ESP32 default to support sketches with a large number of Accessories each configured to use NVS to save the values of many Characteristics
+
+* **New features and documentation for Services and Characteristics**
+  * created "enumerated constants" (e.g. *SWING_ENABLED*, *HUMIDIFYING*, etc.) for every applicable Characteristic that can be used instead of integers when reading and writing values
+    * very helpful since Apple is no longer publishing its non-commercial HAP document that provided a list and description of the states for each Characteristic
+    * example:  `if(target.getNewVal()==target.ARM_STAY) {...}`
+  * added ability to properly name individual Services within a single Accessory using new **Characteristic::ConfiguredName()**
+    * see revised [Example 11 - ServiceNames](docs/Tutorials.md#example-11---servicenames) for details
+  * new [Services and Characteristics](docs/ServiceList.md) page now provides functional descriptions and detailed specifications for every Service and Characteristic supported by HomeSpan, including a list of the enumerated constants available for every Characteristic
+   
+* **New ability to use *Inverted Buttons* and *Touch Sensors* as a Control Button**
+
+  * adds *triggerType* as a second, optional argument to `Span& setControlPin(uint8_t pin, triggerType_t triggerType)`
+  * supports TRIGGER_ON_LOW, TRIGGER_ON_HIGH, TRIGGER_ON_TOUCH, or any user-defined function
+  * see [API Reference](docs/Reference.md) for details
+
+* **New ability to "remotely" trigger user-defined actions by repeatedly power-cycling the device**
+
+  * adds new homeSpan method `Span& setRebootCallback(void (*func)(uint8_t count), uint32_t upTime=5000)`
+  * the parameter *count*, which is passed by HomeSpan to *func*, indicates the number of "short" reboots that have occurred prior to the current reboot, where a "short" reboot is any that occurs before *upTime* milliseconds have elapsed
+  * can be use to remotely restore a device that is not easily accessible to a pre-defined state
+  * see [API Reference](docs/Reference.md) for details
+
+* **Added two new Stepper Motor Drivers**
+  * **Stepper_UNIPOLAR**: a generic driver for any 4-wire center-tapped unipolar motor
+  * **Stepper_ULN2003A**: support for the ULN2003A driver board
+  * see [Stepper Motor Control Stepper](docs/Stepper.md) for details
+
+* **Additional Web Log functionality**
+
+  * adds new homeSpan method `Span& setWebLogCallback(void (*func)(String &))`
+    * allows users to include additional data and custom HTML in the Web Log
+  * adds new homeSpan method `getWebLog(void (*f)(const char *, void *), void *args)`
+    * allows users to retrieve the underlying Web Log HTML from within sketch
+  * modified `enableWebLog()` so that it can be used to set the time from an NTP server without actually serving Web Log pages
   * see [Message Logging](docs/Logging.md) for details
 
-* **Upgrades to Web Log Time Server initialization**
+* **Added ability to "chain" *homeSpan* methods**
 
-  * the process for retrieving the time and date from an NTP server upon booting now runs in the background as a separate task
-  * HomeSpan is no longer blocked from running during the NTP query
+  * converted various *homeSpan* methods that previously returned *void* to now return *Span &*
+  * example: `homeSpan.setControlPin(21).setStatusPin(13);`
+  * see [API Reference](docs/Reference.md) for details
 
-* **Adds new methods to disable HomeSpan's use of the USB Serial port**
-  
-  * new Log Level, -1, causes HomeSpan to suppress all OUTPUT messages
-  * new homeSpan method `setSerialInputDisable(boolean val)` disables/re-enables HomeSpan's reading of CLI commands INPUT into the Arduino Serial Monitor
+* **Added ability to disable SpanPoint encryption**
 
-* **Adds ability to use a non-standard LED as the HomeSpan Status LED**
+  * without encryption increases the maximum number of allowed SpanPoint devices from 7 to 20
+  * see [SpanPoint](docs/NOW.md) for details
+ 
+* **Other new *homeSpan* methods included in this release:**
 
-  * new homeSpan method `setStatusDevice(Blinkable *sDev)` sets the Status LED to the Blinkable object *sDev*
-  * allows an LED connected to a pin expander, or any other non-standard LED controller (such as an inverted LED that lights when a pin is LOW instead of HIGH) to be used as the HomeSpan Status LED    
-  * see [Blinkable.md](docs/Blinkable.md) for details (including an example) on how to create Blinkable objects
-    
+  * `Span& setVerboseWifiReconnect()` - optionally suppresses "Trying to connect to..." messages
+  * `Span& setWifiCallbackAll()` - provides an optional callback every time WiFi is connected *or re-connected*
+  * `TaskHandle_t getAutoPollTask()` - returns the Task Handle for the HomeSpan Auto Poll Task
+ 
+* **Removed dependencies on various "extra" `#include` files**
+  * the following \#include files are now embedded in *HomeSpan.h* and **should not be specified in any sketch:**
+    * *extras/Pixel.h*
+    * *extras/RFControl.h*
+    * *extras/PwmPin.h*
+    * *extras/StepperControl.h*
+
+> [!IMPORTANT]
+> At present it is okay to include the above `#include` files in your sketch (they have no effect on the compiled code), but they will be deleted at some point in the future so please remove them from your sketches now to ensure forward compatibility with subsequent releases. 
+      
 See [Releases](https://github.com/HomeSpan/HomeSpan/releases) for details on all changes and bug fixes included in this update.
 
 # HomeSpan Resources
@@ -116,9 +161,7 @@ Note that all documentation is version-controlled and tied to each branch.  The 
 
 # External Resources
 
-In addition to HomeSpan resources, developers who are new to HomeKit programming should download Apple's HomeKit Accessory Protocol Specification, Non-Commercial Version, Release R2 (HAP-R2). This document is unfortunately no longer available from Apple (perhaps because it was last updated July, 2019, and is now somewhat out-of-date).  However, you may be able find copies of this document elsewhere on the web.  Note Apple has not replaced the HAP-R2 document with any other versions for non-commercial use, and Apple's open-source [HomeKit ADK](https://github.com/apple/HomeKitADK) only reflects the original HAP-R2 specs (rather than all the latest Services and Characteristics available in HomeKit for commercial devices).
-
-You ***do not*** need to read the entire HAP-R2 document. The whole point of HomeSpan is that it implements all the required HAP operations under the hood so you can focus on just programming whatever logic is needed to control your real-world appliances (lights, fans, RF remote controls, etc.) with the device.  However, you will find Chapters 8 and 9 of the HAP guide to be an invaluable reference as it lists and describes all of the Services and Characteristics implemented in HomeSpan, many of which you will routinely utilize in your own HomeSpan sketches.
+In addition to HomeSpan resources, developers who are new to HomeKit programming may find useful Chapters 8 and 9 of Apple's HomeKit Accessory Protocol Specification, Non-Commercial Version, Release R2 (HAP-R2). This document is unfortunately no longer available from Apple (perhaps because it was last updated July, 2019, and is now somewhat out-of-date).  However, you may be able find copies of this document elsewhere on the web.  Note Apple has not replaced the HAP-R2 document with any other versions for non-commercial use, and Apple's open-source [HomeKit ADK](https://github.com/apple/HomeKitADK) only reflects the original HAP-R2 specs (rather than all the latest Services and Characteristics available in HomeKit for commercial devices).
 
 ---
 

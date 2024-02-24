@@ -1,7 +1,7 @@
 /*********************************************************************************
  *  MIT License
  *  
- *  Copyright (c) 2020-2023 Gregg E. Berman
+ *  Copyright (c) 2020-2024 Gregg E. Berman
  *  
  *  https://github.com/HomeSpan/HomeSpan
  *  
@@ -39,11 +39,13 @@
 
 #include "HomeSpan.h"
 #include "HAP.h"
+#include <algorithm>
 
 const __attribute__((section(".rodata_custom_desc"))) SpanPartition spanPartition = {HOMESPAN_MAGIC_COOKIE,0};
 
 using namespace Utils;
 
+HapOut hapOut;                      // Specialized output stream that can both print to serial monitor and encrypt/transmit to HAP Clients with minimal memory usage (global-scope)
 HAPClient **hap;                    // HAP Client structure containing HTTP client connections, parsing routines, and state variables (global-scoped variable)
 Span homeSpan;                      // HAP Attributes database and all related control functions for this Accessory (global-scoped variable)
 HapCharacteristics hapChars;        // Instantiation of all HAP Characteristics (used to create SpanCharacteristics)
@@ -53,6 +55,8 @@ HapCharacteristics hapChars;        // Instantiation of all HAP Characteristics 
 ///////////////////////////////
 
 void Span::begin(Category catID, const char *displayName, const char *hostNameBase, const char *modelName){
+
+  loopTaskHandle=xTaskGetCurrentTaskHandle();                 // a roundabout way of getting the current task handle
   
   this->displayName=displayName;
   this->hostNameBase=hostNameBase;
@@ -68,7 +72,7 @@ void Span::begin(Category catID, const char *displayName, const char *hostNameBa
   if(requestedMaxCon<maxConnections)                          // if specific request for max connections is less than computed max connections
     maxConnections=requestedMaxCon;                           // over-ride max connections with requested value
     
-  hap=(HAPClient **)calloc(maxConnections,sizeof(HAPClient *));
+  hap=(HAPClient **)HS_CALLOC(maxConnections,sizeof(HAPClient *));
   for(int i=0;i<maxConnections;i++)
     hap[i]=new HAPClient;
 
@@ -79,6 +83,11 @@ void Span::begin(Category catID, const char *displayName, const char *hostNameBa
   nvs_open("WIFI",NVS_READWRITE,&wifiNVS);      // open WIFI data namespace in NVS
   nvs_open("OTA",NVS_READWRITE,&otaNVS);        // open OTA data namespace in NVS
 
+  nvs_get_u8(wifiNVS,"REBOOTS",&rebootCount);
+  rebootCount++;
+  nvs_set_u8(wifiNVS,"REBOOTS",rebootCount);
+  nvs_commit(wifiNVS);
+  
   size_t len;
 
   if(strlen(network.wifiData.ssid)){                                                // if setWifiCredentials was already called
@@ -156,7 +165,7 @@ void Span::begin(Category catID, const char *displayName, const char *hostNameBa
 void Span::poll() {
 
   if(pollTaskHandle){
-    LOG0("\n** FATAL ERROR: Do not call homeSpan.poll() directly if homeSpan.start() is used!\n** PROGRAM HALTED **\n\n");
+    LOG0("\n** FATAL ERROR: Do not call homeSpan.poll() directly if homeSpan.autoPoll() is used!\n** PROGRAM HALTED **\n\n");
     vTaskDelete(pollTaskHandle);
     while(1);    
   }
@@ -179,6 +188,10 @@ void Span::pollTask() {
            
     HAPClient::init();                // read NVS and load HAP settings  
 
+    if(heap_caps_get_free_size(MALLOC_CAP_DEFAULT|MALLOC_CAP_INTERNAL)<DEFAULT_LOW_MEM_THRESHOLD)
+      LOG0("\n**** WARNING!  Internal Free Heap of %d bytes is less than Low-Memory Threshold of %d bytes.  Device *may* run out of Internal memory.\n\n",
+          heap_caps_get_free_size(MALLOC_CAP_DEFAULT|MALLOC_CAP_INTERNAL),DEFAULT_LOW_MEM_THRESHOLD);
+
     if(!strlen(network.wifiData.ssid)){
       LOG0("*** WIFI CREDENTIALS DATA NOT FOUND.  ");
       if(autoStartAPEnabled){
@@ -196,7 +209,7 @@ void Span::pollTask() {
       controlButton->reset();        
 
     LOG0("%s is READY!\n\n",displayName);
-    isInitialized=true;
+    isInitialized=true;    
     
   } // isInitialized
 
@@ -260,7 +273,7 @@ void Span::pollTask() {
       homeSpan.lastClientIP="0.0.0.0";                              // reset stored IP address to show "0.0.0.0" if homeSpan.getClientIP() is used in any other context
       
       if(!hap[i]->client){                                 // client disconnected by server
-        LOG1("** Disconnecting Client #");
+        LOG1("** Disconnected Client #");
         LOG1(i);
         LOG1("  (");
         LOG1(millis()/1000);
@@ -301,7 +314,13 @@ void Span::pollTask() {
 
   statusLED->check();
 
-  vTaskDelay(5);
+  if(rebootCallback && snapTime>rebootCallbackTime){
+    rebootCallback(rebootCount-1);
+    rebootCount=0;
+    rebootCallback=NULL;
+    nvs_set_u8(wifiNVS,"REBOOTS",rebootCount);
+    nvs_commit(wifiNVS);    
+  }
     
 } // poll
 
@@ -408,7 +427,8 @@ void Span::checkConnect(){
       LOG0("\n*** Can't connect to %s.  You may type 'W <return>' to re-configure WiFi, or 'X <return>' to erase WiFi credentials.  Will try connecting again in 60 seconds.\n\n",network.wifiData.ssid);
       waitTime=60000;
     } else {    
-      addWebLog(true,"Trying to connect to %s.  Waiting %d sec...",network.wifiData.ssid,waitTime/1000);
+      if(verboseWifiReconnect)
+        addWebLog(true,"Trying to connect to %s.  Waiting %d sec...",network.wifiData.ssid,waitTime/1000);
       WiFi.begin(network.wifiData.ssid,network.wifiData.pwd);
     }
 
@@ -422,38 +442,34 @@ void Span::checkConnect(){
 
   addWebLog(true,"WiFi Connected!  IP Address = %s",WiFi.localIP().toString().c_str());
 
-  if(connected>1)                           // Do not initialize everything below if this is only a reconnect
+  if(connected>1){                           // Do not initialize everything below if this is only a reconnect
+    if(wifiCallbackAll)
+      wifiCallbackAll((connected+1)/2);
     return;
+  }
     
   char id[18];                              // create string version of Accessory ID for MDNS broadcast
   memcpy(id,HAPClient::accessory.ID,17);    // copy ID bytes
   id[17]='\0';                              // add terminating null
 
-  // create broadcaset name from server base name plus accessory ID (without ':')
-
-  int nChars;
-
-  if(!hostNameSuffix)
-    nChars=snprintf(NULL,0,"%s-%.2s%.2s%.2s%.2s%.2s%.2s",hostNameBase,id,id+3,id+6,id+9,id+12,id+15);
-  else
-    nChars=snprintf(NULL,0,"%s%s",hostNameBase,hostNameSuffix);
-    
-  char hostName[nChars+1];
+  // create broadcast name from server base name plus accessory ID (without ':')
   
   if(!hostNameSuffix)
-    sprintf(hostName,"%s-%.2s%.2s%.2s%.2s%.2s%.2s",hostNameBase,id,id+3,id+6,id+9,id+12,id+15);
+    asprintf(&hostName,"%s-%.2s%.2s%.2s%.2s%.2s%.2s",hostNameBase,id,id+3,id+6,id+9,id+12,id+15);
   else
-    sprintf(hostName,"%s%s",hostNameBase,hostNameSuffix);
+    asprintf(&hostName,"%s%s",hostNameBase,hostNameSuffix);
 
-  char d[strlen(hostName)+1];  
-  sscanf(hostName,"%[A-Za-z0-9-]",d);
+  char *d;
+  sscanf(hostName,"%m[A-Za-z0-9-]",&d);
   
-  if(strlen(hostName)>255|| hostName[0]=='-' || hostName[strlen(hostName)-1]=='-' || strlen(hostName)!=strlen(d)){
+  if(strlen(hostName)>255 || hostName[0]=='-' || hostName[strlen(hostName)-1]=='-' || strlen(hostName)!=strlen(d)){
     LOG0("\n*** Error:  Can't start MDNS due to invalid hostname '%s'.\n",hostName);
     LOG0("*** Hostname must consist of 255 or less alphanumeric characters or a hyphen, except that the hyphen cannot be the first or last character.\n");
     LOG0("*** PROGRAM HALTED!\n\n");
     while(1);
   }
+
+  free(d);
     
   LOG0("\nStarting MDNS...\n\n");
   LOG0("HostName:      %s.local:%d\n",hostName,tcpPortNum);
@@ -519,9 +535,10 @@ void Span::checkConnect(){
     mdns_service_txt_item_set("_hap","_tcp","logURL",webLog.statusURL.c_str()+4);           // Web Log status (info only - NOT used by HAP)
     
     LOG0("Web Logging enabled at http://%s.local:%d%swith max number of entries=%d\n\n",hostName,tcpPortNum,webLog.statusURL.c_str()+4,webLog.maxEntries);
-    if(webLog.timeServer)
-      xTaskCreateUniversal(webLog.initTime, "timeSeverTaskHandle", 8096, &webLog, 1, NULL, 0);
   }
+
+  if(webLog.timeServer)
+    xTaskCreateUniversal(webLog.initTime, "timeSeverTaskHandle", 8096, &webLog, 1, NULL, 0);  
   
   LOG0("Starting HAP Server on port %d supporting %d simultaneous HomeKit Controller Connections...\n\n",tcpPortNum,maxConnections);
 
@@ -534,12 +551,15 @@ void Span::checkConnect(){
   
   if(wifiCallback)
     wifiCallback();
+
+  if(wifiCallbackAll)
+    wifiCallbackAll((connected+1)/2);
   
 } // initWiFi
 
 ///////////////////////////////
 
-void Span::setQRID(const char *id){
+Span& Span::setQRID(const char *id){
   
   char tBuf[5];
   sscanf(id,"%4[0-9A-Za-z]",tBuf);
@@ -547,7 +567,8 @@ void Span::setQRID(const char *id){
   if(strlen(id)==4 && strlen(tBuf)==4){
     sprintf(qrID,"%s",id);
   }
-    
+
+  return(*this);
 } // setQRID
 
 ///////////////////////////////
@@ -555,13 +576,15 @@ void Span::setQRID(const char *id){
 void Span::processSerialCommand(const char *c){
 
   switch(c[0]){
-
+    
     case 's': {    
       
       LOG0("\n*** HomeSpan Status ***\n\n");
 
-      LOG0("IP Address:        %s\n\n",WiFi.localIP().toString().c_str());
-      LOG0("Accessory ID:      ");
+      LOG0("IP Address:        %s\n",WiFi.localIP().toString().c_str());
+       if(webLog.isEnabled && hostName!=NULL)   
+        LOG0("Web Logging:       http://%s.local:%d%s\n",hostName,tcpPortNum,webLog.statusURL.c_str()+4);
+      LOG0("\nAccessory ID:      ");
       HAPClient::charPrintRow(HAPClient::accessory.ID,17);
       LOG0("                               LTPK: ");
       HAPClient::hexPrintRow(HAPClient::accessory.LTPK,32);
@@ -595,18 +618,19 @@ void Span::processSerialCommand(const char *c){
     } 
     break;
 
-    case 'd': {      
-      
-      TempBuffer <char> qBuf(sprintfAttributes(NULL)+1);
-      sprintfAttributes(qBuf.buf);  
+    case 'd': {            
 
-      LOG0("\n*** Attributes Database: size=%d  configuration=%d ***\n\n",qBuf.len()-1,hapConfig.configNumber);
-      prettyPrint(qBuf.buf);
-      LOG0("\n*** End Database ***\n\n");
+      LOG0("\n*** Attributes Database ***\n\n");
+      hapOut.prettyPrint();
+      printfAttributes();
+      size_t nBytes=hapOut.getSize();
+      hapOut.flush();
+      LOG0("\n\n*** End Database: size=%d  configuration=%d ***\n\n",nBytes,hapConfig.configNumber);      
     }
     break;
 
     case 'Q': {
+      
       char tBuf[5];
       const char *s=c+1+strspn(c+1," ");
       sscanf(s," %4[0-9A-Za-z]",tBuf);
@@ -652,52 +676,20 @@ void Span::processSerialCommand(const char *c){
     break;
 
     case 'S': {
-      
-      char setupCode[10];
 
-      struct {                                      // temporary structure to hold SRP verification code and salt stored in NVS
-        uint8_t salt[16];
-        uint8_t verifyCode[384];
-      } verifyData;      
-
-      sscanf(c+1," %9[0-9]",setupCode);
-      
-      if(strlen(setupCode)!=8){
-        LOG0("\n*** Invalid request to change Setup Code.  Code must be exactly 8 digits.\n\n");
-      } else
-      
-      if(!network.allowedCode(setupCode)){
-        LOG0("\n*** Invalid request to change Setup Code.  Code too simple.\n\n");
-      } else {
-        
-        LOG0("\nGenerating SRP verification data for new Setup Code: %.3s-%.2s-%.3s ... ",setupCode,setupCode+3,setupCode+5);
-        HAPClient::srp.createVerifyCode(setupCode,verifyData.verifyCode,verifyData.salt);                         // create verification code from default Setup Code and random salt
-        nvs_set_blob(HAPClient::srpNVS,"VERIFYDATA",&verifyData,sizeof(verifyData));                              // update data
-        nvs_commit(HAPClient::srpNVS);                                                                            // commit to NVS
-        LOG0("New Code Saved!\n");
-        LOG0("Setup Payload for Optional QR Code: %s\n\n",qrCode.get(atoi(setupCode),qrID,atoi(category)));
-      }            
+      setPairingCode(c+1);          
     }
     break;
 
     case 'U': {
 
-      HAPClient::removeControllers();                                                                           // clear all Controller data  
-      nvs_set_blob(HAPClient::hapNVS,"CONTROLLERS",HAPClient::controllers,sizeof(HAPClient::controllers));      // update data
-      nvs_commit(HAPClient::hapNVS);                                                                            // commit to NVS
+      HAPClient::controllerList.clear();                                        // clear all Controller data  
+      HAPClient::saveControllers();
       LOG0("\n*** HomeSpan Pairing Data DELETED ***\n\n");
-      
-      for(int i=0;i<maxConnections;i++){     // loop over all connection slots
-        if(hap[i]->client){                    // if slot is connected
-          LOG1("*** Terminating Client #");
-          LOG1(i);
-          LOG1("\n");
-          hap[i]->client.stop();
-        }
-      }
-      
+      HAPClient::tearDown(NULL);                                                // tear down all verified connections
+            
       LOG0("\nDEVICE NOT YET PAIRED -- PLEASE PAIR WITH HOMEKIT APP\n\n");
-      mdns_service_txt_item_set("_hap","_tcp","sf","1");                                                        // set Status Flag = 1 (Table 6-8)
+      mdns_service_txt_item_set("_hap","_tcp","sf","1");                        // set Status Flag = 1 (Table 6-8)
 
       if(homeSpan.pairCallback)
         homeSpan.pairCallback(false);
@@ -831,13 +823,26 @@ void Span::processSerialCommand(const char *c){
     break;
 
     case 'm': {
-      multi_heap_info_t heapInfo;
-      heap_caps_get_info(&heapInfo,MALLOC_CAP_INTERNAL);
-      LOG0("Total Heap=%d   ",heapInfo.total_free_bytes);
-      heap_caps_get_info(&heapInfo,MALLOC_CAP_DEFAULT);
-      LOG0("DRAM-Capable=%d   ",heapInfo.total_free_bytes);
-      heap_caps_get_info(&heapInfo,MALLOC_CAP_EXEC);
-      LOG0("IRAM-Capable=%d\n",heapInfo.total_free_bytes);
+      multi_heap_info_t heapAll;
+      multi_heap_info_t heapInternal;
+      multi_heap_info_t heapPSRAM;
+    
+      heap_caps_get_info(&heapAll,MALLOC_CAP_DEFAULT);
+      heap_caps_get_info(&heapInternal,MALLOC_CAP_DEFAULT|MALLOC_CAP_INTERNAL);
+      heap_caps_get_info(&heapPSRAM,MALLOC_CAP_DEFAULT|MALLOC_CAP_SPIRAM);
+    
+      Serial.printf("\n            Allocated      Free   Largest       Low\n");
+      Serial.printf("            --------- --------- --------- ---------\n");
+      Serial.printf("Total Heap: %9d %9d %9d %9d\n",heapAll.total_allocated_bytes,heapAll.total_free_bytes,heapAll.largest_free_block,heapAll.minimum_free_bytes);
+      Serial.printf("  Internal: %9d %9d %9d %9d\n",heapInternal.total_allocated_bytes,heapInternal.total_free_bytes,heapInternal.largest_free_block,heapInternal.minimum_free_bytes);
+      Serial.printf("     PSRAM: %9d %9d %9d %9d\n\n",heapPSRAM.total_allocated_bytes,heapPSRAM.total_free_bytes,heapPSRAM.largest_free_block,heapPSRAM.minimum_free_bytes);
+      
+      if(getAutoPollTask())
+        LOG0("Lowest stack level: %d bytes (%s)\n",uxTaskGetStackHighWaterMark(getAutoPollTask()),pcTaskGetName(getAutoPollTask()));
+      LOG0("Lowest stack level: %d bytes (%s)\n",uxTaskGetStackHighWaterMark(loopTaskHandle),pcTaskGetName(loopTaskHandle));
+      nvs_stats_t nvs_stats;
+      nvs_get_stats(NULL, &nvs_stats);
+      LOG0("NVS Flash Partition: %d of %d records used\n\n",nvs_stats.used_entries,nvs_stats.total_entries-126);      
     }
     break;       
 
@@ -848,7 +853,7 @@ void Span::processSerialCommand(const char *c){
       int nErrors=0;
       int nWarnings=0;
       
-      unordered_set<uint32_t> aidValues;
+      vector<uint32_t, Mallocator<uint32_t>> aidValues;
       char pNames[][7]={"PR","PW","EV","AA","TW","HD","WR"};
 
       for(auto acc=Accessories.begin(); acc!=Accessories.end(); acc++){
@@ -858,10 +863,10 @@ void Span::processSerialCommand(const char *c){
         if(acc==Accessories.begin() && (*acc)->aid!=1)
           LOG0("   *** ERROR #%d!  AID of first Accessory must always be 1 ***\n",++nErrors);
 
-        if(aidValues.find((*acc)->aid)!=aidValues.end())
+        if(std::find(aidValues.begin(),aidValues.end(),(*acc)->aid)!=aidValues.end())
           LOG0("   *** ERROR #%d!  AID already in use for another Accessory ***\n",++nErrors);
         
-        aidValues.insert((*acc)->aid);
+        aidValues.push_back((*acc)->aid);
 
         for(auto svc=(*acc)->Services.begin(); svc!=(*acc)->Services.end(); svc++){
           LOG0("   \u279f Service %s:  IID=%d, %sUUID=\"%s\"\n",(*svc)->hapName,(*svc)->iid,(*svc)->isCustom?"Custom-":"",(*svc)->type);
@@ -873,9 +878,7 @@ void Span::processSerialCommand(const char *c){
           }
           else if((*acc)->aid==1)            // this is an Accessory with aid=1, but it has more than just AccessoryInfo.  So...
             isBridge=false;                  // ...this is not a bridge device          
-
-          unordered_set<HapChar *> hapChar;
-        
+       
           for(auto chr=(*svc)->Characteristics.begin(); chr!=(*svc)->Characteristics.end(); chr++){
             LOG0("      \u21e8 Characteristic %s(%s):  IID=%d, %sUUID=\"%s\", %sPerms=",
               (*chr)->hapName,(*chr)->uvPrint((*chr)->value).c_str(),(*chr)->iid,(*chr)->isCustom?"Custom-":"",(*chr)->type,(*chr)->perms!=(*chr)->hapChar->perms?"Custom-":"");
@@ -899,13 +902,13 @@ void Span::processSerialCommand(const char *c){
               LOG0(" (nvs)");
             LOG0("\n");        
             
-            if(!(*chr)->isCustom && !(*svc)->isCustom  && (*svc)->req.find((*chr)->hapChar)==(*svc)->req.end() && (*svc)->opt.find((*chr)->hapChar)==(*svc)->opt.end())
+            if(!(*chr)->isCustom && !(*svc)->isCustom  && std::find((*svc)->req.begin(),(*svc)->req.end(),(*chr)->hapChar)==(*svc)->req.end() && std::find((*svc)->opt.begin(),(*svc)->opt.end(),(*chr)->hapChar)==(*svc)->opt.end())
               LOG0("          *** WARNING #%d!  Service does not support this Characteristic ***\n",++nWarnings);
             else
             if(invalidUUID((*chr)->type,(*chr)->isCustom))
               LOG0("          *** ERROR #%d!  Format of UUID is invalid ***\n",++nErrors);
             else       
-            if(hapChar.find((*chr)->hapChar)!=hapChar.end())
+              if(std::find_if((*svc)->Characteristics.begin(),chr,[chr](SpanCharacteristic *c)->boolean{return(c->hapChar==(*chr)->hapChar);})!=chr)
               LOG0("          *** ERROR #%d!  Characteristic already defined for this Service ***\n",++nErrors);
 
             if((*chr)->setRangeError)
@@ -914,15 +917,13 @@ void Span::processSerialCommand(const char *c){
             if((*chr)->setValidValuesError)
               LOG0("          *** WARNING #%d!  Attempt to set Custom Valid Values for this Characteristic ignored ***\n",++nWarnings);
 
-            if((*chr)->format!=STRING && ((*chr)->uvGet<double>((*chr)->value) < (*chr)->uvGet<double>((*chr)->minValue) || (*chr)->uvGet<double>((*chr)->value) > (*chr)->uvGet<double>((*chr)->maxValue)))
+            if((*chr)->format!=STRING && (!(((*chr)->uvGet<double>((*chr)->value) >= (*chr)->uvGet<double>((*chr)->minValue)) && ((*chr)->uvGet<double>((*chr)->value) <= (*chr)->uvGet<double>((*chr)->maxValue)))))
               LOG0("          *** WARNING #%d!  Value of %g is out of range [%g,%g] ***\n",++nWarnings,(*chr)->uvGet<double>((*chr)->value),(*chr)->uvGet<double>((*chr)->minValue),(*chr)->uvGet<double>((*chr)->maxValue));
-
-            hapChar.insert((*chr)->hapChar);
           
           } // Characteristics
 
           for(auto req=(*svc)->req.begin(); req!=(*svc)->req.end(); req++){
-            if(hapChar.find(*req)==hapChar.end())
+            if(std::find_if((*svc)->Characteristics.begin(),(*svc)->Characteristics.end(),[req](SpanCharacteristic *c)->boolean{return(c->hapChar==*req);})==(*svc)->Characteristics.end())
               LOG0("          *** WARNING #%d!  Required '%s' Characteristic for this Service not found ***\n",++nWarnings,(*req)->hapName);
           }
 
@@ -956,15 +957,10 @@ void Span::processSerialCommand(const char *c){
         if(!foundInfo)
           LOG0("   *** ERROR #%d!  Required 'AccessoryInformation' Service not found ***\n",++nErrors);
           
-      } // Accessories
-      
-      LOG0("\nConfigured as Bridge: %s\n",isBridge?"YES":"NO");
-      if(hapConfig.configNumber>0)
-        LOG0("Configuration Number: %d\n",hapConfig.configNumber);
-      LOG0("\nDatabase Validation:  Warnings=%d, Errors=%d\n\n",nWarnings,nErrors);    
+      } // Accessories   
 
       char d[]="------------------------------";
-      LOG0("%-30s  %8s  %10s  %s  %s  %s  %s  %s\n","Service","UUID","AID","IID","Update","Loop","Button","Linked Services");
+      LOG0("\n%-30s  %8s  %10s  %s  %s  %s  %s  %s\n","Service","UUID","AID","IID","Update","Loop","Button","Linked Services");
       LOG0("%.30s  %.8s  %.10s  %.3s  %.6s  %.4s  %.6s  %.15s\n",d,d,d,d,d,d,d,d);
       for(int i=0;i<Accessories.size();i++){                             // identify all services with over-ridden loop() methods
         for(int j=0;j<Accessories[i]->Services.size();j++){
@@ -989,18 +985,23 @@ void Span::processSerialCommand(const char *c){
         uint8_t channel;
         wifi_second_chan_t channel2; 
         esp_wifi_get_channel(&channel,&channel2);
-        LOG0("\nFound %d SpanPoint Links:\n\n",SpanPoint::SpanPoints.size());
+        LOG0("\nFound %d %s SpanPoint Links:\n\n",SpanPoint::SpanPoints.size(),SpanPoint::useEncryption?"encrypted":"unencrypted");
         LOG0("%-17s  %18s  %7s  %7s  %7s\n","Local MAC Address","Remote MAC Address","Send","Receive","Depth"); 
         LOG0("%.17s  %.18s  %.7s  %.7s  %.7s\n",d,d,d,d,d);
         for(auto it=SpanPoint::SpanPoints.begin();it!=SpanPoint::SpanPoints.end();it++)
-          LOG0("%-18s  %02X:%02X:%02X:%02X:%02X:%02X  %7d  %7d  %7d\n",(*it)->peerInfo.ifidx==WIFI_IF_AP?WiFi.softAPmacAddress().c_str():WiFi.macAddress().c_str(),
+          LOG0("%-18s  %02X:%02X:%02X:%02X:%02X:%02X  %7d  %7d  %7d  %s\n",(*it)->peerInfo.ifidx==WIFI_IF_AP?WiFi.softAPmacAddress().c_str():WiFi.macAddress().c_str(),
                  (*it)->peerInfo.peer_addr[0],(*it)->peerInfo.peer_addr[1],(*it)->peerInfo.peer_addr[2],(*it)->peerInfo.peer_addr[3],(*it)->peerInfo.peer_addr[4],(*it)->peerInfo.peer_addr[5],
-                 (*it)->sendSize,(*it)->receiveSize,uxQueueSpacesAvailable((*it)->receiveQueue));           
+                 (*it)->sendSize,(*it)->receiveSize,uxQueueSpacesAvailable((*it)->receiveQueue),esp_now_is_peer_exist((*it)->peerInfo.peer_addr)?"":"(max connections exceeded!)");           
         LOG0("\nSpanPoint using WiFi Channel %d%s\n",channel,WiFi.status()!=WL_CONNECTED?" (subject to change once WiFi connection established)":"");
       }
-      
+
+      LOG0("\nConfigured as Bridge: %s\n",isBridge?"YES":"NO");
+      if(hapConfig.configNumber>0)
+        LOG0("Configuration Number: %d\n",hapConfig.configNumber);
+      LOG0("\nDatabase Validation:  Warnings=%d, Errors=%d\n",nWarnings,nErrors);      
       LOG0("\n*** End Info ***\n\n");
     }
+    
     break;
 
     case 'P': {
@@ -1008,13 +1009,11 @@ void Span::processSerialCommand(const char *c){
       LOG0("\n*** Pairing Data used for Cloning another Device\n\n");
       size_t olen;
       TempBuffer<char> tBuf(256);
-      mbedtls_base64_encode((uint8_t *)tBuf.buf,256,&olen,(uint8_t *)&HAPClient::accessory,sizeof(struct Accessory));
-      LOG0("Accessory data:  %s\n",tBuf.buf);
-      for(int i=0;i<HAPClient::MAX_CONTROLLERS;i++){
-        if(HAPClient::controllers[i].allocated){
-          mbedtls_base64_encode((uint8_t *)tBuf.buf,256,&olen,(uint8_t *)(HAPClient::controllers+i),sizeof(struct Controller));
-          LOG0("Controller data: %s\n",tBuf.buf);
-        }
+      mbedtls_base64_encode((uint8_t *)tBuf.get(),256,&olen,(uint8_t *)&HAPClient::accessory,sizeof(struct Accessory));
+      LOG0("Accessory data:  %s\n",tBuf.get());
+      for(const auto &cont : HAPClient::controllerList){
+        mbedtls_base64_encode((uint8_t *)tBuf.get(),256,&olen,(uint8_t *)(&cont),sizeof(struct Controller));
+        LOG0("Controller data: %s\n",tBuf.get());        
       }
       LOG0("\n*** End Pairing Data\n\n");
     }
@@ -1026,14 +1025,14 @@ void Span::processSerialCommand(const char *c){
       TempBuffer<char> tBuf(200);
       size_t olen;
 
-      tBuf.buf[0]='\0';
+      tBuf[0]='\0';
       LOG0(">>> Accessory data:  ");
-      readSerial(tBuf.buf,199);
-      if(strlen(tBuf.buf)==0){
+      readSerial(tBuf,199);
+      if(strlen(tBuf)==0){
         LOG0("(cancelled)\n\n");
         return;
       }
-      mbedtls_base64_decode((uint8_t *)&HAPClient::accessory,sizeof(struct Accessory),&olen,(uint8_t *)tBuf.buf,strlen(tBuf.buf));
+      mbedtls_base64_decode((uint8_t *)&HAPClient::accessory,sizeof(struct Accessory),&olen,(uint8_t *)tBuf.get(),strlen(tBuf));
       if(olen!=sizeof(struct Accessory)){
         LOG0("\n*** Error in size of Accessory data - cloning cancelled.  Restarting...\n\n");
         reboot();
@@ -1041,22 +1040,25 @@ void Span::processSerialCommand(const char *c){
         HAPClient::charPrintRow(HAPClient::accessory.ID,17);
         LOG0("\n");
       }
+
+      HAPClient::controllerList.clear();
+      Controller tCont;
       
-      for(int i=0;i<HAPClient::MAX_CONTROLLERS;i++){
-        tBuf.buf[0]='\0';
+      while(HAPClient::controllerList.size()<16){
+        tBuf[0]='\0';
         LOG0(">>> Controller data: ");
-        readSerial(tBuf.buf,199);
-        if(strlen(tBuf.buf)==0){
+        readSerial(tBuf,199);
+        if(strlen(tBuf)==0){
           LOG0("(done)\n");
-          while(i<HAPClient::MAX_CONTROLLERS)              // clear data from remaining controller slots
-            HAPClient::controllers[i++].allocated=false;
+          break;
         } else {
-          mbedtls_base64_decode((uint8_t *)(HAPClient::controllers+i),sizeof(struct Controller),&olen,(uint8_t *)tBuf.buf,strlen(tBuf.buf));
+          mbedtls_base64_decode((uint8_t *)(&tCont),sizeof(struct Controller),&olen,(uint8_t *)tBuf.get(),strlen(tBuf));
           if(olen!=sizeof(struct Controller)){
             LOG0("\n*** Error in size of Controller data - cloning cancelled.  Restarting...\n\n");
             reboot();
           } else {
-            HAPClient::charPrintRow(HAPClient::controllers[i].ID,36);
+            HAPClient::controllerList.push_back(tCont);
+            HAPClient::charPrintRow(tCont.ID,36);
             LOG0("\n");
           }
         }
@@ -1070,8 +1072,7 @@ void Span::processSerialCommand(const char *c){
         if(qSave[0]=='y'){
           LOG0("(yes)\nData saved!  Rebooting...");
           nvs_set_blob(HAPClient::hapNVS,"ACCESSORY",&HAPClient::accessory,sizeof(HAPClient::accessory));           // update data
-          nvs_set_blob(HAPClient::hapNVS,"CONTROLLERS",HAPClient::controllers,sizeof(HAPClient::controllers));      
-          nvs_commit(HAPClient::hapNVS);                                                      // commit to NVS
+          HAPClient::saveControllers();
           reboot();
         } else
         if(qSave[0]=='n'){
@@ -1147,6 +1148,12 @@ void Span::processSerialCommand(const char *c){
 
 ///////////////////////////////
 
+void Span::getWebLog(void (*f)(const char *, void *), void *user_data){
+  HAPClient::getStatusURL(NULL,f,user_data);
+}
+
+///////////////////////////////
+
 void Span::resetStatus(){
   if(strlen(network.wifiData.ssid)==0)
     STATUS_UPDATE(start(LED_WIFI_NEEDED),HS_WIFI_NEEDED)
@@ -1197,80 +1204,67 @@ const char* Span::statusString(HS_STATUS s){
 
 ///////////////////////////////
 
-void Span::setWifiCredentials(const char *ssid, const char *pwd){
+Span& Span::setPairingCode(const char *s){
+   
+  char setupCode[10];
+
+  sscanf(s," %9[0-9]",setupCode);
+
+  if(strlen(setupCode)!=8){
+    LOG0("\n*** Invalid request to change Setup Code.  Code must be exactly 8 digits.\n\n");
+    return(*this);
+  }   
+
+  if(!network.allowedCode(setupCode)){
+    LOG0("\n*** Invalid request to change Setup Code.  Code too simple.\n\n");
+    return(*this);
+  }
+
+  TempBuffer<Verification> verifyData;       // temporary storage for verification data
+  SRP6A *srp=new SRP6A;                      // create temporary instance of SRP
+  
+  LOG0("\nGenerating SRP verification data for new Setup Code: %.3s-%.2s-%.3s ... ",setupCode,setupCode+3,setupCode+5);
+  
+  srp->createVerifyCode(setupCode,verifyData);                                                  // create random salt and compute verification code from specified Setup Code
+  nvs_set_blob(HAPClient::srpNVS,"VERIFYDATA",verifyData,verifyData.len());                     // update data
+  nvs_commit(HAPClient::srpNVS);                                                                // commit to NVS
+  
+  LOG0("New Code Saved!\n");
+  LOG0("Setup Payload for Optional QR Code: %s\n\n",qrCode.get(atoi(setupCode),qrID,atoi(category)));
+
+  delete srp;
+  return(*this);
+}
+
+///////////////////////////////
+
+Span& Span::setWifiCredentials(const char *ssid, const char *pwd){
   sprintf(network.wifiData.ssid,"%.*s",MAX_SSID,ssid);
   sprintf(network.wifiData.pwd,"%.*s",MAX_PWD,pwd);
   if(wifiNVS){                                                                      // is begin() already called and wifiNVS is open
     nvs_set_blob(wifiNVS,"WIFIDATA",&network.wifiData,sizeof(network.wifiData));    // update data
     nvs_commit(wifiNVS);                                                            // commit to NVS
   }
+
+  return(*this);
 }
 
 ///////////////////////////////
 
-int Span::sprintfAttributes(char *cBuf, int flags){
+void Span::printfAttributes(int flags){
 
-  int nBytes=0;
-
-  nBytes+=snprintf(cBuf,cBuf?64:0,"{\"accessories\":[");
+  hapOut << "{\"accessories\":[";
 
   for(int i=0;i<Accessories.size();i++){
-    nBytes+=Accessories[i]->sprintfAttributes(cBuf?(cBuf+nBytes):NULL,flags);    
+    Accessories[i]->printfAttributes(flags);    
     if(i+1<Accessories.size())
-      nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",");
-    }
+      hapOut << "," ;
+  }
     
-  nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,"]}");
-  return(nBytes);
+  hapOut << "]}";
 }
 
 ///////////////////////////////
-
-void Span::prettyPrint(char *buf, int nsp, int minLogLevel){
-
-  if(logLevel<minLogLevel)
-    return;
-      
-  int s=strlen(buf);
-  int indent=0;
-  
-  for(int i=0;i<s;i++){
-    switch(buf[i]){
-      
-      case '{':
-      case '[':
-        Serial.printf("%c\n",buf[i]);
-        indent+=nsp;
-        for(int j=0;j<indent;j++)
-          Serial.printf(" ");
-        break;
-
-      case '}':
-      case ']':
-        Serial.printf("\n");
-        indent-=nsp;
-        for(int j=0;j<indent;j++)
-          Serial.printf(" ");
-        Serial.printf("%c",buf[i]);
-        break;
-
-      case ',':
-        Serial.printf("%c\n",buf[i]);
-        for(int j=0;j<indent;j++)
-          Serial.printf(" ");
-        break;
-
-      default:
-        Serial.printf("%c",buf[i]);
-           
-    } // switch
-  } // loop over all characters
-
-  Serial.printf("\n");
-}
-
-
-///////////////////////////
 
 boolean Span::deleteAccessory(uint32_t n){
   
@@ -1430,7 +1424,7 @@ int Span::updateCharacteristics(char *buf, SpanBuf *pObj){
             pObj[j].characteristic->uvSet(pObj[j].characteristic->value,pObj[j].characteristic->newValue);               // update characteristic value with new value
             if(pObj[j].characteristic->nvsKey){                                                                                               // if storage key found
               if(pObj[j].characteristic->format!=FORMAT::STRING && pObj[j].characteristic->format!=FORMAT::DATA)
-                nvs_set_blob(charNVS,pObj[j].characteristic->nvsKey,&(pObj[j].characteristic->value),sizeof(pObj[j].characteristic->value));  // store data
+                nvs_set_u64(charNVS,pObj[j].characteristic->nvsKey,pObj[j].characteristic->value.UINT64);  // store data as uint64_t regardless of actual type (it will be read correctly when access through uvGet())         
               else
                 nvs_set_str(charNVS,pObj[j].characteristic->nvsKey,pObj[j].characteristic->value.STRING);                                     // store data
               nvs_commit(charNVS);
@@ -1465,125 +1459,108 @@ void Span::clearNotify(int slotNum){
 
 ///////////////////////////////
 
-int Span::sprintfNotify(SpanBuf *pObj, int nObj, char *cBuf, int conNum){
+void Span::printfNotify(SpanBuf *pObj, int nObj, int conNum){
 
-  int nChars=0;
   boolean notifyFlag=false;
   
-  nChars+=snprintf(cBuf,cBuf?64:0,"{\"characteristics\":[");
-
-  for(int i=0;i<nObj;i++){                              // loop over all objects
+  for(int i=0;i<nObj;i++){                                       // loop over all objects
     
     if(pObj[i].status==StatusCode::OK && pObj[i].val){           // characteristic was successfully updated with a new value (i.e. not just an EV request)
       
-      if(pObj[i].characteristic->ev[conNum]){           // if notifications requested for this characteristic by specified connection number
-      
-        if(notifyFlag)                                                           // already printed at least one other characteristic
-          nChars+=snprintf(cBuf?(cBuf+nChars):NULL,cBuf?64:0,",");               // add preceeding comma before printing next characteristic
+      if(pObj[i].characteristic->ev[conNum]){                    // if notifications requested for this characteristic by specified connection number
+
+        if(!notifyFlag)                                          // this is first notification for any characteristic
+          hapOut << "{\"characteristics\":[";                    // print start of JSON array
+        else                                                     // else already printed at least one other characteristic
+          hapOut << ",";                                         // add preceeding comma before printing this characteristic
         
-        nChars+=pObj[i].characteristic->sprintfAttributes(cBuf?(cBuf+nChars):NULL,GET_VALUE|GET_AID|GET_NV);    // get JSON attributes for characteristic
-        notifyFlag=true;
-        
-      } // notification requested
-    } // characteristic updated
-  } // loop over all objects
-
-  nChars+=snprintf(cBuf?(cBuf+nChars):NULL,cBuf?64:0,"]}");
-
-  return(notifyFlag?nChars:0);                          // if notifyFlag is not set, return 0, else return number of characters printed to cBuf
-}
-
-///////////////////////////////
-
-int Span::sprintfAttributes(SpanBuf *pObj, int nObj, char *cBuf){
-
-  int nChars=0;
-
-  nChars+=snprintf(cBuf,cBuf?64:0,"{\"characteristics\":[");
-
-  for(int i=0;i<nObj;i++){
-      nChars+=snprintf(cBuf?(cBuf+nChars):NULL,cBuf?128:0,"{\"aid\":%u,\"iid\":%d,\"status\":%d}",pObj[i].aid,pObj[i].iid,(int)pObj[i].status);
-      if(i+1<nObj)
-        nChars+=snprintf(cBuf?(cBuf+nChars):NULL,cBuf?64:0,",");
+        pObj[i].characteristic->printfAttributes(GET_VALUE|GET_AID|GET_NV);    // print JSON attributes for this characteristic
+        notifyFlag=true;        
+      }
+    }
   }
 
-  nChars+=snprintf(cBuf?(cBuf+nChars):NULL,cBuf?64:0,"]}");
-
-  return(nChars);    
+  if(notifyFlag)
+    hapOut << "]}";
 }
 
 ///////////////////////////////
 
-int Span::sprintfAttributes(char **ids, int numIDs, int flags, char *cBuf){
+void Span::printfAttributes(SpanBuf *pObj, int nObj){
 
-  int nChars=0;
+  hapOut << "{\"characteristics\":[";
+
+  for(int i=0;i<nObj;i++){
+    hapOut << "{\"aid\":" << pObj[i].aid << ",\"iid\":" << pObj[i].iid << ",\"status\":" << (int)pObj[i].status << "}";
+    if(i+1<nObj)
+      hapOut << ",";
+  }
+
+  hapOut << "]}";
+}
+
+///////////////////////////////
+
+boolean Span::printfAttributes(char **ids, int numIDs, int flags){
+
   uint32_t aid;
   int iid;
   
   SpanCharacteristic *Characteristics[numIDs];
   StatusCode status[numIDs];
-  boolean sFlag=false;
 
   for(int i=0;i<numIDs;i++){              // PASS 1: loop over all ids requested to check status codes - only errors are if characteristic not found, or not readable
     sscanf(ids[i],"%u.%d",&aid,&iid);     // parse aid and iid
     Characteristics[i]=find(aid,iid);     // find matching chararacteristic
     
-    if(Characteristics[i]){                                          // if found
-      if(Characteristics[i]->perms&PERMS::PR){                       // if permissions allow reading
-        status[i]=StatusCode::OK;                                    // always set status to OK (since no actual reading of device is needed)
+    if(Characteristics[i]){                                         // if found
+      if(Characteristics[i]->perms&PERMS::PR){                      // if permissions allow reading
+        status[i]=StatusCode::OK;                                   // always set status to OK (since no actual reading of device is needed)
       } else {
-        Characteristics[i]=NULL;                                     
+        Characteristics[i]=NULL;                                    // set to NULL to trigger not-found in Pass 2 below                                     
         status[i]=StatusCode::WriteOnly;
-        sFlag=true;                                                  // set flag indicating there was an error
+        flags|=GET_STATUS;                                          // update flags to require status attribute for all characteristics
       }
     } else {
       status[i]=StatusCode::UnknownResource;
-      sFlag=true;                                                    // set flag indicating there was an error
+      flags|=GET_STATUS;                                            // update flags to require status attribute for all characteristics
     }
   }
 
-  nChars+=snprintf(cBuf,cBuf?64:0,"{\"characteristics\":[");  
+  hapOut << "{\"characteristics\":[";
 
-  for(int i=0;i<numIDs;i++){              // PASS 2: loop over all ids requested and create JSON for each (with or without status code base on sFlag set above)
+  for(int i=0;i<numIDs;i++){              // PASS 2: loop over all ids requested and create JSON for each (either all with, or all without, a status attribute based on final flags setting)
     
-    if(Characteristics[i])                                                                         // if found
-      nChars+=Characteristics[i]->sprintfAttributes(cBuf?(cBuf+nChars):NULL,flags);                // get JSON attributes for characteristic
-    else{
-      sscanf(ids[i],"%u.%d",&aid,&iid);     // parse aid and iid                        
-      nChars+=snprintf(cBuf?(cBuf+nChars):NULL,cBuf?64:0,"{\"iid\":%d,\"aid\":%u}",iid,aid);      // else create JSON attributes based on requested aid/iid
+    if(Characteristics[i])                                          // if found
+      Characteristics[i]->printfAttributes(flags);                  // get JSON attributes for characteristic (may or may not include status=0 attribute)
+    else{                                                           // else create JSON status attribute based on requested aid/iid
+      sscanf(ids[i],"%u.%d",&aid,&iid);                             
+      hapOut << "{\"iid\":" << iid << ",\"aid\":" << aid << ",\"status\":" << (int)status[i] << "}";     
     }
-    
-    if(sFlag){                                                                                    // status flag is needed - overlay at end
-      nChars--;
-      nChars+=snprintf(cBuf?(cBuf+nChars):NULL,cBuf?64:0,",\"status\":%d}",(int)status[i]);
-    }
-  
+      
     if(i+1<numIDs)
-      nChars+=snprintf(cBuf?(cBuf+nChars):NULL,cBuf?64:0,",");
-    
+      hapOut << ",";    
   }
 
-  nChars+=snprintf(cBuf?(cBuf+nChars):NULL,cBuf?64:0,"]}");
+  hapOut << "]}";
 
-  return(nChars);    
+  return(flags&GET_STATUS);    
 }
 
 ///////////////////////////////
 
 boolean Span::updateDatabase(boolean updateMDNS){
 
-  uint8_t tHash[48];
-  TempBuffer <char> tBuf(sprintfAttributes(NULL,GET_META|GET_PERMS|GET_TYPE|GET_DESC)+1);
-  sprintfAttributes(tBuf.buf,GET_META|GET_PERMS|GET_TYPE|GET_DESC);  
-  mbedtls_sha512_ret((uint8_t *)tBuf.buf,tBuf.len(),tHash,1);     // create SHA-384 hash of JSON (can be any hash - just looking for a unique key)
+  printfAttributes(GET_META|GET_PERMS|GET_TYPE|GET_DESC);   // stream attributes database, which automtically produces a SHA-384 hash
+  hapOut.flush();  
 
   boolean changed=false;
 
-  if(memcmp(tHash,hapConfig.hashCode,48)){           // if hash code of current HAP database does not match stored hash code
-    memcpy(hapConfig.hashCode,tHash,48);             // update stored hash code
-    hapConfig.configNumber++;                        // increment configuration number
-    if(hapConfig.configNumber==65536)                // reached max value
-      hapConfig.configNumber=1;                      // reset to 1
+  if(memcmp(hapOut.getHash(),hapConfig.hashCode,48)){       // if hash code of current HAP database does not match stored hash code
+    memcpy(hapConfig.hashCode,hapOut.getHash(),48);         // update stored hash code
+    hapConfig.configNumber++;                               // increment configuration number
+    if(hapConfig.configNumber==65536)                       // reached max value
+      hapConfig.configNumber=1;                             // reset to 1
                    
     nvs_set_blob(HAPClient::hapNVS,"HAPHASH",&hapConfig,sizeof(hapConfig));     // update data
     nvs_commit(HAPClient::hapNVS);                                              // commit to NVS
@@ -1595,6 +1572,11 @@ boolean Span::updateDatabase(boolean updateMDNS){
       mdns_service_txt_item_set("_hap","_tcp","c#",cNum);      
     }
   }
+
+  nvs_stats_t nvs_stats;
+  nvs_get_stats(NULL, &nvs_stats);
+  if(nvs_stats.free_entries<=130)
+    LOG0("\n*** WARNING: NVS is running low on space.  Try erasing with 'E'.  If that fails, increase size of NVS partition or reduce NVS usage.\n\n");
 
   Loops.clear();
 
@@ -1651,20 +1633,17 @@ SpanAccessory::~SpanAccessory(){
 
 ///////////////////////////////
 
-int SpanAccessory::sprintfAttributes(char *cBuf, int flags){
-  int nBytes=0;
+void SpanAccessory::printfAttributes(int flags){
 
-  nBytes+=snprintf(cBuf,cBuf?64:0,"{\"aid\":%u,\"services\":[",aid);
+  hapOut << "{\"aid\":" << aid << ",\"services\":[";
 
   for(int i=0;i<Services.size();i++){
-    nBytes+=Services[i]->sprintfAttributes(cBuf?(cBuf+nBytes):NULL,flags);    
+    Services[i]->printfAttributes(flags);    
     if(i+1<Services.size())
-      nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",");
+      hapOut << ",";
     }
     
-  nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,"]}");
-
-  return(nBytes);
+  hapOut << "]}";
 }
 
 ///////////////////////////////
@@ -1743,38 +1722,35 @@ SpanService *SpanService::addLink(SpanService *svc){
 
 ///////////////////////////////
 
-int SpanService::sprintfAttributes(char *cBuf, int flags){
-  int nBytes=0;
+void SpanService::printfAttributes(int flags){
 
-  nBytes+=snprintf(cBuf,cBuf?64:0,"{\"iid\":%d,\"type\":\"%s\",",iid,type);
+  hapOut << "{\"iid\":" << iid << ",\"type\":\"" << type << "\",";
   
   if(hidden)
-    nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,"\"hidden\":true,");
+    hapOut << "\"hidden\":true,";
     
   if(primary)
-    nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,"\"primary\":true,");
+    hapOut << "\"primary\":true,";
 
   if(!linkedServices.empty()){
-    nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,"\"linked\":[");
+    hapOut << "\"linked\":[";
     for(int i=0;i<linkedServices.size();i++){
-      nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,"%d",linkedServices[i]->iid);
+      hapOut << linkedServices[i]->iid;
       if(i+1<linkedServices.size())
-        nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",");
+        hapOut << ",";
     }
-     nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,"],");
+     hapOut << "],";
   }
     
-  nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,"\"characteristics\":[");
+  hapOut << "\"characteristics\":[";
   
   for(int i=0;i<Characteristics.size();i++){
-    nBytes+=Characteristics[i]->sprintfAttributes(cBuf?(cBuf+nBytes):NULL,flags);    
+    Characteristics[i]->printfAttributes(flags);    
     if(i+1<Characteristics.size())
-      nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",");
+      hapOut << ",";
   }
     
-  nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,"]}");
-
-  return(nBytes);
+  hapOut << "]}";
 }
 
 ///////////////////////////////
@@ -1802,7 +1778,7 @@ SpanCharacteristic::SpanCharacteristic(HapChar *hapChar, boolean isCustom){
   service=homeSpan.Accessories.back()->Services.back();
   aid=homeSpan.Accessories.back()->aid;
 
-  ev=(boolean *)calloc(homeSpan.maxConnections,sizeof(boolean));
+  ev=(boolean *)HS_CALLOC(homeSpan.maxConnections,sizeof(boolean));
 }
 
 ///////////////////////////////
@@ -1830,72 +1806,71 @@ SpanCharacteristic::~SpanCharacteristic(){
 
 ///////////////////////////////
 
-int SpanCharacteristic::sprintfAttributes(char *cBuf, int flags){
-  int nBytes=0;
+void SpanCharacteristic::printfAttributes(int flags){
 
   const char permCodes[][7]={"pr","pw","ev","aa","tw","hd","wr"};
-
   const char formatCodes[][9]={"bool","uint8","uint16","uint32","uint64","int","float","string","data"};
 
-  nBytes+=snprintf(cBuf,cBuf?64:0,"{\"iid\":%d",iid);
+  hapOut << "{\"iid\":" << iid;
 
-  if(flags&GET_TYPE)  
-    nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"type\":\"%s\"",type);
+  if(flags&GET_TYPE)
+    hapOut << ",\"type\":\"" << type << "\"";
 
   if((perms&PR) && (flags&GET_VALUE)){    
     if(perms&NV && !(flags&GET_NV))
-      nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"value\":null");
+      hapOut << ",\"value\":null";
     else
-      nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"value\":%s",uvPrint(value).c_str());      
+      hapOut << ",\"value\":" << uvPrint(value).c_str();
   }
 
   if(flags&GET_META){
-    nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"format\":\"%s\"",formatCodes[format]);
+    hapOut << ",\"format\":\"" << formatCodes[format] << "\"";
     
     if(customRange && (flags&GET_META)){
-      nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?128:0,",\"minValue\":%s,\"maxValue\":%s",uvPrint(minValue).c_str(),uvPrint(maxValue).c_str());
+      hapOut << ",\"minValue\":" << uvPrint(minValue).c_str() << ",\"maxValue\":" << uvPrint(maxValue).c_str();
         
       if(uvGet<float>(stepValue)>0)
-        nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?128:0,",\"minStep\":%s",uvPrint(stepValue).c_str());
+        hapOut << ",\"minStep\":" << uvPrint(stepValue).c_str();
     }
 
     if(unit){
       if(strlen(unit)>0)
-        nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?128:0,",\"unit\":\"%s\"",unit);
+        hapOut << ",\"unit\":\"" << unit << "\"";
      else
-        nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?128:0,",\"unit\":null");
+        hapOut << ",\"unit\":null";
     }
 
     if(validValues){
-      nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?128:0,",\"valid-values\":%s",validValues);      
+      hapOut << ",\"valid-values\":" << validValues;
     }
   }
     
   if(desc && (flags&GET_DESC)){
-    nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?128:0,",\"description\":\"%s\"",desc);    
+    hapOut << ",\"description\":\"" << desc << "\"";
   }
 
   if(flags&GET_PERMS){
-    nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"perms\":[");
+    hapOut << ",\"perms\":[";
     for(int i=0;i<7;i++){
       if(perms&(1<<i)){
-        nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,"\"%s\"",permCodes[i]);
+        hapOut << "\"" << permCodes[i] <<"\"";
         if(perms>=(1<<(i+1)))
-          nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",");
+          hapOut << ",";
       }
     }
-    nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,"]");
+    hapOut << "]";
   }
 
   if(flags&GET_AID)
-    nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"aid\":%u",aid);
+    hapOut << ",\"aid\":" << aid;
   
   if(flags&GET_EV)
-    nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,",\"ev\":%s",ev[HAPClient::conNum]?"true":"false");
+    hapOut << ",\"ev\":" << (ev[HAPClient::conNum]?"true":"false");
 
-  nBytes+=snprintf(cBuf?(cBuf+nBytes):NULL,cBuf?64:0,"}");
+  if(flags&GET_STATUS)
+    hapOut << ",\"status\":0";    
 
-  return(nBytes);
+  hapOut << "}";
 }
 
 ///////////////////////////////
@@ -2044,7 +2019,7 @@ SpanCharacteristic *SpanCharacteristic::setValidValues(int n, ...){
   va_end(vl);
   s+="]";
 
-  validValues=(char *)realloc(validValues, strlen(s.c_str()) + 1);
+  validValues=(char *)HS_REALLOC(validValues, strlen(s.c_str()) + 1);
   strcpy(validValues,s.c_str());
 
   return(this);
@@ -2124,12 +2099,14 @@ SpanUserCommand::SpanUserCommand(char c, const char *s, void (*f)(const char *, 
 ///////////////////////////////
 
 void SpanWebLog::init(uint16_t maxEntries, const char *serv, const char *tz, const char *url){
-  isEnabled=true;
   this->maxEntries=maxEntries;
   timeServer=serv;
   timeZone=tz;
-  statusURL="GET /" + String(url) + " ";
-  log = (log_t *)calloc(maxEntries,sizeof(log_t));
+  if(url){
+    statusURL="GET /" + String(url) + " ";
+    isEnabled=true;
+  }
+  log = (log_t *)HS_CALLOC(maxEntries,sizeof(log_t));
   if(timeServer)
     homeSpan.reserveSocketConnections(1);
 }
@@ -2175,7 +2152,7 @@ void SpanWebLog::vLog(boolean sysMsg, const char *fmt, va_list ap){
     else
       log[index].clockTime.tm_year=0;
   
-    log[index].message=(char *)realloc(log[index].message, strlen(buf) + 1);
+    log[index].message=(char *)HS_REALLOC(log[index].message, strlen(buf) + 1);
     strcpy(log[index].message, buf);
     
     log[index].clientIP=homeSpan.lastClientIP;  
@@ -2305,7 +2282,7 @@ SpanPoint::SpanPoint(const char *macAddress, int sendSize, int receiveSize, int 
   
   peerInfo.ifidx=useAPaddress?WIFI_IF_AP:WIFI_IF_STA;         // specify interface as either STA or AP
   
-  peerInfo.encrypt=true;              // turn on encryption for this peer
+  peerInfo.encrypt=useEncryption;     // set encryption for this peer
   memcpy(peerInfo.lmk, lmk, 16);      // set local key
   esp_now_add_peer(&peerInfo);        // add peer to ESP-NOW
 
@@ -2469,7 +2446,8 @@ void SpanPoint::dataReceived(const uint8_t *mac, const uint8_t *incomingData, in
 uint8_t SpanPoint::lmk[16];
 boolean SpanPoint::initialized=false;
 boolean SpanPoint::isHub=false;
-vector<SpanPoint *> SpanPoint::SpanPoints;
+boolean SpanPoint::useEncryption=true;
+vector<SpanPoint *, Mallocator<SpanPoint *>> SpanPoint::SpanPoints;
 uint16_t SpanPoint::channelMask=0x3FFE;
 QueueHandle_t SpanPoint::statusQueue;
 nvs_handle SpanPoint::pointNVS;

@@ -1,7 +1,7 @@
 /*********************************************************************************
  *  MIT License
  *  
- *  Copyright (c) 2023 Gregg E. Berman
+ *  Copyright (c) 2023-2024 Gregg E. Berman
  *  
  *  https://github.com/HomeSpan/HomeSpan
  *  
@@ -25,6 +25,8 @@
  *  
  ********************************************************************************/
 
+#pragma once
+
 // Implementation of StepperControl for a Sparkfun A3967 EasyDriver Stepper Motor Driver
 // Breakout Board (https://www.sparkfun.com/products/12779)
 
@@ -36,10 +38,6 @@
 // The motor outputs can be enabled (current running through the coils) or
 // disabled (no current / high impedence).  The EasyDriver board does NOT support
 // the short brake mode.
-
-#pragma once
-
-#include "StepperControl.h"
 
 //////////////////////////
  

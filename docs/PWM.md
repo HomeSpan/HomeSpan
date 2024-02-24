@@ -1,8 +1,6 @@
 # Pulse Width Modulation (PWM)
 
-The ESP32 has up to 16 PWM channels that can be used to drive a variety of devices.  HomeSpan includes an integrated PWM library with dedicated classes designed for controlling **Dimmable LEDs** as well as **Servo Motors**.  Both classes are provided in a standalone header file that is accessed by placing the following near the top of your sketch:
-
-`#include "extras/PwmPin.h"`
+The ESP32 has up to 16 PWM channels that can be used to drive a variety of devices.  HomeSpan includes an integrated PWM library with dedicated classes designed for controlling **Dimmable LEDs** as well as **Servo Motors**.
 
 ## *LedPin(uint8_t pin [,float level [,uint16_t frequency [,boolean invert]]])*
 

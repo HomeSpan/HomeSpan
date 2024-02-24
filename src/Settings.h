@@ -1,7 +1,7 @@
 /*********************************************************************************
  *  MIT License
  *  
- *  Copyright (c) 2020-2023 Gregg E. Berman
+ *  Copyright (c) 2020-2024 Gregg E. Berman
  *  
  *  https://github.com/HomeSpan/HomeSpan
  *  
@@ -27,7 +27,7 @@
  
 // USER-DEFINED SETTINGS AND REFERENCE ENUMERATION CLASSES
 
-#include <core_version.h>
+#include <esp_arduino_version.h>
 
 #pragma once
 
@@ -35,7 +35,7 @@
 //              HomeSpan Version                    //
 
 #define     HS_MAJOR  1
-#define     HS_MINOR  8
+#define     HS_MINOR  9
 #define     HS_PATCH  0
 
 #define     STRINGIFY(x) _STR(x)
@@ -53,7 +53,7 @@
   #error THIS SKETCH REQUIRES A LATER VERSION OF THE HOMESPAN LIBRARY
 #endif
 
-#define     ARDUINO_ESP_VERSION   STRINGIFY(ARDUINO_ESP32_GIT_DESC)
+#define     ARDUINO_ESP_VERSION  STRINGIFY(ESP_ARDUINO_VERSION_MAJOR) "." STRINGIFY(ESP_ARDUINO_VERSION_MINOR) "." STRINGIFY(ESP_ARDUINO_VERSION_PATCH)
 
 #if ESP_ARDUINO_VERSION_MAJOR<2
   #error HOMESPAN REQUIRES VERSION 2 OF THE ARDUINO ESP32 LIBRARY
@@ -83,6 +83,10 @@
 #define     DEFAULT_TCP_PORT          80                  // change with homeSpan.setPort(port);
 
 #define     DEFAULT_WEBLOG_URL        "status"            // change with optional fourth argument in homeSpan.enableWebLog()
+
+#define     DEFAULT_LOW_MEM_THRESHOLD     80000           // default low watermark memory (for internal RAM) threshold that triggers warning
+
+#define     DEFAULT_REBOOT_CALLBACK_TIME  5000            // default time (in milliseconds) to check for reboot callback
 
 /////////////////////////////////////////////////////
 //              OTA PARTITION INFO                 //

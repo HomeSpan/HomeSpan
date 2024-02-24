@@ -2,28 +2,28 @@
 
 HomeSpan includes dedicated classes that provide for easy control of a stepper motor connected to an ESP32 via a stepper motor driver board.  These classes allow one or more stepper motors to operate smoothly and asynchronously in the background while HomeSpan continues to run in the foreground.  On devices with dual processors, stepper-motor control can be run either on the same or a different processor from HomeSpan.
 
-The HomeSpan class that contains all the methods to control a stepper motor is called **StepperControl**.  However, this is an abstract class and cannot be instantiated directly.  Instead you instantiate stepper motor objects using driver-specific child-classes (derived from **StepperControl**) that contain all the logic to configure and operate a particular driver board.  Each child class supports one or more constructors allowing you to specify which output pins on your ESP32 device will be connected to the required pins on your driver board:
+The HomeSpan class that contains all the methods to control a stepper motor is called **StepperControl**.  However, this is an abstract class and cannot be instantiated directly.  Instead you instantiate stepper motor objects using driver-specific child-classes (derived from **StepperControl**) that contain all the logic to configure and operate a particular driver board.  Each child class supports one or more constructors allowing you to specify which output pins on your ESP32 device will be connected to the required pins on your driver board.
+
+The following drivers are currently included in HomeSpan:
 
 * **[Stepper_TB6612](StepperDrivers/Stepper_TB6612.md)**
-  * This class is used to operate stepper motors driven by a [Toshiba TB6612](https://cdn-shop.adafruit.com/datasheets/TB6612FNG_datasheet_en_20121101.pdf) chip, either with or without the use of ESP32 PWM pins
+  * This class is used to operate stepper motors driven by a [Toshiba TB6612](https://cdn-shop.adafruit.com/datasheets/TB6612FNG_datasheet_en_20121101.pdf) (or equivalent) chip
+  * Can be used either with or without ESP32 PWM pins
   * See, for example, the [Adafruit TB6612 1.2A DC/Stepper Motor Driver Breakout Board](https://www.adafruit.com/product/2448)
-  * To use, add the following to the top of your sketch: `#include "extras/Stepper_TB6612.h"`
-  * Constructor 1: `Stepper_TB6612(int AIN1, int AIN2, int BIN1, int BIN2)`
-    * controls the driver board using only 4 digital pins from the ESP32
-    * does not provide ability to microstep the motor
-  * Constructor 2: `Stepper_TB6612(int AIN1, int AIN2, int BIN1, int BIN2, int PWMA, int PWMB)`
-    * controls the driver board using 4 digital pins and 2 PWM pins from the ESP32
-    * the addition of the PWM pins provides the ability to microstep the motor
    
 * **[Stepper_A3967](StepperDrivers/Stepper_A3967.md)**
-  * This class is used to operate stepper motors driven by an [Allegro A3967](https://cdn.sparkfun.com/datasheets/Robotics/A3967-Datasheet.pdf) chip
+  * This class is used to operate stepper motors driven by an [Allegro A3967](https://cdn.sparkfun.com/datasheets/Robotics/A3967-Datasheet.pdf) (or equivalent) chip
   * See, for example, the [Sparkfun EasyDriver Stepper Motor Board](https://www.sparkfun.com/products/12779)
-  * To use, add the following to the top of your sketch: `#include "extras/Stepper_A3967.h"`
-  * Contructor: `Stepper_A3967(int M1, int M2, int STEP, int DIR, int ENABLE)`
-    * controls the driver board using 5 digital pins from the ESP32
-    * microstepping is built into the driver board (separate ESP32 PWM pins are not needed)
 
-Click on either of the driver-specific classes above for complete details on how to wire and configure a particular driver board.
+* **[Stepper_ULN2003A](StepperDrivers/Stepper_ULN2003A.md)**
+  * This class is used to operate stepper motors driven by a [Texas Instruments ULN2003A](https://www.ti.com/lit/ds/symlink/uln2003a.pdf) (or equivalent) chip
+  * See, for example, the [Opencircuit ULN2003 Stepper Motor Driver Board](https://opencircuit.shop/product/uln2003-stepper-motor-driver-module)
+
+* **[Stepper_UNIPOLAR](StepperDrivers/Stepper_UNIPOLAR.md)**
+  * This class provides a generic driver for use with any center-tapped unipolar stepper motor
+  * Use requires a driver board that can convert the low-voltage/low-current digital signals from 4 pins on the ESP32 to higher-voltage/higher-current signals suitable for operating the stepper motor
+  
+Click on any of the driver-specific classes above for complete details on how to wire and configure a particular driver board.
 
 ## StepperControl Methods
 
@@ -136,7 +136,7 @@ Below is a simple sketch demonstrating the above methods:
 ```C++
 // StepperControl Example using TB6612-based Driver Board with HALF STEP PWM MODE
 
-#include "Stepper_TB6612.h"   // include the driver for a TB6612 chip
+#include "HomeSpan.h"         // HomeSpan includes all the StepperControl classes
 
 StepperControl *motor;        // create a global pointer to StepperControl so it can be accessed in both setup() and loop()
 
@@ -186,7 +186,7 @@ A fully worked example showing how to use the *StepperControl* class within a co
 
 ## Creating your own **StepperControl** Driver
 
-If neither of the above motor driver classes works for your specific chip or driver board, it is relatively straightfoward to create a new driver to use in your sketch.  This is because all the logic to operate a stepper motor in the background is already embedded in the abstract **StepperControl** class.  To create your own driver, start by creating a child class derived from **StepperControl**.  Next, add a constructor that defines the pins and performs any initializations if needed.  Finally, define the following methods that **StepperControl** calls to operate the motor:
+If none of the above motor driver classes works for your specific chip or driver board, it is relatively straightfoward to create a new driver to use in your sketch.  This is because all the logic to operate a stepper motor in the background is already embedded in the abstract **StepperControl** class.  To create your own driver, start by creating a child class derived from **StepperControl**.  Next, add a constructor that defines the pins and performs any initializations if needed.  Finally, define the following methods that **StepperControl** calls to operate the motor:
 
 * `void onStep(boolean direction)` - contains the logic to advance the motor by a single step based on the *direction* parameter
 * `void onEnable()` - contains the logic that enables the motor driver
@@ -199,7 +199,7 @@ Only the first method, `onStep()`, is required to be defined.  You can leave any
 As an example, below is the complete code for the **Stepper_A3967** class:
 
 ```C++
-#include "StepperControl.h"
+#include "HomeSpan.h"
 
 //////////////////////////
  
