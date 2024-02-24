@@ -1,9 +1,12 @@
 set(COMPONENT_SRCDIRS
 "src"
+"src/src/extras"
 )
  
 set(COMPONENT_ADD_INCLUDEDIRS
 "src"
+"src/extras"
+"src/src/extras"
 )
  
 set(COMPONENT_REQUIRES
