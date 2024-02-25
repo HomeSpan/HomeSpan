@@ -27,12 +27,10 @@
  
 #include "Pixel.h"
 
-#define PIXEL_PIN 32                   // set this to whatever pin you are using - note pin cannot be "input only"
-#define NPIXELS   60                   // set to number of pixels in strand
-#define COLORMAP  ColorMap::GRB        // sets the order in which color bytes are transmitted
-#define RGBW      true                 // set to true if RGBW, else false if just RGB
+#define PIXEL_PIN 26                  // set this to whatever pin you are using - note pin cannot be "input only"
+#define NPIXELS   8                   // set to number of pixels in strand
 
-Pixel testPixel(PIXEL_PIN,RGBW);
+Pixel testPixel(PIXEL_PIN);
 
 void setup() {
  
@@ -40,7 +38,6 @@ void setup() {
   delay(1000);
 
   Serial.printf("\n\nPixel Test on pin %d with %d pixels\n\n",PIXEL_PIN,NPIXELS); 
-  testPixel.setColorMap(COLORMAP);
   
 }
 

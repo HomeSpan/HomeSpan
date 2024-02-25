@@ -33,7 +33,7 @@ void setup() {
  
   Serial.begin(115200);
 
-  homeSpan.setLogLevel(1);
+  homeSpan.setLogLevel(2);
   homeSpan.enableWebLog(50,"pool.ntp.org","UTC",NULL);
 //  homeSpan.enableWebLog(50,"pool.ntp.org","UTC","myStatus");
 //  homeSpan.enableWebLog(50,NULL,NULL,NULL);

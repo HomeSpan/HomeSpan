@@ -52,7 +52,7 @@ void HAPClient::init(){
   if(nvs_get_blob(srpNVS,"VERIFYDATA",NULL,&len))                         // if Pair-Setup verification code data not found in NVS
     homeSpan.setPairingCode(DEFAULT_SETUP_CODE);                          // create and save verification from using Pairing Setup Code
 
-  if(!strlen(homeSpan.qrID)){                                             // is Setup ID has not been specified in sketch
+  if(!strlen(homeSpan.qrID)){                                             // if Setup ID has not been specified in sketch
     if(!nvs_get_str(hapNVS,"SETUPID",NULL,&len)){                         // check for saved value
       nvs_get_str(hapNVS,"SETUPID",homeSpan.qrID,&len);                   // retrieve data
     } else {

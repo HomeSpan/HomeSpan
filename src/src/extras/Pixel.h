@@ -37,14 +37,23 @@
 
 [[maybe_unused]] static const char* PIXEL_TAG = "Pixel";
 
-namespace ColorMap {
+typedef const uint8_t pixelType_t[];
 
-  static const uint8_t RGB[4]={31,23,15,7}; 
-  static const uint8_t RBG[4]={31,15,23,7}; 
-  static const uint8_t BRG[4]={23,15,31,7}; 
-  static const uint8_t BGR[4]={15,23,31,7}; 
-  static const uint8_t GBR[4]={15,31,23,7}; 
-  static const uint8_t GRB[4]={23,31,15,7}; 
+namespace PixelType {
+  
+//  const uint8_t RGB[4]={31,23,15,0}; 
+  pixelType_t RGB={31,23,15,0}; 
+  pixelType_t RBG={31,15,23,0}; 
+  pixelType_t BRG={23,15,31,0}; 
+  pixelType_t BGR={15,23,31,0}; 
+  pixelType_t GBR={15,31,23,0}; 
+  pixelType_t GRB={23,31,15,0};
+  pixelType_t RGBW={31,23,15,7}; 
+  pixelType_t RBGW={31,15,23,7}; 
+  pixelType_t BRGW={23,15,31,7}; 
+  pixelType_t BGRW={15,23,31,7}; 
+  pixelType_t GBRW={15,31,23,7}; 
+  pixelType_t GRBW={23,31,15,7};
 };
 
 ////////////////////////////////////////////
@@ -53,7 +62,7 @@ namespace ColorMap {
 
 class Pixel : public Blinkable {
 
-  public: 
+  public:
     struct Color {
       union{
         struct {
@@ -153,7 +162,9 @@ class Pixel : public Blinkable {
     volatile static pixel_status_t status;      // storage for volatile information modified in interupt handler   
   
   public:
-    Pixel(int pin, boolean isRGBW=false);                                                   // creates addressable single-wire RGB (false) or RGBW (true) LED connected to pin (such as the SK68 or WS28)   
+   
+    Pixel(int pin, pixelType_t pixelType=PixelType::GRB);                                   // creates addressable single-wire LED of pixelType connected to pin (such as the SK68 or WS28)   
+    Pixel(int pin, boolean isRGBW):Pixel(pin,isRGBW?PixelType::GRBW:PixelType::GRB){};      // old-style constructor included for backwards compatibility
     void set(Color *c, int nPixels, boolean multiColor=true);                               // sets colors of nPixels based on array of Colors c; setting multiColor to false repeats Color in c[0] for all nPixels
     void set(Color c, int nPixels=1){set(&c,nPixels,false);}                                // sets color of nPixels to be equal to specific Color c
     
@@ -162,7 +173,6 @@ class Pixel : public Blinkable {
               
     int getPin(){return(rf->getPin());}                                                     // returns pixel pin if valid, else returns -1
     void setTiming(float high0, float low0, float high1, float low1, uint32_t lowReset);    // changes default timings for bit pulse - note parameters are in MICROSECONDS
-    void setColorMap(const uint8_t *map);                                                  // changes the default color map from GRBW to an alternative mapping - controls order in which color bytes are transmitted
         
     operator bool(){         // override boolean operator to return true/false if creation succeeded/failed
       return(*rf);

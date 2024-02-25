@@ -35,19 +35,21 @@
 //     Single-Wire RGB/RGBW NeoPixels     //
 ////////////////////////////////////////////
 
-Pixel::Pixel(int pin, boolean isRGBW){
+//Pixel::Pixel(int pin, boolean isRGBW){
+Pixel::Pixel(int pin, pixelType_t pixelType){
     
   rf=new RFControl(pin,false,false);          // set clock to 1/80 usec, no default driver
   if(!*rf)
     return;
 
-  if(isRGBW)
-    this->bytesPerPixel=4;
+  map=pixelType;
+  
+  if(map[3])
+    bytesPerPixel=4;
   else
-    this->bytesPerPixel=3;
+    bytesPerPixel=3;
   
   setTiming(0.32, 0.88, 0.64, 0.56, 80.0);    // set default timing parameters (suitable for most SK68 and WS28 RGB pixels)
-  setColorMap(ColorMap::GRB);                 // set default color mapping
 
   rmt_isr_register(loadData,NULL,0,NULL);               // set custom interrupt handler
   
@@ -71,13 +73,6 @@ void Pixel::setTiming(float high0, float low0, float high1, float low1, uint32_t
   pattern[0]=RF_PULSE(high0*80+0.5,low0*80+0.5);
   pattern[1]=RF_PULSE(high1*80+0.5,low1*80+0.5);
   resetTime=lowReset;
-}
-
-///////////////////
-
-void Pixel::setColorMap(const uint8_t *map){
-
-  this->map=map;
 }
 
 ///////////////////
