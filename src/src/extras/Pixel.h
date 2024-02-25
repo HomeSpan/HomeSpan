@@ -37,6 +37,16 @@
 
 [[maybe_unused]] static const char* PIXEL_TAG = "Pixel";
 
+namespace ColorMap {
+
+  static const uint8_t RGB[4]={32,24,16,8}; 
+  static const uint8_t RBG[4]={32,16,24,8}; 
+  static const uint8_t BRG[4]={24,16,32,8}; 
+  static const uint8_t BGR[4]={16,24,32,8}; 
+  static const uint8_t GBR[4]={16,32,24,8}; 
+  static const uint8_t GRB[4]={24,32,16,8}; 
+};
+
 ////////////////////////////////////////////
 //     Single-Wire RGB/RGBW NeoPixels     //
 ////////////////////////////////////////////
@@ -49,8 +59,8 @@ class Pixel : public Blinkable {
         struct {
           uint8_t white:8;
           uint8_t blue:8;
-          uint8_t red:8;
           uint8_t green:8;
+          uint8_t red:8;
         };
         uint32_t val;
       };
@@ -121,11 +131,11 @@ class Pixel : public Blinkable {
     struct pixel_status_t {
       int nPixels;
       Color *color;
-      int iBit;
       int iMem;
       boolean started;
       Pixel *px;
       boolean multiColor;
+      int iByte;
     };
   
     RFControl *rf;                 // Pixel utilizes RFControl
@@ -133,7 +143,8 @@ class Pixel : public Blinkable {
     uint32_t resetTime;            // minimum time (in usec) between pulse trains
     uint32_t txEndMask;            // mask for end-of-transmission interrupt
     uint32_t txThrMask;            // mask for threshold interrupt
-    uint32_t lastBit;              // 0=RGBW; 8=RGB
+    uint8_t bytesPerPixel;         // RGBW=4; RGB=3
+    const uint8_t *map;            // color map representing order in which color bytes are transmitted
     Color onColor;                 // color used for on() command
     
     const int memSize=sizeof(RMTMEM.chan[0].data32)/4;    // determine size (in pulses) of one channel
@@ -151,6 +162,7 @@ class Pixel : public Blinkable {
               
     int getPin(){return(rf->getPin());}                                                     // returns pixel pin if valid, else returns -1
     void setTiming(float high0, float low0, float high1, float low1, uint32_t lowReset);    // changes default timings for bit pulse - note parameters are in MICROSECONDS
+    void setColorMap(const uint8_t *map);                                                  // changes the default color map from GRBW to an alternative mapping - controls order in which color bytes are transmitted
         
     operator bool(){         // override boolean operator to return true/false if creation succeeded/failed
       return(*rf);
