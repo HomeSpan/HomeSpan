@@ -27,30 +27,68 @@
  
 #include "Pixel.h"
 
-#define PIXEL_PIN 26    // set this to whatever pin you are using - note pin cannot be "input only"
+#define PIXEL_PIN 32                   // set this to whatever pin you are using - note pin cannot be "input only"
+#define NPIXELS   60                   // set to number of pixels in strand
+#define COLORMAP  ColorMap::GRB        // sets the order in which color bytes are transmitted
+#define RGBW      true                 // set to true if RGBW, else false if just RGB
 
-Pixel testPixel(PIXEL_PIN);
+Pixel testPixel(PIXEL_PIN,RGBW);
 
 void setup() {
  
   Serial.begin(115200);
   delay(1000);
 
-  Serial.printf("Pixel Test on pin %d\n",PIXEL_PIN); 
+  Serial.printf("\n\nPixel Test on pin %d with %d pixels\n\n",PIXEL_PIN,NPIXELS); 
+  testPixel.setColorMap(COLORMAP);
+  
 }
 
 //////////////////////////////////////
 
 void loop(){
-  Serial.print("Red\n");
-  testPixel.set(Pixel::RGB(100,0,0));
+
+  Serial.printf("Red...");
+  for(int i=0;i<255;i++){
+    testPixel.set(Pixel::RGB(i,0,0,0),NPIXELS);
+    delay(10);
+  }
+  for(int i=255;i>=0;i--){
+    testPixel.set(Pixel::RGB(i,0,0,0),NPIXELS);
+    delay(10);
+  }
   delay(2000);  
 
-  Serial.print("Green\n");
-  testPixel.set(Pixel::RGB(0,100,0));
+  Serial.printf("Green...");
+  for(int i=0;i<255;i++){
+    testPixel.set(Pixel::RGB(0,i,0,0),NPIXELS);
+    delay(10);
+  }
+  for(int i=255;i>=0;i--){
+    testPixel.set(Pixel::RGB(0,i,0,0),NPIXELS);
+    delay(10);
+  }
   delay(2000);  
   
-  Serial.print("Blue\n");
-  testPixel.set(Pixel::RGB(0,0,100));
+  Serial.printf("Blue...");
+  for(int i=0;i<255;i++){
+    testPixel.set(Pixel::RGB(0,0,i,0),NPIXELS);
+    delay(10);
+  }
+  for(int i=255;i>=0;i--){
+    testPixel.set(Pixel::RGB(0,0,i,0),NPIXELS);
+    delay(10);
+  }
+  delay(2000);  
+
+  Serial.printf("White...\n");
+  for(int i=0;i<255;i++){
+    testPixel.set(Pixel::RGB(0,0,0,i),NPIXELS);
+    delay(10);
+  }
+  for(int i=255;i>=0;i--){
+    testPixel.set(Pixel::RGB(0,0,0,i),NPIXELS);
+    delay(10);
+  }
   delay(2000);  
 }

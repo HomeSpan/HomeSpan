@@ -39,12 +39,12 @@
 
 namespace ColorMap {
 
-  static const uint8_t RGB[4]={32,24,16,8}; 
-  static const uint8_t RBG[4]={32,16,24,8}; 
-  static const uint8_t BRG[4]={24,16,32,8}; 
-  static const uint8_t BGR[4]={16,24,32,8}; 
-  static const uint8_t GBR[4]={16,32,24,8}; 
-  static const uint8_t GRB[4]={24,32,16,8}; 
+  static const uint8_t RGB[4]={31,23,15,7}; 
+  static const uint8_t RBG[4]={31,15,23,7}; 
+  static const uint8_t BRG[4]={23,15,31,7}; 
+  static const uint8_t BGR[4]={15,23,31,7}; 
+  static const uint8_t GBR[4]={15,31,23,7}; 
+  static const uint8_t GRB[4]={23,31,15,7}; 
 };
 
 ////////////////////////////////////////////
