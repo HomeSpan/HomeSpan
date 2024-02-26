@@ -27,18 +27,34 @@
  
 #include "Pixel.h"
 
-#define PIXEL_PIN 26                  // set this to whatever pin you are using - note pin cannot be "input only"
-#define NPIXELS   8                   // set to number of pixels in strand
+#define MAX_BRIGHTNESS  255           // maximum brightness when flashing RGB [0-255]
 
-Pixel testPixel(PIXEL_PIN);
+#define PIXEL_PIN 26                  // set this to whatever pin you are using - note pin cannot be "input only"
+#define NPIXELS   8                  // set to number of pixels in strand
+
+Pixel testPixel(PIXEL_PIN, PixelType::RGBW);
 
 void setup() {
  
   Serial.begin(115200);
   delay(1000);
 
-  Serial.printf("\n\nPixel Test on pin %d with %d pixels\n\n",PIXEL_PIN,NPIXELS); 
+  Serial.printf("\n\nPixel Test on pin %d with %d pixels\n\n",PIXEL_PIN,NPIXELS);
+}
+
+//////////////////////////////////////
+
+void flashColor(boolean r, boolean g, boolean b, boolean w){
   
+  for(int i=0;i<MAX_BRIGHTNESS;i++){
+    testPixel.set(Pixel::RGB(i*r,i*g,i*b,i*w),NPIXELS);
+    delay(4);
+  }
+    
+  for(int i=MAX_BRIGHTNESS;i>=0;i--){
+    testPixel.set(Pixel::RGB(i*r,i*g,i*b,i*w),NPIXELS);
+    delay(4);
+  }
 }
 
 //////////////////////////////////////
@@ -46,46 +62,17 @@ void setup() {
 void loop(){
 
   Serial.printf("Red...");
-  for(int i=0;i<255;i++){
-    testPixel.set(Pixel::RGB(i,0,0,0),NPIXELS);
-    delay(10);
-  }
-  for(int i=255;i>=0;i--){
-    testPixel.set(Pixel::RGB(i,0,0,0),NPIXELS);
-    delay(10);
-  }
-  delay(2000);  
+  flashColor(1,0,0,0);
 
   Serial.printf("Green...");
-  for(int i=0;i<255;i++){
-    testPixel.set(Pixel::RGB(0,i,0,0),NPIXELS);
-    delay(10);
-  }
-  for(int i=255;i>=0;i--){
-    testPixel.set(Pixel::RGB(0,i,0,0),NPIXELS);
-    delay(10);
-  }
-  delay(2000);  
-  
-  Serial.printf("Blue...");
-  for(int i=0;i<255;i++){
-    testPixel.set(Pixel::RGB(0,0,i,0),NPIXELS);
-    delay(10);
-  }
-  for(int i=255;i>=0;i--){
-    testPixel.set(Pixel::RGB(0,0,i,0),NPIXELS);
-    delay(10);
-  }
-  delay(2000);  
+  flashColor(0,1,0,0);
 
-  Serial.printf("White...\n");
-  for(int i=0;i<255;i++){
-    testPixel.set(Pixel::RGB(0,0,0,i),NPIXELS);
-    delay(10);
-  }
-  for(int i=255;i>=0;i--){
-    testPixel.set(Pixel::RGB(0,0,0,i),NPIXELS);
-    delay(10);
-  }
-  delay(2000);  
+  Serial.printf("Blue...");
+  flashColor(0,0,1,0);
+
+  Serial.printf("White...");
+  flashColor(0,0,0,1);
+
+  Serial.printf("Pausing.\n");
+  delay(1000);
 }

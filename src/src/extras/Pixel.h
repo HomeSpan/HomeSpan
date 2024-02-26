@@ -41,7 +41,6 @@ typedef const uint8_t pixelType_t[];
 
 namespace PixelType {
   
-//  const uint8_t RGB[4]={31,23,15,0}; 
   pixelType_t RGB={31,23,15,0}; 
   pixelType_t RBG={31,15,23,0}; 
   pixelType_t BRG={23,15,31,0}; 
@@ -163,15 +162,15 @@ class Pixel : public Blinkable {
   
   public:
    
-    Pixel(int pin, pixelType_t pixelType=PixelType::GRB);                                   // creates addressable single-wire LED of pixelType connected to pin (such as the SK68 or WS28)   
-    Pixel(int pin, boolean isRGBW):Pixel(pin,isRGBW?PixelType::GRBW:PixelType::GRB){};      // old-style constructor included for backwards compatibility
-    void set(Color *c, int nPixels, boolean multiColor=true);                               // sets colors of nPixels based on array of Colors c; setting multiColor to false repeats Color in c[0] for all nPixels
-    void set(Color c, int nPixels=1){set(&c,nPixels,false);}                                // sets color of nPixels to be equal to specific Color c
+    Pixel(int pin, pixelType_t pixelType=PixelType::GRB);            // creates addressable single-wire LED of pixelType connected to pin (such as the SK68 or WS28)   
+    void set(Color *c, int nPixels, boolean multiColor=true);        // sets colors of nPixels based on array of Colors c; setting multiColor to false repeats Color in c[0] for all nPixels
+    void set(Color c, int nPixels=1){set(&c,nPixels,false);}         // sets color of nPixels to be equal to specific Color c
     
     static Color RGB(uint8_t r, uint8_t g, uint8_t b, uint8_t w=0){return(Color().RGB(r,g,b,w));}  // an alternative method for returning an RGB Color
     static Color HSV(float h, float s, float v, double w=0){return(Color().HSV(h,s,v,w));}         // an alternative method for returning an HSV Color
               
     int getPin(){return(rf->getPin());}                                                     // returns pixel pin if valid, else returns -1
+    boolean isRGBW(){return(bytesPerPixel==4);}                                             // returns true if RGBW LED, else false if RGB LED
     void setTiming(float high0, float low0, float high1, float low1, uint32_t lowReset);    // changes default timings for bit pulse - note parameters are in MICROSECONDS
         
     operator bool(){         // override boolean operator to return true/false if creation succeeded/failed
@@ -181,6 +180,10 @@ class Pixel : public Blinkable {
     void on() {set(onColor);}
     void off() {set(RGB(0,0,0,0));}
     Pixel *setOnColor(Color c){onColor=c;return(this);}
+
+    [[deprecated("Please use Pixel(int pin, pixelType_t pixelType) constructor instead.")]]
+    Pixel(int pin, boolean isRGBW):Pixel(pin,isRGBW?PixelType::GRBW:PixelType::GRB){};
+
 };
 
 ////////////////////////////////////////////
