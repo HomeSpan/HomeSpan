@@ -6,12 +6,21 @@ Both classes allow you to individually set each of the "pixels" in a multi-pixel
 
 The methods for both classes are nearly identical, which allows you to readily interchange code written for single-wire devices to use with two-wire devices (and vice-versa) with only minor modifications.
 
-## *Pixel(uint8_t pin, [boolean isRGBW])*
+## *Pixel(uint8_t pin, [pixelType_t pixelType])*
 
 Creating an instance of this **class** configures the specified *pin* to output a waveform signal suitable for controlling a single-wire, addressable RGB or RGBW LED device with an arbitrary number of pixels.  Such devices typically contain SK6812 or WS2812 LEDs.  Arguments, along with their defaults if left unspecified, are as follows:
 
   * *pin* - the pin on which the RGB control signal will be output; normally connected to the "data" input of the addressable LED device
-  * *isRGBW* - set to *true* for RGBW devices that contain 4-color (red/green/blue/white) LEDs; set to *false* for the more typical 3-color RGB devices.  Defaults to *false* if unspecified.  Note you must set the *isRGBW* flag to *true* if you are using an RGBW device, even if you do not intend on utilizing the white LED
+  * *pixelType* - controls the order in which color data is transmitted, as well as whether the device contains 3-color (red/green/blue) or&nbsp;4&#8209;color (red/green/blue/white) LEDs.  Pre-defined values for *pixelType* are provided in the **PixelType** namespace.  Choose from one of the following twelve formats:
+    
+    * *PixelType::RGB, PixelType::RBG, PixelType::BRG, PixelType::BGR, PixelType::GBR, PixelType::GRB*
+    * *PixelType::RGBW, PixelType::RBGW, PixelType::BRGW, PixelType::BGRW, PixelType::GBRW, PixelType::GRBW*
+      
+* Example: `Pixel myDevice(26, PixelType::BRGW);` creates a 4-color RGBW device attached to pin 26 where the colors are transmitted in the order blue, red, green, and then white 
+
+Note that *pixelType* is optional.  If left unspecified, the default value is *PixelType::GRB*.
+
+Since it is often not obvious which type of LED your specific device may have, HomeSpan includes a sketch designed to help you determine the correct value of *pixelType*.  See [*File → Examples → HomeSpan → Other Examples → PixelTester*](../examples/Other%20Examples/PixelTester) under the Arduino IDE for detailed instructions. 
 
 The two main methods to set pixel colors are:
 
@@ -47,12 +56,16 @@ The **Pixel** class also supports the following class-level methods as a conveni
   * equivalent to `return(Color().HSV(h,s,v,w));`
   * example: `Pixel::Color c[]={Pixel::HSV(120,100,100),Pixel::HSV(60,100,100),Pixel::HSV(0,100,100)};` to create a red-yellow-green traffic light pattern
 
-Finally, the **Pixel** class supports these two additional, but rarely-needed, methods:
+Finally, the **Pixel** class supports these additional, but less-used, methods:
 
 * `int getPin()`
 
   * returns the pin number, or -1 if the instantiation failed due to lack of resources 
 
+* `boolean isRGBW()`
+
+  * returns *true* if *pixelType* specified an RGBW LED, else *false* if just an RGB LED
+    
 * `void setTiming(float high0, float low0, float high1, float low1, uint32_t lowReset)`
 
   * the default timing parameters used by the **Pixel** class to generate the "data" signal needed to set the colors of an RGB LED device should work with most commercial products based on SK6812 or WS2812 driver chips.  Use this method **ONLY** if you need to override the class defaults and replace them with your own timing parameters, where
