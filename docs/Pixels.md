@@ -20,7 +20,8 @@ Creating an instance of this **class** configures the specified *pin* to output 
 
 Note that *pixelType* is optional.  If left unspecified, the default value is *PixelType::GRB*.
 
-Since it is often not obvious which type of LED your specific device may have, HomeSpan includes a sketch designed to help you determine the correct value of *pixelType*.  See [*File → Examples → HomeSpan → Other Examples → PixelTester*](../examples/Other%20Examples/PixelTester) under the Arduino IDE for detailed instructions. 
+> [!TIP]
+> Since it is often not obvious which type of LED your specific device may have, HomeSpan includes a sketch designed to help you determine the correct value of *pixelType*.  See [*File → Examples → HomeSpan → Other Examples → PixelTester*](../examples/Other%20Examples/PixelTester) under the Arduino IDE for detailed instructions.  Please use this tester sketch if you find the colors of your Pixel device are not matching what appears in the Home App.
 
 The two main methods to set pixel colors are:
 
@@ -56,7 +57,7 @@ The **Pixel** class also supports the following class-level methods as a conveni
   * equivalent to `return(Color().HSV(h,s,v,w));`
   * example: `Pixel::Color c[]={Pixel::HSV(120,100,100),Pixel::HSV(60,100,100),Pixel::HSV(0,100,100)};` to create a red-yellow-green traffic light pattern
 
-Finally, the **Pixel** class supports these additional, but less-used, methods:
+Finally, the **Pixel** class supports these additional methods:
 
 * `int getPin()`
 
@@ -72,7 +73,10 @@ Finally, the **Pixel** class supports these additional, but less-used, methods:
     * *high0* and *low0* specify the duration (in microseconds) of the high phase and low phase for a pulse encoding a zero-bit;
     * *high1* and *low1* specify the duration (in microseconds) of the high phase and low phase for a pulse encoding a one-bit; and
     * *lowReset* specifies the delay (in microseconds) representing the end of a pulse stream
-   * for reference, the **Pixel** class uses the following defaults: *high0=0.32𝛍s, low0=0.88𝛍s, high1=0.64𝛍s, low1=0.56𝛍s, lowReset=80.0𝛍s* 
+   * for reference, the **Pixel** class uses the following defaults: *high0=0.32𝛍s, low0=0.88𝛍s, high1=0.64𝛍s, low1=0.56𝛍s, lowReset=80.0𝛍s*
+ 
+> [!TIP]
+> If your LED colors are flickering, this is likely due to a mismatch in timing parameters.  To solve, please search the web for a specifications document for the exact **chip** used by your specific device.  These documents generally provide a table listing the durations of the HIGH and LOW periods required to transmit a binary 1 or binary 0.  You can then use the `setTiming` method above to set the timing parameters accordingly.
 
 ### Resource Usage and Resource Conflicts
 
