@@ -215,9 +215,6 @@ class Span{
   boolean isBridge=true;                        // flag indicating whether device is configured as a bridge (i.e. first Accessory contains nothing but AccessoryInformation and HAPProtocolInformation)
   HapQR qrCode;                                 // optional QR Code to use for pairing
   const char *sketchVersion="n/a";              // version of the sketch
-  nvs_handle charNVS;                           // handle for non-volatile-storage of Characteristics data
-  nvs_handle wifiNVS=0;                         // handle for non-volatile-storage of WiFi data
-  nvs_handle otaNVS;                            // handle for non-volatile storage of OTA data
   char pairingCodeCommand[12]="";               // user-specified Pairing Code - only needed if Pairing Setup Code is specified in sketch using setPairingCode()
   String lastClientIP="0.0.0.0";                // IP address of last client accessing device through encrypted channel
   boolean newCode;                              // flag indicating new application code has been loaded (based on keeping track of app SHA256)
@@ -225,6 +222,11 @@ class Span{
   uint8_t rebootCount=0;                        // counts number of times device was rebooted (used in optional Reboot callback)
   uint32_t rebootCallbackTime;                  // length of time to wait (in milliseconds) before calling optional Reboot callback
   
+  nvs_handle charNVS;                           // handle for non-volatile-storage of Characteristics data
+  nvs_handle wifiNVS=0;                         // handle for non-volatile-storage of WiFi data
+  nvs_handle otaNVS;                            // handle for non-volatile storage of OTA data
+  nvs_handle srpNVS;                            // handle for non-volatile storage of SRP data
+
   int connected=0;                              // WiFi connection status (increments upon each connect and disconnect)
   unsigned long waitTime=60000;                 // time to wait (in milliseconds) between WiFi connection attempts
   unsigned long alarmConnect=0;                 // time after which WiFi connection attempt should be tried again
@@ -291,6 +293,8 @@ class Span{
   
   public:
 
+  Span();   // constructor
+
   void begin(Category catID=DEFAULT_CATEGORY,
              const char *displayName=DEFAULT_DISPLAY_NAME,
              const char *hostNameBase=DEFAULT_HOST_NAME,
@@ -342,7 +346,7 @@ class Span{
   Span& setWifiCredentials(const char *ssid, const char *pwd);                           // sets WiFi Credentials
   Span& setStatusCallback(void (*f)(HS_STATUS status)){statusCallback=f;return(*this);}  // sets an optional user-defined function to call when HomeSpan status changes
   const char* statusString(HS_STATUS s);                                                 // returns char string for HomeSpan status change messages
-  Span& setPairingCode(const char *s);                                                   // sets the Pairing Code - use is NOT recommended.  Use 'S' from CLI instead
+  Span& setPairingCode(const char *s, boolean progCall=true);                            // sets the Pairing Code - use is NOT recommended.  Use 'S' from CLI instead
   void deleteStoredValues(){processSerialCommand("V");}                                  // deletes stored Characteristic values from NVS  
 
   int enableOTA(boolean auth=true, boolean safeLoad=true){return(spanOTA.init(auth, safeLoad, NULL));}   // enables Over-the-Air updates, with (auth=true) or without (auth=false) authorization password  

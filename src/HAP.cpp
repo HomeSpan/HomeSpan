@@ -38,9 +38,6 @@ void HAPClient::init(){
 
   size_t len;                                   // not used but required to read blobs from NVS
 
-  nvs_open("SRP",NVS_READWRITE,&srpNVS);        // open SRP data namespace in NVS 
-  nvs_open("HAP",NVS_READWRITE,&hapNVS);        // open HAP data namespace in NVS
-
   if(strlen(homeSpan.spanOTA.otaPwd)==0){                                 // OTA password has not been specified in sketch
     if(!nvs_get_str(homeSpan.otaNVS,"OTADATA",NULL,&len)){                // if found OTA data in NVS...
     nvs_get_str(homeSpan.otaNVS,"OTADATA",homeSpan.spanOTA.otaPwd,&len);  // ...retrieve data.
@@ -49,9 +46,6 @@ void HAPClient::init(){
     }
   }
   
-  if(nvs_get_blob(srpNVS,"VERIFYDATA",NULL,&len))                         // if Pair-Setup verification code data not found in NVS
-    homeSpan.setPairingCode(DEFAULT_SETUP_CODE);                          // create and save verification from using Pairing Setup Code
-
   if(!strlen(homeSpan.qrID)){                                             // if Setup ID has not been specified in sketch
     if(!nvs_get_str(hapNVS,"SETUPID",NULL,&len)){                         // check for saved value
       nvs_get_str(hapNVS,"SETUPID",homeSpan.qrID,&len);                   // retrieve data
@@ -59,6 +53,9 @@ void HAPClient::init(){
       sprintf(homeSpan.qrID,"%s",DEFAULT_QR_ID);                          // use default
    }
   }
+
+  if(nvs_get_blob(homeSpan.srpNVS,"VERIFYDATA",NULL,&len))                // if Pair-Setup verification code data not found in NVS
+    homeSpan.setPairingCode(DEFAULT_SETUP_CODE,false);                    // create and save verification from default Pairing Setup Code 
   
   if(!nvs_get_blob(hapNVS,"ACCESSORY",NULL,&len)){                        // if found long-term Accessory data in NVS
     nvs_get_blob(hapNVS,"ACCESSORY",&accessory,&len);                     // retrieve data
@@ -316,6 +313,8 @@ int HAPClient::unauthorizedError(){
 
 int HAPClient::postPairSetupURL(uint8_t *content, size_t len){
 
+  static SRP6A *srp=NULL;   // must persist across multiple calls to postPairSetupURL
+
   HAPTLV iosTLV;
   HAPTLV responseTLV;
   HAPTLV subTLV;
@@ -378,7 +377,7 @@ int HAPClient::postPairSetupURL(uint8_t *content, size_t len){
         
       TempBuffer<Verification> verifyData;                                          // retrieve verification data (should already be stored in NVS)
       size_t len=verifyData.len();
-      nvs_get_blob(srpNVS,"VERIFYDATA",verifyData,&len);
+      nvs_get_blob(homeSpan.srpNVS,"VERIFYDATA",verifyData,&len);
 
       responseTLV.add(kTLVType_Salt,16,verifyData.get()->salt);                     // write Salt from verification data into TLV
       
@@ -542,6 +541,7 @@ int HAPClient::postPairSetupURL(uint8_t *content, size_t len){
       tlvRespond(responseTLV);                              // send response to client
 
       delete srp;                                           // delete SRP - no longer needed once pairing is completed
+      srp=NULL;                                             // reset to NULL
 
       mdns_service_txt_item_set("_hap","_tcp","sf","0");    // broadcast new status
       
@@ -1691,11 +1691,10 @@ void HapOut::HapStreamBuffer::printFormatted(char *buf, size_t nChars, size_t ns
 // instantiate all static HAP Client structures and data
 
 nvs_handle HAPClient::hapNVS;
-nvs_handle HAPClient::srpNVS;
 HKDF HAPClient::hkdf;                                   
 pairState HAPClient::pairStatus;                        
 Accessory HAPClient::accessory;                         
 list<Controller, Mallocator<Controller>> HAPClient::controllerList;
-SRP6A *HAPClient::srp=NULL;
+//SRP6A *HAPClient::srp=NULL;
 int HAPClient::conNum;
  

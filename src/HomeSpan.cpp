@@ -45,13 +45,33 @@ const __attribute__((section(".rodata_custom_desc"))) SpanPartition spanPartitio
 
 using namespace Utils;
 
-HapOut hapOut;                      // Specialized output stream that can both print to serial monitor and encrypt/transmit to HAP Clients with minimal memory usage (global-scope)
+HapOut hapOut;                      // Specialized output stream that can both print to serial monitor and encrypt/transmit to HAP Clients with minimal memory usage (global-scoped variable)
 HAPClient **hap;                    // HAP Client structure containing HTTP client connections, parsing routines, and state variables (global-scoped variable)
 Span homeSpan;                      // HAP Attributes database and all related control functions for this Accessory (global-scoped variable)
-HapCharacteristics hapChars;        // Instantiation of all HAP Characteristics (used to create SpanCharacteristics)
+HapCharacteristics hapChars;        // Instantiation of all HAP Characteristics used to create SpanCharacteristics (global-scoped variable)
 
 ///////////////////////////////
 //         Span              //
+///////////////////////////////
+
+Span::Span(){
+
+  nvs_flash_init();                                       // initialize non-volatile-storage partition in flash 
+
+  nvs_open("CHAR",NVS_READWRITE,&charNVS);                // open Characteristic data namespace in NVS
+  nvs_open("WIFI",NVS_READWRITE,&wifiNVS);                // open WIFI data namespace in NVS
+  nvs_open("OTA",NVS_READWRITE,&otaNVS);                  // open OTA data namespace in NVS
+
+  nvs_open("SRP",NVS_READWRITE,&srpNVS);                  // open SRP data namespace in NVS 
+  nvs_open("HAP",NVS_READWRITE,&HAPClient::hapNVS);       // open HAP data namespace in NVS
+  
+  nvs_get_u8(wifiNVS,"REBOOTS",&rebootCount);
+  rebootCount++;
+  nvs_set_u8(wifiNVS,"REBOOTS",rebootCount);
+  nvs_commit(wifiNVS);
+
+}
+
 ///////////////////////////////
 
 void Span::begin(Category catID, const char *displayName, const char *hostNameBase, const char *modelName){
@@ -67,7 +87,7 @@ void Span::begin(Category catID, const char *displayName, const char *hostNameBa
 
   statusLED=new Blinker(statusDevice,autoOffLED);             // create Status LED, even is statusDevice is NULL
 
-  esp_task_wdt_delete(xTaskGetIdleTaskHandleForCPU(0));       // required to avoid watchdog timeout messages from ESP32-C3
+  esp_task_wdt_delete(xTaskGetIdleTaskHandleForCPU(0));       // required to avoid watchdog timeout messages from ESP32-C3  
 
   if(requestedMaxCon<maxConnections)                          // if specific request for max connections is less than computed max connections
     maxConnections=requestedMaxCon;                           // over-ride max connections with requested value
@@ -77,17 +97,7 @@ void Span::begin(Category catID, const char *displayName, const char *hostNameBa
     hap[i]=new HAPClient;
 
   hapServer=new WiFiServer(tcpPortNum);
-
-  nvs_flash_init();                             // initialize non-volatile-storage partition in flash  
-  nvs_open("CHAR",NVS_READWRITE,&charNVS);      // open Characteristic data namespace in NVS
-  nvs_open("WIFI",NVS_READWRITE,&wifiNVS);      // open WIFI data namespace in NVS
-  nvs_open("OTA",NVS_READWRITE,&otaNVS);        // open OTA data namespace in NVS
-
-  nvs_get_u8(wifiNVS,"REBOOTS",&rebootCount);
-  rebootCount++;
-  nvs_set_u8(wifiNVS,"REBOOTS",rebootCount);
-  nvs_commit(wifiNVS);
-  
+ 
   size_t len;
 
   if(strlen(network.wifiData.ssid)){                                                // if setWifiCredentials was already called
@@ -677,7 +687,7 @@ void Span::processSerialCommand(const char *c){
 
     case 'S': {
 
-      setPairingCode(c+1);          
+      setPairingCode(c+1,false);          
     }
     break;
 
@@ -736,14 +746,11 @@ void Span::processSerialCommand(const char *c){
       nvs_set_blob(wifiNVS,"WIFIDATA",&network.wifiData,sizeof(network.wifiData));    // update data
       nvs_commit(wifiNVS);                                                            // commit to NVS
       LOG0("\n*** Credentials saved!\n");
-      if(strlen(network.setupCode)){
-        char s[10];
-        sprintf(s,"S%s",network.setupCode);
-        processSerialCommand(s);
-      } else {
+      if(strlen(network.setupCode))
+        setPairingCode(network.setupCode,false);
+      else
         LOG0("*** Setup Code Unchanged\n");
-      }
-      
+            
       LOG0("\n*** Restarting...\n\n");
       STATUS_UPDATE(start(LED_ALERT),HS_AP_TERMINATED)
       reboot();
@@ -1204,33 +1211,42 @@ const char* Span::statusString(HS_STATUS s){
 
 ///////////////////////////////
 
-Span& Span::setPairingCode(const char *s){
+Span& Span::setPairingCode(const char *s, boolean progCall){
    
   char setupCode[10];
 
   sscanf(s," %9[0-9]",setupCode);
 
   if(strlen(setupCode)!=8){
-    LOG0("\n*** Invalid request to change Setup Code.  Code must be exactly 8 digits.\n\n");
+    LOG0("\n*** Invalid request to change Setup Code to '%s'.  Code must be exactly 8 digits.\n\n",s);
+    if(progCall){
+      LOG0("=== PROGRAM HALTED ===");
+      while(1);
+    }
     return(*this);
   }   
 
   if(!network.allowedCode(setupCode)){
-    LOG0("\n*** Invalid request to change Setup Code.  Code too simple.\n\n");
+    LOG0("\n*** Invalid request to change Setup Code to '%s'.  Code too simple.\n\n",s);
+    if(progCall){
+      LOG0("=== PROGRAM HALTED ===");
+      while(1);
+    }
     return(*this);
   }
 
   TempBuffer<Verification> verifyData;       // temporary storage for verification data
   SRP6A *srp=new SRP6A;                      // create temporary instance of SRP
+
+  if(!progCall)
+    LOG0("\nGenerating new SRP verification data for Setup Code: %.3s-%.2s-%.3s ... ",setupCode,setupCode+3,setupCode+5);
+
+  srp->createVerifyCode(setupCode,verifyData);                                       // create random salt and compute verification code from specified Setup Code
+  nvs_set_blob(srpNVS,"VERIFYDATA",verifyData,verifyData.len());                     // update data
+  nvs_commit(srpNVS);                                                                // commit to NVS
   
-  LOG0("\nGenerating SRP verification data for new Setup Code: %.3s-%.2s-%.3s ... ",setupCode,setupCode+3,setupCode+5);
-  
-  srp->createVerifyCode(setupCode,verifyData);                                                  // create random salt and compute verification code from specified Setup Code
-  nvs_set_blob(HAPClient::srpNVS,"VERIFYDATA",verifyData,verifyData.len());                     // update data
-  nvs_commit(HAPClient::srpNVS);                                                                // commit to NVS
-  
-  LOG0("New Code Saved!\n");
-  LOG0("Setup Payload for Optional QR Code: %s\n\n",qrCode.get(atoi(setupCode),qrID,atoi(category)));
+  if(!progCall)
+    LOG0("New Code Saved!\nSetup Payload for Optional QR Code: %s\n\n",qrCode.get(atoi(setupCode),qrID,atoi(category)));
 
   delete srp;
   return(*this);

@@ -27,7 +27,7 @@
 
 #include "HomeSpan.h"
 
-#define MAX_LIGHTS  2
+#define MAX_LIGHTS  1
 
 void setup() {
  
@@ -35,6 +35,7 @@ void setup() {
 
   homeSpan.setLogLevel(2);
   homeSpan.enableWebLog(50,"pool.ntp.org","UTC",NULL);
+  homeSpan.setPairingCode("12345670");
 //  homeSpan.enableWebLog(50,"pool.ntp.org","UTC","myStatus");
 //  homeSpan.enableWebLog(50,NULL,NULL,NULL);
 
