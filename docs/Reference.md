@@ -196,7 +196,7 @@ The following **optional** `homeSpan` methods enable additional features and pro
   * sets the Setup Pairing Code to *s*, which **must** be exactly eight numerical digits (no dashes)
   * example: `homeSpan.setPairingCode("46637726");`
   * a hashed version of the Pairing Code will be saved to the device's non-volatile storage, overwriting any currently-stored Pairing Code
-  * if *s* contains an invalid code, an error will be reported and the code will *not* be saved.  Instead, the currently-stored Pairing Code (or the HomeSpan default Pairing Code if no code has been stored) will be used
+  * this method operated silently unless *s* contains an invalid code, in which case a fatal error will be reported to the Serial Monitor, the code will *not* be saved, and the sketch will be HALTED
   * :warning: SECURTY WARNING: Hardcoding a device's Pairing Code into your sketch is considered a security risk and is **not** recommended.  Instead, use one of the more secure methods provided by HomeSpan, such as typing 'S \<code\>' from the CLI, or launching HomeSpan's Access Point, to set your Pairing Code without hardcoding it into your sketch
 
 * `Span& setSketchVersion(const char *sVer)`
