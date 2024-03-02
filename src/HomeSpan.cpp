@@ -63,7 +63,7 @@ Span::Span(){
   nvs_open("OTA",NVS_READWRITE,&otaNVS);                  // open OTA data namespace in NVS
 
   nvs_open("SRP",NVS_READWRITE,&srpNVS);                  // open SRP data namespace in NVS 
-  nvs_open("HAP",NVS_READWRITE,&HAPClient::hapNVS);       // open HAP data namespace in NVS
+  nvs_open("HAP",NVS_READWRITE,&hapNVS);                  // open HAP data namespace in NVS
   
   nvs_get_u8(wifiNVS,"REBOOTS",&rebootCount);
   rebootCount++;
@@ -268,7 +268,7 @@ void Span::pollTask() {
     LOG1("\n");
     LOG2("\n");
 
-    hap[freeSlot]->cPair=NULL;                   // reset pointer to verified ID
+    hap[freeSlot]->cPair=NULL;                  // reset pointer to verified ID
     homeSpan.clearNotify(freeSlot);             // clear all notification requests for this connection
     HAPClient::pairStatus=pairState_M1;         // reset starting PAIR STATE (which may be needed if Accessory failed in middle of pair-setup)
   }
@@ -648,8 +648,8 @@ void Span::processSerialCommand(const char *c){
       if(strlen(s)==4 && strlen(tBuf)==4){
         sprintf(qrID,"%s",tBuf);
         LOG0("\nChanging default Setup ID for QR Code to: '%s'.  Will take effect after next restart.\n\n",qrID);
-        nvs_set_str(HAPClient::hapNVS,"SETUPID",qrID);
-        nvs_commit(HAPClient::hapNVS);          
+        nvs_set_str(hapNVS,"SETUPID",qrID);
+        nvs_commit(hapNVS);          
       } else {
         LOG0("\n*** Invalid request to change Setup ID for QR Code to: '%s'.  Setup ID must be exactly 4 alphanumeric characters (0-9, A-Z, and a-z).\n\n",s);
       }        
@@ -777,8 +777,8 @@ void Span::processSerialCommand(const char *c){
 
     case 'H': {
       
-      nvs_erase_all(HAPClient::hapNVS);
-      nvs_commit(HAPClient::hapNVS);      
+      nvs_erase_all(hapNVS);
+      nvs_commit(hapNVS);      
       LOG0("\n*** HomeSpan Device ID and Pairing Data DELETED!  Restarting...\n\n");
       reboot();
     }
@@ -792,8 +792,8 @@ void Span::processSerialCommand(const char *c){
 
     case 'F': {
       
-      nvs_erase_all(HAPClient::hapNVS);
-      nvs_commit(HAPClient::hapNVS);      
+      nvs_erase_all(hapNVS);
+      nvs_commit(hapNVS);      
       nvs_erase_all(wifiNVS);
       nvs_commit(wifiNVS);   
       nvs_erase_all(charNVS);
@@ -1078,7 +1078,7 @@ void Span::processSerialCommand(const char *c){
         readSerial(qSave,1);
         if(qSave[0]=='y'){
           LOG0("(yes)\nData saved!  Rebooting...");
-          nvs_set_blob(HAPClient::hapNVS,"ACCESSORY",&HAPClient::accessory,sizeof(HAPClient::accessory));           // update data
+          nvs_set_blob(hapNVS,"ACCESSORY",&HAPClient::accessory,sizeof(HAPClient::accessory));           // update data (commit is included in saveControllers below)
           HAPClient::saveControllers();
           reboot();
         } else
@@ -1578,8 +1578,8 @@ boolean Span::updateDatabase(boolean updateMDNS){
     if(hapConfig.configNumber==65536)                       // reached max value
       hapConfig.configNumber=1;                             // reset to 1
                    
-    nvs_set_blob(HAPClient::hapNVS,"HAPHASH",&hapConfig,sizeof(hapConfig));     // update data
-    nvs_commit(HAPClient::hapNVS);                                              // commit to NVS
+    nvs_set_blob(hapNVS,"HAPHASH",&hapConfig,sizeof(hapConfig));     // update data
+    nvs_commit(hapNVS);                                              // commit to NVS
     changed=true;
 
     if(updateMDNS){

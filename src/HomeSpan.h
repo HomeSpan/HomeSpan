@@ -226,6 +226,7 @@ class Span{
   nvs_handle wifiNVS=0;                         // handle for non-volatile-storage of WiFi data
   nvs_handle otaNVS;                            // handle for non-volatile storage of OTA data
   nvs_handle srpNVS;                            // handle for non-volatile storage of SRP data
+  nvs_handle hapNVS;                            // handle for non-volatile-storage of HAP data
 
   int connected=0;                              // WiFi connection status (increments upon each connect and disconnect)
   unsigned long waitTime=60000;                 // time to wait (in milliseconds) between WiFi connection attempts

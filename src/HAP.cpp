@@ -47,8 +47,8 @@ void HAPClient::init(){
   }
   
   if(!strlen(homeSpan.qrID)){                                             // if Setup ID has not been specified in sketch
-    if(!nvs_get_str(hapNVS,"SETUPID",NULL,&len)){                         // check for saved value
-      nvs_get_str(hapNVS,"SETUPID",homeSpan.qrID,&len);                   // retrieve data
+    if(!nvs_get_str(homeSpan.hapNVS,"SETUPID",NULL,&len)){                // check for saved value
+      nvs_get_str(homeSpan.hapNVS,"SETUPID",homeSpan.qrID,&len);          // retrieve data
     } else {
       sprintf(homeSpan.qrID,"%s",DEFAULT_QR_ID);                          // use default
    }
@@ -57,8 +57,8 @@ void HAPClient::init(){
   if(nvs_get_blob(homeSpan.srpNVS,"VERIFYDATA",NULL,&len))                // if Pair-Setup verification code data not found in NVS
     homeSpan.setPairingCode(DEFAULT_SETUP_CODE,false);                    // create and save verification from default Pairing Setup Code 
   
-  if(!nvs_get_blob(hapNVS,"ACCESSORY",NULL,&len)){                        // if found long-term Accessory data in NVS
-    nvs_get_blob(hapNVS,"ACCESSORY",&accessory,&len);                     // retrieve data
+  if(!nvs_get_blob(homeSpan.hapNVS,"ACCESSORY",NULL,&len)){               // if found long-term Accessory data in NVS
+    nvs_get_blob(homeSpan.hapNVS,"ACCESSORY",&accessory,&len);            // retrieve data
   } else {      
     LOG0("Generating new random Accessory ID and Long-Term Ed25519 Signature Keys...\n\n");
     uint8_t buf[6];
@@ -71,13 +71,13 @@ void HAPClient::init(){
     memcpy(accessory.ID,cBuf,17);                                        // copy into Accessory ID for permanent storage
     crypto_sign_keypair(accessory.LTPK,accessory.LTSK);                  // generate new random set of keys using libsodium public-key signature
     
-    nvs_set_blob(hapNVS,"ACCESSORY",&accessory,sizeof(accessory));       // update data
-    nvs_commit(hapNVS);                                                  // commit to NVS
+    nvs_set_blob(homeSpan.hapNVS,"ACCESSORY",&accessory,sizeof(accessory));       // update data
+    nvs_commit(homeSpan.hapNVS);                                                  // commit to NVS
   }
 
-  if(!nvs_get_blob(hapNVS,"CONTROLLERS",NULL,&len)){                     // if found long-term Controller Pairings data from NVS
+  if(!nvs_get_blob(homeSpan.hapNVS,"CONTROLLERS",NULL,&len)){            // if found long-term Controller Pairings data from NVS
     TempBuffer<Controller> tBuf(len/sizeof(Controller));
-    nvs_get_blob(hapNVS,"CONTROLLERS",tBuf,&len);                        // retrieve data
+    nvs_get_blob(homeSpan.hapNVS,"CONTROLLERS",tBuf,&len);               // retrieve data
     for(int i=0;i<tBuf.size();i++){
       if(tBuf[i].allocated)
         controllerList.push_back(tBuf[i]);
@@ -92,12 +92,12 @@ void HAPClient::init(){
 
   printControllers();                                                         
 
-  if(!nvs_get_blob(hapNVS,"HAPHASH",NULL,&len)){                 // if found HAP HASH structure
-    nvs_get_blob(hapNVS,"HAPHASH",&homeSpan.hapConfig,&len);     // retrieve data    
+  if(!nvs_get_blob(homeSpan.hapNVS,"HAPHASH",NULL,&len)){                 // if found HAP HASH structure
+    nvs_get_blob(homeSpan.hapNVS,"HAPHASH",&homeSpan.hapConfig,&len);     // retrieve data    
   } else {
     LOG0("Resetting Database Hash...\n");
-    nvs_set_blob(hapNVS,"HAPHASH",&homeSpan.hapConfig,sizeof(homeSpan.hapConfig));     // save data (will default to all zero values, which will then be updated below)
-    nvs_commit(hapNVS);                                                                // commit to NVS
+    nvs_set_blob(homeSpan.hapNVS,"HAPHASH",&homeSpan.hapConfig,sizeof(homeSpan.hapConfig));     // save data (will default to all zero values, which will then be updated below)
+    nvs_commit(homeSpan.hapNVS);                                                                // commit to NVS
   }
 
   if(homeSpan.updateDatabase(false)){       // create Configuration Number and Loop vector
@@ -1504,15 +1504,15 @@ void HAPClient::printControllers(int minLogLevel){
 void HAPClient::saveControllers(){
 
   if(controllerList.empty()){
-    nvs_erase_key(hapNVS,"CONTROLLERS");
+    nvs_erase_key(homeSpan.hapNVS,"CONTROLLERS");
     return;
   }
 
   TempBuffer<Controller> tBuf(controllerList.size());                    // create temporary buffer to hold Controller data
-  std::copy(controllerList.begin(),controllerList.end(),tBuf.get());      // copy data from linked list to buffer
+  std::copy(controllerList.begin(),controllerList.end(),tBuf.get());     // copy data from linked list to buffer
   
-  nvs_set_blob(hapNVS,"CONTROLLERS",tBuf,tBuf.len());      // update data
-  nvs_commit(hapNVS);                                            // commit to NVS  
+  nvs_set_blob(homeSpan.hapNVS,"CONTROLLERS",tBuf,tBuf.len());           // update data
+  nvs_commit(homeSpan.hapNVS);                                           // commit to NVS  
 }
 
 
@@ -1690,11 +1690,9 @@ void HapOut::HapStreamBuffer::printFormatted(char *buf, size_t nChars, size_t ns
 
 // instantiate all static HAP Client structures and data
 
-nvs_handle HAPClient::hapNVS;
 HKDF HAPClient::hkdf;                                   
 pairState HAPClient::pairStatus;                        
 Accessory HAPClient::accessory;                         
 list<Controller, Mallocator<Controller>> HAPClient::controllerList;
-//SRP6A *HAPClient::srp=NULL;
 int HAPClient::conNum;
  
