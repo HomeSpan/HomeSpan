@@ -52,81 +52,24 @@ HomeSpan requires version 2.0.0 or later of the [Arduino-ESP32 Board Manager](ht
   * Launch the WiFi Access Point
 * A standalone, detailed End-User Guide
 
-## ❗Latest Update - HomeSpan 1.9.0 (2/17/2024)
+## ❗Latest Update - HomeSpan 1.9.1 (MM/DD/YYY)
 
-* **HomeSpan has been optimized to use significantly less RAM!**
+* **Added support for more Pixel chips**
 
-  * supports approximately **TWICE** the number of Accessories using the same amount of memory
-  * minimized memory use also means much more room for users to add non-HomeSpan features to their sketch without running out of memory, especially if the non-HomeSpan code consumes a lot of stack space
-  * HomeSpan now automatically detects the presence of **PSRAM** (SPIRAM) and will utilize that extra memory to the largest extent possible to keep internal RAM free for certain HomeSpan functions and ESP32 functions (e.g. WiFi) that require internal RAM.  Also keeps internal RAM free for use by any non-HomeSpan code that does not (or cannot) use PSRAM
-  * increased HomeSpan's 41-Accessory limit to a 150-Accessory Limit (as specified by HAP) since it is now possible to create a device with many more than 41 Accessories without running out of memory, especially if PSRAM is used
+  * new constructor `Pixel(uint8_t pin, [pixelType_t pixelType])` allows your to set the order in which colors are transmitted to the pixel chip, where *pixelType* is one of the following:
+    * PixelType::RGB, PixelType::RBG, PixelType::BRG, PixelType::BGR, PixelType::GBR, PixelType::GRB
+    * PixelType::RGBW, PixelType::RBGW, PixelType::BRGW, PixelType::BGRW, PixelType::GBRW, PixelType::GRBW* 
+  * deprecated previous constructor `Pixel(uint8_t pin, boolean isRGBW)`
+    * this constructor will continue to work, but you will receive a warning during compilation that it has been deprecated
+    * users should switch to the new constructor to avoid potential compatibility issues with future versions of HomeSpan
+  * added new method `boolean isRGBW()`
+    * returns *true* if Pixel was constructed as RGBW, else *false* if constructed as RGB only (i.e. no white LED)
+  * created new PixelTester sketch (found under Other-> Examples) to aid in determining the *pixelType* for any LED Strip
 
-* **HomeSpan has been optimized to use significantly less Non-Volatile Storage (NVS)**
+* **Fixed bug introduced in 1.9.0 that prevented `homeSpan.setPairingCode()` from saving (and subsequently using) the request Setup Pairing Code**
 
-  * allows you to use NVS to save the values of a many more Characteristics 
-  * see the newly-added [CustomNVSPartition](docs/Tutorials.md#customnvspartition) example that demonstrates how to create your own Partition Scheme to further expand the size of the NVS partition beyond the ESP32 default to support sketches with a large number of Accessories each configured to use NVS to save the values of many Characteristics
-
-* **New features and documentation for Services and Characteristics**
-  * created "enumerated constants" (e.g. *SWING_ENABLED*, *HUMIDIFYING*, etc.) for every applicable Characteristic that can be used instead of integers when reading and writing values
-    * very helpful since Apple is no longer publishing its non-commercial HAP document that provided a list and description of the states for each Characteristic
-    * example:  `if(target.getNewVal()==target.ARM_STAY) {...}`
-  * added ability to properly name individual Services within a single Accessory using new **Characteristic::ConfiguredName()**
-    * see revised [Example 11 - ServiceNames](docs/Tutorials.md#example-11---servicenames) for details
-  * new [Services and Characteristics](docs/ServiceList.md) page now provides functional descriptions and detailed specifications for every Service and Characteristic supported by HomeSpan, including a list of the enumerated constants available for every Characteristic
-   
-* **New ability to use *Inverted Buttons* and *Touch Sensors* as a Control Button**
-
-  * adds *triggerType* as a second, optional argument to `Span& setControlPin(uint8_t pin, triggerType_t triggerType)`
-  * supports TRIGGER_ON_LOW, TRIGGER_ON_HIGH, TRIGGER_ON_TOUCH, or any user-defined function
-  * see [API Reference](docs/Reference.md) for details
-
-* **New ability to "remotely" trigger user-defined actions by repeatedly power-cycling the device**
-
-  * adds new homeSpan method `Span& setRebootCallback(void (*func)(uint8_t count), uint32_t upTime=5000)`
-  * the parameter *count*, which is passed by HomeSpan to *func*, indicates the number of "short" reboots that have occurred prior to the current reboot, where a "short" reboot is any that occurs before *upTime* milliseconds have elapsed
-  * can be use to remotely restore a device that is not easily accessible to a pre-defined state
-  * see [API Reference](docs/Reference.md) for details
-
-* **Added two new Stepper Motor Drivers**
-  * **Stepper_UNIPOLAR**: a generic driver for any 4-wire center-tapped unipolar motor
-  * **Stepper_ULN2003A**: support for the ULN2003A driver board
-  * see [Stepper Motor Control Stepper](docs/Stepper.md) for details
-
-* **Additional Web Log functionality**
-
-  * adds new homeSpan method `Span& setWebLogCallback(void (*func)(String &))`
-    * allows users to include additional data and custom HTML in the Web Log
-  * adds new homeSpan method `getWebLog(void (*f)(const char *, void *), void *args)`
-    * allows users to retrieve the underlying Web Log HTML from within sketch
-  * modified `enableWebLog()` so that it can be used to set the time from an NTP server without actually serving Web Log pages
-  * see [Message Logging](docs/Logging.md) for details
-
-* **Added ability to "chain" *homeSpan* methods**
-
-  * converted various *homeSpan* methods that previously returned *void* to now return *Span &*
-  * example: `homeSpan.setControlPin(21).setStatusPin(13);`
-  * see [API Reference](docs/Reference.md) for details
-
-* **Added ability to disable SpanPoint encryption**
-
-  * without encryption increases the maximum number of allowed SpanPoint devices from 7 to 20
-  * see [SpanPoint](docs/NOW.md) for details
- 
-* **Other new *homeSpan* methods included in this release:**
-
-  * `Span& setVerboseWifiReconnect()` - optionally suppresses "Trying to connect to..." messages
-  * `Span& setWifiCallbackAll()` - provides an optional callback every time WiFi is connected *or re-connected*
-  * `TaskHandle_t getAutoPollTask()` - returns the Task Handle for the HomeSpan Auto Poll Task
- 
-* **Removed dependencies on various "extra" `#include` files**
-  * the following \#include files are now embedded in *HomeSpan.h* and **should not be specified in any sketch:**
-    * *extras/Pixel.h*
-    * *extras/RFControl.h*
-    * *extras/PwmPin.h*
-    * *extras/StepperControl.h*
-
-> [!IMPORTANT]
-> At present it is okay to include the above `#include` files in your sketch (they have no effect on the compiled code), but they will be deleted at some point in the future so please remove them from your sketches now to ensure forward compatibility with subsequent releases. 
+  * this method now operates silently, unless an invalid pairing code is provided, in which case an error is reported to the Serial Monitor and *the sketch is halted*
+  * the process for setting the Pairing Code using the CLI 'S' command or via the Access Point are unchanged - confirmation messages are still output to the Serial Monitor and errors do *not* cause the sketch to halt
       
 See [Releases](https://github.com/HomeSpan/HomeSpan/releases) for details on all changes and bug fixes included in this update.
 
