@@ -448,7 +448,7 @@ int HAPClient::postPairSetupURL(uint8_t *content, size_t len){
       // The iosDeviceX HKDF calculations are separate and will be performed further below with the SALT and INFO as specified in the HAP docs.
 
       TempBuffer<uint8_t> sessionKey(crypto_box_PUBLICKEYBYTES);                                            // temporary space - used only in this block     
-      hkdf.create(sessionKey,srp->K,64,"Pair-Setup-Encrypt-Salt","Pair-Setup-Encrypt-Info");                // create SessionKey
+      HKDF::create(sessionKey,srp->K,64,"Pair-Setup-Encrypt-Salt","Pair-Setup-Encrypt-Info");               // create SessionKey
 
       LOG2("------- DECRYPTING SUB-TLVS -------\n");
       
@@ -488,7 +488,7 @@ int HAPClient::postPairSetupURL(uint8_t *content, size_t len){
       // Note that the SALT and INFO text fields now match those in HAP Section 5.6.6.1
 
       TempBuffer<uint8_t> iosDeviceX(32);
-      hkdf.create(iosDeviceX,srp->K,64,"Pair-Setup-Controller-Sign-Salt","Pair-Setup-Controller-Sign-Info");     // derive iosDeviceX (32 bytes) from SRP Shared Secret using HKDF 
+      HKDF::create(iosDeviceX,srp->K,64,"Pair-Setup-Controller-Sign-Salt","Pair-Setup-Controller-Sign-Info");     // derive iosDeviceX (32 bytes) from SRP Shared Secret using HKDF 
 
       // Concatenate iosDeviceX, IOS ID, and IOS PublicKey into iosDeviceInfo
       
@@ -507,7 +507,7 @@ int HAPClient::postPairSetupURL(uint8_t *content, size_t len){
       // Now perform the above steps in reverse to securely transmit the AccessoryLTPK to the Controller (HAP Section 5.6.6.2)
 
       TempBuffer<uint8_t> accessoryX(32);
-      hkdf.create(accessoryX,srp->K,64,"Pair-Setup-Accessory-Sign-Salt","Pair-Setup-Accessory-Sign-Info");       // derive accessoryX from SRP Shared Secret using HKDF 
+      HKDF::create(accessoryX,srp->K,64,"Pair-Setup-Accessory-Sign-Salt","Pair-Setup-Accessory-Sign-Info");       // derive accessoryX from SRP Shared Secret using HKDF 
       
       // Concatenate accessoryX, Accessory ID, and Accessory PublicKey into accessoryInfo
 
@@ -638,7 +638,7 @@ int HAPClient::postPairVerifyURL(uint8_t *content, size_t len){
       crypto_scalarmult_curve25519(sharedCurveKey,secretCurveKey,iosCurveKey);                            // generate Shared-Secret Curve25519 Key from Accessory's Curve25519 Secret Key and Controller's Curve25519 Public Key
 
       sessionKey=(uint8_t *)HS_MALLOC(crypto_box_PUBLICKEYBYTES);                                                                // temporary space - will be deleted at end of verification process
-      hkdf.create(sessionKey,sharedCurveKey,crypto_box_PUBLICKEYBYTES,"Pair-Verify-Encrypt-Salt","Pair-Verify-Encrypt-Info");    // create Session Curve25519 Key from Shared-Secret Curve25519 Key using HKDF-SHA-512  
+      HKDF::create(sessionKey,sharedCurveKey,crypto_box_PUBLICKEYBYTES,"Pair-Verify-Encrypt-Salt","Pair-Verify-Encrypt-Info");   // create Session Curve25519 Key from Shared-Secret Curve25519 Key using HKDF-SHA-512  
 
       auto itEncryptedData=responseTLV.add(kTLVType_EncryptedData,subPack.len()+crypto_aead_chacha20poly1305_IETF_ABYTES,NULL);                                    // create blank EncryptedData subTLV
       crypto_aead_chacha20poly1305_ietf_encrypt(*itEncryptedData,NULL,subPack,subPack.len(),NULL,0,NULL,(unsigned char *)"\x00\x00\x00\x00PV-Msg02",sessionKey);   // encrypt data with Session Curve25519 Key and padded nonce="PV-Msg02"
@@ -728,8 +728,8 @@ int HAPClient::postPairVerifyURL(uint8_t *content, size_t len){
 
       cPair=tPair;        // save Controller for this connection slot - connection is now verified and should be encrypted going forward
 
-      hkdf.create(a2cKey,sharedCurveKey,32,"Control-Salt","Control-Read-Encryption-Key");        // create AccessoryToControllerKey from (previously-saved) Shared-Secret Curve25519 Key (HAP Section 6.5.2)
-      hkdf.create(c2aKey,sharedCurveKey,32,"Control-Salt","Control-Write-Encryption-Key");       // create ControllerToAccessoryKey from (previously-saved) Shared-Secret Curve25519 Key (HAP Section 6.5.2)
+      HKDF::create(a2cKey,sharedCurveKey,32,"Control-Salt","Control-Read-Encryption-Key");        // create AccessoryToControllerKey from (previously-saved) Shared-Secret Curve25519 Key (HAP Section 6.5.2)
+      HKDF::create(c2aKey,sharedCurveKey,32,"Control-Salt","Control-Write-Encryption-Key");       // create ControllerToAccessoryKey from (previously-saved) Shared-Secret Curve25519 Key (HAP Section 6.5.2)
       
       a2cNonce.zero();         // reset Nonces for this session to zero
       c2aNonce.zero();
@@ -1690,7 +1690,6 @@ void HapOut::HapStreamBuffer::printFormatted(char *buf, size_t nChars, size_t ns
 
 // instantiate all static HAP Client structures and data
 
-HKDF HAPClient::hkdf;                                   
 pairState HAPClient::pairStatus;                        
 Accessory HAPClient::accessory;                         
 list<Controller, Mallocator<Controller>> HAPClient::controllerList;

@@ -105,7 +105,6 @@ struct HAPClient {
   static const int MAX_CONTROLLERS=16;                // maximum number of paired controllers (HAP requires at least 16)
   static const int MAX_ACCESSORIES=150;               // maximum number of allowed Accessories (HAP limit=150)
   
-  static HKDF hkdf;                                                 // generates (and stores) HKDF-SHA-512 32-byte keys derived from an inputKey of arbitrary length, a salt string, and an info string
   static pairState pairStatus;                                      // tracks pair-setup status
   static Accessory accessory;                                       // Accessory ID and Ed25519 public and secret keys - permanently stored
   static list<Controller, Mallocator<Controller>> controllerList;   // linked-list of Paired Controller IDs and ED25519 long-term public keys - permanently stored
