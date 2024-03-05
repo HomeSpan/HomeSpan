@@ -32,7 +32,7 @@
 
 * **Resolution:**  Select a different partition table that does not reserve so much flash memory for a SPIFFS partition since SPIFFS is not used at all by HomeSpan and *this partition is just wasting space.*
 
-* From within the Arduino IDE, the easiest way to reduce the SPIFFS partition is to select the *Minimal SPIFFS* partition scheme from under the Tools menu, and then simply recompile and upload you sketch.  This scheme reserves only 128 KB for the SPIFFS partition, which leaves a full 1920 KB of program storage for each OTA partition.  This represents a 50% increase in program size, which should suffice for most applications.
+* From within the Arduino IDE, the easiest way to reduce the SPIFFS partition is to select the *Minimal SPIFFS* partition scheme from under the Tools menu, and then simply recompile and upload your sketch.  This scheme reserves only 128 KB for the SPIFFS partition, which leaves a full 1920 KB of program storage for each OTA partition.  This represents a 50% increase in program size, which should suffice for most applications.
   
 * If for some reason you still need more space, and you only have 4MB of flash, you can try selecting the *Huge App* partition scheme, which reserves 896 KB for SPIFFS and leaves a *single* partition of 3072 KB for program storage. OTA will unfortunately *not* be available in this scheme. 
 
