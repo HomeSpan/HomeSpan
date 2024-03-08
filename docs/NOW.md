@@ -91,6 +91,9 @@ Examples showing such a configuration can be found in the Arduino IDE under [*Fi
 * *RemoteDevice.ino* - a lightweight sketch that simulates taking periodic temperature measurements, which are then transmitted to the Main Device via SpanPoint
 * *RemoteTempSensor.ino* - a lightweight sketch that is similar to *RemoteDevice.ino*, except that instead of simulating a temperature sensor, it implements an actual Adafruit ADT7410 I2C-based temperature sensor.  This sketch also uses some power-management techniques to extend battery life, such as lowering the CPU frequency and entering into deep-sleep after each measurement is taken
 * *RemoteDevice8266.ino* - similar in function to *RemoteDevice.ino*, but implemented to run on an ESP8266 device using native ESP-NOW commands (since neither HomeSpan nor SpanPoint support the ESP8266).  Note that the "complementary" SpanPoint object on the ESP32 that receives data from the ESP8266 must be configured to use the ESP32's *AP MAC Address* (instead of the *STA MAC Address*) by setting *useAPaddress* to *true* in the SpanPoint constructor
+
+Please also see the [SpanPointLightSwitch Repository](https://github.com/HomeSpan/SpanPointLightSwitch/tree/main) for a detailed example that shows how to use SpanPoint for *bi-directional communication* between an ESP32 "Central Hub" device implementing two HomeKit Lighbulb Accessories, an remote ESP32 device controlling an LED, and a separate ESP8266 device controlling another LED.
+  
 ---
 
 [↩️](../README.md) Back to the Welcome page
