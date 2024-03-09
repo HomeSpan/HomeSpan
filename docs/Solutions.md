@@ -12,7 +12,7 @@
 
 * Note that adding this pull-up resistor should **not** interefere with normal serial operation of the board, such as using the Serial Monitor or uploading sketches.
 
-* *As an alternative*, instead of adding a pull-up resistor, you can simply exclude (or comment out) the `Serial.begin()` line in your sketch.  This prevents the problem of HomeSpan hanging when you power it through the 5V pin, but it unfortunately means the Serial Monitor will not function when you connect the board to your computer, and you will need to add back `Serial.begin()` whenever you want to use the Serial Monitor.
+* *As an alternative*, instead of adding a pull-up resistor, you can simply exclude (or comment out) the `Serial.begin()` line in your sketch, or call `homeSpan.setSerialInputDisable(false)` to disable HomeSpan reading from the Serial port.  This should prevent the problem of HomeSpan hanging when you power it through the 5V pin, but it unfortunately means the Serial Monitor will not function when you connect the board to your computer, and you will need to add back `Serial.begin()`, or remove `homeSpan.setSerialInputDisable(false)` whenever you want to use the Serial Monitor.
 
 ### *HomeSpan crashes when I enable PSRAM, but works fine if I disable PSRAM*
 
