@@ -69,7 +69,10 @@ Example 12 introduces HomeKit *Event Notifications* to implement two new accesso
 * setting the value of a Characteristic and triggering an Event Notification with the `setVal()` method
 
 ### [Example 13 - TargetStates](../examples/13-TargetStates)
-Example 13 we demonstrate the simultaneous use of both the `update()` and `loop()` methods by implementing two new Services: a Garage Door Opener and a motorized Window Shade.  Both examples showcase HomeKit's Target-State/Current-State framework.
+Example 13 demonstrates the simultaneous use of both the `update()` and `loop()` methods by implementing two new Services: a Garage Door Opener and a motorized Window Shade.  Both examples showcase HomeKit's Target-State/Current-State framework.  New HomeSpan API topics covered in this example include:
+
+* using Enumerated Constants to set the values of Characteristics that represent discrete states (e.g. "raising", "closing")
+
 
 ### [Example 14 - EmulatedPushButtons](../examples/14-EmulatedPushButtons)
 Example 14 demonstrates how you can use the `setVal()` and `timeVal()` methods inside a Service's `loop()` method to create a tile in the Home App that emulates a pushbutton switch.  In this example pressing the tile in the Home App will cause it to turn on, blink an LED 3 times, and then turn off (just like a real pushbutton might do).
