@@ -1,7 +1,7 @@
 /*********************************************************************************
  *  MIT License
  *  
- *  Copyright (c) 2020-2022 Gregg E. Berman
+ *  Copyright (c) 2020-2024 Gregg E. Berman
  *  
  *  https://github.com/HomeSpan/HomeSpan
  *  
@@ -113,7 +113,7 @@ struct Shower : Service::Faucet {                 // this is our Shower structur
   
   struct WaterValve : Service::Valve {                            // here we define our WaterValve structure as a child class of the HomeSpan Valve Service
     SpanCharacteristic *active=new Characteristic::Active(1);;    // the Active Characteristic is used to specify whether the Valve is Active (open) or Inactive (closed)
-    SpanCharacteristic *inUse=new Characteristic::InUse();        // the InUser Characteristic is used to specify whether water is actually flowing through value
+    SpanCharacteristic *inUse=new Characteristic::InUse();        // the InUse Characteristic is used to specify whether water is actually flowing through value
     Shower *shower;                                               // storage for the pointer to the "controlling" Shower Service
     
     WaterValve(Shower *s){                                                      // this is constructor for WaterValve.  It takes a single argument that points to the "controlling" Shower Service

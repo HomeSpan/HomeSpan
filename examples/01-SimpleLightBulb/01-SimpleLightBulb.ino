@@ -1,7 +1,7 @@
 /*********************************************************************************
  *  MIT License
  *  
- *  Copyright (c) 2020-2022 Gregg E. Berman
+ *  Copyright (c) 2020-2024 Gregg E. Berman
  *  
  *  https://github.com/HomeSpan/HomeSpan
  *  
@@ -51,9 +51,6 @@
   // NOTE: All HomeSpan examples are best understood when reviewed in conjunction with the documentation provided on the HomeSpan GitHub page.
   // See https://github.com/HomeSpan/HomeSpan for details and references.  In particular, you may want to review the HomeSpan API Overview
   // page before proceeding.
-  
-  // These examples also make frequent reference to  Apple's HomeKit Accessory Protocol Specification, known as HAP.  You can download this
-  // directly from Apple at https://developer.apple.com/support/homekit-accessory-protocol.
 
   // LET'S GET STARTED...
 

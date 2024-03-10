@@ -1,7 +1,7 @@
 /*********************************************************************************
  *  MIT License
  *  
- *  Copyright (c) 2020-2022 Gregg E. Berman
+ *  Copyright (c) 2020-2024 Gregg E. Berman
  *  
  *  https://github.com/HomeSpan/HomeSpan
  *  
@@ -40,7 +40,7 @@
 void setup() {
 
    // Though HomeKit and the HomeKit Accessory Protocol (HAP) Specification provide a very flexible framework
-   // for creating iOS- and MacOS-controlled devices, they does not contain every possible desired feature.
+   // for creating iOS- and MacOS-controlled devices, they do not contain every possible desired feature.
    //
    // One very common Characteristic HomeKit does not seem to contain is a simple pushbutton, like the type you
    // would find on a remote control.  Unlike switches that can be "on" or "off", a pushbutton has no state.

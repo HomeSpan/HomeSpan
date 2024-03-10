@@ -3,17 +3,33 @@
 //   DEVICE-SPECIFIC LED SERVICES //
 ////////////////////////////////////
 
-struct DEV_GarageDoor : Service::GarageDoorOpener {     // A Garage Door Opener
+struct DEV_GarageDoor : Service::GarageDoorOpener {    // A Garage Door Opener
 
-  Characteristic::CurrentDoorState *current;            // reference to the Current Door State Characteristic (specific to Garage Door Openers)
+  Characteristic::CurrentDoorState *current;           // reference to the Current Door State Characteristic (specific to Garage Door Openers)
   Characteristic::TargetDoorState *target;             // reference to the Target Door State Characteristic (specific to Garage Door Openers)  
-  SpanCharacteristic *obstruction;        // reference to the Obstruction Detected Characteristic (specific to Garage Door Openers)
+  SpanCharacteristic *obstruction;                     // reference to the Obstruction Detected Characteristic (specific to Garage Door Openers)
 
-  DEV_GarageDoor() : Service::GarageDoorOpener(){       // constructor() method
+  DEV_GarageDoor() : Service::GarageDoorOpener(){      // constructor() method
+
+    // Below we use enumerated constants rather than integers to set the values of the Characteristics.
+    // Using enumerated constants means not having to remember the integer code for each state.  You'll find
+    // a complete list of all available enumerated constants on HomeSpan's Services and Characteristics page.
+    // Note the use of enumerated constants is optional - you can always use the integer code representing
+    // each state instead.
         
-    current=new Characteristic::CurrentDoorState(1);              // initial value of 1 means closed
-    target=new Characteristic::TargetDoorState(1);                // initial value of 1 means closed
-    obstruction=new Characteristic::ObstructionDetected(false);   // initial value of false means NO obstruction is detected
+    current=new Characteristic::CurrentDoorState(Characteristic::CurrentDoorState::CLOSED);      // here we use the fully-qualified name of the constant "CLOSED"
+    target=new Characteristic::TargetDoorState(target->CLOSED);                                  // here we use the name of the object instead of the fully-qualified name (much less typing)
+
+    // Below we must use the fully-qualified name of the enumerated constant and cannot use "obstruction->NOT_DETECTED".
+    // Why?  Because above we declared "obstruction" to be a pointer to a generic SpanCharacteristic instead of a pointer to 
+    // the more specific Characteristic::ObstructionDetected.  Either is fine, and it's just a matter of programming preference
+    // (as you can see we use both conventions in this sketch).  But the downside of using SpanCharacteristic to declare a
+    // Characteristic that contains enumerated constants is that the object itself does not know about these constants. This is
+    // because all enumerated constants are uniquely defined within their respective specific Characteristic classes, and not in the
+    // generic SpanCharacteristic class from which all specific Characterstics are derived.
+    
+    obstruction=new Characteristic::ObstructionDetected(Characteristic::ObstructionDetected::NOT_DETECTED);   // this works
+//  obstruction=new Characteristic::ObstructionDetected(obstruction->NOT_DETECTED);                           // this would produce a compiler error (try it and see)
     
     Serial.print("Configuring Garage Door Opener");   // initialization message
     Serial.print("\n");
@@ -24,13 +40,13 @@ struct DEV_GarageDoor : Service::GarageDoorOpener {     // A Garage Door Opener
 
     // see HAP Documentation for details on what each value represents
 
-    if(target->getNewVal()==0){                     // if the target-state value is set to 0, HomeKit is requesting the door to be in open position
+    if(target->getNewVal()==target->OPEN){          // HomeKit is requesting the door to be in OPEN position
       LOG1("Opening Garage Door\n");
-      current->setVal(2);                           // set the current-state value to 2, which means "opening"
-      obstruction->setVal(false);                   // clear any prior obstruction detection
+      current->setVal(current->OPENING);            // set the current-state value to OPENING
+      obstruction->setVal(false);                   // clear any prior obstruction detection - note we do not bother using an enumerated constant here
     } else {
-      LOG1("Closing Garage Door\n");                // else the target-state value is set to 1, and HomeKit is requesting the door to be in the closed position
-      current->setVal(3);                           // set the current-state value to 3, which means "closing"         
+      LOG1("Closing Garage Door\n");                // else HomeKit must be requesting the door to be in the CLOSED position
+      current->setVal(current->CLOSING);            // set the current-state value to CLOSING
       obstruction->setVal(false);                   // clear any prior obstruction detection
     }
     
@@ -43,13 +59,13 @@ struct DEV_GarageDoor : Service::GarageDoorOpener {     // A Garage Door Opener
     if(current->getVal()==target->getVal())        // if current-state matches target-state there is nothing do -- exit loop()
       return;
 
-    if(current->getVal()==3 && random(100000)==0){    // here we simulate a random obstruction, but only if the door is closing (not opening)
-      current->setVal(4);                             // if our simulated obstruction is triggered, set the curent-state to 4, which means "stopped"
-      obstruction->setVal(true);                      // and set obstruction-detected to true
+    if(current->getVal()==current->CLOSING && random(100000)==0){    // here we simulate a random obstruction, but only if the door is closing (not opening)
+      current->setVal(current->STOPPED);                             // if our simulated obstruction is triggered, set the curent-state to STOPPED
+      obstruction->setVal(true);                                     // and set obstruction-detected to true
       LOG1("Garage Door Obstruction Detected!\n");
     }
 
-    if(current->getVal()==4)                       // if the current-state is stopped, there is nothing more to do - exit loop()     
+    if(current->getVal()==current->STOPPED)                          // if the current-state is stopped, there is nothing more to do - exit loop()     
       return;
 
     // This last bit of code only gets called if the door is in a state that represents actively opening or actively closing.
@@ -83,15 +99,6 @@ struct DEV_WindowShade : Service::WindowCovering {     // A motorized Window Sha
 
   boolean update(){                              // update() method
 
-    // The logic below is based on how HomeKit appears to operate in practice, which is NOT consistent with
-    // HAP documentation.  In that document HomeKit seems to support fully opening or fully closing a window shade, with
-    // an optional control to HOLD the window shade at a given in-between position while it is moving.
-
-    // In practice, HomeKit does not appear to implement any form of a HOLD control button, even if you instantiate that
-    // Characteristic.  Instead, HomeKit provides a full slider control, similar to the brightness control for a lightbulb,
-    // that allows you to set the exact position of the window shade from 0-100%.  This obviates the need to any sort of HOLD button.
-    // The resulting logic is also very simple:
-
     if(target->getNewVal()>current->getVal()){      // if the target-position requested is greater than the current-position, simply log a "raise" message  
       LOG1("Raising Shade\n");                      // ** there is nothing more to do - HomeKit keeps track of the current-position so knows raising is required
     } else 
@@ -116,10 +123,7 @@ struct DEV_WindowShade : Service::WindowCovering {     // A motorized Window Sha
     // the user in the Home App.  If it finds current and target positions are the same, it knows the shade is stopped.  Otherwise
     // it will report the shade is raising or lowering depending on whether the specified target state is greater or less than
     // the current state.
-
-    // According to HAP, the Characteristic Position State is also required.  However, this seems duplicative and is NOT needed
-    // at all given the way HomeKit uses current position.
-    
+   
   } // loop
   
 };

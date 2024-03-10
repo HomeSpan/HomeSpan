@@ -138,15 +138,23 @@ void setup() {
 
   homeSpan.setLogLevel(1);
   homeSpan.begin(Category::Lighting,"HomeSpan LEDS");
-  
+
+// Here we replace the usual construct:
+
+//   new SpanAccessory();
+//    new Service::AccessoryInformation();  
+//      new Characteristic::Identify();
+
+// with this:
+
   new SpanAccessory();  
-    new DEV_INFO(13);         // Here we instantiate the new DEV_INFO structure, instead of simply instantiating Characteristic::Name() and Characteristic::Identity() as in all previous examples
+    new DEV_INFO(13);         // instantiate a new DEV_INFO structure that will run our custom identification routine to blink an LED on pin 13 three times
 
   new SpanAccessory();
     new DEV_INFO(16);         // Note we instantiate a new DEV_INFO structure for each Accessory in this device
     new DEV_LED(16);          // Here we instantiate the usual DEV_LED structure that controls the LED during normal operation
 
-  new SpanAccessory();        // Here we add a second LED
+  new SpanAccessory();        // Here we add a second LED Accessory
     new DEV_INFO(17);               
     new DEV_LED(17);    
 }
