@@ -998,10 +998,10 @@ int HAPClient::putCharacteristicsURL(char *json){
   if(!homeSpan.updateCharacteristics(json, pObj))         // perform update
     return(0);                                            // return if failed to update (error message will have been printed in update)
 
-  int multiCast=0;                                        // check if all status is OK, or if multicast response is request
-  for(int i=0;i<n;i++)
-    if(pObj[i].status!=StatusCode::OK)
-      multiCast=1;    
+  boolean multiCast=false;                     
+  for(int i=0;i<n && !multiCast;i++)                      // for each characterstic, check if any status is either NOT OKAY, or if WRITE-RESPONSE is requested
+    if(pObj[i].status!=StatusCode::OK || pObj[i].wr)      // if so, to use multicast response
+      multiCast=true;    
 
   LOG2("\n>>>>>>>>>> %s >>>>>>>>>>\n",client.remoteIP().toString().c_str());
 

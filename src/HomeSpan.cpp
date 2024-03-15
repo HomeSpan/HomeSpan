@@ -1378,6 +1378,9 @@ int Span::updateCharacteristics(char *buf, SpanBuf *pObj){
         pObj[nObj].ev=t3;
         okay|=8;
       } else 
+      if(!strcmp(t2,"r") && (t3=strtok_r(t1,"}[]:, \"\t\n\r",&p2))){
+        pObj[nObj].wr=(t3 && (!strcmp(t3,"1") || !strcmp(t3,"true")));
+      } else 
       if(!strcmp(t2,"pid") && (t3=strtok_r(t1,"}[]:, \"\t\n\r",&p2))){        
         uint64_t pid=strtoull(t3,NULL,0);        
         if(!TimedWrites.count(pid)){
@@ -1395,7 +1398,9 @@ int Span::updateCharacteristics(char *buf, SpanBuf *pObj){
     } // parse property tokens
 
     if(!t1){                                                                  // at least one token was found that was not initial "characteristics"
-      if(okay==7 || okay==11  || okay==15){                                   // all required properties found                           
+      if(okay==7 || okay==11  || okay==15){                                   // all required properties found
+        if(!pObj[nObj].val)                                                   // if value is NOT being updated
+          pObj[nObj].wr=false;                                                // ignore any request for write-response
         nObj++;                                                               // increment number of characteristic objects found        
       } else {
         LOG0("\n*** ERROR:  Problems parsing JSON characteristics object - missing required properties\n\n");
@@ -1507,7 +1512,10 @@ void Span::printfAttributes(SpanBuf *pObj, int nObj){
   hapOut << "{\"characteristics\":[";
 
   for(int i=0;i<nObj;i++){
-    hapOut << "{\"aid\":" << pObj[i].aid << ",\"iid\":" << pObj[i].iid << ",\"status\":" << (int)pObj[i].status << "}";
+    hapOut << "{\"aid\":" << pObj[i].aid << ",\"iid\":" << pObj[i].iid << ",\"status\":" << (int)pObj[i].status;
+    if(pObj[i].status==StatusCode::OK && pObj[i].wr && pObj[i].characteristic)
+      hapOut << ",\"value\":" << pObj[i].characteristic->uvPrint(pObj[i].characteristic->value).c_str();
+    hapOut << "}";
     if(i+1<nObj)
       hapOut << ",";
   }
