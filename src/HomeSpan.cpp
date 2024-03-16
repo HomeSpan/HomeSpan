@@ -904,9 +904,22 @@ void Span::processSerialCommand(const char *c){
               else
                 LOG0(", %sRange=[%s,%s]",(*chr)->customRange?"Custom-":"",(*chr)->uvPrint((*chr)->minValue).c_str(),(*chr)->uvPrint((*chr)->maxValue).c_str());
             }
+
+            if(((*chr)->perms)&EV){
+              LOG0(", EV=(");
+              boolean addComma=false;
+              for(int i=0;i<homeSpan.maxConnections;i++){
+                if((*chr)->ev[i] && hap[i]->client){
+                  LOG0("%s%d",addComma?",":"",i);
+                  addComma=true;
+                }
+              }
+              LOG0(")");              
+            }
             
             if((*chr)->nvsKey)
               LOG0(" (nvs)");
+              
             LOG0("\n");        
             
             if(!(*chr)->isCustom && !(*svc)->isCustom  && std::find((*svc)->req.begin(),(*svc)->req.end(),(*chr)->hapChar)==(*svc)->req.end() && std::find((*svc)->opt.begin(),(*svc)->opt.end(),(*chr)->hapChar)==(*svc)->opt.end())
@@ -1420,10 +1433,10 @@ int Span::updateCharacteristics(char *buf, SpanBuf *pObj){
     } else {
       pObj[i].characteristic = find(pObj[i].aid,pObj[i].iid);  // find characteristic with matching aid/iid and store pointer          
 
-      if(pObj[i].characteristic)                                                      // if found, initialize characterstic update with new val/ev
-        pObj[i].status=pObj[i].characteristic->loadUpdate(pObj[i].val,pObj[i].ev);    // save status code, which is either an error, or TBD (in which case isUpdated for the characteristic has been set to true) 
+      if(pObj[i].characteristic)                                                                 // if found, initialize characterstic update with new val/ev
+        pObj[i].status=pObj[i].characteristic->loadUpdate(pObj[i].val,pObj[i].ev,pObj[i].wr);    // save status code, which is either an error, or TBD (in which case updateFlag for the characteristic has been set to either 1 or 2) 
       else
-        pObj[i].status=StatusCode::UnknownResource;                                   // if not found, set HAP error            
+        pObj[i].status=StatusCode::UnknownResource;                                              // if not found, set HAP error            
     }
       
   } // first pass
@@ -1455,7 +1468,7 @@ int Span::updateCharacteristics(char *buf, SpanBuf *pObj){
             pObj[j].characteristic->uvSet(pObj[j].characteristic->newValue,pObj[j].characteristic->value);                // replace characteristic new value with original value
             LOG1(" (failed)\n");
           }
-          pObj[j].characteristic->isUpdated=false;             // reset isUpdated flag for characteristic
+          pObj[j].characteristic->updateFlag=0;             // reset updateFlag for characteristic
         }
       }
 
@@ -1899,7 +1912,7 @@ void SpanCharacteristic::printfAttributes(int flags){
 
 ///////////////////////////////
 
-StatusCode SpanCharacteristic::loadUpdate(char *val, char *ev){
+StatusCode SpanCharacteristic::loadUpdate(char *val, char *ev, boolean wr){
 
   if(ev){                // request for notification
     boolean evFlag;
@@ -2000,7 +2013,7 @@ StatusCode SpanCharacteristic::loadUpdate(char *val, char *ev){
 
   } // switch
 
-  isUpdated=true;
+  updateFlag=1+wr;                // set flag to 1 if successful update or 2 if successful AND write-response flag is set
   updateTime=homeSpan.snapTime;
   return(StatusCode::TBD);
 }

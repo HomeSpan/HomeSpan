@@ -500,13 +500,13 @@ class SpanCharacteristic{
   boolean setValidValuesError=false;       // flag to indicate attempt to set Valid Values on Characteristic that does not support changes to Valid Values
   
   uint32_t aid=0;                          // Accessory ID - passed through from Service containing this Characteristic
-  boolean isUpdated=false;                 // set to true when new value has been requested by PUT /characteristic
+  uint8_t updateFlag=0;                    // set to either 1 (for normal write) or 2 (for write-response) inside update() when Characteristic is successfully updated via Home App
   unsigned long updateTime=0;              // last time value was updated (in millis) either by PUT /characteristic OR by setVal()
   UVal newValue;                           // the updated value requested by PUT /characteristic
   SpanService *service=NULL;               // pointer to Service containing this Characteristic
 
-  void printfAttributes(int flags);               // writes Characteristic JSON to hapOut stream
-  StatusCode loadUpdate(char *val, char *ev);     // load updated val/ev from PUT /characteristic JSON request.  Return intitial HAP status code (checks to see if characteristic is found, is writable, etc.)  
+  void printfAttributes(int flags);                           // writes Characteristic JSON to hapOut stream
+  StatusCode loadUpdate(char *val, char *ev, boolean wr);     // load updated val/ev from PUT /characteristic JSON request.  Return intitial HAP status code (checks to see if characteristic is found, is writable, etc.)  
     
   String uvPrint(UVal &u){
     char c[67];               // space for 64 characters + surrounding quotes + terminating null
@@ -669,28 +669,35 @@ class SpanCharacteristic{
     return NULL;
   }
 
-  void setString(const char *val){
+  void setString(const char *val, boolean notify=true){
 
-    if((perms & EV) == 0){
-      LOG0("\n*** WARNING:  Attempt to update Characteristic::%s with setString() ignored.  No NOTIFICATION permission on this characteristic\n\n",hapName);
+    if(!((perms&EV) || (updateFlag==2))){
+      LOG0("\n*** WARNING:  Attempt to update Characteristic::%s with setData() ignored.  No EVENT NOTIFICATION (EV) permission on this characteristic\n\n",hapName);
       return;
-    }
+    }   
+
+    if(updateFlag==1)
+      LOG0("\n*** WARNING:  Attempt to update Characteristic::%s with setVal() within update() while it is being updated by Home App.  This may cause device to become non-responsive!\n\n",hapName);
 
     uvSet(value,val);
     uvSet(newValue,value);
       
     updateTime=homeSpan.snapTime;
-    
-    SpanBuf sb;                             // create SpanBuf object
-    sb.characteristic=this;                 // set characteristic          
-    sb.status=StatusCode::OK;               // set status
-    char dummy[]="";
-    sb.val=dummy;                           // set dummy "val" so that printfNotify knows to consider this "update"
-    homeSpan.Notifications.push_back(sb);   // store SpanBuf in Notifications vector  
 
-    if(nvsKey){
-      nvs_set_str(homeSpan.charNVS,nvsKey,value.STRING);    // store data
-      nvs_commit(homeSpan.charNVS);
+    if(notify){
+      if(updateFlag!=2){                        // do not broadcast EV if update is being done in context of write-response    
+        SpanBuf sb;                             // create SpanBuf object
+        sb.characteristic=this;                 // set characteristic          
+        sb.status=StatusCode::OK;               // set status
+        char dummy[]="";
+        sb.val=dummy;                           // set dummy "val" so that printfNotify knows to consider this "update"
+        homeSpan.Notifications.push_back(sb);   // store SpanBuf in Notifications vector
+      }
+  
+      if(nvsKey){
+        nvs_set_str(homeSpan.charNVS,nvsKey,value.STRING);    // store data
+        nvs_commit(homeSpan.charNVS);
+      }
     }
     
   } // setString()
@@ -731,12 +738,12 @@ class SpanCharacteristic{
     return(olen);
   }  
 
-  void setData(uint8_t *data, size_t len){
+  void setData(uint8_t *data, size_t len, boolean notify=true){
 
-    if((perms & EV) == 0){
-      LOG0("\n*** WARNING:  Attempt to update Characteristic::%s with setData() ignored.  No NOTIFICATION permission on this characteristic\n\n",hapName);
+    if(!((perms&EV) || (updateFlag==2))){
+      LOG0("\n*** WARNING:  Attempt to update Characteristic::%s with setData() ignored.  No EVENT NOTIFICATION (EV) permission on this characteristic\n\n",hapName);
       return;
-    }
+    }   
 
     if(len<1){
       LOG0("\n*** WARNING:  Attempt to update Characteristic::%s with setData() ignored.  Size of data buffer must be greater than zero\n\n",hapName);
@@ -744,18 +751,21 @@ class SpanCharacteristic{
     }
 
     size_t olen;
-    mbedtls_base64_encode(NULL,0,&olen,data,len);                    // get length of string buffer needed (mbedtls includes the trailing null in this size)
-    TempBuffer<char> tBuf(olen);                                     // create temporary string buffer, with room for trailing null
+    mbedtls_base64_encode(NULL,0,&olen,data,len);                      // get length of string buffer needed (mbedtls includes the trailing null in this size)
+    TempBuffer<char> tBuf(olen);                                       // create temporary string buffer, with room for trailing null
     mbedtls_base64_encode((uint8_t*)tBuf.get(),olen,&olen,data,len );  // encode data into string buf
-    setString(tBuf);                                             // call setString to continue processing as if characteristic was a string
+    setString(tBuf,notify);                                            // call setString to continue processing as if characteristic was a string
   }  
 
   template <typename T> void setVal(T val, boolean notify=true){
 
-    if((perms & EV) == 0){
-      LOG0("\n*** WARNING:  Attempt to update Characteristic::%s with setVal() ignored.  No NOTIFICATION permission on this characteristic\n\n",hapName);
+    if(!((perms&EV) || (updateFlag==2))){
+      LOG0("\n*** WARNING:  Attempt to update Characteristic::%s with setData() ignored.  No EVENT NOTIFICATION (EV) permission on this characteristic\n\n",hapName);
       return;
-    }
+    }   
+
+    if(updateFlag==1)
+      LOG0("\n*** WARNING:  Attempt to update Characteristic::%s with setVal() within update() while it is being updated by Home App.  This may cause device to become non-responsive!\n\n",hapName);
 
     if(!((val >= uvGet<T>(minValue)) && (val <= uvGet<T>(maxValue)))){
       LOG0("\n*** WARNING:  Attempt to update Characteristic::%s with setVal(%g) is out of range [%g,%g].  This may cause device to become non-responsive!\n\n",
@@ -768,13 +778,15 @@ class SpanCharacteristic{
     updateTime=homeSpan.snapTime;
 
     if(notify){
-      SpanBuf sb;                             // create SpanBuf object
-      sb.characteristic=this;                 // set characteristic          
-      sb.status=StatusCode::OK;               // set status
-      char dummy[]="";
-      sb.val=dummy;                           // set dummy "val" so that printfNotify knows to consider this "update"
-      homeSpan.Notifications.push_back(sb);   // store SpanBuf in Notifications vector  
-  
+      if(updateFlag!=2){                        // do not broadcast EV if update is being done in context of write-response
+        SpanBuf sb;                             // create SpanBuf object
+        sb.characteristic=this;                 // set characteristic          
+        sb.status=StatusCode::OK;               // set status
+        char dummy[]="";
+        sb.val=dummy;                           // set dummy "val" so that printfNotify knows to consider this "update"
+        homeSpan.Notifications.push_back(sb);   // store SpanBuf in Notifications vector  
+      }
+    
       if(nvsKey){
         nvs_set_u64(homeSpan.charNVS,nvsKey,value.UINT64);            // store data as uint64_t regardless of actual type (it will be read correctly when access through uvGet())         
         nvs_commit(homeSpan.charNVS);
@@ -783,8 +795,8 @@ class SpanCharacteristic{
     
   } // setVal()
 
-  boolean updated(){return(isUpdated);}             // returns isUpdated
-  unsigned long timeVal();                          // returns time elapsed (in millis) since value was last updated
+  boolean updated(){return(updateFlag>0);}          // returns true within update() if Characteristic was updated by Home App 
+  unsigned long timeVal();                          // returns time elapsed (in millis) since value was last updated, either by Home App or by using setVal()
   
   SpanCharacteristic *setValidValues(int n, ...);   // sets a list of 'n' valid values allowed for a Characteristic and returns pointer to self.  Only applicable if format=INT, UINT8, UINT16, or UINT32
 
