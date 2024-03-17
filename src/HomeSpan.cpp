@@ -377,6 +377,9 @@ void Span::commandMode(){
         done=true;
       }
     } // button press
+    else {
+      vTaskDelay(100 / portTICK_PERIOD_MS);
+    }
   } // while
 
   STATUS_UPDATE(start(LED_ALERT),static_cast<HS_STATUS>(HS_ENTERING_CONFIG_MODE+mode+5))
@@ -896,7 +899,7 @@ void Span::processSerialCommand(const char *c){
                 LOG0("%s%s",(foundPerms++)?"+":"",pNames[i]);
             }           
             
-            if((*chr)->format!=FORMAT::STRING && (*chr)->format!=FORMAT::BOOL && (*chr)->format!=FORMAT::DATA){
+            if((*chr)->format!=FORMAT::STRING && (*chr)->format!=FORMAT::BOOL && (*chr)->format!=FORMAT::DATA && (*chr)->format!=FORMAT::TLV){
               if((*chr)->validValues)
                 LOG0(", Valid Values=%s",(*chr)->validValues);
               else if((*chr)->uvGet<double>((*chr)->stepValue)>0)
@@ -1350,7 +1353,7 @@ int Span::countCharacteristics(char *buf){
 
 ///////////////////////////////
 
-int Span::updateCharacteristics(char *buf, SpanBuf *pObj){
+int Span::updateCharacteristics(char *buf, SpanBuf *pObj, std::vector<char> *callback){
 
   int nObj=0;
   char *p1;
@@ -1404,6 +1407,8 @@ int Span::updateCharacteristics(char *buf, SpanBuf *pObj){
           LOG0("\n*** ERROR:  Timed Write Expired\n\n");
           twFail=true;
         }        
+      } else if(!strcmp(t2,"r") && (t3=strtok_r(t1,"}[]:, \"\t\n\r",&p2))){
+        okay|=4;
       } else {
         LOG0("\n*** ERROR:  Problems parsing JSON characteristics object - unexpected property \"%s\"\n\n",t2);
         return(0);
@@ -1444,7 +1449,7 @@ int Span::updateCharacteristics(char *buf, SpanBuf *pObj){
   for(int i=0;i<nObj;i++){                                     // PASS 2: loop again over all objects       
     if(pObj[i].status==StatusCode::TBD){                       // if object status still TBD
 
-      StatusCode status=pObj[i].characteristic->service->update()?StatusCode::OK:StatusCode::Unable;                  // update service and save statusCode as OK or Unable depending on whether return is true or false
+      StatusCode status=pObj[i].characteristic->service->update(callback)?StatusCode::OK:StatusCode::Unable;                  // update service and save statusCode as OK or Unable depending on whether return is true or false
 
       for(int j=i;j<nObj;j++){                                                      // loop over this object plus any remaining objects to update values and save status for any other characteristics in this service
         
@@ -1454,10 +1459,10 @@ int Span::updateCharacteristics(char *buf, SpanBuf *pObj){
           LOG1(pObj[j].characteristic->aid);
           LOG1(" iid=");  
           LOG1(pObj[j].characteristic->iid);
-          if(status==StatusCode::OK){                                                     // if status is okay
+          if(status==StatusCode::OK){               // if status is okay
             pObj[j].characteristic->uvSet(pObj[j].characteristic->value,pObj[j].characteristic->newValue);               // update characteristic value with new value
             if(pObj[j].characteristic->nvsKey){                                                                                               // if storage key found
-              if(pObj[j].characteristic->format!=FORMAT::STRING && pObj[j].characteristic->format!=FORMAT::DATA)
+              if(pObj[j].characteristic->format!=FORMAT::STRING && pObj[j].characteristic->format!= FORMAT::DATA && pObj[j].characteristic->format!= FORMAT::TLV)
                 nvs_set_u64(charNVS,pObj[j].characteristic->nvsKey,pObj[j].characteristic->value.UINT64);  // store data as uint64_t regardless of actual type (it will be read correctly when access through uvGet())         
               else
                 nvs_set_str(charNVS,pObj[j].characteristic->nvsKey,pObj[j].characteristic->value.STRING);                                     // store data
@@ -1529,6 +1534,21 @@ void Span::printfAttributes(SpanBuf *pObj, int nObj){
     if(pObj[i].status==StatusCode::OK && pObj[i].wr && pObj[i].characteristic)
       hapOut << ",\"value\":" << pObj[i].characteristic->uvPrint(pObj[i].characteristic->value).c_str();
     hapOut << "}";
+    if(i+1<nObj)
+      hapOut << ",";
+  }
+
+  hapOut << "]}";
+}
+
+///////////////////////////////
+
+void Span::printfValueAttributes(SpanBuf *pObj, int nObj, const char *value){
+
+  hapOut << "{\"characteristics\":[";
+
+  for(int i=0;i<nObj;i++){
+    hapOut << "{\"aid\":" << pObj[i].aid << ",\"iid\":" << pObj[i].iid << ",\"status\":" << (int)pObj[i].status << ",\"value\":" << "\"" << value << "\"" << "}";
     if(i+1<nObj)
       hapOut << ",";
   }
@@ -1833,7 +1853,7 @@ SpanCharacteristic::~SpanCharacteristic(){
   free(validValues);
   free(nvsKey);
 
-  if(format==FORMAT::STRING || format==FORMAT::DATA){
+  if(format==FORMAT::STRING || format==FORMAT::DATA || format==FORMAT::TLV){
     free(value.STRING);
     free(newValue.STRING);
   }
@@ -1846,7 +1866,8 @@ SpanCharacteristic::~SpanCharacteristic(){
 void SpanCharacteristic::printfAttributes(int flags){
 
   const char permCodes[][7]={"pr","pw","ev","aa","tw","hd","wr"};
-  const char formatCodes[][9]={"bool","uint8","uint16","uint32","uint64","int","float","string","data"};
+
+  const char formatCodes[][10]={"bool","uint8","uint16","uint32","uint64","int","float","string","data","tlv8"};
 
   hapOut << "{\"iid\":" << iid;
 
@@ -2005,7 +2026,8 @@ StatusCode SpanCharacteristic::loadUpdate(char *val, char *ev, boolean wr){
       break;
 
     case STRING:
-      uvSet(newValue,(const char *)val);
+    case TLV:
+      uvSet(newValue, (const char *)val);
       break;
 
     default:

@@ -49,7 +49,8 @@ enum FORMAT {     // HAP Table 6-5
   INT=5,
   FLOAT=6,
   STRING=7,
-  DATA=8
+  DATA=8,
+  TLV=9
 };
 
 ///////////////////////////////
@@ -130,6 +131,16 @@ struct HapCharacteristics {
   HAPCHAR( LockCurrentState, 1D, PR+EV, UINT8, true );  
   HAPCHAR( LockPhysicalControls, A7, PW+PR+EV, UINT8, true );
   HAPCHAR( LockTargetState, 1E, PW+PR+EV, UINT8, true );  
+  HAPCHAR( HardwareFinish, 26C, PR, TLV, true );  
+  HAPCHAR( ConfigurationState, 263, PR+EV, UINT16, true );  
+  HAPCHAR( NFCAccessControlPoint, 264, PR+PW+WR, TLV, true );  
+  HAPCHAR( NFCAccessSupportedConfiguration, 265, PR, TLV, true );  
+  HAPCHAR( LockControlPoint, 19, PW, TLV, true );  
+  HAPCHAR( AdministratorOnlyAccess, 1, PW+PR+EV, BOOL, true );  
+  HAPCHAR( AudioFeedback, 5, PW+PR+EV, BOOL, true );  
+  HAPCHAR( LockManagementAutoSecurityTimeout, 1A, PW+PR+EV, UINT32, true );  
+  HAPCHAR( LockLastKnownAction, 1C, PR+EV, UINT8, false );  
+  HAPCHAR( Logs, 1F, PR+EV, TLV, true );  
   HAPCHAR( Manufacturer, 20, PR, STRING, true );
   HAPCHAR( Model, 21, PR, STRING, true );
   HAPCHAR( MotionDetected, 22, PR+EV, BOOL, true );

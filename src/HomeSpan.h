@@ -281,8 +281,9 @@ class Span{
   
   SpanCharacteristic *find(uint32_t aid, int iid);                        // return Characteristic with matching aid and iid (else NULL if not found)
   int countCharacteristics(char *buf);                                    // return number of characteristic objects referenced in PUT /characteristics JSON request
-  int updateCharacteristics(char *buf, SpanBuf *pObj);                    // parses PUT /characteristics JSON request 'buf into 'pObj' and updates referenced characteristics; returns 1 on success, 0 on fail
+  int updateCharacteristics(char *buf, SpanBuf *pObj, std::vector<char> *callback);                    // parses PUT /characteristics JSON request 'buf into 'pObj' and updates referenced characteristics; returns 1 on success, 0 on fail
   void printfAttributes(SpanBuf *pObj, int nObj);                         // writes SpanBuf objects to hapOut stream
+  void printfValueAttributes(SpanBuf *pObj, int nObj, const char *value);                         // writes SpanBuf objects to hapOut stream
   boolean printfAttributes(char **ids, int numIDs, int flags);            // writes accessory requested characteristic ids to hapOut stream - returns true if all characteristics are found and readable, else returns false
   void clearNotify(int slotNum);                                          // set ev notification flags for connection 'slotNum' to false across all characteristics 
   void printfNotify(SpanBuf *pObj, int nObj, int conNum);                 // writes notification JSON to hapOut stream based on SpanBuf objects and specified connection number
@@ -455,7 +456,7 @@ class SpanService{
   SpanService *addLink(SpanService *svc);                                         // adds svc as a Linked Service and returns pointer to self
   vector<SpanService *, Mallocator<SpanService *>> getLinks(){return(linkedServices);}                       // returns linkedServices vector for use as range in "for-each" loops
 
-  virtual boolean update() {return(true);}                // placeholder for code that is called when a Service is updated via a Controller.  Must return true/false depending on success of update
+  virtual boolean update(std::vector<char> *callback) {return(true);}                // placeholder for code that is called when a Service is updated via a Controller.  Must return true/false depending on success of update
   virtual void loop(){}                                   // loops for each Service - called every cycle if over-ridden with user-defined code
   virtual void button(int pin, int pressType){}           // method called for a Service when a button attached to "pin" has a Single, Double, or Long Press, according to pressType
 };
@@ -475,6 +476,7 @@ class SpanCharacteristic{
     UINT64_t UINT64;
     INT_t INT;
     FLOAT_t FLOAT;
+    STRING_t TLV;
     STRING_t STRING = NULL;
   };
 
@@ -529,6 +531,7 @@ class SpanCharacteristic{
         return(String(c));        
       case FORMAT::STRING:
       case FORMAT::DATA:
+      case FORMAT::TLV:
         sprintf(c,"\"%.64s\"",u.STRING);  // Truncating string to 64 chars
         return(String(c));        
     } // switch
@@ -536,7 +539,7 @@ class SpanCharacteristic{
   }
 
   void uvSet(UVal &dest, UVal &src){
-    if(format==FORMAT::STRING || format==FORMAT::DATA)
+    if(format==FORMAT::STRING || format==FORMAT::DATA || format==FORMAT::TLV)
       uvSet(dest,(const char *)src.STRING);
     else
       dest=src;
@@ -572,6 +575,7 @@ class SpanCharacteristic{
       break;
       case FORMAT::STRING:
       case FORMAT::DATA:
+      case FORMAT::TLV:
       break;
     } // switch
   }
@@ -595,6 +599,7 @@ class SpanCharacteristic{
         return((T) u.FLOAT);        
       case FORMAT::STRING:
       case FORMAT::DATA:
+      case FORMAT::TLV:
       break;
     }
     return((T)0);       // included to prevent compiler warnings  
@@ -615,7 +620,7 @@ class SpanCharacteristic{
       sprintf(nvsKey,"%04X%08X%03X",t,aid,iid&0xFFF);
       size_t len;    
 
-      if(format!=FORMAT::STRING && format!=FORMAT::DATA){
+      if(format!=FORMAT::STRING && format!=FORMAT::DATA && format!=FORMAT::TLV){
         if(nvs_get_u64(homeSpan.charNVS,nvsKey,&(value.UINT64))!=ESP_OK) {
           nvs_set_u64(homeSpan.charNVS,nvsKey,value.UINT64);                // store data as uint64_t regardless of actual type (it will be read correctly when access through uvGet())         
           nvs_commit(homeSpan.charNVS);                                     // commit to NVS  
@@ -634,7 +639,7 @@ class SpanCharacteristic{
   
     uvSet(newValue,value);
 
-    if(format!=FORMAT::STRING && format!=FORMAT::DATA) {
+    if(format!=FORMAT::STRING && format!=FORMAT::DATA && format!=FORMAT::TLV) {
         uvSet(minValue,min);
         uvSet(maxValue,max);
         uvSet(stepValue,0);
@@ -656,14 +661,14 @@ class SpanCharacteristic{
   }
     
   char *getString(){
-    if(format == FORMAT::STRING)
+    if(format == FORMAT::STRING || format == FORMAT::TLV)
         return value.STRING;
 
     return NULL;
   }
 
   char *getNewString(){
-    if(format == FORMAT::STRING)
+    if(format == FORMAT::STRING || format == FORMAT::TLV)
         return newValue.STRING;
 
     return NULL;
@@ -703,7 +708,7 @@ class SpanCharacteristic{
   } // setString()
 
   size_t getData(uint8_t *data, size_t len){    
-    if(format!=FORMAT::DATA)
+    if(format!=FORMAT::DATA || format!=FORMAT::TLV)
       return(0);
 
     size_t olen;
@@ -721,7 +726,7 @@ class SpanCharacteristic{
   }
 
   size_t getNewData(uint8_t *data, size_t len){    
-    if(format!=FORMAT::DATA)
+    if(format!=FORMAT::DATA || format!=FORMAT::TLV)
       return(0);
 
     size_t olen;

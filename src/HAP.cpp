@@ -995,7 +995,8 @@ int HAPClient::putCharacteristicsURL(char *json){
     return(0);
  
   SpanBuf pObj[n];                                        // reserve space for objects
-  if(!homeSpan.updateCharacteristics(json, pObj))         // perform update
+  std::vector<char> callback;
+  if (!homeSpan.updateCharacteristics(json, pObj, &callback))        // perform update
     return(0);                                            // return if failed to update (error message will have been printed in update)
 
   boolean multiCast=false;                     
@@ -1003,9 +1004,26 @@ int HAPClient::putCharacteristicsURL(char *json){
     if(pObj[i].status!=StatusCode::OK || pObj[i].wr)      // if so, to use multicast response
       multiCast=true;    
 
-  LOG2("\n>>>>>>>>>> %s >>>>>>>>>>\n",client.remoteIP().toString().c_str());
-
-  if(!multiCast){                                         // JSON object has no content
+  LOG2("\n>>>>>>>>>> %s >>>>>>>>>>\n", client.remoteIP().toString().c_str());
+  
+  if (callback.size() > 0) {
+    homeSpan.printfValueAttributes(pObj, n, callback.data());
+    int nBytes = hapOut.getSize();
+    hapOut.flush();
+  
+    hapOut.setLogLevel(2).setHapClient(this);
+    hapOut << "HTTP/1.1 207 Multi-Status\r\nContent-Type: application/hap+json\r\nContent-Length: " << nBytes << "\r\n\r\n";
+    homeSpan.printfValueAttributes(pObj, n, callback.data());
+    hapOut.flush(); 
+  }
+  else if(!multiCast){                                         // JSON object has no content
+    
+    char body[]="HTTP/1.1 204 No Content\r\n\r\n";
+    
+    LOG2("\n>>>>>>>>>> ");
+    LOG2(client.remoteIP());
+    LOG2(" >>>>>>>>>>\n");
+    LOG2(body);  
 
     hapOut.setLogLevel(2).setHapClient(this);    
     hapOut << "HTTP/1.1 204 No Content\r\n\r\n";
@@ -1413,6 +1431,9 @@ tagError HAPClient::addController(uint8_t *id, uint8_t *ltpk, boolean admin){
       charPrintRow(id,hap_controller_IDBYTES,2);
       LOG2(admin?" (admin)\n\n":" (regular)\n\n");
       saveControllers();
+      if(homeSpan.pairCallback){ // if set, invoke user-defined Pairing Callback to indicate device has been removed
+        homeSpan.pairCallback(true);
+      }
     } else {
       LOG0("\n*** ERROR: Can't pair more than %d Controllers\n\n",MAX_CONTROLLERS);
       err=tagError_MaxPeers;
