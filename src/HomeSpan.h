@@ -529,6 +529,7 @@ class SpanCharacteristic{
         return(String(c));        
       case FORMAT::STRING:
       case FORMAT::DATA:
+      case FORMAT::TLV_ENC:
         sprintf(c,"\"%.64s\"",u.STRING);  // Truncating string to 64 chars
         return(String(c));        
     } // switch
@@ -536,7 +537,7 @@ class SpanCharacteristic{
   }
 
   void uvSet(UVal &dest, UVal &src){
-    if(format==FORMAT::STRING || format==FORMAT::DATA)
+    if(format==FORMAT::STRING || format==FORMAT::DATA || format==FORMAT::TLV_ENC)
       uvSet(dest,(const char *)src.STRING);
     else
       dest=src;
@@ -572,6 +573,7 @@ class SpanCharacteristic{
       break;
       case FORMAT::STRING:
       case FORMAT::DATA:
+      case FORMAT::TLV_ENC:
       break;
     } // switch
   }
@@ -595,6 +597,7 @@ class SpanCharacteristic{
         return((T) u.FLOAT);        
       case FORMAT::STRING:
       case FORMAT::DATA:
+      case FORMAT::TLV_ENC:
       break;
     }
     return((T)0);       // included to prevent compiler warnings  
@@ -615,7 +618,7 @@ class SpanCharacteristic{
       sprintf(nvsKey,"%04X%08X%03X",t,aid,iid&0xFFF);
       size_t len;    
 
-      if(format!=FORMAT::STRING && format!=FORMAT::DATA){
+      if(format!=FORMAT::STRING && format!=FORMAT::DATA && format!=FORMAT::TLV_ENC){
         if(nvs_get_u64(homeSpan.charNVS,nvsKey,&(value.UINT64))!=ESP_OK) {
           nvs_set_u64(homeSpan.charNVS,nvsKey,value.UINT64);                // store data as uint64_t regardless of actual type (it will be read correctly when access through uvGet())         
           nvs_commit(homeSpan.charNVS);                                     // commit to NVS  
@@ -634,7 +637,7 @@ class SpanCharacteristic{
   
     uvSet(newValue,value);
 
-    if(format!=FORMAT::STRING && format!=FORMAT::DATA) {
+    if(format!=FORMAT::STRING && format!=FORMAT::DATA && format!=FORMAT::TLV_ENC) {
         uvSet(minValue,min);
         uvSet(maxValue,max);
         uvSet(stepValue,0);

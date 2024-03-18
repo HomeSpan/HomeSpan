@@ -49,7 +49,8 @@ enum FORMAT {     // HAP Table 6-5
   INT=5,
   FLOAT=6,
   STRING=7,
-  DATA=8
+  DATA=8,
+  TLV_ENC=9
 };
 
 ///////////////////////////////
