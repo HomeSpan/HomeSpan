@@ -53,6 +53,8 @@ namespace PixelType {
   pixelType_t BGRW={15,23,31,7}; 
   pixelType_t GBRW={15,31,23,7}; 
   pixelType_t GRBW={23,31,15,7};
+  // White-only pixels
+  pixelType_t WHITE_WxC={15,0,23,0}; // GBR, R=warm white, G=nothing, B=cold white
 };
 
 ////////////////////////////////////////////
@@ -90,6 +92,13 @@ class Pixel : public Blinkable {
         this->white=w*2.555;      
         return(*this);
       }      
+
+      Color WarmColdWhite(uint8_t warm, uint8_t cold)                 // returns Color based on 0-255 values of warm and cold white leds.
+      {
+        this->red = warm;
+        this->blue = cold;
+        return(*this);        
+      }
 
       bool operator==(const Color& color){
         return(val==color.val);
@@ -168,6 +177,7 @@ class Pixel : public Blinkable {
     
     static Color RGB(uint8_t r, uint8_t g, uint8_t b, uint8_t w=0){return(Color().RGB(r,g,b,w));}  // an alternative method for returning an RGB Color
     static Color HSV(float h, float s, float v, double w=0){return(Color().HSV(h,s,v,w));}         // an alternative method for returning an HSV Color
+    static Color WarmColdWhite(uint8_t warm, uint8_t cold){return(Color().WarmColdWhite(warm,cold));}  // an alternative method for returning an all-white Color
               
     int getPin(){return(rf->getPin());}                                                     // returns pixel pin if valid, else returns -1
     boolean isRGBW(){return(bytesPerPixel==4);}                                             // returns true if RGBW LED, else false if RGB LED
