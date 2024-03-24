@@ -618,7 +618,7 @@ class SpanCharacteristic{
       sprintf(nvsKey,"%04X%08X%03X",t,aid,iid&0xFFF);
       size_t len;    
 
-      if(format!=FORMAT::STRING && format!=FORMAT::DATA && format!=FORMAT::TLV_ENC){
+      if(format<FORMAT::STRING){
         if(nvs_get_u64(homeSpan.charNVS,nvsKey,&(value.UINT64))!=ESP_OK) {
           nvs_set_u64(homeSpan.charNVS,nvsKey,value.UINT64);                // store data as uint64_t regardless of actual type (it will be read correctly when access through uvGet())         
           nvs_commit(homeSpan.charNVS);                                     // commit to NVS  
@@ -637,10 +637,10 @@ class SpanCharacteristic{
   
     uvSet(newValue,value);
 
-    if(format!=FORMAT::STRING && format!=FORMAT::DATA && format!=FORMAT::TLV_ENC) {
-        uvSet(minValue,min);
-        uvSet(maxValue,max);
-        uvSet(stepValue,0);
+    if(format<FORMAT::STRING){
+      uvSet(minValue,min);
+      uvSet(maxValue,max);
+      uvSet(stepValue,0);
     }
           
   } // init()
@@ -659,14 +659,14 @@ class SpanCharacteristic{
   }
     
   char *getString(){
-    if(format == FORMAT::STRING)
+    if(format>=FORMAT::STRING)
         return value.STRING;
 
     return NULL;
   }
 
   char *getNewString(){
-    if(format == FORMAT::STRING)
+    if(format>=FORMAT::STRING)
         return newValue.STRING;
 
     return NULL;
@@ -706,7 +706,7 @@ class SpanCharacteristic{
   } // setString()
 
   size_t getData(uint8_t *data, size_t len){    
-    if(format!=FORMAT::DATA)
+    if(format<FORMAT::DATA)
       return(0);
 
     size_t olen;
@@ -724,7 +724,7 @@ class SpanCharacteristic{
   }
 
   size_t getNewData(uint8_t *data, size_t len){    
-    if(format!=FORMAT::DATA)
+    if(format<FORMAT::DATA)
       return(0);
 
     size_t olen;

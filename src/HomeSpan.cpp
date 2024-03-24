@@ -1846,7 +1846,7 @@ SpanCharacteristic::~SpanCharacteristic(){
 void SpanCharacteristic::printfAttributes(int flags){
 
   const char permCodes[][7]={"pr","pw","ev","aa","tw","hd","wr"};
-  const char formatCodes[][9]={"bool","uint8","uint16","uint32","uint64","int","float","string","data"};
+  const char formatCodes[][9]={"bool","uint8","uint16","uint32","uint64","int","float","string","data","tlv8"};
 
   hapOut << "{\"iid\":" << iid;
 
