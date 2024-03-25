@@ -537,7 +537,7 @@ class SpanCharacteristic{
   }
 
   void uvSet(UVal &dest, UVal &src){
-    if(format==FORMAT::STRING || format==FORMAT::DATA || format==FORMAT::TLV_ENC)
+    if(format>=FORMAT::STRING)
       uvSet(dest,(const char *)src.STRING);
     else
       dest=src;

@@ -26,18 +26,43 @@
  ********************************************************************************/
 
 #include "HomeSpan.h"
+#include "TLV8.h"
 
 #define MAX_LIGHTS  1
 
 void setup() {
  
   Serial.begin(115200);
+  delay(1000);
+  Serial.printf("\n\nREADY\n\n");
+
+  TLV8 tlv, tlv2;
+
+  const size_t nMax=257;
+  uint8_t c[nMax];
+  for(int i=0;i<nMax;i++)
+    c[i]=0x22;
+
+  tlv.add(5);
+  tlv.add(6);
+  tlv.add(7,44);
+  tlv.add(255);
+  tlv.add(7,33);
+  tlv.add(7,34);
+  tlv.add(15,nMax,c);
+  tlv.print();
+
+  Serial.printf("\nSize=%d\n\n",tlv.pack_size());
+
+  uint8_t bOut[tlv.pack_size()];
+  tlv.pack(bOut);
+
+  tlv2.unpack(bOut,tlv.pack_size());
+  tlv2.print();
+
+  while(1);
 
   homeSpan.setLogLevel(2);
-  homeSpan.enableWebLog(50,"pool.ntp.org","UTC",NULL);
-//  homeSpan.setPairingCode("12345670");
-//  homeSpan.enableWebLog(50,"pool.ntp.org","UTC","myStatus");
-//  homeSpan.enableWebLog(50,NULL,NULL,NULL);
 
   homeSpan.begin(Category::Lighting,"HomeSpan Max");
 
@@ -57,8 +82,6 @@ void setup() {
      WEBLOG("Configuring %s",c);
   }
 
-  new SpanUserCommand('w', " - get web log test",webLogTest);     // simulate getting an HTTPS request for weblog
-
 }
 
 //////////////////////////////////////
@@ -70,18 +93,3 @@ void loop(){
 }
 
 //////////////////////////////////////
-
-void webLogTest(const char *dummy){
-  Serial.printf("\n*** In Web Log Test.  Starting Custom Web Log Handler\n");     // here is where you would perform any HTTPS initializations   
-  homeSpan.getWebLog(webLogHandler,NULL);      // this starts the normal weblog with output redirected to the specified handler (below)
-}
-
-void webLogHandler(const char *buf, void *args){
-  if(buf!=NULL){
-    Serial.printf("--------\n");
-    Serial.printf("%s",buf);            // here is where you would transmit data to the HTTPS connection
-    Serial.printf("********\n");
-  }
-  else
-    Serial.print("*** DONE!\n\n");      // here is where you would close the HTTPS connection
-}

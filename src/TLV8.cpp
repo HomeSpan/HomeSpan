@@ -70,10 +70,10 @@ void tlv8_t::osprint(std::ostream& os){
 
 TLV8_it TLV8::add(uint8_t tag, size_t len, const uint8_t* val){
 
-  if(!empty() && front().tag==tag)
-    front().update(len,val);
+  if(!empty() && back().tag==tag)
+    back().update(len,val);
   else
-    emplace_front(tag,len,val);
+    emplace_back(tag,len,val);
 
   return(begin());
 }

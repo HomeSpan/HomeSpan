@@ -29,7 +29,7 @@
 
 #include <Arduino.h>
 #include <sstream>
-#include <forward_list>
+#include <list>
 #include <memory>
 
 #include "PSRAM.h"
@@ -51,12 +51,12 @@ struct tlv8_t {
 
 /////////////////////////////////////
 
-typedef std::forward_list<tlv8_t, Mallocator<tlv8_t>>::iterator TLV8_it;
+typedef std::list<tlv8_t, Mallocator<tlv8_t>>::iterator TLV8_it;
 typedef struct { const uint8_t tag; const char *name; } TLV8_names;
 
 /////////////////////////////////////
 
-class TLV8 : public std::forward_list<tlv8_t, Mallocator<tlv8_t>> {
+class TLV8 : public std::list<tlv8_t, Mallocator<tlv8_t>> {
 
   TLV8_it currentPackIt;
   TLV8_it endPackIt;
@@ -109,6 +109,6 @@ class TLV8 : public std::forward_list<tlv8_t, Mallocator<tlv8_t>> {
 
   void unpack(uint8_t *buf, size_t bufSize);
 
-  void wipe(){std::forward_list<tlv8_t, Mallocator<tlv8_t>>().swap(*this);}
+  void wipe(){std::list<tlv8_t, Mallocator<tlv8_t>>().swap(*this);}
   
 };
