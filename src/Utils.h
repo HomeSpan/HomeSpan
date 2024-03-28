@@ -55,7 +55,9 @@ class TempBuffer {
   TempBuffer(size_t _nElements=1) : nElements(_nElements) {
     buf=(bufType *)HS_MALLOC(nElements*sizeof(bufType));
     if(buf==NULL){
-      Serial.printf("\n\n*** FATAL ERROR: Requested allocation of %d bytes failed.  Program Halting.\n\n",nElements*sizeof(bufType));
+      Serial.print("\n\n*** FATAL ERROR: Requested allocation of ");
+      Serial.print(nElements*sizeof(bufType));
+      Serial.print(" bytes failed.  Program Halting.\n\n");
       while(1);
     }
    }
@@ -67,7 +69,9 @@ class TempBuffer {
       size_t addElements=va_arg(args,size_t);    
       buf=(bufType *)HS_REALLOC(buf,(nElements+addElements)*sizeof(bufType));
       if(buf==NULL){
-        Serial.printf("\n\n*** FATAL ERROR: Requested allocation of %d bytes failed.  Program Halting.\n\n",nElements*sizeof(bufType));
+        Serial.print("\n\n*** FATAL ERROR: Requested allocation of ");
+        Serial.print(nElements*sizeof(bufType));
+        Serial.print(" bytes failed.  Program Halting.\n\n");
         while(1);
       }
       memcpy(buf+nElements,addBuf,addElements*sizeof(bufType));
