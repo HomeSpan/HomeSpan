@@ -75,7 +75,7 @@ TLV8_it TLV8::add(uint8_t tag, size_t len, const uint8_t* val){
   else
     emplace_back(tag,len,val);
 
-  return(begin());
+  return(--end());
 }
 
 /////////////////////////////////////

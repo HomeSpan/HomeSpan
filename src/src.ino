@@ -50,9 +50,13 @@ void setup() {
   tlv.add(7,33);
   tlv.add(7,34);
   tlv.add(15,nMax,c);
-  tlv.print();
+//  tlv.print();
+
+  tlv.print(--tlv.end(),tlv.end());
 
   Serial.printf("\nSize=%d\n\n",tlv.pack_size());
+
+  
 
   uint8_t bOut[tlv.pack_size()];
   tlv.pack(bOut);
