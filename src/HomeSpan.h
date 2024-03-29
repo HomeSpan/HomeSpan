@@ -675,12 +675,12 @@ class SpanCharacteristic{
   void setString(const char *val, boolean notify=true){
 
     if(!((perms&EV) || (updateFlag==2))){
-      LOG0("\n*** WARNING:  Attempt to update Characteristic::%s with setData() ignored.  No EVENT NOTIFICATION (EV) permission on this characteristic\n\n",hapName);
+      LOG0("\n*** WARNING:  Attempt to update Characteristic::%s with setString() ignored.  No EVENT NOTIFICATION (EV) permission on this characteristic\n\n",hapName);
       return;
     }   
 
     if(updateFlag==1)
-      LOG0("\n*** WARNING:  Attempt to update Characteristic::%s with setVal() within update() while it is being updated by Home App.  This may cause device to become non-responsive!\n\n",hapName);
+      LOG0("\n*** WARNING:  Attempt to update Characteristic::%s with setString() within update() while it is being updated by Home App.  This may cause device to become non-responsive!\n\n",hapName);
 
     uvSet(value,val);
     uvSet(newValue,value);
@@ -763,7 +763,7 @@ class SpanCharacteristic{
   template <typename T> void setVal(T val, boolean notify=true){
 
     if(!((perms&EV) || (updateFlag==2))){
-      LOG0("\n*** WARNING:  Attempt to update Characteristic::%s with setData() ignored.  No EVENT NOTIFICATION (EV) permission on this characteristic\n\n",hapName);
+      LOG0("\n*** WARNING:  Attempt to update Characteristic::%s with setVal() ignored.  No EVENT NOTIFICATION (EV) permission on this characteristic\n\n",hapName);
       return;
     }   
 

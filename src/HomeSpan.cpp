@@ -896,7 +896,7 @@ void Span::processSerialCommand(const char *c){
                 LOG0("%s%s",(foundPerms++)?"+":"",pNames[i]);
             }           
             
-            if((*chr)->format!=FORMAT::STRING && (*chr)->format!=FORMAT::BOOL && (*chr)->format!=FORMAT::DATA){
+            if((*chr)->format<FORMAT::STRING && (*chr)->format!=FORMAT::BOOL){
               if((*chr)->validValues)
                 LOG0(", Valid Values=%s",(*chr)->validValues);
               else if((*chr)->uvGet<double>((*chr)->stepValue)>0)
@@ -937,7 +937,7 @@ void Span::processSerialCommand(const char *c){
             if((*chr)->setValidValuesError)
               LOG0("          *** WARNING #%d!  Attempt to set Custom Valid Values for this Characteristic ignored ***\n",++nWarnings);
 
-            if((*chr)->format!=STRING && (!(((*chr)->uvGet<double>((*chr)->value) >= (*chr)->uvGet<double>((*chr)->minValue)) && ((*chr)->uvGet<double>((*chr)->value) <= (*chr)->uvGet<double>((*chr)->maxValue)))))
+            if((*chr)->format<STRING && (!(((*chr)->uvGet<double>((*chr)->value) >= (*chr)->uvGet<double>((*chr)->minValue)) && ((*chr)->uvGet<double>((*chr)->value) <= (*chr)->uvGet<double>((*chr)->maxValue)))))
               LOG0("          *** WARNING #%d!  Value of %g is out of range [%g,%g] ***\n",++nWarnings,(*chr)->uvGet<double>((*chr)->value),(*chr)->uvGet<double>((*chr)->minValue),(*chr)->uvGet<double>((*chr)->maxValue));
           
           } // Characteristics
@@ -1457,7 +1457,7 @@ int Span::updateCharacteristics(char *buf, SpanBuf *pObj){
           if(status==StatusCode::OK){                                                     // if status is okay
             pObj[j].characteristic->uvSet(pObj[j].characteristic->value,pObj[j].characteristic->newValue);               // update characteristic value with new value
             if(pObj[j].characteristic->nvsKey){                                                                                               // if storage key found
-              if(pObj[j].characteristic->format!=FORMAT::STRING && pObj[j].characteristic->format!=FORMAT::DATA)
+              if(pObj[j].characteristic->format<FORMAT::STRING)
                 nvs_set_u64(charNVS,pObj[j].characteristic->nvsKey,pObj[j].characteristic->value.UINT64);  // store data as uint64_t regardless of actual type (it will be read correctly when access through uvGet())         
               else
                 nvs_set_str(charNVS,pObj[j].characteristic->nvsKey,pObj[j].characteristic->value.STRING);                                     // store data
@@ -1833,7 +1833,7 @@ SpanCharacteristic::~SpanCharacteristic(){
   free(validValues);
   free(nvsKey);
 
-  if(format==FORMAT::STRING || format==FORMAT::DATA){
+  if(format>=FORMAT::STRING){
     free(value.STRING);
     free(newValue.STRING);
   }
@@ -2005,6 +2005,8 @@ StatusCode SpanCharacteristic::loadUpdate(char *val, char *ev, boolean wr){
       break;
 
     case STRING:
+    case DATA:
+    case TLV_ENC:
       uvSet(newValue,(const char *)val);
       break;
 

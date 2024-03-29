@@ -30,41 +30,11 @@
 
 #define MAX_LIGHTS  1
 
+CUSTOM_CHAR_DATA(UserData, AAAAAAAA-BBBB-AAAA-AAAA-AAAAAAAAAAAA, PR+PW+EV);
+
 void setup() {
  
   Serial.begin(115200);
-  delay(1000);
-  Serial.printf("\n\nREADY\n\n");
-
-  TLV8 tlv, tlv2;
-
-  const size_t nMax=257;
-  uint8_t c[nMax];
-  for(int i=0;i<nMax;i++)
-    c[i]=0x22;
-
-  tlv.add(5);
-  tlv.add(6);
-  tlv.add(7,44);
-  tlv.add(255);
-  tlv.add(7,33);
-  tlv.add(7,34);
-  tlv.add(15,nMax,c);
-//  tlv.print();
-
-  tlv.print(--tlv.end(),tlv.end());
-
-  Serial.printf("\nSize=%d\n\n",tlv.pack_size());
-
-  
-
-  uint8_t bOut[tlv.pack_size()];
-  tlv.pack(bOut);
-
-  tlv2.unpack(bOut,tlv.pack_size());
-  tlv2.print();
-
-  while(1);
 
   homeSpan.setLogLevel(2);
 
@@ -78,6 +48,8 @@ void setup() {
     new SpanAccessory();
       new Service::AccessoryInformation();
         new Characteristic::Identify();
+        uint8_t x[]={1,2,3,4,5};
+        (new Characteristic::UserData("AAAA"))->setDescription("Custom Data")->setData(x,5);
         char c[30];
         sprintf(c,"Light-%d",i);
         new Characteristic::Name(c);
@@ -93,6 +65,7 @@ void setup() {
 void loop(){
  
   homeSpan.poll();
+  delay(100000);
   
 }
 
