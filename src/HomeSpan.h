@@ -55,6 +55,7 @@
 #include "HAPConstants.h"
 #include "HapQR.h"
 #include "Characteristics.h"
+#include "TLV8.h"
 
 using std::vector;
 using std::unordered_map;
@@ -756,11 +757,33 @@ class SpanCharacteristic{
     }
 
     size_t olen;
-    mbedtls_base64_encode(NULL,0,&olen,data,len);                      // get length of string buffer needed (mbedtls includes the trailing null in this size)
+    mbedtls_base64_encode(NULL,0,&olen,NULL,len);                      // get length of string buffer needed (mbedtls includes the trailing null in this size)
     TempBuffer<char> tBuf(olen);                                       // create temporary string buffer, with room for trailing null
     mbedtls_base64_encode((uint8_t*)tBuf.get(),olen,&olen,data,len );  // encode data into string buf
     setString(tBuf,notify);                                            // call setString to continue processing as if characteristic was a string
   }  
+
+
+  void setTLV(TLV8 &tlv, boolean notify=true){
+
+    if(updateFlag==1)
+      LOG0("\n*** WARNING:  Attempt to update Characteristic::%s with setVal() within update() while it is being updated by Home App.  This may cause device to become non-responsive!\n\n",hapName);
+
+    const size_t bufSize=36;                                  // maximum size of buffer to store packed TLV bytes before encoding directly into value; must be multiple of 3
+    size_t nBytes=tlv.pack_size();                            // total size of packed TLV in bytes
+    size_t nChars;
+    mbedtls_base64_encode(NULL,0,&nChars,NULL,nBytes);        // get length of string buffer needed (mbedtls includes the trailing null in this size)
+    value.STRING = (char *)HS_REALLOC(value.STRING,nChars);   // allocate sufficient size for storing value
+    TempBuffer<uint8_t> tBuf(bufSize);                        // create fixed-size buffer to store packed TLV bytes
+    tlv.pack_init();                                          // initialize TLV packing
+    uint8_t *p=(uint8_t *)value.STRING;                       // set pointer to beginning of value
+    while((nBytes=tlv.pack(tBuf,bufSize))>0){                 // pack the next set of TLV bytes, up to a maximum of bufSize, into tBuf
+      size_t olen;                                            // number of characters written (excludes null character)
+      mbedtls_base64_encode(p,nChars,&olen,tBuf,nBytes);      // encode data directly into value
+      p+=olen;                                                // advance pointer to null character
+      nChars-=olen;                                           // subtract number of characters remaining
+    }    
+  }    
 
   template <typename T> void setVal(T val, boolean notify=true){
 

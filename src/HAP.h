@@ -34,7 +34,6 @@
 #include "HAPConstants.h"
 #include "HKDF.h"
 #include "SRP.h"
-#include "TLV8.h"
 
 const TLV8_names HAP_Names[] = {
   {kTLVType_Separator,"SEPARATOR"},

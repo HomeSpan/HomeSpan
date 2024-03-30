@@ -26,7 +26,6 @@
  ********************************************************************************/
 
 #include "HomeSpan.h"
-#include "TLV8.h"
 
 CUSTOM_CHAR_TLV(DisplayOrder,136,PR+EV);
 
@@ -52,11 +51,7 @@ struct HomeSpanTV : Service::Television {
       }
 
       orderTLV.print();
-      size_t n=orderTLV.pack_size();
-      Serial.printf("Size=%d\n",n);
-      uint8_t c[n];
-      orderTLV.pack(c);
-      displayOrder->setData(c,n);
+      displayOrder->setTLV(orderTLV);
 
       new SpanUserCommand('P', "- change order of inputs", changeOrder, this);  
     }
