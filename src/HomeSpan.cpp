@@ -887,8 +887,8 @@ void Span::processSerialCommand(const char *c){
             isBridge=false;                  // ...this is not a bridge device          
        
           for(auto chr=(*svc)->Characteristics.begin(); chr!=(*svc)->Characteristics.end(); chr++){
-            LOG0("      \u21e8 Characteristic %s(%s):  IID=%d, %sUUID=\"%s\", %sPerms=",
-              (*chr)->hapName,(*chr)->uvPrint((*chr)->value).c_str(),(*chr)->iid,(*chr)->isCustom?"Custom-":"",(*chr)->type,(*chr)->perms!=(*chr)->hapChar->perms?"Custom-":"");
+            LOG0("      \u21e8 Characteristic %s(%.32s%s):  IID=%d, %sUUID=\"%s\", %sPerms=",
+              (*chr)->hapName,(*chr)->uvPrint((*chr)->value).c_str(),strlen((*chr)->uvPrint((*chr)->value).c_str())>32?"...":"",(*chr)->iid,(*chr)->isCustom?"Custom-":"",(*chr)->type,(*chr)->perms!=(*chr)->hapChar->perms?"Custom-":"");
 
             int foundPerms=0;
             for(uint8_t i=0;i<7;i++){
@@ -925,7 +925,7 @@ void Span::processSerialCommand(const char *c){
             if(!(*chr)->isCustom && !(*svc)->isCustom  && std::find((*svc)->req.begin(),(*svc)->req.end(),(*chr)->hapChar)==(*svc)->req.end() && std::find((*svc)->opt.begin(),(*svc)->opt.end(),(*chr)->hapChar)==(*svc)->opt.end())
               LOG0("          *** WARNING #%d!  Service does not support this Characteristic ***\n",++nWarnings);
             else
-            if(invalidUUID((*chr)->type,(*chr)->isCustom))
+            if(invalidUUID((*chr)->type))
               LOG0("          *** ERROR #%d!  Format of UUID is invalid ***\n",++nErrors);
             else       
               if(std::find_if((*svc)->Characteristics.begin(),chr,[chr](SpanCharacteristic *c)->boolean{return(c->hapChar==(*chr)->hapChar);})!=chr)

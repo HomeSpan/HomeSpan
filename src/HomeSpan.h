@@ -287,10 +287,13 @@ class Span{
   void clearNotify(int slotNum);                                          // set ev notification flags for connection 'slotNum' to false across all characteristics 
   void printfNotify(SpanBuf *pObj, int nObj, int conNum);                 // writes notification JSON to hapOut stream based on SpanBuf objects and specified connection number
 
-  static boolean invalidUUID(const char *uuid, boolean isCustom){
+  static boolean invalidUUID(const char *uuid){
     int x=0;
+    sscanf(uuid,"%*8[0-9a-fA-F]%n",&x);       // check for short-form of UUID
+    if(strlen(uuid)==x && uuid[0]!='0')
+      return(false);
     sscanf(uuid,"%*8[0-9a-fA-F]-%*4[0-9a-fA-F]-%*4[0-9a-fA-F]-%*4[0-9a-fA-F]-%*12[0-9a-fA-F]%n",&x);
-    return(isCustom && (strlen(uuid)!=36 || x!=36));    
+    return(strlen(uuid)!=36 || x!=36);
   }
   
   public:
