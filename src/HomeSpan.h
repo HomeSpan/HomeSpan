@@ -509,7 +509,7 @@ class SpanCharacteristic{
   StatusCode loadUpdate(char *val, char *ev, boolean wr);     // load updated val/ev from PUT /characteristic JSON request.  Return intitial HAP status code (checks to see if characteristic is found, is writable, etc.)  
     
   String uvPrint(UVal &u){
-    char c[67];               // space for 64 characters + surrounding quotes + terminating null
+    char c[64];
     switch(format){
       case FORMAT::BOOL:
         return(String(u.BOOL));      
@@ -530,8 +530,7 @@ class SpanCharacteristic{
       case FORMAT::STRING:
       case FORMAT::DATA:
       case FORMAT::TLV_ENC:
-        sprintf(c,"\"%.64s\"",u.STRING);  // Truncating string to 64 chars
-        return(String(c));        
+        return(String("\"") + String(u.STRING) + String("\""));        
     } // switch
     return(String());       // included to prevent compiler warnings
   }

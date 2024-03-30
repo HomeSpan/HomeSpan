@@ -616,6 +616,10 @@ namespace Characteristic {
   HapChar _CUSTOM_##NAME {#UUID,#NAME,(PERMS)(PERMISISONS),DATA,true}; \
   namespace Characteristic { struct NAME : SpanCharacteristic { NAME(const char * val="AA==", boolean nvsStore=false) : SpanCharacteristic {&_CUSTOM_##NAME,true} { init(val,nvsStore); } }; }
 
+#define CUSTOM_CHAR_TLV(NAME,UUID,PERMISISONS) \
+  HapChar _CUSTOM_##NAME {#UUID,#NAME,(PERMS)(PERMISISONS),TLV_ENC,true}; \
+  namespace Characteristic { struct NAME : SpanCharacteristic { NAME(const char * val="", boolean nvsStore=false) : SpanCharacteristic {&_CUSTOM_##NAME,true} { init(val,nvsStore); } }; }
+
 #else
 
 #define CUSTOM_CHAR(NAME,UUID,PERMISISONS,FORMAT,DEFVAL,MINVAL,MAXVAL,STATIC_RANGE) \
