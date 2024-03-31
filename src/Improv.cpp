@@ -81,11 +81,11 @@ void handleImprovCommand(improv::ImprovCommand cmd, Span* span) {
           // Firmware name
           "HomeSpan",
           // Firmware version
-          "1.0.0",
+          HOMESPAN_VERSION,
           // Hardware chip/variant
           "ESP32",
           // Device name
-          "HomeSpanDevice"
+          span->getDisplayName(),
         };
         std::vector<uint8_t> data = improv::build_rpc_response(improv::GET_DEVICE_INFO, infos, false);
         improv::sendImprovResponse(data);
