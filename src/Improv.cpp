@@ -22,7 +22,7 @@ void Span::processImprovCommand(const char *c, Span* span){
   strcpy(buffer, c);
   buffer[len-1] = c[len-1]; // Copy the checksum bit since it falls after the null terminator
 
-  improv::parse_improv_serial_byte(len - 1, buffer[len - 1], (uint8_t *)c, [&](ImprovCommand command) {
+  improv::parseImprovSerialByte(len - 1, buffer[len - 1], (uint8_t *)c, [&](ImprovCommand command) {
     improv::handleImprovCommand(command, span);
     return true;
   }, [&](Error error) {
@@ -49,7 +49,7 @@ void handleImprovCommand(improv::ImprovCommand cmd, Span* span) {
       if (connectWifi(cmd.ssid.c_str(), cmd.password.c_str())) {
         sendImprovState(improv::State::STATE_PROVISIONED);
         std::vector<std::string> infos; // Empty vector, we could put an HTTP URL here as the next step for the user if we had one
-        std::vector<uint8_t> data = improv::build_rpc_response(improv::WIFI_SETTINGS, infos, false);
+        std::vector<uint8_t> data = improv::buildRPCResponse(improv::WIFI_SETTINGS, infos, false);
         improv::sendImprovResponse(data);
 
         span->setWifiCredentials(cmd.ssid.c_str(), cmd.password.c_str()); // Save credentials and reboot
@@ -66,7 +66,7 @@ void handleImprovCommand(improv::ImprovCommand cmd, Span* span) {
       if((WiFi.status() == WL_CONNECTED)) {
         sendImprovState(improv::State::STATE_PROVISIONED);
         std::vector<std::string> infos; // Empty vector, we could put an HTTP URL here as the next step for the user if we had one
-        std::vector<uint8_t> data = improv::build_rpc_response(improv::GET_CURRENT_STATE, infos, false);
+        std::vector<uint8_t> data = improv::buildRPCResponse(improv::GET_CURRENT_STATE, infos, false);
         improv::sendImprovResponse(data);
       } else {
         sendImprovState(improv::State::STATE_AUTHORIZED);
@@ -87,7 +87,7 @@ void handleImprovCommand(improv::ImprovCommand cmd, Span* span) {
           // Device name
           span->getDisplayName(),
         };
-        std::vector<uint8_t> data = improv::build_rpc_response(improv::GET_DEVICE_INFO, infos, false);
+        std::vector<uint8_t> data = improv::buildRPCResponse(improv::GET_DEVICE_INFO, infos, false);
         improv::sendImprovResponse(data);
         break;
       }
@@ -98,7 +98,7 @@ void handleImprovCommand(improv::ImprovCommand cmd, Span* span) {
       break;
 
     case Command::BAD_CHECKSUM:
-      LOG2("Improv-Serial Error: Bad Checksum");
+      //LOG2("Improv-Serial Error: Bad Checksum");
       break;
 
     case Command::UNKNOWN:
@@ -112,12 +112,12 @@ void handleImprovCommand(improv::ImprovCommand cmd, Span* span) {
 bool connectWifi(const char *ssid, const char *pwd) {
   uint8_t attempts = 0;
 
-  LOG2("Attempting to connect to WiFi SSID %s\n", ssid);
+  //LOG2("Attempting to connect to WiFi SSID %s\n", ssid);
   WiFi.begin(ssid, pwd); // Connect to the network
 
   while (WiFi.status() != WL_CONNECTED) {
     delay(1000); // Wait for the connection to be established
-    LOG2("Attempting to connect to WiFi SSID %s, attempt #%s\n", ssid, String(attempts));
+    //LOG2("Attempting to connect to WiFi SSID %s, attempt #%s\n", ssid, String(attempts));
 
     if (attempts > MAX_ATTEMPTS_WIFI_CONNECTION) { // Give up after a certain number of attempts
       LOG0("Failed to connect to WiFi");
@@ -138,14 +138,14 @@ void getAvailableWifiNetworks() {
 
   // Send one RPC response for each network we found
   for(int id = 0; id < networkNum; ++id) {
-    std::vector<uint8_t> data = improv::build_rpc_response(
+    std::vector<uint8_t> data = improv::buildRPCResponse(
             improv::GET_WIFI_NETWORKS, {WiFi.SSID(id), String(WiFi.RSSI(id)), (WiFi.encryptionType(id) == WIFI_AUTH_OPEN ? "NO" : "YES")}, false);
     improv::sendImprovResponse(data);
     delay(1);
   }
   // Send a blank response to signal the end of the list
   std::vector<uint8_t> data =
-          improv::build_rpc_response(improv::GET_WIFI_NETWORKS, std::vector<std::string>{}, false);
+          improv::buildRPCResponse(improv::GET_WIFI_NETWORKS, std::vector<std::string>{}, false);
   improv::sendImprovResponse(data);
 }
 
@@ -172,7 +172,7 @@ void sendImprovState(improv::State state) {
     sprintf(hex, "%02X", data[i]);
     hexData += hex;
   }
-  LOG2("Wrote Improv Serial state: %s\n", hexData);
+  //LOG2("Wrote Improv Serial state: %s\n", hexData);
 } // sendImprovState
 
 ///////////////////////////////
@@ -198,7 +198,7 @@ void sendImprovError(improv::Error error) {
     sprintf(hex, "%02X", data[i]);
     hexData += hex;
   }
-  LOG2("Wrote Improv Serial error: %s\n", hexData);
+  //LOG2("Wrote Improv Serial error: %s\n", hexData);
 }
 
 ///////////////////////////////
@@ -224,19 +224,19 @@ void sendImprovResponse(std::vector<uint8_t> &response) {
     sprintf(hex, "%02X", data[i]);
     hexData += hex;
   }
-  LOG2("Wrote Improv Serial response: %s\n", hexData);
+  //LOG2("Wrote Improv Serial response: %s\n", hexData);
 }
 
 ///////////////////////////////
 
 // From https://github.com/improv-wifi/sdk-cpp/blob/main/src/improv.cpp
-ImprovCommand parse_improv_data(const std::vector<uint8_t> &data, bool check_checksum) {
-  return parse_improv_data(data.data(), data.size(), check_checksum);
-} // parse_improv_data
+ImprovCommand parseImprovData(const std::vector<uint8_t> &data, bool check_checksum) {
+  return parseImprovData(data.data(), data.size(), check_checksum);
+} // parseImprovData
 
 ///////////////////////////////
 
-ImprovCommand parse_improv_data(const uint8_t *data, size_t length, bool check_checksum) {
+ImprovCommand parseImprovData(const uint8_t *data, size_t length, bool check_checksum) {
   ImprovCommand improv_command;
   Command command = (Command) data[0];
   uint8_t data_length = data[1];
@@ -276,11 +276,11 @@ ImprovCommand parse_improv_data(const uint8_t *data, size_t length, bool check_c
 
   improv_command.command = command;
   return improv_command;
-} // parse_improv_data
+} // parseImprovData
 
 ///////////////////////////////
 
-bool parse_improv_serial_byte(size_t position, uint8_t byte, const uint8_t *buffer,
+bool parseImprovSerialByte(size_t position, uint8_t byte, const uint8_t *buffer,
                               std::function<bool(ImprovCommand)> &&callback, std::function<void(Error)> &&on_error) {
   if(position == 0)
     return byte == 'I';
@@ -312,24 +312,24 @@ bool parse_improv_serial_byte(size_t position, uint8_t byte, const uint8_t *buff
     for(size_t i = 0; i < position; i++)
       checksum += buffer[i];
 
-    Serial.println("Checksum: " + String(checksum) + " Byte: " + String(byte));
     if(checksum != byte) {
+      //LOG2.println("Improv-Serial packet checksum, calculated: " + String(checksum) + ", expecting: " + String(byte));
       on_error(ERROR_INVALID_RPC);
       return false;
     }
 
     if(type == TYPE_RPC) {
-      auto command = parse_improv_data(&buffer[9], data_len, false);
+      auto command = parseImprovData(&buffer[9], data_len, false);
       return callback(command);
     }
   }
 
   return false;
-} // parse_improv_serial_byte
+} // parseImprovSerialByte
 
 ///////////////////////////////
 
-std::vector<uint8_t> build_rpc_response(Command command, const std::vector<std::string> &datum, bool add_checksum) {
+std::vector<uint8_t> buildRPCResponse(Command command, const std::vector<std::string> &datum, bool add_checksum) {
   std::vector<uint8_t> out;
   uint32_t length = 0;
   out.push_back(command);
@@ -350,12 +350,12 @@ std::vector<uint8_t> build_rpc_response(Command command, const std::vector<std::
     out.push_back(calculated_checksum);
   }
   return out;
-} // build_rpc_response
+} // buildRPCResponse
 
 ///////////////////////////////
 
 #ifdef ARDUINO
-std::vector<uint8_t> build_rpc_response(Command command, const std::vector<String> &datum, bool add_checksum) {
+std::vector<uint8_t> buildRPCResponse(Command command, const std::vector<String> &datum, bool add_checksum) {
   std::vector<uint8_t> out;
   uint32_t length = 0;
   out.push_back(command);
@@ -376,7 +376,7 @@ std::vector<uint8_t> build_rpc_response(Command command, const std::vector<Strin
     out.push_back(calculated_checksum);
   }
   return out;
-} // build_rpc_response
+} // buildRPCResponse
 #endif  // ARDUINO
 
 }  // namespace improv
