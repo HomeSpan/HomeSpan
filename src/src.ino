@@ -122,6 +122,12 @@ struct HomeSpanTV : Service::Television {
     HomeSpanTV *hsTV=(HomeSpanTV *)arg;
 
     TLV8 orderTLV;
+
+    Serial.printf("BEFORE:\n");
+    hsTV->displayOrder->getTLV(orderTLV);
+    orderTLV.print();
+    orderTLV.wipe();
+    
     uint32_t order[]={12,10,6,2,1,9,11,3,18,5};
 
     for(int i=0;i<sizeof(order)/sizeof(uint32_t);i++){
@@ -130,6 +136,7 @@ struct HomeSpanTV : Service::Television {
       orderTLV.add(1,sizeof(uint32_t),(uint8_t*)(order+i));
     }
 
+    Serial.printf("AFTER:\n");
     orderTLV.print();
     size_t n=orderTLV.pack_size();
     Serial.printf("Size=%d\n",n);

@@ -736,6 +736,25 @@ class SpanCharacteristic{
   }  
 
 
+  size_t getTLV(TLV8 &tlv){    
+    if(format<FORMAT::TLV_ENC)
+      return(0);
+
+    size_t olen;
+    mbedtls_base64_decode(NULL,0,&olen,(uint8_t *)value.STRING,strlen(value.STRING));        // get length of buffer needed to decode
+    TempBuffer<uint8_t> tBuf(olen);                                                          // create temporary buffer
+
+    int ret=mbedtls_base64_decode(tBuf,olen,&olen,(uint8_t *)value.STRING,strlen(value.STRING));
+    
+    if(ret==MBEDTLS_ERR_BASE64_INVALID_CHARACTER){
+      LOG0("\n*** WARNING:  Can't decode Characteristic::%s with getTLV().  Data is not in base-64 format\n\n",hapName);
+      return(0);
+    }
+
+    tlv.unpack(tBuf,olen);      
+    return(tlv.pack_size());
+  }
+
   void setTLV(TLV8 &tlv, boolean notify=true){
 
     setValCheck();
@@ -793,9 +812,8 @@ class SpanCharacteristic{
 
   template <typename T> void setVal(T val, boolean notify=true){ 
 
-    if(updateFlag==1)
-      LOG0("\n*** WARNING:  Attempt to update Characteristic::%s with setVal() within update() while it is being updated by Home App.  This may cause device to become non-responsive!\n\n",hapName);
-
+    setValCheck();
+    
     if(!((val >= uvGet<T>(minValue)) && (val <= uvGet<T>(maxValue)))){
       LOG0("\n*** WARNING:  Attempt to update Characteristic::%s with setVal(%g) is out of range [%g,%g].  This may cause device to become non-responsive!\n\n",
       hapName,(double)val,uvGet<double>(minValue),uvGet<double>(maxValue));
