@@ -1159,6 +1159,12 @@ void Span::getWebLog(void (*f)(const char *, void *), void *user_data){
 
 ///////////////////////////////
 
+const char* Span::getDisplayName(){
+  return(this->displayName);
+}
+
+///////////////////////////////
+
 void Span::resetStatus(){
   if(strlen(network.wifiData.ssid)==0)
     STATUS_UPDATE(start(LED_WIFI_NEEDED),HS_WIFI_NEEDED)

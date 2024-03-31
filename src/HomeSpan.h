@@ -365,6 +365,8 @@ class Span{
   Span& setWebLogCallback(void (*f)(String &)){weblogCallback=f;return(*this);} 
   void getWebLog(void (*f)(const char *, void *), void *);
 
+  const char* getDisplayName();
+
   Span& setVerboseWifiReconnect(bool verbose=true){verboseWifiReconnect=verbose;return(*this);}
 
   Span& setRebootCallback(void (*f)(uint8_t),uint32_t t=DEFAULT_REBOOT_CALLBACK_TIME){rebootCallback=f;rebootCallbackTime=t;return(*this);}
