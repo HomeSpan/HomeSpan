@@ -223,7 +223,7 @@ void Span::pollTask() {
     readSerial(cBuf,64);
 
     if(strncmp(cBuf, "IMPROV", 6) == 0) {
-      processImprovCommand(cBuf);
+      processImprovCommand(cBuf, this);
     } else {
       processSerialCommand(cBuf);
     }

@@ -8,6 +8,7 @@
 #include <functional>
 #include <string>
 #include <vector>
+#include "HomeSpan.h"
 
 namespace improv {
 
@@ -73,10 +74,11 @@ std::vector<uint8_t> build_rpc_response(Command command, const std::vector<std::
 std::vector<uint8_t> build_rpc_response(Command command, const std::vector<String> &datum, bool add_checksum = true);
 #endif  // ARDUINO
 
-void handleImprovCommand(improv::ImprovCommand cmd);
+void handleImprovCommand(improv::ImprovCommand cmd, Span* span);
 void sendImprovState(improv::State state);
 void sendImprovResponse(std::vector<uint8_t> &response);
-void sendImprovRPCResponse(std::vector<uint8_t> &response);
+void sendImprovError(improv::Error error);
 void getAvailableWifiNetworks();
+bool connectWifi(const char *ssid, const char *pwd);
 
 }  // namespace improv
