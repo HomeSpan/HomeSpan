@@ -50,6 +50,7 @@ void handleImprovCommand(improv::ImprovCommand cmd, Span* span) {
       if (connectWifi(cmd.ssid.c_str(), cmd.password.c_str())) {
         sendImprovState(improv::State::STATE_PROVISIONED);
         std::vector<std::string> infos; // Empty vector, we could put an HTTP URL here as the next step for the user if we had one
+                                        // IDEA: We could link to a page that will render the QR code for the user to scan
         std::vector<uint8_t> data = improv::buildRPCResponse(improv::WIFI_SETTINGS, infos, false);
         improv::sendImprovResponse(data);
 
