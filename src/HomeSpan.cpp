@@ -221,7 +221,12 @@ void Span::pollTask() {
   
   if(!serialInputDisabled && Serial.available()){
     readSerial(cBuf,64);
-    processSerialCommand(cBuf);
+
+    if(strncmp(cBuf, "IMPROV", 6) == 0) {
+      processImprovCommand(cBuf);
+    } else {
+      processSerialCommand(cBuf);
+    }
   }
 
   WiFiClient newClient;
