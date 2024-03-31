@@ -28,6 +28,7 @@
 #include "HomeSpan.h"
 
 CUSTOM_CHAR_TLV(DisplayOrder,136,PR+EV);
+CUSTOM_CHAR_DATA(TestData,333,PR+EV);
 
 struct HomeSpanTV : Service::Television {
 
@@ -36,6 +37,7 @@ struct HomeSpanTV : Service::Television {
     SpanCharacteristic *remoteKey = new Characteristic::RemoteKey();                // Used to receive button presses from the Remote Control widget
     SpanCharacteristic *settingsKey = new Characteristic::PowerModeSelection();     // Adds "View TV Setting" option to Selection Screen
     SpanCharacteristic *displayOrder = new Characteristic::DisplayOrder();
+    SpanCharacteristic *testData = new Characteristic::TestData();
 
     HomeSpanTV(const char *name) : Service::Television() {
       new Characteristic::ConfiguredName(name);             // Name of TV
@@ -52,6 +54,10 @@ struct HomeSpanTV : Service::Television {
 
       orderTLV.print();
       displayOrder->setTLV(orderTLV);
+
+      uint8_t blob[]={1,2,3,4,5,6,7,8,9,10,11,12};
+//      testData->setData(blob,sizeof(blob));
+      testData->setData(blob,1);
 
       new SpanUserCommand('P', "- change order of inputs", changeOrder, this);  
     }

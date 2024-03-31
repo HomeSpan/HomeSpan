@@ -675,12 +675,7 @@ class SpanCharacteristic{
     return NULL;
   }
 
-  void setString(const char *val, boolean notify=true){
-
-    if(!((perms&EV) || (updateFlag==2))){
-      LOG0("\n*** WARNING:  Attempt to update Characteristic::%s with setString() ignored.  No EVENT NOTIFICATION (EV) permission on this characteristic\n\n",hapName);
-      return;
-    }   
+  void setString(const char *val, boolean notify=true){ 
 
     if(updateFlag==1)
       LOG0("\n*** WARNING:  Attempt to update Characteristic::%s with setString() within update() while it is being updated by Home App.  This may cause device to become non-responsive!\n\n",hapName);
@@ -746,51 +741,78 @@ class SpanCharacteristic{
 
   void setData(uint8_t *data, size_t len, boolean notify=true){
 
-    if(!((perms&EV) || (updateFlag==2))){
-      LOG0("\n*** WARNING:  Attempt to update Characteristic::%s with setData() ignored.  No EVENT NOTIFICATION (EV) permission on this characteristic\n\n",hapName);
-      return;
-    }   
+    setValCheck();
 
-    if(len<1){
-      LOG0("\n*** WARNING:  Attempt to update Characteristic::%s with setData() ignored.  Size of data buffer must be greater than zero\n\n",hapName);
-      return;      
+    if(len>0){
+      size_t olen;
+      mbedtls_base64_encode(NULL,0,&olen,NULL,len);                        // get length of string buffer needed (mbedtls includes the trailing null in this size)
+      value.STRING = (char *)HS_REALLOC(value.STRING,olen);                // allocate sufficient size for storing value
+      mbedtls_base64_encode((uint8_t*)value.STRING,olen,&olen,data,len );  // encode data into string buf
+    } else {
+      value.STRING = (char *)HS_REALLOC(value.STRING,1);                   // allocate sufficient size for just trailing null character
+      *value.STRING ='\0';
     }
 
-    size_t olen;
-    mbedtls_base64_encode(NULL,0,&olen,NULL,len);                      // get length of string buffer needed (mbedtls includes the trailing null in this size)
-    TempBuffer<char> tBuf(olen);                                       // create temporary string buffer, with room for trailing null
-    mbedtls_base64_encode((uint8_t*)tBuf.get(),olen,&olen,data,len );  // encode data into string buf
-    setString(tBuf,notify);                                            // call setString to continue processing as if characteristic was a string
+    setValFinish(notify);
   }  
 
 
   void setTLV(TLV8 &tlv, boolean notify=true){
 
-    if(updateFlag==1)
-      LOG0("\n*** WARNING:  Attempt to update Characteristic::%s with setVal() within update() while it is being updated by Home App.  This may cause device to become non-responsive!\n\n",hapName);
-
+    setValCheck();
+    
     const size_t bufSize=36;                                  // maximum size of buffer to store packed TLV bytes before encoding directly into value; must be multiple of 3
     size_t nBytes=tlv.pack_size();                            // total size of packed TLV in bytes
-    size_t nChars;
-    mbedtls_base64_encode(NULL,0,&nChars,NULL,nBytes);        // get length of string buffer needed (mbedtls includes the trailing null in this size)
-    value.STRING = (char *)HS_REALLOC(value.STRING,nChars);   // allocate sufficient size for storing value
-    TempBuffer<uint8_t> tBuf(bufSize);                        // create fixed-size buffer to store packed TLV bytes
-    tlv.pack_init();                                          // initialize TLV packing
-    uint8_t *p=(uint8_t *)value.STRING;                       // set pointer to beginning of value
-    while((nBytes=tlv.pack(tBuf,bufSize))>0){                 // pack the next set of TLV bytes, up to a maximum of bufSize, into tBuf
-      size_t olen;                                            // number of characters written (excludes null character)
-      mbedtls_base64_encode(p,nChars,&olen,tBuf,nBytes);      // encode data directly into value
-      p+=olen;                                                // advance pointer to null character
-      nChars-=olen;                                           // subtract number of characters remaining
-    }    
-  }    
 
-  template <typename T> void setVal(T val, boolean notify=true){
+    if(nBytes>0){
+      size_t nChars;
+      mbedtls_base64_encode(NULL,0,&nChars,NULL,nBytes);        // get length of string buffer needed (mbedtls includes the trailing null in this size)
+      value.STRING = (char *)HS_REALLOC(value.STRING,nChars);   // allocate sufficient size for storing value
+      TempBuffer<uint8_t> tBuf(bufSize);                        // create fixed-size buffer to store packed TLV bytes
+      tlv.pack_init();                                          // initialize TLV packing
+      uint8_t *p=(uint8_t *)value.STRING;                       // set pointer to beginning of value
+      while((nBytes=tlv.pack(tBuf,bufSize))>0){                 // pack the next set of TLV bytes, up to a maximum of bufSize, into tBuf
+        size_t olen;                                            // number of characters written (excludes null character)
+        mbedtls_base64_encode(p,nChars,&olen,tBuf,nBytes);      // encode data directly into value
+        p+=olen;                                                // advance pointer to null character
+        nChars-=olen;                                           // subtract number of characters remaining
+      }
+    } else {
+      value.STRING = (char *)HS_REALLOC(value.STRING,1);        // allocate sufficient size for just trailing null character
+      *value.STRING ='\0';
+    }
 
-    if(!((perms&EV) || (updateFlag==2))){
-      LOG0("\n*** WARNING:  Attempt to update Characteristic::%s with setVal() ignored.  No EVENT NOTIFICATION (EV) permission on this characteristic\n\n",hapName);
-      return;
-    }   
+    setValFinish(notify);
+  }
+
+  void setValCheck(){
+    if(updateFlag==1)
+      LOG0("\n*** WARNING:  Attempt to set value of Characteristic::%s within update() while it is being simultaneously updated by Home App.  This may cause device to become non-responsive!\n\n",hapName);
+  }
+
+  void setValFinish(boolean notify){
+
+    uvSet(newValue,value);     
+    updateTime=homeSpan.snapTime;
+
+    if(notify){
+      if((perms&EV) && (updateFlag!=2)){        // only broadcast notification if EV permission is set AND update is NOT being done in context of write-response    
+        SpanBuf sb;                             // create SpanBuf object
+        sb.characteristic=this;                 // set characteristic          
+        sb.status=StatusCode::OK;               // set status
+        char dummy[]="";
+        sb.val=dummy;                           // set dummy "val" so that printfNotify knows to consider this "update"
+        homeSpan.Notifications.push_back(sb);   // store SpanBuf in Notifications vector
+      }
+  
+      if(nvsKey){
+        nvs_set_str(homeSpan.charNVS,nvsKey,value.STRING);    // store data
+        nvs_commit(homeSpan.charNVS);
+      }
+    }      
+  }
+
+  template <typename T> void setVal(T val, boolean notify=true){ 
 
     if(updateFlag==1)
       LOG0("\n*** WARNING:  Attempt to update Characteristic::%s with setVal() within update() while it is being updated by Home App.  This may cause device to become non-responsive!\n\n",hapName);

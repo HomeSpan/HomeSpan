@@ -887,8 +887,8 @@ void Span::processSerialCommand(const char *c){
             isBridge=false;                  // ...this is not a bridge device          
        
           for(auto chr=(*svc)->Characteristics.begin(); chr!=(*svc)->Characteristics.end(); chr++){
-            LOG0("      \u21e8 Characteristic %s(%.32s%s):  IID=%d, %sUUID=\"%s\", %sPerms=",
-              (*chr)->hapName,(*chr)->uvPrint((*chr)->value).c_str(),strlen((*chr)->uvPrint((*chr)->value).c_str())>32?"...":"",(*chr)->iid,(*chr)->isCustom?"Custom-":"",(*chr)->type,(*chr)->perms!=(*chr)->hapChar->perms?"Custom-":"");
+            LOG0("      \u21e8 Characteristic %s(%.33s%s):  IID=%d, %sUUID=\"%s\", %sPerms=",
+              (*chr)->hapName,(*chr)->uvPrint((*chr)->value).c_str(),strlen((*chr)->uvPrint((*chr)->value).c_str())>33?"...\"":"",(*chr)->iid,(*chr)->isCustom?"Custom-":"",(*chr)->type,(*chr)->perms!=(*chr)->hapChar->perms?"Custom-":"");
 
             int foundPerms=0;
             for(uint8_t i=0;i<7;i++){
