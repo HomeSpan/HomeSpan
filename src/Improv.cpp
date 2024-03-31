@@ -1,3 +1,8 @@
+/*********************************************************************************
+ * This code includes contributions from:
+ * Jonathas Barbosa (https://github.com/jnthas/improv-wifi-demo)
+ * Improv Wi-Fi (https://github.com/improv-wifi/sdk-cpp)
+ ********************************************************************************/
 #include "improv.h"
 #include "HomeSpan.h"
 
@@ -5,6 +10,9 @@ using namespace Utils;
 using namespace improv;
 
 #define MAX_ATTEMPTS_WIFI_CONNECTION 10
+
+//////////////////////////////////////////////////////
+//       PROCESS IMPROV COMMANDS FROM SERIAL        //  
 
 void Span::processImprovCommand(const char *c, Span* span){
   
@@ -22,11 +30,15 @@ void Span::processImprovCommand(const char *c, Span* span){
   });
 } // Span::processImprovCommand
 
+//////////////////////////////////////////////////////
+//             IMPROV-SPECIFIC FUNCTIONS            //  
 
 namespace improv {
 
 void handleImprovCommand(improv::ImprovCommand cmd, Span* span) {
   switch(cmd.command) {
+
+    // Configure WiFi credentials
     case Command::WIFI_SETTINGS:
       Serial.println("WiFi Settings: ");
       Serial.print(cmd.ssid.c_str());
@@ -49,6 +61,7 @@ void handleImprovCommand(improv::ImprovCommand cmd, Span* span) {
       }
       break;
 
+    // Notify the client of the current WiFi provisioning stte
     case Command::GET_CURRENT_STATE:
       if((WiFi.status() == WL_CONNECTED)) {
         sendImprovState(improv::State::STATE_PROVISIONED);
@@ -59,6 +72,8 @@ void handleImprovCommand(improv::ImprovCommand cmd, Span* span) {
         sendImprovState(improv::State::STATE_AUTHORIZED);
       }
       break;
+    
+    // Get general information about the device to show in the flash dialog
     case Command::GET_DEVICE_INFO:
       {
         Serial.println("Get Device Info");
@@ -76,28 +91,35 @@ void handleImprovCommand(improv::ImprovCommand cmd, Span* span) {
         improv::sendImprovResponse(data);
         break;
       }
+    
+    // Get a list of WiFi networks to show in the connect dialog
     case Command::GET_WIFI_NETWORKS:
       getAvailableWifiNetworks();
       break;
+
     case Command::BAD_CHECKSUM:
-      Serial.println("Bad Checksum");
+      LOG2("Improv-Serial Error: Bad Checksum");
       break;
+
     case Command::UNKNOWN:
-      Serial.println("Unknown");
+      LOG0("Improv-Serial Error: Unknown command");
       break;
   }
 }
 
+///////////////////////////////
+
 bool connectWifi(const char *ssid, const char *pwd) {
   uint8_t attempts = 0;
 
-  WiFi.begin(ssid, pwd);
-  LOG2("Attempting to connect to WiFi SSID %s", ssid);
+  LOG2("Attempting to connect to WiFi SSID %s\n", ssid);
+  WiFi.begin(ssid, pwd); // Connect to the network
 
   while (WiFi.status() != WL_CONNECTED) {
-    delay(1000);
-    LOG2("Attempting to connect to WiFi SSID %s, attempt #%s", ssid, String(attempts));
-    if (attempts > MAX_ATTEMPTS_WIFI_CONNECTION) {
+    delay(1000); // Wait for the connection to be established
+    LOG2("Attempting to connect to WiFi SSID %s, attempt #%s\n", ssid, String(attempts));
+
+    if (attempts > MAX_ATTEMPTS_WIFI_CONNECTION) { // Give up after a certain number of attempts
       LOG0("Failed to connect to WiFi");
       WiFi.disconnect();
       return false;
@@ -105,24 +127,29 @@ bool connectWifi(const char *ssid, const char *pwd) {
     attempts++;
   }
 
-  LOG0("Successfully connected to WiFi SSID %s", ssid);
+  LOG0("Successfully connected to WiFi SSID %s\n", ssid);
   return true;
 } // connectWifi
+
+///////////////////////////////
 
 void getAvailableWifiNetworks() {
   int networkNum = WiFi.scanNetworks();
 
-  for(int id = 0; id < networkNum; ++id) { 
+  // Send one RPC response for each network we found
+  for(int id = 0; id < networkNum; ++id) {
     std::vector<uint8_t> data = improv::build_rpc_response(
             improv::GET_WIFI_NETWORKS, {WiFi.SSID(id), String(WiFi.RSSI(id)), (WiFi.encryptionType(id) == WIFI_AUTH_OPEN ? "NO" : "YES")}, false);
     improv::sendImprovResponse(data);
     delay(1);
   }
-  //final response
+  // Send a blank response to signal the end of the list
   std::vector<uint8_t> data =
           improv::build_rpc_response(improv::GET_WIFI_NETWORKS, std::vector<std::string>{}, false);
   improv::sendImprovResponse(data);
 }
+
+///////////////////////////////
 
 void sendImprovState(improv::State state) {
   std::vector<uint8_t> data = {'I', 'M', 'P', 'R', 'O', 'V'};
@@ -137,17 +164,18 @@ void sendImprovState(improv::State state) {
     checksum += d;
   data[10] = checksum;
 
-  Serial.write(data.data(), data.size());
+  Serial.write(data.data(), data.size()); // Send the output
   
-  Serial.println("Wrote ");
-  for(size_t i = 0; i < data.size(); i++) {
-    Serial.print("0x");
-    Serial.print(data[i] < 16 ? "0" : "");
-    Serial.print(data[i], HEX);
-    Serial.print(" ");
+  String hexData;
+  for (size_t i = 0; i < data.size(); i++) {
+    char hex[3];
+    sprintf(hex, "%02X", data[i]);
+    hexData += hex;
   }
-  Serial.println();
+  LOG2("Wrote Improv Serial state: %s\n", hexData);
 } // sendImprovState
+
+///////////////////////////////
 
 void sendImprovError(improv::Error error) {
   std::vector<uint8_t> data = {'I', 'M', 'P', 'R', 'O', 'V'};
@@ -162,8 +190,18 @@ void sendImprovError(improv::Error error) {
     checksum += d;
   data[10] = checksum;
 
-  Serial.write(data.data(), data.size());
+  Serial.write(data.data(), data.size()); // Send the output
+
+  String hexData;
+  for (size_t i = 0; i < data.size(); i++) {
+    char hex[3];
+    sprintf(hex, "%02X", data[i]);
+    hexData += hex;
+  }
+  LOG2("Wrote Improv Serial error: %s\n", hexData);
 }
+
+///////////////////////////////
 
 void sendImprovResponse(std::vector<uint8_t> &response) {
   std::vector<uint8_t> data = {'I', 'M', 'P', 'R', 'O', 'V'};
@@ -178,22 +216,25 @@ void sendImprovResponse(std::vector<uint8_t> &response) {
     checksum += d;
   data.push_back(checksum);
 
-  Serial.write(data.data(), data.size());
+  Serial.write(data.data(), data.size()); // Send the output
 
-  Serial.println("Wrote ");
-  for(size_t i = 0; i < data.size(); i++) {
-    Serial.print("0x");
-    Serial.print(data[i] < 16 ? "0" : "");
-    Serial.print(data[i], HEX);
-    Serial.print(" ");
+  String hexData;
+  for (size_t i = 0; i < data.size(); i++) {
+    char hex[3];
+    sprintf(hex, "%02X", data[i]);
+    hexData += hex;
   }
-  Serial.println();
+  LOG2("Wrote Improv Serial response: %s\n", hexData);
 }
+
+///////////////////////////////
 
 // From https://github.com/improv-wifi/sdk-cpp/blob/main/src/improv.cpp
 ImprovCommand parse_improv_data(const std::vector<uint8_t> &data, bool check_checksum) {
   return parse_improv_data(data.data(), data.size(), check_checksum);
 } // parse_improv_data
+
+///////////////////////////////
 
 ImprovCommand parse_improv_data(const uint8_t *data, size_t length, bool check_checksum) {
   ImprovCommand improv_command;
@@ -236,6 +277,8 @@ ImprovCommand parse_improv_data(const uint8_t *data, size_t length, bool check_c
   improv_command.command = command;
   return improv_command;
 } // parse_improv_data
+
+///////////////////////////////
 
 bool parse_improv_serial_byte(size_t position, uint8_t byte, const uint8_t *buffer,
                               std::function<bool(ImprovCommand)> &&callback, std::function<void(Error)> &&on_error) {
@@ -284,6 +327,8 @@ bool parse_improv_serial_byte(size_t position, uint8_t byte, const uint8_t *buff
   return false;
 } // parse_improv_serial_byte
 
+///////////////////////////////
+
 std::vector<uint8_t> build_rpc_response(Command command, const std::vector<std::string> &datum, bool add_checksum) {
   std::vector<uint8_t> out;
   uint32_t length = 0;
@@ -306,6 +351,8 @@ std::vector<uint8_t> build_rpc_response(Command command, const std::vector<std::
   }
   return out;
 } // build_rpc_response
+
+///////////////////////////////
 
 #ifdef ARDUINO
 std::vector<uint8_t> build_rpc_response(Command command, const std::vector<String> &datum, bool add_checksum) {
