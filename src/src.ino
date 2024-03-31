@@ -38,9 +38,10 @@ struct HomeSpanTV : Service::Television {
     SpanCharacteristic *settingsKey = new Characteristic::PowerModeSelection();     // Adds "View TV Setting" option to Selection Screen
     SpanCharacteristic *displayOrder = new Characteristic::DisplayOrder();
     SpanCharacteristic *testData = new Characteristic::TestData();
+    SpanCharacteristic *tvname;
 
     HomeSpanTV(const char *name) : Service::Television() {
-      new Characteristic::ConfiguredName(name);             // Name of TV
+      tvname = new Characteristic::ConfiguredName(name);             // Name of TV
       Serial.printf("Configured TV: %s\n",name);
 
       TLV8 orderTLV;
@@ -60,6 +61,7 @@ struct HomeSpanTV : Service::Television {
       testData->setData(blob,1);
 
       new SpanUserCommand('P', "- change order of inputs", changeOrder, this);  
+      new SpanUserCommand('C', "- change name of TV", setTVName, this); 
     }
 
     boolean update() override {
@@ -110,6 +112,11 @@ struct HomeSpanTV : Service::Television {
 
       return(true);
     }
+
+  static void setTVName(const char *buf, void *arg){
+    HomeSpanTV *hsTV=(HomeSpanTV *)arg;
+    hsTV->tvname->setString("New Name");
+  }
 
   static void changeOrder(const char *buf, void *arg){
     HomeSpanTV *hsTV=(HomeSpanTV *)arg;

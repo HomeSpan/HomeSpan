@@ -677,31 +677,10 @@ class SpanCharacteristic{
 
   void setString(const char *val, boolean notify=true){ 
 
-    if(updateFlag==1)
-      LOG0("\n*** WARNING:  Attempt to update Characteristic::%s with setString() within update() while it is being updated by Home App.  This may cause device to become non-responsive!\n\n",hapName);
-
+    setValCheck();
     uvSet(value,val);
-    uvSet(newValue,value);
-      
-    updateTime=homeSpan.snapTime;
-
-    if(notify){
-      if(updateFlag!=2){                        // do not broadcast EV if update is being done in context of write-response    
-        SpanBuf sb;                             // create SpanBuf object
-        sb.characteristic=this;                 // set characteristic          
-        sb.status=StatusCode::OK;               // set status
-        char dummy[]="";
-        sb.val=dummy;                           // set dummy "val" so that printfNotify knows to consider this "update"
-        homeSpan.Notifications.push_back(sb);   // store SpanBuf in Notifications vector
-      }
-  
-      if(nvsKey){
-        nvs_set_str(homeSpan.charNVS,nvsKey,value.STRING);    // store data
-        nvs_commit(homeSpan.charNVS);
-      }
-    }
-    
-  } // setString()
+    setValFinish(notify);    
+  }
 
   size_t getData(uint8_t *data, size_t len){    
     if(format<FORMAT::DATA)
