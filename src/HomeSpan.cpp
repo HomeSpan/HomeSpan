@@ -222,7 +222,7 @@ void Span::pollTask() {
   if(!serialInputDisabled && Serial.available()){
     readSerial(cBuf,64);
 
-    if(strncmp(cBuf, "IMPROV", 6) == 0) {
+    if(strncmp(cBuf, "IMPROV", 6) == 0) { // check for an Improv-Serial command, see https://www.improv-wifi.com/serial/
       processImprovCommand(cBuf, this);
     } else {
       processSerialCommand(cBuf);
