@@ -5,6 +5,7 @@
  ********************************************************************************/
 #include "Improv.h"
 #include "HomeSpan.h"
+#include <set>
 
 using namespace Utils;
 using namespace improv;
@@ -136,12 +137,18 @@ bool connectWifi(const char *ssid, const char *pwd) {
 void getAvailableWifiNetworks() {
   int networkNum = WiFi.scanNetworks();
 
+  std::set<String> ssidSet; // Store unique SSIDs
+
   // Send one RPC response for each network we found
   for(int id = 0; id < networkNum; ++id) {
-    std::vector<uint8_t> data = improv::buildRPCResponse(
-            improv::GET_WIFI_NETWORKS, {WiFi.SSID(id), String(WiFi.RSSI(id)), (WiFi.encryptionType(id) == WIFI_AUTH_OPEN ? "NO" : "YES")}, false);
-    improv::sendImprovResponse(data);
-    delay(1);
+    String ssid = WiFi.SSID(id);
+    if (ssidSet.count(ssid) == 0) { // Check if SSID is already sent
+      std::vector<uint8_t> data = improv::buildRPCResponse(
+              improv::GET_WIFI_NETWORKS, {ssid, String(WiFi.RSSI(id)), (WiFi.encryptionType(id) == WIFI_AUTH_OPEN ? "NO" : "YES")}, false);
+      improv::sendImprovResponse(data);
+      ssidSet.insert(ssid); // Add SSID to the set
+      delay(1);
+    }
   }
   // Send a blank response to signal the end of the list
   std::vector<uint8_t> data =
