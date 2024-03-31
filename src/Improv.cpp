@@ -3,7 +3,7 @@
  * Jonathas Barbosa (https://github.com/jnthas/improv-wifi-demo)
  * Improv Wi-Fi (https://github.com/improv-wifi/sdk-cpp)
  ********************************************************************************/
-#include "improv.h"
+#include "Improv.h"
 #include "HomeSpan.h"
 
 using namespace Utils;
