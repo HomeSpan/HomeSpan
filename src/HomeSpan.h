@@ -693,9 +693,9 @@ class SpanCharacteristic{
       return(olen);
       
     if(ret==MBEDTLS_ERR_BASE64_BUFFER_TOO_SMALL)
-      LOG0("\n*** WARNING:  Can't decode Characteristic::%s with getData().  Destination buffer is too small (%d out of %d bytes needed)\n\n",hapName,len,olen);
+      LOG0("\n*** WARNING:  Can't decode Characteristic::%s with getData().  Destination buffer is too small (%d out of %d bytes needed)!\n\n",hapName,len,olen);
     else if(ret==MBEDTLS_ERR_BASE64_INVALID_CHARACTER)
-      LOG0("\n*** WARNING:  Can't decode Characteristic::%s with getData().  Data is not in base-64 format\n\n",hapName);
+      LOG0("\n*** WARNING:  Can't decode Characteristic::%s with getData().  Data is not in base-64 format!\n\n",hapName);
       
     return(olen);
   }
@@ -711,9 +711,9 @@ class SpanCharacteristic{
       return(olen);
       
     if(ret==MBEDTLS_ERR_BASE64_BUFFER_TOO_SMALL)
-      LOG0("\n*** WARNING:  Can't decode Characteristic::%s with getData().  Destination buffer is too small (%d out of %d bytes needed)\n\n",hapName,len,olen);
+      LOG0("\n*** WARNING:  Can't decode Characteristic::%s with getData().  Destination buffer is too small (%d out of %d bytes needed)!\n\n",hapName,len,olen);
     else if(ret==MBEDTLS_ERR_BASE64_INVALID_CHARACTER)
-      LOG0("\n*** WARNING:  Can't decode Characteristic::%s with getData().  Data is not in base-64 format\n\n",hapName);
+      LOG0("\n*** WARNING:  Can't decode Characteristic::%s with getData().  Data is not in base-64 format!\n\n",hapName);
       
     return(olen);
   }  
@@ -735,7 +735,7 @@ class SpanCharacteristic{
     setValFinish(notify);
   }  
 
-  size_t getTLV(TLV8 &tlv){
+  size_t getTLVGeneric(TLV8 &tlv, UVal &val){
      
     if(format<FORMAT::TLV_ENC)
       return(0);
@@ -744,9 +744,9 @@ class SpanCharacteristic{
     TempBuffer<uint8_t> tBuf(bufSize);          // create fixed-size buffer to store decoded bytes
     tlv.wipe();                                 // clear TLV completely
 
-    size_t nChars=strlen(value.STRING);         // total characters to decode
-    uint8_t *p=(uint8_t *)value.STRING;         // set pointer to beginning of value
-    const size_t decodeSize=bufSize/3*4;        // number of characters to decode in each pass
+    size_t nChars=strlen(val.STRING);         // total characters to decode
+    uint8_t *p=(uint8_t *)val.STRING;         // set pointer to beginning of value
+    const size_t decodeSize=bufSize/3*4;      // number of characters to decode in each pass
     int status=0;
     
     while(nChars>0){
@@ -755,7 +755,7 @@ class SpanCharacteristic{
       
       int ret=mbedtls_base64_decode(tBuf,tBuf.len(),&olen,p,n);
       if(ret==MBEDTLS_ERR_BASE64_INVALID_CHARACTER){
-        LOG0("\n*** WARNING:  Can't decode Characteristic::%s with getTLV().  Data is not in base-64 format\n\n",hapName);
+        LOG0("\n*** WARNING:  Can't decode Characteristic::%s with getTLV().  Data is not in base-64 format!\n\n",hapName);
         tlv.wipe();
         return(0);
       }
@@ -764,12 +764,15 @@ class SpanCharacteristic{
       nChars-=n;
     }
     if(status>0){
-      LOG0("\n*** WARNING:  Can't unpack Characteristic::%s with getTLV().  TLV record is incomplete or corrupted\n\n",hapName);
+      LOG0("\n*** WARNING:  Can't unpack Characteristic::%s with getTLV().  TLV record is incomplete or corrupted!\n\n",hapName);
       tlv.wipe();
       return(0);      
     }
   return(tlv.pack_size());
   }
+
+  size_t getTLV(TLV8 &tlv){return(getTLVGeneric(tlv,value));}
+  size_t getNewTLV(TLV8 &tlv){return(getTLVGeneric(tlv,newValue));}
 
   void setTLV(TLV8 &tlv, boolean notify=true){
 
