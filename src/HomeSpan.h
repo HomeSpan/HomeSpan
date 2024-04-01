@@ -661,19 +661,15 @@ class SpanCharacteristic{
     return(uvGet<T>(newValue));
   }
     
-  char *getString(){
+  char *getStringGeneric(UVal &val){
     if(format>=FORMAT::STRING)
-        return value.STRING;
+        return val.STRING;
 
     return NULL;
   }
 
-  char *getNewString(){
-    if(format>=FORMAT::STRING)
-        return newValue.STRING;
-
-    return NULL;
-  }
+  char *getString(){return(getStringGeneric(value));}
+  char *getNewString(){return(getStringGeneric(newValue));}
 
   void setString(const char *val, boolean notify=true){ 
 
@@ -682,12 +678,12 @@ class SpanCharacteristic{
     setValFinish(notify);    
   }
 
-  size_t getData(uint8_t *data, size_t len){    
+  size_t getDataGeneric(uint8_t *data, size_t len, UVal &val){    
     if(format<FORMAT::DATA)
       return(0);
 
     size_t olen;
-    int ret=mbedtls_base64_decode(data,len,&olen,(uint8_t *)value.STRING,strlen(value.STRING));
+    int ret=mbedtls_base64_decode(data,len,&olen,(uint8_t *)val.STRING,strlen(val.STRING));
     
     if(data==NULL)
       return(olen);
@@ -700,23 +696,8 @@ class SpanCharacteristic{
     return(olen);
   }
 
-  size_t getNewData(uint8_t *data, size_t len){    
-    if(format<FORMAT::DATA)
-      return(0);
-
-    size_t olen;
-    int ret=mbedtls_base64_decode(data,len,&olen,(uint8_t *)newValue.STRING,strlen(newValue.STRING));
-    
-    if(data==NULL)
-      return(olen);
-      
-    if(ret==MBEDTLS_ERR_BASE64_BUFFER_TOO_SMALL)
-      LOG0("\n*** WARNING:  Can't decode Characteristic::%s with getData().  Destination buffer is too small (%d out of %d bytes needed)!\n\n",hapName,len,olen);
-    else if(ret==MBEDTLS_ERR_BASE64_INVALID_CHARACTER)
-      LOG0("\n*** WARNING:  Can't decode Characteristic::%s with getData().  Data is not in base-64 format!\n\n",hapName);
-      
-    return(olen);
-  }  
+  size_t getData(uint8_t *data, size_t len){return(getDataGeneric(data,len,value));}
+  size_t getNewData(uint8_t *data, size_t len){return(getDataGeneric(data,len,newValue));}
 
   void setData(uint8_t *data, size_t len, boolean notify=true){
 

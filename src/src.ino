@@ -116,6 +116,7 @@ struct HomeSpanTV : Service::Television {
   static void setTVName(const char *buf, void *arg){
     HomeSpanTV *hsTV=(HomeSpanTV *)arg;
     hsTV->tvname->setString("New Name");
+    Serial.printf("Reset TV Name to '%s'\n",hsTV->tvname->getString());
   }
 
   static void changeOrder(const char *buf, void *arg){
