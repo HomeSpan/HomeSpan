@@ -160,7 +160,10 @@ size_t TLV8::pack(uint8_t *buf, size_t bufSize){
 
 /////////////////////////////////////
 
-void TLV8::unpack(uint8_t *buf, size_t bufSize){
+int TLV8::unpack(uint8_t *buf, size_t bufSize){
+
+  if(bufSize==0)
+    return(-1);
 
   if(empty())
     unpackPhase=0;
@@ -171,18 +174,17 @@ void TLV8::unpack(uint8_t *buf, size_t bufSize){
       case 0:
         unpackTag=*buf++;
         bufSize--;
+        add(unpackTag);
         unpackPhase=1;
         break;
 
       case 1:
         unpackBytes=*buf++;
         bufSize--;
-        if(unpackBytes==0){
-          add(unpackTag);
+        if(unpackBytes==0)
           unpackPhase=0;          
-        } else {
+        else
           unpackPhase=2;
-        }
         break;
 
       case 2:
@@ -196,6 +198,7 @@ void TLV8::unpack(uint8_t *buf, size_t bufSize){
       break;        
     }
   }
+  return(unpackPhase);
 }
 
 

@@ -122,8 +122,7 @@ struct HomeSpanTV : Service::Television {
     HomeSpanTV *hsTV=(HomeSpanTV *)arg;
 
     TLV8 orderTLV;
-
-    Serial.printf("BEFORE:\n");
+    
     hsTV->displayOrder->getTLV(orderTLV);
     orderTLV.print();
     orderTLV.wipe();

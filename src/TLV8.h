@@ -107,7 +107,7 @@ class TLV8 : public std::list<tlv8_t, Mallocator<tlv8_t>> {
   void osprint(std::ostream& os, TLV8_it it1){osprint(os, it1, it1++);}
   void osprint(std::ostream& os){osprint(os, begin(), end());}
 
-  void unpack(uint8_t *buf, size_t bufSize);
+  int unpack(uint8_t *buf, size_t bufSize);
 
   void wipe(){std::list<tlv8_t, Mallocator<tlv8_t>>().swap(*this);}
   

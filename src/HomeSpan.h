@@ -735,24 +735,40 @@ class SpanCharacteristic{
     setValFinish(notify);
   }  
 
-
-  size_t getTLV(TLV8 &tlv){    
+  size_t getTLV(TLV8 &tlv){
+     
     if(format<FORMAT::TLV_ENC)
       return(0);
 
-    size_t olen;
-    mbedtls_base64_decode(NULL,0,&olen,(uint8_t *)value.STRING,strlen(value.STRING));        // get length of buffer needed to decode
-    TempBuffer<uint8_t> tBuf(olen);                                                          // create temporary buffer
+    const size_t bufSize=36;                    // maximum size of buffer to store decoded bytes before unpacking into TLV; must be multiple of 3
+    TempBuffer<uint8_t> tBuf(bufSize);          // create fixed-size buffer to store decoded bytes
+    tlv.wipe();                                 // clear TLV completely
 
-    int ret=mbedtls_base64_decode(tBuf,olen,&olen,(uint8_t *)value.STRING,strlen(value.STRING));
+    size_t nChars=strlen(value.STRING);         // total characters to decode
+    uint8_t *p=(uint8_t *)value.STRING;         // set pointer to beginning of value
+    const size_t decodeSize=bufSize/3*4;        // number of characters to decode in each pass
+    int status=0;
     
-    if(ret==MBEDTLS_ERR_BASE64_INVALID_CHARACTER){
-      LOG0("\n*** WARNING:  Can't decode Characteristic::%s with getTLV().  Data is not in base-64 format\n\n",hapName);
-      return(0);
+    while(nChars>0){
+      size_t olen;
+      size_t n=nChars<decodeSize?nChars:decodeSize;
+      
+      int ret=mbedtls_base64_decode(tBuf,tBuf.len(),&olen,p,n);
+      if(ret==MBEDTLS_ERR_BASE64_INVALID_CHARACTER){
+        LOG0("\n*** WARNING:  Can't decode Characteristic::%s with getTLV().  Data is not in base-64 format\n\n",hapName);
+        tlv.wipe();
+        return(0);
+      }
+      status=tlv.unpack(tBuf,olen);
+      p+=n;
+      nChars-=n;
     }
-
-    tlv.unpack(tBuf,olen);      
-    return(tlv.pack_size());
+    if(status>0){
+      LOG0("\n*** WARNING:  Can't unpack Characteristic::%s with getTLV().  TLV record is incomplete or corrupted\n\n",hapName);
+      tlv.wipe();
+      return(0);      
+    }
+  return(tlv.pack_size());
   }
 
   void setTLV(TLV8 &tlv, boolean notify=true){
