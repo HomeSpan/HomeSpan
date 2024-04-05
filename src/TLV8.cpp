@@ -80,6 +80,14 @@ TLV8_it TLV8::add(uint8_t tag, size_t len, const uint8_t* val){
 
 /////////////////////////////////////
 
+TLV8_it TLV8::add(uint8_t tag, TLV8 &subTLV){
+  auto it=add(tag,subTLV.pack_size(),NULL);      // create space for inserting sub TLV and store iterator to new element
+  subTLV.pack(*it);                              // pack subTLV into new element
+  return(--end());
+}
+
+/////////////////////////////////////
+
 TLV8_it TLV8::find(uint8_t tag, TLV8_it it1, TLV8_it it2){
 
   auto it=it1;
