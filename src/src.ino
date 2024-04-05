@@ -49,7 +49,7 @@ struct HomeSpanTV : Service::Television {
 
       for(int i=0;i<sizeof(order)/sizeof(uint32_t);i++){
         if(i>0)
-          orderTLV.add(0);
+          orderTLV.add(6);
         orderTLV.add(1,sizeof(uint32_t),(uint8_t*)(order+i));
       }
 
@@ -117,6 +117,7 @@ struct HomeSpanTV : Service::Television {
     HomeSpanTV *hsTV=(HomeSpanTV *)arg;
     hsTV->tvname->setString("New Name");
     Serial.printf("Reset TV Name to '%s'\n",hsTV->tvname->getString());
+    Serial.printf("Showing displayOrder '%s'\n",hsTV->displayOrder->getString());
   }
 
   static void changeOrder(const char *buf, void *arg){
@@ -128,12 +129,12 @@ struct HomeSpanTV : Service::Television {
     orderTLV.print();
     orderTLV.wipe();
     
-    uint32_t order[]={12,10,6,2,1,9,11,3,18,5};
+    uint8_t order[]={12,10,6,2,1,9,11,3,18,5};
 
-    for(int i=0;i<sizeof(order)/sizeof(uint32_t);i++){
+    for(int i=0;i<sizeof(order)/sizeof(uint8_t);i++){
       if(i>0)
         orderTLV.add(0);
-      orderTLV.add(1,sizeof(uint32_t),(uint8_t*)(order+i));
+      orderTLV.add(1,sizeof(uint8_t),(uint8_t*)(order+i));
     }
 
     Serial.printf("AFTER:\n");

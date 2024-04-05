@@ -2007,7 +2007,7 @@ StatusCode SpanCharacteristic::loadUpdate(char *val, char *ev, boolean wr){
     case STRING:
     case DATA:
     case TLV_ENC:
-      uvSet(newValue,(const char *)val);
+      uvSet(newValue,(const char *)stripBackslash(val));
       break;
 
     default:
