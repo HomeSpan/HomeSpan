@@ -92,7 +92,7 @@ class TLV8 : public std::list<tlv8_t, Mallocator<tlv8_t>> {
   size_t pack_size(){return(pack_size(begin(), end()));}
 
   void pack_init(TLV8_it it1, TLV8_it it2){currentPackIt=it1; endPackIt=it2; currentPackPhase=0;}
-  void pack_init(TLV8_it it1){pack_init(it1, it1++);}
+  void pack_init(TLV8_it it1){pack_init(it1, std::next(it1));}
   void pack_init(){pack_init(begin(),end());}
   
   size_t pack(uint8_t *buf, size_t bufSize);
@@ -101,15 +101,16 @@ class TLV8 : public std::list<tlv8_t, Mallocator<tlv8_t>> {
   const char *getName(uint8_t tag);
   
   void print(TLV8_it it1, TLV8_it it2);
-  void print(TLV8_it it1){print(it1, it1++);}
+  void print(TLV8_it it1){print(it1, std::next(it1));}
   void print(){print(begin(), end());}
 
   void osprint(std::ostream& os, TLV8_it it1, TLV8_it it2);
-  void osprint(std::ostream& os, TLV8_it it1){osprint(os, it1, it1++);}
+  void osprint(std::ostream& os, TLV8_it it1){osprint(os, it1, std::next(it1));}
   void osprint(std::ostream& os){osprint(os, begin(), end());}
 
   int unpack(uint8_t *buf, size_t bufSize);
-
+  int unpack(TLV8_it it);
+  
   void wipe(){std::list<tlv8_t, Mallocator<tlv8_t>>().swap(*this);}
   
 };

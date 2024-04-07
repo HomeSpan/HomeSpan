@@ -209,6 +209,15 @@ int TLV8::unpack(uint8_t *buf, size_t bufSize){
   return(unpackPhase);
 }
 
+/////////////////////////////////////
+
+int TLV8::unpack(TLV8_it it){
+  
+  if(it==end())
+    return(0);
+    
+  return(unpack(*it,(*it).len));
+}
 
 /////////////////////////////////////
 
