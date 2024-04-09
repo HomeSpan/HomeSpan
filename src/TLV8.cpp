@@ -260,11 +260,11 @@ void TLV8::print(TLV8_it it1, TLV8_it it2){
     for(int i=0;i<(*it1).len;i++)
       Serial.printf("%02X",(*it1).val.get()[i]);
     if((*it1).len==0)
-      Serial.printf(" (null)");
+      Serial.printf(" [null]");
     else if((*it1).len<=4)
-      Serial.printf(" (%u)",(*it1).getVal());
+      Serial.printf(" [%u]",(*it1).getVal());
     else if((*it1).len<=8)
-      Serial.printf(" (%llu)",(*it1).getVal<uint64_t>());
+      Serial.printf(" [%llu]",(*it1).getVal<uint64_t>());
     Serial.printf("\n");
     it1++;
   }

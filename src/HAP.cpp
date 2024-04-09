@@ -334,7 +334,7 @@ int HAPClient::postPairSetupURL(uint8_t *content, size_t len){
     return(0);
   }
 
-  int tlvState=(*itState)[0];
+  int tlvState=(*itState).getVal();
 
   if(nAdminControllers()){                                  // error: Device already paired (i.e. there is at least one admin Controller). We should not be receiving any requests for Pair-Setup!
     LOG0("\n*** ERROR: Device already paired!\n\n");
@@ -363,7 +363,7 @@ int HAPClient::postPairSetupURL(uint8_t *content, size_t len){
 
       auto itMethod=iosTLV.find(kTLVType_Method);
 
-      if(iosTLV.len(itMethod)!=1 || (*itMethod)[0]!=0){                         // error: "Pair Setup" method must always be 0 to indicate setup without MiFi Authentification (HAP Table 5-3)
+      if(iosTLV.len(itMethod)!=1 || (*itMethod).getVal()!=0){                         // error: "Pair Setup" method must always be 0 to indicate setup without MiFi Authentification (HAP Table 5-3)
         LOG0("\n*** ERROR: Pair 'Method' missing or not set to 0\n\n");
         responseTLV.add(kTLVType_Error,tagError_Unavailable);                   // set Error=Unavailable
         tlvRespond(responseTLV);                                                // send response to client
@@ -585,7 +585,7 @@ int HAPClient::postPairVerifyURL(uint8_t *content, size_t len){
     return(0);
   }
 
-  int tlvState=(*itState)[0];
+  int tlvState=(*itState).getVal();
 
   if(!nAdminControllers()){                             // error: Device not yet paired - we should not be receiving any requests for Pair-Verify!
     LOG0("\n*** ERROR: Device not yet paired!\n\n");
@@ -771,7 +771,7 @@ int HAPClient::postPairingsURL(uint8_t *content, size_t len){
   auto itState=iosTLV.find(kTLVType_State);
   auto itMethod=iosTLV.find(kTLVType_Method);
     
-  if(iosTLV.len(itState)!=1 || (*itState)[0]!=1){               // missing STATE TLV
+  if(iosTLV.len(itState)!=1 || (*itState).getVal()!=1){               // missing STATE TLV
     LOG0("\n*** ERROR: Parirings 'State' is either missing or not set to <M1>\n\n");
     badRequestError();                                          // return with 400 error, which closes connection      
     return(0);
@@ -783,7 +783,7 @@ int HAPClient::postPairingsURL(uint8_t *content, size_t len){
     return(0);
   }
 
-  int tlvMethod=(*itMethod)[0];
+  int tlvMethod=(*itMethod).getVal();
 
   responseTLV.add(kTLVType_State,pairState_M2);                 // all responses include State=M2
   
@@ -810,7 +810,7 @@ int HAPClient::postPairingsURL(uint8_t *content, size_t len){
         return(0);
       } 
              
-      tagError err=addController(*itIdentifier,*itPublicKey,(*itPermissions)[0]);
+      tagError err=addController(*itIdentifier,*itPublicKey,(*itPermissions).getVal());
       if(err!=tagError_None)
         responseTLV.add(kTLVType_Error,err);
       
