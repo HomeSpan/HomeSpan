@@ -81,9 +81,21 @@ TLV8_it TLV8::add(uint8_t tag, size_t len, const uint8_t* val){
 /////////////////////////////////////
 
 TLV8_it TLV8::add(uint8_t tag, TLV8 &subTLV){
+  
   auto it=add(tag,subTLV.pack_size(),NULL);      // create space for inserting sub TLV and store iterator to new element
   subTLV.pack(*it);                              // pack subTLV into new element
   return(--end());
+}
+
+/////////////////////////////////////
+
+TLV8_it TLV8::add(uint8_t tag, uint64_t val){
+  
+  uint8_t *p=reinterpret_cast<uint8_t *>(&val);
+  size_t nBytes=sizeof(uint64_t);
+  while(nBytes>1 && p[nBytes-1]==0)               // TLV requires little endian without any trailing zero bytes (i.e. only use what is needed to fully represent the value)
+    nBytes--;
+  return(add(tag, nBytes, p));
 }
 
 /////////////////////////////////////
@@ -247,6 +259,12 @@ void TLV8::print(TLV8_it it1, TLV8_it it2){
     Serial.printf("(%d) ",(*it1).len);
     for(int i=0;i<(*it1).len;i++)
       Serial.printf("%02X",(*it1).val.get()[i]);
+    if((*it1).len==0)
+      Serial.printf(" (null)");
+    else if((*it1).len<=4)
+      Serial.printf(" (%u)",(*it1).getVal());
+    else if((*it1).len<=8)
+      Serial.printf(" (%llu)",(*it1).getVal<uint64_t>());
     Serial.printf("\n");
     it1++;
   }

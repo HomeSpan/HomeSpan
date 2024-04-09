@@ -42,9 +42,16 @@ struct tlv8_t {
   tlv8_t(uint8_t tag, size_t len, const uint8_t* val);
   void update(size_t addLen, const uint8_t *addVal);
   void osprint(std::ostream& os);
-
+  
   operator uint8_t*() const{
     return(val.get());
+  }
+
+  template<class T=uint32_t> T getVal(){
+    T iVal=0;
+    for(int i=0;i<len;i++)
+      iVal|=static_cast<T>(val.get()[i])<<(i*8);
+    return(iVal);
   }
   
 };
@@ -78,9 +85,10 @@ class TLV8 : public std::list<tlv8_t, Mallocator<tlv8_t>> {
   TLV8(const TLV8_names *names, int nNames) : names{names}, nNames{nNames} {};
 
   TLV8_it add(uint8_t tag, size_t len, const uint8_t *val);
-  TLV8_it add(uint8_t tag, uint8_t val){return(add(tag, 1, &val));}
-  TLV8_it add(uint8_t tag){return(add(tag, 0, NULL));}
+  TLV8_it add(uint8_t tag, uint64_t val);
   TLV8_it add(uint8_t tag, TLV8 &subTLV);
+  TLV8_it add(uint8_t tag){return(add(tag, 0, NULL));}
+  TLV8_it add(uint8_t tag, const char *val){return(add(tag, strlen(val), reinterpret_cast<const uint8_t*>(val)));}
 
   TLV8_it find(uint8_t tag, TLV8_it it1, TLV8_it it2);
   TLV8_it find(uint8_t tag, TLV8_it it1){return(find(tag, it1, end()));}
