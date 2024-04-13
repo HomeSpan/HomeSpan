@@ -51,7 +51,9 @@ char *Utils::readSerial(char *c, int max){
 
   while(1){
 
-    while(!Serial.available());       // wait until there is a new character
+    while(!Serial.available()){        // wait until there is a new character
+      vTaskDelay(100 / portTICK_PERIOD_MS);
+    }
     
     buf=Serial.read();
     
