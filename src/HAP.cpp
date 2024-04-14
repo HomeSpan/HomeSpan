@@ -404,7 +404,7 @@ int HAPClient::postPairSetupURL(uint8_t *content, size_t len){
         return(0);
       };
 
-      srp->createSessionKey(*itPublicKey,(*itPublicKey).len);                 // create session key, K, from client Public Key, A
+      srp->createSessionKey(*itPublicKey,(*itPublicKey).getLen());            // create session key, K, from client Public Key, A
 
       if(!srp->verifyClientProof(*itClientProof)){                            // verify client Proof, M1
         LOG0("\n*** ERROR: SRP Proof Verification Failed\n\n");
@@ -454,9 +454,9 @@ int HAPClient::postPairSetupURL(uint8_t *content, size_t len){
       
       // use SessionKey to decrypt encryptedData TLV with padded nonce="PS-Msg05"
                                   
-      TempBuffer<uint8_t> decrypted((*itEncryptedData).len-crypto_aead_chacha20poly1305_IETF_ABYTES);       // temporary storage for decrypted data
+      TempBuffer<uint8_t> decrypted((*itEncryptedData).getLen()-crypto_aead_chacha20poly1305_IETF_ABYTES);  // temporary storage for decrypted data
        
-      if(crypto_aead_chacha20poly1305_ietf_decrypt(decrypted, NULL, NULL, *itEncryptedData, (*itEncryptedData).len, NULL, 0, (unsigned char *)"\x00\x00\x00\x00PS-Msg05", sessionKey)==-1){          
+      if(crypto_aead_chacha20poly1305_ietf_decrypt(decrypted, NULL, NULL, *itEncryptedData, (*itEncryptedData).getLen(), NULL, 0, (unsigned char *)"\x00\x00\x00\x00PS-Msg05", sessionKey)==-1){          
         LOG0("\n*** ERROR: Exchange-Request Authentication Failed\n\n");
         responseTLV.add(kTLVType_Error,tagError_Authentication);        // set Error=Authentication
         tlvRespond(responseTLV);                                        // send response to client
@@ -492,7 +492,7 @@ int HAPClient::postPairSetupURL(uint8_t *content, size_t len){
 
       // Concatenate iosDeviceX, IOS ID, and IOS PublicKey into iosDeviceInfo
       
-      TempBuffer<uint8_t> iosDeviceInfo(iosDeviceX,iosDeviceX.len(),(*itIdentifier).val.get(),(*itIdentifier).len,(*itPublicKey).val.get(),(*itPublicKey).len,NULL);
+      TempBuffer<uint8_t> iosDeviceInfo(iosDeviceX,iosDeviceX.len(),(uint8_t *)(*itIdentifier),(*itIdentifier).getLen(),(uint8_t *)(*itPublicKey),(*itPublicKey).getLen(),NULL);
 
       if(crypto_sign_verify_detached(*itSignature, iosDeviceInfo, iosDeviceInfo.len(), *itPublicKey) != 0){      // verify signature of iosDeviceInfo using iosDeviceLTPK   
         LOG0("\n*** ERROR: LPTK Signature Verification Failed\n\n");
@@ -668,9 +668,9 @@ int HAPClient::postPairVerifyURL(uint8_t *content, size_t len){
 
       // use Session Curve25519 Key (from previous step) to decrypt encrypytedData TLV with padded nonce="PV-Msg03"
 
-      TempBuffer<uint8_t> decrypted((*itEncryptedData).len-crypto_aead_chacha20poly1305_IETF_ABYTES);        // temporary storage for decrypted data
+      TempBuffer<uint8_t> decrypted((*itEncryptedData).getLen()-crypto_aead_chacha20poly1305_IETF_ABYTES);        // temporary storage for decrypted data
       
-      if(crypto_aead_chacha20poly1305_ietf_decrypt(decrypted, NULL, NULL, *itEncryptedData, (*itEncryptedData).len, NULL, 0, (unsigned char *)"\x00\x00\x00\x00PV-Msg03", sessionKey)==-1){          
+      if(crypto_aead_chacha20poly1305_ietf_decrypt(decrypted, NULL, NULL, *itEncryptedData, (*itEncryptedData).getLen(), NULL, 0, (unsigned char *)"\x00\x00\x00\x00PV-Msg03", sessionKey)==-1){          
         LOG0("\n*** ERROR: Verify Authentication Failed\n\n");
         responseTLV.add(kTLVType_State,pairState_M4);               // set State=<M4>
         responseTLV.add(kTLVType_Error,tagError_Authentication);    // set Error=Authentication

@@ -70,7 +70,7 @@ void tlv8_t::osprint(std::ostream& os){
 
 TLV8_it TLV8::add(uint8_t tag, size_t len, const uint8_t* val){
 
-  if(!empty() && back().tag==tag)
+  if(!empty() && back().getTag()==tag)
     back().update(len,val);
   else
     emplace_back(tag,len,val);
@@ -103,9 +103,9 @@ TLV8_it TLV8::add(uint8_t tag, uint64_t val){
 TLV8_it TLV8::find(uint8_t tag, TLV8_it it1, TLV8_it it2){
 
   auto it=it1;
-  while(it!=it2 && (*it).tag!=tag)
+  while(it!=it2 && (*it).getTag()!=tag)
     it++;
-  return(it==it2?end():it);
+  return(it);
 }
 
 /////////////////////////////////////
@@ -115,9 +115,9 @@ size_t TLV8::pack_size(TLV8_it it1, TLV8_it it2){
   size_t nBytes=0;
 
   while(it1!=it2){
-    nBytes+=2+(*it1).len;
-    if((*it1).len>255)
-      nBytes+=2*(((*it1).len-1)/255);
+    nBytes+=2+(*it1).getLen();
+    if((*it1).getLen()>255)
+      nBytes+=2*(((*it1).getLen()-1)/255);
     it1++;
   }
 
@@ -134,13 +134,13 @@ size_t TLV8::pack(uint8_t *buf, size_t bufSize){
     switch(currentPackPhase){
 
       case 0:
-        currentPackBuf=(*currentPackIt).val.get();
-        endPackBuf=(*currentPackIt).val.get()+(*currentPackIt).len;
+        currentPackBuf=*currentPackIt;
+        endPackBuf=(*currentPackIt)+(*currentPackIt).getLen();
         currentPackPhase=1;
         break;
         
       case 1:
-        *buf++=(*currentPackIt).tag;
+        *buf++=(*currentPackIt).getTag();
         nBytes++;
         currentPackPhase=2;
         break;
@@ -228,7 +228,7 @@ int TLV8::unpack(TLV8_it it){
   if(it==end())
     return(0);
     
-  return(unpack(*it,(*it).len));
+  return(unpack(*it,(*it).getLen()));
 }
 
 /////////////////////////////////////
@@ -251,19 +251,19 @@ const char *TLV8::getName(uint8_t tag){
 void TLV8::print(TLV8_it it1, TLV8_it it2){
 
   while(it1!=it2){
-    const char *name=getName((*it1).tag);
+    const char *name=getName((*it1).getTag());
     if(name)
       Serial.printf("%s",name);
     else
-      Serial.printf("%d",(*it1).tag);
-    Serial.printf("(%d) ",(*it1).len);
-    for(int i=0;i<(*it1).len;i++)
-      Serial.printf("%02X",(*it1).val.get()[i]);
-    if((*it1).len==0)
+      Serial.printf("%d",(*it1).getTag());
+    Serial.printf("(%d) ",(*it1).getLen());
+    for(int i=0;i<(*it1).getLen();i++)
+      Serial.printf("%02X",(*it1)[i]);
+    if((*it1).getLen()==0)
       Serial.printf(" [null]");
-    else if((*it1).len<=4)
+    else if((*it1).getLen()<=4)
       Serial.printf(" [%u]",(*it1).getVal());
-    else if((*it1).len<=8)
+    else if((*it1).getLen()<=8)
       Serial.printf(" [%llu]",(*it1).getVal<uint64_t>());
     Serial.printf("\n");
     it1++;

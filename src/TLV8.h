@@ -34,17 +34,34 @@
 
 #include "PSRAM.h"
 
-struct tlv8_t {
+class tlv8_t {
+  
+  private:
+  
   uint8_t tag;
   size_t len;
   std::unique_ptr<uint8_t> val;
 
+  public:
+ 
   tlv8_t(uint8_t tag, size_t len, const uint8_t* val);
   void update(size_t addLen, const uint8_t *addVal);
   void osprint(std::ostream& os);
   
   operator uint8_t*() const{
     return(val.get());
+  }
+
+  uint8_t & operator[](int index){
+    return(val.get()[index]);
+  }
+
+  size_t getLen(){
+    return(len);
+  }
+
+  uint8_t getTag(){
+    return(tag);
   }
 
   template<class T=uint32_t> T getVal(){
@@ -94,7 +111,7 @@ class TLV8 : public std::list<tlv8_t, Mallocator<tlv8_t>> {
   TLV8_it find(uint8_t tag, TLV8_it it1){return(find(tag, it1, end()));}
   TLV8_it find(uint8_t tag){return(find(tag, begin(), end()));}
 
-  int len(TLV8_it it){return(it==end()?-1:(*it).len);} 
+  int len(TLV8_it it){return(it==end()?-1:(*it).getLen());} 
 
   size_t pack_size(TLV8_it it1, TLV8_it it2);
   size_t pack_size(){return(pack_size(begin(), end()));}
