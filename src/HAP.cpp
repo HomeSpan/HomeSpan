@@ -370,7 +370,6 @@ int HAPClient::postPairSetupURL(uint8_t *content, size_t len){
         return(0);
       };
 
-      auto itPublicKey=responseTLV.add(kTLVType_PublicKey,384,NULL);                // create blank PublicKey TLV with space for 384 bytes
 
       if(srp==NULL)                                                                 // create instance of SRP (if not already created) to persist until Pairing-Setup M5 completes
         srp=new SRP6A;
@@ -381,7 +380,8 @@ int HAPClient::postPairSetupURL(uint8_t *content, size_t len){
 
       responseTLV.add(kTLVType_Salt,16,verifyData.get()->salt);                     // write Salt from verification data into TLV
       
-      srp->createPublicKey(verifyData,*itPublicKey);                                // create accessory Public Key from stored verification data and write result into PublicKey TLV
+      responseTLV.add(kTLVType_PublicKey,384,NULL);                                 // create blank PublicKey TLV with space for 384 bytes
+      srp->createPublicKey(verifyData,responseTLV.back());                          // create accessory Public Key from stored verification data and write result into PublicKey TLV
       
       tlvRespond(responseTLV);                                                      // send response to client
       pairStatus=pairState_M3;                                                      // set next expected pair-state request from client
@@ -414,9 +414,8 @@ int HAPClient::postPairSetupURL(uint8_t *content, size_t len){
         return(0);        
       };
 
-      auto itAccProof=responseTLV.add(kTLVType_Proof,64,NULL);                // create blank accessory Proof TLV with space for 64 bytes
-
-      srp->createAccProof(*itAccProof);                                       // M1 has been successully verified; now create accessory Proof M2
+      responseTLV.add(kTLVType_Proof,64,NULL);                                // create blank accessory Proof TLV with space for 64 bytes
+      srp->createAccProof(responseTLV.back());                                // M1 has been successully verified; now create accessory Proof M2
 
       tlvRespond(responseTLV);                                                // send response to client
       pairStatus=pairState_M5;                                                // set next expected pair-state request from client
@@ -513,14 +512,13 @@ int HAPClient::postPairSetupURL(uint8_t *content, size_t len){
 
       TempBuffer<uint8_t> accessoryInfo(accessoryX,accessoryX.len(),accessory.ID,hap_accessory_IDBYTES,accessory.LTPK,crypto_sign_PUBLICKEYBYTES,NULL);
 
-      subTLV.clear();                                                                            // clear existing SUBTLV records
+      subTLV.clear();                                                                             // clear existing SUBTLV records
 
-      itSignature=subTLV.add(kTLVType_Signature,64,NULL);                                        // create blank Signature TLV with space for 64 bytes
+      subTLV.add(kTLVType_Signature,64,NULL);                                                     // create blank Signature TLV with space for 64 bytes
+      crypto_sign_detached(subTLV.back(),NULL,accessoryInfo,accessoryInfo.len(),accessory.LTSK);  // produce signature of accessoryInfo using AccessoryLTSK (Ed25519 long-term secret key)
 
-      crypto_sign_detached(*itSignature,NULL,accessoryInfo,accessoryInfo.len(),accessory.LTSK);  // produce signature of accessoryInfo using AccessoryLTSK (Ed25519 long-term secret key)
-
-      subTLV.add(kTLVType_Identifier,hap_accessory_IDBYTES,accessory.ID);                        // set Identifier TLV record as accessoryPairingID
-      subTLV.add(kTLVType_PublicKey,crypto_sign_PUBLICKEYBYTES,accessory.LTPK);                  // set PublicKey TLV record as accessoryLTPK
+      subTLV.add(kTLVType_Identifier,hap_accessory_IDBYTES,accessory.ID);                         // set Identifier TLV record as accessoryPairingID
+      subTLV.add(kTLVType_PublicKey,crypto_sign_PUBLICKEYBYTES,accessory.LTPK);                   // set PublicKey TLV record as accessoryLTPK
 
       LOG2("------- ENCRYPTING SUB-TLVS -------\n");
 
@@ -532,9 +530,9 @@ int HAPClient::postPairSetupURL(uint8_t *content, size_t len){
 
       // Encrypt the subTLV data using the same SRP Session Key as above with ChaCha20-Poly1305
 
-      itEncryptedData=responseTLV.add(kTLVType_EncryptedData,subPack.len()+crypto_aead_chacha20poly1305_IETF_ABYTES,NULL);     //create blank EncryptedData TLV with space for subTLV + Authentication Tag
+      responseTLV.add(kTLVType_EncryptedData,subPack.len()+crypto_aead_chacha20poly1305_IETF_ABYTES,NULL);     //create blank EncryptedData TLV with space for subTLV + Authentication Tag
 
-      crypto_aead_chacha20poly1305_ietf_encrypt(*itEncryptedData,NULL,subPack,subPack.len(),NULL,0,NULL,(unsigned char *)"\x00\x00\x00\x00PS-Msg06",sessionKey);
+      crypto_aead_chacha20poly1305_ietf_encrypt(responseTLV.back(),NULL,subPack,subPack.len(),NULL,0,NULL,(unsigned char *)"\x00\x00\x00\x00PS-Msg06",sessionKey);
                                                    
       LOG2("---------- END SUB-TLVS! ----------\n");
       
@@ -623,8 +621,8 @@ int HAPClient::postPairVerifyURL(uint8_t *content, size_t len){
       TempBuffer<uint8_t> accessoryInfo(publicCurveKey,crypto_box_PUBLICKEYBYTES,accessory.ID,hap_accessory_IDBYTES,iosCurveKey,crypto_box_PUBLICKEYBYTES,NULL);
 
       subTLV.add(kTLVType_Identifier,hap_accessory_IDBYTES,accessory.ID);                         // set Identifier subTLV record as Accessory's Pairing ID
-      auto itSignature=subTLV.add(kTLVType_Signature,crypto_sign_BYTES,NULL);                     // create blank Signature subTLV
-      crypto_sign_detached(*itSignature,NULL,accessoryInfo,accessoryInfo.len(),accessory.LTSK);   // produce Signature of accessoryInfo using Accessory's LTSK
+      subTLV.add(kTLVType_Signature,crypto_sign_BYTES,NULL);                                      // create blank Signature subTLV
+      crypto_sign_detached(subTLV.back(),NULL,accessoryInfo,accessoryInfo.len(),accessory.LTSK);  // produce Signature of accessoryInfo using Accessory's LTSK
 
       LOG2("------- ENCRYPTING SUB-TLVS -------\n");
 
@@ -640,8 +638,8 @@ int HAPClient::postPairVerifyURL(uint8_t *content, size_t len){
       sessionKey=(uint8_t *)HS_MALLOC(crypto_box_PUBLICKEYBYTES);                                                                // temporary space - will be deleted at end of verification process
       HKDF::create(sessionKey,sharedCurveKey,crypto_box_PUBLICKEYBYTES,"Pair-Verify-Encrypt-Salt","Pair-Verify-Encrypt-Info");   // create Session Curve25519 Key from Shared-Secret Curve25519 Key using HKDF-SHA-512  
 
-      auto itEncryptedData=responseTLV.add(kTLVType_EncryptedData,subPack.len()+crypto_aead_chacha20poly1305_IETF_ABYTES,NULL);                                    // create blank EncryptedData subTLV
-      crypto_aead_chacha20poly1305_ietf_encrypt(*itEncryptedData,NULL,subPack,subPack.len(),NULL,0,NULL,(unsigned char *)"\x00\x00\x00\x00PV-Msg02",sessionKey);   // encrypt data with Session Curve25519 Key and padded nonce="PV-Msg02"
+      responseTLV.add(kTLVType_EncryptedData,subPack.len()+crypto_aead_chacha20poly1305_IETF_ABYTES,NULL);                                                           // create blank EncryptedData subTLV
+      crypto_aead_chacha20poly1305_ietf_encrypt(responseTLV.back(),NULL,subPack,subPack.len(),NULL,0,NULL,(unsigned char *)"\x00\x00\x00\x00PV-Msg02",sessionKey);   // encrypt data with Session Curve25519 Key and padded nonce="PV-Msg02"
                                             
       LOG2("---------- END SUB-TLVS! ----------\n");
       
