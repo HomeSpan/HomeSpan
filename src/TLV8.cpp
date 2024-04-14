@@ -272,6 +272,20 @@ void TLV8::print(TLV8_it it1, TLV8_it it2){
   
 //////////////////////////////////////
 
+void TLV8::printAll_r(String label){
+  
+  for(auto it=begin();it!=end();it++){
+    Serial.printf("%s",label.c_str());
+    print(it);
+    TLV8 tlv;
+    if(tlv.unpack(*it,(*it).getLen())==0)
+      tlv.printAll_r(label+String((*it).getTag())+"-");
+  }
+  Serial.printf("%sDONE\n",label.c_str());
+}
+
+//////////////////////////////////////
+
 void TLV8::osprint(std::ostream& os, TLV8_it it1, TLV8_it it2){
 
   for(auto it=it1;it!=it2;it++)

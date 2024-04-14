@@ -95,7 +95,9 @@ class TLV8 : public std::list<tlv8_t, Mallocator<tlv8_t>> {
 
   const TLV8_names *names=NULL;
   int nNames=0;
-  
+
+  void printAll_r(String label);
+
   public:
 
   TLV8(){};
@@ -128,6 +130,7 @@ class TLV8 : public std::list<tlv8_t, Mallocator<tlv8_t>> {
   void print(TLV8_it it1, TLV8_it it2);
   void print(TLV8_it it1){print(it1, std::next(it1));}
   void print(){print(begin(), end());}
+  void printAll(){printAll_r("");}
 
   void osprint(std::ostream& os, TLV8_it it1, TLV8_it it2);
   void osprint(std::ostream& os, TLV8_it it1){osprint(os, it1, std::next(it1));}
