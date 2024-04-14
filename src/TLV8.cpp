@@ -68,27 +68,28 @@ void tlv8_t::osprint(std::ostream& os){
 
 /////////////////////////////////////
 
-TLV8 &TLV8::add(uint8_t tag, size_t len, const uint8_t* val){
+TLV8_it TLV8::add(uint8_t tag, size_t len, const uint8_t* val){
 
   if(!empty() && back().tag==tag)
     back().update(len,val);
   else
     emplace_back(tag,len,val);
 
-  return(*this);
+  return(--end());
 }
 
 /////////////////////////////////////
 
-TLV8 &TLV8::add(uint8_t tag, TLV8 &subTLV){
+TLV8_it TLV8::add(uint8_t tag, TLV8 &subTLV){
   
-  subTLV.pack(add(tag,subTLV.pack_size(),NULL).back());    // add new blank element of sufficient size and pack subTLV into this new element
-  return(*this);
+  auto it=add(tag,subTLV.pack_size(),NULL);      // create space for inserting sub TLV and store iterator to new element
+  subTLV.pack(*it);                              // pack subTLV into new element
+  return(--end());
 }
 
 /////////////////////////////////////
 
-TLV8 &TLV8::add(uint8_t tag, uint64_t val){
+TLV8_it TLV8::add(uint8_t tag, uint64_t val){
   
   uint8_t *p=reinterpret_cast<uint8_t *>(&val);
   size_t nBytes=sizeof(uint64_t);
@@ -104,7 +105,7 @@ TLV8_it TLV8::find(uint8_t tag, TLV8_it it1, TLV8_it it2){
   auto it=it1;
   while(it!=it2 && (*it).tag!=tag)
     it++;
-  return(it);
+  return(it==it2?end():it);
 }
 
 /////////////////////////////////////

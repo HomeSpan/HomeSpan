@@ -84,11 +84,11 @@ class TLV8 : public std::list<tlv8_t, Mallocator<tlv8_t>> {
   TLV8(){};
   TLV8(const TLV8_names *names, int nNames) : names{names}, nNames{nNames} {};
 
-  TLV8 & add(uint8_t tag, size_t len, const uint8_t *val);
-  TLV8 & add(uint8_t tag, uint64_t val);
-  TLV8 & add(uint8_t tag, TLV8 &subTLV);
-  TLV8 & add(uint8_t tag){return(add(tag, 0, NULL));}
-  TLV8 & add(uint8_t tag, const char *val){return(add(tag, strlen(val), reinterpret_cast<const uint8_t*>(val)));}
+  TLV8_it add(uint8_t tag, size_t len, const uint8_t *val);
+  TLV8_it add(uint8_t tag, uint64_t val);
+  TLV8_it add(uint8_t tag, TLV8 &subTLV);
+  TLV8_it add(uint8_t tag){return(add(tag, 0, NULL));}
+  TLV8_it add(uint8_t tag, const char *val){return(add(tag, strlen(val), reinterpret_cast<const uint8_t*>(val)));}
 
   TLV8_it find(uint8_t tag, TLV8_it it1, TLV8_it it2);
   TLV8_it find(uint8_t tag, TLV8_it it1){return(find(tag, it1, end()));}
