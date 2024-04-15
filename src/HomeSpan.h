@@ -353,7 +353,8 @@ class Span{
   Span& setStatusCallback(void (*f)(HS_STATUS status)){statusCallback=f;return(*this);}  // sets an optional user-defined function to call when HomeSpan status changes
   const char* statusString(HS_STATUS s);                                                 // returns char string for HomeSpan status change messages
   Span& setPairingCode(const char *s, boolean progCall=true);                            // sets the Pairing Code - use is NOT recommended.  Use 'S' from CLI instead
-  void deleteStoredValues(){processSerialCommand("V");}                                  // deletes stored Characteristic values from NVS  
+  void deleteStoredValues(){processSerialCommand("V");}                                  // deletes stored Characteristic values from NVS
+  Span& resetIID(int newIID);                                                            // resets the IID count for the current Accessory to start at newIID
 
   int enableOTA(boolean auth=true, boolean safeLoad=true){return(spanOTA.init(auth, safeLoad, NULL));}   // enables Over-the-Air updates, with (auth=true) or without (auth=false) authorization password  
   int enableOTA(const char *pwd, boolean safeLoad=true){return(spanOTA.init(true, safeLoad, pwd));}      // enables Over-the-Air updates, with custom authorization password (overrides any password stored with the 'O' command)
@@ -452,12 +453,14 @@ class SpanService{
 
   public:
   
-  void *operator new(size_t size){return(HS_MALLOC(size));}                       // override new operator to use PSRAM when available
-  SpanService(const char *type, const char *hapName, boolean isCustom=false);     // constructor
-  SpanService *setPrimary();                                                      // sets the Service Type to be primary and returns pointer to self
-  SpanService *setHidden();                                                       // sets the Service Type to be hidden and returns pointer to self
-  SpanService *addLink(SpanService *svc);                                         // adds svc as a Linked Service and returns pointer to self
-  vector<SpanService *, Mallocator<SpanService *>> getLinks(){return(linkedServices);}                       // returns linkedServices vector for use as range in "for-each" loops
+  void *operator new(size_t size){return(HS_MALLOC(size));}                               // override new operator to use PSRAM when available
+  SpanService(const char *type, const char *hapName, boolean isCustom=false);             // constructor
+  SpanService *setPrimary();                                                              // sets the Service Type to be primary and returns pointer to self
+  SpanService *setHidden();                                                               // sets the Service Type to be hidden and returns pointer to self
+  SpanService *addLink(SpanService *svc);                                                 // adds svc as a Linked Service and returns pointer to self
+  vector<SpanService *, Mallocator<SpanService *>> getLinks(){return(linkedServices);}    // returns linkedServices vector for use as range in "for-each" loops
+
+  int getIID(){return(iid);}
 
   virtual boolean update() {return(true);}                // placeholder for code that is called when a Service is updated via a Controller.  Must return true/false depending on success of update
   virtual void loop(){}                                   // loops for each Service - called every cycle if over-ridden with user-defined code
@@ -652,6 +655,8 @@ class SpanCharacteristic{
 
   void *operator new(size_t size){return(HS_MALLOC(size));}               // override new operator to use PSRAM when available
   SpanCharacteristic(HapChar *hapChar, boolean isCustom=false);           // constructor
+
+  int getIID(){return(iid);}
 
   template <class T=int> T getVal(){
     return(uvGet<T>(value));

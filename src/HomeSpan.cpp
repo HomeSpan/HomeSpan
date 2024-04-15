@@ -1586,6 +1586,26 @@ boolean Span::printfAttributes(char **ids, int numIDs, int flags){
 
 ///////////////////////////////
 
+Span& Span::resetIID(int newIID){
+
+  if(Accessories.empty()){
+    LOG0("\nFATAL ERROR!  Can't reset the Accessory IID count without a defined Accessory ***\n");
+    LOG0("\n=== PROGRAM HALTED ===");
+    while(1);
+  }
+
+  if(newIID<1){
+    LOG0("\nFATAL ERROR!  Can't reset the Accessory IID count to a value less than 1 ***\n");
+    LOG0("\n=== PROGRAM HALTED ===");
+    while(1);    
+  }
+  
+  Accessories.back()->iidCount=newIID-1;
+  return(*this);
+}
+
+///////////////////////////////
+
 boolean Span::updateDatabase(boolean updateMDNS){
 
   printfAttributes(GET_META|GET_PERMS|GET_TYPE|GET_DESC);   // stream attributes database, which automtically produces a SHA-384 hash
