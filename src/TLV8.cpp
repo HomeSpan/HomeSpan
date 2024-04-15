@@ -93,8 +93,12 @@ TLV8_it TLV8::add(uint8_t tag, uint64_t val){
   
   uint8_t *p=reinterpret_cast<uint8_t *>(&val);
   size_t nBytes=sizeof(uint64_t);
-  while(nBytes>1 && p[nBytes-1]==0)               // TLV requires little endian without any trailing zero bytes (i.e. only use what is needed to fully represent the value)
+  while(nBytes>1 && p[nBytes-1]==0)               // TLV requires little endian of size 1, 2, 4, or 8 bytes (include trailing zeros as needed)
     nBytes--;
+  if(nBytes==3)                                   // need to include a trailing zero so that total bytes=4
+    nBytes=4;
+  else if(nBytes>4)                               // need to include multiple trailing zeros so that total bytes=8
+    nBytes=8;
   return(add(tag, nBytes, p));
 }
 
