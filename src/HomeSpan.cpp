@@ -1594,13 +1594,15 @@ Span& Span::resetIID(int newIID){
     while(1);
   }
 
-  if(newIID<1){
-    LOG0("\nFATAL ERROR!  Can't reset the Accessory IID count to a value less than 1 ***\n");
+  newIID--;
+  
+  if(newIID<Accessories.back()->iidCount){
+    LOG0("\nFATAL ERROR!  Can't reset the Accessory IID count to a value less than already used ***\n");
     LOG0("\n=== PROGRAM HALTED ===");
     while(1);    
   }
   
-  Accessories.back()->iidCount=newIID-1;
+  Accessories.back()->iidCount=newIID;
   return(*this);
 }
 
