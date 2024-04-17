@@ -864,7 +864,7 @@ void Span::processSerialCommand(const char *c){
       char pNames[][7]={"PR","PW","EV","AA","TW","HD","WR"};
 
       for(auto acc=Accessories.begin(); acc!=Accessories.end(); acc++){
-        LOG0("\u27a4 Accessory:  AID=%d\n",(*acc)->aid);
+        LOG0("\u27a4 Accessory:  AID=%u\n",(*acc)->aid);
         boolean foundInfo=false;
 
         if(acc==Accessories.begin() && (*acc)->aid!=1)
@@ -877,7 +877,7 @@ void Span::processSerialCommand(const char *c){
         vector<uint32_t, Mallocator<uint32_t>> iidValues;
 
         for(auto svc=(*acc)->Services.begin(); svc!=(*acc)->Services.end(); svc++){
-          LOG0("   \u279f Service %s:  IID=%d, %sUUID=\"%s\"\n",(*svc)->hapName,(*svc)->iid,(*svc)->isCustom?"Custom-":"",(*svc)->type);
+          LOG0("   \u279f Service %s:  IID=%u, %sUUID=\"%s\"\n",(*svc)->hapName,(*svc)->iid,(*svc)->isCustom?"Custom-":"",(*svc)->type);
 
           if(!strcmp((*svc)->type,"3E")){
             foundInfo=true;
@@ -893,7 +893,7 @@ void Span::processSerialCommand(const char *c){
           iidValues.push_back((*svc)->iid);
 
           for(auto chr=(*svc)->Characteristics.begin(); chr!=(*svc)->Characteristics.end(); chr++){
-            LOG0("      \u21e8 Characteristic %s(%.33s%s):  IID=%d, %sUUID=\"%s\", %sPerms=",
+            LOG0("      \u21e8 Characteristic %s(%.33s%s):  IID=%u, %sUUID=\"%s\", %sPerms=",
               (*chr)->hapName,(*chr)->uvPrint((*chr)->value).c_str(),strlen((*chr)->uvPrint((*chr)->value).c_str())>33?"...\"":"",(*chr)->iid,(*chr)->isCustom?"Custom-":"",(*chr)->type,(*chr)->perms!=(*chr)->hapChar->perms?"Custom-":"");
 
             int foundPerms=0;
@@ -996,7 +996,7 @@ void Span::processSerialCommand(const char *c){
       for(int i=0;i<Accessories.size();i++){                             // identify all services with over-ridden loop() methods
         for(int j=0;j<Accessories[i]->Services.size();j++){
           SpanService *s=Accessories[i]->Services[j];
-          LOG0("%-30s  %8.8s  %10u  %3d  %6s  %4s  %6s  ",s->hapName,s->type,Accessories[i]->aid,s->iid, 
+          LOG0("%-30s  %8.8s  %10u  %3u  %6s  %4s  %6s  ",s->hapName,s->type,Accessories[i]->aid,s->iid, 
                  (void(*)())(s->*(&SpanService::update))!=(void(*)())(&SpanService::update)?"YES":"NO",
                  (void(*)())(s->*(&SpanService::loop))!=(void(*)())(&SpanService::loop)?"YES":"NO",
                  (void(*)(int,boolean))(s->*(&SpanService::button))!=(void(*)(int,boolean))(&SpanService::button)?"YES":"NO"
@@ -1004,7 +1004,7 @@ void Span::processSerialCommand(const char *c){
           if(s->linkedServices.empty())
             LOG0("-");
           for(int k=0;k<s->linkedServices.size();k++){
-            LOG0("%d",s->linkedServices[k]->iid);
+            LOG0("%u",s->linkedServices[k]->iid);
             if(k<s->linkedServices.size()-1)
               LOG0(",");
           }
@@ -1323,7 +1323,7 @@ boolean Span::deleteAccessory(uint32_t n){
 
 ///////////////////////////////
 
-SpanCharacteristic *Span::find(uint32_t aid, int iid){
+SpanCharacteristic *Span::find(uint32_t aid, uint32_t iid){
 
   int index=-1;
   for(int i=0;i<Accessories.size();i++){   // loop over all Accessories to find aid
@@ -1394,7 +1394,7 @@ int Span::updateCharacteristics(char *buf, SpanBuf *pObj){
         okay|=1;
       } else 
       if(!strcmp(t2,"iid") && (t3=strtok_r(t1,"}[]:, \"\t\n\r",&p2))){
-        pObj[nObj].iid=atoi(t3);
+        sscanf(t3,"%u",&pObj[nObj].iid);
         okay|=2;
       } else 
       if(!strcmp(t2,"value") && (t3=strtok_r(t1,"}[]:,\"",&p2))){
@@ -1458,31 +1458,28 @@ int Span::updateCharacteristics(char *buf, SpanBuf *pObj){
   for(int i=0;i<nObj;i++){                                     // PASS 2: loop again over all objects       
     if(pObj[i].status==StatusCode::TBD){                       // if object status still TBD
 
-      StatusCode status=pObj[i].characteristic->service->update()?StatusCode::OK:StatusCode::Unable;                  // update service and save statusCode as OK or Unable depending on whether return is true or false
+      StatusCode status=pObj[i].characteristic->service->update()?StatusCode::OK:StatusCode::Unable;        // update service and save statusCode as OK or Unable depending on whether return is true or false
 
-      for(int j=i;j<nObj;j++){                                                      // loop over this object plus any remaining objects to update values and save status for any other characteristics in this service
+      for(int j=i;j<nObj;j++){                                                                              // loop over this object plus any remaining objects to update values and save status for any other characteristics in this service
         
-        if(pObj[j].characteristic->service==pObj[i].characteristic->service){       // if service of this characteristic matches service that was updated
-          pObj[j].status=status;                                                    // save statusCode for this object
-          LOG1("Updating aid=");
-          LOG1(pObj[j].characteristic->aid);
-          LOG1(" iid=");  
-          LOG1(pObj[j].characteristic->iid);
-          if(status==StatusCode::OK){                                                     // if status is okay
-            pObj[j].characteristic->uvSet(pObj[j].characteristic->value,pObj[j].characteristic->newValue);               // update characteristic value with new value
-            if(pObj[j].characteristic->nvsKey){                                                                                               // if storage key found
+        if(pObj[j].characteristic->service==pObj[i].characteristic->service){                               // if service of this characteristic matches service that was updated
+          pObj[j].status=status;                                                                            // save statusCode for this object
+          LOG1("Updating aid=%u iid=%u",pObj[j].characteristic->aid,pObj[j].characteristic->iid);
+          if(status==StatusCode::OK){                                                                       // if status is okay
+            pObj[j].characteristic->uvSet(pObj[j].characteristic->value,pObj[j].characteristic->newValue);  // update characteristic value with new value
+            if(pObj[j].characteristic->nvsKey){                                                             // if storage key found
               if(pObj[j].characteristic->format<FORMAT::STRING)
-                nvs_set_u64(charNVS,pObj[j].characteristic->nvsKey,pObj[j].characteristic->value.UINT64);  // store data as uint64_t regardless of actual type (it will be read correctly when access through uvGet())         
+                nvs_set_u64(charNVS,pObj[j].characteristic->nvsKey,pObj[j].characteristic->value.UINT64);   // store data as uint64_t regardless of actual type (it will be read correctly when access through uvGet())         
               else
-                nvs_set_str(charNVS,pObj[j].characteristic->nvsKey,pObj[j].characteristic->value.STRING);                                     // store data
+                nvs_set_str(charNVS,pObj[j].characteristic->nvsKey,pObj[j].characteristic->value.STRING);   // store data
               nvs_commit(charNVS);
             }
             LOG1(" (okay)\n");
-          } else {                                                                        // if status not okay
-            pObj[j].characteristic->uvSet(pObj[j].characteristic->newValue,pObj[j].characteristic->value);                // replace characteristic new value with original value
+          } else {                                                                                          // if status not okay
+            pObj[j].characteristic->uvSet(pObj[j].characteristic->newValue,pObj[j].characteristic->value);  // replace characteristic new value with original value
             LOG1(" (failed)\n");
           }
-          pObj[j].characteristic->updateFlag=0;             // reset updateFlag for characteristic
+          pObj[j].characteristic->updateFlag=0;                                                             // reset updateFlag for characteristic
         }
       }
 
@@ -1555,13 +1552,13 @@ void Span::printfAttributes(SpanBuf *pObj, int nObj){
 boolean Span::printfAttributes(char **ids, int numIDs, int flags){
 
   uint32_t aid;
-  int iid;
+  uint32_t iid;
   
   SpanCharacteristic *Characteristics[numIDs];
   StatusCode status[numIDs];
 
   for(int i=0;i<numIDs;i++){              // PASS 1: loop over all ids requested to check status codes - only errors are if characteristic not found, or not readable
-    sscanf(ids[i],"%u.%d",&aid,&iid);     // parse aid and iid
+    sscanf(ids[i],"%u.%u",&aid,&iid);     // parse aid and iid
     Characteristics[i]=find(aid,iid);     // find matching chararacteristic
     
     if(Characteristics[i]){                                         // if found
@@ -1585,7 +1582,7 @@ boolean Span::printfAttributes(char **ids, int numIDs, int flags){
     if(Characteristics[i])                                          // if found
       Characteristics[i]->printfAttributes(flags);                  // get JSON attributes for characteristic (may or may not include status=0 attribute)
     else{                                                           // else create JSON status attribute based on requested aid/iid
-      sscanf(ids[i],"%u.%d",&aid,&iid);                             
+      sscanf(ids[i],"%u.%u",&aid,&iid);                             
       hapOut << "{\"iid\":" << iid << ",\"aid\":" << aid << ",\"status\":" << (int)status[i] << "}";     
     }
       
@@ -1600,7 +1597,7 @@ boolean Span::printfAttributes(char **ids, int numIDs, int flags){
 
 ///////////////////////////////
 
-Span& Span::resetIID(int newIID){
+Span& Span::resetIID(uint32_t newIID){
 
   if(Accessories.empty()){
     LOG0("\nFATAL ERROR!  Can't reset the Accessory IID count without a defined Accessory ***\n");
@@ -1767,7 +1764,7 @@ SpanService::~SpanService(){
     }
   }
   
-  LOG1("Deleted Service AID=%d IID=%d\n",accessory->aid,iid); 
+  LOG1("Deleted Service AID=%u IID=%u\n",accessory->aid,iid); 
 }
 
 ///////////////////////////////
@@ -1872,7 +1869,7 @@ SpanCharacteristic::~SpanCharacteristic(){
     free(newValue.STRING);
   }
   
-  LOG1("Deleted Characteristic AID=%d IID=%d\n",aid,iid);  
+  LOG1("Deleted Characteristic AID=%u IID=%u\n",aid,iid);  
 }
 
 ///////////////////////////////
@@ -1961,13 +1958,7 @@ StatusCode SpanCharacteristic::loadUpdate(char *val, char *ev, boolean wr){
     if(evFlag && !(perms&EV))         // notification is not supported for characteristic
       return(StatusCode::NotifyNotAllowed);
       
-    LOG1("Notification Request for aid=");
-    LOG1(aid);
-    LOG1(" iid=");
-    LOG1(iid);
-    LOG1(": ");
-    LOG1(evFlag?"true":"false");
-    LOG1("\n");
+    LOG1("Notification Request for aid=%u iid=%u: %s\n",aid,iid,evFlag?"true":"false");
     this->ev[HAPClient::conNum]=evFlag;
   }
 

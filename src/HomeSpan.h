@@ -136,7 +136,7 @@ struct SpanConfig{
 
 struct SpanBuf{                               // temporary storage buffer for use with putCharacteristicsURL() and checkTimedResets() 
   uint32_t aid=0;                             // updated aid 
-  int iid=0;                                  // updated iid
+  uint32_t iid=0;                             // updated iid
   boolean wr=false;                           // flag to indicate write-response has been requested
   char *val=NULL;                             // updated value (optional, though either at least 'val' or 'ev' must be specified)
   char *ev=NULL;                              // updated event notification flag (optional, though either at least 'val' or 'ev' must be specified)
@@ -280,7 +280,7 @@ class Span{
 
   void printfAttributes(int flags=GET_VALUE|GET_META|GET_PERMS|GET_TYPE|GET_DESC);   // writes Attributes JSON database to hapOut stream
   
-  SpanCharacteristic *find(uint32_t aid, int iid);                        // return Characteristic with matching aid and iid (else NULL if not found)
+  SpanCharacteristic *find(uint32_t aid, uint32_t iid);                   // return Characteristic with matching aid and iid (else NULL if not found)
   int countCharacteristics(char *buf);                                    // return number of characteristic objects referenced in PUT /characteristics JSON request
   int updateCharacteristics(char *buf, SpanBuf *pObj);                    // parses PUT /characteristics JSON request 'buf into 'pObj' and updates referenced characteristics; returns 1 on success, 0 on fail
   void printfAttributes(SpanBuf *pObj, int nObj);                         // writes SpanBuf objects to hapOut stream
@@ -354,7 +354,7 @@ class Span{
   const char* statusString(HS_STATUS s);                                                 // returns char string for HomeSpan status change messages
   Span& setPairingCode(const char *s, boolean progCall=true);                            // sets the Pairing Code - use is NOT recommended.  Use 'S' from CLI instead
   void deleteStoredValues(){processSerialCommand("V");}                                  // deletes stored Characteristic values from NVS
-  Span& resetIID(int newIID);                                                            // resets the IID count for the current Accessory to start at newIID
+  Span& resetIID(uint32_t newIID);                                                       // resets the IID count for the current Accessory to start at newIID
 
   int enableOTA(boolean auth=true, boolean safeLoad=true){return(spanOTA.init(auth, safeLoad, NULL));}   // enables Over-the-Air updates, with (auth=true) or without (auth=false) authorization password  
   int enableOTA(const char *pwd, boolean safeLoad=true){return(spanOTA.init(true, safeLoad, pwd));}      // enables Over-the-Air updates, with custom authorization password (overrides any password stored with the 'O' command)
@@ -408,15 +408,15 @@ class SpanAccessory{
   friend class SpanButton;
   friend class SpanRange;
     
-  uint32_t aid=0;                                         // Accessory Instance ID (HAP Table 6-1)
-  int iidCount=0;                                         // running count of iid to use for Services and Characteristics associated with this Accessory                                 
-  vector<SpanService *, Mallocator<SpanService*>> Services;                         // vector of pointers to all Services in this Accessory  
+  uint32_t aid=0;                                               // Accessory Instance ID (HAP Table 6-1)
+  uint32_t iidCount=0;                                          // running count of iid to use for Services and Characteristics associated with this Accessory                                 
+  vector<SpanService *, Mallocator<SpanService*>> Services;     // vector of pointers to all Services in this Accessory  
 
-  void printfAttributes(int flags);                       // writes Accessory JSON to hapOut stream
+  void printfAttributes(int flags);                             // writes Accessory JSON to hapOut stream
 
   protected:
 
-  ~SpanAccessory();                                       // destructor
+  ~SpanAccessory();                                             // destructor
 
   public:
 
@@ -433,23 +433,23 @@ class SpanService{
   friend class SpanCharacteristic;
   friend class SpanRange;
 
-  int iid=0;                                              // Instance ID (HAP Table 6-2)
-  const char *type;                                       // Service Type
-  const char *hapName;                                    // HAP Name
-  boolean hidden=false;                                   // optional property indicating service is hidden
-  boolean primary=false;                                  // optional property indicating service is primary
-  vector<SpanCharacteristic *, Mallocator<SpanCharacteristic*>> Characteristics;           // vector of pointers to all Characteristics in this Service  
-  vector<SpanService *, Mallocator<SpanService *>> linkedServices;                   // vector of pointers to any optional linked Services
-  boolean isCustom;                                       // flag to indicate this is a Custom Service
-  SpanAccessory *accessory=NULL;                          // pointer to Accessory containing this Service
+  uint32_t iid=0;                                                                   // Instance ID (HAP Table 6-2)
+  const char *type;                                                                 // Service Type
+  const char *hapName;                                                              // HAP Name
+  boolean hidden=false;                                                             // optional property indicating service is hidden
+  boolean primary=false;                                                            // optional property indicating service is primary
+  vector<SpanCharacteristic *, Mallocator<SpanCharacteristic*>> Characteristics;    // vector of pointers to all Characteristics in this Service  
+  vector<SpanService *, Mallocator<SpanService *>> linkedServices;                  // vector of pointers to any optional linked Services
+  boolean isCustom;                                                                 // flag to indicate this is a Custom Service
+  SpanAccessory *accessory=NULL;                                                    // pointer to Accessory containing this Service
   
-  void printfAttributes(int flags);                       // writes Service JSON to hapOut stream
+  void printfAttributes(int flags);                                                 // writes Service JSON to hapOut stream
 
   protected:
   
-  virtual ~SpanService();                                 // destructor
-  vector<HapChar *, Mallocator<HapChar*>> req;                                  // vector of pointers to all required HAP Characteristic Types for this Service
-  vector<HapChar *, Mallocator<HapChar*>> opt;                                  // vector of pointers to all optional HAP Characteristic Types for this Service
+  virtual ~SpanService();                                                           // destructor
+  vector<HapChar *, Mallocator<HapChar*>> req;                                      // vector of pointers to all required HAP Characteristic Types for this Service
+  vector<HapChar *, Mallocator<HapChar*>> opt;                                      // vector of pointers to all optional HAP Characteristic Types for this Service
 
   public:
   
@@ -460,7 +460,7 @@ class SpanService{
   SpanService *addLink(SpanService *svc);                                                 // adds svc as a Linked Service and returns pointer to self
   vector<SpanService *, Mallocator<SpanService *>> getLinks(){return(linkedServices);}    // returns linkedServices vector for use as range in "for-each" loops
 
-  int getIID(){return(iid);}
+  uint32_t getIID(){return(iid);}                         // returns IID of Service
 
   virtual boolean update() {return(true);}                // placeholder for code that is called when a Service is updated via a Controller.  Must return true/false depending on success of update
   virtual void loop(){}                                   // loops for each Service - called every cycle if over-ridden with user-defined code
@@ -485,7 +485,7 @@ class SpanCharacteristic{
     STRING_t STRING = NULL;
   };
 
-  int iid=0;                               // Instance ID (HAP Table 6-3)
+  uint32_t iid=0;                          // Instance ID (HAP Table 6-3)
   HapChar *hapChar;                        // pointer to HAP Characteristic structure
   const char *type;                        // Characteristic Type
   const char *hapName;                     // HAP Name
@@ -656,7 +656,7 @@ class SpanCharacteristic{
   void *operator new(size_t size){return(HS_MALLOC(size));}               // override new operator to use PSRAM when available
   SpanCharacteristic(HapChar *hapChar, boolean isCustom=false);           // constructor
 
-  int getIID(){return(iid);}
+  uint32_t getIID(){return(iid);}                                         // returns IID of Characteristic
 
   template <class T=int> T getVal(){
     return(uvGet<T>(value));
