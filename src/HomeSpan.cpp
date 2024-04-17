@@ -874,6 +874,7 @@ void Span::processSerialCommand(const char *c){
           LOG0("   *** ERROR #%d!  AID already in use for another Accessory ***\n",++nErrors);
         
         aidValues.push_back((*acc)->aid);
+        vector<uint32_t, Mallocator<uint32_t>> iidValues;
 
         for(auto svc=(*acc)->Services.begin(); svc!=(*acc)->Services.end(); svc++){
           LOG0("   \u279f Service %s:  IID=%d, %sUUID=\"%s\"\n",(*svc)->hapName,(*svc)->iid,(*svc)->isCustom?"Custom-":"",(*svc)->type);
@@ -881,11 +882,16 @@ void Span::processSerialCommand(const char *c){
           if(!strcmp((*svc)->type,"3E")){
             foundInfo=true;
             if((*svc)->iid!=1)
-              LOG0("     *** ERROR #%d!  The Accessory Information Service must be defined before any other Services in an Accessory ***\n",++nErrors);
+              LOG0("     *** ERROR #%d!  The Accessory Information Service must be defined with IID=1 (i.e. before any other Services in an Accessory) ***\n",++nErrors);
           }
           else if((*acc)->aid==1)            // this is an Accessory with aid=1, but it has more than just AccessoryInfo.  So...
-            isBridge=false;                  // ...this is not a bridge device          
-       
+            isBridge=false;                  // ...this is not a bridge device
+
+          if(std::find(iidValues.begin(),iidValues.end(),(*svc)->iid)!=iidValues.end())
+            LOG0("   *** ERROR #%d!  IID already in use for another Service or Characteristic within this Accessory ***\n",++nErrors);
+
+          iidValues.push_back((*svc)->iid);
+
           for(auto chr=(*svc)->Characteristics.begin(); chr!=(*svc)->Characteristics.end(); chr++){
             LOG0("      \u21e8 Characteristic %s(%.33s%s):  IID=%d, %sUUID=\"%s\", %sPerms=",
               (*chr)->hapName,(*chr)->uvPrint((*chr)->value).c_str(),strlen((*chr)->uvPrint((*chr)->value).c_str())>33?"...\"":"",(*chr)->iid,(*chr)->isCustom?"Custom-":"",(*chr)->type,(*chr)->perms!=(*chr)->hapChar->perms?"Custom-":"");
@@ -939,6 +945,11 @@ void Span::processSerialCommand(const char *c){
 
             if((*chr)->format<STRING && (!(((*chr)->uvGet<double>((*chr)->value) >= (*chr)->uvGet<double>((*chr)->minValue)) && ((*chr)->uvGet<double>((*chr)->value) <= (*chr)->uvGet<double>((*chr)->maxValue)))))
               LOG0("          *** WARNING #%d!  Value of %g is out of range [%g,%g] ***\n",++nWarnings,(*chr)->uvGet<double>((*chr)->value),(*chr)->uvGet<double>((*chr)->minValue),(*chr)->uvGet<double>((*chr)->maxValue));
+
+            if(std::find(iidValues.begin(),iidValues.end(),(*chr)->iid)!=iidValues.end())
+              LOG0("   *** ERROR #%d!  IID already in use for another Service or Characteristic within this Accessory ***\n",++nErrors);
+
+            iidValues.push_back((*chr)->iid);
           
           } // Characteristics
 
@@ -1593,16 +1604,14 @@ Span& Span::resetIID(int newIID){
     LOG0("\n=== PROGRAM HALTED ===");
     while(1);
   }
-
-  newIID--;
   
-  if(newIID<Accessories.back()->iidCount){
-    LOG0("\nFATAL ERROR!  Can't reset the Accessory IID count to a value less than already used ***\n");
+  if(newIID<1){
+    LOG0("\nFATAL ERROR!  Request to reset the Accessory IID count to 0 not allowed (IID must be 1 or greater) ***\n");
     LOG0("\n=== PROGRAM HALTED ===");
     while(1);    
   }
   
-  Accessories.back()->iidCount=newIID;
+  Accessories.back()->iidCount=newIID-1;
   return(*this);
 }
 
