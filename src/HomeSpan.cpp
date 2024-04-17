@@ -1027,6 +1027,9 @@ void Span::processSerialCommand(const char *c){
       }
 
       LOG0("\nConfigured as Bridge: %s\n",isBridge?"YES":"NO");
+      if(!isBridge && Accessories.size()>3)
+        LOG0("*** WARNING #%d!  HomeKit requires the device be configured as a Bridge when more than 3 Accessories are defined ***\n",++nWarnings);
+      
       if(hapConfig.configNumber>0)
         LOG0("Configuration Number: %d\n",hapConfig.configNumber);
       LOG0("\nDatabase Validation:  Warnings=%d, Errors=%d\n",nWarnings,nErrors);      
