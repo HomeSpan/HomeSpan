@@ -281,7 +281,7 @@ The following **optional** `homeSpan` methods provide additional run-time functi
   * allows for dynamically changing the Accessory database during run-time (i.e. changing the configuration *after* the Arduino `setup()` has finished)
   * deleting an Accessory automatically deletes all Services, Characteristics, and any other resources it contains
   * outputs Level-1 Log Messages listing all deleted components
-  * note: though deletions take effect immediately, HomeKit Controllers, such as the Home App, will not be aware of these changes until the database configuration number is updated and rebroadcast - see updateDatabase() below
+  * note: though deletions take effect immediately, HomeKit Controllers, such as the Home App, will not be aware of these changes until the database configuration number is updated and rebroadcast - see `updateDatabase()` below
  
 * `boolean updateDatabase()`
   * recomputes the database configuration number and, if changed, rebroadcasts the new number via MDNS so all connected HomeKit Controllers, such as the Home App, can request a full refresh to accurately reflect the new configuration
@@ -290,6 +290,12 @@ The following **optional** `homeSpan` methods provide additional run-time functi
   * use anytime after dynamically adding one or more Accessories (with `new SpanAccessory(aid)`) or deleting one or more Accessories (with `homeSpan.deleteAccessory(aid)`)
   * **important**: once you delete an Accessory, you cannot re-use the same *aid* when adding a new Accessory (on the same device) unless the new Accessory is configured with the exact same Services and Characteristics as the deleted Accessory
   * note: this method is **not** needed if you have a static Accessory database that is fully defined in the Arduino `setup()` function of a sketch
+
+* `Span& resetIID(uint32_t newIID)`
+  * resets the IID count for the current Accessory to *newIID*, which must be greater than 0
+  * throws an error and halts program if called before at least one Accessory is created
+  * example: `homeSpan.resetIID(100)` causes HomeSpan to set the IID to 100 for the very next Service or Characteristic defined within the current Accessory, and then increment the IID count going forward so that any Services or Characteristics subsequently defined (within the same Accessory) have IID=101, 102, etc.
+  * note: calling this function only affects the IID generation for the current Accessory (the count will be reset to IID=1 upon instantiation of a new Accessory)
  
 ---
 
@@ -371,6 +377,9 @@ The following methods are supported:
       * 0=single press (SpanButton::SINGLE)
       * 1=double press (SpanButton::DOUBLE)
       * 2=long press (SpanButton::LONG)
+     
+* `uint32_t getIID()`
+  * returns the IID of the Service
     
 ## *SpanCharacteristic(value [,boolean nvsStore])*
   
@@ -484,6 +493,9 @@ This is a **base class** from which all HomeSpan Characteristics are derived, an
   * adds or overrides the *unit* for a Characteristic, as described in HAP-R2 Table 6-6
   * returns a pointer to the Characteristic itself so that the method can be chained during instantiation
   * example: `(new Characteristic::RotationSpeed())->setUnit("percentage");`
+
+* `uint32_t getIID()`
+  * returns the IID of the Characteristic
 
 ### *SpanButton(int pin, uint16_t longTime, uint16_t singleTime, uint16_t doubleTime, boolean (\*triggerType)(int))*
 
