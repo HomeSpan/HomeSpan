@@ -440,10 +440,10 @@ This is a **base class** from which all HomeSpan Characteristics are derived, an
 * `char *getNewString()`
   * equivalent to `getNewVal()`, but used exclusively for string-characteristics (i.e. a null-terminated array of characters)
 
-* `void setString(const char *value)`
+* `void setString(const char *value [,boolean notify])`
   * equivalent to `setVal(value)`, but used exclusively for string-characteristics (i.e. a null-terminated array of characters)
  
- #### The following methods are supported for DATA (i.e. byte-array) Characteristics:
+#### The following methods are supported for DATA (i.e. byte-array) Characteristics:
 
 * `size_t getData(uint8_t *data, size_t len)`
   * similar to `getVal()`, but exclusively used for byte-array Characteristics
@@ -451,14 +451,34 @@ This is a **base class** from which all HomeSpan Characteristics are derived, an
   * returns the total number of bytes encoded in the Characteristic
   * if *len* is less than the total number of bytes encoded, no data is extracted (i.e. *data* is unmodified) and a warning message is thrown indicating that the size of the *data* array is insufficient to extract all the bytes encoded in the Characteristic
   * setting *data* to NULL returns the total number of bytes encoded without extracting any data.  This can be used to help create a *data* array of sufficient size in advance of extracting the data
+  * note: byte-array Characteristics are encoded and transmitted as base-64 strings.  HomeSpan automatically peforms all encoding and decoding between this format and the specified byte arrays.  But when output to the Serial Monitor, the value of byte-array Characteristics are displayed in their base-64 format (as opposed to being shown as a byte array), since base-64 is the representation that is actually transmitted to and from HomeKit
+  * a warning message is thrown if the value stored in the Characteristic is not in base-64 format
   
 * `size_t getNewData(uint8_t *data, size_t len)`
   * similar to `getData()`, but fills byte array *data*, of specified size *len*, with bytes based on the desired **new** value to which a HomeKit Controller has requested the Characteristic be updated
 
-* `void setData(uint8_t *data, size_t len)`
+* `void setData(uint8_t *data, size_t len [,boolean notify])`
   * similar to `setVal()`, but exclusively used for byte-array Characteristics
   * updates the Characteristic by "filling" it with *len* bytes from bytes array *data*
-  * note: byte-array Characteristics are encoded and transmitted as base-64 strings.  HomeSpan automatically peforms all encoding and decoding between this format and the specified byte arrays.  But when output to the Serial Monitor, the value of byte-array Characteristics are displayed in their base-64 format (as opposed to being shown as a byte array), since base-64 is the representation that is actually transmitted to and from HomeKit
+
+#### The following methods are supported for TLV8 (structured-data) Characteristics:
+
+* `size_t getTLV(TLV8 &tlv)`
+  * similar to `getVal()`, but exclusively used for TLV8 Characteristics
+  * fills TLV8 structure *tlv* with TLV8 records from the current value of the Characteristic
+  * returns the total number of bytes encoded in the Characteristic
+  * if *tlv8* is not empty, TLV8 records from the Characteristic will be appended to any existing records
+  * similar DATA Characteristics, TLV8 Characteristics are encoded and transmittred as base-64 strings
+  * a warning message is thrown if the value stored in the Characteristic is not in base-64 format, or does not appear to contain TLV8 records 
+  
+* `size_t getNewTLV(TLV8 &tlv)`
+  * similar to `getTLV()`, but fills TLV8 structure *tlv* with TLV8 records based on the desired **new** value to which a HomeKit Controller has requested the Characteristic be updated
+
+* `void setTLV(TLV8 &tlv [,boolean notify])`
+  * similar to `setVal()`, but exclusively used for TLV8 Characteristics
+  * updates the Characteristic by packing the TLV8 structure *tlv* into a byte array and then encoding it in base-64 for storage as a string
+
+* see the [TLV8 Characteristics](TLV8.md) page for complete details on how to read/process/create TLV8 Characteristics
 
 #### The following methods are supported for all Characteristics:
 
