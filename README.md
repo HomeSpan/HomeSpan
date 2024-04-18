@@ -15,7 +15,7 @@ HomeSpan requires version 2.0.0 or later of the [Arduino-ESP32 Board Manager](ht
 * Utilizes a unique *Service-Centric* approach to creating HomeKit devices
 * Takes full advantage of the widely-popular Arduino IDE
 * 100% HAP-R2 compliance
-* 38 integrated HomeKit Services
+* Dozens of integrated HomeKit Services
 * Operates in either Accessory or Bridge mode
 * Supports pairing with Setup Codes or QR Codes
 
