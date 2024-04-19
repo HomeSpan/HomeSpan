@@ -451,7 +451,7 @@ This is a **base class** from which all HomeSpan Characteristics are derived, an
   * returns the total number of bytes encoded in the Characteristic
   * if *len* is less than the total number of bytes encoded, no data is extracted (i.e. *data* is unmodified) and a warning message is thrown indicating that the size of the *data* array is insufficient to extract all the bytes encoded in the Characteristic
   * setting *data* to NULL returns the total number of bytes encoded without extracting any data.  This can be used to help create a *data* array of sufficient size in advance of extracting the data
-  * note: byte-array Characteristics are encoded and transmitted as base-64 strings.  HomeSpan automatically peforms all encoding and decoding between this format and the specified byte arrays.  But when output to the Serial Monitor, the value of byte-array Characteristics are displayed in their base-64 format (as opposed to being shown as a byte array), since base-64 is the representation that is actually transmitted to and from HomeKit
+  * note: byte-array Characteristics are encoded and transmitted as base-64 strings.  HomeSpan automatically peforms all encoding and decoding between this format and the specified byte arrays.  But when output to the Serial Monitor using the 'i' CLI command, the value of byte-array Characteristics are displayed in their base-64 string format (only the first 32 characters are shown), since base-64 is the representation that is actually transmitted to and from HomeKit
   * a warning message is thrown if the value stored in the Characteristic is not in base-64 format
   
 * `size_t getNewData(uint8_t *data, size_t len)`
@@ -468,7 +468,7 @@ This is a **base class** from which all HomeSpan Characteristics are derived, an
   * fills TLV8 structure *tlv* with TLV8 records from the current value of the Characteristic
   * returns the total number of bytes encoded in the Characteristic
   * if *tlv8* is not empty, TLV8 records from the Characteristic will be appended to any existing records
-  * similar DATA Characteristics, TLV8 Characteristics are encoded and transmittred as base-64 strings
+  * similar to DATA Characteristics, TLV8 Characteristics are stored and transmitted as base-64 strings
   * a warning message is thrown if the value stored in the Characteristic is not in base-64 format, or does not appear to contain TLV8 records 
   
 * `size_t getNewTLV(TLV8 &tlv)`
