@@ -72,7 +72,28 @@ To restrict the search range to a limited set of records, add optional starting 
   * search range is inclusive of *it1* but exclusive of *it2*
   * returns *it2* if no records match
   * if *it2* is unspecified, default is *end()*; if *it1* is unspecified, default is *begin()*
-  * note `myTLV.find(tag)` is equivalent to `myTLV.find(tag, myTLV.begin(), myTLV.end())` 
+  * note `myTLV.find(tag)` is equivalent to `myTLV.find(tag, myTLV.begin(), myTLV.end())`
+ 
+Use of the C++ `auto` keyword is generally the best way to save the TVL8_it iterator that is returned from the `find()` and `add()` methods.  For example, `auto myIT = myTLV.find(6)` sets *myIT* to an iterator pointing to the first TLV8 record in *myTLV* that has a TAG identifer of 6.
+
+The method for finding the LENGTH of the data VALUE stored in a particular TLV8 record is as follows:
+
+* `int len(TLV8_it it)`
+  * where *it* is an iterator pointing to a specific TLV8 record
+  * returns the length of the data VALUE stored in the associated record, which may be zero for a zero-LENGTH record
+  * returns -1 if *it* points to the *end()* of the TLV8 object
+
+A typical use of the `len()` method is to simultaneously check whether a TLV8 object contains a particular TAG identifier, and that the LENGTH of the TAG matches an expected value.  For example, if a certain Characteristic requires a TLV8 record with a TAG identifer of 6 to contain a 32-byte registration number, you can perform the following check:
+
+```C++
+auto myIT = myTLV.find(6);
+if(myTLV.len(myIT)!=32)
+  Serial.printf("Error: TAG 6 is either missing or of improper length\n");
+else 
+  Serial.printf("TAG 6 containing 32 bytes of data has been found\n");
+```
+
+Once you have the iterator *myIT* pointing to the desired TLV8 record, you can then use any of the methods below to access the VALUE stored in the TLV8 record:
 
 
 
@@ -82,6 +103,3 @@ To restrict the search range to a limited set of records, add optional starting 
  
 
 
-
-
-🚧
