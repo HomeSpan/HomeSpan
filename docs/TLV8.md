@@ -37,7 +37,7 @@ The method for adding a generic TLV8 record to a TLV8 object is as follows:
   * where *tag* is the TAG identifier for the record to add and *val* is a pointer to a byte-array containing *len* elements
   * example: `TLV8 myTLV; uint8_t v[]={0x01, 0x05, 0xE3, 0x4C}; tlv.add(1, sizeof(v), v);
   * setting *val* to NULL reserves *len* bytes of space for the TLV8 record within the TLV8 object, but does not copy any data
-  * this method returns an *iterator* to the resulting TLV8 record so you can reference the record at a later time if needed
+  * this method returns a TLV8 *iterator* to the resulting TLV8 record so you can reference the record at a later time if needed
 
 In addition to the above generic method suitable for any type of data, the following methods make it easier to add TLV8 records with specific, frequently-used types of data:
 
@@ -62,7 +62,17 @@ The method for finding a TLV8 record within a TLV8 object that contains a specif
 * `TLV8_it find(uint8_t tag)`
 
   * where *tag* is the TAG identifier you are seeking
-  * 
+  * returns a TLV8 iterator to *first* record that matches; returns *end()* if no records match
+ 
+To restrict the search range to a limited set of records, add optional starting and ending iterators *it1* and *it2*:
+
+* `TLV8_it find(uint8_t tag [, TLV8_it it1 [, TLV8_it it2]])`
+  
+  * returns a TLV8 iterator to the *first* record within the range of iterators from *it1* to *it2* that matches the specified *tag*
+  * search range is inclusive of *it1* but exclusive of *it2*
+  * returns *it2* if no records match
+  * if *it2* is unspecified, default is *end()*; if *it1* is unspecified, default is *begin()*
+  * note `myTLV.find(tag)` is equivalent to `myTLV.find(tag, myTLV.begin(), myTLV.end())` 
 
 
 
