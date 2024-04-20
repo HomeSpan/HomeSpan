@@ -22,7 +22,9 @@ Fortunately, HomeSpan includes a dedicated TLV8 library (see below) that automat
 
 ## *TLV8()*
 
-Creating an instance of HomeSpan's TLV8 **class** using the above constructor builds an empty TLV8 object into which you can add and process TLV8 records.  TLV8 objects are instantiated as standard C++ linked-list containers derived from `std::list<tlv8_t>`, where *tlv8_t* is an opaque structure used to store individual TLV8 records[^1].  Note that many of the TLV8 methods below rely heavily on linked-list *iterators*.[^2] 
+Creating an instance of HomeSpan's TLV8 **class** using the above constructor builds an empty TLV8 object into which you can add and process TLV8 records.  TLV8 objects are instantiated as standard C++ linked-list containers derived from `std::list<tlv8_t>`, where *tlv8_t* is an opaque structure used to store individual TLV8 records.[^1]
+
+Also, as shown below, many of the TLV8 methods utilize linked-list iterators.  These are represented by the typedef *TLV8_it*.[^2] 
 
 [^1]:The *tlv8_t* structure is opaque because in general you will not have to create or interact directly with the structure or its data.  Note that in addition to the above TLV8-specific methods, you can use any `std::list` method with a TLV8 object if desired.
 
