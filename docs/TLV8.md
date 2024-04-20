@@ -4,6 +4,8 @@ Most HomeKit Characteristics store a single numerical value or simple string. Ho
 
 In contrast, the TLV8 format is used extensively by HomeKit during the initial pairing process as well as whenever a new secure (verified) connection is established between HomeKit and a HomeSpan device.  There are also a variety of Apple-defined Characteristics that use the TLV8 format to store and transmit multiple sets of values, each represented as byte-arrays of arbitrary length.
 
+## Overview of TLV8 Format
+
 The TLV8 format itself is quite simple.  A TLV8 Characteristic comprises one or more byte-arrays (sometimes called TLV8 records), where the first byte in a record represents an identifying TAG (from 0-255), the second byte represents the LENGTH of the value, and the remaining LENGTH-bytes represent the VALUE itself (hence the acronym TLV).  Notable points about the TLV8 format are as follows:
 
 * since the LENGTH is stored only as a single byte, VALUES requiring more than 255 bytes must be represented as sequential TLV8 records *with the same TAG*
@@ -18,6 +20,39 @@ The TLV8 format itself is quite simple.  A TLV8 Characteristic comprises one or 
 
 Fortunately, HomeSpan includes a dedicated TLV8 library (see below) that automatically takes care of many of the above points, which enables you to read, create, and process TLV8 data without worrying about parsing TLV8 records with more than 255 bytes, converting numerical values to little-endian, or encoding/decoding records into base-64.
 
+## *TLV8()*
+
+Creating an instance of HomeSpan's TLV8 **class** using the above constructor builds an empty TLV8 object into which you can add and process TLV8 records.  TLV8 objects are instantiated as standard C++ linked-list containers derived from `std::list<tlv8_t>`, where *tlv8_t* is an opaque structure used to store individual TLV8 records[^1].  Note that many of the TLV8 methods below rely heavily on linked-list *iterators*.[^2] 
+
+[^1]:The *tlv8_t* structure is opaque because in general you will not have to create or interact directly with the structure or its data.  Note that in addition to the above TLV8-specific methods, you can use any `std::list` method with a TLV8 object if desired.
+
+[^2]:You do not need expert knowledge of C++ containers and iterators in order to use the TLV8 library, but a basic understanding of containers and iterators will make the library much easier to learn and enjoyable to use.
+
+The method for adding a generic TLV8 record to a TLV8 object is as follows:
+
+* `TLV8_it add(uint8_t tag, size_t len, const uint8_t *val)`
+
+  * where *tag* is the TAG identifier for the record to add and *val* is a pointer to a byte-array containing *len* elements
+  * example: `TLV8 myTLV; uint8_t v[]={0x01, 0x05, 0xE3, 0x4C}; tlv.add(1, sizeof(v), v);
+  * setting *val* to NULL reserves *len* bytes of space for the TLV8 record within the TLV8 object, but does not copy any data
+  * this method returns an *iterator* to the resulting TLV8 record so you can reference the record at a later time if needed
+
+In addition to the above generic method suitable for any type of data, the following methods make it easier to add TLV8 records with specific, frequently-used types of data:
+
+* `TLV8_it add(uint8_t tag, uintXX_t val)`
+  * adds a TLV8 record containing a single, unsigned numeric value, *val* (i.e. uint8_t, uint16_t, uint32_t, or uint64_t)
+    
+* `TLV8_it add(uint8_t tag, const char *val)`
+  * adds a TLV8 record containing all the non-null bytes of a null-terminated character string, *val*
+    
+* `TLV8_it add(uint8_t tag, TLV8 &subTLV)`
+  * adds a TLV8 record containing all the bytes of an entire TLV8 object, *subTLV*
+    
+* `TLV8_it add(uint8_t tag)`
+  * adds a zero-length TLV8 record containing nothing but a TAG identifer
+
+
+ 
 
 
 
