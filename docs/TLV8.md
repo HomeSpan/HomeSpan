@@ -55,7 +55,14 @@ In addition to the above generic method suitable for any type of data, the follo
 
 Note that if you *add* consecutive records with the same TAG identifier, the TLV8 library will concatenate their data and combine into a single record.  For example, `myTLV.add(1,13); myTLV.add(1,300)` will be combined to produce a single 3-byte recording containing the data 0x0D2C01, where the first byte represents from the number 13 and the second two bytes represent the number 300.  This may have been your desired outcome, but likely not what you wanted to happen.
 
-Instead, to create two distinct records with the same tag value, simply interpose a zero-length record with a different TAG identifier between the two as a "separator" liek this: `myTLV.add(1,13); myTLV.add(255); myTLV.add(1,300);`  Here we used a TAG identifer of 255 to represent the separator, but that choice is arbitrary, unless that TAG happens to be used by the Characteristic for something else (TAG identifiers of 0 or 255 are commonly used as separators).
+Instead, to create two distinct records with the same tag value, simply interpose a zero-length record with a different TAG identifier between the two as a "separator" like this: `myTLV.add(1,13); myTLV.add(255); myTLV.add(1,300);`  Here we used a TAG identifer of 255 to represent the separator, but that choice is arbitrary, unless that TAG happens to be used by the Characteristic for something else (TAG identifiers of 0 or 255 are commonly used as separators).
+
+The method for finding a TLV8 record within a TLV8 object that contains a specific TAG identifer is as follows:
+
+* `TLV8_it find(uint8_t tag)`
+
+  * where *tag* is the TAG identifier you are seeking
+  * 
 
 
 
