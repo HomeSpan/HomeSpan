@@ -107,7 +107,7 @@ TLV8_it TLV8::add(uint8_t tag, uint64_t val){
 TLV8_it TLV8::find(uint8_t tag, TLV8_it it1, TLV8_it it2){
 
   auto it=it1;
-  while(it!=it2 && (*it).getTag()!=tag)
+  while(it!=it2 && it->getTag()!=tag)
     it++;
   return(it);
 }
@@ -139,12 +139,12 @@ size_t TLV8::pack(uint8_t *buf, size_t bufSize){
 
       case 0:
         currentPackBuf=*currentPackIt;
-        endPackBuf=(*currentPackIt)+(*currentPackIt).getLen();
+        endPackBuf=(*currentPackIt)+currentPackIt->getLen();
         currentPackPhase=1;
         break;
         
       case 1:
-        *buf++=(*currentPackIt).getTag();
+        *buf++=currentPackIt->getTag();
         nBytes++;
         currentPackPhase=2;
         break;
@@ -232,7 +232,7 @@ int TLV8::unpack(TLV8_it it){
   if(it==end())
     return(0);
     
-  return(unpack(*it,(*it).getLen()));
+  return(unpack(*it,it->getLen()));
 }
 
 /////////////////////////////////////
@@ -255,20 +255,20 @@ const char *TLV8::getName(uint8_t tag){
 void TLV8::print(TLV8_it it1, TLV8_it it2){
 
   while(it1!=it2){
-    const char *name=getName((*it1).getTag());
+    const char *name=getName(it1->getTag());
     if(name)
       Serial.printf("%s",name);
     else
-      Serial.printf("%d",(*it1).getTag());
-    Serial.printf("(%d) ",(*it1).getLen());
-    for(int i=0;i<(*it1).getLen();i++)
+      Serial.printf("%d",it1->getTag());
+    Serial.printf("(%d) ",it1->getLen());
+    for(int i=0;i<it1->getLen();i++)
       Serial.printf("%02X",(*it1)[i]);
-    if((*it1).getLen()==0)
+    if(it1->getLen()==0)
       Serial.printf(" [null]");
-    else if((*it1).getLen()<=4)
-      Serial.printf(" [%u]",(*it1).getVal());
-    else if((*it1).getLen()<=8)
-      Serial.printf(" [%llu]",(*it1).getVal<uint64_t>());
+    else if(it1->getLen()<=4)
+      Serial.printf(" [%u]",it1->getVal());
+    else if(it1->getLen()<=8)
+      Serial.printf(" [%llu]",it1->getVal<uint64_t>());
     Serial.printf("\n");
     it1++;
   }

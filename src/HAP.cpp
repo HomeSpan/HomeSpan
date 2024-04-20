@@ -334,7 +334,7 @@ int HAPClient::postPairSetupURL(uint8_t *content, size_t len){
     return(0);
   }
 
-  int tlvState=(*itState).getVal();
+  int tlvState=itState->getVal();
 
   if(nAdminControllers()){                                  // error: Device already paired (i.e. there is at least one admin Controller). We should not be receiving any requests for Pair-Setup!
     LOG0("\n*** ERROR: Device already paired!\n\n");
@@ -363,7 +363,7 @@ int HAPClient::postPairSetupURL(uint8_t *content, size_t len){
 
       auto itMethod=iosTLV.find(kTLVType_Method);
 
-      if(iosTLV.len(itMethod)!=1 || (*itMethod).getVal()!=0){                         // error: "Pair Setup" method must always be 0 to indicate setup without MiFi Authentification (HAP Table 5-3)
+      if(iosTLV.len(itMethod)!=1 || itMethod->getVal()!=0){                     // error: "Pair Setup" method must always be 0 to indicate setup without MiFi Authentification (HAP Table 5-3)
         LOG0("\n*** ERROR: Pair 'Method' missing or not set to 0\n\n");
         responseTLV.add(kTLVType_Error,tagError_Unavailable);                   // set Error=Unavailable
         tlvRespond(responseTLV);                                                // send response to client
@@ -404,7 +404,7 @@ int HAPClient::postPairSetupURL(uint8_t *content, size_t len){
         return(0);
       };
 
-      srp->createSessionKey(*itPublicKey,(*itPublicKey).getLen());            // create session key, K, from client Public Key, A
+      srp->createSessionKey(*itPublicKey,itPublicKey->getLen());              // create session key, K, from client Public Key, A
 
       if(!srp->verifyClientProof(*itClientProof)){                            // verify client Proof, M1
         LOG0("\n*** ERROR: SRP Proof Verification Failed\n\n");
@@ -454,9 +454,9 @@ int HAPClient::postPairSetupURL(uint8_t *content, size_t len){
       
       // use SessionKey to decrypt encryptedData TLV with padded nonce="PS-Msg05"
                                   
-      TempBuffer<uint8_t> decrypted((*itEncryptedData).getLen()-crypto_aead_chacha20poly1305_IETF_ABYTES);  // temporary storage for decrypted data
+      TempBuffer<uint8_t> decrypted(itEncryptedData->getLen()-crypto_aead_chacha20poly1305_IETF_ABYTES);  // temporary storage for decrypted data
        
-      if(crypto_aead_chacha20poly1305_ietf_decrypt(decrypted, NULL, NULL, *itEncryptedData, (*itEncryptedData).getLen(), NULL, 0, (unsigned char *)"\x00\x00\x00\x00PS-Msg05", sessionKey)==-1){          
+      if(crypto_aead_chacha20poly1305_ietf_decrypt(decrypted, NULL, NULL, *itEncryptedData, itEncryptedData->getLen(), NULL, 0, (unsigned char *)"\x00\x00\x00\x00PS-Msg05", sessionKey)==-1){          
         LOG0("\n*** ERROR: Exchange-Request Authentication Failed\n\n");
         responseTLV.add(kTLVType_Error,tagError_Authentication);        // set Error=Authentication
         tlvRespond(responseTLV);                                        // send response to client
@@ -492,7 +492,7 @@ int HAPClient::postPairSetupURL(uint8_t *content, size_t len){
 
       // Concatenate iosDeviceX, IOS ID, and IOS PublicKey into iosDeviceInfo
       
-      TempBuffer<uint8_t> iosDeviceInfo(iosDeviceX,iosDeviceX.len(),(uint8_t *)(*itIdentifier),(*itIdentifier).getLen(),(uint8_t *)(*itPublicKey),(*itPublicKey).getLen(),NULL);
+      TempBuffer<uint8_t> iosDeviceInfo(iosDeviceX,iosDeviceX.len(),(uint8_t *)(*itIdentifier),itIdentifier->getLen(),(uint8_t *)(*itPublicKey),itPublicKey->getLen(),NULL);
 
       if(crypto_sign_verify_detached(*itSignature, iosDeviceInfo, iosDeviceInfo.len(), *itPublicKey) != 0){      // verify signature of iosDeviceInfo using iosDeviceLTPK   
         LOG0("\n*** ERROR: LPTK Signature Verification Failed\n\n");
@@ -585,7 +585,7 @@ int HAPClient::postPairVerifyURL(uint8_t *content, size_t len){
     return(0);
   }
 
-  int tlvState=(*itState).getVal();
+  int tlvState=itState->getVal();
 
   if(!nAdminControllers()){                             // error: Device not yet paired - we should not be receiving any requests for Pair-Verify!
     LOG0("\n*** ERROR: Device not yet paired!\n\n");
@@ -670,7 +670,7 @@ int HAPClient::postPairVerifyURL(uint8_t *content, size_t len){
 
       TempBuffer<uint8_t> decrypted((*itEncryptedData).getLen()-crypto_aead_chacha20poly1305_IETF_ABYTES);        // temporary storage for decrypted data
       
-      if(crypto_aead_chacha20poly1305_ietf_decrypt(decrypted, NULL, NULL, *itEncryptedData, (*itEncryptedData).getLen(), NULL, 0, (unsigned char *)"\x00\x00\x00\x00PV-Msg03", sessionKey)==-1){          
+      if(crypto_aead_chacha20poly1305_ietf_decrypt(decrypted, NULL, NULL, *itEncryptedData, itEncryptedData->getLen(), NULL, 0, (unsigned char *)"\x00\x00\x00\x00PV-Msg03", sessionKey)==-1){          
         LOG0("\n*** ERROR: Verify Authentication Failed\n\n");
         responseTLV.add(kTLVType_State,pairState_M4);               // set State=<M4>
         responseTLV.add(kTLVType_Error,tagError_Authentication);    // set Error=Authentication
@@ -771,7 +771,7 @@ int HAPClient::postPairingsURL(uint8_t *content, size_t len){
   auto itState=iosTLV.find(kTLVType_State);
   auto itMethod=iosTLV.find(kTLVType_Method);
     
-  if(iosTLV.len(itState)!=1 || (*itState).getVal()!=1){               // missing STATE TLV
+  if(iosTLV.len(itState)!=1 || itState->getVal()!=1){           // missing STATE TLV
     LOG0("\n*** ERROR: Parirings 'State' is either missing or not set to <M1>\n\n");
     badRequestError();                                          // return with 400 error, which closes connection      
     return(0);
@@ -783,7 +783,7 @@ int HAPClient::postPairingsURL(uint8_t *content, size_t len){
     return(0);
   }
 
-  int tlvMethod=(*itMethod).getVal();
+  int tlvMethod=itMethod->getVal();
 
   responseTLV.add(kTLVType_State,pairState_M2);                 // all responses include State=M2
   
@@ -810,7 +810,7 @@ int HAPClient::postPairingsURL(uint8_t *content, size_t len){
         return(0);
       } 
              
-      tagError err=addController(*itIdentifier,*itPublicKey,(*itPermissions).getVal());
+      tagError err=addController(*itIdentifier,*itPublicKey,itPermissions->getVal());
       if(err!=tagError_None)
         responseTLV.add(kTLVType_Error,err);
       

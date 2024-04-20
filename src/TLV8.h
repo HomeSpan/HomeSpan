@@ -56,6 +56,10 @@ class tlv8_t {
     return(val.get()[index]);
   }
 
+  uint8_t *get(){
+    return(val.get());
+  }
+
   size_t getLen(){
     return(len);
   }
