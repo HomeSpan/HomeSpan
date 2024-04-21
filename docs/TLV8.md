@@ -137,9 +137,11 @@ TLV8 objects manage all of their internal memory requirements, and free up all r
  
 ## *TLV8_it()*  
   
-Objects of type *TLV8_it* are iterators that point to a specific record in an TLV8 objects (or to *end()*).  If you are using the TLV8 library correctly you should rarely, if ever, need to directly instatiate a TLV8_it using its constructor.  Instead, simply use `auto` as described above.
+Objects of type *TLV8_it* are iterators that point to a specific record in an TLV8 objects (or to *end()*).  If you are using the TLV8 library correctly you should rarely, if ever, need to directly instantiate a TLV8_it using its constructor.  Instead, simply use `auto` as described above.
 
-TLV8 iterators are the **most imporant** part of the TLV8 library, since a TLV8 iterator is used to directly access the data contained in the TLV8 record to which it points.  The methods to access this data are as follows:
+**TLV8 iterators are the most imporant part of the TLV8 library.  A TLV8 iterator provides the only means to directly access, read from, and write to, the VALUE element in the TLV8 record to which it points.**
+
+TLV8_it supports the following methods:
 
 
 
