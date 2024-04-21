@@ -93,6 +93,29 @@ else
   Serial.printf("TAG 6 containing 32 bytes of data has been found\n");
 ```
 
+The method for printing all of the records in a TLV8 object to the Serial Monitor is as follows:
+
+* `void print()`
+  
+  * prints all TLV8 records, one per line, to the Serial Monitor
+  * format of the output is: TAG(LENGTH) VALUE [NUMERIC], where
+    * TAG = the TAG identifer (0-255)
+    * LENGTH = length of the VALUE byte-array (may be zero)
+    * VALUE = a sequential list, in hexadecimal, of all the bytes in the VALUE byte-array (only displayed if LENGTH>0)
+    * NUMERIC = an unsigned-integer interpretation of the bytes in VALUE, assuming little-endian ordering
+      * this decimal value is only displayed if LENGTH<=8
+      * if LENGTH=0, the word "null" is displayed instead
+     
+To restrict the the printing range to a limited set of records, add optional starting and ending iterators *it1* and *it2*:
+
+* `void print(TLV8_it it1 [, TLV8_it it2])`
+  
+  * prints all TLV8 records between iterators *it1* and *it2*
+  * print range is inclusive of *it1* but exclusive of *it2*
+  * if *it2* is unspecified, prints only the record pointed to by *it1*
+  * note `myTLV.print()` is equivalent to `myTLV.print(myTLV.begin(), myTLV.end())`
+
+
 Once you have the iterator *myIT* pointing to the desired TLV8 record, you can then use any of the methods below to access the VALUE stored in the TLV8 record:
 
 
