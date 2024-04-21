@@ -274,7 +274,7 @@ it_E TAG=200, LENGTH=32, Sum of all bytes = 496
 
 ## Reading and Writing TLV8 Characteristics
 
-As documented in the [API Reference](Reference.md#spancharacteristicvalue-boolean-nvsstore), the following *SpanCharacteristic* methods are used to read and write TLV8 objects to TLV8 Characteristics:
+As documented in the [API Reference](Reference.md), the following *SpanCharacteristic* methods are used to read and write TLV8 objects to TLV8 Characteristics:
 
 * `getVal(TLV8 &tlv)`
 * `getNewVal(TLV8 &tlv)`
@@ -286,12 +286,8 @@ Note that since TLV8 Characteristics are stored as base-64 encoded strings, you 
 
 Also, if you really don't want to use HomeSpan's TLV8 library to produce TLV8 objects, but instead prefer to use your own methods to create a TLV8-compliant byte-array, you can do so and then use `setData()` to save the byte-array you produced to the TLV8 Characteristic, which will perform the base-64 encoding. Or if you want to additionally perform your own base-64 encoding (why?) you can do so and then simply use `setString()` to save the resulting encoded string to the TLV8 Characteristic.
 
+---
 
-
-[API Reference](https://github.com/HomeSpan/HomeSpan/blob/tlvwork/docs/Reference.md#spancharacteristicvalue-boolean-nvsstore)
-
-
-
- 
+[↩️](../README.md) Back to the Welcome page
 
 
