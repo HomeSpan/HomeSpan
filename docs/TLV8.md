@@ -139,13 +139,33 @@ TLV8 objects manage all of their internal memory requirements, and free up all r
   
 Objects of type *TLV8_it* are iterators that point to specific records in a TLV8 object (or to *end()*).  TLV8 iterators are used to access, read from, and write to, the data elements in any given TLV8 record, and are thus a critical part of the TLV8 library.  However, if you are using the TLV8 library correctly you should rarely, if ever, need to directly instantiate a *TLV8_it* using its constructor.  Instead, simply use the C++ `auto` keyword as noted above.
 
-TLV8_it supports the following methods (a detailed example is provided below that illustrates the use of each method):
+TLV8_it supports the following methods:
 
 * `uint8_t getTag()`
+  
   * returns the TAG identifier (0-255) of the TLV8 record
+  * example: `uint8_t tag = myIT->getTag()` or, equivalently, `uint8_t tag = (*myIT).getTag()`
 
 * `size_t getLen()`
+  
   * returns the LENGTH of the VALUE byte-array of the TLV8 record
+  * example: `size_t len = myIT->getLen()` or, equivalently, `size_t len = (*myIT).getLen()`
+    
+* `uint8_t *get()`
+  
+  * returns `uint8_t *` pointing to the first element of the VALUE byte-array of the TLV8 record
+  * for zero-LENGTH TLV8 records, the return value is NULL
+  * example: `uint8_t *v = myIT->get();` or, equivalently, `uint8_t *v = (*myIT).get();`
+  * the `(uint8_t *)` casting operator has been overloaded so you can also obtain this same `uint8_t *` pointer by simply dereferencing the iterator
+    * example: `auto myIT = myTLV.find(6); uint8_t *v = *myIT;`
+    * note this only works if the compiler can determine the need to auto-cast into a `uint8_t *` pointer based on the context of the code
+
+* `uint8_t get()[i]`
+  * returns the *i<sup>th</sup>* element of the VALUE byte-array
+  * example: `uint8_t n = myIT->get()[i]` or, equivalently, `uint8_t n = (*myIT).get()[i]`
+  * the subscript operator has also been overloaded so you can obtain the *i<sup>th</sup>* element by simply dereferencing the iterator
+    * example: `uint8_t n = (*myIT)[i]`
+  * note there is no range-checking so make sure *i* does not try to reference an element beyond the end of the VALUE byte-array
 
 
 ```C++
