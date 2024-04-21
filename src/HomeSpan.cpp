@@ -175,7 +175,7 @@ void Span::begin(Category catID, const char *displayName, const char *hostNameBa
 void Span::poll() {
 
   if(pollTaskHandle){
-    LOG0("\n** FATAL ERROR: Do not call homeSpan.poll() directly if homeSpan.autoPoll() is used!\n** PROGRAM HALTED **\n\n");
+    Serial.print("\n** FATAL ERROR: Do not call homeSpan.poll() directly if homeSpan.autoPoll() is used!\n** PROGRAM HALTED **\n\n");
     vTaskDelete(pollTaskHandle);
     while(1);    
   }
@@ -188,7 +188,7 @@ void Span::poll() {
 void Span::pollTask() {
 
   if(!strlen(category)){
-    LOG0("\n** FATAL ERROR: Cannot start homeSpan polling without an initial call to homeSpan.begin()!\n** PROGRAM HALTED **\n\n");
+    Serial.print("\n** FATAL ERROR: Cannot start homeSpan polling without an initial call to homeSpan.begin()!\n** PROGRAM HALTED **\n\n");
     while(1);    
   }
 
@@ -473,9 +473,9 @@ void Span::checkConnect(){
   sscanf(hostName,"%m[A-Za-z0-9-]",&d);
   
   if(strlen(hostName)>255 || hostName[0]=='-' || hostName[strlen(hostName)-1]=='-' || strlen(hostName)!=strlen(d)){
-    LOG0("\n*** Error:  Can't start MDNS due to invalid hostname '%s'.\n",hostName);
-    LOG0("*** Hostname must consist of 255 or less alphanumeric characters or a hyphen, except that the hyphen cannot be the first or last character.\n");
-    LOG0("*** PROGRAM HALTED!\n\n");
+    Serial.printf("\n*** Error:  Can't start MDNS due to invalid hostname '%s'.\n",hostName);
+    Serial.print("*** Hostname must consist of 255 or less alphanumeric characters or a hyphen, except that the hyphen cannot be the first or last character.\n");
+    Serial.print("*** PROGRAM HALTED!\n\n");
     while(1);
   }
 
@@ -1233,7 +1233,7 @@ Span& Span::setPairingCode(const char *s, boolean progCall){
   if(strlen(setupCode)!=8){
     LOG0("\n*** Invalid request to change Setup Code to '%s'.  Code must be exactly 8 digits.\n\n",s);
     if(progCall){
-      LOG0("=== PROGRAM HALTED ===");
+      Serial.print("=== PROGRAM HALTED (Pairing code not 8 digit) ===");
       while(1);
     }
     return(*this);
@@ -1242,7 +1242,7 @@ Span& Span::setPairingCode(const char *s, boolean progCall){
   if(!network.allowedCode(setupCode)){
     LOG0("\n*** Invalid request to change Setup Code to '%s'.  Code too simple.\n\n",s);
     if(progCall){
-      LOG0("=== PROGRAM HALTED ===");
+      Serial.print("=== PROGRAM HALTED (Pairing code too simple) ===");
       while(1);
     }
     return(*this);
@@ -1636,7 +1636,7 @@ SpanAccessory::SpanAccessory(uint32_t aid){
   if(!homeSpan.Accessories.empty()){
 
     if(homeSpan.Accessories.size()==HAPClient::MAX_ACCESSORIES){
-      LOG0("\n\n*** FATAL ERROR: Can't create more than %d Accessories.  Program Halting.\n\n",HAPClient::MAX_ACCESSORIES);
+      Serial.printf("\n\n*** FATAL ERROR: Can't create more than %d Accessories.  Program Halting.\n\n",HAPClient::MAX_ACCESSORIES);
       while(1);      
     }
     
@@ -1691,7 +1691,7 @@ SpanService::SpanService(const char *type, const char *hapName, boolean isCustom
 
   if(homeSpan.Accessories.empty()){
     LOG0("\nFATAL ERROR!  Can't create new Service '%s' without a defined Accessory ***\n",hapName);
-    LOG0("\n=== PROGRAM HALTED ===");
+    Serial.print("\n=== PROGRAM HALTED (No defined accessory for service) ===");
     while(1);
   }
 
@@ -1806,7 +1806,7 @@ SpanCharacteristic::SpanCharacteristic(HapChar *hapChar, boolean isCustom){
 
   if(homeSpan.Accessories.empty() || homeSpan.Accessories.back()->Services.empty()){
     LOG0("\nFATAL ERROR!  Can't create new Characteristic '%s' without a defined Service ***\n",hapName);
-    LOG0("\n=== PROGRAM HALTED ===");
+    Serial.print("\n=== PROGRAM HALTED (Characteristc without a service)===");
     while(1);
   }
 
@@ -2070,7 +2070,7 @@ SpanRange::SpanRange(int min, int max, int step){
 
   if(homeSpan.Accessories.empty() || homeSpan.Accessories.back()->Services.empty() || homeSpan.Accessories.back()->Services.back()->Characteristics.empty() ){
     LOG0("\nFATAL ERROR!  Can't create new SpanRange(%d,%d,%d) without a defined Characteristic ***\n",min,max,step);
-    LOG0("\n=== PROGRAM HALTED ===");
+    Serial.print("\n=== PROGRAM HALTED (SpanRange without characteristic) ===");
     while(1);
   } else {
     homeSpan.Accessories.back()->Services.back()->Characteristics.back()->setRange(min,max,step);
@@ -2089,7 +2089,7 @@ SpanButton::SpanButton(int pin, uint16_t longTime, uint16_t singleTime, uint16_t
     else
       LOG0("\nFATAL ERROR!  Can't create new SpanToggle(%d,%u) without a defined Service ***\n",pin,longTime);
       
-    LOG0("\n=== PROGRAM HALTED ===");
+    Serial.print("\n=== PROGRAM HALTED (SpanButton without a Service) ===");
     while(1);
   }
 
@@ -2296,13 +2296,13 @@ SpanPoint::SpanPoint(const char *macAddress, int sendSize, int receiveSize, int 
 
   if(sscanf(macAddress,"%hhx:%hhx:%hhx:%hhx:%hhx:%hhx",peerInfo.peer_addr,peerInfo.peer_addr+1,peerInfo.peer_addr+2,peerInfo.peer_addr+3,peerInfo.peer_addr+4,peerInfo.peer_addr+5)!=6){
     LOG0("\nFATAL ERROR!  Can't create new SpanPoint(\"%s\") - Invalid MAC Address ***\n",macAddress);
-    LOG0("\n=== PROGRAM HALTED ===");
+    Serial.print("\n=== PROGRAM HALTED (SpanPoint: Invalid MAC) ===");
     while(1);
   }
 
   if(sendSize<0 || sendSize>200 || receiveSize<0 || receiveSize>200 || queueDepth<1 || (sendSize==0 && receiveSize==0)){
     LOG0("\nFATAL ERROR!  Can't create new SpanPoint(\"%s\",%d,%d,%d) - one or more invalid parameters ***\n",macAddress,sendSize,receiveSize,queueDepth);
-    LOG0("\n=== PROGRAM HALTED ===");
+    Serial.print("\n=== PROGRAM HALTED (SpanPoint: Invalid parameters) ===");
     while(1);
   }
 
@@ -2384,7 +2384,7 @@ void SpanPoint::setChannelMask(uint16_t mask){
 
   if(channel==0){
     LOG0("\nFATAL ERROR!  SpanPoint::setChannelMask(0x%04X) - mask must allow for at least one channel ***\n",mask);
-    LOG0("\n=== PROGRAM HALTED ===");
+    Serial.print("\n=== PROGRAM HALTED (SpanPoint: mask for channel invalid) ===");
     while(1);
   }
 
