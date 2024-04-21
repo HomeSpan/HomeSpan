@@ -168,8 +168,13 @@ TLV8_it supports the following methods:
   * note there is no range-checking so make sure *i* does not try to reference an element beyond the end of the VALUE byte-array
 
 * `T getVal<class T>()`
-  * this template function interprets the VALUE byte-array as a single unsigned integer of type T
-  * example: 
+  * this template function returns a single numeric value of type *T* on the assumption that the VALUE byte-array is storing an unsigned integer in little endian format
+  * *T* can be *uint8_t*, *uint16_t*, *uint32_t*, or *uint64_t* (if unspecified *T* defaults to *uint32_t*)
+  * example: `auto myIT = myTLV.add(50,60000); uint16_t n = myIT->getVal<uint16_t>();`
+  * this method returns the correct numeric value as long as sizeof(*T*) >= LENGTH of the byte-array. For example:
+    * setting *T=uint64_t* with a VALUE byte-array containing 2 bytes returns the *correct* numeric value
+    * setting *T=uint16_t* with a VALUE byte-array containing 4 bytes return an *incorrect* numeric value
+  * this function returns zero for all zero-LENGTH TLV8 records 
 
 ```C++
 TLV8 myTLV;   // instantiates an empty TLV8 object
