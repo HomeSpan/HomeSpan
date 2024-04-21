@@ -137,11 +137,31 @@ TLV8 objects manage all of their internal memory requirements, and free up all r
  
 ## *TLV8_it()*  
   
-Objects of type *TLV8_it* are iterators that point to a specific record in an TLV8 objects (or to *end()*).  If you are using the TLV8 library correctly you should rarely, if ever, need to directly instantiate a TLV8_it using its constructor.  Instead, simply use `auto` as described above.
+Objects of type *TLV8_it* are iterators that point to specific records in a TLV8 object (or to *end()*).  TLV8 iterators are how you access, read from, and write to, the VALUE element in any given TLV8 record, and are thus a critical part of the TLV8 library.  However, if you are using the TLV8 library correctly you should rarely, if ever, need to directly instantiate a *TLV8_it* using its constructor.  Instead, simply use the C++ `auto` keyword as noted above.
 
-**TLV8 iterators are the most imporant part of the TLV8 library.  A TLV8 iterator provides the only means to directly access, read from, and write to, the VALUE element in the TLV8 record to which it points.**
+TLV8_it supports the following methods (a detailed example is provided below that illustrates the use of each method):
 
-TLV8_it supports the following methods:
+```C++
+TLV8 myTLV;   // instantiates an empty TLV8 object
+
+myTLV.add(1,32000);               // add a TLV8 record with TAG=1 and VALUE=32000
+auto it_A = myTLV.add(2,180);     // add a TLV8 record with TAG=2 and VALUE=18, and save the iterator that is returned
+
+uint8_t v[]={0x01, 0x05, 0xE3, 0x4C};    // create a fixed array, v, of 4 bytes
+myTLV.add(200,4,v);                      // add a TLV8 record with TAG=200 and copy all 4 bytes of array v into its VALUE
+
+myTLV.add(50,60000);   // add a TLV8 record with TAG=50 and VALUE=60000
+myTLV.add(255);        // add a zero-length TLV8 record with TAG=255 to act as separator
+myTLV.add(50,120000);  // add a TLV8 record with TAG=50 and VALUE=120000
+myTLV.add(255);        // add a zero-length TLV8 record with TAG=255 to act as separator
+auto it_B = myTLV.add(50,30000);   // add a TLV8 record with TAG=50 and VALUE=30000, and save the iterator that is returned
+
+auto it_C = myTLV.find(200);  // find an iterator to first TLV8 record with TAG=200;
+auto it_D = myTLV.find(50);   // find an iterator to first TLV8 record with TAG=50;
+auto it_E = myTLV.find(200);  // find an iterator to first TLV8 record with TAG=200;
+
+myTLV.print();         // prints the contents of myTLV to the Serial Monitor
+```
 
 
 
