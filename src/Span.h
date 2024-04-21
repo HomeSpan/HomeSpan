@@ -614,9 +614,9 @@ namespace Characteristic {
 
 #define CUSTOM_CHAR_DATA(NAME,UUID,PERMISISONS) \
   HapChar _CUSTOM_##NAME {#UUID,#NAME,(PERMS)(PERMISISONS),DATA,true}; \
-  namespace Characteristic { struct NAME : SpanCharacteristic { NAME(const char * val="AA==", boolean nvsStore=false) : SpanCharacteristic {&_CUSTOM_##NAME,true} { init(val,nvsStore); } }; }
+  namespace Characteristic { struct NAME : SpanCharacteristic { NAME(const char * val="", boolean nvsStore=false) : SpanCharacteristic {&_CUSTOM_##NAME,true} { init(val,nvsStore); } }; }
 
-#define CUSTOM_CHAR_TLV(NAME,UUID,PERMISISONS) \
+#define CUSTOM_CHAR_TLV8(NAME,UUID,PERMISISONS) \
   HapChar _CUSTOM_##NAME {#UUID,#NAME,(PERMS)(PERMISISONS),TLV_ENC,true}; \
   namespace Characteristic { struct NAME : SpanCharacteristic { NAME(const char * val="", boolean nvsStore=false) : SpanCharacteristic {&_CUSTOM_##NAME,true} { init(val,nvsStore); } }; }
 
@@ -632,7 +632,11 @@ namespace Characteristic {
 
 #define CUSTOM_CHAR_DATA(NAME,UUID,PERMISISONS) \
   extern HapChar _CUSTOM_##NAME; \
-  namespace Characteristic { struct NAME : SpanCharacteristic { NAME(const char * val="AA==", boolean nvsStore=false) : SpanCharacteristic {&_CUSTOM_##NAME,true} { init(val,nvsStore); } }; }
+  namespace Characteristic { struct NAME : SpanCharacteristic { NAME(const char * val="", boolean nvsStore=false) : SpanCharacteristic {&_CUSTOM_##NAME,true} { init(val,nvsStore); } }; }
+
+#define CUSTOM_CHAR_TLV8(NAME,UUID,PERMISISONS) \
+  extern HapChar _CUSTOM_##NAME; \
+  namespace Characteristic { struct NAME : SpanCharacteristic { NAME(const char * val="", boolean nvsStore=false) : SpanCharacteristic {&_CUSTOM_##NAME,true} { init(val,nvsStore); } }; }
 
 #endif
 
