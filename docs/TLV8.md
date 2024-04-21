@@ -288,7 +288,7 @@ Also, if you really don't want to use HomeSpan's TLV8 library to produce TLV8 ob
 
 
 
-
+[API Reference](https://github.com/HomeSpan/HomeSpan/blob/tlvwork/docs/Reference.md#spancharacteristicvalue-boolean-nvsstore)
 
 
 
