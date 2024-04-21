@@ -167,6 +167,9 @@ TLV8_it supports the following methods:
     * example: `uint8_t n = (*myIT)[i]`
   * note there is no range-checking so make sure *i* does not try to reference an element beyond the end of the VALUE byte-array
 
+* `T getVal<class T>()`
+  * this template function interprets the VALUE byte-array as a single unsigned integer of type T
+  * example: 
 
 ```C++
 TLV8 myTLV;   // instantiates an empty TLV8 object
