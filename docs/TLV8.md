@@ -176,29 +176,115 @@ TLV8_it supports the following methods:
     * setting *T=uint16_t* with a VALUE byte-array containing 4 bytes return an *incorrect* numeric value
   * this function returns zero for all zero-LENGTH TLV8 records 
 
+### A detailed example using the above methods
+
+The following code:
+
 ```C++
 TLV8 myTLV;   // instantiates an empty TLV8 object
 
-myTLV.add(1,32000);               // add a TLV8 record with TAG=1 and VALUE=32000
-auto it_A = myTLV.add(2,180);     // add a TLV8 record with TAG=2 and VALUE=18, and save the iterator that is returned
+myTLV.add(1,8700);                       // add a TLV8 record with TAG=1 and VALUE=8700
+auto it_A = myTLV.add(2,180);            // add a TLV8 record with TAG=2 and VALUE=180, and save the iterator that is returned
 
-uint8_t v[]={0x01, 0x05, 0xE3, 0x4C};    // create a fixed array, v, of 4 bytes
-myTLV.add(200,4,v);                      // add a TLV8 record with TAG=200 and copy all 4 bytes of array v into its VALUE
+uint8_t v[32];                           // create a 32-byte array, v, and fill it with some data
+for(int i=0;i<32;i++)
+  v[i]=i;
+  
+myTLV.add(200,32,v);                     // add a TLV8 record with TAG=200 and copy all 32 bytes of array v into its VALUE
 
-myTLV.add(50,60000);   // add a TLV8 record with TAG=50 and VALUE=60000
-myTLV.add(255);        // add a zero-length TLV8 record with TAG=255 to act as separator
-myTLV.add(50,120000);  // add a TLV8 record with TAG=50 and VALUE=120000
-myTLV.add(255);        // add a zero-length TLV8 record with TAG=255 to act as separator
-auto it_B = myTLV.add(50,30000);   // add a TLV8 record with TAG=50 and VALUE=30000, and save the iterator that is returned
+myTLV.add(50,60000);                     // add a TLV8 record with TAG=50 and VALUE=60000
+myTLV.add(255);                          // add a zero-length TLV8 record with TAG=255 to act as separator
+myTLV.add(50,120000);                    // add a TLV8 record with TAG=50 and VALUE=120000
+myTLV.add(255);                          // add a zero-length TLV8 record with TAG=255 to act as separator
+myTLV.add(50,180000);                    // add a TLV8 record with TAG=50 and VALUE=180000
+myTLV.add(255);                          // add a zero-length TLV8 record with TAG=255 to act as separator
+auto it_B = myTLV.add(50,240000);        // add a TLV8 record with TAG=50 and VALUE=240000, and save the iterator that is returned
 
-auto it_C = myTLV.find(200);  // find an iterator to first TLV8 record with TAG=200;
-auto it_D = myTLV.find(50);   // find an iterator to first TLV8 record with TAG=50;
-auto it_E = myTLV.find(200);  // find an iterator to first TLV8 record with TAG=200;
+auto it_C = myTLV.find(50);                   // find an iterator to the first TLV8 record with TAG=50;
+auto it_D = myTLV.find(50,std::next(it_C));   // find an iterator to the first TLV8 record with TAG=50 that occurs AFTER it_C;
 
-myTLV.print();         // prints the contents of myTLV to the Serial Monitor
+auto it_E = myTLV.find(200);             // find an iterator to first TLV8 record with TAG=200;
+
+Serial.printf("results of myTLV.print():\n\n");
+
+myTLV.print();                           // print the contents of myTLV to the Serial Monitor
+
+Serial.printf("\n");
+
+// print content of it_A:
+
+Serial.printf("it_A: TAG=%d, LENGTH=%d, Value=%d\n", it_A->getTag(), it_A->getLen(), it_A->getVal());
+
+// print content of it_B using alternative syntax:
+
+Serial.printf("it_B: TAG=%d, LENGTH=%d, Value=%d\n", (*it_B).getTag(), (*it_B).getLen(), (*it_B).getVal());
+
+// print contents of it_C and it_D, based on previous find() above:
+
+Serial.printf("it_C TAG=%d, LENGTH=%d, Value=%d\n", (*it_C).getTag(), (*it_C).getLen(), (*it_C).getVal());
+Serial.printf("it_D TAG=%d, LENGTH=%d, Value=%d\n", (*it_D).getTag(), (*it_D).getLen(), (*it_D).getVal());
+
+// you can also use the results of find() directly without saving as a separate iterator, though this is computationally inefficient:
+
+if(myTLV.find(1)!=myTLV.end())      // check for match
+  Serial.printf("Found: TAG=%d, LENGTH=%d, Value=%d\n", myTLV.find(1)->getTag(), myTLV.find(1)->getLen(), myTLV.find(1)->getVal());
+
+// sum up all the bytes in it_E:
+
+int sum=0;
+for(int i=0; i < it_E->getLen(); i++)
+  sum+= (*it_E)[i];
+
+Serial.printf("it_E TAG=%d, LENGTH=%d, Sum of all bytes = %d\n", (*it_E).getTag(), (*it_E).getLen(), sum);
+
+// create a "blank" TLV8 record with TAG=90 and space for 16 bytes:
+
+auto it_F = myTLV.add(90,16,NULL);
+
+// copy the first 16 bytes of it_E into it_F and print the record:
+
+memcpy(*it_F,*it_E,16);
+myTLV.print(it_F);
 ```
 
+produces the following output:
 
+```C++
+results of myTLV.print():
+
+1(2) FC21 [8700]
+2(1) B4 [180]
+200(32) 000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F
+50(2) 60EA [60000]
+255(0)  [null]
+50(4) C0D40100 [120000]
+255(0)  [null]
+50(4) 20BF0200 [180000]
+255(0)  [null]
+50(4) 80A90300 [240000]
+
+it_A: TAG=2, LENGTH=1, Value=180
+it_B: TAG=50, LENGTH=4, Value=240000
+it_C TAG=50, LENGTH=2, Value=60000
+it_D TAG=50, LENGTH=4, Value=120000
+Found: TAG=1, LENGTH=2, Value=8700
+it_E TAG=200, LENGTH=32, Sum of all bytes = 496
+90(16) 000102030405060708090A0B0C0D0E0F
+```
+
+## Reading and Writing TLV8 Characteristics
+
+As documented in the [API Reference](Reference.md#spancharacteristicvalue-boolean-nvsstore), the following *SpanCharacteristic* methods are used to read and write TLV8 objects to TLV8 Characteristics:
+
+* `getVal(TLV8 &tlv)`
+* `getNewVal(TLV8 &tlv)`
+* `setVal(TLV8 &tlv)`
+
+These are analagous to the `getVal()` and `setVal()` methods used for numerical-based Characteristics. 
+
+Note that since TLV8 Characteristics are stored as base-64 encoded strings, you can use `getString()` to read the base-64 text, or `getData()` to decode the string into the full byte-array that represents the entire TLV8 object.
+
+Also, if you really don't want to use HomeSpan's TLV8 library to produce TLV8 objects, but instead prefer to use your own methods to create a TLV8-compliant byte-array, you can do so and then use `setData()` to save the byte-array you produced to the TLV8 Characteristic, which will perform the base-64 encoding. Or if you want to additionally perform your own base-64 encoding (why?) you can do so and then simply use `setString()` to save the resulting encoded string to the TLV8 Characteristic.
 
 
 
