@@ -627,8 +627,9 @@ To create more than one user-defined command, simply create multiple instances o
 ### *CUSTOM_CHAR(name,uuid,perms,format,defaultValue,minValue,maxValue,staticRange)*
 ### *CUSTOM_CHAR_STRING(name,uuid,perms,defaultValue)*
 ### *CUSTOM_CHAR_DATA(name,uuid,perms)*
+### *CUSTOM_CHAR_TLV8(name,uuid,perms)*
 
-Creates a custom Characteristic that can be added to any Service.  Custom Characteristics are generally ignored by the Home App but may be used by other third-party applications (such as *Eve for HomeKit*).  The first form should be used create numerical Characterstics (e.g., UINT8, BOOL...). The second form is used to STRING-based Characteristics. The third form is used for DATA-based (i.e. byte-array) Characteristics.  Parameters are as follows (note that quotes should NOT be used in any of the macro parameters, except for *defaultValue* when applied to a STRING-based Characteristic):
+Creates a custom Characteristic that can be added to any Service.  Custom Characteristics are generally ignored by the Home App but may be used by other third-party applications (such as *Eve for HomeKit*).  The first form should be used create numerical Characterstics (e.g., UINT8, BOOL...); the second form is used to STRING-based Characteristics; the third form is used for DATA-based (i.e. byte-array) Characteristics; and the fourth form is used for TLV8-based (i.e. *structured* byte-array) Characteristics  Parameters are as follows (note that quotes should NOT be used in any of the macro parameters, except for *defaultValue* when applied to a STRING-based Characteristic):
 
 * *name* - the name of the custom Characteristic.  This will be added to the Characteristic namespace so that it is accessed the same as any HomeSpan Characteristic.  Use UTF-8 coded string for non-ASCII characters.
 * *uuid* - the UUID of the Characteristic as defined by the manufacturer.  Must be *exactly* 36 characters in the form XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX, where *X* represent a valid hexidecimal digit.  Leading zeros are required if needed as described more fully in HAP-R2 Section 6.6.1
