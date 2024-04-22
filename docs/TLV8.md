@@ -274,17 +274,35 @@ it_E TAG=200, LENGTH=32, Sum of all bytes = 496
 
 ## Reading and Writing TLV8 Characteristics
 
-As documented in the [API Reference](Reference.md), the following *SpanCharacteristic* methods are used to read and write TLV8 objects to TLV8 Characteristics:
+As fully documented in the [API Reference](Reference.md), the following *SpanCharacteristic* methods are used to read and write TLV8 objects to TLV8 Characteristics:
 
-* `getVal(TLV8 &tlv)`
-* `getNewVal(TLV8 &tlv)`
-* `setVal(TLV8 &tlv)`
+* `getTLV(TLV8 &tlv)`
+* `getNewTLV(TLV8 &tlv)`
+* `setTLV(TLV8 &tlv)`
 
-These are analagous to the `getVal()` and `setVal()` methods used for numerical-based Characteristics. 
+These are analagous to the `getVal()`, `getNewVal()` and `setVal()` methods used for numerical-based Characteristics. 
 
-Note that since TLV8 Characteristics are stored as base-64 encoded strings, you can use `getString()` to read the base-64 text, or `getData()` to decode the string into the full byte-array that represents the entire TLV8 object.
+Note that using the above methods *do not* require you to create a separate byte-array that splits records into chunks of 255 bytes, nor does it require you to encode or decode anything into base-64.  Rather, you directly read and write to and from the Characteristic into a TLV8 object.
 
-Also, if you really don't want to use HomeSpan's TLV8 library to produce TLV8 objects, but instead prefer to use your own methods to create a TLV8-compliant byte-array, you can do so and then use `setData()` to save the byte-array you produced to the TLV8 Characteristic, which will perform the base-64 encoding. Or if you want to additionally perform your own base-64 encoding (why?) you can do so and then simply use `setString()` to save the resulting encoded string to the TLV8 Characteristic.
+However, since TLV8 Characteristics are stored as base-64 encoded strings, you can nevertheless use `getString()` to read the base-64 text, or `getData()` to decode the string into the full byte-array that represents the entire TLV8 object, if you desire.
+
+Also, if you really don't want to use HomeSpan's TLV8 library to produce TLV8 objects, but instead prefer to use your own methods to create a TLV8-compliant byte-array, you can do so and then use `setData()` to save the byte-array you produced to the TLV8 Characteristic, which will perform the base-64 encoding for you. Or, if you want to additionally perform your own base-64 encoding (why?), you can do so and then simply use `setString()` to save the resulting encoded text to the TLV8 Characteristic.
+
+### Write-Response Requests
+
+For most Characteristics, when the Home App sends HomeSpan a request to update a value, it is instructing HomeSpan to perform some sort of action, such as "change the brightness of a lightbulb to 30%" or "change the target state of the door to open."  The only feedback the Home App expects to receive in response to such requests is basically an "OK" or "NOT OKAY" message, which is the purpose of the boolean return value in the `update()` method for every Service.
+
+However, sometimes the Home App sends HomeSpan a request for information, rather than a direct instruction to perform a task.  In such instances, rather than sending back just an OK/NOT-OKAY message, the Home App expects the Accessory device to update the value of the Characteristic *not* with the new value that the Home App sent, but rather with the information it requested.  It then expects this information to be transmitted back to the Home App at the conclusion of the update.  
+
+This procedure is known as a "Write-Response Request", and it is the primary purpose for having TLV8 Characteristics, since TLV8 objects are ideal for storing structured information.
+
+Though the procedure is complex, HomeSpan fortunately handles all of the protocol details.  The only thing you need to do when working with a TLV8 Characteristic that implements Write-Response Requests is:
+
+* check to see if the Characteristic is updated when inside the `update()` loop of a Service;
+* if so, create a new TLV8 object and use `getNewTLV()` to load the contents of the updated Characterstic into that TLV8 object;
+* use the TLV8 Library to read through the TAGS and VALUES in the TLV8 to determine (based on the specs for the Characteristic) what data the Home App is conveying and what information it wants returned;
+* create a second TLV8 object and add the appropriate TAG and VALUES needed to respond to the information request (again, based on the on the specs for the Characteristic);
+* use `setVal()` to update the Characteristic with the second TLV8 object  
 
 ---
 
