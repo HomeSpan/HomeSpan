@@ -478,7 +478,7 @@ This is a **base class** from which all HomeSpan Characteristics are derived, an
   * similar to `setVal()`, but exclusively used for TLV8 Characteristics
   * updates the Characteristic by packing the TLV8 structure *tlv* into a byte array and then encoding it in base-64 for storage as a string
 
-* see the [TLV8 Characteristics](TLV8.md) page for complete details on how to read/process/create TLV8 Characteristics
+* see the [TLV8 Characteristics](TLV8.md) page for complete details on how to read/process/create TLV8 Objects using HomeSpan's TLV8 Library.
 
 #### The following methods are supported for all Characteristics:
 
