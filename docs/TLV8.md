@@ -294,15 +294,17 @@ For most Characteristics, when the Home App sends HomeSpan a request to update a
 
 However, sometimes the Home App sends HomeSpan a request for information, rather than a direct instruction to perform a task.  In such instances, rather than sending back just an OK/NOT-OKAY message, the Home App expects the Accessory device to update the value of the Characteristic *not* with the new value that the Home App sent, but rather with the information it requested.  It then expects this information to be transmitted back to the Home App at the conclusion of the update.  
 
-This procedure is known as a "Write-Response Request", and it is the primary purpose for having TLV8 Characteristics, since TLV8 objects are ideal for storing structured information.
+This procedure is known as a "Write-Response Request", and it is the primary purpose for having TLV8 Characteristics, since TLV8 objects are ideal for storing structured information. 
 
-Though the procedure is complex, HomeSpan fortunately handles all of the protocol details.  The only thing you need to do when working with a TLV8 Characteristic that implements Write-Response Requests is:
+Though the procedure is complex, HomeSpan handles all of the protocol details.  You only need to focus on reading the TLV8 Characteristic and updating it with the required TLV8 response as follows:
 
-* check to see if the Characteristic is updated when inside the `update()` loop of a Service;
-* if so, create a new TLV8 object and use `getNewTLV()` to load the contents of the updated Characterstic into that TLV8 object;
-* use the TLV8 Library to read through the TAGS and VALUES in the TLV8 to determine (based on the specs for the Characteristic) what data the Home App is conveying and what information it wants returned;
-* create a second TLV8 object and add the appropriate TAG and VALUES needed to respond to the information request (again, based on the on the specs for the Characteristic);
-* use `setVal()` to update the Characteristic with the second TLV8 object  
+* first, from within the `update()` loop of the applicable Service, check to see if the Home App has requested an update to the TLV8&nbsp;Characteristic;
+* if so, create a new TLV8 object and use `getNewTLV()` to load the contents of the updated Characteristic into that TLV8 object;
+* then, use the TLV8 library methods described above to read through the TAGS and VALUES in the TLV8 object to determine what data the Home App is conveying and what information it wants returned (based on the specs for the Characteristic);
+* next, create a *second* TLV8 object and use the TLV8 library methods above to create the appropriate TAGS and VALUES needed to respond to the information request (again, based on the on the specs for the Characteristic);
+* finally, use `setVal()` to update the TLV8 Characteristic with the second TLV8 object
+
+HomeSpan will automatically send the new TLV8 data you placed in the TLV8 Characterstic back to the Home App in its response at the conclusion of the `update()` loop. 
 
 ---
 
