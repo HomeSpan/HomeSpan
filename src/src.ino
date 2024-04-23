@@ -27,7 +27,6 @@
 
 #include "HomeSpan.h"
 
-CUSTOM_CHAR_TLV8(DisplayOrder,136,PR+EV);
 CUSTOM_CHAR_DATA(TestData,333,PR+EV);
 
 struct HomeSpanTV : Service::Television {

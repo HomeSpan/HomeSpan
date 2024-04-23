@@ -429,6 +429,7 @@ namespace Service {
   CREATE_SERV(Television,D8)    // Defines a TV.  Optional Linked Services: <b>InputSource</b> and <b>TelevisionSpeaker</b>.
     REQ(Active);
     OPT(ActiveIdentifier);
+    OPT(DisplayOrder);
     OPT(RemoteKey);
     OPT(PowerModeSelection);      
     OPT(ConfiguredName);
@@ -513,6 +514,7 @@ namespace Characteristic {
   CREATE_CHAR(double,CurrentRelativeHumidity,0,0,100);  // current humidity measured as a percentage
   CREATE_CHAR(double,CurrentTemperature,0,0,100);   // current temperature measured in Celsius
   CREATE_CHAR(int,CurrentTiltAngle,0,-90,90);  // current angle (in degrees) of slats from fully up or left (-90) to fully open (0) to fully down or right (90)
+  CREATE_CHAR(const char *,DisplayOrder,"",0,1);  // specifies the order in which the TV inputs are displayed for selection in the Home App
   CREATE_CHAR(double,FilterLifeLevel,100,0,100); // measured as a percentage of remaining life
   CREATE_CHAR(uint8_t,FilterChangeIndication,0,0,1,NO_CHANGE_NEEDED,CHANGE_NEEDED);  // indicates state of filter
   CREATE_CHAR(const char *,FirmwareRevision,"1.0.0",0,1);  // must be in form x[.y[.z]] - informational only
