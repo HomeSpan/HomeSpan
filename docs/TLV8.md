@@ -282,11 +282,11 @@ As fully documented in the [API Reference](Reference.md), the following *SpanCha
 
 These are analagous to the `getVal()`, `getNewVal()` and `setVal()` methods used for numerical-based Characteristics. 
 
-Note that using the above methods *do not* require you to create a separate byte-array that splits records into chunks of 255 bytes, nor does it require you to encode or decode anything into base-64.  Rather, you directly read and write to and from the Characteristic into a TLV8 object.
+Note that using the above methods *do not* require you to create a separate byte-array that splits records into chunks of 255 bytes, nor does it require you to encode or decode anything into base-64.  Rather, you directly read and write to and from the Characteristic into a TLV8 object.[^getString]
 
-However, since TLV8 Characteristics are stored as base-64 encoded strings, you can nevertheless use `getString()` to read the base-64 text, or `getData()` to decode the string into the full byte-array that represents the entire TLV8 object, if you desire.
+For a detailed example of how TLV8 Characteristics are used in practice, see [Tutorial Example 22-TL8_Characteristics](../examples/22-TL8_Characteristics) demonstrating how the **DisplayOrder** TLV8 Charactersitic can be used to set the order in which Input Sources for a TV Service are displayed in the Home App. 
 
-Also, if you really don't want to use HomeSpan's TLV8 library to produce TLV8 objects, but instead prefer to use your own methods to create a TLV8-compliant byte-array, you can do so and then use `setData()` to save the byte-array you produced to the TLV8 Characteristic, which will perform the base-64 encoding for you. Or, if you want to additionally perform your own base-64 encoding (why?), you can do so and then simply use `setString()` to save the resulting encoded text to the TLV8 Characteristic.
+[^getString]:Since TLV8 Characteristics are stored as base-64 encoded strings, you can always use `getString()` to read the base-64 text, or `getData()` to decode the string into the full byte-array that represents the entire TLV8 object, if you desire. Also, if you really don't want to use HomeSpan's TLV8 library to produce TLV8 objects, but instead prefer to use your own methods to create a TLV8-compliant byte-array, you can do so and then use `setData()` to save the byte-array you produced to the TLV8 Characteristic, which will perform the base-64 encoding for you. Or, if you want to additionally perform your own base-64 encoding (why?), you can do so and then simply use `setString()` to save the resulting encoded text to the TLV8 Characteristic.
 
 ### Write-Response Requests
 
