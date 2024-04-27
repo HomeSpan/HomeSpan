@@ -113,6 +113,10 @@ Example 20 illustrates a number of advanced techniques through the implementatio
 
 ### [Example 21 - AccessoryIdentifier](../examples/21-AccessoryIdentifier)
 Example 21 shows how the Identifier Characteristic that is always present in each Accessory's required AccessoryInformation Service can be used to create a custom "identification routine" that can be triggered from within the Home App when pairing a device.  This example does not use any new HomeSpan methods.
+
+### [Example 22-TLV8_Characteristics](../examples/22-TLV8_Characteristics)
+Example 22 demonstrates, through the implementation of the DisplayOrder Characteristic used in conjunction with the InputSource and Television Services...
+
  
 ## Other Examples
 
