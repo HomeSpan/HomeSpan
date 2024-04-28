@@ -181,7 +181,13 @@ The following **optional** `homeSpan` methods enable additional features and pro
   *   this one-time call to *func* is provided for users that would like to trigger additional actions when the device is first paired, or the device is later unpaired
   *   note this *func* is **not** called upon start-up and should not be used to simply check whether a device is paired or unpaired.  It is only called when pairing status changes
   *   the function *func* must be of type *void* and accept one *boolean* argument
-
+ 
+* `Span& setControllerCallback(void (*func)())`
+  * sets an optional user-defined callback function, *func*, to be called by HomeSpan every time a new controller is added, removed, or updated, even if the pairing status does not change
+  * note this method differs from `setPairCallback()`, which is only called if the device's pairing status changes, such as when the first controller is added during initial pairing, or the last controller is removed when unpairing
+  * the function *func* must be of type *void* and have no arguments
+  * see the `controllerListBegin()` and `controllerListEnd()` methods for details on how to read the pairing data for each paired controller (*only needed to support certain advanced use cases*)
+ 
 * `Span& setStatusCallback(void (*func)(HS_STATUS status))`
   * sets an optional user-defined callback function, *func*, to be called by HomeSpan whenever its running state (e.g. WiFi Connecting, Pairing Needed...) changes in way that would alter the blinking pattern of the (optional) Status LED
   * if *func* is set, it will be called regardless of whether or not a Status LED has actually been defined
