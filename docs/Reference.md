@@ -310,7 +310,7 @@ The following **optional** `homeSpan` methods provide additional run-time functi
     * `const uint8_t *getID()` returns pointer to the 36-byte ID of the controller
     * `const uint8_t *getLTPK()` returns pointer to the 32-byte Long Term Public Key of the controller
     * `boolean isAdmin()` returns true if controller has admin permissions, else returns false
-  * see this gist for an example of how to use these methods to extract the same data about each controller that HomeSpan prints to the Serial Monitor when using the 's' CLI command
+  * see this [gist](https://gist.github.com/HomeSpan/5486704b42027e31ab38a9f193451308) for an example of how to use these methods to extract the same data about each controller that HomeSpan prints to the Serial Monitor when using the 's' CLI command
  
 ---
 
