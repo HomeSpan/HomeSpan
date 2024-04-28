@@ -304,9 +304,13 @@ The following **optional** `homeSpan` methods provide additional run-time functi
   * note: calling this function only affects the IID generation for the current Accessory (the count will be reset to IID=1 upon instantiation of a new Accessory)
 
 * `const_iterator controllerListBegin()` and `const_iterator controllerListEnd()`
-  * respectively returns constant iterators pointing to the beginning (*cbegin()*) or end (*cend()*) of an opaque linked list that stores all controller data
-  * primarily used to loop through all controller data 
-  * use `auto` keyword to define and save an iterator as such: `for(auto it=homeSpan.controllerListBegin(); it!=homeSpan.controllerListEnd(); ++it) {}`
+  * returns a *constant iterator* pointing to either the beginning, or the end, of an opaque linked list that stores all controller data
+  * iterators should be defined using the `auto` keyword as follows: `auto myIt=homeSpan.controllerListBegin();`
+  * controller data can be read from a de-referenced iterator using the following methods:    
+    * `const uint8_t *getID()` returns pointer to the 36-byte ID of the controller
+    * `const uint8_t *getLTPK()` returns pointer to the 32-byte Long Term Public Key of the controller
+    * `boolean isAdmin()` returns true if controller has admin permissions, else returns false
+  * see this gist for an example of how to use these methods to extract the same data about each controller that HomeSpan prints to the Serial Monitor when using the 's' CLI command
  
 ---
 
