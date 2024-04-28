@@ -302,6 +302,11 @@ The following **optional** `homeSpan` methods provide additional run-time functi
   * throws an error and halts program if called before at least one Accessory is created
   * example: `homeSpan.resetIID(100)` causes HomeSpan to set the IID to 100 for the very next Service or Characteristic defined within the current Accessory, and then increment the IID count going forward so that any Services or Characteristics subsequently defined (within the same Accessory) have IID=101, 102, etc.
   * note: calling this function only affects the IID generation for the current Accessory (the count will be reset to IID=1 upon instantiation of a new Accessory)
+
+* `const_iterator controllerListBegin()` and `const_iterator controllerListEnd()`
+  * respectively returns constant iterators pointing to the beginning (*cbegin()*) or end (*cend()*) of an opaque linked list that stores all controller data
+  * primarily used to loop through all controller data 
+  * use `auto` keyword to define and save an iterator as such: `for(auto it=homeSpan.controllerListBegin(); it!=homeSpan.controllerListEnd(); ++it) {}`
  
 ---
 
