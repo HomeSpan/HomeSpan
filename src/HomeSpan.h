@@ -113,6 +113,7 @@ struct SpanRange;
 struct SpanBuf;
 struct SpanButton;
 struct SpanUserCommand;
+class Controller;
 
 extern Span homeSpan;
 
@@ -189,6 +190,35 @@ struct SpanOTA{                               // manages OTA process
   static void error(ota_error_t err);
 };
 
+
+//////////////////////////////////////////////////////////
+// Paired Controller Structure for Permanently-Stored Data
+
+class Controller {
+  friend class HAPClient;
+  
+  boolean allocated=false;        // DEPRECATED (but needed for backwards compatability with original NVS storage of Controller info)
+  boolean admin;                  // Controller has admin privileges
+  uint8_t ID[36];                 // Pairing ID
+  uint8_t LTPK[32];               // Long Term Ed2519 Public Key
+
+  public:
+
+  Controller(uint8_t *id, uint8_t *ltpk, boolean ad){
+    allocated=true;
+    admin=ad;
+    memcpy(ID,id,36);
+    memcpy(LTPK,ltpk,32);
+  }
+
+  Controller(){}
+
+  const uint8_t *getID() const {return(ID);}
+  const uint8_t *getLTPK() const {return(LTPK);}
+  boolean isAdmin() const {return(admin);}
+
+};
+
 //////////////////////////////////////
 //   USER API CLASSES BEGINS HERE   //
 //////////////////////////////////////
@@ -250,6 +280,7 @@ class Span{
   void (*apFunction)()=NULL;                                  // optional function to invoke when starting Access Point
   void (*statusCallback)(HS_STATUS status)=NULL;              // optional callback when HomeSpan status changes
   void (*rebootCallback)(uint8_t)=NULL;                       // optional callback when device reboots
+  void (*controllerCallback)()=NULL;                          // optional callback when Controller is added/removed/changed
   
   WiFiServer *hapServer;                            // pointer to the HAP Server connection
   Blinker *statusLED;                               // indicates HomeSpan status
@@ -355,6 +386,7 @@ class Span{
   Span& setPairingCode(const char *s, boolean progCall=true);                            // sets the Pairing Code - use is NOT recommended.  Use 'S' from CLI instead
   void deleteStoredValues(){processSerialCommand("V");}                                  // deletes stored Characteristic values from NVS
   Span& resetIID(uint32_t newIID);                                                       // resets the IID count for the current Accessory to start at newIID
+  Span& setControllerCallback(void (*f)()){controllerCallback=f;return(*this);}          // sets an optional user-defined function to call whenever a Controller is added/removed/changed
 
   int enableOTA(boolean auth=true, boolean safeLoad=true){return(spanOTA.init(auth, safeLoad, NULL));}   // enables Over-the-Air updates, with (auth=true) or without (auth=false) authorization password  
   int enableOTA(const char *pwd, boolean safeLoad=true){return(spanOTA.init(true, safeLoad, pwd));}      // enables Over-the-Air updates, with custom authorization password (overrides any password stored with the 'O' command)
@@ -393,6 +425,9 @@ class Span{
   TaskHandle_t getAutoPollTask(){return(pollTaskHandle);}
 
   Span& setTimeServerTimeout(uint32_t tSec){webLog.waitTime=tSec*1000;return(*this);}    // sets wait time (in seconds) for optional web log time server to connect
+
+  list<Controller, Mallocator<Controller>>::const_iterator controllerListBegin();
+  list<Controller, Mallocator<Controller>>::const_iterator controllerListEnd();   
  
   [[deprecated("Please use reserveSocketConnections(n) method instead.")]]
   void setMaxConnections(uint8_t n){requestedMaxCon=n;}                   // sets maximum number of simultaneous HAP connections

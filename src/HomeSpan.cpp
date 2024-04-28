@@ -611,8 +611,8 @@ void Span::processSerialCommand(const char *c){
           
           if(hap[i]->cPair){
             LOG0("  ID=");
-            HAPClient::charPrintRow(hap[i]->cPair->ID,36);
-            LOG0(hap[i]->cPair->admin?"   (admin)":" (regular)");
+            HAPClient::charPrintRow(hap[i]->cPair->getID(),36);
+            LOG0(hap[i]->cPair->isAdmin()?"   (admin)":" (regular)");
           } else {
             LOG0("  (unverified)");
           }
@@ -1092,7 +1092,7 @@ void Span::processSerialCommand(const char *c){
             reboot();
           } else {
             HAPClient::controllerList.push_back(tCont);
-            HAPClient::charPrintRow(tCont.ID,36);
+            HAPClient::charPrintRow(tCont.getID(),36);
             LOG0("\n");
           }
         }
@@ -1656,6 +1656,18 @@ boolean Span::updateDatabase(boolean updateMDNS){
   }    
 
   return(changed);
+}
+
+///////////////////////////////
+
+list<Controller, Mallocator<Controller>>::const_iterator Span::controllerListBegin(){
+  return(HAPClient::controllerList.cbegin());
+}
+
+///////////////////////////////
+
+list<Controller, Mallocator<Controller>>::const_iterator Span::controllerListEnd(){
+  return(HAPClient::controllerList.cend());
 }
 
 ///////////////////////////////

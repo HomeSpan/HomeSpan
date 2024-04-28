@@ -1345,7 +1345,7 @@ int HAPClient::receiveEncrypted(uint8_t *httpBuf, int messageSize){
 /////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////
 
-void HAPClient::hexPrintColumn(uint8_t *buf, int n, int minLogLevel){
+void HAPClient::hexPrintColumn(const uint8_t *buf, int n, int minLogLevel){
 
   if(homeSpan.logLevel<minLogLevel)
     return;
@@ -1356,7 +1356,7 @@ void HAPClient::hexPrintColumn(uint8_t *buf, int n, int minLogLevel){
 
 //////////////////////////////////////
 
-void HAPClient::hexPrintRow(uint8_t *buf, int n, int minLogLevel){
+void HAPClient::hexPrintRow(const uint8_t *buf, int n, int minLogLevel){
 
   if(homeSpan.logLevel<minLogLevel)
     return;
@@ -1367,7 +1367,7 @@ void HAPClient::hexPrintRow(uint8_t *buf, int n, int minLogLevel){
 
 //////////////////////////////////////
 
-void HAPClient::charPrintRow(uint8_t *buf, int n, int minLogLevel){
+void HAPClient::charPrintRow(const uint8_t *buf, int n, int minLogLevel){
 
   if(homeSpan.logLevel<minLogLevel)
     return;
@@ -1502,6 +1502,9 @@ void HAPClient::printControllers(int minLogLevel){
 //////////////////////////////////////
 
 void HAPClient::saveControllers(){
+
+  if(homeSpan.controllerCallback)
+    homeSpan.controllerCallback();
 
   if(controllerList.empty()){
     nvs_erase_key(homeSpan.hapNVS,"CONTROLLERS");

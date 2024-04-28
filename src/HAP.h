@@ -64,26 +64,6 @@ struct Nonce {
 };
 
 /////////////////////////////////////////////////
-// Paired Controller Structure for Permanently-Stored Data
-
-struct Controller {                
-  boolean allocated=false;                          // DEPRECATED (but needed for backwards compatability with original NVS storage of Controller info)
-  boolean admin;                                    // Controller has admin privileges
-  uint8_t ID[hap_controller_IDBYTES];               // Pairing ID
-  uint8_t LTPK[crypto_sign_PUBLICKEYBYTES];         // Long Term Ed2519 Public Key
-
-  Controller(){}
-  
-  Controller(uint8_t *id, uint8_t *ltpk, boolean ad){
-    allocated=true;
-    admin=ad;
-    memcpy(ID,id,hap_controller_IDBYTES);
-    memcpy(LTPK,ltpk,crypto_sign_PUBLICKEYBYTES);
-  }
-
-};
-
-/////////////////////////////////////////////////
 // Accessory Structure for Permanently-Stored Data
 
 struct Accessory {
@@ -150,9 +130,9 @@ struct HAPClient {
     
   static void init();            // initialize HAP after start-up
     
-  static void hexPrintColumn(uint8_t *buf, int n, int minLogLevel=0);     // prints 'n' bytes of *buf as HEX, one byte per row, subject to specified minimum log level
-  static void hexPrintRow(uint8_t *buf, int n, int minLogLevel=0);        // prints 'n' bytes of *buf as HEX, all on one row, subject to specified minimum log level
-  static void charPrintRow(uint8_t *buf, int n, int minLogLevel=0);       // prints 'n' bytes of *buf as CHAR, all on one row, subject to specified minimum log level
+  static void hexPrintColumn(const uint8_t *buf, int n, int minLogLevel=0);            // prints 'n' bytes of *buf as HEX, one byte per row, subject to specified minimum log level
+  static void hexPrintRow(const uint8_t *buf, int n, int minLogLevel=0);               // prints 'n' bytes of *buf as HEX, all on one row, subject to specified minimum log level
+  static void charPrintRow(const uint8_t *buf, int n, int minLogLevel=0);              // prints 'n' bytes of *buf as CHAR, all on one row, subject to specified minimum log level
   
   static Controller *findController(uint8_t *id);                                      // returns pointer to controller with matching ID (or NULL if no match)
   static tagError addController(uint8_t *id, uint8_t *ltpk, boolean admin);            // stores data for new Controller with specified data.  Returns tagError (if any)
