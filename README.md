@@ -54,6 +54,26 @@ HomeSpan requires version 2.0.0 or later of the [Arduino-ESP32 Board Manager](ht
 
 ## ❗Latest Update - HomeSpan 1.9.1 (MM/DD/YYY)
 
+* **HomeSpan now supports TLV8 "TAG-LENGTH-VALUE" Characteristics!**
+
+  * adds new, fully-integrated `TLV8()` class library for the creation and management of TLV8 objects
+  * includes methods to handle standard byte-stream VALUES as well as strings, numerical values, zero-length tags, and sub-TLVs
+  * utilizes standard C++ iterators for easy access to reading and writing TLV8 records
+  * adds new `Characteristic` methods `getTLV()`, `getNewTLV()`, and `setTLV()`
+  * adds new `CUSTOM_CHAR_TLV8()` that allows for easy creation of custom TLV8 Characteristics
+  * includes new [Tutorial Example 22 - TLV8 Characteristics](examples/22-TLV8_Characteristics) demonstrating use of the `TLV8()` class and TLV8 Characteristics
+  * see the new [TLV8 Characteristics](docs/TLV8.md) page for complete details and documentation 
+     
+* **New TLV8 Characteristic - *DisplayOrder***
+  
+  * utlizes HomeSpan's new `TLV8()` library
+  * sets the order in which the Input Sources for a Television Service are displayed for selection in the Home App
+  * see [Tutorial Example 22 - TLV8 Characteristics](examples/22-TLV8_Characteristics) for details
+ 
+* **New [Tutorial Example 21 - AccessoryIdentifier](examples/21-AccessoryIdentifier)**
+
+  * demonstrates how to trigger an Accessory's Identifier Characteristic, optionally used to help identify a device during initial pairing to the Home App
+
 * **Added support for more Pixel chips**
 
   * new constructor `Pixel(uint8_t pin, [pixelType_t pixelType])` allows your to set the order in which colors are transmitted to the pixel chip, where *pixelType* is one of the following:
@@ -66,10 +86,38 @@ HomeSpan requires version 2.0.0 or later of the [Arduino-ESP32 Board Manager](ht
     * returns *true* if Pixel was constructed as RGBW, else *false* if constructed as RGB only (i.e. no white LED)
   * created new PixelTester sketch (found under Other-> Examples) to aid in determining the *pixelType* for any LED Strip
 
-* **Fixed bug introduced in 1.9.0 that prevented `homeSpan.setPairingCode()` from saving (and subsequently using) the request Setup Pairing Code**
+* **New ability to read and set the IIDs of Services and Characteristics**
+
+  * adds new `SpanService` method `getIID()` that returns the IID of a Service
+  * adds new `SpanCharacteristic` method `getIID()` that returns the IID of a Characteristic
+  * adds new `homeSpan` method `resetIID(int newIID)` that resets the IID count for the current Accessory 
+  * see the [API Reference](docs/Reference.md) for details
+  
+* **New ability to read Controller pairing data (for advanced use-cases only)**
+
+  * adds new `homeSpan` methods `controllerListBegin()` and `controllerListEnd()` that returns iterators to HomeSpan's internal linked-list of Controller data records
+  * adds new methods to read each Controller's pairing data:
+    * `getID()` - returns a pointer to the 36-byte Device ID of the controller
+    * `getLTPK()` - a pointer to the 32-byte Long-Term Public Key of the controller
+    * `isAdmin()` - returns true if the controller has admin permission, else returns false
+  * adds new `homeSpan` method `setControllerCallback()` to set optional callback function that HomeSpan calls whenever a controller is added, removed, or updated
+  * see the [API Reference](docs/Reference.md) for details
+ 
+* **HomeSpan now supports the *write-response ("WR")* protocol**
+  * added automated handling of the HomeKits's *write-response ("WR")* protocol*
+    * not needed for any Characteristics that are currently supported by HomeSpan, but useful for experimentation and work with Custom Characteristics
+  * added extra checks when using `setVal()`
+    * a warning message is output on the Serial Monitor if `setVal()` is called to change the value of a Characteristic from within the `update()` method at the same time the Home App is sending an update request for that value
+    * does not apply if `setVal()` is called from within `update()` to change the value of a Characteristic in response to a *write-response* request from the Home App
+   
+* **Fixed bug introduced in 1.9.0 that prevented `homeSpan.setPairingCode()` from saving (and subsequently using) the request Setup Pairing Code** (#786)
 
   * this method now operates silently, unless an invalid pairing code is provided, in which case an error is reported to the Serial Monitor and *the sketch is halted*
   * the process for setting the Pairing Code using the CLI 'S' command or via the Access Point are unchanged - confirmation messages are still output to the Serial Monitor and errors do *not* cause the sketch to halt
+
+* **Fixed latent bug in SpanPoint** 
+  * HomeSpan would crash when printing **SpanPoint** configuration information to the Serial Monitor (the 'i' CLI command) if any of the instances of SpanPoint had *receiveSize=0*
+  * this bug never surfaced before since all the **SpanPoint examples** were based on receiving data and therefore had a non-zero *receiveSize* 
       
 See [Releases](https://github.com/HomeSpan/HomeSpan/releases) for details on all changes and bug fixes included in this update.
 
