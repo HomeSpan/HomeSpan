@@ -15,7 +15,7 @@ HomeSpan requires version 2.0.0 or later of the [Arduino-ESP32 Board Manager](ht
 * Utilizes a unique *Service-Centric* approach to creating HomeKit devices
 * Takes full advantage of the widely-popular Arduino IDE
 * 100% HAP-R2 compliance
-* 38 integrated HomeKit Services
+* Dozens of integrated HomeKit Services
 * Operates in either Accessory or Bridge mode
 * Supports pairing with Setup Codes or QR Codes
 
@@ -94,6 +94,7 @@ HomeSpan includes the following documentation:
 * [HomeSpan SpanPoint](docs/NOW.md) - facilitates point-to-point, bi-directional communication between ESP32 Devices using ESP-NOW
 * [HomeSpan Television Services](docs/TVServices.md) - how to use HomeKit's undocumented Television Services and Characteristics
 * [HomeSpan Message Logging](docs/Logging.md) - how to generate log messages for display on the Arduino Serial Monitor as well as optionally posted to an integrated Web Log page
+* [HomeSpan TLV8 Characteristics](docs/TLV8.md) - classes and methods for creating TLV8 objects to use with TLV8-based Characteristics
 * [HomeSpan Device Cloning](docs/Cloning.md) - seamlessly swap a broken device for a new one without needing to re-pair and lose HomeKit automations
 * [HomeSpan Projects](https://github.com/topics/homespan) - real-world applications of the HomeSpan Library
 * [HomeSpan FAQ](docs/FAQ.md) - answers to frequently-asked questions

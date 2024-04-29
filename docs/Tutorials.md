@@ -73,7 +73,6 @@ Example 13 demonstrates the simultaneous use of both the `update()` and `loop()`
 
 * using Enumerated Constants to set the values of Characteristics that represent discrete states (e.g. "raising", "closing")
 
-
 ### [Example 14 - EmulatedPushButtons](../examples/14-EmulatedPushButtons)
 Example 14 demonstrates how you can use the `setVal()` and `timeVal()` methods inside a Service's `loop()` method to create a tile in the Home App that emulates a pushbutton switch.  In this example pressing the tile in the Home App will cause it to turn on, blink an LED 3 times, and then turn off (just like a real pushbutton might do).
 
@@ -113,6 +112,13 @@ Example 20 illustrates a number of advanced techniques through the implementatio
 
 ### [Example 21 - AccessoryIdentifier](../examples/21-AccessoryIdentifier)
 Example 21 shows how the Identifier Characteristic that is always present in each Accessory's required AccessoryInformation Service can be used to create a custom "identification routine" that can be triggered from within the Home App when pairing a device.  This example does not use any new HomeSpan methods.
+
+### [Example 22 - TLV8 Characteristics](../examples/22-TLV8_Characteristics)
+Example 22 demonstrates how to create and utilize TLV8-based Characteristics through the implementation of the DisplayOrder Characteristic used to set the order in which input sources for a Television Service are presented in the Home App.  New HomeSpan API topics covered in this example include:
+
+* creating TLV8 objects using HomeSpan's TLV8 class
+* updating TLV8 Characteristics using `setTLV()`
+
  
 ## Other Examples
 

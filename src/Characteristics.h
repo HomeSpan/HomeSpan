@@ -114,6 +114,7 @@ struct HapCharacteristics {
   HAPCHAR( CurrentTemperature, 11, PR+EV, FLOAT, false );
   HAPCHAR( CurrentTiltAngle, C1, PR+EV, INT, false );
   HAPCHAR( CurrentVisibilityState, 135, PR+EV, UINT8, true );
+  HAPCHAR( DisplayOrder, 136, PR+EV, TLV_ENC, true );
   HAPCHAR( FilterLifeLevel, AB, PR+EV, FLOAT, false );
   HAPCHAR( FilterChangeIndication, AC, PR+EV, UINT8, true );
   HAPCHAR( FirmwareRevision, 52, PR+EV, STRING, true );

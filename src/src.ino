@@ -27,61 +27,42 @@
 
 #include "HomeSpan.h"
 
-#define MAX_LIGHTS  1
-
 void setup() {
- 
+
   Serial.begin(115200);
 
-  homeSpan.setLogLevel(2);
-  homeSpan.enableWebLog(50,"pool.ntp.org","UTC",NULL);
-//  homeSpan.setPairingCode("12345670");
-//  homeSpan.enableWebLog(50,"pool.ntp.org","UTC","myStatus");
-//  homeSpan.enableWebLog(50,NULL,NULL,NULL);
+  homeSpan.begin(Category::Lighting,"HomeSpan Light");
+  
+  new SpanAccessory();   
+    new Service::AccessoryInformation(); 
+      new Characteristic::Identify();  
+    new Service::LightBulb();
+      new Characteristic::On();
 
-  homeSpan.begin(Category::Lighting,"HomeSpan Max");
+//  new SpanUserCommand('k',"- list controllers",list_controllers);
+  homeSpan.setControllerCallback(list_controllers);
+}   
 
-   new SpanAccessory();
-    new Service::AccessoryInformation();  
-      new Characteristic::Identify();
-
-  for(int i=0;i<MAX_LIGHTS;i++){
-    new SpanAccessory();
-      new Service::AccessoryInformation();
-        new Characteristic::Identify();
-        char c[30];
-        sprintf(c,"Light-%d",i);
-        new Characteristic::Name(c);
-      new Service::LightBulb();
-        new Characteristic::On(0,false);
-     WEBLOG("Configuring %s",c);
-  }
-
-  new SpanUserCommand('w', " - get web log test",webLogTest);     // simulate getting an HTTPS request for weblog
-
-}
 
 //////////////////////////////////////
 
 void loop(){
  
-  homeSpan.poll();
-  
+  homeSpan.poll();  
 }
 
 //////////////////////////////////////
 
-void webLogTest(const char *dummy){
-  Serial.printf("\n*** In Web Log Test.  Starting Custom Web Log Handler\n");     // here is where you would perform any HTTPS initializations   
-  homeSpan.getWebLog(webLogHandler,NULL);      // this starts the normal weblog with output redirected to the specified handler (below)
-}
 
-void webLogHandler(const char *buf, void *args){
-  if(buf!=NULL){
-    Serial.printf("--------\n");
-    Serial.printf("%s",buf);            // here is where you would transmit data to the HTTPS connection
-    Serial.printf("********\n");
+void list_controllers(){
+  Serial.printf("\nControllers\n");
+  for(auto it=homeSpan.controllerListBegin(); it!=homeSpan.controllerListEnd(); ++it){
+    Serial.printf("Admin=%d  ID=",it->isAdmin());
+    for(int i=0;i<36;i++)
+      Serial.printf("%02X",it->getID()[i]);
+    Serial.printf("  LTPK=");
+    for(int i=0;i<32;i++)
+      Serial.printf("%02X",it->getLTPK()[i]);
+    Serial.printf("\n");
   }
-  else
-    Serial.print("*** DONE!\n\n");      // here is where you would close the HTTPS connection
 }

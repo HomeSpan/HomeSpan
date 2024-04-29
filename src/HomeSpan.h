@@ -55,6 +55,7 @@
 #include "HAPConstants.h"
 #include "HapQR.h"
 #include "Characteristics.h"
+#include "TLV8.h"
 
 using std::vector;
 using std::unordered_map;
@@ -112,6 +113,7 @@ struct SpanRange;
 struct SpanBuf;
 struct SpanButton;
 struct SpanUserCommand;
+class Controller;
 
 extern Span homeSpan;
 
@@ -135,7 +137,7 @@ struct SpanConfig{
 
 struct SpanBuf{                               // temporary storage buffer for use with putCharacteristicsURL() and checkTimedResets() 
   uint32_t aid=0;                             // updated aid 
-  int iid=0;                                  // updated iid
+  uint32_t iid=0;                             // updated iid
   boolean wr=false;                           // flag to indicate write-response has been requested
   char *val=NULL;                             // updated value (optional, though either at least 'val' or 'ev' must be specified)
   char *ev=NULL;                              // updated event notification flag (optional, though either at least 'val' or 'ev' must be specified)
@@ -186,6 +188,35 @@ struct SpanOTA{                               // manages OTA process
   static void end();
   static void progress(uint32_t progress, uint32_t total);
   static void error(ota_error_t err);
+};
+
+
+//////////////////////////////////////////////////////////
+// Paired Controller Structure for Permanently-Stored Data
+
+class Controller {
+  friend class HAPClient;
+  
+  boolean allocated=false;        // DEPRECATED (but needed for backwards compatability with original NVS storage of Controller info)
+  boolean admin;                  // Controller has admin privileges
+  uint8_t ID[36];                 // Pairing ID
+  uint8_t LTPK[32];               // Long Term Ed2519 Public Key
+
+  public:
+
+  Controller(uint8_t *id, uint8_t *ltpk, boolean ad){
+    allocated=true;
+    admin=ad;
+    memcpy(ID,id,36);
+    memcpy(LTPK,ltpk,32);
+  }
+
+  Controller(){}
+
+  const uint8_t *getID() const {return(ID);}
+  const uint8_t *getLTPK() const {return(LTPK);}
+  boolean isAdmin() const {return(admin);}
+
 };
 
 //////////////////////////////////////
@@ -249,6 +280,7 @@ class Span{
   void (*apFunction)()=NULL;                                  // optional function to invoke when starting Access Point
   void (*statusCallback)(HS_STATUS status)=NULL;              // optional callback when HomeSpan status changes
   void (*rebootCallback)(uint8_t)=NULL;                       // optional callback when device reboots
+  void (*controllerCallback)()=NULL;                          // optional callback when Controller is added/removed/changed
   
   WiFiServer *hapServer;                            // pointer to the HAP Server connection
   Blinker *statusLED;                               // indicates HomeSpan status
@@ -279,7 +311,7 @@ class Span{
 
   void printfAttributes(int flags=GET_VALUE|GET_META|GET_PERMS|GET_TYPE|GET_DESC);   // writes Attributes JSON database to hapOut stream
   
-  SpanCharacteristic *find(uint32_t aid, int iid);                        // return Characteristic with matching aid and iid (else NULL if not found)
+  SpanCharacteristic *find(uint32_t aid, uint32_t iid);                   // return Characteristic with matching aid and iid (else NULL if not found)
   int countCharacteristics(char *buf);                                    // return number of characteristic objects referenced in PUT /characteristics JSON request
   int updateCharacteristics(char *buf, SpanBuf *pObj);                    // parses PUT /characteristics JSON request 'buf into 'pObj' and updates referenced characteristics; returns 1 on success, 0 on fail
   void printfAttributes(SpanBuf *pObj, int nObj);                         // writes SpanBuf objects to hapOut stream
@@ -287,10 +319,13 @@ class Span{
   void clearNotify(int slotNum);                                          // set ev notification flags for connection 'slotNum' to false across all characteristics 
   void printfNotify(SpanBuf *pObj, int nObj, int conNum);                 // writes notification JSON to hapOut stream based on SpanBuf objects and specified connection number
 
-  static boolean invalidUUID(const char *uuid, boolean isCustom){
+  static boolean invalidUUID(const char *uuid){
     int x=0;
+    sscanf(uuid,"%*8[0-9a-fA-F]%n",&x);       // check for short-form of UUID
+    if(strlen(uuid)==x && uuid[0]!='0')
+      return(false);
     sscanf(uuid,"%*8[0-9a-fA-F]-%*4[0-9a-fA-F]-%*4[0-9a-fA-F]-%*4[0-9a-fA-F]-%*12[0-9a-fA-F]%n",&x);
-    return(isCustom && (strlen(uuid)!=36 || x!=36));    
+    return(strlen(uuid)!=36 || x!=36);
   }
   
   public:
@@ -349,7 +384,9 @@ class Span{
   Span& setStatusCallback(void (*f)(HS_STATUS status)){statusCallback=f;return(*this);}  // sets an optional user-defined function to call when HomeSpan status changes
   const char* statusString(HS_STATUS s);                                                 // returns char string for HomeSpan status change messages
   Span& setPairingCode(const char *s, boolean progCall=true);                            // sets the Pairing Code - use is NOT recommended.  Use 'S' from CLI instead
-  void deleteStoredValues(){processSerialCommand("V");}                                  // deletes stored Characteristic values from NVS  
+  void deleteStoredValues(){processSerialCommand("V");}                                  // deletes stored Characteristic values from NVS
+  Span& resetIID(uint32_t newIID);                                                       // resets the IID count for the current Accessory to start at newIID
+  Span& setControllerCallback(void (*f)()){controllerCallback=f;return(*this);}          // sets an optional user-defined function to call whenever a Controller is added/removed/changed
 
   int enableOTA(boolean auth=true, boolean safeLoad=true){return(spanOTA.init(auth, safeLoad, NULL));}   // enables Over-the-Air updates, with (auth=true) or without (auth=false) authorization password  
   int enableOTA(const char *pwd, boolean safeLoad=true){return(spanOTA.init(true, safeLoad, pwd));}      // enables Over-the-Air updates, with custom authorization password (overrides any password stored with the 'O' command)
@@ -388,6 +425,9 @@ class Span{
   TaskHandle_t getAutoPollTask(){return(pollTaskHandle);}
 
   Span& setTimeServerTimeout(uint32_t tSec){webLog.waitTime=tSec*1000;return(*this);}    // sets wait time (in seconds) for optional web log time server to connect
+
+  list<Controller, Mallocator<Controller>>::const_iterator controllerListBegin();
+  list<Controller, Mallocator<Controller>>::const_iterator controllerListEnd();   
  
   [[deprecated("Please use reserveSocketConnections(n) method instead.")]]
   void setMaxConnections(uint8_t n){requestedMaxCon=n;}                   // sets maximum number of simultaneous HAP connections
@@ -403,15 +443,15 @@ class SpanAccessory{
   friend class SpanButton;
   friend class SpanRange;
     
-  uint32_t aid=0;                                         // Accessory Instance ID (HAP Table 6-1)
-  int iidCount=0;                                         // running count of iid to use for Services and Characteristics associated with this Accessory                                 
-  vector<SpanService *, Mallocator<SpanService*>> Services;                         // vector of pointers to all Services in this Accessory  
+  uint32_t aid=0;                                               // Accessory Instance ID (HAP Table 6-1)
+  uint32_t iidCount=0;                                          // running count of iid to use for Services and Characteristics associated with this Accessory                                 
+  vector<SpanService *, Mallocator<SpanService*>> Services;     // vector of pointers to all Services in this Accessory  
 
-  void printfAttributes(int flags);                       // writes Accessory JSON to hapOut stream
+  void printfAttributes(int flags);                             // writes Accessory JSON to hapOut stream
 
   protected:
 
-  ~SpanAccessory();                                       // destructor
+  ~SpanAccessory();                                             // destructor
 
   public:
 
@@ -428,32 +468,34 @@ class SpanService{
   friend class SpanCharacteristic;
   friend class SpanRange;
 
-  int iid=0;                                              // Instance ID (HAP Table 6-2)
-  const char *type;                                       // Service Type
-  const char *hapName;                                    // HAP Name
-  boolean hidden=false;                                   // optional property indicating service is hidden
-  boolean primary=false;                                  // optional property indicating service is primary
-  vector<SpanCharacteristic *, Mallocator<SpanCharacteristic*>> Characteristics;           // vector of pointers to all Characteristics in this Service  
-  vector<SpanService *, Mallocator<SpanService *>> linkedServices;                   // vector of pointers to any optional linked Services
-  boolean isCustom;                                       // flag to indicate this is a Custom Service
-  SpanAccessory *accessory=NULL;                          // pointer to Accessory containing this Service
+  uint32_t iid=0;                                                                   // Instance ID (HAP Table 6-2)
+  const char *type;                                                                 // Service Type
+  const char *hapName;                                                              // HAP Name
+  boolean hidden=false;                                                             // optional property indicating service is hidden
+  boolean primary=false;                                                            // optional property indicating service is primary
+  vector<SpanCharacteristic *, Mallocator<SpanCharacteristic*>> Characteristics;    // vector of pointers to all Characteristics in this Service  
+  vector<SpanService *, Mallocator<SpanService *>> linkedServices;                  // vector of pointers to any optional linked Services
+  boolean isCustom;                                                                 // flag to indicate this is a Custom Service
+  SpanAccessory *accessory=NULL;                                                    // pointer to Accessory containing this Service
   
-  void printfAttributes(int flags);                       // writes Service JSON to hapOut stream
+  void printfAttributes(int flags);                                                 // writes Service JSON to hapOut stream
 
   protected:
   
-  virtual ~SpanService();                                 // destructor
-  vector<HapChar *, Mallocator<HapChar*>> req;                                  // vector of pointers to all required HAP Characteristic Types for this Service
-  vector<HapChar *, Mallocator<HapChar*>> opt;                                  // vector of pointers to all optional HAP Characteristic Types for this Service
+  virtual ~SpanService();                                                           // destructor
+  vector<HapChar *, Mallocator<HapChar*>> req;                                      // vector of pointers to all required HAP Characteristic Types for this Service
+  vector<HapChar *, Mallocator<HapChar*>> opt;                                      // vector of pointers to all optional HAP Characteristic Types for this Service
 
   public:
   
-  void *operator new(size_t size){return(HS_MALLOC(size));}                       // override new operator to use PSRAM when available
-  SpanService(const char *type, const char *hapName, boolean isCustom=false);     // constructor
-  SpanService *setPrimary();                                                      // sets the Service Type to be primary and returns pointer to self
-  SpanService *setHidden();                                                       // sets the Service Type to be hidden and returns pointer to self
-  SpanService *addLink(SpanService *svc);                                         // adds svc as a Linked Service and returns pointer to self
-  vector<SpanService *, Mallocator<SpanService *>> getLinks(){return(linkedServices);}                       // returns linkedServices vector for use as range in "for-each" loops
+  void *operator new(size_t size){return(HS_MALLOC(size));}                               // override new operator to use PSRAM when available
+  SpanService(const char *type, const char *hapName, boolean isCustom=false);             // constructor
+  SpanService *setPrimary();                                                              // sets the Service Type to be primary and returns pointer to self
+  SpanService *setHidden();                                                               // sets the Service Type to be hidden and returns pointer to self
+  SpanService *addLink(SpanService *svc);                                                 // adds svc as a Linked Service and returns pointer to self
+  vector<SpanService *, Mallocator<SpanService *>> getLinks(){return(linkedServices);}    // returns linkedServices vector for use as range in "for-each" loops
+
+  uint32_t getIID(){return(iid);}                         // returns IID of Service
 
   virtual boolean update() {return(true);}                // placeholder for code that is called when a Service is updated via a Controller.  Must return true/false depending on success of update
   virtual void loop(){}                                   // loops for each Service - called every cycle if over-ridden with user-defined code
@@ -478,7 +520,7 @@ class SpanCharacteristic{
     STRING_t STRING = NULL;
   };
 
-  int iid=0;                               // Instance ID (HAP Table 6-3)
+  uint32_t iid=0;                          // Instance ID (HAP Table 6-3)
   HapChar *hapChar;                        // pointer to HAP Characteristic structure
   const char *type;                        // Characteristic Type
   const char *hapName;                     // HAP Name
@@ -509,7 +551,7 @@ class SpanCharacteristic{
   StatusCode loadUpdate(char *val, char *ev, boolean wr);     // load updated val/ev from PUT /characteristic JSON request.  Return intitial HAP status code (checks to see if characteristic is found, is writable, etc.)  
     
   String uvPrint(UVal &u){
-    char c[67];               // space for 64 characters + surrounding quotes + terminating null
+    char c[64];
     switch(format){
       case FORMAT::BOOL:
         return(String(u.BOOL));      
@@ -530,14 +572,13 @@ class SpanCharacteristic{
       case FORMAT::STRING:
       case FORMAT::DATA:
       case FORMAT::TLV_ENC:
-        sprintf(c,"\"%.64s\"",u.STRING);  // Truncating string to 64 chars
-        return(String(c));        
+        return(String("\"") + String(u.STRING) + String("\""));        
     } // switch
     return(String());       // included to prevent compiler warnings
   }
 
   void uvSet(UVal &dest, UVal &src){
-    if(format==FORMAT::STRING || format==FORMAT::DATA || format==FORMAT::TLV_ENC)
+    if(format>=FORMAT::STRING)
       uvSet(dest,(const char *)src.STRING);
     else
       dest=src;
@@ -650,6 +691,8 @@ class SpanCharacteristic{
   void *operator new(size_t size){return(HS_MALLOC(size));}               // override new operator to use PSRAM when available
   SpanCharacteristic(HapChar *hapChar, boolean isCustom=false);           // constructor
 
+  uint32_t getIID(){return(iid);}                                         // returns IID of Characteristic
+
   template <class T=int> T getVal(){
     return(uvGet<T>(value));
   }
@@ -658,37 +701,140 @@ class SpanCharacteristic{
     return(uvGet<T>(newValue));
   }
     
-  char *getString(){
+  char *getStringGeneric(UVal &val){
     if(format>=FORMAT::STRING)
-        return value.STRING;
+        return val.STRING;
 
     return NULL;
   }
 
-  char *getNewString(){
-    if(format>=FORMAT::STRING)
-        return newValue.STRING;
+  char *getString(){return(getStringGeneric(value));}
+  char *getNewString(){return(getStringGeneric(newValue));}
 
-    return NULL;
-  }
+  void setString(const char *val, boolean notify=true){ 
 
-  void setString(const char *val, boolean notify=true){
-
-    if(!((perms&EV) || (updateFlag==2))){
-      LOG0("\n*** WARNING:  Attempt to update Characteristic::%s with setData() ignored.  No EVENT NOTIFICATION (EV) permission on this characteristic\n\n",hapName);
-      return;
-    }   
-
-    if(updateFlag==1)
-      LOG0("\n*** WARNING:  Attempt to update Characteristic::%s with setVal() within update() while it is being updated by Home App.  This may cause device to become non-responsive!\n\n",hapName);
-
+    setValCheck();
     uvSet(value,val);
-    uvSet(newValue,value);
+    setValFinish(notify);    
+  }
+
+  size_t getDataGeneric(uint8_t *data, size_t len, UVal &val){    
+    if(format<FORMAT::DATA)
+      return(0);
+
+    size_t olen;
+    int ret=mbedtls_base64_decode(data,len,&olen,(uint8_t *)val.STRING,strlen(val.STRING));
+    
+    if(data==NULL)
+      return(olen);
       
+    if(ret==MBEDTLS_ERR_BASE64_BUFFER_TOO_SMALL)
+      LOG0("\n*** WARNING:  Can't decode Characteristic::%s with getData().  Destination buffer is too small (%d out of %d bytes needed)!\n\n",hapName,len,olen);
+    else if(ret==MBEDTLS_ERR_BASE64_INVALID_CHARACTER)
+      LOG0("\n*** WARNING:  Can't decode Characteristic::%s with getData().  Data is not in base-64 format!\n\n",hapName);
+      
+    return(olen);
+  }
+
+  size_t getData(uint8_t *data, size_t len){return(getDataGeneric(data,len,value));}
+  size_t getNewData(uint8_t *data, size_t len){return(getDataGeneric(data,len,newValue));}
+
+  void setData(uint8_t *data, size_t len, boolean notify=true){
+
+    setValCheck();
+
+    if(len>0){
+      size_t olen;
+      mbedtls_base64_encode(NULL,0,&olen,NULL,len);                        // get length of string buffer needed (mbedtls includes the trailing null in this size)
+      value.STRING = (char *)HS_REALLOC(value.STRING,olen);                // allocate sufficient size for storing value
+      mbedtls_base64_encode((uint8_t*)value.STRING,olen,&olen,data,len );  // encode data into string buf
+    } else {
+      value.STRING = (char *)HS_REALLOC(value.STRING,1);                   // allocate sufficient size for just trailing null character
+      *value.STRING ='\0';
+    }
+
+    setValFinish(notify);
+  }  
+
+  size_t getTLVGeneric(TLV8 &tlv, UVal &val){
+     
+    if(format<FORMAT::TLV_ENC)
+      return(0);
+
+    const size_t bufSize=36;                    // maximum size of buffer to store decoded bytes before unpacking into TLV; must be multiple of 3
+    TempBuffer<uint8_t> tBuf(bufSize);          // create fixed-size buffer to store decoded bytes
+    tlv.wipe();                                 // clear TLV completely
+
+    size_t nChars=strlen(val.STRING);         // total characters to decode
+    uint8_t *p=(uint8_t *)val.STRING;         // set pointer to beginning of value
+    const size_t decodeSize=bufSize/3*4;      // number of characters to decode in each pass
+    int status=0;
+    
+    while(nChars>0){
+      size_t olen;
+      size_t n=nChars<decodeSize?nChars:decodeSize;
+      
+      int ret=mbedtls_base64_decode(tBuf,tBuf.len(),&olen,p,n);
+      if(ret==MBEDTLS_ERR_BASE64_INVALID_CHARACTER){
+        LOG0("\n*** WARNING:  Can't decode Characteristic::%s with getTLV().  Data is not in base-64 format!\n\n",hapName);
+        tlv.wipe();
+        return(0);
+      }
+      status=tlv.unpack(tBuf,olen);
+      p+=n;
+      nChars-=n;
+    }
+    if(status>0){
+      LOG0("\n*** WARNING:  Can't unpack Characteristic::%s with getTLV().  TLV record is incomplete or corrupted!\n\n",hapName);
+      tlv.wipe();
+      return(0);      
+    }
+  return(tlv.pack_size());
+  }
+
+  size_t getTLV(TLV8 &tlv){return(getTLVGeneric(tlv,value));}
+  size_t getNewTLV(TLV8 &tlv){return(getTLVGeneric(tlv,newValue));}
+
+  void setTLV(TLV8 &tlv, boolean notify=true){
+
+    setValCheck();
+    
+    const size_t bufSize=36;                                  // maximum size of buffer to store packed TLV bytes before encoding directly into value; must be multiple of 3
+    size_t nBytes=tlv.pack_size();                            // total size of packed TLV in bytes
+
+    if(nBytes>0){
+      size_t nChars;
+      mbedtls_base64_encode(NULL,0,&nChars,NULL,nBytes);        // get length of string buffer needed (mbedtls includes the trailing null in this size)
+      value.STRING = (char *)HS_REALLOC(value.STRING,nChars);   // allocate sufficient size for storing value
+      TempBuffer<uint8_t> tBuf(bufSize);                        // create fixed-size buffer to store packed TLV bytes
+      tlv.pack_init();                                          // initialize TLV packing
+      uint8_t *p=(uint8_t *)value.STRING;                       // set pointer to beginning of value
+      while((nBytes=tlv.pack(tBuf,bufSize))>0){                 // pack the next set of TLV bytes, up to a maximum of bufSize, into tBuf
+        size_t olen;                                            // number of characters written (excludes null character)
+        mbedtls_base64_encode(p,nChars,&olen,tBuf,nBytes);      // encode data directly into value
+        p+=olen;                                                // advance pointer to null character
+        nChars-=olen;                                           // subtract number of characters remaining
+      }
+    } else {
+      value.STRING = (char *)HS_REALLOC(value.STRING,1);        // allocate sufficient size for just trailing null character
+      *value.STRING ='\0';
+    }
+
+    setValFinish(notify);
+  }
+
+  void setValCheck(){
+    if(updateFlag==1)
+      LOG0("\n*** WARNING:  Attempt to set value of Characteristic::%s within update() while it is being simultaneously updated by Home App.  This may cause device to become non-responsive!\n\n",hapName);
+  }
+
+  void setValFinish(boolean notify){
+
+    uvSet(newValue,value);     
     updateTime=homeSpan.snapTime;
 
     if(notify){
-      if(updateFlag!=2){                        // do not broadcast EV if update is being done in context of write-response    
+      if((perms&EV) && (updateFlag!=2)){        // only broadcast notification if EV permission is set AND update is NOT being done in context of write-response    
         SpanBuf sb;                             // create SpanBuf object
         sb.characteristic=this;                 // set characteristic          
         sb.status=StatusCode::OK;               // set status
@@ -701,75 +847,13 @@ class SpanCharacteristic{
         nvs_set_str(homeSpan.charNVS,nvsKey,value.STRING);    // store data
         nvs_commit(homeSpan.charNVS);
       }
-    }
-    
-  } // setString()
-
-  size_t getData(uint8_t *data, size_t len){    
-    if(format<FORMAT::DATA)
-      return(0);
-
-    size_t olen;
-    int ret=mbedtls_base64_decode(data,len,&olen,(uint8_t *)value.STRING,strlen(value.STRING));
-    
-    if(data==NULL)
-      return(olen);
-      
-    if(ret==MBEDTLS_ERR_BASE64_BUFFER_TOO_SMALL)
-      LOG0("\n*** WARNING:  Can't decode Characteristic::%s with getData().  Destination buffer is too small (%d out of %d bytes needed)\n\n",hapName,len,olen);
-    else if(ret==MBEDTLS_ERR_BASE64_INVALID_CHARACTER)
-      LOG0("\n*** WARNING:  Can't decode Characteristic::%s with getData().  Data is not in base-64 format\n\n",hapName);
-      
-    return(olen);
+    }      
   }
 
-  size_t getNewData(uint8_t *data, size_t len){    
-    if(format<FORMAT::DATA)
-      return(0);
+  template <typename T> void setVal(T val, boolean notify=true){ 
 
-    size_t olen;
-    int ret=mbedtls_base64_decode(data,len,&olen,(uint8_t *)newValue.STRING,strlen(newValue.STRING));
+    setValCheck();
     
-    if(data==NULL)
-      return(olen);
-      
-    if(ret==MBEDTLS_ERR_BASE64_BUFFER_TOO_SMALL)
-      LOG0("\n*** WARNING:  Can't decode Characteristic::%s with getData().  Destination buffer is too small (%d out of %d bytes needed)\n\n",hapName,len,olen);
-    else if(ret==MBEDTLS_ERR_BASE64_INVALID_CHARACTER)
-      LOG0("\n*** WARNING:  Can't decode Characteristic::%s with getData().  Data is not in base-64 format\n\n",hapName);
-      
-    return(olen);
-  }  
-
-  void setData(uint8_t *data, size_t len, boolean notify=true){
-
-    if(!((perms&EV) || (updateFlag==2))){
-      LOG0("\n*** WARNING:  Attempt to update Characteristic::%s with setData() ignored.  No EVENT NOTIFICATION (EV) permission on this characteristic\n\n",hapName);
-      return;
-    }   
-
-    if(len<1){
-      LOG0("\n*** WARNING:  Attempt to update Characteristic::%s with setData() ignored.  Size of data buffer must be greater than zero\n\n",hapName);
-      return;      
-    }
-
-    size_t olen;
-    mbedtls_base64_encode(NULL,0,&olen,data,len);                      // get length of string buffer needed (mbedtls includes the trailing null in this size)
-    TempBuffer<char> tBuf(olen);                                       // create temporary string buffer, with room for trailing null
-    mbedtls_base64_encode((uint8_t*)tBuf.get(),olen,&olen,data,len );  // encode data into string buf
-    setString(tBuf,notify);                                            // call setString to continue processing as if characteristic was a string
-  }  
-
-  template <typename T> void setVal(T val, boolean notify=true){
-
-    if(!((perms&EV) || (updateFlag==2))){
-      LOG0("\n*** WARNING:  Attempt to update Characteristic::%s with setData() ignored.  No EVENT NOTIFICATION (EV) permission on this characteristic\n\n",hapName);
-      return;
-    }   
-
-    if(updateFlag==1)
-      LOG0("\n*** WARNING:  Attempt to update Characteristic::%s with setVal() within update() while it is being updated by Home App.  This may cause device to become non-responsive!\n\n",hapName);
-
     if(!((val >= uvGet<T>(minValue)) && (val <= uvGet<T>(maxValue)))){
       LOG0("\n*** WARNING:  Attempt to update Characteristic::%s with setVal(%g) is out of range [%g,%g].  This may cause device to become non-responsive!\n\n",
       hapName,(double)val,uvGet<double>(minValue),uvGet<double>(maxValue));
