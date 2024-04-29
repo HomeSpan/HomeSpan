@@ -54,7 +54,7 @@ HomeSpan requires version 2.0.0 or later of the [Arduino-ESP32 Board Manager](ht
 
 ## ❗Latest Update - HomeSpan 1.9.1 (MM/DD/YYY)
 
-* **HomeSpan now supports TLV8 "TAG-LENGTH-VALUE" Characteristics!**
+* **HomeSpan now supports *Tag-Length-Value ("TLV8")* Characteristics!**
 
   * adds new, fully-integrated `TLV8()` class library for the creation and management of TLV8 objects
   * includes methods to handle standard byte-stream VALUES as well as strings, numerical values, zero-length tags, and sub-TLVs
@@ -64,17 +64,18 @@ HomeSpan requires version 2.0.0 or later of the [Arduino-ESP32 Board Manager](ht
   * includes new [Tutorial Example 22 - TLV8 Characteristics](examples/22-TLV8_Characteristics) demonstrating use of the `TLV8()` class and TLV8 Characteristics
   * see the new [TLV8 Characteristics](docs/TLV8.md) page for complete details and documentation 
      
-* **New TLV8 Characteristic - *DisplayOrder***
+* **New *DisplayOrder* TLV8 Characteristic**
   
   * utlizes HomeSpan's new `TLV8()` library
-  * sets the order in which the Input Sources for a Television Service are displayed for selection in the Home App
+  * allows you to specify the exact order in which the Input Sources for a Television Service are displayed in the Home App
   * see [Tutorial Example 22 - TLV8 Characteristics](examples/22-TLV8_Characteristics) for details
  
-* **New [Tutorial Example 21 - AccessoryIdentifier](examples/21-AccessoryIdentifier)**
+* **New *AccessoryIdentifier* Tutorial**
 
-  * demonstrates how to trigger an Accessory's Identifier Characteristic, optionally used to help identify a device during initial pairing to the Home App
+  * demonstrates how to trigger an Accessory's Identifier Characteristic, optionally used to help identify a device during initial pairing
+  * see [Tutorial Example 21 - AccessoryIdentifier](examples/21-AccessoryIdentifier)
 
-* **Added support for more Pixel chips**
+* **Added support for customizing Pixel chips**
 
   * new constructor `Pixel(uint8_t pin, [pixelType_t pixelType])` allows your to set the order in which colors are transmitted to the pixel chip, where *pixelType* is one of the following:
     * PixelType::RGB, PixelType::RBG, PixelType::BRG, PixelType::BGR, PixelType::GBR, PixelType::GRB
