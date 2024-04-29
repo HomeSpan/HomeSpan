@@ -304,13 +304,35 @@ The following **optional** `homeSpan` methods provide additional run-time functi
   * note: calling this function only affects the IID generation for the current Accessory (the count will be reset to IID=1 upon instantiation of a new Accessory)
 
 * `const_iterator controllerListBegin()` and `const_iterator controllerListEnd()`
-  * returns a *constant iterator* pointing to either the beginning, or the end, of an opaque linked list that stores all controller data
+  * returns a *constant iterator* pointing to either the *beginning*, or the *end*, of an opaque linked list that stores all controller data
   * iterators should be defined using the `auto` keyword as follows: `auto myIt=homeSpan.controllerListBegin();`
   * controller data can be read from a de-referenced iterator using the following methods:    
     * `const uint8_t *getID()` returns pointer to the 36-byte ID of the controller
     * `const uint8_t *getLTPK()` returns pointer to the 32-byte Long Term Public Key of the controller
     * `boolean isAdmin()` returns true if controller has admin permissions, else returns false
-  * see this [gist](https://gist.github.com/HomeSpan/5486704b42027e31ab38a9f193451308) for an example of how to use these methods to extract the same data about each controller that HomeSpan prints to the Serial Monitor when using the 's' CLI command
+  * <details><summary>click here for example code</summary><br>
+
+    ```C++
+    // Extract and print the same data about each controller that HomeSpan prints to the Serial Monitor when using the 's' CLI command
+    
+    Serial.printf("\nController Data\n");
+    
+    for(auto it=homeSpan.controllerListBegin(); it!=homeSpan.controllerListEnd(); ++it){  // loop over each controller
+    
+      Serial.printf("Admin=%d",it->isAdmin());    // indicate if controller has admin permissions
+
+      Serial.printf("  ID=");                     // print the 36-byte Device ID of the controller
+      for(int i=0;i<36;i++)
+        Serial.printf("%02X",it->getID()[i]);
+    
+      Serial.printf("  LTPK=");                   // print the 32-byte Long-Term Public Key of the controller)
+      for(int i=0;i<32;i++)
+        Serial.printf("%02X",it->getLTPK()[i]);
+    
+      Serial.printf("\n");
+    }
+    ```
+    </details>
  
 ---
 
