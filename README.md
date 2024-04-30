@@ -86,7 +86,7 @@ HomeSpan requires version 2.0.0 or later of the [Arduino-ESP32 Board Manager](ht
   * added new method `boolean isRGBW()`
     * returns *true* if Pixel was constructed as RGBW, else *false* if constructed as RGB only (i.e. no white LED)
   * added new [PixelTester](examples/Other%20Examples/PixelTester) sketch (found under *Other Examples*) to aid in determining the *pixelType* for any LED Strip
-  * see the [Pixels](docs/Pixels.md) page for details
+  * see the [Adressable RGB LEDs](docs/Pixels.md) page for details
     
 * **New ability to read and set the IIDs of Services and Characteristics**
 
