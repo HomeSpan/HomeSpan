@@ -549,47 +549,12 @@ class SpanCharacteristic{
 
   void printfAttributes(int flags);                           // writes Characteristic JSON to hapOut stream
   StatusCode loadUpdate(char *val, char *ev, boolean wr);     // load updated val/ev from PUT /characteristic JSON request.  Return intitial HAP status code (checks to see if characteristic is found, is writable, etc.)  
-    
-  String uvPrint(UVal &u){
-    char c[64];
-    switch(format){
-      case FORMAT::BOOL:
-        return(String(u.BOOL));      
-      case FORMAT::INT:
-        return(String(u.INT));
-      case FORMAT::UINT8:
-        return(String(u.UINT8));        
-      case FORMAT::UINT16:
-        return(String(u.UINT16));        
-      case FORMAT::UINT32:
-        return(String(u.UINT32));        
-      case FORMAT::UINT64:
-        sprintf(c,"%llu",u.UINT64);
-        return(String(c));        
-      case FORMAT::FLOAT:
-        sprintf(c,"%g",u.FLOAT);
-        return(String(c));        
-      case FORMAT::STRING:
-      case FORMAT::DATA:
-      case FORMAT::TLV_ENC:
-        return(String("\"") + String(u.STRING) + String("\""));        
-    } // switch
-    return(String());       // included to prevent compiler warnings
-  }
+  String uvPrint(UVal &u);                                    // returns "printable" String for any type of Characteristic  
+  
+  void uvSet(UVal &dest, UVal &src);                          // copies UVal src into UVal dest
+  void uvSet(UVal &u, const char *val);                       // copies string val into UVal u
 
-  void uvSet(UVal &dest, UVal &src){
-    if(format>=FORMAT::STRING)
-      uvSet(dest,(const char *)src.STRING);
-    else
-      dest=src;
-  }
-
-  void uvSet(UVal &u, const char *val){
-    u.STRING = (char *)HS_REALLOC(u.STRING, strlen(val) + 1);
-    strcpy(u.STRING, val);
-  }
-
-  template <typename T> void uvSet(UVal &u, T val){  
+  template <typename T> void uvSet(UVal &u, T val){           // copies any other type of val into UVal u  
     switch(format){
       case FORMAT::BOOL:
         u.BOOL=(boolean)val;
@@ -619,7 +584,7 @@ class SpanCharacteristic{
     } // switch
   }
  
-  template <class T> T uvGet(UVal &u){
+  template <class T> T uvGet(UVal &u){                        // returns UVal u, cast into T
   
     switch(format){   
       case FORMAT::BOOL:
@@ -646,7 +611,7 @@ class SpanCharacteristic{
     
   protected:
 
-  ~SpanCharacteristic();                                                  // destructor  
+  ~SpanCharacteristic();                                      // destructor  
     
   template <typename T, typename A=boolean, typename B=boolean> void init(T val, boolean nvsStore, A min=0, B max=1){
 
@@ -688,10 +653,8 @@ class SpanCharacteristic{
 
   public:
 
-  void *operator new(size_t size){return(HS_MALLOC(size));}               // override new operator to use PSRAM when available
   SpanCharacteristic(HapChar *hapChar, boolean isCustom=false);           // constructor
-
-  uint32_t getIID(){return(iid);}                                         // returns IID of Characteristic
+  void *operator new(size_t size){return(HS_MALLOC(size));}               // override new operator to use PSRAM when available
 
   template <class T=int> T getVal(){
     return(uvGet<T>(value));
@@ -699,155 +662,6 @@ class SpanCharacteristic{
 
   template <class T=int> T getNewVal(){
     return(uvGet<T>(newValue));
-  }
-    
-  char *getStringGeneric(UVal &val){
-    if(format>=FORMAT::STRING)
-        return val.STRING;
-
-    return NULL;
-  }
-
-  char *getString(){return(getStringGeneric(value));}
-  char *getNewString(){return(getStringGeneric(newValue));}
-
-  void setString(const char *val, boolean notify=true){ 
-
-    setValCheck();
-    uvSet(value,val);
-    setValFinish(notify);    
-  }
-
-  size_t getDataGeneric(uint8_t *data, size_t len, UVal &val){    
-    if(format<FORMAT::DATA)
-      return(0);
-
-    size_t olen;
-    int ret=mbedtls_base64_decode(data,len,&olen,(uint8_t *)val.STRING,strlen(val.STRING));
-    
-    if(data==NULL)
-      return(olen);
-      
-    if(ret==MBEDTLS_ERR_BASE64_BUFFER_TOO_SMALL)
-      LOG0("\n*** WARNING:  Can't decode Characteristic::%s with getData().  Destination buffer is too small (%d out of %d bytes needed)!\n\n",hapName,len,olen);
-    else if(ret==MBEDTLS_ERR_BASE64_INVALID_CHARACTER)
-      LOG0("\n*** WARNING:  Can't decode Characteristic::%s with getData().  Data is not in base-64 format!\n\n",hapName);
-      
-    return(olen);
-  }
-
-  size_t getData(uint8_t *data, size_t len){return(getDataGeneric(data,len,value));}
-  size_t getNewData(uint8_t *data, size_t len){return(getDataGeneric(data,len,newValue));}
-
-  void setData(uint8_t *data, size_t len, boolean notify=true){
-
-    setValCheck();
-
-    if(len>0){
-      size_t olen;
-      mbedtls_base64_encode(NULL,0,&olen,NULL,len);                        // get length of string buffer needed (mbedtls includes the trailing null in this size)
-      value.STRING = (char *)HS_REALLOC(value.STRING,olen);                // allocate sufficient size for storing value
-      mbedtls_base64_encode((uint8_t*)value.STRING,olen,&olen,data,len );  // encode data into string buf
-    } else {
-      value.STRING = (char *)HS_REALLOC(value.STRING,1);                   // allocate sufficient size for just trailing null character
-      *value.STRING ='\0';
-    }
-
-    setValFinish(notify);
-  }  
-
-  size_t getTLVGeneric(TLV8 &tlv, UVal &val){
-     
-    if(format<FORMAT::TLV_ENC)
-      return(0);
-
-    const size_t bufSize=36;                    // maximum size of buffer to store decoded bytes before unpacking into TLV; must be multiple of 3
-    TempBuffer<uint8_t> tBuf(bufSize);          // create fixed-size buffer to store decoded bytes
-    tlv.wipe();                                 // clear TLV completely
-
-    size_t nChars=strlen(val.STRING);         // total characters to decode
-    uint8_t *p=(uint8_t *)val.STRING;         // set pointer to beginning of value
-    const size_t decodeSize=bufSize/3*4;      // number of characters to decode in each pass
-    int status=0;
-    
-    while(nChars>0){
-      size_t olen;
-      size_t n=nChars<decodeSize?nChars:decodeSize;
-      
-      int ret=mbedtls_base64_decode(tBuf,tBuf.len(),&olen,p,n);
-      if(ret==MBEDTLS_ERR_BASE64_INVALID_CHARACTER){
-        LOG0("\n*** WARNING:  Can't decode Characteristic::%s with getTLV().  Data is not in base-64 format!\n\n",hapName);
-        tlv.wipe();
-        return(0);
-      }
-      status=tlv.unpack(tBuf,olen);
-      p+=n;
-      nChars-=n;
-    }
-    if(status>0){
-      LOG0("\n*** WARNING:  Can't unpack Characteristic::%s with getTLV().  TLV record is incomplete or corrupted!\n\n",hapName);
-      tlv.wipe();
-      return(0);      
-    }
-  return(tlv.pack_size());
-  }
-
-  size_t getTLV(TLV8 &tlv){return(getTLVGeneric(tlv,value));}
-  size_t getNewTLV(TLV8 &tlv){return(getTLVGeneric(tlv,newValue));}
-
-  void setTLV(TLV8 &tlv, boolean notify=true){
-
-    setValCheck();
-    
-    const size_t bufSize=36;                                  // maximum size of buffer to store packed TLV bytes before encoding directly into value; must be multiple of 3
-    size_t nBytes=tlv.pack_size();                            // total size of packed TLV in bytes
-
-    if(nBytes>0){
-      size_t nChars;
-      mbedtls_base64_encode(NULL,0,&nChars,NULL,nBytes);        // get length of string buffer needed (mbedtls includes the trailing null in this size)
-      value.STRING = (char *)HS_REALLOC(value.STRING,nChars);   // allocate sufficient size for storing value
-      TempBuffer<uint8_t> tBuf(bufSize);                        // create fixed-size buffer to store packed TLV bytes
-      tlv.pack_init();                                          // initialize TLV packing
-      uint8_t *p=(uint8_t *)value.STRING;                       // set pointer to beginning of value
-      while((nBytes=tlv.pack(tBuf,bufSize))>0){                 // pack the next set of TLV bytes, up to a maximum of bufSize, into tBuf
-        size_t olen;                                            // number of characters written (excludes null character)
-        mbedtls_base64_encode(p,nChars,&olen,tBuf,nBytes);      // encode data directly into value
-        p+=olen;                                                // advance pointer to null character
-        nChars-=olen;                                           // subtract number of characters remaining
-      }
-    } else {
-      value.STRING = (char *)HS_REALLOC(value.STRING,1);        // allocate sufficient size for just trailing null character
-      *value.STRING ='\0';
-    }
-
-    setValFinish(notify);
-  }
-
-  void setValCheck(){
-    if(updateFlag==1)
-      LOG0("\n*** WARNING:  Attempt to set value of Characteristic::%s within update() while it is being simultaneously updated by Home App.  This may cause device to become non-responsive!\n\n",hapName);
-  }
-
-  void setValFinish(boolean notify){
-
-    uvSet(newValue,value);     
-    updateTime=homeSpan.snapTime;
-
-    if(notify){
-      if((perms&EV) && (updateFlag!=2)){        // only broadcast notification if EV permission is set AND update is NOT being done in context of write-response    
-        SpanBuf sb;                             // create SpanBuf object
-        sb.characteristic=this;                 // set characteristic          
-        sb.status=StatusCode::OK;               // set status
-        char dummy[]="";
-        sb.val=dummy;                           // set dummy "val" so that printfNotify knows to consider this "update"
-        homeSpan.Notifications.push_back(sb);   // store SpanBuf in Notifications vector
-      }
-  
-      if(nvsKey){
-        nvs_set_str(homeSpan.charNVS,nvsKey,value.STRING);    // store data
-        nvs_commit(homeSpan.charNVS);
-      }
-    }      
   }
 
   template <typename T> void setVal(T val, boolean notify=true){ 
@@ -880,10 +694,29 @@ class SpanCharacteristic{
       }
     }
     
-  } // setVal()
+  } // setVal()  
+    
+  char *getStringGeneric(UVal &val);                                      // return the specified UVal for string-based Characteristics
+  char *getString(){return(getStringGeneric(value));}                     // return the value for string-based Characteristics
+  char *getNewString(){return(getStringGeneric(newValue));}               // return the newValue for string-based Characteristics
+  void setString(const char *val, boolean notify=true);                   // set the value and newValue for string-based Characteristic
 
-  boolean updated(){return(updateFlag>0);}          // returns true within update() if Characteristic was updated by Home App 
+  size_t getDataGeneric(uint8_t *data, size_t len, UVal &val);                                // return the specified UVal for data-based Characteristics
+  size_t getData(uint8_t *data, size_t len){return(getDataGeneric(data,len,value));}          // return the value for data-based Characteristics
+  size_t getNewData(uint8_t *data, size_t len){return(getDataGeneric(data,len,newValue));}    // return the newValue for data-based Characteristics
+  void setData(uint8_t *data, size_t len, boolean notify=true);                               // set the value and newValue for data-based Characteristic
+
+  size_t getTLVGeneric(TLV8 &tlv, UVal &val);                             // return the specified UVal for tlv8-based Characteristics
+  size_t getTLV(TLV8 &tlv){return(getTLVGeneric(tlv,value));}             // return the value for tlv8-based Characteristics
+  size_t getNewTLV(TLV8 &tlv){return(getTLVGeneric(tlv,newValue));}       // return the newValue for tlv8-based Characteristics
+  void setTLV(TLV8 &tlv, boolean notify=true);                            // set the value and newValue for tlv8-based Characteristic
+
+  void setValCheck();                                                     // initial check before setting value of any Characteristic
+  void setValFinish(boolean notify);                                      // final processing after setting value of any Characteristic
+
+  boolean updated();                                // returns true within update() if Characteristic was updated by Home App 
   unsigned long timeVal();                          // returns time elapsed (in millis) since value was last updated, either by Home App or by using setVal()
+  uint32_t getIID();                                // returns IID of Characteristic
   
   SpanCharacteristic *setValidValues(int n, ...);   // sets a list of 'n' valid values allowed for a Characteristic and returns pointer to self.  Only applicable if format=INT, UINT8, UINT16, or UINT32
 
@@ -901,33 +734,11 @@ class SpanCharacteristic{
     
   } // setRange()
 
-  SpanCharacteristic *setPerms(uint8_t perms){
-    perms&=0x7F;
-    if(perms>0)
-      this->perms=perms;
-    return(this);
-  }
-
-  SpanCharacteristic *addPerms(uint8_t dPerms){
-    return(setPerms(perms|dPerms));
-  }
-  
-  SpanCharacteristic *removePerms(uint8_t dPerms){
-    return(setPerms(perms&(~dPerms)));
-  }
-
-  SpanCharacteristic *setDescription(const char *c){
-    desc = (char *)HS_REALLOC(desc, strlen(c) + 1);
-    strcpy(desc, c);
-    return(this);
-  }  
-
-  SpanCharacteristic *setUnit(const char *c){
-    unit = (char *)HS_REALLOC(unit, strlen(c) + 1);
-    strcpy(unit, c);
-    return(this);
-  }  
-
+  SpanCharacteristic *setPerms(uint8_t perms);        // sets permissions of a Characteristic
+  SpanCharacteristic *addPerms(uint8_t dPerms);       // add permissions of a Characteristic  
+  SpanCharacteristic *removePerms(uint8_t dPerms);    // removes permissions of a Characteristic
+  SpanCharacteristic *setDescription(const char *c);  // sets description of a Characteristic
+  SpanCharacteristic *setUnit(const char *c);         // set unit of a Characteristic
 };
 
 ///////////////////////////////
