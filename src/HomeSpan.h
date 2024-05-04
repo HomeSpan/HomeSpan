@@ -550,7 +550,7 @@ class SpanCharacteristic{
   void uvSet(UVal &dest, UVal &src);                          // copies UVal src into UVal dest
   void uvSet(UVal &u, const char *val);                       // copies string val into UVal u
 
-  template <typename T> void uvSet(UVal &u, T val){           // copies any other type of val into UVal u  
+  template <typename T> void uvSet(UVal &u, T val){           // copies numeric val into UVal u  
     switch(format){
       case FORMAT::BOOL:
         u.BOOL=(boolean)val;
@@ -580,7 +580,11 @@ class SpanCharacteristic{
     } // switch
   }
  
-  template <class T> T uvGet(UVal &u){                        // returns UVal u, cast into T
+  char *getStringGeneric(UVal &val);                                      // gets the specified UVal for string-based Characteristics
+  size_t getDataGeneric(uint8_t *data, size_t len, UVal &val);            // gets the specified UVal for data-based Characteristics
+  size_t getTLVGeneric(TLV8 &tlv, UVal &val);                             // gets the specified UVal for tlv8-based Characteristics
+  
+  template <class T> T uvGet(UVal &u){                                    // gets the specified UVal for numeric-based Characteristics
   
     switch(format){   
       case FORMAT::BOOL:
@@ -604,7 +608,10 @@ class SpanCharacteristic{
     }
     return((T)0);       // included to prevent compiler warnings  
   }
-    
+
+  void setValCheck();                                                     // initial check before setting value of any Characteristic
+  void setValFinish(boolean notify);                                      // final processing after setting value of any Characteristic
+   
   protected:
 
   ~SpanCharacteristic();                                      // destructor  
@@ -649,18 +656,24 @@ class SpanCharacteristic{
 
   public:
 
-  SpanCharacteristic(HapChar *hapChar, boolean isCustom=false);           // constructor
-  void *operator new(size_t size){return(HS_MALLOC(size));}               // override new operator to use PSRAM when available
+  SpanCharacteristic(HapChar *hapChar, boolean isCustom=false);                               // SpanCharacteristic constructor
+  void *operator new(size_t size){return(HS_MALLOC(size));}                                   // override new operator to use PSRAM when available
 
-  template <class T=int> T getVal(){
-    return(uvGet<T>(value));
-  }
+  template <class T=int> T getVal(){return(uvGet<T>(value));}                                 // gets the value for numeric-based Characteristics
+  char *getString(){return(getStringGeneric(value));}                                         // gets the value for string-based Characteristics
+  size_t getData(uint8_t *data, size_t len){return(getDataGeneric(data,len,value));}          // gets the value for data-based Characteristics
+  size_t getTLV(TLV8 &tlv){return(getTLVGeneric(tlv,value));}                                 // gets the value for tlv8-based Characteristics
 
-  template <class T=int> T getNewVal(){
-    return(uvGet<T>(newValue));
-  }
+  template <class T=int> T getNewVal(){return(uvGet<T>(newValue));}                           // gets the newValue for numeric-based Characteristics
+  char *getNewString(){return(getStringGeneric(newValue));}                                   // gets the newValue for string-based Characteristics
+  size_t getNewData(uint8_t *data, size_t len){return(getDataGeneric(data,len,newValue));}    // gets the newValue for data-based Characteristics
+  size_t getNewTLV(TLV8 &tlv){return(getTLVGeneric(tlv,newValue));}                           // gets the newValue for tlv8-based Characteristics
 
-  template <typename T> void setVal(T val, boolean notify=true){ 
+  void setString(const char *val, boolean notify=true);                                       // sets the value and newValue for string-based Characteristic
+  void setData(uint8_t *data, size_t len, boolean notify=true);                               // sets the value and newValue for data-based Characteristic
+  void setTLV(TLV8 &tlv, boolean notify=true);                                                // sets the value and newValue for tlv8-based Characteristic
+  
+  template <typename T> void setVal(T val, boolean notify=true){                              // sets the value and newValue for numeric-based Characteristics
 
     setValCheck();
     
@@ -692,31 +705,18 @@ class SpanCharacteristic{
     
   } // setVal()  
     
-  char *getStringGeneric(UVal &val);                                      // return the specified UVal for string-based Characteristics
-  char *getString(){return(getStringGeneric(value));}                     // return the value for string-based Characteristics
-  char *getNewString(){return(getStringGeneric(newValue));}               // return the newValue for string-based Characteristics
-  void setString(const char *val, boolean notify=true);                   // set the value and newValue for string-based Characteristic
+  boolean updated();                                  // returns true within update() if Characteristic was updated by Home App 
+  unsigned long timeVal();                            // returns time elapsed (in millis) since value was last updated, either by Home App or by using setVal()
+  uint32_t getIID();                                  // returns IID of Characteristic
 
-  size_t getDataGeneric(uint8_t *data, size_t len, UVal &val);                                // return the specified UVal for data-based Characteristics
-  size_t getData(uint8_t *data, size_t len){return(getDataGeneric(data,len,value));}          // return the value for data-based Characteristics
-  size_t getNewData(uint8_t *data, size_t len){return(getDataGeneric(data,len,newValue));}    // return the newValue for data-based Characteristics
-  void setData(uint8_t *data, size_t len, boolean notify=true);                               // set the value and newValue for data-based Characteristic
+  SpanCharacteristic *setPerms(uint8_t perms);        // sets permissions of a Characteristic
+  SpanCharacteristic *addPerms(uint8_t dPerms);       // add permissions of a Characteristic  
+  SpanCharacteristic *removePerms(uint8_t dPerms);    // removes permissions of a Characteristic
+  SpanCharacteristic *setDescription(const char *c);  // sets description of a Characteristic
+  SpanCharacteristic *setUnit(const char *c);         // set unit of a Characteristic  
+  SpanCharacteristic *setValidValues(int n, ...);     // sets a list of 'n' valid values allowed for a Characteristic - only applicable if format=INT, UINT8, UINT16, or UINT32
 
-  size_t getTLVGeneric(TLV8 &tlv, UVal &val);                             // return the specified UVal for tlv8-based Characteristics
-  size_t getTLV(TLV8 &tlv){return(getTLVGeneric(tlv,value));}             // return the value for tlv8-based Characteristics
-  size_t getNewTLV(TLV8 &tlv){return(getTLVGeneric(tlv,newValue));}       // return the newValue for tlv8-based Characteristics
-  void setTLV(TLV8 &tlv, boolean notify=true);                            // set the value and newValue for tlv8-based Characteristic
-
-  void setValCheck();                                                     // initial check before setting value of any Characteristic
-  void setValFinish(boolean notify);                                      // final processing after setting value of any Characteristic
-
-  boolean updated();                                // returns true within update() if Characteristic was updated by Home App 
-  unsigned long timeVal();                          // returns time elapsed (in millis) since value was last updated, either by Home App or by using setVal()
-  uint32_t getIID();                                // returns IID of Characteristic
-  
-  SpanCharacteristic *setValidValues(int n, ...);   // sets a list of 'n' valid values allowed for a Characteristic and returns pointer to self.  Only applicable if format=INT, UINT8, UINT16, or UINT32
-
-  template <typename A, typename B, typename S=int> SpanCharacteristic *setRange(A min, B max, S step=0){
+  template <typename A, typename B, typename S=int> SpanCharacteristic *setRange(A min, B max, S step=0){     // sets the allowed range of a Characteristic
 
     if(!staticRange){
       uvSet(minValue,min);
@@ -729,12 +729,6 @@ class SpanCharacteristic{
     return(this);
     
   } // setRange()
-
-  SpanCharacteristic *setPerms(uint8_t perms);        // sets permissions of a Characteristic
-  SpanCharacteristic *addPerms(uint8_t dPerms);       // add permissions of a Characteristic  
-  SpanCharacteristic *removePerms(uint8_t dPerms);    // removes permissions of a Characteristic
-  SpanCharacteristic *setDescription(const char *c);  // sets description of a Characteristic
-  SpanCharacteristic *setUnit(const char *c);         // set unit of a Characteristic
 };
 
 ///////////////////////////////
