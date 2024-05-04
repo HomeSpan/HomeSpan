@@ -2354,21 +2354,6 @@ SpanCharacteristic *SpanCharacteristic::setValidValues(int n, ...){
 }
 
 ///////////////////////////////
-//        SpanRange          //
-///////////////////////////////
-
-SpanRange::SpanRange(int min, int max, int step){
-
-  if(homeSpan.Accessories.empty() || homeSpan.Accessories.back()->Services.empty() || homeSpan.Accessories.back()->Services.back()->Characteristics.empty() ){
-    LOG0("\nFATAL ERROR!  Can't create new SpanRange(%d,%d,%d) without a defined Characteristic ***\n",min,max,step);
-    LOG0("\n=== PROGRAM HALTED ===");
-    while(1);
-  } else {
-    homeSpan.Accessories.back()->Services.back()->Characteristics.back()->setRange(min,max,step);
-  }
-}
-
-///////////////////////////////
 //        SpanButton         //
 ///////////////////////////////
 

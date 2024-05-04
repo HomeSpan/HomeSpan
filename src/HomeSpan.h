@@ -109,7 +109,6 @@ struct Span;
 struct SpanAccessory;
 struct SpanService;
 struct SpanCharacteristic;
-struct SpanRange;
 struct SpanBuf;
 struct SpanButton;
 struct SpanUserCommand;
@@ -230,7 +229,6 @@ class Span{
   friend class SpanCharacteristic;
   friend class SpanUserCommand;
   friend class SpanButton;
-  friend class SpanRange;
   friend class SpanWebLog;
   friend class SpanOTA;
   friend class Network;
@@ -441,7 +439,6 @@ class SpanAccessory{
   friend class SpanService;
   friend class SpanCharacteristic;
   friend class SpanButton;
-  friend class SpanRange;
     
   uint32_t aid=0;                                               // Accessory Instance ID (HAP Table 6-1)
   uint32_t iidCount=0;                                          // running count of iid to use for Services and Characteristics associated with this Accessory                                 
@@ -466,7 +463,6 @@ class SpanService{
   friend class Span;
   friend class SpanAccessory;
   friend class SpanCharacteristic;
-  friend class SpanRange;
 
   uint32_t iid=0;                                                                   // Instance ID (HAP Table 6-2)
   const char *type;                                                                 // Service Type
@@ -739,12 +735,6 @@ class SpanCharacteristic{
   SpanCharacteristic *removePerms(uint8_t dPerms);    // removes permissions of a Characteristic
   SpanCharacteristic *setDescription(const char *c);  // sets description of a Characteristic
   SpanCharacteristic *setUnit(const char *c);         // set unit of a Characteristic
-};
-
-///////////////////////////////
-
-struct [[deprecated("Please use Characteristic::setRange() method instead.")]] SpanRange{
-  SpanRange(int min, int max, int step);
 };
 
 ///////////////////////////////
