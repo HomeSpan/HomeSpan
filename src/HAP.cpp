@@ -1253,8 +1253,8 @@ void HAPClient::checkTimedWrites(){
 
 void HAPClient::eventNotify(SpanBuf *pObj, int nObj, int ignoreClient){
   
-  for(int cNum=0;cNum<homeSpan.maxConnections;cNum++){      // loop over all connection slots
-    if(hap[cNum]->client && cNum!=ignoreClient){            // if there is a client connected to this slot and it is NOT flagged to be ignored (in cases where it is the client making a PUT request)
+  for(int cNum=0;cNum<CONFIG_LWIP_MAX_SOCKETS;cNum++){            // loop over all connection slots
+    if(hap[cNum] && hap[cNum]->client && cNum!=ignoreClient){     // if there is a client connected to this slot and it is NOT flagged to be ignored (in cases where it is the client making a PUT request)
 
       homeSpan.printfNotify(pObj,nObj,cNum);                // create JSON (which may be of zero length if there are no applicable notifications for this cNum)
       size_t nBytes=hapOut.getSize();
@@ -1470,8 +1470,8 @@ void HAPClient::removeController(uint8_t *id){
 
 void HAPClient::tearDown(uint8_t *id){
   
-  for(int i=0;i<homeSpan.maxConnections;i++){     // loop over all connection slots
-    if(hap[i]->client && (id==NULL || (hap[i]->cPair && !memcmp(id,hap[i]->cPair->ID,hap_controller_IDBYTES)))){
+  for(int i=0;i<CONFIG_LWIP_MAX_SOCKETS;i++){         // loop over all connection slots
+    if(hap[i] && hap[i]->client && (id==NULL || (hap[i]->cPair && !memcmp(id,hap[i]->cPair->ID,hap_controller_IDBYTES)))){
       LOG1("*** Terminating Client #%d\n",i);
       hap[i]->client.stop();
     }

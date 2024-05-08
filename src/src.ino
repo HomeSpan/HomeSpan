@@ -31,7 +31,10 @@ void setup() {
 
   Serial.begin(115200);
 
-  homeSpan.begin(Category::Lighting,"HomeSpan Light");
+  homeSpan.setLogLevel(2);
+  homeSpan.enableWebLog();
+
+  homeSpan.begin(Category::Lighting,"HomeSpan LightBulb");
   
   new SpanAccessory();   
     new Service::AccessoryInformation(); 
@@ -39,8 +42,6 @@ void setup() {
     new Service::LightBulb();
       new Characteristic::On();
 
-//  new SpanUserCommand('k',"- list controllers",list_controllers);
-  homeSpan.setControllerCallback(list_controllers);
 }   
 
 
@@ -52,17 +53,3 @@ void loop(){
 }
 
 //////////////////////////////////////
-
-
-void list_controllers(){
-  Serial.printf("\nControllers\n");
-  for(auto it=homeSpan.controllerListBegin(); it!=homeSpan.controllerListEnd(); ++it){
-    Serial.printf("Admin=%d  ID=",it->isAdmin());
-    for(int i=0;i<36;i++)
-      Serial.printf("%02X",it->getID()[i]);
-    Serial.printf("  LTPK=");
-    for(int i=0;i<32;i++)
-      Serial.printf("%02X",it->getLTPK()[i]);
-    Serial.printf("\n");
-  }
-}

@@ -89,14 +89,9 @@ void Span::begin(Category catID, const char *displayName, const char *hostNameBa
 
   esp_task_wdt_delete(xTaskGetIdleTaskHandleForCPU(0));       // required to avoid watchdog timeout messages from ESP32-C3  
 
-  if(requestedMaxCon<maxConnections)                          // if specific request for max connections is less than computed max connections
-    maxConnections=requestedMaxCon;                           // over-ride max connections with requested value
-    
-  hap=(HAPClient **)HS_CALLOC(maxConnections,sizeof(HAPClient *));
-  for(int i=0;i<maxConnections;i++)
-    hap[i]=new HAPClient;
+  hap=(HAPClient **)HS_CALLOC(CONFIG_LWIP_MAX_SOCKETS,sizeof(HAPClient *));         // create fixed array of pointers to HAPClient objects (initially set to NULL)
 
-  hapServer=new WiFiServer(tcpPortNum);
+  hapServer=new WiFiServer(tcpPortNum);                                             // create HAP WIFI SERVER
  
   size_t len;
 
@@ -234,67 +229,44 @@ void Span::pollTask() {
     processSerialCommand(cBuf);
   }
 
-  WiFiClient newClient;
+  if(hapServer->hasClient()){                        // found new client
+    
+    WiFiClient newClient=hapServer->available();     // get new client
 
-  if(newClient=hapServer->available()){                        // found a new HTTP client
-    int freeSlot=getFreeSlot();                                // get next free slot
+    int socket=newClient.fd()-LWIP_SOCKET_OFFSET;    // get socket number (starting at zero)
+    
+    if(hap[socket]==NULL)                            // create HAPClient at that socket if it does not alreay exist
+      hap[socket]=new HAPClient;
 
-    if(freeSlot==-1){                                          // no available free slots
-      freeSlot=randombytes_uniform(maxConnections);
-      LOG2("=======================================\n");
-      LOG1("** Freeing Client #");
-      LOG1(freeSlot);
-      LOG1(" (");
-      LOG1(millis()/1000);
-      LOG1(" sec) ");
-      LOG1(hap[freeSlot]->client.remoteIP());
-      LOG1("\n");
-      hap[freeSlot]->client.stop();                     // disconnect client from first slot and re-use
-    }
-
-    hap[freeSlot]->client=newClient;             // copy new client handle into free slot
+    hap[socket]->client=newClient;                   // copy new client handle
+    hap[socket]->isConnected=true;                   // set isConnected flag
+    hap[socket]->cPair=NULL;                         // reset pointer to verified ID
+    homeSpan.clearNotify(socket);                    // clear all notification requests for this connection
+    HAPClient::pairStatus=pairState_M1;              // reset starting PAIR STATE (which may be needed if Accessory failed in middle of pair-setup)    
 
     LOG2("=======================================\n");
-    LOG1("** Client #");
-    LOG1(freeSlot);
-    LOG1(" Connected: (");
-    LOG1(millis()/1000);
-    LOG1(" sec) ");
-    LOG1(hap[freeSlot]->client.remoteIP());
-    LOG1(" on Socket ");
-    LOG1(hap[freeSlot]->client.fd()-LWIP_SOCKET_OFFSET+1);
-    LOG1("/");
-    LOG1(CONFIG_LWIP_MAX_SOCKETS);
-    LOG1("\n");
+    LOG1("** Client #%d Connected (%lu sec): %s\n",socket,millis()/1000,newClient.remoteIP().toString().c_str());
     LOG2("\n");
-
-    hap[freeSlot]->cPair=NULL;                  // reset pointer to verified ID
-    homeSpan.clearNotify(freeSlot);             // clear all notification requests for this connection
-    HAPClient::pairStatus=pairState_M1;         // reset starting PAIR STATE (which may be needed if Accessory failed in middle of pair-setup)
   }
-
-  for(int i=0;i<maxConnections;i++){                     // loop over all HAP Connection slots
     
-    if(hap[i]->client && hap[i]->client.available()){       // if connection exists and data is available
+  for(int i=0;i<CONFIG_LWIP_MAX_SOCKETS;i++){                           // loop over all HAP Connection slots
 
-      HAPClient::conNum=i;                                          // set connection number
-      homeSpan.lastClientIP=hap[i]->client.remoteIP().toString();   // store IP Address for web logging
-      hap[i]->processRequest();                                     // process HAP request
-      homeSpan.lastClientIP="0.0.0.0";                              // reset stored IP address to show "0.0.0.0" if homeSpan.getClientIP() is used in any other context
-      
-      if(!hap[i]->client){                                 // client disconnected by server
-        LOG1("** Disconnected Client #");
-        LOG1(i);
-        LOG1("  (");
-        LOG1(millis()/1000);
-        LOG1(" sec)\n");
+    if(hap[i]){                                                         // if this socket has a configured HAPClient
+      if(hap[i]->client){                                               // if the client is connected
+        if(hap[i]->client.available()){                                 // if client has data available
+          HAPClient::conNum=i;                                          // set connection number
+          homeSpan.lastClientIP=hap[i]->client.remoteIP().toString();   // store IP Address for web logging
+          hap[i]->processRequest();                                     // PROCESS HAP REQUEST
+          homeSpan.lastClientIP="0.0.0.0";                              // reset stored IP address to show "0.0.0.0" if homeSpan.getClientIP() is used in any other context 
+        }
+      }                                                                 
+      else if(hap[i]->isConnected){                                     // if client is not connected, but HAPClient thinks it is
+        LOG1("** Client #%d DISCONNECTED (%lu sec)\n",i,millis()/1000);
+        hap[i]->isConnected=false;      
       }
-
-      LOG2("\n");
-
-    } // process HAP Client 
-  } // for-loop over connection slots
-
+    }
+  }
+      
   snapTime=millis();                                     // snap the current time for use in ALL loop routines
   
   for(auto it=Loops.begin();it!=Loops.end();it++)                 // call loop() for all Services with over-ridden loop() methods
@@ -587,6 +559,13 @@ void Span::processSerialCommand(const char *c){
 
   switch(c[0]){
     
+    case 'Z': {
+      for(int i=0;i<CONFIG_LWIP_MAX_SOCKETS;i++)
+        if(hap[i] && hap[i]->client)
+          hap[i]->client.stop();
+    }
+    break;
+
     case 's': {    
       
       LOG0("\n*** HomeSpan Status ***\n\n");
@@ -603,27 +582,26 @@ void Span::processSerialCommand(const char *c){
       HAPClient::printControllers();
       LOG0("\n");
 
-      for(int i=0;i<maxConnections;i++){
-        LOG0("Connection #%d ",i);
-        if(hap[i]->client){
-      
-          LOG0("%s on Socket %d/%d",hap[i]->client.remoteIP().toString().c_str(),hap[i]->client.fd()-LWIP_SOCKET_OFFSET+1,CONFIG_LWIP_MAX_SOCKETS);
+      for(int i=0;i<CONFIG_LWIP_MAX_SOCKETS;i++){
+        if(hap[i]){
+          LOG0("Client #%d:",i);
           
-          if(hap[i]->cPair){
-            LOG0("  ID=");
-            HAPClient::charPrintRow(hap[i]->cPair->getID(),36);
-            LOG0(hap[i]->cPair->isAdmin()?"   (admin)":" (regular)");
+          if(hap[i]->client){
+            LOG0(" %s",hap[i]->client.remoteIP().toString().c_str());
+            
+            if(hap[i]->cPair){
+              LOG0("  ID=");
+              HAPClient::charPrintRow(hap[i]->cPair->getID(),36);
+              LOG0(hap[i]->cPair->isAdmin()?"   (admin)":" (regular)");
+            } else {
+              LOG0("  (unverified)");
+            }
           } else {
-            LOG0("  (unverified)");
+            LOG0(" unconnected");
           }
-      
-        } else {
-          LOG0("(unconnected)");
+          LOG0("\n");
         }
-
-        LOG0("\n");
-      }
-
+      }          
       LOG0("\n*** End Status ***\n\n");
     } 
     break;
@@ -914,8 +892,8 @@ void Span::processSerialCommand(const char *c){
             if(((*chr)->perms)&EV){
               LOG0(", EV=(");
               boolean addComma=false;
-              for(int i=0;i<homeSpan.maxConnections;i++){
-                if((*chr)->ev[i] && hap[i]->client){
+              for(int i=0;i<CONFIG_LWIP_MAX_SOCKETS;i++){
+                if((*chr)->ev[i] && hap[i] && hap[i]->client){
                   LOG0("%s%d",addComma?",":"",i);
                   addComma=true;
                 }
