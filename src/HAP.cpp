@@ -1217,6 +1217,7 @@ void HAPClient::getStatusURL(HAPClient *hapClient, void (*callBack)(const char *
 
   if(hapClient){
     hapClient->client.stop();
+    delay(1);
     LOG2("------------ SENT! --------------\n");
   }
 }

@@ -229,10 +229,10 @@ void Span::pollTask() {
     processSerialCommand(cBuf);
   }
 
-  if(hapServer->hasClient()){                        // found new client
+  WiFiClient newClient;
+  
+  if(newClient=hapServer->available()){              // found new client
     
-    WiFiClient newClient=hapServer->available();     // get new client
-
     int socket=newClient.fd()-LWIP_SOCKET_OFFSET;    // get socket number (starting at zero)
     
     if(hap[socket]==NULL)                            // create HAPClient at that socket if it does not alreay exist
@@ -262,7 +262,9 @@ void Span::pollTask() {
       }                                                                 
       else if(hap[i]->isConnected){                                     // if client is not connected, but HAPClient thinks it is
         LOG1("** Client #%d DISCONNECTED (%lu sec)\n",i,millis()/1000);
-        hap[i]->isConnected=false;      
+        hap[i]->isConnected=false; 
+        hap[i]->client.stop();
+        delay(1);     
       }
     }
   }
