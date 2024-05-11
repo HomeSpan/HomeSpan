@@ -447,8 +447,7 @@ int HAPClient::postPairSetupURL(uint8_t *content, size_t len){
       // Note the SALT and INFO text fields used by HKDF to create this Session Key are NOT the same as those for creating iosDeviceX.
       // The iosDeviceX HKDF calculations are separate and will be performed further below with the SALT and INFO as specified in the HAP docs.
 
-      TempBuffer<uint8_t> sessionKey(crypto_box_PUBLICKEYBYTES);                                            // temporary space - used only in this block     
-      HKDF::create(sessionKey,srp->K,64,"Pair-Setup-Encrypt-Salt","Pair-Setup-Encrypt-Info");               // create SessionKey
+      HKDF::create(temp.sessionKey,srp->K,64,"Pair-Setup-Encrypt-Salt","Pair-Setup-Encrypt-Info");               // create SessionKey
 
       LOG2("------- DECRYPTING SUB-TLVS -------\n");
       
@@ -456,7 +455,7 @@ int HAPClient::postPairSetupURL(uint8_t *content, size_t len){
                                   
       TempBuffer<uint8_t> decrypted(itEncryptedData->getLen()-crypto_aead_chacha20poly1305_IETF_ABYTES);  // temporary storage for decrypted data
        
-      if(crypto_aead_chacha20poly1305_ietf_decrypt(decrypted, NULL, NULL, *itEncryptedData, itEncryptedData->getLen(), NULL, 0, (unsigned char *)"\x00\x00\x00\x00PS-Msg05", sessionKey)==-1){          
+      if(crypto_aead_chacha20poly1305_ietf_decrypt(decrypted, NULL, NULL, *itEncryptedData, itEncryptedData->getLen(), NULL, 0, (unsigned char *)"\x00\x00\x00\x00PS-Msg05", temp.sessionKey)==-1){          
         LOG0("\n*** ERROR: Exchange-Request Authentication Failed\n\n");
         responseTLV.add(kTLVType_Error,tagError_Authentication);        // set Error=Authentication
         tlvRespond(responseTLV);                                        // send response to client
@@ -534,7 +533,7 @@ int HAPClient::postPairSetupURL(uint8_t *content, size_t len){
 
       itEncryptedData=responseTLV.add(kTLVType_EncryptedData,subPack.len()+crypto_aead_chacha20poly1305_IETF_ABYTES,NULL);     //create blank EncryptedData TLV with space for subTLV + Authentication Tag
 
-      crypto_aead_chacha20poly1305_ietf_encrypt(*itEncryptedData,NULL,subPack,subPack.len(),NULL,0,NULL,(unsigned char *)"\x00\x00\x00\x00PS-Msg06",sessionKey);
+      crypto_aead_chacha20poly1305_ietf_encrypt(*itEncryptedData,NULL,subPack,subPack.len(),NULL,0,NULL,(unsigned char *)"\x00\x00\x00\x00PS-Msg06",temp.sessionKey);
                                                    
       LOG2("---------- END SUB-TLVS! ----------\n");
       
@@ -611,16 +610,14 @@ int HAPClient::postPairVerifyURL(uint8_t *content, size_t len){
         return(0);        
       }
 
-      publicCurveKey=(uint8_t *)HS_MALLOC(crypto_box_PUBLICKEYBYTES);               // temporary space - will be deleted at end of verification process
       TempBuffer<uint8_t> secretCurveKey(crypto_box_SECRETKEYBYTES);                // temporary space - used only in this block     
-      crypto_box_keypair(publicCurveKey,secretCurveKey);                            // generate Accessory's random Curve25519 Public/Secret Key Pair
+      crypto_box_keypair(temp.publicCurveKey,secretCurveKey);                       // generate Accessory's random Curve25519 Public/Secret Key Pair
 
-      iosCurveKey=(uint8_t *)HS_MALLOC(crypto_box_PUBLICKEYBYTES);                  // temporary space - will be deleted at end of verification process
-      memcpy(iosCurveKey,*itPublicKey,crypto_box_PUBLICKEYBYTES);                   // save Controller's Curve25519 Public Key
+      memcpy(temp.iosCurveKey,*itPublicKey,crypto_box_PUBLICKEYBYTES);              // save Controller's Curve25519 Public Key
             
       // concatenate Accessory's Curve25519 Public Key, Accessory's Pairing ID, and Controller's Curve25519 Public Key into accessoryInfo
       
-      TempBuffer<uint8_t> accessoryInfo(publicCurveKey,crypto_box_PUBLICKEYBYTES,accessory.ID,hap_accessory_IDBYTES,iosCurveKey,crypto_box_PUBLICKEYBYTES,NULL);
+      TempBuffer<uint8_t> accessoryInfo(temp.publicCurveKey,crypto_box_PUBLICKEYBYTES,accessory.ID,hap_accessory_IDBYTES,temp.iosCurveKey,crypto_box_PUBLICKEYBYTES,NULL);
 
       subTLV.add(kTLVType_Identifier,hap_accessory_IDBYTES,accessory.ID);                         // set Identifier subTLV record as Accessory's Pairing ID
       auto itSignature=subTLV.add(kTLVType_Signature,crypto_sign_BYTES,NULL);                     // create blank Signature subTLV
@@ -634,19 +631,17 @@ int HAPClient::postPairVerifyURL(uint8_t *content, size_t len){
       TempBuffer<uint8_t> subPack(subTLV.pack_size());                                                    // create sub-TLV by packing Identifier and Signature TLV records together
       subTLV.pack(subPack);                                
 
-      sharedCurveKey=(uint8_t *)HS_MALLOC(crypto_box_PUBLICKEYBYTES);                                     // temporary space - will be deleted at end of verification process
-      crypto_scalarmult_curve25519(sharedCurveKey,secretCurveKey,iosCurveKey);                            // generate Shared-Secret Curve25519 Key from Accessory's Curve25519 Secret Key and Controller's Curve25519 Public Key
+      crypto_scalarmult_curve25519(temp.sharedCurveKey,secretCurveKey,temp.iosCurveKey);                  // generate Shared-Secret Curve25519 Key from Accessory's Curve25519 Secret Key and Controller's Curve25519 Public Key
 
-      sessionKey=(uint8_t *)HS_MALLOC(crypto_box_PUBLICKEYBYTES);                                                                // temporary space - will be deleted at end of verification process
-      HKDF::create(sessionKey,sharedCurveKey,crypto_box_PUBLICKEYBYTES,"Pair-Verify-Encrypt-Salt","Pair-Verify-Encrypt-Info");   // create Session Curve25519 Key from Shared-Secret Curve25519 Key using HKDF-SHA-512  
+      HKDF::create(temp.sessionKey,temp.sharedCurveKey,crypto_box_PUBLICKEYBYTES,"Pair-Verify-Encrypt-Salt","Pair-Verify-Encrypt-Info");   // create Session Curve25519 Key from Shared-Secret Curve25519 Key using HKDF-SHA-512  
 
-      auto itEncryptedData=responseTLV.add(kTLVType_EncryptedData,subPack.len()+crypto_aead_chacha20poly1305_IETF_ABYTES,NULL);                                    // create blank EncryptedData subTLV
-      crypto_aead_chacha20poly1305_ietf_encrypt(*itEncryptedData,NULL,subPack,subPack.len(),NULL,0,NULL,(unsigned char *)"\x00\x00\x00\x00PV-Msg02",sessionKey);   // encrypt data with Session Curve25519 Key and padded nonce="PV-Msg02"
+      auto itEncryptedData=responseTLV.add(kTLVType_EncryptedData,subPack.len()+crypto_aead_chacha20poly1305_IETF_ABYTES,NULL);                                         // create blank EncryptedData subTLV
+      crypto_aead_chacha20poly1305_ietf_encrypt(*itEncryptedData,NULL,subPack,subPack.len(),NULL,0,NULL,(unsigned char *)"\x00\x00\x00\x00PV-Msg02",temp.sessionKey);   // encrypt data with Session Curve25519 Key and padded nonce="PV-Msg02"
                                             
       LOG2("---------- END SUB-TLVS! ----------\n");
       
       responseTLV.add(kTLVType_State,pairState_M2);                                        // set State=<M2>
-      responseTLV.add(kTLVType_PublicKey,crypto_box_PUBLICKEYBYTES,publicCurveKey);        // set PublicKey to Accessory's Curve25519 Public Key
+      responseTLV.add(kTLVType_PublicKey,crypto_box_PUBLICKEYBYTES,temp.publicCurveKey);        // set PublicKey to Accessory's Curve25519 Public Key
     
       tlvRespond(responseTLV);                                      // send response to client  
     }
@@ -670,7 +665,7 @@ int HAPClient::postPairVerifyURL(uint8_t *content, size_t len){
 
       TempBuffer<uint8_t> decrypted((*itEncryptedData).getLen()-crypto_aead_chacha20poly1305_IETF_ABYTES);        // temporary storage for decrypted data
       
-      if(crypto_aead_chacha20poly1305_ietf_decrypt(decrypted, NULL, NULL, *itEncryptedData, itEncryptedData->getLen(), NULL, 0, (unsigned char *)"\x00\x00\x00\x00PV-Msg03", sessionKey)==-1){          
+      if(crypto_aead_chacha20poly1305_ietf_decrypt(decrypted, NULL, NULL, *itEncryptedData, itEncryptedData->getLen(), NULL, 0, (unsigned char *)"\x00\x00\x00\x00PV-Msg03", temp.sessionKey)==-1){          
         LOG0("\n*** ERROR: Verify Authentication Failed\n\n");
         responseTLV.add(kTLVType_State,pairState_M4);               // set State=<M4>
         responseTLV.add(kTLVType_Error,tagError_Authentication);    // set Error=Authentication
@@ -713,7 +708,7 @@ int HAPClient::postPairVerifyURL(uint8_t *content, size_t len){
 
       // concatenate Controller's Curve25519 Public Key (from previous step), Controller's Pairing ID, and Accessory's Curve25519 Public Key (from previous step) into iosDeviceInfo     
 
-      TempBuffer<uint8_t> iosDeviceInfo(iosCurveKey,crypto_box_PUBLICKEYBYTES,tPair->ID,hap_controller_IDBYTES,publicCurveKey,crypto_box_PUBLICKEYBYTES,NULL);
+      TempBuffer<uint8_t> iosDeviceInfo(temp.iosCurveKey,crypto_box_PUBLICKEYBYTES,tPair->ID,hap_controller_IDBYTES,temp.publicCurveKey,crypto_box_PUBLICKEYBYTES,NULL);
       
       if(crypto_sign_verify_detached(*itSignature, iosDeviceInfo, iosDeviceInfo.len(), tPair->LTPK) != 0){         // verify signature of iosDeviceInfo using Controller's LTPK   
         LOG0("\n*** ERROR: LPTK Signature Verification Failed\n\n");
@@ -728,16 +723,11 @@ int HAPClient::postPairVerifyURL(uint8_t *content, size_t len){
 
       cPair=tPair;        // save Controller for this connection slot - connection is now verified and should be encrypted going forward
 
-      HKDF::create(a2cKey,sharedCurveKey,32,"Control-Salt","Control-Read-Encryption-Key");        // create AccessoryToControllerKey from (previously-saved) Shared-Secret Curve25519 Key (HAP Section 6.5.2)
-      HKDF::create(c2aKey,sharedCurveKey,32,"Control-Salt","Control-Write-Encryption-Key");       // create ControllerToAccessoryKey from (previously-saved) Shared-Secret Curve25519 Key (HAP Section 6.5.2)
+      HKDF::create(a2cKey,temp.sharedCurveKey,32,"Control-Salt","Control-Read-Encryption-Key");        // create AccessoryToControllerKey from (previously-saved) Shared-Secret Curve25519 Key (HAP Section 6.5.2)
+      HKDF::create(c2aKey,temp.sharedCurveKey,32,"Control-Salt","Control-Write-Encryption-Key");       // create ControllerToAccessoryKey from (previously-saved) Shared-Secret Curve25519 Key (HAP Section 6.5.2)
       
       a2cNonce.zero();         // reset Nonces for this session to zero
       c2aNonce.zero();
-
-      free(publicCurveKey);     // free storage of these temporary variables created in previous step
-      free(sharedCurveKey);
-      free(sessionKey);
-      free(iosCurveKey);
 
       LOG2("\n*** SESSION VERIFICATION COMPLETE *** \n");
     }

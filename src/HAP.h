@@ -96,12 +96,14 @@ struct HAPClient {
   boolean isConnected=false;      // flag to indicate client is connect
    
   // These temporary Curve25519 keys are generated in the first call to pair-verify and used in the second call to pair-verify so must persist for a short period
-    
-  uint8_t *publicCurveKey;     // Accessory's Curve25519 Public Key
-  uint8_t *sharedCurveKey;     // Shared-Secret Curve25519 Key derived from Accessory's Secret Key and Controller's Public Key
-  uint8_t *sessionKey;         // Session Key Curve25519 (derived with various HKDF calls)
-  uint8_t *iosCurveKey;        // Controller's Curve25519 Public Key
 
+  struct tempKeys_t {
+    uint8_t publicCurveKey[crypto_box_PUBLICKEYBYTES];     // Accessory's Curve25519 Public Key
+    uint8_t sharedCurveKey[crypto_box_PUBLICKEYBYTES];     // Shared-Secret Curve25519 Key derived from Accessory's Secret Key and Controller's Public Key
+    uint8_t sessionKey[crypto_box_PUBLICKEYBYTES];         // Session Key Curve25519 (derived with various HKDF calls)
+    uint8_t iosCurveKey[crypto_box_PUBLICKEYBYTES];        // Controller's Curve25519 Public Key    
+  } temp;
+  
   // CurveKey and CurveKey Nonces are created once each new session is verified in /pair-verify.  Keys persist for as long as connection is open
   
   uint8_t a2cKey[32];             // AccessoryToControllerKey derived from HKDF-SHA-512 of sharedCurveKey (HAP Section 6.5.2)
