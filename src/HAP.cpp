@@ -324,7 +324,7 @@ int HAPClient::postPairSetupURL(uint8_t *content, size_t len){
     iosTLV.print();
   LOG2("------------ END TLVS! ------------\n");
 
-  LOG1("In Pair Setup #%d (%s)...",conNum,client.remoteIP().toString().c_str());
+  LOG1("In Pair Setup #%d (%s)...",client.fd()-LWIP_SOCKET_OFFSET,client.remoteIP().toString().c_str());
   
   auto itState=iosTLV.find(kTLVType_State);
 
@@ -344,7 +344,7 @@ int HAPClient::postPairSetupURL(uint8_t *content, size_t len){
     return(0);
   };
 
-  LOG2("Found <M%d>.  Expected <M%d>.\n",tlvState,pairStatus);
+  LOG1("Found <M%d>.  Expected <M%d>.\n",tlvState,pairStatus);
 
   if(tlvState!=pairStatus){                                         // error: Device is not yet paired, but out-of-sequence pair-setup STATE was received
     LOG0("\n*** ERROR: Out-of-Sequence Pair-Setup request!\n\n");
@@ -574,7 +574,7 @@ int HAPClient::postPairVerifyURL(uint8_t *content, size_t len){
     iosTLV.print();
   LOG2("------------ END TLVS! ------------\n");
 
-  LOG1("In Pair Verify #%d (%s)...",conNum,client.remoteIP().toString().c_str());
+  LOG1("In Pair Verify #%d (%s)...",client.fd()-LWIP_SOCKET_OFFSET,client.remoteIP().toString().c_str());
   
   auto itState=iosTLV.find(kTLVType_State);
 
@@ -594,7 +594,7 @@ int HAPClient::postPairVerifyURL(uint8_t *content, size_t len){
     return(0);
   };
 
-  LOG2("Found <M%d>\n",tlvState);          // unlike pair-setup, out-of-sequencing can be handled gracefully for pair-verify (HAP requirement). No need to keep track of pairStatus
+  LOG1("Found <M%d>\n",tlvState);          // unlike pair-setup, out-of-sequencing can be handled gracefully for pair-verify (HAP requirement). No need to keep track of pairStatus
 
   switch(tlvState){                        // Pair-Verify STATE received -- process request!  (HAP Section 5.7)
 
@@ -756,7 +756,7 @@ int HAPClient::postPairingsURL(uint8_t *content, size_t len){
     iosTLV.print();
   LOG2("------------ END TLVS! ------------\n");
 
-  LOG1("In Post Pairings #%d (%s)...",conNum,client.remoteIP().toString().c_str());
+  LOG1("In Post Pairings #%d (%s)...",client.fd()-LWIP_SOCKET_OFFSET,client.remoteIP().toString().c_str());
   
   auto itState=iosTLV.find(kTLVType_State);
   auto itMethod=iosTLV.find(kTLVType_Method);
@@ -882,7 +882,7 @@ int HAPClient::getAccessoriesURL(){
     return(0);
   }
 
-  LOG1("In Get Accessories #%d (%s)...\n",conNum,client.remoteIP().toString().c_str());
+  LOG1("In Get Accessories #%d (%s)...\n",client.fd()-LWIP_SOCKET_OFFSET,client.remoteIP().toString().c_str());
 
   homeSpan.printfAttributes();
   size_t nBytes=hapOut.getSize();
@@ -910,7 +910,7 @@ int HAPClient::getCharacteristicsURL(char *urlBuf){
     return(0);
   }
 
-  LOG1("In Get Characteristics #%d (%s)...\n",conNum,client.remoteIP().toString().c_str());
+  LOG1("In Get Characteristics #%d (%s)...\n",client.fd()-LWIP_SOCKET_OFFSET,client.remoteIP().toString().c_str());
 
   int len=strlen(urlBuf);           // determine number of IDs specified by counting commas in URL
   int numIDs=1;
@@ -978,7 +978,7 @@ int HAPClient::putCharacteristicsURL(char *json){
     return(0);
   }
 
-  LOG1("In Put Characteristics #%d (%s)...\n",conNum,client.remoteIP().toString().c_str());
+  LOG1("In Put Characteristics #%d (%s)...\n",client.fd()-LWIP_SOCKET_OFFSET,client.remoteIP().toString().c_str());
 
   int n=homeSpan.countCharacteristics(json);    // count number of objects in JSON request
   if(n==0)                                      // if no objects found, return
@@ -1031,7 +1031,7 @@ int HAPClient::putPrepareURL(char *json){
     return(0);
   }
 
-  LOG1("In Put Prepare #%d (%s)...\n",conNum,client.remoteIP().toString().c_str());
+  LOG1("In Put Prepare #%d (%s)...\n",client.fd()-LWIP_SOCKET_OFFSET,client.remoteIP().toString().c_str());
 
   char ttlToken[]="\"ttl\":";
   char pidToken[]="\"pid\":";
@@ -1237,7 +1237,6 @@ void HAPClient::checkTimedWrites(){
     else
       tw++; 
   }
- 
 }
 
 //////////////////////////////////////

@@ -47,6 +47,8 @@ using namespace Utils;
 
 HapOut hapOut;                      // Specialized output stream that can both print to serial monitor and encrypt/transmit to HAP Clients with minimal memory usage (global-scoped variable)
 HAPClient **hap;                    // HAP Client structure containing HTTP client connections, parsing routines, and state variables (global-scoped variable)
+list<HAPClient, Mallocator<HAPClient>> hapList;   // linked-list of HAP Client structures containing HTTP client connections, parsing routines, and state variables (global-scoped variable)
+
 Span homeSpan;                      // HAP Attributes database and all related control functions for this Accessory (global-scoped variable)
 HapCharacteristics hapChars;        // Instantiation of all HAP Characteristics used to create SpanCharacteristics (global-scoped variable)
 
@@ -229,43 +231,36 @@ void Span::pollTask() {
     processSerialCommand(cBuf);
   }
 
-  WiFiClient newClient;
-  
-  if(newClient=hapServer->available()){              // found new client
+  if(hapServer->hasClient()){  
+ 
+    auto it=hapList.emplace(hapList.begin());
+    (*it).client=hapServer->available();
+        
+//    homeSpan.clearNotify(socket);                    // clear all notification requests for this connection
     
-    int socket=newClient.fd()-LWIP_SOCKET_OFFSET;    // get socket number (starting at zero)
-    
-    if(hap[socket]==NULL)                            // create HAPClient at that socket if it does not alreay exist
-      hap[socket]=new HAPClient;
-
-    hap[socket]->client=newClient;                   // copy new client handle
-    hap[socket]->isConnected=true;                   // set isConnected flag
-    hap[socket]->cPair=NULL;                         // reset pointer to verified ID
-    homeSpan.clearNotify(socket);                    // clear all notification requests for this connection
     HAPClient::pairStatus=pairState_M1;              // reset starting PAIR STATE (which may be needed if Accessory failed in middle of pair-setup)    
 
     LOG2("=======================================\n");
-    LOG1("** Client #%d Connected (%lu sec): %s\n",socket,millis()/1000,newClient.remoteIP().toString().c_str());
+    LOG1("** Client #%d Connected (%lu sec): %s\n",(*it).client.fd()-LWIP_SOCKET_OFFSET,millis()/1000,(*it).client.remoteIP().toString().c_str());
     LOG2("\n");
   }
-    
-  for(int i=0;i<CONFIG_LWIP_MAX_SOCKETS;i++){                           // loop over all HAP Connection slots
 
-    if(hap[i]){                                                         // if this socket has a configured HAPClient
-      if(hap[i]->client){                                               // if the client is connected
-        if(hap[i]->client.available()){                                 // if client has data available
-          HAPClient::conNum=i;                                          // set connection number
-          homeSpan.lastClientIP=hap[i]->client.remoteIP().toString();   // store IP Address for web logging
-          hap[i]->processRequest();                                     // PROCESS HAP REQUEST
-          homeSpan.lastClientIP="0.0.0.0";                              // reset stored IP address to show "0.0.0.0" if homeSpan.getClientIP() is used in any other context 
-        }
-      }                                                                 
-      else if(hap[i]->isConnected){                                     // if client is not connected, but HAPClient thinks it is
-        LOG1("** Client #%d DISCONNECTED (%lu sec)\n",i,millis()/1000);
-        hap[i]->isConnected=false; 
-        hap[i]->client.stop();
-        delay(1);     
+  auto it=hapList.begin();
+  while(it!=hapList.end()){
+
+    if((*it).client.connected()){                                   // if the client is connected
+      if((*it).client.available()){                                 // if client has data available
+//        HAPClient::conNum=i;                                          // set connection number
+        homeSpan.lastClientIP=(*it).client.remoteIP().toString();   // store IP Address for web logging
+        (*it).processRequest();                                     // PROCESS HAP REQUEST
+        homeSpan.lastClientIP="0.0.0.0";                              // reset stored IP address to show "0.0.0.0" if homeSpan.getClientIP() is used in any other context 
       }
+      it++;
+    } else {
+      LOG1("** Client #%d DISCONNECTED (%lu sec)\n",(*it).client.fd()-LWIP_SOCKET_OFFSET,millis()/1000);
+      (*it).client.stop();
+      delay(5);
+      it=hapList.erase(it);
     }
   }
       
@@ -277,7 +272,7 @@ void Span::pollTask() {
   for(auto it=PushButtons.begin();it!=PushButtons.end();it++)     // check for SpanButton presses
     (*it)->check();
     
-  HAPClient::checkNotifications();  
+//////  HAPClient::checkNotifications();  
   HAPClient::checkTimedWrites();
 
   if(spanOTA.enabled)
@@ -584,26 +579,20 @@ void Span::processSerialCommand(const char *c){
       HAPClient::printControllers();
       LOG0("\n");
 
-      for(int i=0;i<CONFIG_LWIP_MAX_SOCKETS;i++){
-        if(hap[i]){
-          LOG0("Client #%d:",i);
-          
-          if(hap[i]->client){
-            LOG0(" %s",hap[i]->client.remoteIP().toString().c_str());
-            
-            if(hap[i]->cPair){
-              LOG0("  ID=");
-              HAPClient::charPrintRow(hap[i]->cPair->getID(),36);
-              LOG0(hap[i]->cPair->isAdmin()?"   (admin)":" (regular)");
-            } else {
-              LOG0("  (unverified)");
-            }
-          } else {
-            LOG0(" unconnected");
-          }
-          LOG0("\n");
+      for(auto it=hapList.begin(); it!=hapList.end(); ++it){
+        LOG0("Client #%d: %s",(*it).client.fd()-LWIP_SOCKET_OFFSET,(*it).client.remoteIP().toString().c_str());
+        if((*it).cPair){
+          LOG0("  ID=");
+          HAPClient::charPrintRow((*it).cPair->getID(),36);
+          LOG0((*it).cPair->isAdmin()?"   (admin)":" (regular)\n");
+        } else {
+          LOG0("  (unverified)\n");
         }
       }          
+
+      if(hapList.empty())
+        LOG0("No Client Connections!\n");
+        
       LOG0("\n*** End Status ***\n\n");
     } 
     break;
