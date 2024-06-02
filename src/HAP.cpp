@@ -26,6 +26,10 @@
  ********************************************************************************/
  
 #include <ESPmDNS.h>
+#include <core_version.h>
+#ifdef ARDUINO_ESP32_RELEASE_3_0_0
+# error HomeSpan currently does not work on the Espressif Board 3.0 definitions$
+#endif
 #include <sodium.h>
 #include <MD5Builder.h>
 #include <mbedtls/version.h>
