@@ -235,13 +235,14 @@ void Span::pollTask() {
  
     auto it=hapList.emplace(hapList.begin());
     (*it).client=hapServer->available();
+    (*it).clientNumber=(*it).client.fd()-LWIP_SOCKET_OFFSET;
         
 //    homeSpan.clearNotify(socket);                    // clear all notification requests for this connection
     
     HAPClient::pairStatus=pairState_M1;              // reset starting PAIR STATE (which may be needed if Accessory failed in middle of pair-setup)    
 
     LOG2("=======================================\n");
-    LOG1("** Client #%d Connected (%lu sec): %s\n",(*it).client.fd()-LWIP_SOCKET_OFFSET,millis()/1000,(*it).client.remoteIP().toString().c_str());
+    LOG1("** Client #%d Connected (%lu sec): %s\n",(*it).clientNumber,millis()/1000,(*it).client.remoteIP().toString().c_str());
     LOG2("\n");
   }
 
@@ -257,7 +258,7 @@ void Span::pollTask() {
       }
       it++;
     } else {
-      LOG1("** Client #%d DISCONNECTED (%lu sec)\n",(*it).client.fd()-LWIP_SOCKET_OFFSET,millis()/1000);
+      LOG1("** Client #%d DISCONNECTED (%lu sec)\n",(*it).clientNumber,millis()/1000);
       (*it).client.stop();
       delay(5);
       it=hapList.erase(it);
@@ -557,9 +558,11 @@ void Span::processSerialCommand(const char *c){
   switch(c[0]){
     
     case 'Z': {
-      for(int i=0;i<CONFIG_LWIP_MAX_SOCKETS;i++)
-        if(hap[i] && hap[i]->client)
-          hap[i]->client.stop();
+      for(auto it=hapList.begin(); it!=hapList.end(); ++it){
+        (*it).client.stop();
+        delay(5);
+        
+      }
     }
     break;
 
@@ -580,11 +583,11 @@ void Span::processSerialCommand(const char *c){
       LOG0("\n");
 
       for(auto it=hapList.begin(); it!=hapList.end(); ++it){
-        LOG0("Client #%d: %s",(*it).client.fd()-LWIP_SOCKET_OFFSET,(*it).client.remoteIP().toString().c_str());
+        LOG0("Client #%d: %s",(*it).clientNumber,(*it).client.remoteIP().toString().c_str());
         if((*it).cPair){
           LOG0("  ID=");
           HAPClient::charPrintRow((*it).cPair->getID(),36);
-          LOG0((*it).cPair->isAdmin()?"   (admin)":" (regular)\n");
+          LOG0((*it).cPair->isAdmin()?"   (admin)\n":" (regular)\n");
         } else {
           LOG0("  (unverified)\n");
         }

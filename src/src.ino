@@ -35,6 +35,8 @@ void setup() {
   homeSpan.enableWebLog();
 
   homeSpan.begin(Category::Lighting,"HomeSpan LightBulb");
+
+  new SpanUserCommand('D', " - disconnect WiFi", [](const char *buf){WiFi.disconnect();});  
   
   new SpanAccessory();   
     new Service::AccessoryInformation(); 

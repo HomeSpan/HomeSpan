@@ -92,6 +92,7 @@ struct HAPClient {
   // individual structures and data defined for each Hap Client connection
   
   WiFiClient client;              // handle to client
+  int clientNumber;               // client number
   Controller *cPair=NULL;         // pointer to info on current, session-verified Paired Controller (NULL=un-verified, and therefore un-encrypted, connection)
    
   // These temporary Curve25519 keys are generated in the first call to pair-verify and used in the second call to pair-verify so must persist for a short period

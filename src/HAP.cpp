@@ -324,7 +324,7 @@ int HAPClient::postPairSetupURL(uint8_t *content, size_t len){
     iosTLV.print();
   LOG2("------------ END TLVS! ------------\n");
 
-  LOG1("In Pair Setup #%d (%s)...",client.fd()-LWIP_SOCKET_OFFSET,client.remoteIP().toString().c_str());
+  LOG1("In Pair Setup #%d (%s)...",clientNumber,client.remoteIP().toString().c_str());
   
   auto itState=iosTLV.find(kTLVType_State);
 
@@ -574,7 +574,7 @@ int HAPClient::postPairVerifyURL(uint8_t *content, size_t len){
     iosTLV.print();
   LOG2("------------ END TLVS! ------------\n");
 
-  LOG1("In Pair Verify #%d (%s)...",client.fd()-LWIP_SOCKET_OFFSET,client.remoteIP().toString().c_str());
+  LOG1("In Pair Verify #%d (%s)...",clientNumber,client.remoteIP().toString().c_str());
   
   auto itState=iosTLV.find(kTLVType_State);
 
@@ -756,7 +756,7 @@ int HAPClient::postPairingsURL(uint8_t *content, size_t len){
     iosTLV.print();
   LOG2("------------ END TLVS! ------------\n");
 
-  LOG1("In Post Pairings #%d (%s)...",client.fd()-LWIP_SOCKET_OFFSET,client.remoteIP().toString().c_str());
+  LOG1("In Post Pairings #%d (%s)...",clientNumber,client.remoteIP().toString().c_str());
   
   auto itState=iosTLV.find(kTLVType_State);
   auto itMethod=iosTLV.find(kTLVType_Method);
@@ -882,7 +882,7 @@ int HAPClient::getAccessoriesURL(){
     return(0);
   }
 
-  LOG1("In Get Accessories #%d (%s)...\n",client.fd()-LWIP_SOCKET_OFFSET,client.remoteIP().toString().c_str());
+  LOG1("In Get Accessories #%d (%s)...\n",clientNumber,client.remoteIP().toString().c_str());
 
   homeSpan.printfAttributes();
   size_t nBytes=hapOut.getSize();
@@ -910,7 +910,7 @@ int HAPClient::getCharacteristicsURL(char *urlBuf){
     return(0);
   }
 
-  LOG1("In Get Characteristics #%d (%s)...\n",client.fd()-LWIP_SOCKET_OFFSET,client.remoteIP().toString().c_str());
+  LOG1("In Get Characteristics #%d (%s)...\n",clientNumber,client.remoteIP().toString().c_str());
 
   int len=strlen(urlBuf);           // determine number of IDs specified by counting commas in URL
   int numIDs=1;
@@ -978,7 +978,7 @@ int HAPClient::putCharacteristicsURL(char *json){
     return(0);
   }
 
-  LOG1("In Put Characteristics #%d (%s)...\n",client.fd()-LWIP_SOCKET_OFFSET,client.remoteIP().toString().c_str());
+  LOG1("In Put Characteristics #%d (%s)...\n",clientNumber,client.remoteIP().toString().c_str());
 
   int n=homeSpan.countCharacteristics(json);    // count number of objects in JSON request
   if(n==0)                                      // if no objects found, return
@@ -1031,7 +1031,7 @@ int HAPClient::putPrepareURL(char *json){
     return(0);
   }
 
-  LOG1("In Put Prepare #%d (%s)...\n",client.fd()-LWIP_SOCKET_OFFSET,client.remoteIP().toString().c_str());
+  LOG1("In Put Prepare #%d (%s)...\n",clientNumber,client.remoteIP().toString().c_str());
 
   char ttlToken[]="\"ttl\":";
   char pidToken[]="\"pid\":";
@@ -1291,6 +1291,8 @@ void HAPClient::tlvRespond(TLV8 &tlv8){
     LOG2("------------ SENT! --------------\n");
   else
     LOG2("-------- SENT ENCRYPTED! --------\n");
+
+  free(body);
   
 } // tlvRespond
 
@@ -1559,9 +1561,12 @@ HapOut::HapStreamBuffer::HapStreamBuffer(){
 //////////////////////////////////////
 
 HapOut::HapStreamBuffer::~HapStreamBuffer(){
-  
+
   sync();
   free(buffer);
+  free(encBuf);
+  free(hash);
+  free(ctx);
 }
 
 //////////////////////////////////////
