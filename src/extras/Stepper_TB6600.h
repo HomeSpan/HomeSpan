@@ -1,7 +1,7 @@
 /*********************************************************************************
  *  MIT License
  *  
- *  Copyright (c) 2023-2024 Jeremy laurenson
+ *  Copyright (c) 2024 Jeremy Laurenson
  *  
  *  https://github.com/HomeSpan/HomeSpan
  *  
@@ -27,71 +27,4 @@
 
 #pragma once
 
-// Implementation of StepperControl for a TB6600 stepper driver
-// https://www.dfrobot.com/product-1547.html
-
-// This implementation uses direction and pulse pins and optinally enable pins only to save pinouts
-
-//////////////////////////
- 
-struct Stepper_TB6600 : StepperControl {
-
-  int stepPin;
-  int dirPin;
-  int enablePin;
-
-//////////////////////////
-
-  Stepper_TB6600(int stepPin, int dirPin, int enablePin, std::pair<uint32_t, uint32_t> taskParams = {1,0}) : StepperControl(taskParams.first,taskParams.second){
-    this->stepPin=stepPin;
-    this->dirPin=dirPin;
-    this->enablePin=enablePin;
-
-    pinMode(stepPin,OUTPUT);
-    pinMode(dirPin,OUTPUT);
-    if(enablePin>0)pinMode(enablePin,OUTPUT);
-
-    setStepType(EIGHTH_STEP);
-    //   FULL_STEP_ONE_PHASE=0,
-    //FULL_STEP_TWO_PHASE=1,
-    //HALF_STEP=2,
-    //QUARTER_STEP=4,
-    //EIGHTH_STEP=8
-  }
-
-//////////////////////////
-
-  void onStep(boolean direction) override {
-    digitalWrite(dirPin,direction);
-    digitalWrite(stepPin,HIGH);
-    delayMicroseconds(10); // Wait for controller to see this. Min is 2.2uS
-    digitalWrite(stepPin,LOW);      
-  }
-
-//////////////////////////
-
-  void onEnable() override {
-    if(enablePin>0)digitalWrite(enablePin,0);
-  }
-
-//////////////////////////
-
-  void onDisable() override {
-    if(enablePin>0)digitalWrite(enablePin,1);
-  }
-
-//////////////////////////
-
-  StepperControl *setStepType(int mode) override {
-    switch(mode){
-      case FULL_STEP_TWO_PHASE:
-        break;
-      default:
-        ESP_LOGE(STEPPER_TAG,"Unknown StepType=%d",mode);
-    }
-    return(this);
-  }
-  
-};
-
-//////////////////////////
+#include "../src/extras/Stepper_TB6600.h"
