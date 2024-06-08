@@ -866,7 +866,7 @@ void Span::processSerialCommand(const char *c){
             if(((*chr)->perms)&EV){
               LOG0(", EV=(");
               boolean addComma=false;
-              for(HAPClient *hc : (*chr)->evList){
+              for(auto const &hc : (*chr)->evList){
                 LOG0("%s%d",addComma?",":"",hc->clientNumber);
                 addComma=true;
               }
@@ -2319,7 +2319,8 @@ void SpanCharacteristic::EVLIST::add(HAPClient *hc){
 ///////////////////////////////
 
 void SpanCharacteristic::EVLIST::remove(HAPClient *hc){
-  remove_if(begin(), end(), [hc](const HAPClient *hcTemp){return(hc==hcTemp);});  
+  auto it=remove_if(begin(), end(), [hc](const HAPClient *hcTemp){return(hc==hcTemp);});
+  erase(it,end());
 }
 
 ///////////////////////////////
