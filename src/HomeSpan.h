@@ -238,8 +238,6 @@ class Span{
   const char *defaultSetupCode=DEFAULT_SETUP_CODE;            // Setup Code used for pairing
   uint16_t autoOffLED=0;                                      // automatic turn-off duration (in seconds) for Status LED
   int logLevel=DEFAULT_LOG_LEVEL;                             // level for writing out log messages to serial monitor
-  uint8_t maxConnections=CONFIG_LWIP_MAX_SOCKETS-2;           // maximum number of allowed simultaneous HAP connections
-  uint8_t requestedMaxCon=CONFIG_LWIP_MAX_SOCKETS-2;          // requested maximum number of simultaneous HAP connections
   unsigned long comModeLife=DEFAULT_COMMAND_TIMEOUT*1000;     // length of time (in milliseconds) to keep Command Mode alive before resuming normal operations
   uint16_t tcpPortNum=DEFAULT_TCP_PORT;                       // port for TCP communications between HomeKit and HomeSpan
   char qrID[5]="";                                            // Setup ID used for pairing with QR Code
@@ -341,7 +339,6 @@ class Span{
   int getLogLevel(){return(logLevel);}                                                   // get Log Level
   Span& setSerialInputDisable(boolean val){serialInputDisabled=val;return(*this);}       // sets whether serial input is disabled (true) or enabled (false)
   boolean getSerialInputDisable(){return(serialInputDisabled);}                          // returns true if serial input is disabled, or false if serial input in enabled
-  Span& reserveSocketConnections(uint8_t n){maxConnections-=n;return(*this);}            // reserves n socket connections *not* to be used for HAP
   Span& setHostNameSuffix(const char *suffix){hostNameSuffix=suffix;return(*this);}      // sets the hostName suffix to be used instead of the 6-byte AccessoryID
   Span& setPortNum(uint16_t port){tcpPortNum=port;return(*this);}                        // sets the TCP port number to use for communications between HomeKit and HomeSpan
   Span& setQRID(const char *id);                                                         // sets the Setup ID for optional pairing with a QR Code
@@ -399,10 +396,11 @@ class Span{
   Span& setTimeServerTimeout(uint32_t tSec){webLog.waitTime=tSec*1000;return(*this);}    // sets wait time (in seconds) for optional web log time server to connect
 
   list<Controller, Mallocator<Controller>>::const_iterator controllerListBegin();
-  list<Controller, Mallocator<Controller>>::const_iterator controllerListEnd();   
- 
-  [[deprecated("Please use reserveSocketConnections(n) method instead.")]]
-  void setMaxConnections(uint8_t n){requestedMaxCon=n;}                   // sets maximum number of simultaneous HAP connections
+  list<Controller, Mallocator<Controller>>::const_iterator controllerListEnd();
+
+  [[deprecated("This function has been deprecated (it is not needed) and no longer does anything.  Please remove from sketch to ensure backwards compatilibilty with future versions.")]]
+  Span& reserveSocketConnections(uint8_t n){return(*this);}
+  
 };
 
 ///////////////////////////////

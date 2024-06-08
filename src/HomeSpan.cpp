@@ -250,8 +250,8 @@ void Span::pollTask() {
       currentClient++;
     } else {
       LOG1("** Client #%d DISCONNECTED (%lu sec)\n",currentClient->clientNumber,millis()/1000);
-      currentClient->client.stop();
-      delay(5);
+//      currentClient->client.stop();
+//      delay(5);
       clearNotify(&*currentClient);                                          // clear all notification requests for this connection
       currentClient=hapList.erase(currentClient);                            // remove HAPClient connection
     }
@@ -500,7 +500,7 @@ void Span::checkConnect(){
   if(webLog.timeServer)
     xTaskCreateUniversal(webLog.initTime, "timeSeverTaskHandle", 8096, &webLog, 1, NULL, 0);  
   
-  LOG0("Starting HAP Server on port %d supporting %d simultaneous HomeKit Controller Connections...\n\n",tcpPortNum,maxConnections);
+  LOG0("Starting HAP Server on port %d...\n\n",tcpPortNum);
 
   hapServer->begin();
 
@@ -2390,8 +2390,6 @@ void SpanWebLog::init(uint16_t maxEntries, const char *serv, const char *tz, con
     isEnabled=true;
   }
   log = (log_t *)HS_CALLOC(maxEntries,sizeof(log_t));
-  if(timeServer)
-    homeSpan.reserveSocketConnections(1);
 }
 
 ///////////////////////////////
@@ -2458,7 +2456,6 @@ int SpanOTA::init(boolean _auth, boolean _safeLoad, const char *pwd){
   enabled=true;
   safeLoad=_safeLoad;
   auth=_auth;
-  homeSpan.reserveSocketConnections(1);
   if(pwd==NULL)
     return(0);
   return(setPassword(pwd));
