@@ -112,6 +112,8 @@ struct SpanCharacteristic;
 struct SpanBuf;
 struct SpanButton;
 struct SpanUserCommand;
+
+struct HAPClient;
 class Controller;
 
 extern Span homeSpan;
@@ -263,16 +265,17 @@ class Span{
     
   SpanOTA spanOTA;                                  // manages OTA process
   SpanConfig hapConfig;                             // track configuration changes to the HAP Accessory database; used to increment the configuration number (c#) when changes found
-  vector<SpanAccessory *, Mallocator<SpanAccessory *>> Accessories;              // vector of pointers to all Accessories
-  vector<SpanService *, Mallocator<SpanService *>> Loops;                      // vector of pointer to all Services that have over-ridden loop() methods
+
+  list<HAPClient, Mallocator<HAPClient>> hapList;                        // linked-list of HAPClient structures containing HTTP client connections, parsing routines, and state variables
+  list<HAPClient, Mallocator<HAPClient>>::iterator currentClient;        // iterator to current client
+  vector<SpanAccessory *, Mallocator<SpanAccessory *>> Accessories;      // vector of pointers to all Accessories
+  vector<SpanService *, Mallocator<SpanService *>> Loops;                // vector of pointer to all Services that have over-ridden loop() methods
   vector<SpanBuf, Mallocator<SpanBuf>> Notifications;                    // vector of SpanBuf objects that store info for Characteristics that are updated with setVal() and require a Notification Event
-  vector<SpanButton *,  Mallocator<SpanButton *>> PushButtons;                 // vector of pointer to all PushButtons
-  unordered_map<uint64_t, uint32_t> TimedWrites;    // map of timed-write PIDs and Alarm Times (based on TTLs)
-  
-  unordered_map<char, SpanUserCommand *> UserCommands;           // map of pointers to all UserCommands
+  vector<SpanButton *,  Mallocator<SpanButton *>> PushButtons;           // vector of pointer to all PushButtons
+  unordered_map<uint64_t, uint32_t> TimedWrites;                         // map of timed-write PIDs and Alarm Times (based on TTLs)  
+  unordered_map<char, SpanUserCommand *> UserCommands;                   // map of pointers to all UserCommands
 
   void pollTask();                              // poll HAP Clients and process any new HAP requests
-  int getFreeSlot();                            // returns free HAPClient slot number. HAPClients slot keep track of each active HAPClient connection
   void checkConnect();                          // check WiFi connection; connect if needed
   void commandMode();                           // allows user to control and reset HomeSpan settings with the control button
   void resetStatus();                           // resets statusLED and calls statusCallback based on current HomeSpan status
@@ -285,8 +288,8 @@ class Span{
   int updateCharacteristics(char *buf, SpanBuf *pObj);                    // parses PUT /characteristics JSON request 'buf into 'pObj' and updates referenced characteristics; returns 1 on success, 0 on fail
   void printfAttributes(SpanBuf *pObj, int nObj);                         // writes SpanBuf objects to hapOut stream
   boolean printfAttributes(char **ids, int numIDs, int flags);            // writes accessory requested characteristic ids to hapOut stream - returns true if all characteristics are found and readable, else returns false
-  void clearNotify(int slotNum);                                          // set ev notification flags for connection 'slotNum' to false across all characteristics 
-  void printfNotify(SpanBuf *pObj, int nObj, int conNum);                 // writes notification JSON to hapOut stream based on SpanBuf objects and specified connection number
+  void clearNotify(HAPClient *hc);                                        // clear all notifications related to specific client connection
+  void printfNotify(SpanBuf *pObj, int nObj, HAPClient *hc);              // writes notification JSON to hapOut stream based on SpanBuf objects and specified connection
 
   static boolean invalidUUID(const char *uuid){
     int x=0;
@@ -487,6 +490,13 @@ class SpanCharacteristic{
     STRING_t STRING = NULL;
   };
 
+  class EVLIST : public vector<HAPClient *, Mallocator<HAPClient *>>{      // vector of current connections that have subscribed to EV notifications for this Characteristic
+    public:
+    boolean has(HAPClient *hc);                                     // returns true if pointer to connection hc is subscribed, else returns false
+    void add(HAPClient *hc);                                        // adds connection hc as new subscriber, IF not already a subscriber
+    void remove(HAPClient *hc);                                     // removes connection hc as a subscriber; okay to remove even if hc was not already a subscriber
+  };
+
   uint32_t iid=0;                          // Instance ID (HAP Table 6-3)
   HapChar *hapChar;                        // pointer to HAP Characteristic structure
   const char *type;                        // Characteristic Type
@@ -502,7 +512,6 @@ class SpanCharacteristic{
   boolean staticRange;                     // Flag that indicates whether Range is static and cannot be changed with setRange()
   boolean customRange=false;               // Flag for custom ranges
   char *validValues=NULL;                  // Optional JSON array of valid values.  Applicable only to uint8 Characteristics
-  boolean *ev;                             // Characteristic Event Notify Enable (per-connection)
   char *nvsKey=NULL;                       // key for NVS storage of Characteristic value
   boolean isCustom;                        // flag to indicate this is a Custom Characteristic
   boolean setRangeError=false;             // flag to indicate attempt to set Range on Characteristic that does not support changes to Range
@@ -513,7 +522,8 @@ class SpanCharacteristic{
   unsigned long updateTime=0;              // last time value was updated (in millis) either by PUT /characteristic OR by setVal()
   UVal newValue;                           // the updated value requested by PUT /characteristic
   SpanService *service=NULL;               // pointer to Service containing this Characteristic
-
+  EVLIST evList;                           // vector of current connections that have subscribed to EV notifications for this Characteristic 
+    
   void printfAttributes(int flags);                           // writes Characteristic JSON to hapOut stream
   StatusCode loadUpdate(char *val, char *ev, boolean wr);     // load updated val/ev from PUT /characteristic JSON request.  Return intitial HAP status code (checks to see if characteristic is found, is writable, etc.)  
   String uvPrint(UVal &u);                                    // returns "printable" String for any type of Characteristic  

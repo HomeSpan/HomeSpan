@@ -1017,7 +1017,7 @@ int HAPClient::putCharacteristicsURL(char *json){
 
   // Create and send Event Notifications if needed
 
-  eventNotify(pObj,n,HAPClient::conNum);                  // transmit EVENT Notification for "n" pObj objects, except DO NOT notify client making request
+  eventNotify(pObj,n,this);                               // transmit EVENT Notification for "n" pObj objects, except DO NOT notify client making request
     
   return(1);
 }
@@ -1241,22 +1241,22 @@ void HAPClient::checkTimedWrites(){
 
 //////////////////////////////////////
 
-void HAPClient::eventNotify(SpanBuf *pObj, int nObj, int ignoreClient){
-  
-  for(int cNum=0;cNum<CONFIG_LWIP_MAX_SOCKETS;cNum++){            // loop over all connection slots
-    if(hap[cNum] && hap[cNum]->client && cNum!=ignoreClient){     // if there is a client connected to this slot and it is NOT flagged to be ignored (in cases where it is the client making a PUT request)
+void HAPClient::eventNotify(SpanBuf *pObj, int nObj, HAPClient *ignore){
 
-      homeSpan.printfNotify(pObj,nObj,cNum);                // create JSON (which may be of zero length if there are no applicable notifications for this cNum)
+  for(auto it=homeSpan.hapList.begin(); it!=homeSpan.hapList.end(); ++it){          // loop over all connection slots
+    if(&(*it)!=ignore){                                                             // if NOT flagged to be ignored (in cases where it is the client making a PUT request)
+
+      homeSpan.printfNotify(pObj,nObj,&(*it));               // create JSON (which may be of zero length if there are no applicable notifications for this cNum)
       size_t nBytes=hapOut.getSize();
       hapOut.flush();
 
       if(nBytes>0){                                         // if there ARE notifications to send to client cNum
         
-        LOG2("\n>>>>>>>>>> %s >>>>>>>>>>\n",hap[cNum]->client.remoteIP().toString().c_str());
+        LOG2("\n>>>>>>>>>> %s >>>>>>>>>>\n",it->client.remoteIP().toString().c_str());
 
-        hapOut.setLogLevel(2).setHapClient(hap[cNum]);    
+        hapOut.setLogLevel(2).setHapClient(&(*it));    
         hapOut << "EVENT/1.0 200 OK\r\nContent-Type: application/hap+json\r\nContent-Length: " << nBytes << "\r\n\r\n";
-        homeSpan.printfNotify(pObj,nObj,cNum);
+        homeSpan.printfNotify(pObj,nObj,&(*it));
         hapOut.flush();
 
         LOG2("\n-------- SENT ENCRYPTED! --------\n");
@@ -1461,11 +1461,11 @@ void HAPClient::removeController(uint8_t *id){
 //////////////////////////////////////
 
 void HAPClient::tearDown(uint8_t *id){
-  
-  for(int i=0;i<CONFIG_LWIP_MAX_SOCKETS;i++){         // loop over all connection slots
-    if(hap[i] && hap[i]->client && (id==NULL || (hap[i]->cPair && !memcmp(id,hap[i]->cPair->ID,hap_controller_IDBYTES)))){
-      LOG1("*** Terminating Client #%d\n",i);
-      hap[i]->client.stop();
+
+  for(HAPClient &hc : homeSpan.hapList){
+    if(id==NULL || (hc.cPair && !memcmp(id,hc.cPair->ID,hap_controller_IDBYTES))){
+      LOG1("*** Terminating Client #%d\n",hc.clientNumber);
+      hc.client.stop();
     }
   }
 }
@@ -1691,5 +1691,4 @@ void HapOut::HapStreamBuffer::printFormatted(char *buf, size_t nChars, size_t ns
 pairState HAPClient::pairStatus;                        
 Accessory HAPClient::accessory;                         
 list<Controller, Mallocator<Controller>> HAPClient::controllerList;
-int HAPClient::conNum;
  

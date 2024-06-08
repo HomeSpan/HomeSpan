@@ -46,9 +46,6 @@ const __attribute__((section(".rodata_custom_desc"))) SpanPartition spanPartitio
 using namespace Utils;
 
 HapOut hapOut;                      // Specialized output stream that can both print to serial monitor and encrypt/transmit to HAP Clients with minimal memory usage (global-scoped variable)
-HAPClient **hap;                    // HAP Client structure containing HTTP client connections, parsing routines, and state variables (global-scoped variable)
-list<HAPClient, Mallocator<HAPClient>> hapList;   // linked-list of HAP Client structures containing HTTP client connections, parsing routines, and state variables (global-scoped variable)
-
 Span homeSpan;                      // HAP Attributes database and all related control functions for this Accessory (global-scoped variable)
 HapCharacteristics hapChars;        // Instantiation of all HAP Characteristics used to create SpanCharacteristics (global-scoped variable)
 
@@ -71,7 +68,6 @@ Span::Span(){
   rebootCount++;
   nvs_set_u8(wifiNVS,"REBOOTS",rebootCount);
   nvs_commit(wifiNVS);
-
 }
 
 ///////////////////////////////
@@ -90,8 +86,6 @@ void Span::begin(Category catID, const char *displayName, const char *hostNameBa
   statusLED=new Blinker(statusDevice,autoOffLED);             // create Status LED, even is statusDevice is NULL
 
   esp_task_wdt_delete(xTaskGetIdleTaskHandleForCPU(0));       // required to avoid watchdog timeout messages from ESP32-C3  
-
-  hap=(HAPClient **)HS_CALLOC(CONFIG_LWIP_MAX_SOCKETS,sizeof(HAPClient *));         // create fixed array of pointers to HAPClient objects (initially set to NULL)
 
   hapServer=new WiFiServer(tcpPortNum);                                             // create HAP WIFI SERVER
  
@@ -233,35 +227,33 @@ void Span::pollTask() {
 
   if(hapServer->hasClient()){  
  
-    auto it=hapList.emplace(hapList.begin());
-    (*it).client=hapServer->available();
-    (*it).clientNumber=(*it).client.fd()-LWIP_SOCKET_OFFSET;
-        
-//    homeSpan.clearNotify(socket);                    // clear all notification requests for this connection
-    
-    HAPClient::pairStatus=pairState_M1;              // reset starting PAIR STATE (which may be needed if Accessory failed in middle of pair-setup)    
+    auto it=hapList.emplace(hapList.begin());                                // create new HAPClient connection
+    it->client=hapServer->available();
+    it->clientNumber=it->client.fd()-LWIP_SOCKET_OFFSET;
+            
+    HAPClient::pairStatus=pairState_M1;                                      // reset starting PAIR STATE (which may be needed if Accessory failed in middle of pair-setup)    
 
     LOG2("=======================================\n");
-    LOG1("** Client #%d Connected (%lu sec): %s\n",(*it).clientNumber,millis()/1000,(*it).client.remoteIP().toString().c_str());
+    LOG1("** Client #%d Connected (%lu sec): %s\n",it->clientNumber,millis()/1000,it->client.remoteIP().toString().c_str());
     LOG2("\n");
   }
 
-  auto it=hapList.begin();
-  while(it!=hapList.end()){
+  currentClient=hapList.begin();
+  while(currentClient!=hapList.end()){
 
-    if((*it).client.connected()){                                   // if the client is connected
-      if((*it).client.available()){                                 // if client has data available
-//        HAPClient::conNum=i;                                          // set connection number
-        homeSpan.lastClientIP=(*it).client.remoteIP().toString();   // store IP Address for web logging
-        (*it).processRequest();                                     // PROCESS HAP REQUEST
-        homeSpan.lastClientIP="0.0.0.0";                              // reset stored IP address to show "0.0.0.0" if homeSpan.getClientIP() is used in any other context 
+    if(currentClient->client.connected()){                                   // if the client is connected
+      if(currentClient->client.available()){                                 // if client has data available
+        homeSpan.lastClientIP=currentClient->client.remoteIP().toString();   // store IP Address for web logging
+        currentClient->processRequest();                                     // PROCESS HAP REQUEST
+        homeSpan.lastClientIP="0.0.0.0";                                     // reset stored IP address to show "0.0.0.0" if homeSpan.getClientIP() is used in any other context 
       }
-      it++;
+      currentClient++;
     } else {
-      LOG1("** Client #%d DISCONNECTED (%lu sec)\n",(*it).clientNumber,millis()/1000);
-      (*it).client.stop();
+      LOG1("** Client #%d DISCONNECTED (%lu sec)\n",currentClient->clientNumber,millis()/1000);
+      currentClient->client.stop();
       delay(5);
-      it=hapList.erase(it);
+      clearNotify(&*currentClient);                                          // clear all notification requests for this connection
+      currentClient=hapList.erase(currentClient);                            // remove HAPClient connection
     }
   }
       
@@ -273,7 +265,7 @@ void Span::pollTask() {
   for(auto it=PushButtons.begin();it!=PushButtons.end();it++)     // check for SpanButton presses
     (*it)->check();
     
-//////  HAPClient::checkNotifications();  
+  HAPClient::checkNotifications();  
   HAPClient::checkTimedWrites();
 
   if(spanOTA.enabled)
@@ -303,18 +295,6 @@ void Span::pollTask() {
   }
     
 } // poll
-
-///////////////////////////////
-
-int Span::getFreeSlot(){
-  
-  for(int i=0;i<maxConnections;i++){
-    if(!hap[i]->client)
-      return(i);
-  }
-
-  return(-1);          
-}
 
 //////////////////////////////////////
 
@@ -886,11 +866,9 @@ void Span::processSerialCommand(const char *c){
             if(((*chr)->perms)&EV){
               LOG0(", EV=(");
               boolean addComma=false;
-              for(int i=0;i<CONFIG_LWIP_MAX_SOCKETS;i++){
-                if((*chr)->ev[i] && hap[i] && hap[i]->client){
-                  LOG0("%s%d",addComma?",":"",i);
-                  addComma=true;
-                }
+              for(HAPClient *hc : (*chr)->evList){
+                LOG0("%s%d",addComma?",":"",hc->clientNumber);
+                addComma=true;
               }
               LOG0(")");              
             }
@@ -1463,29 +1441,25 @@ int Span::updateCharacteristics(char *buf, SpanBuf *pObj){
 
 ///////////////////////////////
 
-void Span::clearNotify(int slotNum){
-  
-  for(int i=0;i<Accessories.size();i++){
-    for(int j=0;j<Accessories[i]->Services.size();j++){
-      for(int k=0;k<Accessories[i]->Services[j]->Characteristics.size();k++){
-        Accessories[i]->Services[j]->Characteristics[k]->ev[slotNum]=false;
-      }
-    }
-  }
-}
+void Span::clearNotify(HAPClient *hc){
+
+  for(auto const &acc : Accessories)
+    for(auto const &svc : acc->Services)
+      for(auto const &chr : svc->Characteristics)
+        chr->evList.remove(hc);  
+} 
 
 ///////////////////////////////
 
-void Span::printfNotify(SpanBuf *pObj, int nObj, int conNum){
+void Span::printfNotify(SpanBuf *pObj, int nObj, HAPClient *hc){
 
   boolean notifyFlag=false;
   
   for(int i=0;i<nObj;i++){                                       // loop over all objects
     
     if(pObj[i].status==StatusCode::OK && pObj[i].val){           // characteristic was successfully updated with a new value (i.e. not just an EV request)
+      if(pObj[i].characteristic->evList.has(hc)){                // if connection hc is subscribed to EV notifications for this characteristic
       
-      if(pObj[i].characteristic->ev[conNum]){                    // if notifications requested for this characteristic by specified connection number
-
         if(!notifyFlag)                                          // this is first notification for any characteristic
           hapOut << "{\"characteristics\":[";                    // print start of JSON array
         else                                                     // else already printed at least one other characteristic
@@ -1829,8 +1803,6 @@ SpanCharacteristic::SpanCharacteristic(HapChar *hapChar, boolean isCustom){
   iid=++(homeSpan.Accessories.back()->iidCount);
   service=homeSpan.Accessories.back()->Services.back();
   aid=homeSpan.Accessories.back()->aid;
-
-  ev=(boolean *)HS_CALLOC(homeSpan.maxConnections,sizeof(boolean));
 }
 
 ///////////////////////////////
@@ -1842,7 +1814,6 @@ SpanCharacteristic::~SpanCharacteristic(){
     chr++;
   service->Characteristics.erase(chr);
 
-  free(ev);
   free(desc);
   free(unit);
   free(validValues);
@@ -2116,9 +2087,11 @@ void SpanCharacteristic::printfAttributes(int flags){
 
   if(flags&GET_AID)
     hapOut << ",\"aid\":" << aid;
+
+  HAPClient *hc=&(*(homeSpan.currentClient));
   
   if(flags&GET_EV)
-    hapOut << ",\"ev\":" << (ev[HAPClient::conNum]?"true":"false");
+    hapOut << ",\"ev\":" << (evList.has(hc)?"true":"false");
 
   if(flags&GET_STATUS)
     hapOut << ",\"status\":0";    
@@ -2144,7 +2117,12 @@ StatusCode SpanCharacteristic::loadUpdate(char *val, char *ev, boolean wr){
       return(StatusCode::NotifyNotAllowed);
       
     LOG1("Notification Request for aid=%u iid=%u: %s\n",aid,iid,evFlag?"true":"false");
-    this->ev[HAPClient::conNum]=evFlag;
+    HAPClient *hc=&(*(homeSpan.currentClient));
+    
+    if(evFlag)
+      evList.add(hc);
+    else
+      evList.remove(hc);
   }
 
   if(!val)                // no request to update value
@@ -2323,6 +2301,25 @@ SpanCharacteristic *SpanCharacteristic::setValidValues(int n, ...){
   strcpy(validValues,s.c_str());
 
   return(this);
+}
+
+///////////////////////////////
+
+boolean SpanCharacteristic::EVLIST::has(HAPClient *hc){
+  return(find_if(begin(), end(), [hc](const HAPClient *hcTemp){return(hc==hcTemp);}) != end());  
+}
+
+///////////////////////////////
+
+void SpanCharacteristic::EVLIST::add(HAPClient *hc){
+  if(!has(hc))
+    push_back(hc);
+}
+
+///////////////////////////////
+
+void SpanCharacteristic::EVLIST::remove(HAPClient *hc){
+  remove_if(begin(), end(), [hc](const HAPClient *hcTemp){return(hc==hcTemp);});  
 }
 
 ///////////////////////////////
