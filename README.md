@@ -85,8 +85,9 @@ HomeSpan requires version 2.0.0 or later of the [Arduino-ESP32 Board Manager](ht
     * users should switch to the new constructor to avoid potential compatibility issues with future versions of HomeSpan
   * added new method `boolean isRGBW()`
     * returns *true* if Pixel was constructed as RGBW, else *false* if constructed as RGB only (i.e. no white LED)
-  * created new PixelTester sketch (found under Other-> Examples) to aid in determining the *pixelType* for any LED Strip
-
+  * added new [PixelTester](examples/Other%20Examples/PixelTester) sketch (found under *Other Examples*) to aid in determining the *pixelType* for any LED Strip
+  * see the [Adressable RGB LEDs](docs/Pixels.md) page for details
+    
 * **New ability to read and set the IIDs of Services and Characteristics**
 
   * adds new `SpanService` method `getIID()` that returns the IID of a Service
@@ -111,7 +112,7 @@ HomeSpan requires version 2.0.0 or later of the [Arduino-ESP32 Board Manager](ht
     * a warning message is output on the Serial Monitor if `setVal()` is called to change the value of a Characteristic from within the `update()` method at the same time the Home App is sending an update request for that value
     * does not apply if `setVal()` is called from within `update()` to change the value of a Characteristic in response to a *write-response* request from the Home App
    
-* **Fixed bug introduced in 1.9.0 that prevented `homeSpan.setPairingCode()` from saving (and subsequently using) the request Setup Pairing Code** (#786)
+* **Fixed bug introduced in 1.9.0 that prevented `homeSpan.setPairingCode()` from saving (and subsequently using) the request Setup Pairing Code**
 
   * this method now operates silently, unless an invalid pairing code is provided, in which case an error is reported to the Serial Monitor and *the sketch is halted*
   * the process for setting the Pairing Code using the CLI 'S' command or via the Access Point are unchanged - confirmation messages are still output to the Serial Monitor and errors do *not* cause the sketch to halt

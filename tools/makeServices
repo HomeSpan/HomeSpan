@@ -54,6 +54,8 @@ BEGIN {
 		uuid[char]=x[3]
 		perms[char]=x[4]
 		format[char]=tolower(x[5])
+		if(format[char]=="tlv_enc")
+			format[char]="tlv8"
 		static[char]=x[6]
 	}
 

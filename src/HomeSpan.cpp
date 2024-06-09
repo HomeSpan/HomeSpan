@@ -46,7 +46,6 @@ const __attribute__((section(".rodata_custom_desc"))) SpanPartition spanPartitio
 using namespace Utils;
 
 HapOut hapOut;                      // Specialized output stream that can both print to serial monitor and encrypt/transmit to HAP Clients with minimal memory usage (global-scoped variable)
-HAPClient **hap;                    // HAP Client structure containing HTTP client connections, parsing routines, and state variables (global-scoped variable)
 Span homeSpan;                      // HAP Attributes database and all related control functions for this Accessory (global-scoped variable)
 HapCharacteristics hapChars;        // Instantiation of all HAP Characteristics used to create SpanCharacteristics (global-scoped variable)
 
@@ -69,7 +68,6 @@ Span::Span(){
   rebootCount++;
   nvs_set_u8(wifiNVS,"REBOOTS",rebootCount);
   nvs_commit(wifiNVS);
-
 }
 
 ///////////////////////////////
@@ -89,14 +87,7 @@ void Span::begin(Category catID, const char *displayName, const char *hostNameBa
 
   esp_task_wdt_delete(xTaskGetIdleTaskHandleForCPU(0));       // required to avoid watchdog timeout messages from ESP32-C3  
 
-  if(requestedMaxCon<maxConnections)                          // if specific request for max connections is less than computed max connections
-    maxConnections=requestedMaxCon;                           // over-ride max connections with requested value
-    
-  hap=(HAPClient **)HS_CALLOC(maxConnections,sizeof(HAPClient *));
-  for(int i=0;i<maxConnections;i++)
-    hap[i]=new HAPClient;
-
-  hapServer=new WiFiServer(tcpPortNum);
+  hapServer=new WiFiServer(tcpPortNum);                                             // create HAP WIFI SERVER
  
   size_t len;
 
@@ -234,67 +225,36 @@ void Span::pollTask() {
     processSerialCommand(cBuf);
   }
 
-  WiFiClient newClient;
-
-  if(newClient=hapServer->available()){                        // found a new HTTP client
-    int freeSlot=getFreeSlot();                                // get next free slot
-
-    if(freeSlot==-1){                                          // no available free slots
-      freeSlot=randombytes_uniform(maxConnections);
-      LOG2("=======================================\n");
-      LOG1("** Freeing Client #");
-      LOG1(freeSlot);
-      LOG1(" (");
-      LOG1(millis()/1000);
-      LOG1(" sec) ");
-      LOG1(hap[freeSlot]->client.remoteIP());
-      LOG1("\n");
-      hap[freeSlot]->client.stop();                     // disconnect client from first slot and re-use
-    }
-
-    hap[freeSlot]->client=newClient;             // copy new client handle into free slot
+  if(hapServer->hasClient()){  
+ 
+    auto it=hapList.emplace(hapList.begin());                                // create new HAPClient connection
+    it->client=hapServer->available();
+    it->clientNumber=it->client.fd()-LWIP_SOCKET_OFFSET;
+            
+    HAPClient::pairStatus=pairState_M1;                                      // reset starting PAIR STATE (which may be needed if Accessory failed in middle of pair-setup)    
 
     LOG2("=======================================\n");
-    LOG1("** Client #");
-    LOG1(freeSlot);
-    LOG1(" Connected: (");
-    LOG1(millis()/1000);
-    LOG1(" sec) ");
-    LOG1(hap[freeSlot]->client.remoteIP());
-    LOG1(" on Socket ");
-    LOG1(hap[freeSlot]->client.fd()-LWIP_SOCKET_OFFSET+1);
-    LOG1("/");
-    LOG1(CONFIG_LWIP_MAX_SOCKETS);
-    LOG1("\n");
+    LOG1("** Client #%d Connected (%lu sec): %s\n",it->clientNumber,millis()/1000,it->client.remoteIP().toString().c_str());
     LOG2("\n");
-
-    hap[freeSlot]->cPair=NULL;                  // reset pointer to verified ID
-    homeSpan.clearNotify(freeSlot);             // clear all notification requests for this connection
-    HAPClient::pairStatus=pairState_M1;         // reset starting PAIR STATE (which may be needed if Accessory failed in middle of pair-setup)
   }
 
-  for(int i=0;i<maxConnections;i++){                     // loop over all HAP Connection slots
-    
-    if(hap[i]->client && hap[i]->client.available()){       // if connection exists and data is available
+  currentClient=hapList.begin();
+  while(currentClient!=hapList.end()){
 
-      HAPClient::conNum=i;                                          // set connection number
-      homeSpan.lastClientIP=hap[i]->client.remoteIP().toString();   // store IP Address for web logging
-      hap[i]->processRequest();                                     // process HAP request
-      homeSpan.lastClientIP="0.0.0.0";                              // reset stored IP address to show "0.0.0.0" if homeSpan.getClientIP() is used in any other context
-      
-      if(!hap[i]->client){                                 // client disconnected by server
-        LOG1("** Disconnected Client #");
-        LOG1(i);
-        LOG1("  (");
-        LOG1(millis()/1000);
-        LOG1(" sec)\n");
+    if(currentClient->client.connected()){                                   // if the client is connected
+      if(currentClient->client.available()){                                 // if client has data available
+        homeSpan.lastClientIP=currentClient->client.remoteIP().toString();   // store IP Address for web logging
+        currentClient->processRequest();                                     // PROCESS HAP REQUEST
+        homeSpan.lastClientIP="0.0.0.0";                                     // reset stored IP address to show "0.0.0.0" if homeSpan.getClientIP() is used in any other context 
       }
-
-      LOG2("\n");
-
-    } // process HAP Client 
-  } // for-loop over connection slots
-
+      currentClient++;
+    } else {
+      LOG1("** Client #%d DISCONNECTED (%lu sec)\n",currentClient->clientNumber,millis()/1000);
+      clearNotify(&*currentClient);                                          // clear all notification requests for this connection
+      currentClient=hapList.erase(currentClient);                            // remove HAPClient connection
+    }
+  }
+      
   snapTime=millis();                                     // snap the current time for use in ALL loop routines
   
   for(auto it=Loops.begin();it!=Loops.end();it++)                 // call loop() for all Services with over-ridden loop() methods
@@ -333,18 +293,6 @@ void Span::pollTask() {
   }
     
 } // poll
-
-///////////////////////////////
-
-int Span::getFreeSlot(){
-  
-  for(int i=0;i<maxConnections;i++){
-    if(!hap[i]->client)
-      return(i);
-  }
-
-  return(-1);          
-}
 
 //////////////////////////////////////
 
@@ -550,7 +498,7 @@ void Span::checkConnect(){
   if(webLog.timeServer)
     xTaskCreateUniversal(webLog.initTime, "timeSeverTaskHandle", 8096, &webLog, 1, NULL, 0);  
   
-  LOG0("Starting HAP Server on port %d supporting %d simultaneous HomeKit Controller Connections...\n\n",tcpPortNum,maxConnections);
+  LOG0("Starting HAP Server on port %d...\n\n",tcpPortNum);
 
   hapServer->begin();
 
@@ -587,6 +535,15 @@ void Span::processSerialCommand(const char *c){
 
   switch(c[0]){
     
+    case 'Z': {
+      for(auto it=hapList.begin(); it!=hapList.end(); ++it){
+        (*it).client.stop();
+        delay(5);
+        
+      }
+    }
+    break;
+
     case 's': {    
       
       LOG0("\n*** HomeSpan Status ***\n\n");
@@ -603,27 +560,20 @@ void Span::processSerialCommand(const char *c){
       HAPClient::printControllers();
       LOG0("\n");
 
-      for(int i=0;i<maxConnections;i++){
-        LOG0("Connection #%d ",i);
-        if(hap[i]->client){
-      
-          LOG0("%s on Socket %d/%d",hap[i]->client.remoteIP().toString().c_str(),hap[i]->client.fd()-LWIP_SOCKET_OFFSET+1,CONFIG_LWIP_MAX_SOCKETS);
-          
-          if(hap[i]->cPair){
-            LOG0("  ID=");
-            HAPClient::charPrintRow(hap[i]->cPair->getID(),36);
-            LOG0(hap[i]->cPair->isAdmin()?"   (admin)":" (regular)");
-          } else {
-            LOG0("  (unverified)");
-          }
-      
+      for(auto it=hapList.begin(); it!=hapList.end(); ++it){
+        LOG0("Client #%d: %s",(*it).clientNumber,(*it).client.remoteIP().toString().c_str());
+        if((*it).cPair){
+          LOG0("  ID=");
+          HAPClient::charPrintRow((*it).cPair->getID(),36);
+          LOG0((*it).cPair->isAdmin()?"   (admin)\n":" (regular)\n");
         } else {
-          LOG0("(unconnected)");
+          LOG0("  (unverified)\n");
         }
+      }          
 
-        LOG0("\n");
-      }
-
+      if(hapList.empty())
+        LOG0("No Client Connections!\n");
+        
       LOG0("\n*** End Status ***\n\n");
     } 
     break;
@@ -914,11 +864,9 @@ void Span::processSerialCommand(const char *c){
             if(((*chr)->perms)&EV){
               LOG0(", EV=(");
               boolean addComma=false;
-              for(int i=0;i<homeSpan.maxConnections;i++){
-                if((*chr)->ev[i] && hap[i]->client){
-                  LOG0("%s%d",addComma?",":"",i);
-                  addComma=true;
-                }
+              for(auto const &hc : (*chr)->evList){
+                LOG0("%s%d",addComma?",":"",hc->clientNumber);
+                addComma=true;
               }
               LOG0(")");              
             }
@@ -1491,29 +1439,25 @@ int Span::updateCharacteristics(char *buf, SpanBuf *pObj){
 
 ///////////////////////////////
 
-void Span::clearNotify(int slotNum){
-  
-  for(int i=0;i<Accessories.size();i++){
-    for(int j=0;j<Accessories[i]->Services.size();j++){
-      for(int k=0;k<Accessories[i]->Services[j]->Characteristics.size();k++){
-        Accessories[i]->Services[j]->Characteristics[k]->ev[slotNum]=false;
-      }
-    }
-  }
-}
+void Span::clearNotify(HAPClient *hc){
+
+  for(auto const &acc : Accessories)
+    for(auto const &svc : acc->Services)
+      for(auto const &chr : svc->Characteristics)
+        chr->evList.remove(hc);  
+} 
 
 ///////////////////////////////
 
-void Span::printfNotify(SpanBuf *pObj, int nObj, int conNum){
+void Span::printfNotify(SpanBuf *pObj, int nObj, HAPClient *hc){
 
   boolean notifyFlag=false;
   
   for(int i=0;i<nObj;i++){                                       // loop over all objects
     
     if(pObj[i].status==StatusCode::OK && pObj[i].val){           // characteristic was successfully updated with a new value (i.e. not just an EV request)
+      if(pObj[i].characteristic->evList.has(hc)){                // if connection hc is subscribed to EV notifications for this characteristic
       
-      if(pObj[i].characteristic->ev[conNum]){                    // if notifications requested for this characteristic by specified connection number
-
         if(!notifyFlag)                                          // this is first notification for any characteristic
           hapOut << "{\"characteristics\":[";                    // print start of JSON array
         else                                                     // else already printed at least one other characteristic
@@ -1857,8 +1801,6 @@ SpanCharacteristic::SpanCharacteristic(HapChar *hapChar, boolean isCustom){
   iid=++(homeSpan.Accessories.back()->iidCount);
   service=homeSpan.Accessories.back()->Services.back();
   aid=homeSpan.Accessories.back()->aid;
-
-  ev=(boolean *)HS_CALLOC(homeSpan.maxConnections,sizeof(boolean));
 }
 
 ///////////////////////////////
@@ -1870,7 +1812,6 @@ SpanCharacteristic::~SpanCharacteristic(){
     chr++;
   service->Characteristics.erase(chr);
 
-  free(ev);
   free(desc);
   free(unit);
   free(validValues);
@@ -1882,6 +1823,207 @@ SpanCharacteristic::~SpanCharacteristic(){
   }
   
   LOG1("Deleted Characteristic AID=%u IID=%u\n",aid,iid);  
+}
+
+///////////////////////////////
+
+String SpanCharacteristic::uvPrint(UVal &u){
+  char c[64];
+  switch(format){
+    case FORMAT::BOOL:
+      return(String(u.BOOL));      
+    case FORMAT::INT:
+      return(String(u.INT));
+    case FORMAT::UINT8:
+      return(String(u.UINT8));        
+    case FORMAT::UINT16:
+      return(String(u.UINT16));        
+    case FORMAT::UINT32:
+      return(String(u.UINT32));        
+    case FORMAT::UINT64:
+      sprintf(c,"%llu",u.UINT64);
+      return(String(c));        
+    case FORMAT::FLOAT:
+      sprintf(c,"%g",u.FLOAT);
+      return(String(c));        
+    case FORMAT::STRING:
+    case FORMAT::DATA:
+    case FORMAT::TLV_ENC:
+      return(String("\"") + String(u.STRING) + String("\""));        
+  } // switch
+  return(String());       // included to prevent compiler warnings
+}
+
+///////////////////////////////
+
+void SpanCharacteristic::uvSet(UVal &dest, UVal &src){
+  if(format>=FORMAT::STRING)
+    uvSet(dest,(const char *)src.STRING);
+  else
+    dest=src;
+}
+
+///////////////////////////////
+
+void SpanCharacteristic::uvSet(UVal &u, const char *val){
+  u.STRING = (char *)HS_REALLOC(u.STRING, strlen(val) + 1);
+  strcpy(u.STRING, val);
+}
+
+///////////////////////////////
+
+char *SpanCharacteristic::getStringGeneric(UVal &val){
+  if(format>=FORMAT::STRING)
+      return val.STRING;
+
+  return NULL;
+}
+
+///////////////////////////////
+
+void SpanCharacteristic::setString(const char *val, boolean notify){ 
+
+  setValCheck();
+  uvSet(value,val);
+  setValFinish(notify);    
+}
+
+///////////////////////////////
+
+size_t SpanCharacteristic::getDataGeneric(uint8_t *data, size_t len, UVal &val){    
+  if(format<FORMAT::DATA)
+    return(0);
+
+  size_t olen;
+  int ret=mbedtls_base64_decode(data,len,&olen,(uint8_t *)val.STRING,strlen(val.STRING));
+  
+  if(data==NULL)
+    return(olen);
+    
+  if(ret==MBEDTLS_ERR_BASE64_BUFFER_TOO_SMALL)
+    LOG0("\n*** WARNING:  Can't decode Characteristic::%s with getData().  Destination buffer is too small (%d out of %d bytes needed)!\n\n",hapName,len,olen);
+  else if(ret==MBEDTLS_ERR_BASE64_INVALID_CHARACTER)
+    LOG0("\n*** WARNING:  Can't decode Characteristic::%s with getData().  Data is not in base-64 format!\n\n",hapName);
+    
+  return(olen);
+}
+
+///////////////////////////////
+
+void SpanCharacteristic::setData(uint8_t *data, size_t len, boolean notify){
+
+  setValCheck();
+
+  if(len>0){
+    size_t olen;
+    mbedtls_base64_encode(NULL,0,&olen,NULL,len);                        // get length of string buffer needed (mbedtls includes the trailing null in this size)
+    value.STRING = (char *)HS_REALLOC(value.STRING,olen);                // allocate sufficient size for storing value
+    mbedtls_base64_encode((uint8_t*)value.STRING,olen,&olen,data,len );  // encode data into string buf
+  } else {
+    value.STRING = (char *)HS_REALLOC(value.STRING,1);                   // allocate sufficient size for just trailing null character
+    *value.STRING ='\0';
+  }
+
+  setValFinish(notify);
+} 
+  
+///////////////////////////////
+
+size_t SpanCharacteristic::getTLVGeneric(TLV8 &tlv, UVal &val){
+   
+  if(format<FORMAT::TLV_ENC)
+    return(0);
+
+  const size_t bufSize=36;                    // maximum size of buffer to store decoded bytes before unpacking into TLV; must be multiple of 3
+  TempBuffer<uint8_t> tBuf(bufSize);          // create fixed-size buffer to store decoded bytes
+  tlv.wipe();                                 // clear TLV completely
+
+  size_t nChars=strlen(val.STRING);         // total characters to decode
+  uint8_t *p=(uint8_t *)val.STRING;         // set pointer to beginning of value
+  const size_t decodeSize=bufSize/3*4;      // number of characters to decode in each pass
+  int status=0;
+  
+  while(nChars>0){
+    size_t olen;
+    size_t n=nChars<decodeSize?nChars:decodeSize;
+    
+    int ret=mbedtls_base64_decode(tBuf,tBuf.len(),&olen,p,n);
+    if(ret==MBEDTLS_ERR_BASE64_INVALID_CHARACTER){
+      LOG0("\n*** WARNING:  Can't decode Characteristic::%s with getTLV().  Data is not in base-64 format!\n\n",hapName);
+      tlv.wipe();
+      return(0);
+    }
+    status=tlv.unpack(tBuf,olen);
+    p+=n;
+    nChars-=n;
+  }
+  if(status>0){
+    LOG0("\n*** WARNING:  Can't unpack Characteristic::%s with getTLV().  TLV record is incomplete or corrupted!\n\n",hapName);
+    tlv.wipe();
+    return(0);      
+  }
+return(tlv.pack_size());
+}
+
+///////////////////////////////
+
+void SpanCharacteristic::setTLV(TLV8 &tlv, boolean notify){
+
+  setValCheck();
+  
+  const size_t bufSize=36;                                  // maximum size of buffer to store packed TLV bytes before encoding directly into value; must be multiple of 3
+  size_t nBytes=tlv.pack_size();                            // total size of packed TLV in bytes
+
+  if(nBytes>0){
+    size_t nChars;
+    mbedtls_base64_encode(NULL,0,&nChars,NULL,nBytes);        // get length of string buffer needed (mbedtls includes the trailing null in this size)
+    value.STRING = (char *)HS_REALLOC(value.STRING,nChars);   // allocate sufficient size for storing value
+    TempBuffer<uint8_t> tBuf(bufSize);                        // create fixed-size buffer to store packed TLV bytes
+    tlv.pack_init();                                          // initialize TLV packing
+    uint8_t *p=(uint8_t *)value.STRING;                       // set pointer to beginning of value
+    while((nBytes=tlv.pack(tBuf,bufSize))>0){                 // pack the next set of TLV bytes, up to a maximum of bufSize, into tBuf
+      size_t olen;                                            // number of characters written (excludes null character)
+      mbedtls_base64_encode(p,nChars,&olen,tBuf,nBytes);      // encode data directly into value
+      p+=olen;                                                // advance pointer to null character
+      nChars-=olen;                                           // subtract number of characters remaining
+    }
+  } else {
+    value.STRING = (char *)HS_REALLOC(value.STRING,1);        // allocate sufficient size for just trailing null character
+    *value.STRING ='\0';
+  }
+
+  setValFinish(notify);
+}
+
+///////////////////////////////
+
+void SpanCharacteristic::setValCheck(){
+  if(updateFlag==1)
+    LOG0("\n*** WARNING:  Attempt to set value of Characteristic::%s within update() while it is being simultaneously updated by Home App.  This may cause device to become non-responsive!\n\n",hapName);
+}
+
+///////////////////////////////
+
+void SpanCharacteristic::setValFinish(boolean notify){
+
+  uvSet(newValue,value);     
+  updateTime=homeSpan.snapTime;
+
+  if(notify){
+    if((perms&EV) && (updateFlag!=2)){        // only broadcast notification if EV permission is set AND update is NOT being done in context of write-response    
+      SpanBuf sb;                             // create SpanBuf object
+      sb.characteristic=this;                 // set characteristic          
+      sb.status=StatusCode::OK;               // set status
+      char dummy[]="";
+      sb.val=dummy;                           // set dummy "val" so that printfNotify knows to consider this "update"
+      homeSpan.Notifications.push_back(sb);   // store SpanBuf in Notifications vector
+    }
+
+    if(nvsKey){
+      nvs_set_str(homeSpan.charNVS,nvsKey,value.STRING);    // store data
+      nvs_commit(homeSpan.charNVS);
+    }
+  }      
 }
 
 ///////////////////////////////
@@ -1943,9 +2085,11 @@ void SpanCharacteristic::printfAttributes(int flags){
 
   if(flags&GET_AID)
     hapOut << ",\"aid\":" << aid;
+
+  HAPClient *hc=&(*(homeSpan.currentClient));
   
   if(flags&GET_EV)
-    hapOut << ",\"ev\":" << (ev[HAPClient::conNum]?"true":"false");
+    hapOut << ",\"ev\":" << (evList.has(hc)?"true":"false");
 
   if(flags&GET_STATUS)
     hapOut << ",\"status\":0";    
@@ -1971,7 +2115,12 @@ StatusCode SpanCharacteristic::loadUpdate(char *val, char *ev, boolean wr){
       return(StatusCode::NotifyNotAllowed);
       
     LOG1("Notification Request for aid=%u iid=%u: %s\n",aid,iid,evFlag?"true":"false");
-    this->ev[HAPClient::conNum]=evFlag;
+    HAPClient *hc=&(*(homeSpan.currentClient));
+    
+    if(evFlag)
+      evList.add(hc);
+    else
+      evList.remove(hc);
   }
 
   if(!val)                // no request to update value
@@ -2066,6 +2215,57 @@ unsigned long SpanCharacteristic::timeVal(){
 
 ///////////////////////////////
 
+boolean SpanCharacteristic::updated(){
+  
+  return(updateFlag>0);
+}
+
+///////////////////////////////
+
+uint32_t SpanCharacteristic::getIID(){
+  
+  return(iid);
+}
+
+///////////////////////////////
+
+SpanCharacteristic *SpanCharacteristic::setPerms(uint8_t perms){
+  perms&=0x7F;
+  if(perms>0)
+    this->perms=perms;
+  return(this);
+}
+
+///////////////////////////////
+
+SpanCharacteristic *SpanCharacteristic::addPerms(uint8_t dPerms){
+  return(setPerms(perms|dPerms));
+}
+
+///////////////////////////////
+
+SpanCharacteristic *SpanCharacteristic::removePerms(uint8_t dPerms){
+  return(setPerms(perms&(~dPerms)));
+}
+
+///////////////////////////////
+
+SpanCharacteristic *SpanCharacteristic::setDescription(const char *c){
+  desc = (char *)HS_REALLOC(desc, strlen(c) + 1);
+  strcpy(desc, c);
+  return(this);
+}  
+
+///////////////////////////////
+
+SpanCharacteristic *SpanCharacteristic::setUnit(const char *c){
+  unit = (char *)HS_REALLOC(unit, strlen(c) + 1);
+  strcpy(unit, c);
+  return(this);
+}  
+
+///////////////////////////////
+
 SpanCharacteristic *SpanCharacteristic::setValidValues(int n, ...){
  
   String s="[";
@@ -2102,18 +2302,23 @@ SpanCharacteristic *SpanCharacteristic::setValidValues(int n, ...){
 }
 
 ///////////////////////////////
-//        SpanRange          //
+
+boolean SpanCharacteristic::EVLIST::has(HAPClient *hc){
+  return(find_if(begin(), end(), [hc](const HAPClient *hcTemp){return(hc==hcTemp);}) != end());  
+}
+
 ///////////////////////////////
 
-SpanRange::SpanRange(int min, int max, int step){
+void SpanCharacteristic::EVLIST::add(HAPClient *hc){
+  if(!has(hc))
+    push_back(hc);
+}
 
-  if(homeSpan.Accessories.empty() || homeSpan.Accessories.back()->Services.empty() || homeSpan.Accessories.back()->Services.back()->Characteristics.empty() ){
-    LOG0("\nFATAL ERROR!  Can't create new SpanRange(%d,%d,%d) without a defined Characteristic ***\n",min,max,step);
-    LOG0("\n=== PROGRAM HALTED ===");
-    while(1);
-  } else {
-    homeSpan.Accessories.back()->Services.back()->Characteristics.back()->setRange(min,max,step);
-  }
+///////////////////////////////
+
+void SpanCharacteristic::EVLIST::remove(HAPClient *hc){
+  auto it=remove_if(begin(), end(), [hc](const HAPClient *hcTemp){return(hc==hcTemp);});
+  erase(it,end());
 }
 
 ///////////////////////////////
@@ -2183,8 +2388,6 @@ void SpanWebLog::init(uint16_t maxEntries, const char *serv, const char *tz, con
     isEnabled=true;
   }
   log = (log_t *)HS_CALLOC(maxEntries,sizeof(log_t));
-  if(timeServer)
-    homeSpan.reserveSocketConnections(1);
 }
 
 ///////////////////////////////
@@ -2251,7 +2454,6 @@ int SpanOTA::init(boolean _auth, boolean _safeLoad, const char *pwd){
   enabled=true;
   safeLoad=_safeLoad;
   auth=_auth;
-  homeSpan.reserveSocketConnections(1);
   if(pwd==NULL)
     return(0);
   return(setPassword(pwd));
