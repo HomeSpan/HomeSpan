@@ -250,8 +250,6 @@ void Span::pollTask() {
       currentClient++;
     } else {
       LOG1("** Client #%d DISCONNECTED (%lu sec)\n",currentClient->clientNumber,millis()/1000);
-//      currentClient->client.stop();
-//      delay(5);
       clearNotify(&*currentClient);                                          // clear all notification requests for this connection
       currentClient=hapList.erase(currentClient);                            // remove HAPClient connection
     }
