@@ -103,15 +103,6 @@ Methods with a return type of `Span&` return a reference to `homeSpan` itself an
 * `int getLogLevel()`
   * returns the current Log Level as set by `setLogLevel(level)`
   
-* `Span& reserveSocketConnections(uint8_t nSockets)`
-  * reserves *nSockets* network sockets for uses **other than** by the HomeSpan HAP Server for HomeKit Controller Connections
-    * for sketches compiled under Arduino-ESP32 v2.0.1 or later, HomeSpan reserves 14 sockets for HAP Controller Connections
-    * each call to `reserveSocketConnections(nSockets)` reduces this number by *nSockets*
-    * use this method if you add code to a sketch that requires its own socket connections (e.g. a separate web service, an MQTT server, etc.)
-  * multiple calls to this method are allowed - the number of sockets reserved will be the sum of *nSockets* across all calls
-  * note you do not need to separately reserve sockets for built-in HomeSpan functionality
-    * for example, `enableOTA()` already contains an embedded call to `reserveSocketConnections(1)` since HomeSpan knows one socket must be reserved to support OTA
-  
 * `Span& setPortNum(uint16_t port)`
   * sets the TCP port number used for communication between HomeKit and HomeSpan (default=80)
   
