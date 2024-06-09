@@ -114,14 +114,27 @@ HomeSpan is currently NOT compatible with version 3.X of the Arduino-ESP32 Board
     * a warning message is output on the Serial Monitor if `setVal()` is called to change the value of a Characteristic from within the `update()` method at the same time the Home App is sending an update request for that value
     * does not apply if `setVal()` is called from within `update()` to change the value of a Characteristic in response to a *write-response* request from the Home App
    
+* **Refactored client/slot management to save memory and prepare for future integration of Ethernet support**
+  * fixed-array of Client/Socket connections replaced by dynamic linked-list
+  * serial interface now only shows active client connections (rather than a fixed list of client slots)
+  * **deprecated** `homeSpan.reserveSocketConnections()` since it is no longer needed
+        
 * **Fixed bug introduced in 1.9.0 that prevented `homeSpan.setPairingCode()` from saving (and subsequently using) the request Setup Pairing Code**
-
   * this method now operates silently, unless an invalid pairing code is provided, in which case an error is reported to the Serial Monitor and *the sketch is halted*
   * the process for setting the Pairing Code using the CLI 'S' command or via the Access Point are unchanged - confirmation messages are still output to the Serial Monitor and errors do *not* cause the sketch to halt
 
+* **Fixed memory leak introduced in 1.9.0 that would fail to free a small temporary memory block created when verifying a new connection**
+  * had no practical impact when using a Home Hub since Home Kit only creates a few permanent connections
+  * had significant impact when not using a Home Hub in cases where the Home App repeatedly drops and re-establishes connections, resulting in slow erosion of heap memory and then out-of-memory failure of the device after a few days (note use of HomeSpan without a Home Hub is not formally supported)
+
 * **Fixed latent bug in SpanPoint** 
   * HomeSpan would crash when printing **SpanPoint** configuration information to the Serial Monitor (the 'i' CLI command) if any of the instances of SpanPoint had *receiveSize=0*
-  * this bug never surfaced before since all the **SpanPoint examples** were based on receiving data and therefore had a non-zero *receiveSize* 
+  * this bug never surfaced before since all the **SpanPoint examples** were based on receiving data and therefore had a non-zero *receiveSize*
+ 
+* **Deleted `homeSpan.setMaxConnections()`, which had been *deprecated* many versions ago**
+
+* **Deleted stand-alone `SpanRange` structure, which had been *deprecated* many versions ago**
+  * this has no impact on standard use of the Characteristic method `setRange()`
       
 See [Releases](https://github.com/HomeSpan/HomeSpan/releases) for details on all changes and bug fixes included in this update.
 
