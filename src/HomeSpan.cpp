@@ -24,6 +24,8 @@
  *  SOFTWARE.
  *  
  ********************************************************************************/
+
+#include "version.h"
  
 #include <ESPmDNS.h>
 #include <nvs_flash.h>
