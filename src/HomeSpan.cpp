@@ -74,13 +74,13 @@ Span::Span(){
 
 ///////////////////////////////
 
-void Span::begin(Category catID, const char *displayName, const char *hostNameBase, const char *modelName){
+void Span::begin(Category catID, const char *_displayName, const char *_hostNameBase, const char *_modelName){
 
   loopTaskHandle=xTaskGetCurrentTaskHandle();                 // a roundabout way of getting the current task handle
   
-  this->displayName=displayName;
-  this->hostNameBase=hostNameBase;
-  this->modelName=modelName;
+  asprintf(&displayName,"%s",_displayName);
+  asprintf(&hostNameBase,"%s",_hostNameBase);
+  asprintf(&modelName,"%s",_modelName);
   sprintf(this->category,"%d",(int)catID);
 
   SpanPoint::setAsHub();

@@ -205,11 +205,11 @@ class Span{
   friend class Network;
   friend class HAPClient;
   
-  const char *displayName;                      // display name for this device - broadcast as part of Bonjour MDNS
-  const char *hostNameBase;                     // base of hostName of this device - full host name broadcast by Bonjour MDNS will have 6-byte accessoryID as well as '.local' automatically appended
-  const char *hostNameSuffix=NULL;              // optional "suffix" of hostName of this device.  If specified, will be used as the hostName suffix instead of the 6-byte accessoryID
+  char *displayName;                            // display name for this device - broadcast as part of Bonjour MDNS
+  char *hostNameBase;                           // base of hostName of this device - full host name broadcast by Bonjour MDNS will have 6-byte accessoryID as well as '.local' automatically appended
+  char *hostNameSuffix=NULL;                    // optional "suffix" of hostName of this device.  If specified, will be used as the hostName suffix instead of the 6-byte accessoryID
   char *hostName=NULL;                          // derived full hostname
-  const char *modelName;                        // model name of this device - broadcast as Bonjour field "md" 
+  char *modelName;                              // model name of this device - broadcast as Bonjour field "md" 
   char category[3]="";                          // category ID of primary accessory - broadcast as Bonjour field "ci" (HAP Section 13)
   unsigned long snapTime;                       // current time (in millis) snapped before entering Service loops() or updates()
   boolean isInitialized=false;                  // flag indicating HomeSpan has been initialized
@@ -337,7 +337,6 @@ class Span{
   int getLogLevel(){return(logLevel);}                                                   // get Log Level
   Span& setSerialInputDisable(boolean val){serialInputDisabled=val;return(*this);}       // sets whether serial input is disabled (true) or enabled (false)
   boolean getSerialInputDisable(){return(serialInputDisabled);}                          // returns true if serial input is disabled, or false if serial input in enabled
-  Span& setHostNameSuffix(const char *suffix){hostNameSuffix=suffix;return(*this);}      // sets the hostName suffix to be used instead of the 6-byte AccessoryID
   Span& setPortNum(uint16_t port){tcpPortNum=port;return(*this);}                        // sets the TCP port number to use for communications between HomeKit and HomeSpan
   Span& setQRID(const char *id);                                                         // sets the Setup ID for optional pairing with a QR Code
   Span& setSketchVersion(const char *sVer){sketchVersion=sVer;return(*this);}            // set optional sketch version number
@@ -354,6 +353,8 @@ class Span{
   void deleteStoredValues(){processSerialCommand("V");}                                  // deletes stored Characteristic values from NVS
   Span& resetIID(uint32_t newIID);                                                       // resets the IID count for the current Accessory to start at newIID
   Span& setControllerCallback(void (*f)()){controllerCallback=f;return(*this);}          // sets an optional user-defined function to call whenever a Controller is added/removed/changed
+
+  Span& setHostNameSuffix(const char *suffix){asprintf(&hostNameSuffix,"%s",suffix);return(*this);}      // sets the hostName suffix to be used instead of the 6-byte AccessoryID
 
   int enableOTA(boolean auth=true, boolean safeLoad=true){return(spanOTA.init(auth, safeLoad, NULL));}   // enables Over-the-Air updates, with (auth=true) or without (auth=false) authorization password  
   int enableOTA(const char *pwd, boolean safeLoad=true){return(spanOTA.init(true, safeLoad, pwd));}      // enables Over-the-Air updates, with custom authorization password (overrides any password stored with the 'O' command)
