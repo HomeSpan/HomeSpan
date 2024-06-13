@@ -228,6 +228,9 @@ void Network::apConfigure(){
       LOG2("\n");
 
     } // process Client
+    else {
+      vTaskDelay(100 / portTICK_PERIOD_MS);
+    }
 
   } // while 1
 

@@ -61,8 +61,9 @@ namespace Service {
     OPT(Model);
     OPT(SerialNumber);
     OPT(HardwareRevision);
+    OPT(HardwareFinish);
     OPT_DEP(AccessoryFlags);
-  END_SERV
+    END_SERV
 
   SERVICES_GROUP // Lights, Power, and Switches
 
@@ -348,6 +349,24 @@ namespace Service {
     OPT_DEP(Name);
   END_SERV
 
+ CREATE_SERV(LockManagement, 44)
+    REQ(LockControlPoint);
+    REQ(Version);
+    OPT(AdministratorOnlyAccess);
+    OPT(AudioFeedback);
+    OPT(CurrentDoorState);
+    OPT(LockManagementAutoSecurityTimeout);
+    OPT(LockLastKnownAction);
+    OPT(Logs);
+    OPT(MotionDetected);
+  END_SERV
+
+  CREATE_SERV(NFCAccess, 266)
+    REQ(ConfigurationState);
+    REQ(NFCAccessControlPoint);
+    REQ(NFCAccessSupportedConfiguration);
+  END_SERV
+
   CREATE_SERV(Window,8B)    // Defines a motorized Window.
     REQ(CurrentPosition);
     REQ(TargetPosition);
@@ -531,8 +550,18 @@ namespace Characteristic {
   CREATE_CHAR(uint8_t,LeakDetected,0,0,1,NOT_DETECTED,DETECTED);  // indictates if a leak is detected
   CREATE_CHAR(uint8_t,LockCurrentState,0,0,3,UNLOCKED,LOCKED,JAMMED,UNKNOWN);  // indicates state of a lock
   CREATE_CHAR(uint8_t,LockPhysicalControls,0,0,1,CONTROL_LOCK_DISABLED,CONTROL_LOCK_ENABLED);  // indicates if local control lock is enabled
-  CREATE_CHAR(uint8_t,LockTargetState,0,0,1,UNLOCK,LOCK);   // indicates desired state of lock
-  CREATE_CHAR(const char *,Manufacturer,"HomeSpan",0,1);  // any string - informational only
+  CREATE_CHAR(uint8_t, LockTargetState, 0, 0, 1, UNLOCK, LOCK);   // indicates desired state of lock
+  CREATE_CHAR(const char *,LockControlPoint,"",0,1);
+  CREATE_CHAR(boolean,AdministratorOnlyAccess,false,0,1);
+  CREATE_CHAR(boolean,AudioFeedback,false,0,1);
+  CREATE_CHAR(uint32_t,LockManagementAutoSecurityTimeout,0,0,1);
+  CREATE_CHAR(uint8_t,LockLastKnownAction,0,0,8);
+  CREATE_CHAR(const char *,HardwareFinish,"AQQAAAAA",0,1);
+  CREATE_CHAR(const char *,Logs,"",0,1);
+  CREATE_CHAR(uint16_t,ConfigurationState,0,0,1);
+  CREATE_CHAR(const char *,NFCAccessControlPoint,"",0,1);
+  CREATE_CHAR(const char *,NFCAccessSupportedConfiguration,"AQEQAgEQ",0,1);
+  CREATE_CHAR(const char*, Manufacturer, "HomeSpan", 0, 1);  // any string - informational only
   CREATE_CHAR(const char *,Model,"HomeSpan-ESP32",0,1);  // any string - informational only
   CREATE_CHAR(boolean,MotionDetected,0,0,1,NOT_DETECTED,DETECTED);  // indicates if motion is detected
   CREATE_CHAR(boolean,Mute,0,0,1,OFF,ON); // not used

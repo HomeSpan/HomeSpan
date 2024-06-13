@@ -1407,7 +1407,11 @@ tagError HAPClient::addController(uint8_t *id, uint8_t *ltpk, boolean admin){
       charPrintRow(id,hap_controller_IDBYTES,2);
       LOG2(admin?" (admin)\n\n":" (regular)\n\n");
       saveControllers();
-    } else {
+      if (homeSpan.pairCallback) {
+        homeSpan.pairCallback(true);
+      }
+    }
+    else {
       LOG0("\n*** ERROR: Can't pair more than %d Controllers\n\n",MAX_CONTROLLERS);
       err=tagError_MaxPeers;
     }    
@@ -1455,6 +1459,9 @@ void HAPClient::removeController(uint8_t *id){
     STATUS_UPDATE(start(LED_PAIRING_NEEDED),HS_PAIRING_NEEDED)   // set optional Status LED
     if(homeSpan.pairCallback)                                    // if set, invoke user-defined Pairing Callback to indicate device has been un-paired
       homeSpan.pairCallback(false);    
+  }
+  else if(homeSpan.pairCallback){                    // if set, invoke user-defined Pairing Callback to indicate device has been un-paired
+      homeSpan.pairCallback(false);
   }
 
   saveControllers();
