@@ -4,12 +4,12 @@ Welcome to HomeSpan - a robust and extremely easy-to-use Arduino library for cre
 
 HomeSpan provides a microcontroller-focused implementation of Apple's HomeKit Accessory Protocol Specification Release R2 (HAP-R2) designed specifically for the Espressif ESP32 microcontroller running within the Arduino IDE.  HomeSpan pairs directly to HomeKit via your home WiFi network without the need for any external bridges or components.  With HomeSpan you can use the full power of the ESP32's I/O functionality to create custom control software and/or hardware to automatically operate external devices from the Home App on your iPhone, iPad, or Mac, or with Siri.
 
-HomeSpan requires version 2.0.0 or later of the [Arduino-ESP32 Board Manager](https://github.com/espressif/arduino-esp32), and has been tested up through version 2.0.14 (recommended).  HomeSpan can be run on the original ESP32 as well as Espressif's ESP32-S2, ESP32-C3, and ESP32-S3 chips.
+HomeSpan requires version 2 of the [Arduino-ESP32 Board Manager](https://github.com/espressif/arduino-esp32).  HomeSpan can be run on the original ESP32 as well as Espressif's ESP32-S2, ESP32-C3, and ESP32-S3 chips.
 
-HomeSpan is currently NOT compatible with version 3.X of the Arduino-ESP32 Board Manager, since version 3 contains many breaking changes and is not backwards-compatible with verison 2.X of the Arduino-ESP32 Board Manager.  At present, HomeSpan can only be compiled under version 2.X of the Board Manager. 
+HomeSpan is currently NOT compatible with version 3.X of the Arduino-ESP32 Board Manager, since version 3 contains many breaking changes and is not backwards-compatible with version 2.X of the Arduino-ESP32 Board Manager.  At present, HomeSpan can only be compiled under version 2.X of the Board Manager. 
 
 > [!NOTE]
-> Apple's new HomeKit architecture [requires the use of a Home Hub](https://support.apple.com/en-us/HT207057) (either a HomePod or Apple TV) for full and proper operation of any HomeKit device, including those based on HomeSpan.  Without a Home Hub, HomeSpan cannot send notifications to the Home App - things like pushbuttons and temperature sensors will not be able to transmit updates to the Home App.
+> Apple's new HomeKit architecture [requires the use of a Home Hub](https://support.apple.com/en-us/HT207057) (either a HomePod or Apple TV) for full and proper operation of any HomeKit device, including those based on HomeSpan.  Without a Home Hub, HomeSpan cannot send notifications to the Home App - things like pushbuttons and temperature sensors will not be able to transmit updates to the Home App.  Use of HomeSpan without a Home Hub is NOT recommended.
 
 ### HomeSpan Highlights
 
