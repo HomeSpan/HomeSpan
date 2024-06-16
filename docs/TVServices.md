@@ -66,7 +66,7 @@ This Service allows you to change the volume of a television using the iPhone's 
 
 ### Examples
 
-Please see [*File → Examples → HomeSpan → Other Examples → Television*](../Other%20Examples/Television) for a complete worked example demonstrating the effects of using different combinations of the above Characteristics.  Also, don't forget to check out the [HomeSpan Projects](https://github.com/topics/homespan) page for some real-world examples of TV sketches and controllers.
+Please see [*File → Examples → HomeSpan → Other Examples → Television*](../examples/Other%20Examples/Television) for a complete worked example demonstrating the effects of using different combinations of the above Characteristics.  Also, don't forget to check out the [HomeSpan Projects](https://github.com/topics/homespan) page for some real-world examples of TV sketches and controllers.
 
 
 ### Credits
