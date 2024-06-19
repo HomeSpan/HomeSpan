@@ -695,9 +695,9 @@ int HAPClient::postPairVerifyURL(uint8_t *content, size_t len){
       Controller *tPair;                                            // temporary pointer to Controller
       
       if(!(tPair=findController(*itIdentifier))){
-        LOG0("\n*** ERROR: Unrecognized Controller ID: ");
-        charPrintRow(*itIdentifier,hap_controller_IDBYTES,2);
-        LOG0("\n\n");
+        LOG1("\n*** WARNING: Unrecognized Controller ID: ");
+        charPrintRow(*itIdentifier,hap_controller_IDBYTES,1);
+        LOG1("\n\n");
         responseTLV.add(kTLVType_State,pairState_M4);               // set State=<M4>
         responseTLV.add(kTLVType_Error,tagError_Authentication);    // set Error=Authentication
         tlvRespond(responseTLV);                                    // send response to client
