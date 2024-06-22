@@ -460,7 +460,13 @@ class SpanService{
   SpanService *setPrimary();                                                              // sets the Service Type to be primary and returns pointer to self
   SpanService *setHidden();                                                               // sets the Service Type to be hidden and returns pointer to self
   SpanService *addLink(SpanService *svc);                                                 // adds svc as a Linked Service and returns pointer to self
-  vector<SpanService *, Mallocator<SpanService *>> getLinks(){return(linkedServices);}    // returns linkedServices vector for use as range in "for-each" loops
+
+  template <typename T=SpanService *> vector<T, Mallocator<T>> getLinks(){                // returns linkedServices vector, mapped to <T>, for use as range in "for-each" loops
+    vector<T, Mallocator<T>> v;
+    for(auto svc : linkedServices)
+      v.push_back(static_cast<T>(svc));
+    return(v);
+  }
 
   uint32_t getIID(){return(iid);}                         // returns IID of Service
 
