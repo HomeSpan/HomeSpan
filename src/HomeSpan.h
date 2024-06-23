@@ -461,10 +461,12 @@ class SpanService{
   SpanService *setHidden();                                                               // sets the Service Type to be hidden and returns pointer to self
   SpanService *addLink(SpanService *svc);                                                 // adds svc as a Linked Service and returns pointer to self
 
-  template <typename T=SpanService *> vector<T, Mallocator<T>> getLinks(){                // returns linkedServices vector, mapped to <T>, for use as range in "for-each" loops
+  template <typename T=SpanService *> vector<T, Mallocator<T>> getLinks(const char *hapName=NULL){     // returns linkedServices vector, mapped to <T>, for use as range in "for-each" loops
     vector<T, Mallocator<T>> v;
-    for(auto svc : linkedServices)
-      v.push_back(static_cast<T>(svc));
+    for(auto svc : linkedServices){
+      if(hapName==NULL || !strcmp(hapName,svc->hapName))
+        v.push_back(static_cast<T>(svc));
+    }
     return(v);
   }
 
@@ -533,6 +535,7 @@ class SpanCharacteristic{
   
   void uvSet(UVal &dest, UVal &src);                          // copies UVal src into UVal dest
   void uvSet(UVal &u, const char *val);                       // copies string val into UVal u
+  void uvSet(UVal &u, TLV8 *tlv);                             // copies TLV8 val into UVal u (after transforming to a char *)
 
   template <typename T> void uvSet(UVal &u, T val){           // copies numeric val into UVal u  
     switch(format){

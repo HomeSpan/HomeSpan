@@ -29,17 +29,16 @@
 // SPAN SERVICES (HAP Chapter 8) //
 ///////////////////////////////////
 
-// Macros to define services, along with vectors of required and optional characteristics for each Span Service structure
-// The names of the macros are picked up by external scripts to help generate documentation
-
-// Note: These macros below are also parsed by an external awk script to auto-generate Services and Characteristics documentation.
+// Macros to define Services, along with vectors of required and optional Characteristics for each Span Service structure.
+//
+// NOTE: these macros are parsed by an external awk script to auto-generate Services and Characteristics documentation.
 //
 // The CREATE_SERV_DEP() macro is the same as the CREATE_SERV() macro, except that it is used for deprecated Services that will not
-// be included in documentation. The OPT_DEP() macro is that same as the OPT() macro, except that it is used for deprecated Characteristics
-// that will not be included in documentation.
+// be included in documentation. The REQ_DEP and OPT_DEP() macros are the same as the REQ() and OPT() macros, except that they are used
+// for deprecated Characteristics that will not be included in documentation.
 
-#define CREATE_SERV(NAME,UUID) struct NAME : SpanService { NAME() : SpanService{#UUID,#NAME}{
-#define CREATE_SERV_DEP(NAME,UUID) struct NAME : SpanService { NAME() : SpanService{#UUID,#NAME}{
+#define CREATE_SERV(NAME,_UUID) struct NAME : SpanService { static constexpr const char *UUID=#_UUID; NAME() : SpanService{#_UUID,#NAME}{
+#define CREATE_SERV_DEP(NAME,_UUID) struct NAME : SpanService { static constexpr const char *UUID=#_UUID; NAME() : SpanService{#_UUID,#NAME}{
 #define END_SERV }};
 
 #define REQ(HAPCHAR) req.push_back(&hapChars.HAPCHAR)
@@ -479,7 +478,7 @@ namespace Service {
   struct HAPCHAR : SpanCharacteristic { __VA_OPT__(enum{) __VA_ARGS__ __VA_OPT__(};) HAPCHAR(TYPE val=DEFVAL, boolean nvsStore=false) : SpanCharacteristic {&hapChars.HAPCHAR} { init(val,nvsStore,(TYPE)MINVAL,(TYPE)MAXVAL); } };
 
 namespace Characteristic {
-
+  
   CREATE_CHAR(uint32_t,AccessoryFlags,1,1,1);   // not applicable for HomeSpan
   CREATE_CHAR(uint8_t,Active,0,0,1,INACTIVE,ACTIVE);  // indicates if the Service is active/on
   CREATE_CHAR(uint32_t,ActiveIdentifier,0,0,255);     // numerical Identifier of the <b>InputSource</b> selected in the Home App.
@@ -514,7 +513,8 @@ namespace Characteristic {
   CREATE_CHAR(double,CurrentRelativeHumidity,0,0,100);  // current humidity measured as a percentage
   CREATE_CHAR(double,CurrentTemperature,0,0,100);   // current temperature measured in Celsius
   CREATE_CHAR(int,CurrentTiltAngle,0,-90,90);  // current angle (in degrees) of slats from fully up or left (-90) to fully open (0) to fully down or right (90)
-  CREATE_CHAR(const char *,DisplayOrder,"",0,1);  // specifies the order in which the TV inputs are displayed for selection in the Home App
+//  CREATE_CHAR(const char *,DisplayOrder,"",0,1);  // specifies the order in which the TV inputs are displayed for selection in the Home App
+  CREATE_CHAR(TLV8 *,DisplayOrder,NULL,NULL,NULL);  // specifies the order in which the TV inputs are displayed for selection in the Home App
   CREATE_CHAR(double,FilterLifeLevel,100,0,100); // measured as a percentage of remaining life
   CREATE_CHAR(uint8_t,FilterChangeIndication,0,0,1,NO_CHANGE_NEEDED,CHANGE_NEEDED);  // indicates state of filter
   CREATE_CHAR(const char *,FirmwareRevision,"1.0.0",0,1);  // must be in form x[.y[.z]] - informational only
