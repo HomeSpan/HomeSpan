@@ -297,3 +297,5 @@ void TLV8::osprint(std::ostream& os, TLV8_it it1, TLV8_it it2){
 }
 
 //////////////////////////////////////
+
+TLV8 TLV8::NULL_TLV;

@@ -104,6 +104,8 @@ class TLV8 : public std::list<tlv8_t, Mallocator<tlv8_t>> {
 
   public:
 
+  static TLV8 NULL_TLV;
+ 
   TLV8(){};
   TLV8(const TLV8_names *names, int nNames) : names{names}, nNames{nNames} {};
 

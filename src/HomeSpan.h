@@ -535,7 +535,7 @@ class SpanCharacteristic{
   
   void uvSet(UVal &dest, UVal &src);                          // copies UVal src into UVal dest
   void uvSet(UVal &u, const char *val);                       // copies string val into UVal u
-  void uvSet(UVal &u, TLV8 *tlv);                             // copies TLV8 val into UVal u (after transforming to a char *)
+  void uvSet(UVal &u, TLV8 &tlv);                             // copies TLV8 val into UVal u (after transforming to a char *)
 
   template <typename T> void uvSet(UVal &u, T val){           // copies numeric val into UVal u  
     switch(format){
@@ -602,8 +602,8 @@ class SpanCharacteristic{
   protected:
 
   ~SpanCharacteristic();                                      // destructor  
-    
-  template <typename T, typename A=boolean, typename B=boolean> void init(T val, boolean nvsStore, A min=0, B max=1){
+   
+  template <typename T> void init(T val, boolean nvsStore, T min, T max){
 
     uvSet(value,val);
 

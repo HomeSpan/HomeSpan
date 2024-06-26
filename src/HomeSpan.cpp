@@ -1874,26 +1874,26 @@ void SpanCharacteristic::uvSet(UVal &u, const char *val){
 
 ///////////////////////////////
 
-void SpanCharacteristic::uvSet(UVal &u, TLV8 *tlv){
+void SpanCharacteristic::uvSet(UVal &u, TLV8 &tlv){
 
   const size_t bufSize=36;                                  // maximum size of buffer to store packed TLV bytes before encoding directly into value; must be multiple of 3
-  size_t nBytes=tlv->pack_size();                            // total size of packed TLV in bytes
+  size_t nBytes=tlv.pack_size();                            // total size of packed TLV in bytes
 
   if(nBytes>0){
     size_t nChars;
-    mbedtls_base64_encode(NULL,0,&nChars,NULL,nBytes);        // get length of string buffer needed (mbedtls includes the trailing null in this size)
-    u.STRING = (char *)HS_REALLOC(u.STRING,nChars);   // allocate sufficient size for storing value
-    TempBuffer<uint8_t> tBuf(bufSize);                        // create fixed-size buffer to store packed TLV bytes
-    tlv->pack_init();                                          // initialize TLV packing
-    uint8_t *p=(uint8_t *)u.STRING;                       // set pointer to beginning of value
-    while((nBytes=tlv->pack(tBuf,bufSize))>0){                 // pack the next set of TLV bytes, up to a maximum of bufSize, into tBuf
-      size_t olen;                                            // number of characters written (excludes null character)
-      mbedtls_base64_encode(p,nChars,&olen,tBuf,nBytes);      // encode data directly into value
-      p+=olen;                                                // advance pointer to null character
-      nChars-=olen;                                           // subtract number of characters remaining
+    mbedtls_base64_encode(NULL,0,&nChars,NULL,nBytes);      // get length of string buffer needed (mbedtls includes the trailing null in this size)
+    u.STRING = (char *)HS_REALLOC(u.STRING,nChars);         // allocate sufficient size for storing value
+    TempBuffer<uint8_t> tBuf(bufSize);                      // create fixed-size buffer to store packed TLV bytes
+    tlv.pack_init();                                        // initialize TLV packing
+    uint8_t *p=(uint8_t *)u.STRING;                         // set pointer to beginning of value
+    while((nBytes=tlv.pack(tBuf,bufSize))>0){               // pack the next set of TLV bytes, up to a maximum of bufSize, into tBuf
+      size_t olen;                                          // number of characters written (excludes null character)
+      mbedtls_base64_encode(p,nChars,&olen,tBuf,nBytes);    // encode data directly into value
+      p+=olen;                                              // advance pointer to null character
+      nChars-=olen;                                         // subtract number of characters remaining
     }
   } else {
-    u.STRING = (char *)HS_REALLOC(u.STRING,1);        // allocate sufficient size for just trailing null character
+    u.STRING = (char *)HS_REALLOC(u.STRING,1);              // allocate sufficient size for just trailing null character
     *u.STRING ='\0';
   }  
 }
@@ -1998,28 +1998,7 @@ return(tlv.pack_size());
 void SpanCharacteristic::setTLV(TLV8 &tlv, boolean notify){
 
   setValCheck();
-  
-  const size_t bufSize=36;                                  // maximum size of buffer to store packed TLV bytes before encoding directly into value; must be multiple of 3
-  size_t nBytes=tlv.pack_size();                            // total size of packed TLV in bytes
-
-  if(nBytes>0){
-    size_t nChars;
-    mbedtls_base64_encode(NULL,0,&nChars,NULL,nBytes);        // get length of string buffer needed (mbedtls includes the trailing null in this size)
-    value.STRING = (char *)HS_REALLOC(value.STRING,nChars);   // allocate sufficient size for storing value
-    TempBuffer<uint8_t> tBuf(bufSize);                        // create fixed-size buffer to store packed TLV bytes
-    tlv.pack_init();                                          // initialize TLV packing
-    uint8_t *p=(uint8_t *)value.STRING;                       // set pointer to beginning of value
-    while((nBytes=tlv.pack(tBuf,bufSize))>0){                 // pack the next set of TLV bytes, up to a maximum of bufSize, into tBuf
-      size_t olen;                                            // number of characters written (excludes null character)
-      mbedtls_base64_encode(p,nChars,&olen,tBuf,nBytes);      // encode data directly into value
-      p+=olen;                                                // advance pointer to null character
-      nChars-=olen;                                           // subtract number of characters remaining
-    }
-  } else {
-    value.STRING = (char *)HS_REALLOC(value.STRING,1);        // allocate sufficient size for just trailing null character
-    *value.STRING ='\0';
-  }
-
+  uvSet(value,tlv);
   setValFinish(notify);
 }
 

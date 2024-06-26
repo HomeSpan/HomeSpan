@@ -475,7 +475,7 @@ namespace Service {
 // Macro to define Span Characteristic structures based on name of HAP Characteristic, default value, and min/max value (not applicable for STRING or BOOL which default to min=0, max=1)
 
 #define CREATE_CHAR(TYPE,HAPCHAR,DEFVAL,MINVAL,MAXVAL,...) \
-  struct HAPCHAR : SpanCharacteristic { __VA_OPT__(enum{) __VA_ARGS__ __VA_OPT__(};) HAPCHAR(TYPE val=DEFVAL, boolean nvsStore=false) : SpanCharacteristic {&hapChars.HAPCHAR} { init(val,nvsStore,(TYPE)MINVAL,(TYPE)MAXVAL); } };
+  struct HAPCHAR : SpanCharacteristic { __VA_OPT__(enum{) __VA_ARGS__ __VA_OPT__(};) HAPCHAR(TYPE val=DEFVAL, boolean nvsStore=false) : SpanCharacteristic {&hapChars.HAPCHAR} { init<TYPE>(val,nvsStore,MINVAL,MAXVAL); } };
 
 namespace Characteristic {
   
@@ -496,7 +496,7 @@ namespace Characteristic {
   CREATE_CHAR(double,CoolingThresholdTemperature,10,10,35);   // cooling turns on when temperature (in Celsius) rises above this threshold
   CREATE_CHAR(uint32_t,ColorTemperature,200,140,500);  // measured in inverse megaKelvin (= 1,000,000 / Kelvin)
   CREATE_CHAR(uint8_t,ContactSensorState,1,0,1,DETECTED,NOT_DETECTED);  // indictates if contact is detected (i.e. closed)
-  CREATE_CHAR(const char *,ConfiguredName,"unnamed",0,1);   // default display name of this Service
+  CREATE_CHAR(const char *,ConfiguredName,"unnamed",NULL,NULL);   // default display name of this Service
   CREATE_CHAR(double,CurrentAmbientLightLevel,1,0.0001,100000);   // measured in Lux (lumens/m<sup>2</sup>
   CREATE_CHAR(int,CurrentHorizontalTiltAngle,0,-90,90);  // current angle (in degrees) of slats from fully up (-90) to fully open (0) to fully down (90) 
   CREATE_CHAR(uint8_t,CurrentAirPurifierState,0,0,2,INACTIVE,IDLE,PURIFYING);  // indicates current state of air purification
@@ -513,12 +513,11 @@ namespace Characteristic {
   CREATE_CHAR(double,CurrentRelativeHumidity,0,0,100);  // current humidity measured as a percentage
   CREATE_CHAR(double,CurrentTemperature,0,0,100);   // current temperature measured in Celsius
   CREATE_CHAR(int,CurrentTiltAngle,0,-90,90);  // current angle (in degrees) of slats from fully up or left (-90) to fully open (0) to fully down or right (90)
-//  CREATE_CHAR(const char *,DisplayOrder,"",0,1);  // specifies the order in which the TV inputs are displayed for selection in the Home App
-  CREATE_CHAR(TLV8 *,DisplayOrder,NULL,NULL,NULL);  // specifies the order in which the TV inputs are displayed for selection in the Home App
+  CREATE_CHAR(TLV8 &,DisplayOrder,TLV8::NULL_TLV,TLV8::NULL_TLV,TLV8::NULL_TLV);  // specifies the order in which the TV inputs are displayed for selection in the Home App
   CREATE_CHAR(double,FilterLifeLevel,100,0,100); // measured as a percentage of remaining life
   CREATE_CHAR(uint8_t,FilterChangeIndication,0,0,1,NO_CHANGE_NEEDED,CHANGE_NEEDED);  // indicates state of filter
-  CREATE_CHAR(const char *,FirmwareRevision,"1.0.0",0,1);  // must be in form x[.y[.z]] - informational only
-  CREATE_CHAR(const char *,HardwareRevision,"1.0.0",0,1);  // must be in form x[.y[.z]] - informational only
+  CREATE_CHAR(const char *,FirmwareRevision,"1.0.0",NULL,NULL);  // must be in form x[.y[.z]] - informational only
+  CREATE_CHAR(const char *,HardwareRevision,"1.0.0",NULL,NULL);  // must be in form x[.y[.z]] - informational only
   CREATE_CHAR(double,HeatingThresholdTemperature,16,0,25); // heating turns on when temperature (in Celsius) falls below this threshold
   CREATE_CHAR(boolean,HoldPosition,false,0,1);  // deprecated
   CREATE_CHAR(double,Hue,0,0,360);  // color (in degrees) from red (0) to green (120) to blue (240) and back to red (360)
@@ -532,11 +531,11 @@ namespace Characteristic {
   CREATE_CHAR(uint8_t,LockCurrentState,0,0,3,UNLOCKED,LOCKED,JAMMED,UNKNOWN);  // indicates state of a lock
   CREATE_CHAR(uint8_t,LockPhysicalControls,0,0,1,CONTROL_LOCK_DISABLED,CONTROL_LOCK_ENABLED);  // indicates if local control lock is enabled
   CREATE_CHAR(uint8_t,LockTargetState,0,0,1,UNLOCK,LOCK);   // indicates desired state of lock
-  CREATE_CHAR(const char *,Manufacturer,"HomeSpan",0,1);  // any string - informational only
-  CREATE_CHAR(const char *,Model,"HomeSpan-ESP32",0,1);  // any string - informational only
+  CREATE_CHAR(const char *,Manufacturer,"HomeSpan",NULL,NULL);  // any string - informational only
+  CREATE_CHAR(const char *,Model,"HomeSpan-ESP32",NULL,NULL);  // any string - informational only
   CREATE_CHAR(boolean,MotionDetected,0,0,1,NOT_DETECTED,DETECTED);  // indicates if motion is detected
   CREATE_CHAR(boolean,Mute,0,0,1,OFF,ON); // not used
-  CREATE_CHAR(const char *,Name,"unnamed",0,1); // default display name of the Accessory
+  CREATE_CHAR(const char *,Name,"unnamed",NULL,NULL); // default display name of the Accessory
   CREATE_CHAR(double,NitrogenDioxideDensity,0,0,1000);  // measured in &micro;g/m<sup>3</sup>
   CREATE_CHAR(boolean,ObstructionDetected,0,0,1,NOT_DETECTED,DETECTED);  // indicates if obstruction is detected
   CREATE_CHAR(double,PM25Density,0,0,1000); // 2.5-micron particulate density, measured in &micro;g/m<sup>3</sup>
@@ -561,7 +560,7 @@ namespace Characteristic {
   CREATE_CHAR(uint8_t,SecuritySystemAlarmType,0,0,1,KNOWN,UNKNOWN);  // indicates whether alarm was triggered for known reason
   CREATE_CHAR(uint8_t,SecuritySystemCurrentState,3,0,4,ARMED_STAY,ARMED_AWAY,ARMED_NIGHT,DISARMED,ALARM_TRIGGERED);  // indicates current state of the security system 
   CREATE_CHAR(uint8_t,SecuritySystemTargetState,3,0,3,ARM_STAY,ARM_AWAY,ARM_NIGHT,DISARM); // indicates desired state of the security system
-  CREATE_CHAR(const char *,SerialNumber,"HS-12345",0,1);  // any string - informational only
+  CREATE_CHAR(const char *,SerialNumber,"HS-12345",NULL,NULL);  // any string - informational only
   CREATE_CHAR(uint8_t,ServiceLabelIndex,1,1,255);   // numerical index used to distinguish multiple copies of the same Service within an Accessory
   CREATE_CHAR(uint8_t,ServiceLabelNamespace,1,0,1,DOTS,NUMERALS);  // indicates how un-named Services linked together with a <b>ServiceLabel</b> Service should be displayed in the Home App  
   CREATE_CHAR(uint8_t,SlatType,0,0,1,HORIZONTAL,VERTICAL); // indicates the direction of a slat or group of slats
@@ -591,7 +590,7 @@ namespace Characteristic {
   CREATE_CHAR(uint8_t,TemperatureDisplayUnits,0,0,1,CELSIUS,FAHRENHEIT);   // indicates the desired units to display the temperature on the device itself (has no effect on Home App)
   CREATE_CHAR(int,TargetVerticalTiltAngle,0,-90,90);  // indicates desired angle (in degrees) of slats from fully left (-90) to fully open (0) to fully right (90)
   CREATE_CHAR(uint8_t,ValveType,0,0,3,GENERIC,IRRIGATION,SHOWER_HEAD,FAUCET);  // indicates the type of valve
-  CREATE_CHAR(const char *,Version,"1.0.0",0,1);  // unused
+  CREATE_CHAR(const char *,Version,"1.0.0",NULL,NULL);  // unused
   CREATE_CHAR(double,VOCDensity,0,0,1000);  // measured in &micro;g/m<sup>3</sup>
   CREATE_CHAR(uint8_t,Volume,0,0,100);  // unused
   CREATE_CHAR(uint8_t,VolumeControlType,3,0,3,NONE,RELATIVE,RELATIVE_CURRENT,ABSOLUTE); // indicates the type of volume control
