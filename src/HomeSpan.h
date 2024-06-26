@@ -535,7 +535,7 @@ class SpanCharacteristic{
   
   void uvSet(UVal &dest, UVal &src);                          // copies UVal src into UVal dest
   void uvSet(UVal &u, const char *val);                       // copies string val into UVal u
-  void uvSet(UVal &u, TLV8 &tlv);                             // copies TLV8 val into UVal u (after transforming to a char *)
+  void uvSet(UVal &u, const TLV8 &tlv);                       // copies TLV8 val into UVal u (after transforming to a char *)
 
   template <typename T> void uvSet(UVal &u, T val){           // copies numeric val into UVal u  
     switch(format){
@@ -658,7 +658,7 @@ class SpanCharacteristic{
 
   void setString(const char *val, boolean notify=true);                                       // sets the value and newValue for string-based Characteristic
   void setData(uint8_t *data, size_t len, boolean notify=true);                               // sets the value and newValue for data-based Characteristic
-  void setTLV(TLV8 &tlv, boolean notify=true);                                                // sets the value and newValue for tlv8-based Characteristic
+  void setTLV(const TLV8 &tlv, boolean notify=true);                                          // sets the value and newValue for tlv8-based Characteristic
   
   template <typename T> void setVal(T val, boolean notify=true){                              // sets the value and newValue for numeric-based Characteristics
 

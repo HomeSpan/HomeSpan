@@ -52,7 +52,7 @@ void tlv8_t::update(size_t addLen, const uint8_t *addVal){
 
 /////////////////////////////////////
 
-void tlv8_t::osprint(std::ostream& os){
+void tlv8_t::osprint(std::ostream& os) const {
 
   uint8_t *p=val.get();       // starting pointer
   uint8_t *pend=p+len;        // ending pointer (may equal starting if len=0)
@@ -104,7 +104,7 @@ TLV8_it TLV8::add(uint8_t tag, uint64_t val){
 
 /////////////////////////////////////
 
-TLV8_it TLV8::find(uint8_t tag, TLV8_it it1, TLV8_it it2){
+TLV8_itc TLV8::find(uint8_t tag, TLV8_itc it1, TLV8_itc it2) const {
 
   auto it=it1;
   while(it!=it2 && it->getTag()!=tag)
@@ -114,7 +114,7 @@ TLV8_it TLV8::find(uint8_t tag, TLV8_it it1, TLV8_it it2){
 
 /////////////////////////////////////
 
-size_t TLV8::pack_size(TLV8_it it1, TLV8_it it2){
+size_t TLV8::pack_size(TLV8_itc it1, TLV8_itc it2) const {
 
   size_t nBytes=0;
 
@@ -130,7 +130,7 @@ size_t TLV8::pack_size(TLV8_it it1, TLV8_it it2){
 
 /////////////////////////////////////
 
-size_t TLV8::pack(uint8_t *buf, size_t bufSize){
+size_t TLV8::pack(uint8_t *buf, size_t bufSize) const {
 
   size_t nBytes=0;
 
@@ -237,7 +237,7 @@ int TLV8::unpack(TLV8_it it){
 
 /////////////////////////////////////
 
-const char *TLV8::getName(uint8_t tag){
+const char *TLV8::getName(uint8_t tag) const {
 
   if(names==NULL)
     return(NULL);
@@ -252,7 +252,7 @@ const char *TLV8::getName(uint8_t tag){
 
 /////////////////////////////////////
 
-void TLV8::print(TLV8_it it1, TLV8_it it2){
+void TLV8::print(TLV8_itc it1, TLV8_itc it2) const {
 
   while(it1!=it2){
     const char *name=getName(it1->getTag());
@@ -276,7 +276,7 @@ void TLV8::print(TLV8_it it1, TLV8_it it2){
   
 //////////////////////////////////////
 
-void TLV8::printAll_r(String label){
+void TLV8::printAll_r(String label) const{
   
   for(auto it=begin();it!=end();it++){
     Serial.printf("%s",label.c_str());
@@ -290,7 +290,7 @@ void TLV8::printAll_r(String label){
 
 //////////////////////////////////////
 
-void TLV8::osprint(std::ostream& os, TLV8_it it1, TLV8_it it2){
+void TLV8::osprint(std::ostream& os, TLV8_itc it1, TLV8_itc it2) const {
 
   for(auto it=it1;it!=it2;it++)
     (*it).osprint(os);

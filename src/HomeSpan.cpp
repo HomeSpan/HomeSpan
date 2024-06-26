@@ -1874,7 +1874,7 @@ void SpanCharacteristic::uvSet(UVal &u, const char *val){
 
 ///////////////////////////////
 
-void SpanCharacteristic::uvSet(UVal &u, TLV8 &tlv){
+void SpanCharacteristic::uvSet(UVal &u, const TLV8 &tlv){
 
   const size_t bufSize=36;                                  // maximum size of buffer to store packed TLV bytes before encoding directly into value; must be multiple of 3
   size_t nBytes=tlv.pack_size();                            // total size of packed TLV in bytes
@@ -1995,7 +1995,7 @@ return(tlv.pack_size());
 
 ///////////////////////////////
 
-void SpanCharacteristic::setTLV(TLV8 &tlv, boolean notify){
+void SpanCharacteristic::setTLV(const TLV8 &tlv, boolean notify){
 
   setValCheck();
   uvSet(value,tlv);
