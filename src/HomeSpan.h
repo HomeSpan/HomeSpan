@@ -560,9 +560,7 @@ class SpanCharacteristic{
       case FORMAT::FLOAT:
         u.FLOAT=(double)val;
       break;
-      case FORMAT::STRING:
-      case FORMAT::DATA:
-      case FORMAT::TLV_ENC:
+      default:
       break;
     } // switch
   }
@@ -588,9 +586,7 @@ class SpanCharacteristic{
         return((T) u.UINT64);        
       case FORMAT::FLOAT:
         return((T) u.FLOAT);        
-      case FORMAT::STRING:
-      case FORMAT::DATA:
-      case FORMAT::TLV_ENC:
+      default:
       break;
     }
     return((T)0);       // included to prevent compiler warnings  
