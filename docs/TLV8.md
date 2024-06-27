@@ -24,7 +24,7 @@ Fortunately, HomeSpan includes a dedicated TLV8 library (see below) that automat
 
 Creating an instance of HomeSpan's TLV8 **class** using the above constructor builds an empty TLV8 object into which you can add and process TLV8 records.  TLV8 objects are instantiated as standard C++ linked-list containers derived from `std::list<tlv8_t>`, where *tlv8_t* is an opaque structure used to store individual TLV8 records.[^opaque]
 
-Also, as shown below, many of the TLV8 methods utilize linked-list iterators.  These are represented by the typedef *TLV8_it*.[^iterators] 
+Also, as shown below, many of the TLV8 methods utilize linked-list *constant* iterators.  These are represented by the typedef *TLV8_itc*.[^iterators] 
 
 [^opaque]:The *tlv8_t* structure is opaque because in general you will not have to create or interact directly with the structure or its data.  Note that in addition to the above TLV8-specific methods, you can use any `std::list` method with a TLV8 object if desired.
 
@@ -32,25 +32,25 @@ Also, as shown below, many of the TLV8 methods utilize linked-list iterators.  T
 
 The method for adding a generic TLV8 record to a TLV8 object is as follows:
 
-* `TLV8_it add(uint8_t tag, size_t len, const uint8_t *val)`
+* `TLV8_itc add(uint8_t tag, size_t len, const uint8_t *val)`
 
   * where *tag* is the TAG identifier for the record to add and *val* is a pointer to a byte-array containing *len* elements
   * example: `TLV8 myTLV; uint8_t v[]={0x01, 0x05, 0xE3, 0x4C}; tlv.add(1, sizeof(v), v);
   * setting *val* to NULL reserves *len* bytes of space for the TLV8 record within the TLV8 object, but does not copy any data
-  * this method returns a TLV8 *iterator* to the resulting TLV8 record so you can reference the record at a later time if needed
+  * this method returns a TLV8 constant iterator to the resulting TLV8 record so you can reference the record at a later time if needed
 
 In addition to the above generic method suitable for any type of data, the following methods make it easier to add TLV8 records with specific, frequently-used types of data:
 
-* `TLV8_it add(uint8_t tag, uintXX_t val)`
+* `TLV8_itc add(uint8_t tag, uintXX_t val)`
   * adds a TLV8 record containing a single, unsigned numeric value, *val* (i.e. uint8_t, uint16_t, uint32_t, or uint64_t)
     
-* `TLV8_it add(uint8_t tag, const char *val)`
+* `TLV8_itc add(uint8_t tag, const char *val)`
   * adds a TLV8 record containing all the non-null bytes of a null-terminated character string, *val*
     
-* `TLV8_it add(uint8_t tag, TLV8 &subTLV)`
+* `TLV8_itc add(uint8_t tag, TLV8 &subTLV)`
   * adds a TLV8 record containing all the bytes of an entire TLV8 object, *subTLV*
     
-* `TLV8_it add(uint8_t tag)`
+* `TLV8_itc add(uint8_t tag)`
   * adds a zero-length TLV8 record containing nothing but a TAG identifer
 
 Note that if you *add* consecutive records with the same TAG identifier, the TLV8 library will concatenate their data and combine into a single record.  For example, `myTLV.add(1,13); myTLV.add(1,300)` will be combined to produce a single 3-byte recording containing the data 0x0D2C01, where the first byte represents from the number 13 and the second two bytes represent the number 300.  This may have been your desired outcome, but likely not what you wanted to happen.
@@ -59,27 +59,27 @@ Instead, to create two distinct records with the same tag value, simply interpos
 
 The method for finding a TLV8 record within a TLV8 object that contains a specific TAG identifer is as follows:
 
-* `TLV8_it find(uint8_t tag)`
+* `TLV8_itc find(uint8_t tag)`
 
   * where *tag* is the TAG identifier you are seeking
-  * returns a TLV8 iterator to *first* record that matches; returns *end()* if no records match
+  * returns a TLV8 constant iterator to *first* record that matches; returns *end()* if no records match
  
 To restrict the search range to a limited set of records, add optional starting and ending iterators *it1* and *it2*:
 
-* `TLV8_it find(uint8_t tag [, TLV8_it it1 [, TLV8_it it2]])`
+* `TLV8_itc find(uint8_t tag [, TLV8_itc it1 [, TLV8_itc it2]])`
   
-  * returns a TLV8 iterator to the *first* record within the range of iterators from *it1* to *it2* that matches the specified *tag*
+  * returns a TLV8 constant iterator to the *first* record within the range of constant iterators from *it1* to *it2* that matches the specified *tag*
   * search range is inclusive of *it1* but exclusive of *it2*
   * returns *it2* if no records match
   * if *it2* is unspecified, default is *end()*; if *it1* is unspecified, default is *begin()*
   * note `myTLV.find(tag)` is equivalent to `myTLV.find(tag, myTLV.begin(), myTLV.end())`
  
-Use of the C++ `auto` keyword is generally the best way to save the TVL8_it iterator that is returned from the `find()` and `add()` methods.  For example, `auto myIT = myTLV.find(6)` sets *myIT* to an iterator pointing to the first TLV8 record in *myTLV* that has a TAG identifer of 6.
+Use of the C++ `auto` keyword is generally the best way to save the TVL8_itc iterator that is returned from the `find()` and `add()` methods.  For example, `auto myIT = myTLV.find(6)` sets *myIT* to a constant iterator pointing to the first TLV8 record in *myTLV* that has a TAG identifer of 6.
 
 The method for finding the LENGTH of the data VALUE stored in a particular TLV8 record is as follows:
 
-* `int len(TLV8_it it)`
-  * where *it* is an iterator pointing to a specific TLV8 record
+* `int len(TLV8_itc it)`
+  * where *it* is an constant iterator pointing to a specific TLV8 record
   * returns the length of the data VALUE stored in the associated record, which may be zero for a zero-LENGTH record
   * returns -1 if *it* points to the *end()* of the TLV8 object
 
@@ -106,11 +106,11 @@ The method for printing all of the records in a TLV8 object to the Serial Monito
       * this decimal value is only displayed if LENGTH<=8
       * if LENGTH=0, the word "null" is displayed instead
      
-To restrict the the printing range to a limited set of records, add optional starting and ending iterators *it1* and *it2*:
+To restrict the the printing range to a limited set of records, add optional starting and ending constant iterators *it1* and *it2*:
 
-* `void print(TLV8_it it1 [, TLV8_it it2])`
+* `void print(TLV8_itc it1 [, TLV8_itc it2])`
   
-  * prints all TLV8 records between iterators *it1* and *it2*
+  * prints all TLV8 records between constant iterators *it1* and *it2*
   * print range is inclusive of *it1* but exclusive of *it2*
   * if *it2* is unspecified, prints only the record pointed to by *it1*
   * note `myTLV.print()` is equivalent to `myTLV.print(myTLV.begin(), myTLV.end())`
@@ -135,9 +135,9 @@ TLV8 objects manage all of their internal memory requirements, and free up all r
   * erases all TLV8 records and frees all associated memory
   * leaves an empty TLV8 object ready for re-use
  
-## *TLV8_it()*  
+## *TLV8_itc()*  
   
-Objects of type *TLV8_it* are iterators that point to specific records in a TLV8 object (or to *end()*).  TLV8 iterators are used to access, read from, and write to, the data elements in any given TLV8 record, and are thus a critical part of the TLV8 library.  However, if you are using the TLV8 library correctly you should rarely, if ever, need to directly instantiate a *TLV8_it* using its constructor.  Instead, simply use the C++ `auto` keyword as noted above.
+Objects of type *TLV8_it* are constant iterators that point to specific records in a TLV8 object (or to *end()*).  TLV8 iterators are used to access, read from, and write to, the data elements in any given TLV8 record, and are thus a critical part of the TLV8 library.  However, if you are using the TLV8 library correctly you should rarely, if ever, need to directly instantiate a *TLV8_itc* using its constructor.  Instead, simply use the C++ `auto` keyword as noted above.
 
 TLV8_it supports the following methods:
 
