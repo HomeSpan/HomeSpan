@@ -386,11 +386,15 @@ The following methods are supported:
   * note that Linked Services are only applicable for select HAP Services.  See Apple's HAP-R2 documentation for full details
   * example: `(new Service::Faucet)->addLink(new Service::Valve)->addLink(new Service::Valve);` (links two Valves to a Faucet)
 
-* `vector<SpanService *> getLinks()`
-  * returns a vector of pointers to Services that were added using `addLink()`
-  * useful for creating loops that iterate over all linked Services
-  * note that the returned vector points to generic SpanServices, which should be re-cast as needed
-  * example: `for(auto myValve : faucet->getLinks()) { if((MyValve *)myValve)->active->getVal()) ... }` checks all Valves linked to a Faucet
+* `vector<T> getLinks<T=SpanService *>(const char *serviceName=NULL)`
+  * template function that returns a vector of pointers to Services that were added using `addLink()`
+    * if template parameter, *T*, is left blank, the elements of the returned vector will be of type *SpanService \**
+    * if template parameter, *T*, is specified, the elements of the returned vector will be cast into type *T*
+  * if *serviceName* is specified, only those services matching *serviceName* will be included in the return vector
+    * *serviceName* must be one of HomeSpan's built-in Services (e.g. "Valve")
+    * if *serviceName* is left blank or set to NULL, all services will be included in the return vector
+  * this function is useful for creating loops that iterate over all linked Services
+  * example: from within a Faucet Service containing linked Valves defined in *MyValveService*, use `for(auto valve : getLinks<MyValveService *>()) { if(valve->active->getVal()) ... }` to check which Valves are active
   
 * `virtual boolean update()`
   * HomeSpan calls this method upon receiving a request from a HomeKit Controller to update one or more Characteristics associated with the Service.  Users should override this method with code that implements that requested updates using one or more of the SpanCharacteristic methods below.  Method **must** return *true* if update succeeds, or *false* if not.
