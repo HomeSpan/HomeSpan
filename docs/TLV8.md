@@ -137,9 +137,9 @@ TLV8 objects manage all of their internal memory requirements, and free up all r
  
 ## *TLV8_itc()*  
   
-Objects of type *TLV8_it* are constant iterators that point to specific records in a TLV8 object (or to *end()*).  TLV8 iterators are used to access, read from, and write to, the data elements in any given TLV8 record, and are thus a critical part of the TLV8 library.  However, if you are using the TLV8 library correctly you should rarely, if ever, need to directly instantiate a *TLV8_itc* using its constructor.  Instead, simply use the C++ `auto` keyword as noted above.
+Objects of type *TLV8_itc* are constant iterators that point to specific *tlv8_t* records in a TLV8 object (or to *end()*).  TLV8 iterators are used to access, read from, and write to, the data elements in any given TLV8 record, and are thus a critical part of the TLV8 library.  However, if you are using the TLV8 library correctly you should rarely, if ever, need to directly instantiate a *TLV8_itc* using its constructor.  Instead, simply use the C++ `auto` keyword as noted above.
 
-TLV8_it supports the following methods:
+TLV8_itc iterators can be dereferenced to work with data in an individual TLV8 record using the follow methods:
 
 * `uint8_t getTag()`
   
