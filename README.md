@@ -114,6 +114,11 @@ HomeSpan is currently NOT compatible with version 3.X of the Arduino-ESP32 Board
     * a warning message is output on the Serial Monitor if `setVal()` is called to change the value of a Characteristic from within the `update()` method at the same time the Home App is sending an update request for that value
     * does not apply if `setVal()` is called from within `update()` to change the value of a Characteristic in response to a *write-response* request from the Home App
    
+* **Converted the `getLinks()` SpanService method to a template function**
+  * allows user to automatically cast the elements of the returned vector into any specific Service type
+  * also adds an optional parameter to restrict the elements of the returned vector to match a specified HomeSpan Service
+  * see the [API Reference](docs/Reference.md) for details
+   
 * **Refactored client/slot management to save memory and prepare for future integration of Ethernet support**
   * fixed-array of Client/Socket connections replaced by dynamic linked-list
   * serial interface now only shows active client connections (rather than a fixed list of client slots)
