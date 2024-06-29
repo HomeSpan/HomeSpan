@@ -118,4 +118,5 @@ class ServoPin : public LedC {
     ServoPin(uint8_t pin, double initDegrees=0) : ServoPin(pin,initDegrees,1000,2000,-90,90) {};
     
     void set(double degrees);                               // sets the Servo to degrees, where degrees is bounded by [minDegrees,maxDegrees]  
+    void pause(boolean pauseState);                               // pause the Servo signal, where pauseState is the output state when it is paused, false for Low, true for High  
 };
