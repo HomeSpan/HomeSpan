@@ -419,13 +419,18 @@ This is a **base class** from which all HomeSpan Characteristics are derived, an
 
 * instantiated Characteristics are added to the HomeSpan HAP Database and associated with the last Service instantiated
 * instantiating a Characteristic without first instantiating a Service throws an error during initialization
-* the first argument optionally allows you to set the initial *value* of the Characteristic at startup.  If *value* is not specified, HomeSpan will supply a reasonable default for the Characteristic
-* throws a runtime warning if *value* is outside of the min/max range for the Characteristic, where min/max is either the HAP default, or any new values set via a call to `setRange()`
+* the first argument optionally allows you to set the initial *value* of the Characteristic at startup using the following formats:
+  * for NUMERIC Characteristics, *value* can be any integer or decimal numeric type, such as `boolean`, `int`, `uint64_t`, `double`, etc.  HomeSpan will automatically cast *value* into a variable with the correct numerical precision for the Characteristic specified
+  * for STRING Characteristics, *value* must be either of the type `char *`, or a literal quote-enclosed UTF-8 string
+  * for TLV8 Characteristics, *value* must be of the type `TLV8`
+  * for DATA Characteristics, *value* must be a brace-enclosed *pair* of the form `{uint8_t *data, size_t len}`, where *len* specifies the length of the size of the byte-array *data*
+* if *value* is not specified, HomeSpan will supply a reasonable default for the Characteristic
+* for numerical Characteristics, throws a runtime warning if *value* is outside of the min/max range for the Characteristic, where min/max is either the HAP default, or any new values set via a call to `setRange()`
 * the second optional argument, if set to `true`, instructs HomeSpan to save updates to this Characteristic's value in the device's non-volative storage (NVS) for restoration at startup if the device should lose power.  If not specified, *nvsStore* will default to `false` (no storage)
 * examples:
   * `new Characteristic::Brightness();`           Brightness initialized to default value
   * `new Characteristic::Brightness(50);`         Brightness initialized to 50
-  * `new Characteristic::Brightness(50,true);`    Brightness initialized to 50; updates saved in NVS
+  * `new Characteristic::Brightness(50,true);`    Brightness initialized to 50; updates to the value are saved to, and restored from, NVS
 
 #### The following methods are supported for numerical-based Characteristics (e.g. *int*, *float*...):
 
@@ -664,13 +669,15 @@ To create more than one user-defined command, simply create multiple instances o
 Creates a custom Characteristic that can be added to any Service.  Custom Characteristics are generally ignored by the Home App but may be used by other third-party applications (such as *Eve for HomeKit*).  The first form should be used create numerical Characterstics (e.g., UINT8, BOOL...); the second form is used to STRING-based Characteristics; the third form is used for DATA-based (i.e. byte-array) Characteristics; and the fourth form is used for TLV8-based (i.e. *structured* byte-array) Characteristics  Parameters are as follows (note that quotes should NOT be used in any of the macro parameters, except for *defaultValue* when applied to a STRING-based Characteristic):
 
 * *name* - the name of the custom Characteristic.  This will be added to the Characteristic namespace so that it is accessed the same as any HomeSpan Characteristic.  Use UTF-8 coded string for non-ASCII characters.
-* *uuid* - the UUID of the Characteristic as defined by the manufacturer.  Must be *exactly* 36 characters in the form XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX, where *X* represent a valid hexidecimal digit.  Leading zeros are required if needed as described more fully in HAP-R2 Section 6.6.1
-* *perms* - additive list of permissions as described in HAP-R2 Table 6-4.  Valid values are PR, PW, EV, AA, TW, HD, and WR
-* *format* - specifies the format of the Characteristic value, as described in HAP-R2 Table 6-5.  Valid value are BOOL, UINT8, UINT16, UNIT32, UINT64, INT, and FLOAT (note that the HomeSpan does not presently support the TLV8 formats).  Not applicable for the STRING or DATA Characteristic macros
-* *defaultValue* - specifies the default value of the Characteristic if not defined during instantiation.  Not applicable for the DATA Characteristic macro.
-* *minValue* - specifies the default minimum range for a valid value, which may be able to be overriden by a call to `setRange()`.  Not applicable for the STRING or DATA Characteristic macros
-* *minValue* - specifies the default minimum range for a valid value, which may be able to be overriden by a call to `setRange()`.  Not applicable for the STRING or DATA Characteristic macros
-* *staticRange* - set to *true* if *minValue* and *maxValue* are static and cannot be overridden with a call to `setRange()`.  Set to *false* if calls to `setRange()` are allowed.  Not applicable for the STRING or DATA Characteristic macros
+* *uuid* - the UUID of the Characteristic as defined by the manufacturer.  Must be either:
+  * *exactly* 36 characters of the form XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX, where *X* represent a valid hexidecimal digit, or
+  * a single hexidecimal number of the form XXXXXXXX with *8 digits or less*, and no leading zeros
+* *perms* - additive list of permissions.  Valid values are PR, PW, EV, AA, TW, HD, and WR (e.g. PR+PW+EV)
+* *format* - for numerical Characteristics, specifies the number format.  Valid value are BOOL, UINT8, UINT16, UNIT32, UINT64, INT, and FLOAT.  Not applicable for the STRING, DATA, or TLV8 Characteristic macros
+* *defaultValue* - specifies the default value of the Characteristic when not defined during instantiation.  Not applicable for the DATA or TLV7 Characteristic macros.
+* *minValue* - specifies the default minimum range for a valid value, which may be able to be overriden by a call to `setRange()`.  Not applicable for the STRING, DATA or TLV8 Characteristic macros
+* *minValue* - specifies the default minimum range for a valid value, which may be able to be overriden by a call to `setRange()`.  Not applicable for the STRING, DATA or TLV8 Characteristic macros
+* *staticRange* - set to *true* if *minValue* and *maxValue* are static and cannot be overridden with a call to `setRange()`.  Set to *false* if calls to `setRange()` are allowed.  Not applicable for the STRING, DATA or TLV8 Characteristic macros
 
 As an example, the first line below creates a custom Characteristic named "Voltage" with a UUID code that is recognized by the *Eve for HomeKit* app.  The parameters show that the Characteristic is read-only (PR) and notifications are enabled (EV).  The default range of allowed values is 0-240, with a default of 120.  The range *can* be overridden by subsequent calls to `setRange()`.  The second line below creates a custom read-only String-based Characteristic:
 
