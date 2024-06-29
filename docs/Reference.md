@@ -419,13 +419,18 @@ This is a **base class** from which all HomeSpan Characteristics are derived, an
 
 * instantiated Characteristics are added to the HomeSpan HAP Database and associated with the last Service instantiated
 * instantiating a Characteristic without first instantiating a Service throws an error during initialization
-* the first argument optionally allows you to set the initial *value* of the Characteristic at startup.  If *value* is not specified, HomeSpan will supply a reasonable default for the Characteristic
-* throws a runtime warning if *value* is outside of the min/max range for the Characteristic, where min/max is either the HAP default, or any new values set via a call to `setRange()`
+* the first argument optionally allows you to set the initial *value* of the Characteristic at startup using the following formats:
+  * for NUMERIC Characteristics, *value* can be any integer or decimal numeric type, such as `boolean`, `int`, `uint64_t`, `double`, etc.  HomeSpan will automatically cast *value* into a variable with the correct numerical precision for the Characteristic specified
+  * for STRING Characteristics, *value* must be either of the type `char *`, or a literal quote-enclosed UTF-8 string
+  * for TLV8 Characteristics, *value* must be of the type `TLV8`
+  * for DATA Characteristics, *value* must be a brace-enclosed *pair* of the form `{uint8_t *data, size_t len}`, where *len* specifies the length of the size of the byte-array *data*
+* if *value* is not specified, HomeSpan will supply a reasonable default for the Characteristic
+* for numerical Characteristics, throws a runtime warning if *value* is outside of the min/max range for the Characteristic, where min/max is either the HAP default, or any new values set via a call to `setRange()`
 * the second optional argument, if set to `true`, instructs HomeSpan to save updates to this Characteristic's value in the device's non-volative storage (NVS) for restoration at startup if the device should lose power.  If not specified, *nvsStore* will default to `false` (no storage)
 * examples:
   * `new Characteristic::Brightness();`           Brightness initialized to default value
   * `new Characteristic::Brightness(50);`         Brightness initialized to 50
-  * `new Characteristic::Brightness(50,true);`    Brightness initialized to 50; updates saved in NVS
+  * `new Characteristic::Brightness(50,true);`    Brightness initialized to 50; updates to the value are saved to, and restored from, NVS
 
 #### The following methods are supported for numerical-based Characteristics (e.g. *int*, *float*...):
 
