@@ -55,17 +55,6 @@ enum FORMAT {     // HAP Table 6-5
 
 ///////////////////////////////
 
-typedef boolean BOOL_t;
-typedef uint8_t UINT8_t;
-typedef uint16_t UINT16_t;
-typedef uint32_t UINT32_t;
-typedef uint64_t UINT64_t;
-typedef int32_t INT_t;
-typedef double FLOAT_t;
-typedef char * STRING_t;
-
-///////////////////////////////
-
 struct HapChar {
   const char *type;
   const char *hapName;

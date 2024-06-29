@@ -27,6 +27,12 @@
 
 #include "HomeSpan.h"
 
+
+CUSTOM_CHAR(TestChar,3F4F,PR+PW,UINT8,20,0,100,false)
+CUSTOM_CHAR_STRING(TestString,3F45,PR+EV,"Hello");
+CUSTOM_CHAR_TLV8(TestTLV,4F45,PW+PR);
+CUSTOM_CHAR_DATA(TestData,303,PW+PW);
+
 void setup() {
 
   Serial.begin(115200);
@@ -43,7 +49,31 @@ void setup() {
       new Characteristic::Identify();  
     new Service::LightBulb();
       new Characteristic::On();
+      new Characteristic::TestChar(30);
+      new Characteristic::TestString();
+      new Characteristic::TestString("MyName");
+      new Characteristic::TestTLV();
+      Characteristic::TestData *testData = new Characteristic::TestData();
 
+      TLV8 myTLV;
+
+      myTLV.add(5,0x20);
+      myTLV.add(5,0x30);
+      myTLV.add(1);
+      myTLV.add(5,255);
+
+      Characteristic::TestTLV *testTLV = new Characteristic::TestTLV(myTLV);
+
+      size_t n=testTLV->getData(NULL,0);
+      uint8_t buf[n];
+      testTLV->getData(buf,n);
+
+      Serial.printf("\n");
+      for(int i=0;i<n;i++)
+      Serial.printf("%d %0X\n",i,buf[i]);
+      Serial.printf("\n");
+
+      testData->setData(buf,0);
 }   
 
 

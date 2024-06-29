@@ -79,7 +79,6 @@ class tlv8_t {
 
 /////////////////////////////////////
 
-typedef std::list<tlv8_t, Mallocator<tlv8_t>>::iterator TLV8_it;
 typedef std::list<tlv8_t, Mallocator<tlv8_t>>::const_iterator TLV8_itc;
 typedef struct { const uint8_t tag; const char *name; } TLV8_names;
 
@@ -108,11 +107,11 @@ class TLV8 : public std::list<tlv8_t, Mallocator<tlv8_t>> {
   TLV8(){};
   TLV8(const TLV8_names *names, int nNames) : names{names}, nNames{nNames} {};
 
-  TLV8_it add(uint8_t tag, size_t len, const uint8_t *val);
-  TLV8_it add(uint8_t tag, uint64_t val);
-  TLV8_it add(uint8_t tag, TLV8 &subTLV);
-  TLV8_it add(uint8_t tag){return(add(tag, 0, NULL));}
-  TLV8_it add(uint8_t tag, const char *val){return(add(tag, strlen(val), reinterpret_cast<const uint8_t*>(val)));}
+  TLV8_itc add(uint8_t tag, size_t len, const uint8_t *val);
+  TLV8_itc add(uint8_t tag, uint64_t val);
+  TLV8_itc add(uint8_t tag, TLV8 &subTLV);
+  TLV8_itc add(uint8_t tag){return(add(tag, 0, NULL));}
+  TLV8_itc add(uint8_t tag, const char *val){return(add(tag, strlen(val), reinterpret_cast<const uint8_t*>(val)));}
 
   TLV8_itc find(uint8_t tag, TLV8_itc it1, TLV8_itc it2) const;
   TLV8_itc find(uint8_t tag, TLV8_itc it1) const {return(find(tag, it1, end()));}
@@ -142,9 +141,7 @@ class TLV8 : public std::list<tlv8_t, Mallocator<tlv8_t>> {
   void osprint(std::ostream& os) const {osprint(os, begin(), end());}
 
   int unpack(uint8_t *buf, size_t bufSize);
-  int unpack(TLV8_it it);
+  int unpack(TLV8_itc it);
   
-  void wipe(){std::list<tlv8_t, Mallocator<tlv8_t>>().swap(*this);}
-
-  static TLV8 NULL_TLV;
+  void wipe() {std::list<tlv8_t, Mallocator<tlv8_t>>().swap(*this);}
 };

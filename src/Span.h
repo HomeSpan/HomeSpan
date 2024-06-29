@@ -513,7 +513,7 @@ namespace Characteristic {
   CREATE_CHAR(double,CurrentRelativeHumidity,0,0,100);  // current humidity measured as a percentage
   CREATE_CHAR(double,CurrentTemperature,0,0,100);   // current temperature measured in Celsius
   CREATE_CHAR(int,CurrentTiltAngle,0,-90,90);  // current angle (in degrees) of slats from fully up or left (-90) to fully open (0) to fully down or right (90)
-  CREATE_CHAR(const TLV8 &,DisplayOrder,TLV8::NULL_TLV,TLV8::NULL_TLV,TLV8::NULL_TLV);  // specifies the order in which the TV inputs are displayed for selection in the Home App
+  CREATE_CHAR(const TLV8 &,DisplayOrder,NULL_TLV,NULL_TLV,NULL_TLV);  // specifies the order in which the TV inputs are displayed for selection in the Home App
   CREATE_CHAR(double,FilterLifeLevel,100,0,100); // measured as a percentage of remaining life
   CREATE_CHAR(uint8_t,FilterChangeIndication,0,0,1,NO_CHANGE_NEEDED,CHANGE_NEEDED);  // indicates state of filter
   CREATE_CHAR(const char *,FirmwareRevision,"1.0.0",NULL,NULL);  // must be in form x[.y[.z]] - informational only
@@ -607,46 +607,25 @@ namespace Characteristic {
 
 #define CUSTOM_CHAR(NAME,UUID,PERMISISONS,FORMAT,DEFVAL,MINVAL,MAXVAL,STATIC_RANGE) \
   HapChar _CUSTOM_##NAME {#UUID,#NAME,(PERMS)(PERMISISONS),FORMAT,STATIC_RANGE}; \
-  namespace Characteristic { struct NAME : SpanCharacteristic { NAME(FORMAT##_t val=DEFVAL, boolean nvsStore=false) : SpanCharacteristic {&_CUSTOM_##NAME,true} { init(val,nvsStore,(FORMAT##_t)MINVAL,(FORMAT##_t)MAXVAL); } }; }
-
-#define CUSTOM_CHAR_STRING(NAME,UUID,PERMISISONS,DEFVAL) \
-  HapChar _CUSTOM_##NAME {#UUID,#NAME,(PERMS)(PERMISISONS),STRING,true}; \
-  namespace Characteristic { struct NAME : SpanCharacteristic { NAME(const char * val=DEFVAL, boolean nvsStore=false) : SpanCharacteristic {&_CUSTOM_##NAME,true} { init(val,nvsStore); } }; }
-
-#define CUSTOM_CHAR_DATA(NAME,UUID,PERMISISONS) \
-  HapChar _CUSTOM_##NAME {#UUID,#NAME,(PERMS)(PERMISISONS),DATA,true}; \
-  namespace Characteristic { struct NAME : SpanCharacteristic { NAME(const char * val="", boolean nvsStore=false) : SpanCharacteristic {&_CUSTOM_##NAME,true} { init(val,nvsStore); } }; }
-
-#define CUSTOM_CHAR_TLV8(NAME,UUID,PERMISISONS) \
-  HapChar _CUSTOM_##NAME {#UUID,#NAME,(PERMS)(PERMISISONS),TLV_ENC,true}; \
-  namespace Characteristic { struct NAME : SpanCharacteristic { NAME(const char * val="", boolean nvsStore=false) : SpanCharacteristic {&_CUSTOM_##NAME,true} { init(val,nvsStore); } }; }
+  namespace Characteristic { struct NAME : SpanCharacteristic { NAME(FORMAT##_t val=DEFVAL, boolean nvsStore=false) : SpanCharacteristic {&_CUSTOM_##NAME,true} { init<FORMAT##_t>(val,nvsStore,MINVAL,MAXVAL); } }; }
 
 #else
 
 #define CUSTOM_CHAR(NAME,UUID,PERMISISONS,FORMAT,DEFVAL,MINVAL,MAXVAL,STATIC_RANGE) \
   extern HapChar _CUSTOM_##NAME; \
-  namespace Characteristic { struct NAME : SpanCharacteristic { NAME(FORMAT##_t val=DEFVAL, boolean nvsStore=false) : SpanCharacteristic {&_CUSTOM_##NAME,true} { init(val,nvsStore,(FORMAT##_t)MINVAL,(FORMAT##_t)MAXVAL); } }; }
+  namespace Characteristic { struct NAME : SpanCharacteristic { NAME(FORMAT##_t val=DEFVAL, boolean nvsStore=false) : SpanCharacteristic {&_CUSTOM_##NAME,true} { init<FORMAT##_t>(val,nvsStore,MINVAL,MAXVAL); } }; }
 
-#define CUSTOM_CHAR_STRING(NAME,UUID,PERMISISONS,DEFVAL) \
-  extern HapChar _CUSTOM_##NAME; \
-  namespace Characteristic { struct NAME : SpanCharacteristic { NAME(const char * val=DEFVAL, boolean nvsStore=false) : SpanCharacteristic {&_CUSTOM_##NAME,true} { init(val,nvsStore); } }; }
+#endif  
 
-#define CUSTOM_CHAR_DATA(NAME,UUID,PERMISISONS) \
-  extern HapChar _CUSTOM_##NAME; \
-  namespace Characteristic { struct NAME : SpanCharacteristic { NAME(const char * val="", boolean nvsStore=false) : SpanCharacteristic {&_CUSTOM_##NAME,true} { init(val,nvsStore); } }; }
-
-#define CUSTOM_CHAR_TLV8(NAME,UUID,PERMISISONS) \
-  extern HapChar _CUSTOM_##NAME; \
-  namespace Characteristic { struct NAME : SpanCharacteristic { NAME(const char * val="", boolean nvsStore=false) : SpanCharacteristic {&_CUSTOM_##NAME,true} { init(val,nvsStore); } }; }
-
-#endif
+#define CUSTOM_CHAR_STRING(NAME,UUID,PERMISISONS,DEFVAL) CUSTOM_CHAR(NAME,UUID,PERMISISONS,STRING,DEFVAL,NULL,NULL,true);
+#define CUSTOM_CHAR_TLV8(NAME,UUID,PERMISISONS) CUSTOM_CHAR(NAME,UUID,PERMISISONS,TLV_ENC,NULL_TLV,NULL_TLV,NULL_TLV,true);
+#define CUSTOM_CHAR_DATA(NAME,UUID,PERMISISONS) CUSTOM_CHAR(NAME,UUID,PERMISISONS,DATA,NULL_DATA,NULL_DATA,NULL_DATA,true);
 
 #define CUSTOM_SERV(NAME,UUID) \
   namespace Service { struct NAME : SpanService { NAME() : SpanService{#UUID,#NAME,true}{} }; }
 
-
 ////////////////////////////////////////////////////////
-// MACROS TO ADD A NEW ACCESSORT WITH OPTIONAL NAME   //
+// MACROS TO ADD A NEW ACCESSORY WITH OPTIONAL NAME   //
 ////////////////////////////////////////////////////////
 
 #define SPAN_ACCESSORY(...)    new SpanAccessory();  new Service::AccessoryInformation(); new Characteristic::Identify(); __VA_OPT__(new Characteristic::Name(__VA_ARGS__));

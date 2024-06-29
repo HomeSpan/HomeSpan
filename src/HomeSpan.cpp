@@ -1867,14 +1867,29 @@ void SpanCharacteristic::uvSet(UVal &dest, UVal &src){
 
 ///////////////////////////////
 
-void SpanCharacteristic::uvSet(UVal &u, const char *val){
+void SpanCharacteristic::uvSet(UVal &u, STRING_t val){
   u.STRING = (char *)HS_REALLOC(u.STRING, strlen(val) + 1);
   strcpy(u.STRING, val);
 }
 
 ///////////////////////////////
 
-void SpanCharacteristic::uvSet(UVal &u, const TLV8 &tlv){
+void SpanCharacteristic::uvSet(UVal &u, DATA_t data){
+  
+  if(data.second>0){
+    size_t olen;
+    mbedtls_base64_encode(NULL,0,&olen,NULL,data.second);                              // get length of string buffer needed (mbedtls includes the trailing null in this size)
+    value.STRING = (char *)HS_REALLOC(value.STRING,olen);                              // allocate sufficient size for storing value
+    mbedtls_base64_encode((uint8_t*)value.STRING,olen,&olen,data.first,data.second );  // encode data into string buf
+  } else {
+    value.STRING = (char *)HS_REALLOC(value.STRING,1);                                 // allocate sufficient size for just trailing null character
+    *value.STRING ='\0';
+  }  
+}
+
+///////////////////////////////
+
+void SpanCharacteristic::uvSet(UVal &u, TLV_ENC_t tlv){
 
   const size_t bufSize=36;                                  // maximum size of buffer to store packed TLV bytes before encoding directly into value; must be multiple of 3
   size_t nBytes=tlv.pack_size();                            // total size of packed TLV in bytes
@@ -1941,17 +1956,7 @@ size_t SpanCharacteristic::getDataGeneric(uint8_t *data, size_t len, UVal &val){
 void SpanCharacteristic::setData(uint8_t *data, size_t len, boolean notify){
 
   setValCheck();
-
-  if(len>0){
-    size_t olen;
-    mbedtls_base64_encode(NULL,0,&olen,NULL,len);                        // get length of string buffer needed (mbedtls includes the trailing null in this size)
-    value.STRING = (char *)HS_REALLOC(value.STRING,olen);                // allocate sufficient size for storing value
-    mbedtls_base64_encode((uint8_t*)value.STRING,olen,&olen,data,len );  // encode data into string buf
-  } else {
-    value.STRING = (char *)HS_REALLOC(value.STRING,1);                   // allocate sufficient size for just trailing null character
-    *value.STRING ='\0';
-  }
-
+  uvSet(value,{data,len});
   setValFinish(notify);
 } 
   

@@ -71,6 +71,20 @@ enum {
   GET_STATUS=256
 };
 
+typedef boolean BOOL_t;
+typedef uint8_t UINT8_t;
+typedef uint16_t UINT16_t;
+typedef uint32_t UINT32_t;
+typedef uint64_t UINT64_t;
+typedef int32_t INT_t;
+typedef double FLOAT_t;
+typedef const char * STRING_t;
+typedef const TLV8 & TLV_ENC_t;
+typedef std::pair<const uint8_t *, size_t> DATA_t;
+
+static DATA_t NULL_DATA={NULL,0};
+static TLV8 NULL_TLV{};
+
 ///////////////////////////////
 
 #define STATUS_UPDATE(LED_UPDATE,MESSAGE_UPDATE)  {homeSpan.statusLED->LED_UPDATE;if(homeSpan.statusCallback)homeSpan.statusCallback(MESSAGE_UPDATE);}
@@ -485,14 +499,14 @@ class SpanCharacteristic{
   friend class SpanService;
 
   union UVal {                                  
-    BOOL_t BOOL;
-    UINT8_t UINT8;
-    UINT16_t UINT16;
-    UINT32_t UINT32;
-    UINT64_t UINT64;
-    INT_t INT;
-    FLOAT_t FLOAT;
-    STRING_t STRING = NULL;
+    boolean BOOL;
+    uint8_t UINT8;
+    uint16_t UINT16;
+    uint32_t UINT32;
+    uint64_t UINT64;
+    int32_t INT;
+    double FLOAT;
+    char * STRING = NULL;
   };
 
   class EVLIST : public vector<HAPClient *, Mallocator<HAPClient *>>{      // vector of current connections that have subscribed to EV notifications for this Characteristic
@@ -534,8 +548,9 @@ class SpanCharacteristic{
   String uvPrint(UVal &u);                                    // returns "printable" String for any type of Characteristic  
   
   void uvSet(UVal &dest, UVal &src);                          // copies UVal src into UVal dest
-  void uvSet(UVal &u, const char *val);                       // copies string val into UVal u
-  void uvSet(UVal &u, const TLV8 &tlv);                       // copies TLV8 val into UVal u (after transforming to a char *)
+  void uvSet(UVal &u, STRING_t val);                          // copies string val into UVal u
+  void uvSet(UVal &u, DATA_t data);                           // copies DATA data into UVal u (after transforming to a char *)
+  void uvSet(UVal &u, TLV_ENC_t tlv);                         // copies TLV8 tlv into UVal u (after transforming to a char *)
 
   template <typename T> void uvSet(UVal &u, T val){           // copies numeric val into UVal u  
     switch(format){
