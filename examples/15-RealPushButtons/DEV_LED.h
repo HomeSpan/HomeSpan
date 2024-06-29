@@ -3,10 +3,6 @@
 //   DEVICE-SPECIFIC LED SERVICES //
 ////////////////////////////////////
 
-#include "extras/PwmPin.h"                          // library of various PWM functions
-
-////////////////////////////////////
-
 struct DEV_DimmableLED : Service::LightBulb {       // Dimmable LED
 
   // This version of the Dimmable LED Service is similar to the one last used in Example 11, but now includes support for 3 physical PushButtons

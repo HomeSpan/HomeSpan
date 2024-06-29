@@ -1,7 +1,7 @@
 /*********************************************************************************
  *  MIT License
  *  
- *  Copyright (c) 2020-2023 Gregg E. Berman
+ *  Copyright (c) 2020-2024 Gregg E. Berman
  *  
  *  https://github.com/HomeSpan/HomeSpan
  *  
@@ -61,7 +61,7 @@
 
 #elif defined(ARDUINO_ESP32S3_DEV)
   enum {
-    F13=5,F12=6,F27=7,F15=16,F32=17,F14=18,F16=37,F17=36,F21=35,      // Digital Only (9 pins)
+    F13=5,F12=6,F27=7,F15=16,F32=17,F14=18,F16=37,F17=36,F21=38,      // Digital Only (9 pins)
     F26=1,F25=2,F34=20,F39=19,F36=15,F4=4,                            // A0-A5
     F22=9,F23=8,                                                      // I2C SCL/SDA
     F5=12,F18=11,F19=13,F33=10,                                       // SPI SCK/SDO/SDI/CS

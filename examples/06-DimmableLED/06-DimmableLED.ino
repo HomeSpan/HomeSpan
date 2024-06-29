@@ -50,12 +50,11 @@ void setup() {
   // As usual, all previous comments have been deleted and only new changes from the previous example are shown.
 
   // NOTE: The Arduino/ESP32 code base does not include the function analogWrite() which is typically used to create a PWM
-  // output to drive the brightness of an LED.  The ESP32 code base itself includes a set of functions to create PWM output
-  // and the ESP32 chip has built-in PWM functionality specifically for this purpose.  There are numerous libraries
-  // you can download that mimics or reproduces analogWrite() in some form or another.  HomeSpan conveniently comes with
-  // its own version of a wrapper around the ESP32 PWM classes that make it very easy to define LED pins, and set the
-  // PWM level (or duty cycle) from 0-100%.  These functions are encapsualted in the LedPin class, as defined in
-  // extras/PwmPin.h.  We will include this file in our updated DEV_LED.h for use with DEV_DimmableLED.
+  // output to drive the brightness of an LED.  Instead, the ESP32 code base itself includes a set of functions to create PWM output
+  // and the ESP32 chip has built-in PWM functionality specifically for this purpose.
+  
+  // HomeSpan wraps all of this PWM functionality into a single integrated class called LedPin, making it very easy to define
+  // dimmable LED pins and set the PWM level (i.e. duty cycle) from 0-100%.  Use of this LedPin class is shown in DEV_DimmableLED.
   
   Serial.begin(115200);
 

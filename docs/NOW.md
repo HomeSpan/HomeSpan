@@ -61,6 +61,16 @@ Also note that regardless of whether or not the queue if full, if the size of a 
   * if used, this method must be called *before* the instantiation of any SpanPoint objects.  Example: `SpanPoint::setPassword("MyPassword");`
   * the same passphrase must be used among all devices that are communicating via SpanPoint, else the receiving device will not be able to decrypt messages it receives
 
+* `static void setEncryption(boolean encrypt)`
+
+  * this *optional* **class-level** method provides the ability to enable or disable encryption according to whether *encrypt* is set to *true* or *false*
+  * by default, encryption is normally enabled (using the password above)
+  * if used, this method must be called *before* the instantiation of any SpanPoint objects.  Example: `SpanPoint::setEncryption(false);` disables encryption for all SpanPoint connections
+  * note that this is a global setting - if SpanPoint encryption is disabled on the main device, it must also be disabled on every remote device, else communication between devices will fail
+  * enabling/disabling encryption impacts that total number of SpanPoint connections that can be supported by the ESP32's ESP-NOW functionality:
+    * with encryption enabled, the ESP32 can support a maximum of 7 ESP-NOW links (i.e. 7 instances of SpanPoint)
+    * with encryption disabled, the ESP32 can support a maximum of 20 ESP-NOW links (i.e. 20 instances of SpanPoint)
+
 * `static void setChannelMask(uint16_t mask)`
 
   * this *optional* **class-level** method changes the default channel bitmask from 0x3FFE (i.e. 0011 1111 1111 1110) to *mask*
@@ -81,6 +91,9 @@ Examples showing such a configuration can be found in the Arduino IDE under [*Fi
 * *RemoteDevice.ino* - a lightweight sketch that simulates taking periodic temperature measurements, which are then transmitted to the Main Device via SpanPoint
 * *RemoteTempSensor.ino* - a lightweight sketch that is similar to *RemoteDevice.ino*, except that instead of simulating a temperature sensor, it implements an actual Adafruit ADT7410 I2C-based temperature sensor.  This sketch also uses some power-management techniques to extend battery life, such as lowering the CPU frequency and entering into deep-sleep after each measurement is taken
 * *RemoteDevice8266.ino* - similar in function to *RemoteDevice.ino*, but implemented to run on an ESP8266 device using native ESP-NOW commands (since neither HomeSpan nor SpanPoint support the ESP8266).  Note that the "complementary" SpanPoint object on the ESP32 that receives data from the ESP8266 must be configured to use the ESP32's *AP MAC Address* (instead of the *STA MAC Address*) by setting *useAPaddress* to *true* in the SpanPoint constructor
+
+Please also see the [SpanPointLightSwitch Repository](https://github.com/HomeSpan/SpanPointLightSwitch/tree/main) for a detailed example that shows how to use SpanPoint for *bi-directional communication* between an ESP32 "Central Hub" device implementing two HomeKit Lighbulb Accessories, an remote ESP32 device controlling an LED, and a separate ESP8266 device controlling another LED.
+  
 ---
 
 [↩️](../README.md) Back to the Welcome page

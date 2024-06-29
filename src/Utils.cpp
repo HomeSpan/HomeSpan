@@ -1,7 +1,7 @@
 /*********************************************************************************
  *  MIT License
  *  
- *  Copyright (c) 2020-2023 Gregg E. Berman
+ *  Copyright (c) 2020-2024 Gregg E. Berman
  *  
  *  https://github.com/HomeSpan/HomeSpan
  *  
@@ -278,4 +278,4 @@ void PushButton::reset(){
 
 //////////////////////////////////////
 
-touch_value_t PushButton::threshold=0;
+PushButton::touch_value_t PushButton::threshold=0;

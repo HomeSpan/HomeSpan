@@ -1,0 +1,109 @@
+#!/usr/bin/awk -f
+
+BEGIN {
+
+	ws="[ \t,();]+"									# regexp of separators
+	ltws="^" ws "|" ws "$"					# regexp of leading and trailing separators
+
+	nServs=0												# number of Services found
+}
+
+{
+	split($0,line,"//")							# separate line into program and (optional) comment
+	gsub(ltws,"",line[1])						# strip out leading or trailing separators
+	gsub("[ \t]+","",line[1])				# strip out any other spaces
+
+	n=split(line[1],x,ws)						# split program portion according to separators
+
+	if(x[1]=="CREATE_SERV"){
+		currentService=x[2]
+		services[nServs++]=currentService
+		uuid[currentService]=x[3]
+		desc[currentService]=line[2]	# save optional comment as description of Service
+		nChars[currentService]=0
+	}
+
+ 	else if(x[1]=="REQ" || x[1]=="OPT"){
+		servChars[currentService,nChars[currentService]]=x[2]
+		servReq[currentService,nChars[currentService]]=(x[1]=="REQ")
+		nChars[currentService]++
+	}
+
+	else if(x[1]=="CREATE_CHAR"){
+		char=x[3]
+		default[char]=x[4]
+		min[char]=x[5]
+		max[char]=x[6]
+		nConstants[char]=n-6								# parse any pre-defined constants
+		value=0															# default starting value of constants
+		for(i=0;i<nConstants[char];i++){
+			v=split(x[i+7],y,"=")							# split name of constant from (optional) value
+			constantName[char,i]=y[1]
+			if(v==2)													# override value if provided
+				value=y[2]
+			constantValue[char,i]=value
+			if(index(perms[char],"PR") && x[4]==value)
+				defaultMark[char,i]=":heavy_check_mark:"
+			value++
+		}
+		notes[char]=line[2]						# save optional comment as notes for Characteristic
+	}
+
+	else if(x[1]=="HAPCHAR"){
+		char=x[2]
+		uuid[char]=x[3]
+		perms[char]=x[4]
+		format[char]=tolower(x[5])
+		static[char]=x[6]
+	}
+
+	else if(x[1]=="SERVICES_GROUP"){
+		group[nServs]=line[2]
+	}
+		
+} 
+
+END {
+
+	printf("\n\n");
+
+	for(i=0;i<nServs;i++){
+		if(group[i]!="")
+			printf("## %s\n",toupper(group[i]))
+		s=services[i]
+		printf("### %s (%s)\n",s,uuid[s])
+		printf("<i>%s</i><br><table>\n",desc[s])
+		printf("<tr><th>Characteristic</th><th>Format</th><th>Perms</th><th>Min</th><th>Max</th><th>Constants/Defaults</th></tr>\n")
+
+		for(j=0;j<nChars[s];j++){
+			char=servChars[s,j]
+			printf("<tr>")
+			printf("<td><b>%s (%s) %s</b><ul><li>%s</li></ul></td>",char,uuid[char],servReq[s,j]?":small_blue_diamond:":"",notes[char])
+			printf("<td align=\"center\">%s</td>",format[char])
+			printf("<td align=\"center\">%s</td>",perms[char])
+
+			if(format[char]!="string")
+				printf("<td align=\"center\">%s</td><td align=\"center\">%s</td>",min[char],max[char])
+			else
+				printf("<td align=\"center\">-</td><td align=\"center\">-</td>")
+
+			if(nConstants[char]>0){
+				printf("<td><ul>")
+				for(k=0;k<nConstants[char];k++)
+					printf("<li><span>%s&nbsp(%d)&nbsp;</span>%s</li>",constantName[char,k],constantValue[char,k],defaultMark[char,k])
+				printf("</ul></td>")
+			} else {
+				printf("<td align=\"center\">%s</td>",default[char])
+			}
+
+			printf("</tr>\n")
+		}
+
+		printf("</table><br>\n\n")
+	}
+
+	printf("---\n\n")
+	printf("[↩️](../README.md) Back to the Welcome page\n\n")
+}
+
+

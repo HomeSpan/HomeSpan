@@ -3,8 +3,6 @@
 //   DEVICE-SPECIFIC LED SERVICES //
 ////////////////////////////////////
 
-#include "extras/PwmPin.h"                          // allows PWM control of LED brightness
-
 struct DEV_LED : Service::LightBulb {               // ON/OFF LED
 
   int ledPin;                                       // pin number defined for this LED
