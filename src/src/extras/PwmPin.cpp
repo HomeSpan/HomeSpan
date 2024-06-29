@@ -264,6 +264,17 @@ void ServoPin::set(double degrees){
   ledc_channel_config(channel);
 }
 
+///////////////////
+
+void ServoPin::pause(boolean pauseState){
+
+  if(!channel)
+    return;
+
+  channel->duty=pauseState?(1<<timer->duty_resolution):0;  
+  ledc_channel_config(channel);
+}
+
 ////////////////////////////
 
 ledc_channel_config_t *LedC::channelList[LEDC_CHANNEL_MAX][LEDC_SPEED_MODE_MAX]={};
