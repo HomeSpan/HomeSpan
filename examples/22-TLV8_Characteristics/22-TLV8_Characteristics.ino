@@ -66,16 +66,13 @@ struct HomeSpanTV : Service::Television {
   SpanCharacteristic *active = new Characteristic::Active(0);
   SpanCharacteristic *activeID = new Characteristic::ActiveIdentifier(10);
   
-  SpanCharacteristic *displayOrder = new Characteristic::DisplayOrder();     // <-- This is the new TLV8 Characteristic.  Note the constructor has no argument
+  SpanCharacteristic *displayOrder;       //  Create a pointer to use for the new TLV8 DisplayOrder Characteristic, which will be instantiated below once we build the TLV8 record
 
   HomeSpanTV() : Service::Television() {
 
-    // Unlike the constructors for numerical and string-based Characteristics (such as ActiveIdentifier and ConfiguredName),
-    // we cannot set the initial value of TLV8 Characteristics during construction, but must instead first instantiate the
-    // Characteristic (as we did above), then build a TLV8 object with the information required by the TLV8 Characteristic, and
-    // then use setTLV() to load the completed TLV8 object into the Characteristic's value.
-
-    // The (undocumented by Apple!) TLV8 specifications for the DisplayOrder Characteristic are as follows:
+    // Before we instantiate displayOrder, we need to build a TLV8 object with the information required
+    // by the DisplayOrder Characteristic.  The (undocumented by Apple!) TLV8 specifications for the
+    // DisplayOrder Characteristic are as follows:
 
     // TAG     NAME             FORMAT     DESCRIPTION
     // ----    -------------    ------     --------------------------------------------
@@ -108,9 +105,9 @@ struct HomeSpanTV : Service::Television {
     // in the following order: 10, 20, 50, 30, 40.  These IDs must of course match the IDs you choose
     // for your input sources when you create them at the end of this sketch in setup()
 
-    // The final step is to load this TLV8 object into the DisplayOrder Characteristic
+    // Now we can instantiate displayOrder using the TLV8 object created above as its initial value
 
-    displayOrder->setTLV(orderTLV);           // set the "value" of DisplayOrder to be the orderTLV object we just created
+    displayOrder = new Characteristic::DisplayOrder(orderTLV);           // set the "value" of DisplayOrder to be the orderTLV object we just created
 
     // That's it - you've created your first TLV8 Characteristic!      
   }
