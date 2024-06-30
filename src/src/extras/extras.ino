@@ -25,54 +25,40 @@
  *  
  ********************************************************************************/
  
-#include "Pixel.h"
+#include "PwmPin.h"
 
-#define MAX_BRIGHTNESS  255           // maximum brightness when flashing RGB [0-255]
-
-#define PIXEL_PIN 26                  // set this to whatever pin you are using - note pin cannot be "input only"
-#define NPIXELS   8                  // set to number of pixels in strand
-
-Pixel testPixel(PIXEL_PIN, PixelType::RGBW);
+ServoPin servo(21,0,500,2200,-60,60);
 
 void setup() {
  
   Serial.begin(115200);
   delay(1000);
 
-  Serial.printf("\n\nPixel Test on pin %d with %d pixels\n\n",PIXEL_PIN,NPIXELS);
-}
+  Serial.print("\n\nReady\n\n");
 
-//////////////////////////////////////
+  for(int count=0;count<3;count++){
+    for(int i=-60;i<61;i++){
+     servo.set(i);
+     delay(10);
+    }
 
-void flashColor(boolean r, boolean g, boolean b, boolean w){
-  
-  for(int i=0;i<MAX_BRIGHTNESS;i++){
-    testPixel.set(Pixel::RGB(i*r,i*g,i*b,i*w),NPIXELS);
-    delay(4);
+    for(int i=60;i>-61;i--){
+    servo.set(i);
+    delay(10);
+    }
   }
-    
-  for(int i=MAX_BRIGHTNESS;i>=0;i--){
-    testPixel.set(Pixel::RGB(i*r,i*g,i*b,i*w),NPIXELS);
-    delay(4);
-  }
+
+  delay(5000);
+
+  servo.set(NAN);
+
+  delay(10000);
+
+  servo.set(0);
+
 }
 
 //////////////////////////////////////
 
 void loop(){
-
-  Serial.printf("Red...");
-  flashColor(1,0,0,0);
-
-  Serial.printf("Green...");
-  flashColor(0,1,0,0);
-
-  Serial.printf("Blue...");
-  flashColor(0,0,1,0);
-
-  Serial.printf("White...");
-  flashColor(0,0,0,1);
-
-  Serial.printf("Pausing.\n");
-  delay(1000);
 }
