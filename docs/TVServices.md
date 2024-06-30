@@ -40,7 +40,7 @@ More advanced control of a TV can enabled with these *optional* Characteristics:
 
 * `Characteristic::DisplayOrder()` - this TLV8 Characteristic is used to control the order in which linked Input Sources are displayed in the Home App
   * absent specifying the order with this Characteristic, the Home App will display the Input Sources in a random order within the selection section (under the power button), and in numerical order on the settings page of the Accessory based on the numeric Identifier for each Input Source
-  * the format of the TLV8 object use by this Characteristic is a series of TLV records of TAG=1 and VALUE set to the Identifer of an Input Source, interleaved with an empty TLV record of TAG=0 used as a separator
+  * the format of the TLV8 object used by this Characteristic is a series of TLV8 "Identifier" records with TAG=1 and a VALUE set to the Identifer of a particular Input Source; the "Identifier" records should each be separated by an empty TLV8 record with TAG=0
   * example, the following code snippet sets the display order for three input sources with Identifiers 10, 20, and 30 to be 20, 30, and then 10:
 
 ```C++
@@ -83,7 +83,7 @@ This Service allows you to change the volume of a television using the iPhone's 
 
 ### Examples
 
-Please see [*File → Examples → HomeSpan → Other Examples → Television*](../examples/Other%20Examples/Television) for a complete worked example demonstrating the effects of using different combinations of the above Characteristics.  Also, don't forget to check out the [HomeSpan Projects](https://github.com/topics/homespan) page for some real-world examples of TV sketches and controllers.
+Please see [*File → Examples → HomeSpan → Other Examples → Television*](../examples/Other%20Examples/Television) for a complete worked example demonstrating the effects of using different combinations of the above Characteristics.  For details on how to use TLV8 records with the DisplayOrder Characteristic, see [Tutorial Example 22 - TLV8 Characteristics](../examples/22-TLV8_Characteristics).  Also, don't forget to check out the [HomeSpan Projects](https://github.com/topics/homespan) page for some real-world examples of TV sketches and controllers.
 
 
 ### Credits
