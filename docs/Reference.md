@@ -514,6 +514,10 @@ This is a **base class** from which all HomeSpan Characteristics are derived, an
 * `void setTLV(TLV8 &tlv [,boolean notify])`
   * similar to `setVal()`, but exclusively used for TLV8 Characteristics
   * updates the Characteristic by packing the TLV8 structure *tlv* into a byte array and then encoding it in base-64 for storage as a string
+    
+* `NULL_TLV`
+  * this is not a method, but rather a static HomeSpan constant defined as an empty TLV8 object.  It may used a placeholder wherever an empty TLV8 object is needed, such as when you want to instantiate a TLV8 Characteristic with *nvsStore=true*, but you don't yet want set the TLV8 value
+  * example: `new Characteristic::DisplayOrder(NULL_TLV,true);`
 
 * see the [TLV8 Characteristics](TLV8.md) page for complete details on how to read/process/create TLV8 Objects using HomeSpan's TLV8 Library.
 
