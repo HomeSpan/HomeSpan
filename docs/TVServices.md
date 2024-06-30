@@ -83,7 +83,10 @@ This Service allows you to change the volume of a television using the iPhone's 
 
 ### Examples
 
-Please see [*File → Examples → HomeSpan → Other Examples → Television*](../examples/Other%20Examples/Television) for a complete worked example demonstrating the effects of using different combinations of the above Characteristics.  For details on how to use TLV8 records with the DisplayOrder Characteristic, see [Tutorial Example 22 - TLV8 Characteristics](../examples/22-TLV8_Characteristics).  Also, don't forget to check out the [HomeSpan Projects](https://github.com/topics/homespan) page for some real-world examples of TV sketches and controllers.
+* Please see [*File → Examples → HomeSpan → Other Examples → Television*](../examples/Other%20Examples/Television) for a complete worked example demonstrating the effects of using different combinations of the above Characteristics
+* For details on how to use TLV8 records with the DisplayOrder Characteristic, see [Tutorial Example 22 - TLV8 Characteristics](../examples/22-TLV8_Characteristics)
+* For more advanced use case, see the Television Example on the [HomeSpan Reference Sketches](https://github.com/HomeSpan/HomeSpanReferenceSketches) page
+* Also, don't forget to check out the [HomeSpan Projects](https://github.com/topics/homespan) page for some real-world examples of TV sketches and controllers.
 
 
 ### Credits
