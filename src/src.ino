@@ -73,7 +73,7 @@ void setup() {
       Serial.printf("%d %0X\n",i,buf[i]);
       Serial.printf("\n");
 
-      testData->setData(buf,0);
+      testData->setData(buf,8);
 }   
 
 

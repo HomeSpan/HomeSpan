@@ -668,7 +668,7 @@ class SpanCharacteristic{
   size_t getNewTLV(TLV8 &tlv){return(getTLVGeneric(tlv,newValue));}                           // gets the newValue for tlv8-based Characteristics
 
   void setString(const char *val, boolean notify=true);                                       // sets the value and newValue for string-based Characteristic
-  void setData(uint8_t *data, size_t len, boolean notify=true);                               // sets the value and newValue for data-based Characteristic
+  void setData(const uint8_t *data, size_t len, boolean notify=true);                         // sets the value and newValue for data-based Characteristic
   void setTLV(const TLV8 &tlv, boolean notify=true);                                          // sets the value and newValue for tlv8-based Characteristic
   
   template <typename T> void setVal(T val, boolean notify=true){                              // sets the value and newValue for numeric-based Characteristics

@@ -1953,7 +1953,7 @@ size_t SpanCharacteristic::getDataGeneric(uint8_t *data, size_t len, UVal &val){
 
 ///////////////////////////////
 
-void SpanCharacteristic::setData(uint8_t *data, size_t len, boolean notify){
+void SpanCharacteristic::setData(const uint8_t *data, size_t len, boolean notify){
 
   setValCheck();
   uvSet(value,{data,len});
