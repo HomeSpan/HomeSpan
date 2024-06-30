@@ -30,7 +30,7 @@
 //      HomeSpan: A HomeKit implementation for the ESP32      //
 //      ------------------------------------------------      //
 //                                                            //
-// Example 24: Demonstrates the use of the TLV8 Library       //
+// Example 22: Demonstrates the use of the TLV8 Library       //
 //             by implementing DisplayOrder, an optional      //
 //             TLV8 Characteristic used with the TV Service   //
 //             to set the order in which TV Inputs are        //
