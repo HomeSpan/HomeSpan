@@ -118,6 +118,10 @@ HomeSpan is currently NOT compatible with version 3.X of the Arduino-ESP32 Board
   * allows user to automatically cast the elements of the returned vector into any specific Service type
   * also adds an optional parameter to restrict the elements of the returned vector to match a specified HomeSpan Service
   * see the [API Reference](docs/Reference.md) for details
+ 
+* **New ability to halt the pulse generation for a ServoPin**
+  * calling `set(NAN)` for a ServoPin halts the pulse generation, which (for most analog servos) allows the motor to be freely rotated
+  * calling `set(position)`, where *position* equal the desired number of degrees, restarts the pulse generation and sets the servo position accordingly
    
 * **Refactored client/slot management to save memory and prepare for future integration of Ethernet support**
   * fixed-array of Client/Socket connections replaced by dynamic linked-list
