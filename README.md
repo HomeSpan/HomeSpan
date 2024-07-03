@@ -54,7 +54,7 @@ HomeSpan is currently NOT compatible with version 3.X of the Arduino-ESP32 Board
   * Launch the WiFi Access Point
 * A standalone, detailed End-User Guide
 
-## ❗Latest Update - HomeSpan 1.9.1 (MM/DD/YYY)
+## ❗Latest Update - HomeSpan 1.9.1 (07/03/2024)
 
 * **HomeSpan now supports *Tag-Length-Value ("TLV8")* Characteristics!**
 
