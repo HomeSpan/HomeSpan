@@ -88,7 +88,6 @@ This Service allows you to change the volume of a television using the iPhone's 
 * For more advanced use case, see the Television Example on the [HomeSpan Reference Sketches](https://github.com/HomeSpan/HomeSpanReferenceSketches) page
 * Also, don't forget to check out the [HomeSpan Projects](https://github.com/topics/homespan) page for some real-world examples of TV sketches and controllers.
 
-
 ### Credits
 
 Much thanks to @unreality for the PR to include Television codes and associated functionality!
