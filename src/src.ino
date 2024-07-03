@@ -27,60 +27,61 @@
 
 #include "HomeSpan.h"
 
-#define MAX_LIGHTS  2
+
+CUSTOM_CHAR(TestChar,3F4F,PR+PW,UINT8,20,0,100,false)
+CUSTOM_CHAR_STRING(TestString,3F45,PR+EV,"Hello");
+CUSTOM_CHAR_TLV8(TestTLV,45674F457,PW+PR);
+CUSTOM_CHAR_DATA(TestData,303,PW+PW);
 
 void setup() {
- 
+
   Serial.begin(115200);
+ 
+  homeSpan.setLogLevel(2);
+  homeSpan.enableWebLog();
 
-  homeSpan.setLogLevel(1);
-  homeSpan.enableWebLog(50,"pool.ntp.org","UTC",NULL);
-//  homeSpan.enableWebLog(50,"pool.ntp.org","UTC","myStatus");
-//  homeSpan.enableWebLog(50,NULL,NULL,NULL);
+  homeSpan.begin(Category::Lighting,"HomeSpan LightBulb");
 
-  homeSpan.begin(Category::Lighting,"HomeSpan Max");
+  new SpanUserCommand('D', " - disconnect WiFi", [](const char *buf){WiFi.disconnect();});  
+  
+  new SpanAccessory();   
+    new Service::AccessoryInformation(); 
+      new Characteristic::Identify();  
+    new Service::LightBulb();
+      new Characteristic::On();
+      new Characteristic::TestChar(30);
+      new Characteristic::TestString();
+      new Characteristic::TestString("MyName");
+      new Characteristic::TestTLV();
+      Characteristic::TestData *testData = new Characteristic::TestData();
 
-   new SpanAccessory();
-    new Service::AccessoryInformation();  
-      new Characteristic::Identify();
+      TLV8 myTLV;
 
-  for(int i=0;i<MAX_LIGHTS;i++){
-    new SpanAccessory();
-      new Service::AccessoryInformation();
-        new Characteristic::Identify();
-        char c[30];
-        sprintf(c,"Light-%d",i);
-        new Characteristic::Name(c);
-      new Service::LightBulb();
-        new Characteristic::On(0,false);
-     WEBLOG("Configuring %s",c);
-  }
+      myTLV.add(5,0x20);
+      myTLV.add(5,0x30);
+      myTLV.add(1);
+      myTLV.add(5,255);
 
-  new SpanUserCommand('w', " - get web log test",webLogTest);     // simulate getting an HTTPS request for weblog
+      Characteristic::TestTLV *testTLV = new Characteristic::TestTLV(myTLV);
 
-}
+      size_t n=testTLV->getData(NULL,0);
+      uint8_t buf[n];
+      testTLV->getData(buf,n);
+
+      Serial.printf("\n");
+      for(int i=0;i<n;i++)
+      Serial.printf("%d %0X\n",i,buf[i]);
+      Serial.printf("\n");
+
+      testData->setData(buf,8);
+}   
+
 
 //////////////////////////////////////
 
 void loop(){
  
-  homeSpan.poll();
-  
+  homeSpan.poll();  
 }
 
 //////////////////////////////////////
-
-void webLogTest(const char *dummy){
-  Serial.printf("\n*** In Web Log Test.  Starting Custom Web Log Handler\n");     // here is where you would perform any HTTPS initializations   
-  homeSpan.getWebLog(webLogHandler,NULL);      // this starts the normal weblog with output redirected to the specified handler (below)
-}
-
-void webLogHandler(const char *buf, void *args){
-  if(buf!=NULL){
-    Serial.printf("--------\n");
-    Serial.printf("%s",buf);            // here is where you would transmit data to the HTTPS connection
-    Serial.printf("********\n");
-  }
-  else
-    Serial.print("*** DONE!\n\n");      // here is where you would close the HTTPS connection
-}

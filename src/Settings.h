@@ -24,40 +24,8 @@
  *  SOFTWARE.
  *  
  ********************************************************************************/
- 
-// USER-DEFINED SETTINGS AND REFERENCE ENUMERATION CLASSES
-
-#include <esp_arduino_version.h>
 
 #pragma once
-
-//////////////////////////////////////////////////////
-//              HomeSpan Version                    //
-
-#define     HS_MAJOR  1
-#define     HS_MINOR  9
-#define     HS_PATCH  0
-
-#define     STRINGIFY(x) _STR(x)
-#define     _STR(x) #x
-
-#define     HOMESPAN_VERSION    STRINGIFY(HS_MAJOR) "." STRINGIFY(HS_MINOR) "." STRINGIFY(HS_PATCH)
-
-#define     VERSION(major,minor,patch) major*10000+minor*100+patch
-
-#ifndef REQUIRED
-  #define REQUIRED 0
-#endif
-
-#if (REQUIRED>VERSION(HS_MAJOR,HS_MINOR,HS_PATCH))
-  #error THIS SKETCH REQUIRES A LATER VERSION OF THE HOMESPAN LIBRARY
-#endif
-
-#define     ARDUINO_ESP_VERSION  STRINGIFY(ESP_ARDUINO_VERSION_MAJOR) "." STRINGIFY(ESP_ARDUINO_VERSION_MINOR) "." STRINGIFY(ESP_ARDUINO_VERSION_PATCH)
-
-#if ESP_ARDUINO_VERSION_MAJOR<2
-  #error HOMESPAN REQUIRES VERSION 2 OF THE ARDUINO ESP32 LIBRARY
-#endif
 
 //////////////////////////////////////////////////////
 //                DEFAULT SETTINGS                  //  

@@ -54,6 +54,8 @@ BEGIN {
 		uuid[char]=x[3]
 		perms[char]=x[4]
 		format[char]=tolower(x[5])
+		if(format[char]=="tlv_enc")
+			format[char]="tlv8"
 		static[char]=x[6]
 	}
 
@@ -82,7 +84,7 @@ END {
 			printf("<td align=\"center\">%s</td>",format[char])
 			printf("<td align=\"center\">%s</td>",perms[char])
 
-			if(format[char]!="string")
+			if(format[char]!="string" && format[char]!="tlv8" && format[char]!="data")
 				printf("<td align=\"center\">%s</td><td align=\"center\">%s</td>",min[char],max[char])
 			else
 				printf("<td align=\"center\">-</td><td align=\"center\">-</td>")

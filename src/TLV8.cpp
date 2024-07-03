@@ -52,7 +52,7 @@ void tlv8_t::update(size_t addLen, const uint8_t *addVal){
 
 /////////////////////////////////////
 
-void tlv8_t::osprint(std::ostream& os){
+void tlv8_t::osprint(std::ostream& os) const {
 
   uint8_t *p=val.get();       // starting pointer
   uint8_t *pend=p+len;        // ending pointer (may equal starting if len=0)
@@ -68,36 +68,60 @@ void tlv8_t::osprint(std::ostream& os){
 
 /////////////////////////////////////
 
-TLV8_it TLV8::add(uint8_t tag, size_t len, const uint8_t* val){
+TLV8_itc TLV8::add(uint8_t tag, size_t len, const uint8_t* val) {
 
-  if(!empty() && front().tag==tag)
-    front().update(len,val);
+  if(!empty() && back().getTag()==tag)
+    back().update(len,val);
   else
-    emplace_front(tag,len,val);
+    emplace_back(tag,len,val);
 
-  return(begin());
+  return(--end());
 }
 
 /////////////////////////////////////
 
-TLV8_it TLV8::find(uint8_t tag, TLV8_it it1, TLV8_it it2){
+TLV8_itc TLV8::add(uint8_t tag, TLV8 &subTLV){
+  
+  auto it=add(tag,subTLV.pack_size(),NULL);      // create space for inserting sub TLV and store iterator to new element
+  subTLV.pack(*it);                              // pack subTLV into new element
+  return(--end());
+}
+
+/////////////////////////////////////
+
+TLV8_itc TLV8::add(uint8_t tag, uint64_t val){
+  
+  uint8_t *p=reinterpret_cast<uint8_t *>(&val);
+  size_t nBytes=sizeof(uint64_t);
+  while(nBytes>1 && p[nBytes-1]==0)               // TLV requires little endian of size 1, 2, 4, or 8 bytes (include trailing zeros as needed)
+    nBytes--;
+  if(nBytes==3)                                   // need to include a trailing zero so that total bytes=4
+    nBytes=4;
+  else if(nBytes>4)                               // need to include multiple trailing zeros so that total bytes=8
+    nBytes=8;
+  return(add(tag, nBytes, p));
+}
+
+/////////////////////////////////////
+
+TLV8_itc TLV8::find(uint8_t tag, TLV8_itc it1, TLV8_itc it2) const {
 
   auto it=it1;
-  while(it!=it2 && (*it).tag!=tag)
+  while(it!=it2 && it->getTag()!=tag)
     it++;
-  return(it==it2?end():it);
+  return(it);
 }
 
 /////////////////////////////////////
 
-size_t TLV8::pack_size(TLV8_it it1, TLV8_it it2){
+size_t TLV8::pack_size(TLV8_itc it1, TLV8_itc it2) const {
 
   size_t nBytes=0;
 
   while(it1!=it2){
-    nBytes+=2+(*it1).len;
-    if((*it1).len>255)
-      nBytes+=2*(((*it1).len-1)/255);
+    nBytes+=2+(*it1).getLen();
+    if((*it1).getLen()>255)
+      nBytes+=2*(((*it1).getLen()-1)/255);
     it1++;
   }
 
@@ -106,7 +130,7 @@ size_t TLV8::pack_size(TLV8_it it1, TLV8_it it2){
 
 /////////////////////////////////////
 
-size_t TLV8::pack(uint8_t *buf, size_t bufSize){
+size_t TLV8::pack(uint8_t *buf, size_t bufSize) const {
 
   size_t nBytes=0;
 
@@ -114,13 +138,13 @@ size_t TLV8::pack(uint8_t *buf, size_t bufSize){
     switch(currentPackPhase){
 
       case 0:
-        currentPackBuf=(*currentPackIt).val.get();
-        endPackBuf=(*currentPackIt).val.get()+(*currentPackIt).len;
+        currentPackBuf=*currentPackIt;
+        endPackBuf=(*currentPackIt)+currentPackIt->getLen();
         currentPackPhase=1;
         break;
         
       case 1:
-        *buf++=(*currentPackIt).tag;
+        *buf++=currentPackIt->getTag();
         nBytes++;
         currentPackPhase=2;
         break;
@@ -160,7 +184,10 @@ size_t TLV8::pack(uint8_t *buf, size_t bufSize){
 
 /////////////////////////////////////
 
-void TLV8::unpack(uint8_t *buf, size_t bufSize){
+int TLV8::unpack(uint8_t *buf, size_t bufSize){
+
+  if(bufSize==0)
+    return(-1);
 
   if(empty())
     unpackPhase=0;
@@ -171,18 +198,17 @@ void TLV8::unpack(uint8_t *buf, size_t bufSize){
       case 0:
         unpackTag=*buf++;
         bufSize--;
+        add(unpackTag);
         unpackPhase=1;
         break;
 
       case 1:
         unpackBytes=*buf++;
         bufSize--;
-        if(unpackBytes==0){
-          add(unpackTag);
+        if(unpackBytes==0)
           unpackPhase=0;          
-        } else {
+        else
           unpackPhase=2;
-        }
         break;
 
       case 2:
@@ -196,12 +222,22 @@ void TLV8::unpack(uint8_t *buf, size_t bufSize){
       break;        
     }
   }
+  return(unpackPhase);
 }
-
 
 /////////////////////////////////////
 
-const char *TLV8::getName(uint8_t tag){
+int TLV8::unpack(TLV8_itc it){
+  
+  if(it==end())
+    return(0);
+    
+  return(unpack(*it,it->getLen()));
+}
+
+/////////////////////////////////////
+
+const char *TLV8::getName(uint8_t tag) const {
 
   if(names==NULL)
     return(NULL);
@@ -216,17 +252,23 @@ const char *TLV8::getName(uint8_t tag){
 
 /////////////////////////////////////
 
-void TLV8::print(TLV8_it it1, TLV8_it it2){
+void TLV8::print(TLV8_itc it1, TLV8_itc it2) const {
 
   while(it1!=it2){
-    const char *name=getName((*it1).tag);
+    const char *name=getName(it1->getTag());
     if(name)
       Serial.printf("%s",name);
     else
-      Serial.printf("%d",(*it1).tag);
-    Serial.printf("(%d) ",(*it1).len);
-    for(int i=0;i<(*it1).len;i++)
-      Serial.printf("%02X",(*it1).val.get()[i]);
+      Serial.printf("%d",it1->getTag());
+    Serial.printf("(%d) ",it1->getLen());
+    for(int i=0;i<it1->getLen();i++)
+      Serial.printf("%02X",(*it1)[i]);
+    if(it1->getLen()==0)
+      Serial.printf(" [null]");
+    else if(it1->getLen()<=4)
+      Serial.printf(" [%u]",it1->getVal());
+    else if(it1->getLen()<=8)
+      Serial.printf(" [%llu]",it1->getVal<uint64_t>());
     Serial.printf("\n");
     it1++;
   }
@@ -234,7 +276,21 @@ void TLV8::print(TLV8_it it1, TLV8_it it2){
   
 //////////////////////////////////////
 
-void TLV8::osprint(std::ostream& os, TLV8_it it1, TLV8_it it2){
+void TLV8::printAll_r(String label) const{
+  
+  for(auto it=begin();it!=end();it++){
+    Serial.printf("%s",label.c_str());
+    print(it);
+    TLV8 tlv;
+    if(tlv.unpack(*it,(*it).getLen())==0)
+      tlv.printAll_r(label+String((*it).getTag())+"-");
+  }
+  Serial.printf("%sDONE\n",label.c_str());
+}
+
+//////////////////////////////////////
+
+void TLV8::osprint(std::ostream& os, TLV8_itc it1, TLV8_itc it2) const {
 
   for(auto it=it1;it!=it2;it++)
     (*it).osprint(os);

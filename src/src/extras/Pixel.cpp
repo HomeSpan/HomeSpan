@@ -35,16 +35,18 @@
 //     Single-Wire RGB/RGBW NeoPixels     //
 ////////////////////////////////////////////
 
-Pixel::Pixel(int pin, boolean isRGBW){
+Pixel::Pixel(int pin, pixelType_t pixelType){
     
   rf=new RFControl(pin,false,false);          // set clock to 1/80 usec, no default driver
   if(!*rf)
     return;
 
-  if(isRGBW)
-    this->lastBit=0;
+  map=pixelType;
+  
+  if(map[3])
+    bytesPerPixel=4;
   else
-    this->lastBit=8;
+    bytesPerPixel=3;
   
   setTiming(0.32, 0.88, 0.64, 0.56, 80.0);    // set default timing parameters (suitable for most SK68 and WS28 RGB pixels)
 
@@ -82,10 +84,10 @@ void Pixel::set(Color *c, int nPixels, boolean multiColor){
   status.nPixels=nPixels;
   status.color=c;
   status.iMem=0;
-  status.iBit=32;
   status.started=true;
   status.px=this;
   status.multiColor=multiColor;
+  status.iByte=0;
 
   loadData(this);         // load first two bytes of data to get started
   loadData(this);
@@ -112,12 +114,15 @@ void IRAM_ATTR Pixel::loadData(void *arg){
     RMTMEM.chan[status.px->rf->getChannel()].data32[status.iMem].val=0;
     return;
   }
+
+  int startBit=status.px->map[status.iByte];
+  int endBit=startBit-8;
   
-  for(int i=0;i<8;i++)
-    RMTMEM.chan[status.px->rf->getChannel()].data32[status.iMem++].val=status.px->pattern[(status.color->val>>(--status.iBit))&1];
-    
-  if(status.iBit==status.px->lastBit){
-    status.iBit=32;
+  for(int iBit=startBit;iBit>endBit;iBit--)
+    RMTMEM.chan[status.px->rf->getChannel()].data32[status.iMem++].val=status.px->pattern[(status.color->val>>iBit)&1];
+
+  if(++status.iByte==status.px->bytesPerPixel){
+    status.iByte=0;
     status.color+=status.multiColor;
     status.nPixels--;    
   }

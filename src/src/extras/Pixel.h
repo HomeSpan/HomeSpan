@@ -37,20 +37,38 @@
 
 [[maybe_unused]] static const char* PIXEL_TAG = "Pixel";
 
+typedef const uint8_t pixelType_t[];
+
+namespace PixelType {
+  
+  pixelType_t RGB={31,23,15,0}; 
+  pixelType_t RBG={31,15,23,0}; 
+  pixelType_t BRG={23,15,31,0}; 
+  pixelType_t BGR={15,23,31,0}; 
+  pixelType_t GBR={15,31,23,0}; 
+  pixelType_t GRB={23,31,15,0};
+  pixelType_t RGBW={31,23,15,7}; 
+  pixelType_t RBGW={31,15,23,7}; 
+  pixelType_t BRGW={23,15,31,7}; 
+  pixelType_t BGRW={15,23,31,7}; 
+  pixelType_t GBRW={15,31,23,7}; 
+  pixelType_t GRBW={23,31,15,7};
+};
+
 ////////////////////////////////////////////
 //     Single-Wire RGB/RGBW NeoPixels     //
 ////////////////////////////////////////////
 
 class Pixel : public Blinkable {
 
-  public: 
+  public:
     struct Color {
       union{
         struct {
           uint8_t white:8;
           uint8_t blue:8;
-          uint8_t red:8;
           uint8_t green:8;
+          uint8_t red:8;
         };
         uint32_t val;
       };
@@ -121,11 +139,11 @@ class Pixel : public Blinkable {
     struct pixel_status_t {
       int nPixels;
       Color *color;
-      int iBit;
       int iMem;
       boolean started;
       Pixel *px;
       boolean multiColor;
+      int iByte;
     };
   
     RFControl *rf;                 // Pixel utilizes RFControl
@@ -133,7 +151,8 @@ class Pixel : public Blinkable {
     uint32_t resetTime;            // minimum time (in usec) between pulse trains
     uint32_t txEndMask;            // mask for end-of-transmission interrupt
     uint32_t txThrMask;            // mask for threshold interrupt
-    uint32_t lastBit;              // 0=RGBW; 8=RGB
+    uint8_t bytesPerPixel;         // RGBW=4; RGB=3
+    const uint8_t *map;            // color map representing order in which color bytes are transmitted
     Color onColor;                 // color used for on() command
     
     const int memSize=sizeof(RMTMEM.chan[0].data32)/4;    // determine size (in pulses) of one channel
@@ -142,14 +161,16 @@ class Pixel : public Blinkable {
     volatile static pixel_status_t status;      // storage for volatile information modified in interupt handler   
   
   public:
-    Pixel(int pin, boolean isRGBW=false);                                                   // creates addressable single-wire RGB (false) or RGBW (true) LED connected to pin (such as the SK68 or WS28)   
-    void set(Color *c, int nPixels, boolean multiColor=true);                               // sets colors of nPixels based on array of Colors c; setting multiColor to false repeats Color in c[0] for all nPixels
-    void set(Color c, int nPixels=1){set(&c,nPixels,false);}                                // sets color of nPixels to be equal to specific Color c
+   
+    Pixel(int pin, pixelType_t pixelType=PixelType::GRB);            // creates addressable single-wire LED of pixelType connected to pin (such as the SK68 or WS28)   
+    void set(Color *c, int nPixels, boolean multiColor=true);        // sets colors of nPixels based on array of Colors c; setting multiColor to false repeats Color in c[0] for all nPixels
+    void set(Color c, int nPixels=1){set(&c,nPixels,false);}         // sets color of nPixels to be equal to specific Color c
     
     static Color RGB(uint8_t r, uint8_t g, uint8_t b, uint8_t w=0){return(Color().RGB(r,g,b,w));}  // an alternative method for returning an RGB Color
     static Color HSV(float h, float s, float v, double w=0){return(Color().HSV(h,s,v,w));}         // an alternative method for returning an HSV Color
               
     int getPin(){return(rf->getPin());}                                                     // returns pixel pin if valid, else returns -1
+    boolean isRGBW(){return(bytesPerPixel==4);}                                             // returns true if RGBW LED, else false if RGB LED
     void setTiming(float high0, float low0, float high1, float low1, uint32_t lowReset);    // changes default timings for bit pulse - note parameters are in MICROSECONDS
         
     operator bool(){         // override boolean operator to return true/false if creation succeeded/failed
@@ -159,6 +180,10 @@ class Pixel : public Blinkable {
     void on() {set(onColor);}
     void off() {set(RGB(0,0,0,0));}
     Pixel *setOnColor(Color c){onColor=c;return(this);}
+
+    [[deprecated("Please use Pixel(int pin, pixelType_t pixelType) constructor instead.")]]
+    Pixel(int pin, boolean isRGBW):Pixel(pin,isRGBW?PixelType::GRBW:PixelType::GRB){};
+
 };
 
 ////////////////////////////////////////////

@@ -251,16 +251,21 @@ void ServoPin::set(double degrees){
   if(!channel)
     return;
 
-  double usec=(degrees-minDegrees)*microsPerDegree+minMicros;
+  if(!isnan(degrees)){
+    double usec=(degrees-minDegrees)*microsPerDegree+minMicros;
+    
+    if(usec<minMicros)
+      usec=minMicros;
+    else if(usec>maxMicros)
+      usec=maxMicros;
   
-  if(usec<minMicros)
-    usec=minMicros;
-  else if(usec>maxMicros)
-    usec=maxMicros;
-
-  usec*=timer->freq_hz/1e6*(pow(2,(int)timer->duty_resolution)-1);
-
-  channel->duty=usec;  
+    usec*=timer->freq_hz/1e6*(pow(2,(int)timer->duty_resolution)-1);
+  
+    channel->duty=usec;
+  } else {
+    channel->duty=0;
+  }
+  
   ledc_channel_config(channel);
 }
 

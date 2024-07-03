@@ -71,7 +71,8 @@ The *minMicros* parameter must be less than the *maxMicros* parameter, but setti
 
 * `void set(double position)`
 
-  * sets the position of the Servo Motor to *position* (in degrees).  In order to protect the Servo Motor, values of *position* less than *minDegrees* are automatically reset to *minDegrees*, and values greater than *maxDegrees* are automatically reset to *maxDegrees*.
+  * sets the position of the Servo Motor to *position* (in degrees).  In order to protect the Servo Motor, values of *position* less than *minDegrees* are automatically reset to *minDegrees*, and values greater than *maxDegrees* are automatically reset to *maxDegrees*
+  * if *position* is specified as *NAN* (i.e. the C++ "not-a-number" constant), the duty-cycle is set to zero, which effectively stops the pulse generation --- for most analog servos this means the motor can be freely rotated.  Calling `set()` once again with *position* equal to an actual number of degrees restarts the pulse train and sets the servo position accordingly
   
 * `int getPin()`
 

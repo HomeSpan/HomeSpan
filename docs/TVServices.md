@@ -21,7 +21,7 @@ new Service::Television();
   new Characteristic::Active(0);                    // set power to OFF at start-up
   new Characteristic::ConfiguredName("Sony TV");    // optional Characteristic to set name of TV
 ```
-More advanced control of a TV can enabled with two other optional Characteristics:
+More advanced control of a TV can enabled with these *optional* Characteristics:
 
 * `Characteristic::RemoteKey()` - this write-only numerical Characteristic enables HomeSpan to read button presses from the Remote Control widget on an iPhone that can be found under the Control Center.  This widget is normally used to control Apple TVs, but it seems any Television Accessory created per above can also be operated from the Remote Control widget.  The layout of the widget (which cannot be modified) includes 4 arrows, a central select button, a play/pause button, a large "back" button, and an "info" button.  When a "key" is pressed, the Home App sends an update to `Characteristic::RemoteKey()` that can be read by HomeSpan using the usual `update()` method.  Values are as follows:
   
@@ -37,6 +37,23 @@ More advanced control of a TV can enabled with two other optional Characteristic
 * `Characteristic::PowerModeSelection()` - this write-only Characteristic causes the text "View TV Settings" to appear in the Home App under the Settings page for a TV Accessory.  When this text is pressed, the Home App sends an update with value=0 to `Characteristic::PowerModeSelection()` that can be read by HomeSpan using the usual `update()` method
 
 * `Characteristic::ActiveIdentifier()` - this numerical Characteristic is used to control the input source for the TV (e.g. HDMI-1, HDMI-2, Netflix, etc.).  It is only used when input sources are defined and linked using `Service::InputSource()` (see below), in which case it is a *required* Characteristic
+
+* `Characteristic::DisplayOrder()` - this TLV8 Characteristic is used to control the order in which linked Input Sources are displayed in the Home App
+  * absent specifying the order with this Characteristic, the Home App will display the Input Sources in a random order within the selection section (under the power button), and in numerical order on the settings page of the Accessory based on the numeric Identifier for each Input Source
+  * the format of the TLV8 object used by this Characteristic is a series of TLV8 "Identifier" records with TAG=1 and a VALUE set to the Identifer of a particular Input Source; the "Identifier" records should each be separated by an empty TLV8 record with TAG=0
+  * example, the following code snippet sets the display order for three input sources with Identifiers 10, 20, and 30 to be 20, 30, and then 10:
+
+```C++
+TLV8 orderTLV;             // create an empty TLV8 object named "orderTLV"
+
+orderTLV.add(1,20);        // TAG=1, VALUE=20 (the Identifier of the first Input Source to be displayed)
+orderTLV.add(0);           // TAG=0  (empty record used as a separator)
+orderTLV.add(1,30);        // TAG=1, VALUE=30 (the Identifier of the second Input Source to be displayed)
+orderTLV.add(0);           // TAG=0  (empty record used as a separator)
+orderTLV.add(1,10);        // TAG=1, VALUE=10 (the Identifier of the third Input Source to be displayed)
+
+new Characteristic::DisplayOrder(orderTLV);    // instantiate the DisplayOrder Characteristic and set its value to the orderTLV object
+```   
 
 ### `Service::InputSource()`
 
@@ -66,8 +83,10 @@ This Service allows you to change the volume of a television using the iPhone's 
 
 ### Examples
 
-Please see [*File → Examples → HomeSpan → Other Examples → Television*](../examples/Other%20Examples/Television) for a complete worked example demonstrating the effects of using different combinations of the above Characteristics.  Also, don't forget to check out the [HomeSpan Projects](https://github.com/topics/homespan) page for some real-world examples of TV sketches and controllers.
-
+* Please see [*File → Examples → HomeSpan → Other Examples → Television*](../examples/Other%20Examples/Television) for a complete worked example demonstrating the effects of using different combinations of the above Characteristics
+* For details on how to use TLV8 records with the DisplayOrder Characteristic, see [Tutorial Example 22 - TLV8 Characteristics](../examples/22-TLV8_Characteristics)
+* For more advanced use case, see the Television Example on the [HomeSpan Reference Sketches](https://github.com/HomeSpan/HomeSpanReferenceSketches) page
+* Also, don't forget to check out the [HomeSpan Projects](https://github.com/topics/homespan) page for some real-world examples of TV sketches and controllers.
 
 ### Credits
 

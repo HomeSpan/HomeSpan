@@ -73,6 +73,20 @@ char *Utils::readSerial(char *c, int max){
 
 //////////////////////////////////////
 
+char *Utils::stripBackslash(char *c){
+
+  size_t n=strlen(c);
+  char *p=c;
+  for(int i=0;i<=n;i++){
+    *p=c[i];
+    if(*p!='\\')
+      p++;
+  }
+  return(c);  
+}
+
+//////////////////////////////////////
+
 String Utils::mask(char *c, int n){
   String s="";
   int len=strlen(c);

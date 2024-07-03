@@ -1,7 +1,7 @@
 /*********************************************************************************
  *  MIT License
  *  
- *  Copyright (c) 2020-2022 Gregg E. Berman
+ *  Copyright (c) 2020-2024 Gregg E. Berman
  *  
  *  https://github.com/HomeSpan/HomeSpan
  *  
@@ -30,11 +30,10 @@
 //    HomeSpan: A HomeKit implementation for the ESP32    //
 //    ------------------------------------------------    //
 //                                                        //
-// Example 5: Two working on/off LEDs based on the           //
+// Example 5: Two working on/off LEDs based on the        //
 //            LightBulb Service                           //
 //                                                        //
 ////////////////////////////////////////////////////////////
-
 
 #include "HomeSpan.h" 
 #include "DEV_LED.h"          // NEW! Include this new file, DEV_LED.h, which will be fully explained below

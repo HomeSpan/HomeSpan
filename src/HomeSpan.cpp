@@ -24,6 +24,8 @@
  *  SOFTWARE.
  *  
  ********************************************************************************/
+
+#include "version.h"
  
 #include <ESPmDNS.h>
 #include <nvs_flash.h>
@@ -45,49 +47,50 @@ const __attribute__((section(".rodata_custom_desc"))) SpanPartition spanPartitio
 
 using namespace Utils;
 
-HapOut hapOut;                      // Specialized output stream that can both print to serial monitor and encrypt/transmit to HAP Clients with minimal memory usage (global-scope)
-HAPClient **hap;                    // HAP Client structure containing HTTP client connections, parsing routines, and state variables (global-scoped variable)
+HapOut hapOut;                      // Specialized output stream that can both print to serial monitor and encrypt/transmit to HAP Clients with minimal memory usage (global-scoped variable)
 Span homeSpan;                      // HAP Attributes database and all related control functions for this Accessory (global-scoped variable)
-HapCharacteristics hapChars;        // Instantiation of all HAP Characteristics (used to create SpanCharacteristics)
+HapCharacteristics hapChars;        // Instantiation of all HAP Characteristics used to create SpanCharacteristics (global-scoped variable)
 
 ///////////////////////////////
 //         Span              //
 ///////////////////////////////
 
-void Span::begin(Category catID, const char *displayName, const char *hostNameBase, const char *modelName){
+Span::Span(){
+
+  nvs_flash_init();                                       // initialize non-volatile-storage partition in flash 
+
+  nvs_open("CHAR",NVS_READWRITE,&charNVS);                // open Characteristic data namespace in NVS
+  nvs_open("WIFI",NVS_READWRITE,&wifiNVS);                // open WIFI data namespace in NVS
+  nvs_open("OTA",NVS_READWRITE,&otaNVS);                  // open OTA data namespace in NVS
+
+  nvs_open("SRP",NVS_READWRITE,&srpNVS);                  // open SRP data namespace in NVS 
+  nvs_open("HAP",NVS_READWRITE,&hapNVS);                  // open HAP data namespace in NVS
+  
+  nvs_get_u8(wifiNVS,"REBOOTS",&rebootCount);
+  rebootCount++;
+  nvs_set_u8(wifiNVS,"REBOOTS",rebootCount);
+  nvs_commit(wifiNVS);
+}
+
+///////////////////////////////
+
+void Span::begin(Category catID, const char *_displayName, const char *_hostNameBase, const char *_modelName){
 
   loopTaskHandle=xTaskGetCurrentTaskHandle();                 // a roundabout way of getting the current task handle
   
-  this->displayName=displayName;
-  this->hostNameBase=hostNameBase;
-  this->modelName=modelName;
+  asprintf(&displayName,"%s",_displayName);
+  asprintf(&hostNameBase,"%s",_hostNameBase);
+  asprintf(&modelName,"%s",_modelName);
   sprintf(this->category,"%d",(int)catID);
 
   SpanPoint::setAsHub();
 
   statusLED=new Blinker(statusDevice,autoOffLED);             // create Status LED, even is statusDevice is NULL
 
-  esp_task_wdt_delete(xTaskGetIdleTaskHandleForCPU(0));       // required to avoid watchdog timeout messages from ESP32-C3
+  esp_task_wdt_delete(xTaskGetIdleTaskHandleForCPU(0));       // required to avoid watchdog timeout messages from ESP32-C3  
 
-  if(requestedMaxCon<maxConnections)                          // if specific request for max connections is less than computed max connections
-    maxConnections=requestedMaxCon;                           // over-ride max connections with requested value
-    
-  hap=(HAPClient **)HS_CALLOC(maxConnections,sizeof(HAPClient *));
-  for(int i=0;i<maxConnections;i++)
-    hap[i]=new HAPClient;
-
-  hapServer=new WiFiServer(tcpPortNum);
-
-  nvs_flash_init();                             // initialize non-volatile-storage partition in flash  
-  nvs_open("CHAR",NVS_READWRITE,&charNVS);      // open Characteristic data namespace in NVS
-  nvs_open("WIFI",NVS_READWRITE,&wifiNVS);      // open WIFI data namespace in NVS
-  nvs_open("OTA",NVS_READWRITE,&otaNVS);        // open OTA data namespace in NVS
-
-  nvs_get_u8(wifiNVS,"REBOOTS",&rebootCount);
-  rebootCount++;
-  nvs_set_u8(wifiNVS,"REBOOTS",rebootCount);
-  nvs_commit(wifiNVS);
-  
+  hapServer=new WiFiServer(tcpPortNum);                                             // create HAP WIFI SERVER
+ 
   size_t len;
 
   if(strlen(network.wifiData.ssid)){                                                // if setWifiCredentials was already called
@@ -224,67 +227,36 @@ void Span::pollTask() {
     processSerialCommand(cBuf);
   }
 
-  WiFiClient newClient;
-
-  if(newClient=hapServer->available()){                        // found a new HTTP client
-    int freeSlot=getFreeSlot();                                // get next free slot
-
-    if(freeSlot==-1){                                          // no available free slots
-      freeSlot=randombytes_uniform(maxConnections);
-      LOG2("=======================================\n");
-      LOG1("** Freeing Client #");
-      LOG1(freeSlot);
-      LOG1(" (");
-      LOG1(millis()/1000);
-      LOG1(" sec) ");
-      LOG1(hap[freeSlot]->client.remoteIP());
-      LOG1("\n");
-      hap[freeSlot]->client.stop();                     // disconnect client from first slot and re-use
-    }
-
-    hap[freeSlot]->client=newClient;             // copy new client handle into free slot
+  if(hapServer->hasClient()){  
+ 
+    auto it=hapList.emplace(hapList.begin());                                // create new HAPClient connection
+    it->client=hapServer->available();
+    it->clientNumber=it->client.fd()-LWIP_SOCKET_OFFSET;
+            
+    HAPClient::pairStatus=pairState_M1;                                      // reset starting PAIR STATE (which may be needed if Accessory failed in middle of pair-setup)    
 
     LOG2("=======================================\n");
-    LOG1("** Client #");
-    LOG1(freeSlot);
-    LOG1(" Connected: (");
-    LOG1(millis()/1000);
-    LOG1(" sec) ");
-    LOG1(hap[freeSlot]->client.remoteIP());
-    LOG1(" on Socket ");
-    LOG1(hap[freeSlot]->client.fd()-LWIP_SOCKET_OFFSET+1);
-    LOG1("/");
-    LOG1(CONFIG_LWIP_MAX_SOCKETS);
-    LOG1("\n");
+    LOG1("** Client #%d Connected (%lu sec): %s\n",it->clientNumber,millis()/1000,it->client.remoteIP().toString().c_str());
     LOG2("\n");
-
-    hap[freeSlot]->cPair=NULL;                   // reset pointer to verified ID
-    homeSpan.clearNotify(freeSlot);             // clear all notification requests for this connection
-    HAPClient::pairStatus=pairState_M1;         // reset starting PAIR STATE (which may be needed if Accessory failed in middle of pair-setup)
   }
 
-  for(int i=0;i<maxConnections;i++){                     // loop over all HAP Connection slots
-    
-    if(hap[i]->client && hap[i]->client.available()){       // if connection exists and data is available
+  currentClient=hapList.begin();
+  while(currentClient!=hapList.end()){
 
-      HAPClient::conNum=i;                                          // set connection number
-      homeSpan.lastClientIP=hap[i]->client.remoteIP().toString();   // store IP Address for web logging
-      hap[i]->processRequest();                                     // process HAP request
-      homeSpan.lastClientIP="0.0.0.0";                              // reset stored IP address to show "0.0.0.0" if homeSpan.getClientIP() is used in any other context
-      
-      if(!hap[i]->client){                                 // client disconnected by server
-        LOG1("** Disconnected Client #");
-        LOG1(i);
-        LOG1("  (");
-        LOG1(millis()/1000);
-        LOG1(" sec)\n");
+    if(currentClient->client.connected()){                                   // if the client is connected
+      if(currentClient->client.available()){                                 // if client has data available
+        homeSpan.lastClientIP=currentClient->client.remoteIP().toString();   // store IP Address for web logging
+        currentClient->processRequest();                                     // PROCESS HAP REQUEST
+        homeSpan.lastClientIP="0.0.0.0";                                     // reset stored IP address to show "0.0.0.0" if homeSpan.getClientIP() is used in any other context 
       }
-
-      LOG2("\n");
-
-    } // process HAP Client 
-  } // for-loop over connection slots
-
+      currentClient++;
+    } else {
+      LOG1("** Client #%d DISCONNECTED (%lu sec)\n",currentClient->clientNumber,millis()/1000);
+      clearNotify(&*currentClient);                                          // clear all notification requests for this connection
+      currentClient=hapList.erase(currentClient);                            // remove HAPClient connection
+    }
+  }
+      
   snapTime=millis();                                     // snap the current time for use in ALL loop routines
   
   for(auto it=Loops.begin();it!=Loops.end();it++)                 // call loop() for all Services with over-ridden loop() methods
@@ -323,18 +295,6 @@ void Span::pollTask() {
   }
     
 } // poll
-
-///////////////////////////////
-
-int Span::getFreeSlot(){
-  
-  for(int i=0;i<maxConnections;i++){
-    if(!hap[i]->client)
-      return(i);
-  }
-
-  return(-1);          
-}
 
 //////////////////////////////////////
 
@@ -510,7 +470,7 @@ void Span::checkConnect(){
   char setupHash[9];
   size_t len;
   
-  memcpy(hashInput,qrID,4);                                           // Create the Seup ID for use with optional QR Codes.  This is an undocumented feature of HAP R2!
+  memcpy(hashInput,qrID,4);                                           // Create the Setup ID for use with optional QR Codes.  This is an undocumented feature of HAP R2!
   memcpy(hashInput+4,id,17);                                          // Step 1: Concatenate 4-character Setup ID and 17-character Accessory ID into hashInput
   mbedtls_sha512_ret(hashInput,21,hashOutput,0);                      // Step 2: Perform SHA-512 hash on combined 21-byte hashInput to create 64-byte hashOutput
   mbedtls_base64_encode((uint8_t *)setupHash,9,&len,hashOutput,4);    // Step 3: Encode the first 4 bytes of hashOutput in base64, which results in an 8-character, null-terminated, setupHash
@@ -540,7 +500,7 @@ void Span::checkConnect(){
   if(webLog.timeServer)
     xTaskCreateUniversal(webLog.initTime, "timeSeverTaskHandle", 8096, &webLog, 1, NULL, 0);  
   
-  LOG0("Starting HAP Server on port %d supporting %d simultaneous HomeKit Controller Connections...\n\n",tcpPortNum,maxConnections);
+  LOG0("Starting HAP Server on port %d...\n\n",tcpPortNum);
 
   hapServer->begin();
 
@@ -577,6 +537,15 @@ void Span::processSerialCommand(const char *c){
 
   switch(c[0]){
     
+    case 'Z': {
+      for(auto it=hapList.begin(); it!=hapList.end(); ++it){
+        (*it).client.stop();
+        delay(5);
+        
+      }
+    }
+    break;
+
     case 's': {    
       
       LOG0("\n*** HomeSpan Status ***\n\n");
@@ -593,27 +562,20 @@ void Span::processSerialCommand(const char *c){
       HAPClient::printControllers();
       LOG0("\n");
 
-      for(int i=0;i<maxConnections;i++){
-        LOG0("Connection #%d ",i);
-        if(hap[i]->client){
-      
-          LOG0("%s on Socket %d/%d",hap[i]->client.remoteIP().toString().c_str(),hap[i]->client.fd()-LWIP_SOCKET_OFFSET+1,CONFIG_LWIP_MAX_SOCKETS);
-          
-          if(hap[i]->cPair){
-            LOG0("  ID=");
-            HAPClient::charPrintRow(hap[i]->cPair->ID,36);
-            LOG0(hap[i]->cPair->admin?"   (admin)":" (regular)");
-          } else {
-            LOG0("  (unverified)");
-          }
-      
+      for(auto it=hapList.begin(); it!=hapList.end(); ++it){
+        LOG0("Client #%d: %s",(*it).clientNumber,(*it).client.remoteIP().toString().c_str());
+        if((*it).cPair){
+          LOG0("  ID=");
+          HAPClient::charPrintRow((*it).cPair->getID(),36);
+          LOG0((*it).cPair->isAdmin()?"   (admin)\n":" (regular)\n");
         } else {
-          LOG0("(unconnected)");
+          LOG0("  (unverified)\n");
         }
+      }          
 
-        LOG0("\n");
-      }
-
+      if(hapList.empty())
+        LOG0("No Client Connections!\n");
+        
       LOG0("\n*** End Status ***\n\n");
     } 
     break;
@@ -638,8 +600,8 @@ void Span::processSerialCommand(const char *c){
       if(strlen(s)==4 && strlen(tBuf)==4){
         sprintf(qrID,"%s",tBuf);
         LOG0("\nChanging default Setup ID for QR Code to: '%s'.  Will take effect after next restart.\n\n",qrID);
-        nvs_set_str(HAPClient::hapNVS,"SETUPID",qrID);
-        nvs_commit(HAPClient::hapNVS);          
+        nvs_set_str(hapNVS,"SETUPID",qrID);
+        nvs_commit(hapNVS);          
       } else {
         LOG0("\n*** Invalid request to change Setup ID for QR Code to: '%s'.  Setup ID must be exactly 4 alphanumeric characters (0-9, A-Z, and a-z).\n\n",s);
       }        
@@ -677,7 +639,7 @@ void Span::processSerialCommand(const char *c){
 
     case 'S': {
 
-      setPairingCode(c+1);          
+      setPairingCode(c+1,false);          
     }
     break;
 
@@ -736,14 +698,11 @@ void Span::processSerialCommand(const char *c){
       nvs_set_blob(wifiNVS,"WIFIDATA",&network.wifiData,sizeof(network.wifiData));    // update data
       nvs_commit(wifiNVS);                                                            // commit to NVS
       LOG0("\n*** Credentials saved!\n");
-      if(strlen(network.setupCode)){
-        char s[10];
-        sprintf(s,"S%s",network.setupCode);
-        processSerialCommand(s);
-      } else {
+      if(strlen(network.setupCode))
+        setPairingCode(network.setupCode,false);
+      else
         LOG0("*** Setup Code Unchanged\n");
-      }
-      
+            
       LOG0("\n*** Restarting...\n\n");
       STATUS_UPDATE(start(LED_ALERT),HS_AP_TERMINATED)
       reboot();
@@ -770,8 +729,8 @@ void Span::processSerialCommand(const char *c){
 
     case 'H': {
       
-      nvs_erase_all(HAPClient::hapNVS);
-      nvs_commit(HAPClient::hapNVS);      
+      nvs_erase_all(hapNVS);
+      nvs_commit(hapNVS);      
       LOG0("\n*** HomeSpan Device ID and Pairing Data DELETED!  Restarting...\n\n");
       reboot();
     }
@@ -785,8 +744,8 @@ void Span::processSerialCommand(const char *c){
 
     case 'F': {
       
-      nvs_erase_all(HAPClient::hapNVS);
-      nvs_commit(HAPClient::hapNVS);      
+      nvs_erase_all(hapNVS);
+      nvs_commit(hapNVS);      
       nvs_erase_all(wifiNVS);
       nvs_commit(wifiNVS);   
       nvs_erase_all(charNVS);
@@ -857,7 +816,7 @@ void Span::processSerialCommand(const char *c){
       char pNames[][7]={"PR","PW","EV","AA","TW","HD","WR"};
 
       for(auto acc=Accessories.begin(); acc!=Accessories.end(); acc++){
-        LOG0("\u27a4 Accessory:  AID=%d\n",(*acc)->aid);
+        LOG0("\u27a4 Accessory:  AID=%u\n",(*acc)->aid);
         boolean foundInfo=false;
 
         if(acc==Accessories.begin() && (*acc)->aid!=1)
@@ -867,21 +826,27 @@ void Span::processSerialCommand(const char *c){
           LOG0("   *** ERROR #%d!  AID already in use for another Accessory ***\n",++nErrors);
         
         aidValues.push_back((*acc)->aid);
+        vector<uint32_t, Mallocator<uint32_t>> iidValues;
 
         for(auto svc=(*acc)->Services.begin(); svc!=(*acc)->Services.end(); svc++){
-          LOG0("   \u279f Service %s:  IID=%d, %sUUID=\"%s\"\n",(*svc)->hapName,(*svc)->iid,(*svc)->isCustom?"Custom-":"",(*svc)->type);
+          LOG0("   \u279f Service %s:  IID=%u, %sUUID=\"%s\"\n",(*svc)->hapName,(*svc)->iid,(*svc)->isCustom?"Custom-":"",(*svc)->type);
 
           if(!strcmp((*svc)->type,"3E")){
             foundInfo=true;
             if((*svc)->iid!=1)
-              LOG0("     *** ERROR #%d!  The Accessory Information Service must be defined before any other Services in an Accessory ***\n",++nErrors);
+              LOG0("     *** ERROR #%d!  The Accessory Information Service must be defined with IID=1 (i.e. before any other Services in an Accessory) ***\n",++nErrors);
           }
           else if((*acc)->aid==1)            // this is an Accessory with aid=1, but it has more than just AccessoryInfo.  So...
-            isBridge=false;                  // ...this is not a bridge device          
-       
+            isBridge=false;                  // ...this is not a bridge device
+
+          if(std::find(iidValues.begin(),iidValues.end(),(*svc)->iid)!=iidValues.end())
+            LOG0("   *** ERROR #%d!  IID already in use for another Service or Characteristic within this Accessory ***\n",++nErrors);
+
+          iidValues.push_back((*svc)->iid);
+
           for(auto chr=(*svc)->Characteristics.begin(); chr!=(*svc)->Characteristics.end(); chr++){
-            LOG0("      \u21e8 Characteristic %s(%s):  IID=%d, %sUUID=\"%s\", %sPerms=",
-              (*chr)->hapName,(*chr)->uvPrint((*chr)->value).c_str(),(*chr)->iid,(*chr)->isCustom?"Custom-":"",(*chr)->type,(*chr)->perms!=(*chr)->hapChar->perms?"Custom-":"");
+            LOG0("      \u21e8 Characteristic %s(%.33s%s):  IID=%u, %sUUID=\"%s\", %sPerms=",
+              (*chr)->hapName,(*chr)->uvPrint((*chr)->value).c_str(),strlen((*chr)->uvPrint((*chr)->value).c_str())>33?"...\"":"",(*chr)->iid,(*chr)->isCustom?"Custom-":"",(*chr)->type,(*chr)->perms!=(*chr)->hapChar->perms?"Custom-":"");
 
             int foundPerms=0;
             for(uint8_t i=0;i<7;i++){
@@ -889,7 +854,7 @@ void Span::processSerialCommand(const char *c){
                 LOG0("%s%s",(foundPerms++)?"+":"",pNames[i]);
             }           
             
-            if((*chr)->format!=FORMAT::STRING && (*chr)->format!=FORMAT::BOOL && (*chr)->format!=FORMAT::DATA){
+            if((*chr)->format<FORMAT::STRING && (*chr)->format!=FORMAT::BOOL){
               if((*chr)->validValues)
                 LOG0(", Valid Values=%s",(*chr)->validValues);
               else if((*chr)->uvGet<double>((*chr)->stepValue)>0)
@@ -897,15 +862,26 @@ void Span::processSerialCommand(const char *c){
               else
                 LOG0(", %sRange=[%s,%s]",(*chr)->customRange?"Custom-":"",(*chr)->uvPrint((*chr)->minValue).c_str(),(*chr)->uvPrint((*chr)->maxValue).c_str());
             }
+
+            if(((*chr)->perms)&EV){
+              LOG0(", EV=(");
+              boolean addComma=false;
+              for(auto const &hc : (*chr)->evList){
+                LOG0("%s%d",addComma?",":"",hc->clientNumber);
+                addComma=true;
+              }
+              LOG0(")");              
+            }
             
             if((*chr)->nvsKey)
               LOG0(" (nvs)");
+              
             LOG0("\n");        
             
             if(!(*chr)->isCustom && !(*svc)->isCustom  && std::find((*svc)->req.begin(),(*svc)->req.end(),(*chr)->hapChar)==(*svc)->req.end() && std::find((*svc)->opt.begin(),(*svc)->opt.end(),(*chr)->hapChar)==(*svc)->opt.end())
               LOG0("          *** WARNING #%d!  Service does not support this Characteristic ***\n",++nWarnings);
             else
-            if(invalidUUID((*chr)->type,(*chr)->isCustom))
+            if(invalidUUID((*chr)->type))
               LOG0("          *** ERROR #%d!  Format of UUID is invalid ***\n",++nErrors);
             else       
               if(std::find_if((*svc)->Characteristics.begin(),chr,[chr](SpanCharacteristic *c)->boolean{return(c->hapChar==(*chr)->hapChar);})!=chr)
@@ -917,8 +893,13 @@ void Span::processSerialCommand(const char *c){
             if((*chr)->setValidValuesError)
               LOG0("          *** WARNING #%d!  Attempt to set Custom Valid Values for this Characteristic ignored ***\n",++nWarnings);
 
-            if((*chr)->format!=STRING && (!(((*chr)->uvGet<double>((*chr)->value) >= (*chr)->uvGet<double>((*chr)->minValue)) && ((*chr)->uvGet<double>((*chr)->value) <= (*chr)->uvGet<double>((*chr)->maxValue)))))
+            if((*chr)->format<STRING && (!(((*chr)->uvGet<double>((*chr)->value) >= (*chr)->uvGet<double>((*chr)->minValue)) && ((*chr)->uvGet<double>((*chr)->value) <= (*chr)->uvGet<double>((*chr)->maxValue)))))
               LOG0("          *** WARNING #%d!  Value of %g is out of range [%g,%g] ***\n",++nWarnings,(*chr)->uvGet<double>((*chr)->value),(*chr)->uvGet<double>((*chr)->minValue),(*chr)->uvGet<double>((*chr)->maxValue));
+
+            if(std::find(iidValues.begin(),iidValues.end(),(*chr)->iid)!=iidValues.end())
+              LOG0("   *** ERROR #%d!  IID already in use for another Service or Characteristic within this Accessory ***\n",++nErrors);
+
+            iidValues.push_back((*chr)->iid);
           
           } // Characteristics
 
@@ -965,7 +946,7 @@ void Span::processSerialCommand(const char *c){
       for(int i=0;i<Accessories.size();i++){                             // identify all services with over-ridden loop() methods
         for(int j=0;j<Accessories[i]->Services.size();j++){
           SpanService *s=Accessories[i]->Services[j];
-          LOG0("%-30s  %8.8s  %10u  %3d  %6s  %4s  %6s  ",s->hapName,s->type,Accessories[i]->aid,s->iid, 
+          LOG0("%-30s  %8.8s  %10u  %3u  %6s  %4s  %6s  ",s->hapName,s->type,Accessories[i]->aid,s->iid, 
                  (void(*)())(s->*(&SpanService::update))!=(void(*)())(&SpanService::update)?"YES":"NO",
                  (void(*)())(s->*(&SpanService::loop))!=(void(*)())(&SpanService::loop)?"YES":"NO",
                  (void(*)(int,boolean))(s->*(&SpanService::button))!=(void(*)(int,boolean))(&SpanService::button)?"YES":"NO"
@@ -973,7 +954,7 @@ void Span::processSerialCommand(const char *c){
           if(s->linkedServices.empty())
             LOG0("-");
           for(int k=0;k<s->linkedServices.size();k++){
-            LOG0("%d",s->linkedServices[k]->iid);
+            LOG0("%u",s->linkedServices[k]->iid);
             if(k<s->linkedServices.size()-1)
               LOG0(",");
           }
@@ -991,11 +972,14 @@ void Span::processSerialCommand(const char *c){
         for(auto it=SpanPoint::SpanPoints.begin();it!=SpanPoint::SpanPoints.end();it++)
           LOG0("%-18s  %02X:%02X:%02X:%02X:%02X:%02X  %7d  %7d  %7d  %s\n",(*it)->peerInfo.ifidx==WIFI_IF_AP?WiFi.softAPmacAddress().c_str():WiFi.macAddress().c_str(),
                  (*it)->peerInfo.peer_addr[0],(*it)->peerInfo.peer_addr[1],(*it)->peerInfo.peer_addr[2],(*it)->peerInfo.peer_addr[3],(*it)->peerInfo.peer_addr[4],(*it)->peerInfo.peer_addr[5],
-                 (*it)->sendSize,(*it)->receiveSize,uxQueueSpacesAvailable((*it)->receiveQueue),esp_now_is_peer_exist((*it)->peerInfo.peer_addr)?"":"(max connections exceeded!)");           
+                 (*it)->sendSize,(*it)->receiveSize,(*it)->receiveSize?uxQueueSpacesAvailable((*it)->receiveQueue):0,esp_now_is_peer_exist((*it)->peerInfo.peer_addr)?"":"(max connections exceeded!)");           
         LOG0("\nSpanPoint using WiFi Channel %d%s\n",channel,WiFi.status()!=WL_CONNECTED?" (subject to change once WiFi connection established)":"");
       }
 
       LOG0("\nConfigured as Bridge: %s\n",isBridge?"YES":"NO");
+      if(!isBridge && Accessories.size()>3)
+        LOG0("*** WARNING #%d!  HomeKit requires the device be configured as a Bridge when more than 3 Accessories are defined ***\n",++nWarnings);
+      
       if(hapConfig.configNumber>0)
         LOG0("Configuration Number: %d\n",hapConfig.configNumber);
       LOG0("\nDatabase Validation:  Warnings=%d, Errors=%d\n",nWarnings,nErrors);      
@@ -1058,7 +1042,7 @@ void Span::processSerialCommand(const char *c){
             reboot();
           } else {
             HAPClient::controllerList.push_back(tCont);
-            HAPClient::charPrintRow(tCont.ID,36);
+            HAPClient::charPrintRow(tCont.getID(),36);
             LOG0("\n");
           }
         }
@@ -1071,7 +1055,7 @@ void Span::processSerialCommand(const char *c){
         readSerial(qSave,1);
         if(qSave[0]=='y'){
           LOG0("(yes)\nData saved!  Rebooting...");
-          nvs_set_blob(HAPClient::hapNVS,"ACCESSORY",&HAPClient::accessory,sizeof(HAPClient::accessory));           // update data
+          nvs_set_blob(hapNVS,"ACCESSORY",&HAPClient::accessory,sizeof(HAPClient::accessory));           // update data (commit is included in saveControllers below)
           HAPClient::saveControllers();
           reboot();
         } else
@@ -1204,33 +1188,42 @@ const char* Span::statusString(HS_STATUS s){
 
 ///////////////////////////////
 
-Span& Span::setPairingCode(const char *s){
+Span& Span::setPairingCode(const char *s, boolean progCall){
    
   char setupCode[10];
 
   sscanf(s," %9[0-9]",setupCode);
 
   if(strlen(setupCode)!=8){
-    LOG0("\n*** Invalid request to change Setup Code.  Code must be exactly 8 digits.\n\n");
+    LOG0("\n*** Invalid request to change Setup Code to '%s'.  Code must be exactly 8 digits.\n\n",s);
+    if(progCall){
+      LOG0("=== PROGRAM HALTED ===");
+      while(1);
+    }
     return(*this);
   }   
 
   if(!network.allowedCode(setupCode)){
-    LOG0("\n*** Invalid request to change Setup Code.  Code too simple.\n\n");
+    LOG0("\n*** Invalid request to change Setup Code to '%s'.  Code too simple.\n\n",s);
+    if(progCall){
+      LOG0("=== PROGRAM HALTED ===");
+      while(1);
+    }
     return(*this);
   }
 
   TempBuffer<Verification> verifyData;       // temporary storage for verification data
   SRP6A *srp=new SRP6A;                      // create temporary instance of SRP
+
+  if(!progCall)
+    LOG0("\nGenerating new SRP verification data for Setup Code: %.3s-%.2s-%.3s ... ",setupCode,setupCode+3,setupCode+5);
+
+  srp->createVerifyCode(setupCode,verifyData);                                       // create random salt and compute verification code from specified Setup Code
+  nvs_set_blob(srpNVS,"VERIFYDATA",verifyData,verifyData.len());                     // update data
+  nvs_commit(srpNVS);                                                                // commit to NVS
   
-  LOG0("\nGenerating SRP verification data for new Setup Code: %.3s-%.2s-%.3s ... ",setupCode,setupCode+3,setupCode+5);
-  
-  srp->createVerifyCode(setupCode,verifyData);                                                  // create random salt and compute verification code from specified Setup Code
-  nvs_set_blob(HAPClient::srpNVS,"VERIFYDATA",verifyData,verifyData.len());                     // update data
-  nvs_commit(HAPClient::srpNVS);                                                                // commit to NVS
-  
-  LOG0("New Code Saved!\n");
-  LOG0("Setup Payload for Optional QR Code: %s\n\n",qrCode.get(atoi(setupCode),qrID,atoi(category)));
+  if(!progCall)
+    LOG0("New Code Saved!\nSetup Payload for Optional QR Code: %s\n\n",qrCode.get(atoi(setupCode),qrID,atoi(category)));
 
   delete srp;
   return(*this);
@@ -1280,7 +1273,7 @@ boolean Span::deleteAccessory(uint32_t n){
 
 ///////////////////////////////
 
-SpanCharacteristic *Span::find(uint32_t aid, int iid){
+SpanCharacteristic *Span::find(uint32_t aid, uint32_t iid){
 
   int index=-1;
   for(int i=0;i<Accessories.size();i++){   // loop over all Accessories to find aid
@@ -1351,7 +1344,7 @@ int Span::updateCharacteristics(char *buf, SpanBuf *pObj){
         okay|=1;
       } else 
       if(!strcmp(t2,"iid") && (t3=strtok_r(t1,"}[]:, \"\t\n\r",&p2))){
-        pObj[nObj].iid=atoi(t3);
+        sscanf(t3,"%u",&pObj[nObj].iid);
         okay|=2;
       } else 
       if(!strcmp(t2,"value") && (t3=strtok_r(t1,"}[]:,\"",&p2))){
@@ -1361,6 +1354,9 @@ int Span::updateCharacteristics(char *buf, SpanBuf *pObj){
       if(!strcmp(t2,"ev") && (t3=strtok_r(t1,"}[]:, \"\t\n\r",&p2))){
         pObj[nObj].ev=t3;
         okay|=8;
+      } else 
+      if(!strcmp(t2,"r") && (t3=strtok_r(t1,"}[]:, \"\t\n\r",&p2))){
+        pObj[nObj].wr=(t3 && (!strcmp(t3,"1") || !strcmp(t3,"true")));
       } else 
       if(!strcmp(t2,"pid") && (t3=strtok_r(t1,"}[]:, \"\t\n\r",&p2))){        
         uint64_t pid=strtoull(t3,NULL,0);        
@@ -1379,7 +1375,9 @@ int Span::updateCharacteristics(char *buf, SpanBuf *pObj){
     } // parse property tokens
 
     if(!t1){                                                                  // at least one token was found that was not initial "characteristics"
-      if(okay==7 || okay==11  || okay==15){                                   // all required properties found                           
+      if(okay==7 || okay==11  || okay==15){                                   // all required properties found
+        if(!pObj[nObj].val)                                                   // if value is NOT being updated
+          pObj[nObj].wr=false;                                                // ignore any request for write-response
         nObj++;                                                               // increment number of characteristic objects found        
       } else {
         LOG0("\n*** ERROR:  Problems parsing JSON characteristics object - missing required properties\n\n");
@@ -1399,10 +1397,10 @@ int Span::updateCharacteristics(char *buf, SpanBuf *pObj){
     } else {
       pObj[i].characteristic = find(pObj[i].aid,pObj[i].iid);  // find characteristic with matching aid/iid and store pointer          
 
-      if(pObj[i].characteristic)                                                      // if found, initialize characterstic update with new val/ev
-        pObj[i].status=pObj[i].characteristic->loadUpdate(pObj[i].val,pObj[i].ev);    // save status code, which is either an error, or TBD (in which case isUpdated for the characteristic has been set to true) 
+      if(pObj[i].characteristic)                                                                 // if found, initialize characterstic update with new val/ev
+        pObj[i].status=pObj[i].characteristic->loadUpdate(pObj[i].val,pObj[i].ev,pObj[i].wr);    // save status code, which is either an error, or TBD (in which case updateFlag for the characteristic has been set to either 1 or 2) 
       else
-        pObj[i].status=StatusCode::UnknownResource;                                   // if not found, set HAP error            
+        pObj[i].status=StatusCode::UnknownResource;                                              // if not found, set HAP error            
     }
       
   } // first pass
@@ -1410,31 +1408,28 @@ int Span::updateCharacteristics(char *buf, SpanBuf *pObj){
   for(int i=0;i<nObj;i++){                                     // PASS 2: loop again over all objects       
     if(pObj[i].status==StatusCode::TBD){                       // if object status still TBD
 
-      StatusCode status=pObj[i].characteristic->service->update()?StatusCode::OK:StatusCode::Unable;                  // update service and save statusCode as OK or Unable depending on whether return is true or false
+      StatusCode status=pObj[i].characteristic->service->update()?StatusCode::OK:StatusCode::Unable;        // update service and save statusCode as OK or Unable depending on whether return is true or false
 
-      for(int j=i;j<nObj;j++){                                                      // loop over this object plus any remaining objects to update values and save status for any other characteristics in this service
+      for(int j=i;j<nObj;j++){                                                                              // loop over this object plus any remaining objects to update values and save status for any other characteristics in this service
         
-        if(pObj[j].characteristic->service==pObj[i].characteristic->service){       // if service of this characteristic matches service that was updated
-          pObj[j].status=status;                                                    // save statusCode for this object
-          LOG1("Updating aid=");
-          LOG1(pObj[j].characteristic->aid);
-          LOG1(" iid=");  
-          LOG1(pObj[j].characteristic->iid);
-          if(status==StatusCode::OK){                                                     // if status is okay
-            pObj[j].characteristic->uvSet(pObj[j].characteristic->value,pObj[j].characteristic->newValue);               // update characteristic value with new value
-            if(pObj[j].characteristic->nvsKey){                                                                                               // if storage key found
-              if(pObj[j].characteristic->format!=FORMAT::STRING && pObj[j].characteristic->format!=FORMAT::DATA)
-                nvs_set_u64(charNVS,pObj[j].characteristic->nvsKey,pObj[j].characteristic->value.UINT64);  // store data as uint64_t regardless of actual type (it will be read correctly when access through uvGet())         
+        if(pObj[j].characteristic->service==pObj[i].characteristic->service){                               // if service of this characteristic matches service that was updated
+          pObj[j].status=status;                                                                            // save statusCode for this object
+          LOG1("Updating aid=%u iid=%u",pObj[j].characteristic->aid,pObj[j].characteristic->iid);
+          if(status==StatusCode::OK){                                                                       // if status is okay
+            pObj[j].characteristic->uvSet(pObj[j].characteristic->value,pObj[j].characteristic->newValue);  // update characteristic value with new value
+            if(pObj[j].characteristic->nvsKey){                                                             // if storage key found
+              if(pObj[j].characteristic->format<FORMAT::STRING)
+                nvs_set_u64(charNVS,pObj[j].characteristic->nvsKey,pObj[j].characteristic->value.UINT64);   // store data as uint64_t regardless of actual type (it will be read correctly when access through uvGet())         
               else
-                nvs_set_str(charNVS,pObj[j].characteristic->nvsKey,pObj[j].characteristic->value.STRING);                                     // store data
+                nvs_set_str(charNVS,pObj[j].characteristic->nvsKey,pObj[j].characteristic->value.STRING);   // store data
               nvs_commit(charNVS);
             }
             LOG1(" (okay)\n");
-          } else {                                                                        // if status not okay
-            pObj[j].characteristic->uvSet(pObj[j].characteristic->newValue,pObj[j].characteristic->value);                // replace characteristic new value with original value
+          } else {                                                                                          // if status not okay
+            pObj[j].characteristic->uvSet(pObj[j].characteristic->newValue,pObj[j].characteristic->value);  // replace characteristic new value with original value
             LOG1(" (failed)\n");
           }
-          pObj[j].characteristic->isUpdated=false;             // reset isUpdated flag for characteristic
+          pObj[j].characteristic->updateFlag=0;                                                             // reset updateFlag for characteristic
         }
       }
 
@@ -1446,29 +1441,25 @@ int Span::updateCharacteristics(char *buf, SpanBuf *pObj){
 
 ///////////////////////////////
 
-void Span::clearNotify(int slotNum){
-  
-  for(int i=0;i<Accessories.size();i++){
-    for(int j=0;j<Accessories[i]->Services.size();j++){
-      for(int k=0;k<Accessories[i]->Services[j]->Characteristics.size();k++){
-        Accessories[i]->Services[j]->Characteristics[k]->ev[slotNum]=false;
-      }
-    }
-  }
-}
+void Span::clearNotify(HAPClient *hc){
+
+  for(auto const &acc : Accessories)
+    for(auto const &svc : acc->Services)
+      for(auto const &chr : svc->Characteristics)
+        chr->evList.remove(hc);  
+} 
 
 ///////////////////////////////
 
-void Span::printfNotify(SpanBuf *pObj, int nObj, int conNum){
+void Span::printfNotify(SpanBuf *pObj, int nObj, HAPClient *hc){
 
   boolean notifyFlag=false;
   
   for(int i=0;i<nObj;i++){                                       // loop over all objects
     
     if(pObj[i].status==StatusCode::OK && pObj[i].val){           // characteristic was successfully updated with a new value (i.e. not just an EV request)
+      if(pObj[i].characteristic->evList.has(hc)){                // if connection hc is subscribed to EV notifications for this characteristic
       
-      if(pObj[i].characteristic->ev[conNum]){                    // if notifications requested for this characteristic by specified connection number
-
         if(!notifyFlag)                                          // this is first notification for any characteristic
           hapOut << "{\"characteristics\":[";                    // print start of JSON array
         else                                                     // else already printed at least one other characteristic
@@ -1491,7 +1482,10 @@ void Span::printfAttributes(SpanBuf *pObj, int nObj){
   hapOut << "{\"characteristics\":[";
 
   for(int i=0;i<nObj;i++){
-    hapOut << "{\"aid\":" << pObj[i].aid << ",\"iid\":" << pObj[i].iid << ",\"status\":" << (int)pObj[i].status << "}";
+    hapOut << "{\"aid\":" << pObj[i].aid << ",\"iid\":" << pObj[i].iid << ",\"status\":" << (int)pObj[i].status;
+    if(pObj[i].status==StatusCode::OK && pObj[i].wr && pObj[i].characteristic)
+      hapOut << ",\"value\":" << pObj[i].characteristic->uvPrint(pObj[i].characteristic->value).c_str();
+    hapOut << "}";
     if(i+1<nObj)
       hapOut << ",";
   }
@@ -1504,13 +1498,13 @@ void Span::printfAttributes(SpanBuf *pObj, int nObj){
 boolean Span::printfAttributes(char **ids, int numIDs, int flags){
 
   uint32_t aid;
-  int iid;
+  uint32_t iid;
   
   SpanCharacteristic *Characteristics[numIDs];
   StatusCode status[numIDs];
 
   for(int i=0;i<numIDs;i++){              // PASS 1: loop over all ids requested to check status codes - only errors are if characteristic not found, or not readable
-    sscanf(ids[i],"%u.%d",&aid,&iid);     // parse aid and iid
+    sscanf(ids[i],"%u.%u",&aid,&iid);     // parse aid and iid
     Characteristics[i]=find(aid,iid);     // find matching chararacteristic
     
     if(Characteristics[i]){                                         // if found
@@ -1534,7 +1528,7 @@ boolean Span::printfAttributes(char **ids, int numIDs, int flags){
     if(Characteristics[i])                                          // if found
       Characteristics[i]->printfAttributes(flags);                  // get JSON attributes for characteristic (may or may not include status=0 attribute)
     else{                                                           // else create JSON status attribute based on requested aid/iid
-      sscanf(ids[i],"%u.%d",&aid,&iid);                             
+      sscanf(ids[i],"%u.%u",&aid,&iid);                             
       hapOut << "{\"iid\":" << iid << ",\"aid\":" << aid << ",\"status\":" << (int)status[i] << "}";     
     }
       
@@ -1545,6 +1539,26 @@ boolean Span::printfAttributes(char **ids, int numIDs, int flags){
   hapOut << "]}";
 
   return(flags&GET_STATUS);    
+}
+
+///////////////////////////////
+
+Span& Span::resetIID(uint32_t newIID){
+
+  if(Accessories.empty()){
+    LOG0("\nFATAL ERROR!  Can't reset the Accessory IID count without a defined Accessory ***\n");
+    LOG0("\n=== PROGRAM HALTED ===");
+    while(1);
+  }
+  
+  if(newIID<1){
+    LOG0("\nFATAL ERROR!  Request to reset the Accessory IID count to 0 not allowed (IID must be 1 or greater) ***\n");
+    LOG0("\n=== PROGRAM HALTED ===");
+    while(1);    
+  }
+  
+  Accessories.back()->iidCount=newIID-1;
+  return(*this);
 }
 
 ///////////////////////////////
@@ -1562,8 +1576,8 @@ boolean Span::updateDatabase(boolean updateMDNS){
     if(hapConfig.configNumber==65536)                       // reached max value
       hapConfig.configNumber=1;                             // reset to 1
                    
-    nvs_set_blob(HAPClient::hapNVS,"HAPHASH",&hapConfig,sizeof(hapConfig));     // update data
-    nvs_commit(HAPClient::hapNVS);                                              // commit to NVS
+    nvs_set_blob(hapNVS,"HAPHASH",&hapConfig,sizeof(hapConfig));     // update data
+    nvs_commit(hapNVS);                                              // commit to NVS
     changed=true;
 
     if(updateMDNS){
@@ -1588,6 +1602,18 @@ boolean Span::updateDatabase(boolean updateMDNS){
   }    
 
   return(changed);
+}
+
+///////////////////////////////
+
+list<Controller, Mallocator<Controller>>::const_iterator Span::controllerListBegin(){
+  return(HAPClient::controllerList.cbegin());
+}
+
+///////////////////////////////
+
+list<Controller, Mallocator<Controller>>::const_iterator Span::controllerListEnd(){
+  return(HAPClient::controllerList.cend());
 }
 
 ///////////////////////////////
@@ -1696,7 +1722,7 @@ SpanService::~SpanService(){
     }
   }
   
-  LOG1("Deleted Service AID=%d IID=%d\n",accessory->aid,iid); 
+  LOG1("Deleted Service AID=%u IID=%u\n",accessory->aid,iid); 
 }
 
 ///////////////////////////////
@@ -1777,8 +1803,6 @@ SpanCharacteristic::SpanCharacteristic(HapChar *hapChar, boolean isCustom){
   iid=++(homeSpan.Accessories.back()->iidCount);
   service=homeSpan.Accessories.back()->Services.back();
   aid=homeSpan.Accessories.back()->aid;
-
-  ev=(boolean *)HS_CALLOC(homeSpan.maxConnections,sizeof(boolean));
 }
 
 ///////////////////////////////
@@ -1790,18 +1814,228 @@ SpanCharacteristic::~SpanCharacteristic(){
     chr++;
   service->Characteristics.erase(chr);
 
-  free(ev);
   free(desc);
   free(unit);
   free(validValues);
   free(nvsKey);
 
-  if(format==FORMAT::STRING || format==FORMAT::DATA){
+  if(format>=FORMAT::STRING){
     free(value.STRING);
     free(newValue.STRING);
   }
   
-  LOG1("Deleted Characteristic AID=%d IID=%d\n",aid,iid);  
+  LOG1("Deleted Characteristic AID=%u IID=%u\n",aid,iid);  
+}
+
+///////////////////////////////
+
+String SpanCharacteristic::uvPrint(UVal &u){
+  char c[64];
+  switch(format){
+    case FORMAT::BOOL:
+      return(String(u.BOOL));      
+    case FORMAT::INT:
+      return(String(u.INT));
+    case FORMAT::UINT8:
+      return(String(u.UINT8));        
+    case FORMAT::UINT16:
+      return(String(u.UINT16));        
+    case FORMAT::UINT32:
+      return(String(u.UINT32));        
+    case FORMAT::UINT64:
+      sprintf(c,"%llu",u.UINT64);
+      return(String(c));        
+    case FORMAT::FLOAT:
+      sprintf(c,"%g",u.FLOAT);
+      return(String(c));        
+    case FORMAT::STRING:
+    case FORMAT::DATA:
+    case FORMAT::TLV_ENC:
+      return(String("\"") + String(u.STRING) + String("\""));        
+  } // switch
+  return(String());       // included to prevent compiler warnings
+}
+
+///////////////////////////////
+
+void SpanCharacteristic::uvSet(UVal &dest, UVal &src){
+  if(format>=FORMAT::STRING)
+    uvSet(dest,(const char *)src.STRING);
+  else
+    dest=src;
+}
+
+///////////////////////////////
+
+void SpanCharacteristic::uvSet(UVal &u, STRING_t val){
+  u.STRING = (char *)HS_REALLOC(u.STRING, strlen(val) + 1);
+  strcpy(u.STRING, val);
+}
+
+///////////////////////////////
+
+void SpanCharacteristic::uvSet(UVal &u, DATA_t data){
+  
+  if(data.second>0){
+    size_t olen;
+    mbedtls_base64_encode(NULL,0,&olen,NULL,data.second);                              // get length of string buffer needed (mbedtls includes the trailing null in this size)
+    value.STRING = (char *)HS_REALLOC(value.STRING,olen);                              // allocate sufficient size for storing value
+    mbedtls_base64_encode((uint8_t*)value.STRING,olen,&olen,data.first,data.second );  // encode data into string buf
+  } else {
+    value.STRING = (char *)HS_REALLOC(value.STRING,1);                                 // allocate sufficient size for just trailing null character
+    *value.STRING ='\0';
+  }  
+}
+
+///////////////////////////////
+
+void SpanCharacteristic::uvSet(UVal &u, TLV_ENC_t tlv){
+
+  const size_t bufSize=36;                                  // maximum size of buffer to store packed TLV bytes before encoding directly into value; must be multiple of 3
+  size_t nBytes=tlv.pack_size();                            // total size of packed TLV in bytes
+
+  if(nBytes>0){
+    size_t nChars;
+    mbedtls_base64_encode(NULL,0,&nChars,NULL,nBytes);      // get length of string buffer needed (mbedtls includes the trailing null in this size)
+    u.STRING = (char *)HS_REALLOC(u.STRING,nChars);         // allocate sufficient size for storing value
+    TempBuffer<uint8_t> tBuf(bufSize);                      // create fixed-size buffer to store packed TLV bytes
+    tlv.pack_init();                                        // initialize TLV packing
+    uint8_t *p=(uint8_t *)u.STRING;                         // set pointer to beginning of value
+    while((nBytes=tlv.pack(tBuf,bufSize))>0){               // pack the next set of TLV bytes, up to a maximum of bufSize, into tBuf
+      size_t olen;                                          // number of characters written (excludes null character)
+      mbedtls_base64_encode(p,nChars,&olen,tBuf,nBytes);    // encode data directly into value
+      p+=olen;                                              // advance pointer to null character
+      nChars-=olen;                                         // subtract number of characters remaining
+    }
+  } else {
+    u.STRING = (char *)HS_REALLOC(u.STRING,1);              // allocate sufficient size for just trailing null character
+    *u.STRING ='\0';
+  }  
+}
+
+///////////////////////////////
+
+char *SpanCharacteristic::getStringGeneric(UVal &val){
+  if(format>=FORMAT::STRING)
+      return val.STRING;
+
+  return NULL;
+}
+
+///////////////////////////////
+
+void SpanCharacteristic::setString(const char *val, boolean notify){ 
+
+  setValCheck();
+  uvSet(value,val);
+  setValFinish(notify);    
+}
+
+///////////////////////////////
+
+size_t SpanCharacteristic::getDataGeneric(uint8_t *data, size_t len, UVal &val){    
+  if(format<FORMAT::DATA)
+    return(0);
+
+  size_t olen;
+  int ret=mbedtls_base64_decode(data,len,&olen,(uint8_t *)val.STRING,strlen(val.STRING));
+  
+  if(data==NULL)
+    return(olen);
+    
+  if(ret==MBEDTLS_ERR_BASE64_BUFFER_TOO_SMALL)
+    LOG0("\n*** WARNING:  Can't decode Characteristic::%s with getData().  Destination buffer is too small (%d out of %d bytes needed)!\n\n",hapName,len,olen);
+  else if(ret==MBEDTLS_ERR_BASE64_INVALID_CHARACTER)
+    LOG0("\n*** WARNING:  Can't decode Characteristic::%s with getData().  Data is not in base-64 format!\n\n",hapName);
+    
+  return(olen);
+}
+
+///////////////////////////////
+
+void SpanCharacteristic::setData(const uint8_t *data, size_t len, boolean notify){
+
+  setValCheck();
+  uvSet(value,{data,len});
+  setValFinish(notify);
+} 
+  
+///////////////////////////////
+
+size_t SpanCharacteristic::getTLVGeneric(TLV8 &tlv, UVal &val){
+   
+  if(format<FORMAT::TLV_ENC)
+    return(0);
+
+  const size_t bufSize=36;                    // maximum size of buffer to store decoded bytes before unpacking into TLV; must be multiple of 3
+  TempBuffer<uint8_t> tBuf(bufSize);          // create fixed-size buffer to store decoded bytes
+  tlv.wipe();                                 // clear TLV completely
+
+  size_t nChars=strlen(val.STRING);         // total characters to decode
+  uint8_t *p=(uint8_t *)val.STRING;         // set pointer to beginning of value
+  const size_t decodeSize=bufSize/3*4;      // number of characters to decode in each pass
+  int status=0;
+  
+  while(nChars>0){
+    size_t olen;
+    size_t n=nChars<decodeSize?nChars:decodeSize;
+    
+    int ret=mbedtls_base64_decode(tBuf,tBuf.len(),&olen,p,n);
+    if(ret==MBEDTLS_ERR_BASE64_INVALID_CHARACTER){
+      LOG0("\n*** WARNING:  Can't decode Characteristic::%s with getTLV().  Data is not in base-64 format!\n\n",hapName);
+      tlv.wipe();
+      return(0);
+    }
+    status=tlv.unpack(tBuf,olen);
+    p+=n;
+    nChars-=n;
+  }
+  if(status>0){
+    LOG0("\n*** WARNING:  Can't unpack Characteristic::%s with getTLV().  TLV record is incomplete or corrupted!\n\n",hapName);
+    tlv.wipe();
+    return(0);      
+  }
+return(tlv.pack_size());
+}
+
+///////////////////////////////
+
+void SpanCharacteristic::setTLV(const TLV8 &tlv, boolean notify){
+
+  setValCheck();
+  uvSet(value,tlv);
+  setValFinish(notify);
+}
+
+///////////////////////////////
+
+void SpanCharacteristic::setValCheck(){
+  if(updateFlag==1)
+    LOG0("\n*** WARNING:  Attempt to set value of Characteristic::%s within update() while it is being simultaneously updated by Home App.  This may cause device to become non-responsive!\n\n",hapName);
+}
+
+///////////////////////////////
+
+void SpanCharacteristic::setValFinish(boolean notify){
+
+  uvSet(newValue,value);     
+  updateTime=homeSpan.snapTime;
+
+  if(notify){
+    if((perms&EV) && (updateFlag!=2)){        // only broadcast notification if EV permission is set AND update is NOT being done in context of write-response    
+      SpanBuf sb;                             // create SpanBuf object
+      sb.characteristic=this;                 // set characteristic          
+      sb.status=StatusCode::OK;               // set status
+      char dummy[]="";
+      sb.val=dummy;                           // set dummy "val" so that printfNotify knows to consider this "update"
+      homeSpan.Notifications.push_back(sb);   // store SpanBuf in Notifications vector
+    }
+
+    if(nvsKey){
+      nvs_set_str(homeSpan.charNVS,nvsKey,value.STRING);    // store data
+      nvs_commit(homeSpan.charNVS);
+    }
+  }      
 }
 
 ///////////////////////////////
@@ -1809,7 +2043,7 @@ SpanCharacteristic::~SpanCharacteristic(){
 void SpanCharacteristic::printfAttributes(int flags){
 
   const char permCodes[][7]={"pr","pw","ev","aa","tw","hd","wr"};
-  const char formatCodes[][9]={"bool","uint8","uint16","uint32","uint64","int","float","string","data"};
+  const char formatCodes[][9]={"bool","uint8","uint16","uint32","uint64","int","float","string","data","tlv8"};
 
   hapOut << "{\"iid\":" << iid;
 
@@ -1863,9 +2097,11 @@ void SpanCharacteristic::printfAttributes(int flags){
 
   if(flags&GET_AID)
     hapOut << ",\"aid\":" << aid;
+
+  HAPClient *hc=&(*(homeSpan.currentClient));
   
   if(flags&GET_EV)
-    hapOut << ",\"ev\":" << (ev[HAPClient::conNum]?"true":"false");
+    hapOut << ",\"ev\":" << (evList.has(hc)?"true":"false");
 
   if(flags&GET_STATUS)
     hapOut << ",\"status\":0";    
@@ -1875,7 +2111,7 @@ void SpanCharacteristic::printfAttributes(int flags){
 
 ///////////////////////////////
 
-StatusCode SpanCharacteristic::loadUpdate(char *val, char *ev){
+StatusCode SpanCharacteristic::loadUpdate(char *val, char *ev, boolean wr){
 
   if(ev){                // request for notification
     boolean evFlag;
@@ -1890,14 +2126,13 @@ StatusCode SpanCharacteristic::loadUpdate(char *val, char *ev){
     if(evFlag && !(perms&EV))         // notification is not supported for characteristic
       return(StatusCode::NotifyNotAllowed);
       
-    LOG1("Notification Request for aid=");
-    LOG1(aid);
-    LOG1(" iid=");
-    LOG1(iid);
-    LOG1(": ");
-    LOG1(evFlag?"true":"false");
-    LOG1("\n");
-    this->ev[HAPClient::conNum]=evFlag;
+    LOG1("Notification Request for aid=%u iid=%u: %s\n",aid,iid,evFlag?"true":"false");
+    HAPClient *hc=&(*(homeSpan.currentClient));
+    
+    if(evFlag)
+      evList.add(hc);
+    else
+      evList.remove(hc);
   }
 
   if(!val)                // no request to update value
@@ -1968,7 +2203,9 @@ StatusCode SpanCharacteristic::loadUpdate(char *val, char *ev){
       break;
 
     case STRING:
-      uvSet(newValue,(const char *)val);
+    case DATA:
+    case TLV_ENC:
+      uvSet(newValue,(const char *)stripBackslash(val));
       break;
 
     default:
@@ -1976,7 +2213,7 @@ StatusCode SpanCharacteristic::loadUpdate(char *val, char *ev){
 
   } // switch
 
-  isUpdated=true;
+  updateFlag=1+wr;                // set flag to 1 if successful update or 2 if successful AND write-response flag is set
   updateTime=homeSpan.snapTime;
   return(StatusCode::TBD);
 }
@@ -1987,6 +2224,57 @@ unsigned long SpanCharacteristic::timeVal(){
   
   return(homeSpan.snapTime-updateTime);
 }
+
+///////////////////////////////
+
+boolean SpanCharacteristic::updated(){
+  
+  return(updateFlag>0);
+}
+
+///////////////////////////////
+
+uint32_t SpanCharacteristic::getIID(){
+  
+  return(iid);
+}
+
+///////////////////////////////
+
+SpanCharacteristic *SpanCharacteristic::setPerms(uint8_t perms){
+  perms&=0x7F;
+  if(perms>0)
+    this->perms=perms;
+  return(this);
+}
+
+///////////////////////////////
+
+SpanCharacteristic *SpanCharacteristic::addPerms(uint8_t dPerms){
+  return(setPerms(perms|dPerms));
+}
+
+///////////////////////////////
+
+SpanCharacteristic *SpanCharacteristic::removePerms(uint8_t dPerms){
+  return(setPerms(perms&(~dPerms)));
+}
+
+///////////////////////////////
+
+SpanCharacteristic *SpanCharacteristic::setDescription(const char *c){
+  desc = (char *)HS_REALLOC(desc, strlen(c) + 1);
+  strcpy(desc, c);
+  return(this);
+}  
+
+///////////////////////////////
+
+SpanCharacteristic *SpanCharacteristic::setUnit(const char *c){
+  unit = (char *)HS_REALLOC(unit, strlen(c) + 1);
+  strcpy(unit, c);
+  return(this);
+}  
 
 ///////////////////////////////
 
@@ -2026,18 +2314,23 @@ SpanCharacteristic *SpanCharacteristic::setValidValues(int n, ...){
 }
 
 ///////////////////////////////
-//        SpanRange          //
+
+boolean SpanCharacteristic::EVLIST::has(HAPClient *hc){
+  return(find_if(begin(), end(), [hc](const HAPClient *hcTemp){return(hc==hcTemp);}) != end());  
+}
+
 ///////////////////////////////
 
-SpanRange::SpanRange(int min, int max, int step){
+void SpanCharacteristic::EVLIST::add(HAPClient *hc){
+  if(!has(hc))
+    push_back(hc);
+}
 
-  if(homeSpan.Accessories.empty() || homeSpan.Accessories.back()->Services.empty() || homeSpan.Accessories.back()->Services.back()->Characteristics.empty() ){
-    LOG0("\nFATAL ERROR!  Can't create new SpanRange(%d,%d,%d) without a defined Characteristic ***\n",min,max,step);
-    LOG0("\n=== PROGRAM HALTED ===");
-    while(1);
-  } else {
-    homeSpan.Accessories.back()->Services.back()->Characteristics.back()->setRange(min,max,step);
-  }
+///////////////////////////////
+
+void SpanCharacteristic::EVLIST::remove(HAPClient *hc){
+  auto it=remove_if(begin(), end(), [hc](const HAPClient *hcTemp){return(hc==hcTemp);});
+  erase(it,end());
 }
 
 ///////////////////////////////
@@ -2107,8 +2400,6 @@ void SpanWebLog::init(uint16_t maxEntries, const char *serv, const char *tz, con
     isEnabled=true;
   }
   log = (log_t *)HS_CALLOC(maxEntries,sizeof(log_t));
-  if(timeServer)
-    homeSpan.reserveSocketConnections(1);
 }
 
 ///////////////////////////////
@@ -2175,7 +2466,6 @@ int SpanOTA::init(boolean _auth, boolean _safeLoad, const char *pwd){
   enabled=true;
   safeLoad=_safeLoad;
   auth=_auth;
-  homeSpan.reserveSocketConnections(1);
   if(pwd==NULL)
     return(0);
   return(setPassword(pwd));

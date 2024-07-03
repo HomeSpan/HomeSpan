@@ -2,7 +2,8 @@
 
 The HomeSpan library includes many tutorial sketches of increasing complexity that take you through all the functions and features of HomeSpan.  The sketches are extensively annotated, and you'll even learn a lot about HomeKit itself by working through all the examples.  If you've already loaded HomeSpan into your Arduino IDE, the tutorials will be found under *File → Examples → HomeSpan*.  Each sketch is ready to be compiled and uploaded to your ESP32 device so you can see them in action.  Alternatively, you can explore just the code within GitHub by clicking on any of titles below.  Note: you may want to first read through the [HomeSpan API Overview](Overview.md) before exploring the tutorials.  They will probably make a lot more sense if you do!
 
-> :heavy_check_mark: Each example is designed to be operated after pairing your ESP32 to HomeKit so you can control HomeSpan from the Home App on your iPhone, iPad, or Mac.  In principle, once you configure and pair your device to HomeKit, your Home App should automatically reflect all changes in your configuration whenever you upload a different tutorial.  However, in practice this is not always the case as it seems HomeKit sometimes caches information about devices, which means what you see in your Home App may not be fully in sync with your sketch.  If this occurs, unpairing and then re-pairing the ESP32 device usually fixes the issue.  If not, you may have to reset the ID on the ESP32 device so that HomeKit thinks it is a new device and will not use any cached data.  This is very easy to do - see the [HomeSpan Command-Line Interface (CLI)](CLI.md) page for details.
+>[!TIP]
+>Each example is designed to be operated after pairing your ESP32 to HomeKit so you can control HomeSpan from the Home App on your iPhone, iPad, or Mac.  In principle, once you configure and pair your device to HomeKit, your Home App should automatically reflect all changes in your configuration whenever you upload a different tutorial.  However, in practice this is not always the case as it seems HomeKit sometimes caches information about devices, which means what you see in your Home App may not be fully in sync with your sketch.  If this occurs, unpairing and then re-pairing the ESP32 device usually fixes the issue.  If not, you may have to reset the HomeKit Device ID on the ESP32 device so that HomeKit thinks it is a new device and will not use any cached data.  This is very easy to do - see the [HomeSpan Command-Line Interface (CLI)](CLI.md) page for details.
 
 ### [Example 1 - SimpleLightBulb](../examples/01-SimpleLightBulb)
 This first example introduces the HomeSpan library and demonstrates how to implement a simple on/off light control using a combination of HomeSpan Accessory, Service, and Characteristic objects.  Once this sketch has been uploaded to your HomeSpan device and the device is paired to your home, a new "lightbulb" tile will appear in the Home App of your iPhone, iPad, or Mac. Though the tile will be fully operational (i.e. you can change the status of the lightbulb from "on" or "off"), we won't yet connect an actual light or LED to the HomeSpan device, so nothing real will light up.  Instead, in this and the next few examples, we'll focus on learning about the different ways HomeKit controls can be configured.  Starting in Example 5, we'll connect an LED to the device and introduce the methods that actually turn the LED on and off from your Home App.  HomeSpan API topics covered in this example include:
@@ -68,7 +69,9 @@ Example 12 introduces HomeKit *Event Notifications* to implement two new accesso
 * setting the value of a Characteristic and triggering an Event Notification with the `setVal()` method
 
 ### [Example 13 - TargetStates](../examples/13-TargetStates)
-Example 13 we demonstrate the simultaneous use of both the `update()` and `loop()` methods by implementing two new Services: a Garage Door Opener and a motorized Window Shade.  Both examples showcase HomeKit's Target-State/Current-State framework.
+Example 13 demonstrates the simultaneous use of both the `update()` and `loop()` methods by implementing two new Services: a Garage Door Opener and a motorized Window Shade.  Both examples showcase HomeKit's Target-State/Current-State framework.  New HomeSpan API topics covered in this example include:
+
+* using Enumerated Constants to set the values of Characteristics that represent discrete states (e.g. "raising", "closing")
 
 ### [Example 14 - EmulatedPushButtons](../examples/14-EmulatedPushButtons)
 Example 14 demonstrates how you can use the `setVal()` and `timeVal()` methods inside a Service's `loop()` method to create a tile in the Home App that emulates a pushbutton switch.  In this example pressing the tile in the Home App will cause it to turn on, blink an LED 3 times, and then turn off (just like a real pushbutton might do).
@@ -106,6 +109,16 @@ Example 20 illustrates a number of advanced techniques through the implementatio
 * dynamically deleting Accessories with `homeSpan.deleteAccessory()`
 * refreshing the Accessory database (which automatically updates the Home App) using `homeSpan.updateDatabase()`
 * using `homeSpan.autoPoll()` to implement HomeSpan Polling in the background (and on the second core, if available)
+
+### [Example 21 - AccessoryIdentifier](../examples/21-AccessoryIdentifier)
+Example 21 shows how the Identifier Characteristic that is always present in each Accessory's required AccessoryInformation Service can be used to create a custom "identification routine" that can be triggered from within the Home App when pairing a device.  This example does not use any new HomeSpan methods.
+
+### [Example 22 - TLV8 Characteristics](../examples/22-TLV8_Characteristics)
+Example 22 demonstrates how to create and utilize TLV8-based Characteristics through the implementation of the DisplayOrder Characteristic used to set the order in which input sources for a Television Service are presented in the Home App.  New HomeSpan API topics covered in this example include:
+
+* creating TLV8 objects using HomeSpan's TLV8 class
+* updating TLV8 Characteristics using `setTLV()`
+
  
 ## Other Examples
 
@@ -125,6 +138,9 @@ An example of HomeKit's *undocumented* Television Service showing how different 
 
 ### [Pixel](../examples/Other%20Examples/Pixel)
 Demonstrates how to use HomeSpan's *Pixel* and *Dot* classes to control one- and two-wire Addressable RGB and RGBW LEDs.  See the [Addressable RGB LEDs](Pixels.md) page for full details
+
+### [PixelTester](../examples/Other%20Examples/PixelTester)
+A sketch to aid in determining the *pixelType* for any RGB(W) LED Strip.  See the [Addressable RGB LEDs](Pixels.md) page for full details
 
 ### [CustomService](../examples/Other%20Examples/CustomService)
 Demonstrates how to create Custom Services and Custom Characteristics in HomeSpan to implement an Atmospheric Pressure Sensor recognized by the *Eve for HomeKit* app.  See [Custom Characteristics and Custom Services Macros](Reference.md#custom-characteristics-and-custom-services-macros) for full details

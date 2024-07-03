@@ -49,19 +49,9 @@ enum FORMAT {     // HAP Table 6-5
   INT=5,
   FLOAT=6,
   STRING=7,
-  DATA=8
+  DATA=8,
+  TLV_ENC=9
 };
-
-///////////////////////////////
-
-typedef boolean BOOL_t;
-typedef uint8_t UINT8_t;
-typedef uint16_t UINT16_t;
-typedef uint32_t UINT32_t;
-typedef uint64_t UINT64_t;
-typedef int32_t INT_t;
-typedef double FLOAT_t;
-typedef char * STRING_t;
 
 ///////////////////////////////
 
@@ -113,6 +103,7 @@ struct HapCharacteristics {
   HAPCHAR( CurrentTemperature, 11, PR+EV, FLOAT, false );
   HAPCHAR( CurrentTiltAngle, C1, PR+EV, INT, false );
   HAPCHAR( CurrentVisibilityState, 135, PR+EV, UINT8, true );
+  HAPCHAR( DisplayOrder, 136, PR+EV, TLV_ENC, true );
   HAPCHAR( FilterLifeLevel, AB, PR+EV, FLOAT, false );
   HAPCHAR( FilterChangeIndication, AC, PR+EV, UINT8, true );
   HAPCHAR( FirmwareRevision, 52, PR+EV, STRING, true );

@@ -87,10 +87,3 @@ struct DEV_Blinker : Service::LightBulb {           // LED Blinker
 };
       
 //////////////////////////////////
-
-// HomeKit Bug Note:  There is an apparent bug in HomeKit uncovered during the development of this example.
-// If you have an Accessory with three or more Services, and the Accessory receives a notification message
-// from the device, AND the HomeKit interface is open to show the detailed control for this Service tile
-// in the HomeKit app, then for some reason HomeKit sends an update() request back to the device asking to 
-// set the Characteristic to the value that it just received from an Event Notification.  HomeKit is not supposed
-// to send update requests in response to an Event Notification.

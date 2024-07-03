@@ -1,7 +1,7 @@
 /*********************************************************************************
  *  MIT License
  *  
- *  Copyright (c) 2020-2022 Gregg E. Berman
+ *  Copyright (c) 2020-2024 Gregg E. Berman
  *  
  *  https://github.com/HomeSpan/HomeSpan
  *  
@@ -60,18 +60,19 @@ void setup() {
   // guesses the actions a device is taking, and updates it tile's icon accordingly, by comparing the value of the target state
   // Characteristic it sets, and the current state Characteristic it receives in the form of Event Notifications.  When they are the same,
   // HomeKit assumes the physical device has reached the required position.  When they differ, HomeKit assumes something will be opening,
-  // closing, raising, lowering, etc.  The details of this process for each Service is outlined in the HAP documentation, but beware
-  // the document is not always up to date with the lastest version of the HomeKit application.  Sometimes a little experimenting and a lot
-  // of trial and error is required to fully understand how each Service responds to different combinations of Characteristic values.
+  // closing, raising, lowering, etc. Sometimes a little experimenting and a lot of trial and error is required to fully understand how
+  // each Service responds to different combinations of Characteristic values.
   
   // As always, we won't be connecting our ESP32 to an actual garage door or window shade but will instead simulate their responses and
   // actions for illustrative purposes. In some ways the code is more complicated because of the need to simulate values - it might be
   // easier if we actually were connecting to a garage door or window shade!
   
   // Fully commented code for both of our derived Services can be found in DEV_DoorsWindows.h.  These examples do not introduce any new
-  // HomeSpan functions or features.  Rather we are combining everything learned so far into two reasonably complex Services.  You may
-  // want to reference the HAP documentation for these two parent Services to fully understand the meaning of the different value settings
-  // for each of the Services' Characteristics.
+  // HomeSpan functions, but you will see how to use HomeSpan's ENUMERATED CONSTANTS, instead of just plain integers, to set the values
+  // of Characteristics where the values represent discrete states (e.g. "lowering", "opening").
+  
+  // Please see HomeSpan's Services and Characteristics page for a complete list of the enumerated constants available for Characteristics
+  // where they are applicable.
   
   Serial.begin(115200);
 

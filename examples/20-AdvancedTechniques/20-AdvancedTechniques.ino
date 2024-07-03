@@ -1,7 +1,7 @@
 /*********************************************************************************
  *  MIT License
  *  
- *  Copyright (c) 2022 Gregg E. Berman
+ *  Copyright (c) 2022-2024 Gregg E. Berman
  *  
  *  https://github.com/HomeSpan/HomeSpan
  *  
@@ -123,7 +123,7 @@ void addLight(int n){
   char name[32];
   sprintf(name,"Light-%d",n);                    // create the name of the device using the specified "ID"
   char sNum[32];
-  sprintf(sNum,"%0.10d",n);                      // create serial number from the ID - this is helpful in case we rename the Light to something else using the Home App
+  sprintf(sNum,"%010d",n);                       // create serial number from the ID - this is helpful in case we rename the Light to something else using the Home App
 
   Serial.printf("Adding Accessory: %s\n",name);
   

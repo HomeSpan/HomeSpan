@@ -76,7 +76,7 @@ struct NeoPixel_RGB : Service::LightBulb {      // Addressable single-wire RGB L
   NeoPixel_RGB(uint8_t pin, int nPixels) : Service::LightBulb(){
 
     V.setRange(5,100,1);                      // sets the range of the Brightness to be from a min of 5%, to a max of 100%, in steps of 1%
-    pixel=new Pixel(pin);                     // creates Pixel LED on specified pin
+    pixel=new Pixel(pin);                     // creates Pixel RGB LED on specified pin
     this->nPixels=nPixels;                    // save number of Pixels in this LED Strand
     update();                                 // manually call update() to set pixel with restored initial values
   }
@@ -110,7 +110,7 @@ struct NeoPixel_RGBW : Service::LightBulb {      // Addressable single-wire RGBW
   NeoPixel_RGBW(uint8_t pin, int nPixels) : Service::LightBulb(){
 
     V.setRange(5,100,1);                      // sets the range of the Brightness to be from a min of 5%, to a max of 100%, in steps of 1%
-    pixel=new Pixel(pin,true);                // creates Pixel RGBW LED (second parameter set to true for RGBW) on specified pin
+    pixel=new Pixel(pin,PixelType::GRBW);     // creates Pixel RGBW LED on specified pin (with order of colors chnanged to reflect this specific NeoPixel device)
     this->nPixels=nPixels;                    // save number of Pixels in this LED Strand
     update();                                 // manually call update() to set pixel with restored initial values
   }

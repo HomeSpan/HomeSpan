@@ -24,41 +24,44 @@
  *  SOFTWARE.
  *  
  ********************************************************************************/
+
+#pragma once
+
+//////////////////////////////////////////////////////
+//              HomeSpan Version                    //
  
-#include "PwmPin.h"
+#define     HS_MAJOR  1
+#define     HS_MINOR  9
+#define     HS_PATCH  1
 
-ServoPin servo(21,0,500,2200,-60,60);
+//////////////////////////////////////////////////////
 
-void setup() {
- 
-  Serial.begin(115200);
-  delay(1000);
+#ifndef ARDUINO_ARCH_ESP32
+  #error ERROR: HOMESPAN IS ONLY AVAILABLE FOR ESP32 MICROCONTROLLERS!
+  #include <FATAL_ERROR>
+#endif
 
-  Serial.print("\n\nReady\n\n");
+#include <esp_arduino_version.h>
 
-  for(int count=0;count<3;count++){
-    for(int i=-60;i<61;i++){
-     servo.set(i);
-     delay(10);
-    }
+#if ESP_ARDUINO_VERSION_MAJOR!=2
+  #error ERROR: HOMESPAN REQUIRES VERSION 2 OF THE ARDUINO ESP32 LIBRARY.  HOMESPAN IS NOT COMPATIBLE WITH VERSION 1 OR VERSION 3
+  #include <FATAL_ERROR>
+#endif
 
-    for(int i=60;i>-61;i--){
-    servo.set(i);
-    delay(10);
-    }
-  }
+#define     STRINGIFY(x) _STR(x)
+#define     _STR(x) #x
 
-  delay(5000);
+#define     HOMESPAN_VERSION    STRINGIFY(HS_MAJOR) "." STRINGIFY(HS_MINOR) "." STRINGIFY(HS_PATCH)
 
-  servo.set(NAN);
+#define     VERSION(major,minor,patch) major*10000+minor*100+patch
 
-  delay(10000);
+#ifndef REQUIRED
+  #define REQUIRED 0
+#endif
 
-  servo.set(0);
+#if (REQUIRED>VERSION(HS_MAJOR,HS_MINOR,HS_PATCH))
+  #error ERROR: THIS SKETCH REQUIRES A LATER VERSION OF THE HOMESPAN LIBRARY
+  #include <FATAL_ERROR>
+#endif
 
-}
-
-//////////////////////////////////////
-
-void loop(){
-}
+#define     ARDUINO_ESP_VERSION  STRINGIFY(ESP_ARDUINO_VERSION_MAJOR) "." STRINGIFY(ESP_ARDUINO_VERSION_MINOR) "." STRINGIFY(ESP_ARDUINO_VERSION_PATCH)

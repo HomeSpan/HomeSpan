@@ -103,15 +103,6 @@ Methods with a return type of `Span&` return a reference to `homeSpan` itself an
 * `int getLogLevel()`
   * returns the current Log Level as set by `setLogLevel(level)`
   
-* `Span& reserveSocketConnections(uint8_t nSockets)`
-  * reserves *nSockets* network sockets for uses **other than** by the HomeSpan HAP Server for HomeKit Controller Connections
-    * for sketches compiled under Arduino-ESP32 v2.0.1 or later, HomeSpan reserves 14 sockets for HAP Controller Connections
-    * each call to `reserveSocketConnections(nSockets)` reduces this number by *nSockets*
-    * use this method if you add code to a sketch that requires its own socket connections (e.g. a separate web service, an MQTT server, etc.)
-  * multiple calls to this method are allowed - the number of sockets reserved will be the sum of *nSockets* across all calls
-  * note you do not need to separately reserve sockets for built-in HomeSpan functionality
-    * for example, `enableOTA()` already contains an embedded call to `reserveSocketConnections(1)` since HomeSpan knows one socket must be reserved to support OTA
-  
 * `Span& setPortNum(uint16_t port)`
   * sets the TCP port number used for communication between HomeKit and HomeSpan (default=80)
   
@@ -181,7 +172,13 @@ The following **optional** `homeSpan` methods enable additional features and pro
   *   this one-time call to *func* is provided for users that would like to trigger additional actions when the device is first paired, or the device is later unpaired
   *   note this *func* is **not** called upon start-up and should not be used to simply check whether a device is paired or unpaired.  It is only called when pairing status changes
   *   the function *func* must be of type *void* and accept one *boolean* argument
-
+ 
+* `Span& setControllerCallback(void (*func)())`
+  * sets an optional user-defined callback function, *func*, to be called by HomeSpan every time a new controller is added, removed, or updated, even if the pairing status does not change
+  * note this method differs from `setPairCallback()`, which is only called if the device's pairing status changes, such as when the first controller is added during initial pairing, or the last controller is removed when unpairing
+  * the function *func* must be of type *void* and have no arguments
+  * see the `controllerListBegin()` and `controllerListEnd()` methods for details on how to read the pairing data for each paired controller (*only needed to support certain advanced use cases*)
+ 
 * `Span& setStatusCallback(void (*func)(HS_STATUS status))`
   * sets an optional user-defined callback function, *func*, to be called by HomeSpan whenever its running state (e.g. WiFi Connecting, Pairing Needed...) changes in way that would alter the blinking pattern of the (optional) Status LED
   * if *func* is set, it will be called regardless of whether or not a Status LED has actually been defined
@@ -196,7 +193,7 @@ The following **optional** `homeSpan` methods enable additional features and pro
   * sets the Setup Pairing Code to *s*, which **must** be exactly eight numerical digits (no dashes)
   * example: `homeSpan.setPairingCode("46637726");`
   * a hashed version of the Pairing Code will be saved to the device's non-volatile storage, overwriting any currently-stored Pairing Code
-  * if *s* contains an invalid code, an error will be reported and the code will *not* be saved.  Instead, the currently-stored Pairing Code (or the HomeSpan default Pairing Code if no code has been stored) will be used
+  * this method operated silently unless *s* contains an invalid code, in which case a fatal error will be reported to the Serial Monitor, the code will *not* be saved, and the sketch will be HALTED
   * :warning: SECURTY WARNING: Hardcoding a device's Pairing Code into your sketch is considered a security risk and is **not** recommended.  Instead, use one of the more secure methods provided by HomeSpan, such as typing 'S \<code\>' from the CLI, or launching HomeSpan's Access Point, to set your Pairing Code without hardcoding it into your sketch
 
 * `Span& setSketchVersion(const char *sVer)`
@@ -281,7 +278,7 @@ The following **optional** `homeSpan` methods provide additional run-time functi
   * allows for dynamically changing the Accessory database during run-time (i.e. changing the configuration *after* the Arduino `setup()` has finished)
   * deleting an Accessory automatically deletes all Services, Characteristics, and any other resources it contains
   * outputs Level-1 Log Messages listing all deleted components
-  * note: though deletions take effect immediately, HomeKit Controllers, such as the Home App, will not be aware of these changes until the database configuration number is updated and rebroadcast - see updateDatabase() below
+  * note: though deletions take effect immediately, HomeKit Controllers, such as the Home App, will not be aware of these changes until the database configuration number is updated and rebroadcast - see `updateDatabase()` below
  
 * `boolean updateDatabase()`
   * recomputes the database configuration number and, if changed, rebroadcasts the new number via MDNS so all connected HomeKit Controllers, such as the Home App, can request a full refresh to accurately reflect the new configuration
@@ -290,6 +287,43 @@ The following **optional** `homeSpan` methods provide additional run-time functi
   * use anytime after dynamically adding one or more Accessories (with `new SpanAccessory(aid)`) or deleting one or more Accessories (with `homeSpan.deleteAccessory(aid)`)
   * **important**: once you delete an Accessory, you cannot re-use the same *aid* when adding a new Accessory (on the same device) unless the new Accessory is configured with the exact same Services and Characteristics as the deleted Accessory
   * note: this method is **not** needed if you have a static Accessory database that is fully defined in the Arduino `setup()` function of a sketch
+
+* `Span& resetIID(uint32_t newIID)`
+  * resets the IID count for the current Accessory to *newIID*, which must be greater than 0
+  * throws an error and halts program if called before at least one Accessory is created
+  * example: `homeSpan.resetIID(100)` causes HomeSpan to set the IID to 100 for the very next Service or Characteristic defined within the current Accessory, and then increment the IID count going forward so that any Services or Characteristics subsequently defined (within the same Accessory) have IID=101, 102, etc.
+  * note: calling this function only affects the IID generation for the current Accessory (the count will be reset to IID=1 upon instantiation of a new Accessory)
+
+* `const_iterator controllerListBegin()` and `const_iterator controllerListEnd()`
+  * returns a *constant iterator* pointing to either the *beginning*, or the *end*, of an opaque linked list that stores all controller data
+  * iterators should be defined using the `auto` keyword as follows: `auto myIt=homeSpan.controllerListBegin();`
+  * controller data can be read from a de-referenced iterator using the following methods:    
+    * `const uint8_t *getID()` returns pointer to the 36-byte ID of the controller
+    * `const uint8_t *getLTPK()` returns pointer to the 32-byte Long Term Public Key of the controller
+    * `boolean isAdmin()` returns true if controller has admin permissions, else returns false
+  * <details><summary>click here for example code</summary><br>
+
+    ```C++
+    // Extract and print the same data about each controller that HomeSpan prints to the Serial Monitor when using the 's' CLI command
+    
+    Serial.printf("\nController Data\n");
+    
+    for(auto it=homeSpan.controllerListBegin(); it!=homeSpan.controllerListEnd(); ++it){  // loop over each controller
+    
+      Serial.printf("Admin=%d",it->isAdmin());    // indicate if controller has admin permissions
+
+      Serial.printf("  ID=");                     // print the 36-byte Device ID of the controller
+      for(int i=0;i<36;i++)
+        Serial.printf("%02X",it->getID()[i]);
+    
+      Serial.printf("  LTPK=");                   // print the 32-byte Long-Term Public Key of the controller)
+      for(int i=0;i<32;i++)
+        Serial.printf("%02X",it->getLTPK()[i]);
+    
+      Serial.printf("\n");
+    }
+    ```
+    </details>
  
 ---
 
@@ -352,11 +386,15 @@ The following methods are supported:
   * note that Linked Services are only applicable for select HAP Services.  See Apple's HAP-R2 documentation for full details
   * example: `(new Service::Faucet)->addLink(new Service::Valve)->addLink(new Service::Valve);` (links two Valves to a Faucet)
 
-* `vector<SpanService *> getLinks()`
-  * returns a vector of pointers to Services that were added using `addLink()`
-  * useful for creating loops that iterate over all linked Services
-  * note that the returned vector points to generic SpanServices, which should be re-cast as needed
-  * example: `for(auto myValve : faucet->getLinks()) { if((MyValve *)myValve)->active->getVal()) ... }` checks all Valves linked to a Faucet
+* `vector<T> getLinks<T=SpanService *>(const char *serviceName=NULL)`
+  * template function that returns a vector of pointers to Services that were added using `addLink()`
+    * if template parameter, *T*, is left blank, the elements of the returned vector will be of type *SpanService \**
+    * if template parameter, *T*, is specified, the elements of the returned vector will be cast into type *T*
+  * if *serviceName* is specified, only those services matching *serviceName* will be included in the return vector
+    * *serviceName* must be one of HomeSpan's built-in Services (e.g. "Valve")
+    * if *serviceName* is left blank or set to NULL, all services will be included in the return vector
+  * this function is useful for creating loops that iterate over all linked Services
+  * example: from within a Faucet Service containing linked Valves defined in *MyValveService*, use `for(auto valve : getLinks<MyValveService *>()) { if(valve->active->getVal()) ... }` to check which Valves are active
   
 * `virtual boolean update()`
   * HomeSpan calls this method upon receiving a request from a HomeKit Controller to update one or more Characteristics associated with the Service.  Users should override this method with code that implements that requested updates using one or more of the SpanCharacteristic methods below.  Method **must** return *true* if update succeeds, or *false* if not.
@@ -371,6 +409,9 @@ The following methods are supported:
       * 0=single press (SpanButton::SINGLE)
       * 1=double press (SpanButton::DOUBLE)
       * 2=long press (SpanButton::LONG)
+     
+* `uint32_t getIID()`
+  * returns the IID of the Service
     
 ## *SpanCharacteristic(value [,boolean nvsStore])*
   
@@ -378,13 +419,18 @@ This is a **base class** from which all HomeSpan Characteristics are derived, an
 
 * instantiated Characteristics are added to the HomeSpan HAP Database and associated with the last Service instantiated
 * instantiating a Characteristic without first instantiating a Service throws an error during initialization
-* the first argument optionally allows you to set the initial *value* of the Characteristic at startup.  If *value* is not specified, HomeSpan will supply a reasonable default for the Characteristic
-* throws a runtime warning if *value* is outside of the min/max range for the Characteristic, where min/max is either the HAP default, or any new values set via a call to `setRange()`
+* the first argument optionally allows you to set the initial *value* of the Characteristic at startup using the following formats:
+  * for NUMERIC Characteristics, *value* can be any integer or decimal numeric type, such as `boolean`, `int`, `uint64_t`, `double`, etc.  HomeSpan will automatically cast *value* into a variable with the correct numerical precision for the Characteristic specified
+  * for STRING Characteristics, *value* must be either of the type `char *`, or a literal quote-enclosed UTF-8 string
+  * for TLV8 Characteristics, *value* must be of the type `TLV8`
+  * for DATA Characteristics, *value* must be a brace-enclosed *pair* of the form `{uint8_t *data, size_t len}`, where *len* specifies the length of the size of the byte-array *data*
+* if *value* is not specified, HomeSpan will supply a reasonable default for the Characteristic
+* for numerical Characteristics, throws a runtime warning if *value* is outside of the min/max range for the Characteristic, where min/max is either the HAP default, or any new values set via a call to `setRange()`
 * the second optional argument, if set to `true`, instructs HomeSpan to save updates to this Characteristic's value in the device's non-volative storage (NVS) for restoration at startup if the device should lose power.  If not specified, *nvsStore* will default to `false` (no storage)
 * examples:
   * `new Characteristic::Brightness();`           Brightness initialized to default value
   * `new Characteristic::Brightness(50);`         Brightness initialized to 50
-  * `new Characteristic::Brightness(50,true);`    Brightness initialized to 50; updates saved in NVS
+  * `new Characteristic::Brightness(50,true);`    Brightness initialized to 50; updates to the value are saved to, and restored from, NVS
 
 #### The following methods are supported for numerical-based Characteristics (e.g. *int*, *float*...):
 
@@ -395,12 +441,16 @@ This is a **base class** from which all HomeSpan Characteristics are derived, an
 
 * `type T getNewVal<T>()`
   * a template method that returns the desired **new** value to which a HomeKit Controller has requested the Characteristic be updated.  Same casting rules as for `getVal<>()`
+  * only applicable when called from within the `update()` loop of a **SpanService** (if called outside of the `update()` loop, the return value is that same as calling `getVal<>()`)
     
 * `void setVal(value [,boolean notify])`
   * sets the value of a numerical-based Characteristic to *value*, and, if *notify* is set to true, notifies all HomeKit Controllers of the change.  The *notify* flag is optional and will be set to true if not specified.  Setting the *notify* flag to false allows you to update a Characateristic without notifying any HomeKit Controllers, which is useful for Characteristics that HomeKit automatically adjusts (such as a countdown timer) but will be requested from the Accessory if the Home App closes and is then re-opened
   * works with any integer, boolean, or floating-based numerical *value*, though HomeSpan will convert *value* into the appropriate type for each Characteristic (e.g. calling `setValue(5.5)` on an integer-based Characteristic results in *value*=5)
   * throws a runtime warning if *value* is outside of the min/max range for the Characteristic, where min/max is either the HAP default, or any new min/max range set via a prior call to `setRange()`
-  * *value* is **not** restricted to being an increment of the step size; for example it is perfectly valid to call `setVal(43.5)` after calling `setRange(0,100,5)` on a floating-based Characteristic even though 43.5 does does not align with the step size specified.  The Home App will properly retain the value as 43.5, though it will round to the nearest step size increment (in this case 45) when used in a slider graphic (such as setting the temperature of a thermostat)
+  * note that *value* is **not** restricted to being an increment of the step size; for example it is perfectly valid to call `setVal(43.5)` after calling `setRange(0,100,5)` on a floating-based Characteristic even though 43.5 does does not align with the step size specified.  The Home App will properly retain the value as 43.5, though it will round to the nearest step size increment (in this case 45) when used in a slider graphic (such as setting the temperature of a thermostat)
+  * throws a runtime warning if called from within the `update()` routine of a **SpanService** *and* `isUpdated()` is *true* for the Characteristic (i.e. it is being updated at the same time via the Home App), *unless* you are changing the value of a Characteristic in response to a *write-response* request from HomeKit (typically used only for certain TLV-based Characteristics)
+  * note this method can be used to update the value of a Characteristic even if the Characteristic is not permissioned for event notifications (EV), in which case the value stored by HomeSpan will be updated but the Home App will *not* be notified of the change
+
 
 * `SpanCharacteristic *setRange(min, max, step)`
   * overrides the default HAP range for a Characteristic with the *min*, *max*, and *step* parameters specified
@@ -427,10 +477,10 @@ This is a **base class** from which all HomeSpan Characteristics are derived, an
 * `char *getNewString()`
   * equivalent to `getNewVal()`, but used exclusively for string-characteristics (i.e. a null-terminated array of characters)
 
-* `void setString(const char *value)`
+* `void setString(const char *value [,boolean notify])`
   * equivalent to `setVal(value)`, but used exclusively for string-characteristics (i.e. a null-terminated array of characters)
  
- #### The following methods are supported for DATA (i.e. byte-array) Characteristics:
+#### The following methods are supported for DATA (i.e. byte-array) Characteristics:
 
 * `size_t getData(uint8_t *data, size_t len)`
   * similar to `getVal()`, but exclusively used for byte-array Characteristics
@@ -438,14 +488,38 @@ This is a **base class** from which all HomeSpan Characteristics are derived, an
   * returns the total number of bytes encoded in the Characteristic
   * if *len* is less than the total number of bytes encoded, no data is extracted (i.e. *data* is unmodified) and a warning message is thrown indicating that the size of the *data* array is insufficient to extract all the bytes encoded in the Characteristic
   * setting *data* to NULL returns the total number of bytes encoded without extracting any data.  This can be used to help create a *data* array of sufficient size in advance of extracting the data
+  * note: byte-array Characteristics are encoded and transmitted as base-64 strings.  HomeSpan automatically peforms all encoding and decoding between this format and the specified byte arrays.  But when output to the Serial Monitor using the 'i' CLI command, the value of byte-array Characteristics are displayed in their base-64 string format (only the first 32 characters are shown), since base-64 is the representation that is actually transmitted to and from HomeKit
+  * a warning message is thrown if the value stored in the Characteristic is not in base-64 format
   
 * `size_t getNewData(uint8_t *data, size_t len)`
   * similar to `getData()`, but fills byte array *data*, of specified size *len*, with bytes based on the desired **new** value to which a HomeKit Controller has requested the Characteristic be updated
 
-* `void setData(uint8_t *data, size_t len)`
+* `void setData(uint8_t *data, size_t len [,boolean notify])`
   * similar to `setVal()`, but exclusively used for byte-array Characteristics
   * updates the Characteristic by "filling" it with *len* bytes from bytes array *data*
-  * note: byte-array Characteristics are encoded and transmitted as base-64 strings.  HomeSpan automatically peforms all encoding and decoding between this format and the specified byte arrays.  But when output to the Serial Monitor, the value of byte-array Characteristics are displayed in their base-64 format (as opposed to being shown as a byte array), since base-64 is the representation that is actually transmitted to and from HomeKit
+
+#### The following methods are supported for TLV8 (structured-data) Characteristics:
+
+* `size_t getTLV(TLV8 &tlv)`
+  * similar to `getVal()`, but exclusively used for TLV8 Characteristics
+  * fills TLV8 structure *tlv* with TLV8 records from the current value of the Characteristic
+  * returns the total number of bytes encoded in the Characteristic
+  * if *tlv8* is not empty, TLV8 records from the Characteristic will be appended to any existing records
+  * similar to DATA Characteristics, TLV8 Characteristics are stored and transmitted as base-64 strings
+  * a warning message is thrown if the value stored in the Characteristic is not in base-64 format, or does not appear to contain TLV8 records 
+  
+* `size_t getNewTLV(TLV8 &tlv)`
+  * similar to `getTLV()`, but fills TLV8 structure *tlv* with TLV8 records based on the desired **new** value to which a HomeKit Controller has requested the Characteristic be updated
+
+* `void setTLV(TLV8 &tlv [,boolean notify])`
+  * similar to `setVal()`, but exclusively used for TLV8 Characteristics
+  * updates the Characteristic by packing the TLV8 structure *tlv* into a byte array and then encoding it in base-64 for storage as a string
+    
+* `NULL_TLV`
+  * this is not a method, but rather a static HomeSpan constant defined as an empty TLV8 object.  It may used a placeholder wherever an empty TLV8 object is needed, such as when you want to instantiate a TLV8 Characteristic with *nvsStore=true*, but you don't yet want set the TLV8 value
+  * example: `new Characteristic::DisplayOrder(NULL_TLV,true);`
+
+* see the [TLV8 Characteristics](TLV8.md) page for complete details on how to read/process/create TLV8 Objects using HomeSpan's TLV8 Library.
 
 #### The following methods are supported for all Characteristics:
 
@@ -480,6 +554,9 @@ This is a **base class** from which all HomeSpan Characteristics are derived, an
   * adds or overrides the *unit* for a Characteristic, as described in HAP-R2 Table 6-6
   * returns a pointer to the Characteristic itself so that the method can be chained during instantiation
   * example: `(new Characteristic::RotationSpeed())->setUnit("percentage");`
+
+* `uint32_t getIID()`
+  * returns the IID of the Characteristic
 
 ### *SpanButton(int pin, uint16_t longTime, uint16_t singleTime, uint16_t doubleTime, boolean (\*triggerType)(int))*
 
@@ -591,17 +668,20 @@ To create more than one user-defined command, simply create multiple instances o
 ### *CUSTOM_CHAR(name,uuid,perms,format,defaultValue,minValue,maxValue,staticRange)*
 ### *CUSTOM_CHAR_STRING(name,uuid,perms,defaultValue)*
 ### *CUSTOM_CHAR_DATA(name,uuid,perms)*
+### *CUSTOM_CHAR_TLV8(name,uuid,perms)*
 
-Creates a custom Characteristic that can be added to any Service.  Custom Characteristics are generally ignored by the Home App but may be used by other third-party applications (such as *Eve for HomeKit*).  The first form should be used create numerical Characterstics (e.g., UINT8, BOOL...). The second form is used to STRING-based Characteristics. The third form is used for DATA-based (i.e. byte-array) Characteristics.  Parameters are as follows (note that quotes should NOT be used in any of the macro parameters, except for *defaultValue* when applied to a STRING-based Characteristic):
+Creates a custom Characteristic that can be added to any Service.  Custom Characteristics are generally ignored by the Home App but may be used by other third-party applications (such as *Eve for HomeKit*).  The first form should be used create numerical Characterstics (e.g., UINT8, BOOL...); the second form is used to STRING-based Characteristics; the third form is used for DATA-based (i.e. byte-array) Characteristics; and the fourth form is used for TLV8-based (i.e. *structured* byte-array) Characteristics  Parameters are as follows (note that quotes should NOT be used in any of the macro parameters, except for *defaultValue* when applied to a STRING-based Characteristic):
 
 * *name* - the name of the custom Characteristic.  This will be added to the Characteristic namespace so that it is accessed the same as any HomeSpan Characteristic.  Use UTF-8 coded string for non-ASCII characters.
-* *uuid* - the UUID of the Characteristic as defined by the manufacturer.  Must be *exactly* 36 characters in the form XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX, where *X* represent a valid hexidecimal digit.  Leading zeros are required if needed as described more fully in HAP-R2 Section 6.6.1
-* *perms* - additive list of permissions as described in HAP-R2 Table 6-4.  Valid values are PR, PW, EV, AA, TW, HD, and WR
-* *format* - specifies the format of the Characteristic value, as described in HAP-R2 Table 6-5.  Valid value are BOOL, UINT8, UINT16, UNIT32, UINT64, INT, and FLOAT (note that the HomeSpan does not presently support the TLV8 formats).  Not applicable for the STRING or DATA Characteristic macros
-* *defaultValue* - specifies the default value of the Characteristic if not defined during instantiation.  Not applicable for the DATA Characteristic macro.
-* *minValue* - specifies the default minimum range for a valid value, which may be able to be overriden by a call to `setRange()`.  Not applicable for the STRING or DATA Characteristic macros
-* *minValue* - specifies the default minimum range for a valid value, which may be able to be overriden by a call to `setRange()`.  Not applicable for the STRING or DATA Characteristic macros
-* *staticRange* - set to *true* if *minValue* and *maxValue* are static and cannot be overridden with a call to `setRange()`.  Set to *false* if calls to `setRange()` are allowed.  Not applicable for the STRING or DATA Characteristic macros
+* *uuid* - the UUID of the Characteristic as defined by the manufacturer.  Must be either:
+  * *exactly* 36 characters of the form XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX, where *X* represent a valid hexidecimal digit, or
+  * a single hexidecimal number of the form XXXXXXXX with *8 digits or less*, and no leading zeros
+* *perms* - additive list of permissions.  Valid values are PR, PW, EV, AA, TW, HD, and WR (e.g. PR+PW+EV)
+* *format* - for numerical Characteristics, specifies the number format.  Valid value are BOOL, UINT8, UINT16, UNIT32, UINT64, INT, and FLOAT.  Not applicable for the STRING, DATA, or TLV8 Characteristic macros
+* *defaultValue* - specifies the default value of the Characteristic when not defined during instantiation.  Not applicable for the DATA or TLV7 Characteristic macros.
+* *minValue* - specifies the default minimum range for a valid value, which may be able to be overriden by a call to `setRange()`.  Not applicable for the STRING, DATA or TLV8 Characteristic macros
+* *minValue* - specifies the default minimum range for a valid value, which may be able to be overriden by a call to `setRange()`.  Not applicable for the STRING, DATA or TLV8 Characteristic macros
+* *staticRange* - set to *true* if *minValue* and *maxValue* are static and cannot be overridden with a call to `setRange()`.  Set to *false* if calls to `setRange()` are allowed.  Not applicable for the STRING, DATA or TLV8 Characteristic macros
 
 As an example, the first line below creates a custom Characteristic named "Voltage" with a UUID code that is recognized by the *Eve for HomeKit* app.  The parameters show that the Characteristic is read-only (PR) and notifications are enabled (EV).  The default range of allowed values is 0-240, with a default of 120.  The range *can* be overridden by subsequent calls to `setRange()`.  The second line below creates a custom read-only String-based Characteristic:
 
