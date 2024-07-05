@@ -37,19 +37,19 @@
 #include <vector>
 #include <list>
 #include <nvs.h>
-#include <ArduinoOTA.h>
+//D#include <ArduinoOTA.h>
 #include <esp_now.h>
 #include <mbedtls/base64.h>
 
 #include "src/extras/Blinker.h"
-#include "src/extras/Pixel.h"
-#include "src/extras/RFControl.h"
-#include "src/extras/PwmPin.h"
-#include "src/extras/StepperControl.h"
+//D #include "src/extras/Pixel.h"
+//D #include "src/extras/RFControl.h"
+//D #include "src/extras/PwmPin.h"
+//D #include "src/extras/StepperControl.h"
 
 #include "Settings.h"
 #include "Utils.h"
-#include "Network.h"
+#include "Network_HS.h"
 #include "HAPConstants.h"
 #include "HapQR.h"
 #include "Characteristics.h"
@@ -186,22 +186,22 @@ struct SpanWebLog{                            // optional web status/log data
 
 ///////////////////////////////
 
-struct SpanOTA{                               // manages OTA process
-  
-  char otaPwd[33]="";                         // MD5 Hash of OTA password, represented as a string of hexidecimal characters
-
-  static boolean enabled;                     // enables OTA - default if not enabled
-  static boolean auth;                        // indicates whether OTA password is required
-  static int otaPercent;
-  static boolean safeLoad;                    // indicates whether OTA update should reject any application update that is not another HomeSpan sketch
-  
-  int init(boolean auth, boolean safeLoad, const char *pwd);
-  int setPassword(const char *pwd);
-  static void start();
-  static void end();
-  static void progress(uint32_t progress, uint32_t total);
-  static void error(ota_error_t err);
-};
+//struct SpanOTA{                               // manages OTA process
+//  
+//  char otaPwd[33]="";                         // MD5 Hash of OTA password, represented as a string of hexidecimal characters
+//
+//  static boolean enabled;                     // enables OTA - default if not enabled
+//  static boolean auth;                        // indicates whether OTA password is required
+//  static int otaPercent;
+//  static boolean safeLoad;                    // indicates whether OTA update should reject any application update that is not another HomeSpan sketch
+//  
+//  int init(boolean auth, boolean safeLoad, const char *pwd);
+//  int setPassword(const char *pwd);
+//  static void start();
+//  static void end();
+//  static void progress(uint32_t progress, uint32_t total);
+//  static void error(ota_error_t err);
+//};
 
 //////////////////////////////////////
 //   USER API CLASSES BEGINS HERE   //
@@ -216,7 +216,7 @@ class Span{
   friend class SpanButton;
   friend class SpanWebLog;
   friend class SpanOTA;
-  friend class Network;
+  friend class Network_HS;
   friend class HAPClient;
   
   char *displayName;                            // display name for this device - broadcast as part of Bonjour MDNS
@@ -267,13 +267,13 @@ class Span{
   Blinker *statusLED;                               // indicates HomeSpan status
   Blinkable *statusDevice = NULL;                   // the device used for the Blinker
   PushButton *controlButton = NULL;                 // controls HomeSpan configuration and resets
-  Network network;                                  // configures WiFi and Setup Code via either serial monitor or temporary Access Point
+  Network_HS network;                               // configures WiFi and Setup Code via either serial monitor or temporary Access Point
   SpanWebLog webLog;                                // optional web status/log
   TaskHandle_t pollTaskHandle = NULL;               // optional task handle to use for poll() function
   TaskHandle_t loopTaskHandle;                      // Arduino Loop Task handle
   boolean verboseWifiReconnect = true;              // set to false to not print WiFi reconnect attempts messages
     
-  SpanOTA spanOTA;                                  // manages OTA process
+//D  SpanOTA spanOTA;                                  // manages OTA process
   SpanConfig hapConfig;                             // track configuration changes to the HAP Accessory database; used to increment the configuration number (c#) when changes found
 
   list<HAPClient, Mallocator<HAPClient>> hapList;                        // linked-list of HAPClient structures containing HTTP client connections, parsing routines, and state variables
@@ -333,10 +333,10 @@ class Span{
   int getControlPin(){return(controlButton?controlButton->getPin():-1);}                 // get Control Pin (returns -1 if undefined)
 
   Span& setStatusPin(uint8_t pin){statusDevice=new GenericLED(pin);return(*this);}       // sets Status Device to a simple LED on specified pin
-  Span& setStatusPixel(uint8_t pin,float h=0,float s=100,float v=100){                   // sets Status Device to an RGB Pixel on specified pin
-    statusDevice=((new Pixel(pin))->setOnColor(Pixel::HSV(h,s,v)));
-    return(*this);
-  }
+//D   Span& setStatusPixel(uint8_t pin,float h=0,float s=100,float v=100){                   // sets Status Device to an RGB Pixel on specified pin
+//D     statusDevice=((new Pixel(pin))->setOnColor(Pixel::HSV(h,s,v)));
+//D     return(*this);
+//D   }
   Span& setStatusDevice(Blinkable *sDev){statusDevice=sDev;return(*this);}               // sets Status Device to a generic Blinkable object
   
   Span& setStatusAutoOff(uint16_t duration){autoOffLED=duration;return(*this);}          // sets Status LED auto off (seconds)  
@@ -370,8 +370,8 @@ class Span{
 
   Span& setHostNameSuffix(const char *suffix){asprintf(&hostNameSuffix,"%s",suffix);return(*this);}      // sets the hostName suffix to be used instead of the 6-byte AccessoryID
 
-  int enableOTA(boolean auth=true, boolean safeLoad=true){return(spanOTA.init(auth, safeLoad, NULL));}   // enables Over-the-Air updates, with (auth=true) or without (auth=false) authorization password  
-  int enableOTA(const char *pwd, boolean safeLoad=true){return(spanOTA.init(true, safeLoad, pwd));}      // enables Over-the-Air updates, with custom authorization password (overrides any password stored with the 'O' command)
+//D  int enableOTA(boolean auth=true, boolean safeLoad=true){return(spanOTA.init(auth, safeLoad, NULL));}   // enables Over-the-Air updates, with (auth=true) or without (auth=false) authorization password  
+//D  int enableOTA(const char *pwd, boolean safeLoad=true){return(spanOTA.init(true, safeLoad, pwd));}      // enables Over-the-Air updates, with custom authorization password (overrides any password stored with the 'O' command)
 
   Span& enableWebLog(uint16_t maxEntries=0, const char *serv=NULL, const char *tz="UTC", const char *url=DEFAULT_WEBLOG_URL){     // enable Web Logging
     webLog.init(maxEntries, serv, tz, url);
@@ -807,7 +807,7 @@ class SpanPoint {
   static QueueHandle_t statusQueue;           // queue for communication between SpanPoint::dataSend and SpanPoint::send
   static nvs_handle pointNVS;                 // NVS storage for channel number (only used for remote devices)
   
-  static void dataReceived(const uint8_t *mac, const uint8_t *incomingData, int len);
+  static void dataReceived(const esp_now_recv_info *mac, const uint8_t *incomingData, int len);
   static void init(const char *password="HomeSpan");
   static void setAsHub(){isHub=true;}
   static uint8_t nextChannel();

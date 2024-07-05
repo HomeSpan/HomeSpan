@@ -40,13 +40,13 @@ void HAPClient::init(){
 
   size_t len;                                   // not used but required to read blobs from NVS
 
-  if(strlen(homeSpan.spanOTA.otaPwd)==0){                                 // OTA password has not been specified in sketch
-    if(!nvs_get_str(homeSpan.otaNVS,"OTADATA",NULL,&len)){                // if found OTA data in NVS...
-    nvs_get_str(homeSpan.otaNVS,"OTADATA",homeSpan.spanOTA.otaPwd,&len);  // ...retrieve data.
-    } else {                                                              // otherwise...
-    homeSpan.spanOTA.setPassword(DEFAULT_OTA_PASSWORD);                   // ...use default password
-    }
-  }
+//  if(strlen(homeSpan.spanOTA.otaPwd)==0){                                 // OTA password has not been specified in sketch
+//    if(!nvs_get_str(homeSpan.otaNVS,"OTADATA",NULL,&len)){                // if found OTA data in NVS...
+//    nvs_get_str(homeSpan.otaNVS,"OTADATA",homeSpan.spanOTA.otaPwd,&len);  // ...retrieve data.
+//    } else {                                                              // otherwise...
+//    homeSpan.spanOTA.setPassword(DEFAULT_OTA_PASSWORD);                   // ...use default password
+//    }
+//  }
   
   if(!strlen(homeSpan.qrID)){                                             // if Setup ID has not been specified in sketch
     if(!nvs_get_str(homeSpan.hapNVS,"SETUPID",NULL,&len)){                // check for saved value
@@ -1555,7 +1555,7 @@ HapOut::HapStreamBuffer::HapStreamBuffer(){
   ctx = (mbedtls_sha512_context *)heap_caps_malloc(sizeof(mbedtls_sha512_context),caps);    // space for hash context
   
   mbedtls_sha512_init(ctx);                 // initialize context
-  mbedtls_sha512_starts_ret(ctx,1);         // start SHA-384 hash (note second argument=1)
+  mbedtls_sha512_starts(ctx,1);             // start SHA-384 hash (note second argument=1)
   
   setp(buffer, buffer+bufSize-1);           // assign buffer pointers
 }
@@ -1607,7 +1607,7 @@ void HapOut::HapStreamBuffer::flushBuffer(){
     delay(1);
   }
 
-  mbedtls_sha512_update_ret(ctx,(uint8_t *)buffer,num);   // update hash
+  mbedtls_sha512_update(ctx,(uint8_t *)buffer,num);       // update hash
 
   pbump(-num);                                            // reset buffer pointers
 }
@@ -1643,8 +1643,8 @@ int HapOut::HapStreamBuffer::sync(){
     callBackUserData=NULL;
   }
 
-  mbedtls_sha512_finish_ret(ctx,hash);    // finish SHA-384 and store hash
-  mbedtls_sha512_starts_ret(ctx,1);       // re-start hash for next time
+  mbedtls_sha512_finish(ctx,hash);    // finish SHA-384 and store hash
+  mbedtls_sha512_starts(ctx,1);       // re-start hash for next time
 
   return(0);
 }

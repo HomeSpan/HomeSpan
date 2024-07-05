@@ -27,6 +27,8 @@
  
 #include "RFControl.h"
 
+#warning "RFControl.cpp Compiling"
+
 ///////////////////
 
 RFControl::RFControl(uint8_t pin, boolean refClock, boolean installDriver){

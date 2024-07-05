@@ -27,6 +27,8 @@
  
 #include "PwmPin.h"
 
+#warning "PwmPin.cpp Compiling"
+
 ///////////////////
 
 LedC::LedC(uint8_t pin, uint16_t freq, boolean invert){

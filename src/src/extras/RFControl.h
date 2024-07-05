@@ -31,6 +31,8 @@
 
 #pragma once
 
+#warning "RFControl.h Included"
+
 #include <Arduino.h>
 #include <soc/rmt_reg.h>
 #include "driver/rmt.h"

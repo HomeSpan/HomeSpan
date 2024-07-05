@@ -31,6 +31,8 @@
 
 #pragma once
 
+#warning "Pixel.h Included"
+
 #include "RFControl.h"
 #include "PwmPin.h"
 #include "Blinker.h"

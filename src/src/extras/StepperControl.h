@@ -27,6 +27,8 @@
  
 #pragma once
 
+#warning "StepperControl.h Included"
+
 #include <Arduino.h>
 #include "PwmPin.h"
 

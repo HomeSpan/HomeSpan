@@ -27,6 +27,7 @@
  
 #pragma once
 
+#include <Arduino.h>
 #include <WiFi.h>
 #include "Settings.h"
 
@@ -35,7 +36,7 @@ const int MAX_PWD=64;                               // max number of characters 
 
 ///////////////////////////////
 
-struct Network {
+struct Network_HS {
 
   const int MAX_HTTP=4095;                            // max number of bytes in HTTP message
 
@@ -46,7 +47,7 @@ struct Network {
   char **ssidList=NULL;
   int numSSID;
 
-  WiFiClient client;                      // client used for HTTP calls
+  NetworkClient client;                   // client used for HTTP calls
   int waitTime;                           // time to wait between HTTP refreshed when checking for WiFi connection
   unsigned long alarmTimeOut;             // alarm time after which access point is shut down and HomeSpan is re-started
   int apStatus;                           // tracks access point status (0=timed-out, -1=cancel, 1=save)
