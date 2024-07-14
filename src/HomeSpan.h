@@ -807,7 +807,7 @@ class SpanPoint {
   static QueueHandle_t statusQueue;           // queue for communication between SpanPoint::dataSend and SpanPoint::send
   static nvs_handle pointNVS;                 // NVS storage for channel number (only used for remote devices)
   
-  static void dataReceived(const esp_now_recv_info *mac, const uint8_t *incomingData, int len);
+  static void dataReceived(const esp_now_recv_info *info, const uint8_t *incomingData, int len);
   static void init(const char *password="HomeSpan");
   static void setAsHub(){isHub=true;}
   static uint8_t nextChannel();

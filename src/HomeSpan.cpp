@@ -2711,8 +2711,9 @@ boolean SpanPoint::send(const void *data){
 
 ///////////////////////////////
 
-//void SpanPoint::dataReceived(const uint8_t *mac, const uint8_t *incomingData, int len){
-void SpanPoint::dataReceived(const esp_now_recv_info *mac, const uint8_t *incomingData, int len){
+void SpanPoint::dataReceived(const esp_now_recv_info *info, const uint8_t *incomingData, int len){
+
+  const uint8_t *mac=info->src_addr;
   
   auto it=SpanPoints.begin();
   for(;it!=SpanPoints.end() && memcmp((*it)->peerInfo.peer_addr,mac,6)!=0; it++);
