@@ -622,7 +622,7 @@ class SpanCharacteristic{
       nvsKey=(char *)HS_MALLOC(16);
       uint16_t t;
       sscanf(type,"%hx",&t);
-      sprintf(nvsKey,"%04X%08X%03X",t,aid,iid&0xFFF);
+      sprintf(nvsKey,"%04X%08lX%03lX",t,aid,iid&0xFFF);
       size_t len;    
 
       if(format<FORMAT::STRING){

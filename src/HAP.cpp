@@ -1043,7 +1043,7 @@ int HAPClient::putPrepareURL(char *json){
   uint64_t pid;
    
   if((cBuf=strstr(json,ttlToken)))
-    sscanf(cBuf+strlen(ttlToken),"%u",&ttl);
+    sscanf(cBuf+strlen(ttlToken),"%lu",&ttl);
 
   if((cBuf=strstr(json,pidToken)))
     sscanf(cBuf+strlen(ttlToken),"%llu",&pid);
@@ -1233,7 +1233,7 @@ void HAPClient::checkTimedWrites(){
   auto tw=homeSpan.TimedWrites.begin();
   while(tw!=homeSpan.TimedWrites.end()){
     if(cTime>tw->second){                                             // timer has expired
-       LOG2("Removing PID=%llu  ALARM=%u\n",tw->first,tw->second);
+       LOG2("Removing PID=%llu  ALARM=%lu\n",tw->first,tw->second);
        tw=homeSpan.TimedWrites.erase(tw);
       }
     else

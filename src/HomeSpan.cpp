@@ -129,7 +129,7 @@ void Span::begin(Category catID, const char *_displayName, const char *_hostName
   LOG0("\nHomeSpan Version: %s",HOMESPAN_VERSION);
   LOG0("\nArduino-ESP Ver.: %s",ARDUINO_ESP_VERSION);
   LOG0("\nESP-IDF Version:  %d.%d.%d",ESP_IDF_VERSION_MAJOR,ESP_IDF_VERSION_MINOR,ESP_IDF_VERSION_PATCH);
-  LOG0("\nESP32 Chip:       %s Rev %d %s-core %dMB Flash", ESP.getChipModel(),ESP.getChipRevision(),
+  LOG0("\nESP32 Chip:       %s Rev %d %s-core %luMB Flash", ESP.getChipModel(),ESP.getChipRevision(),
                 ESP.getChipCores()==1?"single":"dual",ESP.getFlashChipSize()/1024/1024);
   
   #ifdef ARDUINO_VARIANT
@@ -816,7 +816,7 @@ void Span::processSerialCommand(const char *c){
       char pNames[][7]={"PR","PW","EV","AA","TW","HD","WR"};
 
       for(auto acc=Accessories.begin(); acc!=Accessories.end(); acc++){
-        LOG0("\u27a4 Accessory:  AID=%u\n",(*acc)->aid);
+        LOG0("\u27a4 Accessory:  AID=%lu\n",(*acc)->aid);
         boolean foundInfo=false;
 
         if(acc==Accessories.begin() && (*acc)->aid!=1)
@@ -829,7 +829,7 @@ void Span::processSerialCommand(const char *c){
         vector<uint32_t, Mallocator<uint32_t>> iidValues;
 
         for(auto svc=(*acc)->Services.begin(); svc!=(*acc)->Services.end(); svc++){
-          LOG0("   \u279f Service %s:  IID=%u, %sUUID=\"%s\"\n",(*svc)->hapName,(*svc)->iid,(*svc)->isCustom?"Custom-":"",(*svc)->type);
+          LOG0("   \u279f Service %s:  IID=%lu, %sUUID=\"%s\"\n",(*svc)->hapName,(*svc)->iid,(*svc)->isCustom?"Custom-":"",(*svc)->type);
 
           if(!strcmp((*svc)->type,"3E")){
             foundInfo=true;
@@ -845,7 +845,7 @@ void Span::processSerialCommand(const char *c){
           iidValues.push_back((*svc)->iid);
 
           for(auto chr=(*svc)->Characteristics.begin(); chr!=(*svc)->Characteristics.end(); chr++){
-            LOG0("      \u21e8 Characteristic %s(%.33s%s):  IID=%u, %sUUID=\"%s\", %sPerms=",
+            LOG0("      \u21e8 Characteristic %s(%.33s%s):  IID=%lu, %sUUID=\"%s\", %sPerms=",
               (*chr)->hapName,(*chr)->uvPrint((*chr)->value).c_str(),strlen((*chr)->uvPrint((*chr)->value).c_str())>33?"...\"":"",(*chr)->iid,(*chr)->isCustom?"Custom-":"",(*chr)->type,(*chr)->perms!=(*chr)->hapChar->perms?"Custom-":"");
 
             int foundPerms=0;
@@ -946,7 +946,7 @@ void Span::processSerialCommand(const char *c){
       for(int i=0;i<Accessories.size();i++){                             // identify all services with over-ridden loop() methods
         for(int j=0;j<Accessories[i]->Services.size();j++){
           SpanService *s=Accessories[i]->Services[j];
-          LOG0("%-30s  %8.8s  %10u  %3u  %6s  %4s  %6s  ",s->hapName,s->type,Accessories[i]->aid,s->iid, 
+          LOG0("%-30s  %8.8s  %10lu  %3lu  %6s  %4s  %6s  ",s->hapName,s->type,Accessories[i]->aid,s->iid, 
                  (void(*)())(s->*(&SpanService::update))!=(void(*)())(&SpanService::update)?"YES":"NO",
                  (void(*)())(s->*(&SpanService::loop))!=(void(*)())(&SpanService::loop)?"YES":"NO",
                  (void(*)(int,boolean))(s->*(&SpanService::button))!=(void(*)(int,boolean))(&SpanService::button)?"YES":"NO"
@@ -954,7 +954,7 @@ void Span::processSerialCommand(const char *c){
           if(s->linkedServices.empty())
             LOG0("-");
           for(int k=0;k<s->linkedServices.size();k++){
-            LOG0("%u",s->linkedServices[k]->iid);
+            LOG0("%lu",s->linkedServices[k]->iid);
             if(k<s->linkedServices.size()-1)
               LOG0(",");
           }
@@ -1340,11 +1340,11 @@ int Span::updateCharacteristics(char *buf, SpanBuf *pObj){
       t1=NULL;
       char *t3;
       if(!strcmp(t2,"aid") && (t3=strtok_r(t1,"}[]:, \"\t\n\r",&p2))){
-        sscanf(t3,"%u",&pObj[nObj].aid);
+        sscanf(t3,"%lu",&pObj[nObj].aid);
         okay|=1;
       } else 
       if(!strcmp(t2,"iid") && (t3=strtok_r(t1,"}[]:, \"\t\n\r",&p2))){
-        sscanf(t3,"%u",&pObj[nObj].iid);
+        sscanf(t3,"%lu",&pObj[nObj].iid);
         okay|=2;
       } else 
       if(!strcmp(t2,"value") && (t3=strtok_r(t1,"}[]:,\"",&p2))){
@@ -1414,7 +1414,7 @@ int Span::updateCharacteristics(char *buf, SpanBuf *pObj){
         
         if(pObj[j].characteristic->service==pObj[i].characteristic->service){                               // if service of this characteristic matches service that was updated
           pObj[j].status=status;                                                                            // save statusCode for this object
-          LOG1("Updating aid=%u iid=%u",pObj[j].characteristic->aid,pObj[j].characteristic->iid);
+          LOG1("Updating aid=%lu iid=%lu",pObj[j].characteristic->aid,pObj[j].characteristic->iid);
           if(status==StatusCode::OK){                                                                       // if status is okay
             pObj[j].characteristic->uvSet(pObj[j].characteristic->value,pObj[j].characteristic->newValue);  // update characteristic value with new value
             if(pObj[j].characteristic->nvsKey){                                                             // if storage key found
@@ -1504,7 +1504,7 @@ boolean Span::printfAttributes(char **ids, int numIDs, int flags){
   StatusCode status[numIDs];
 
   for(int i=0;i<numIDs;i++){              // PASS 1: loop over all ids requested to check status codes - only errors are if characteristic not found, or not readable
-    sscanf(ids[i],"%u.%u",&aid,&iid);     // parse aid and iid
+    sscanf(ids[i],"%lu.%lu",&aid,&iid);   // parse aid and iid
     Characteristics[i]=find(aid,iid);     // find matching chararacteristic
     
     if(Characteristics[i]){                                         // if found
@@ -1528,7 +1528,7 @@ boolean Span::printfAttributes(char **ids, int numIDs, int flags){
     if(Characteristics[i])                                          // if found
       Characteristics[i]->printfAttributes(flags);                  // get JSON attributes for characteristic (may or may not include status=0 attribute)
     else{                                                           // else create JSON status attribute based on requested aid/iid
-      sscanf(ids[i],"%u.%u",&aid,&iid);                             
+      sscanf(ids[i],"%lu.%lu",&aid,&iid);                             
       hapOut << "{\"iid\":" << iid << ",\"aid\":" << aid << ",\"status\":" << (int)status[i] << "}";     
     }
       
@@ -1654,7 +1654,7 @@ SpanAccessory::~SpanAccessory(){
   while((*acc)!=this)
     acc++;
   homeSpan.Accessories.erase(acc);
-  LOG1("Deleted Accessory AID=%d\n",aid);
+  LOG1("Deleted Accessory AID=%lu\n",aid);
 }
 
 ///////////////////////////////
@@ -1722,7 +1722,7 @@ SpanService::~SpanService(){
     }
   }
   
-  LOG1("Deleted Service AID=%u IID=%u\n",accessory->aid,iid); 
+  LOG1("Deleted Service AID=%lu IID=%lu\n",accessory->aid,iid); 
 }
 
 ///////////////////////////////
@@ -1824,7 +1824,7 @@ SpanCharacteristic::~SpanCharacteristic(){
     free(newValue.STRING);
   }
   
-  LOG1("Deleted Characteristic AID=%u IID=%u\n",aid,iid);  
+  LOG1("Deleted Characteristic AID=%lu IID=%lu\n",aid,iid);  
 }
 
 ///////////////////////////////
@@ -2126,7 +2126,7 @@ StatusCode SpanCharacteristic::loadUpdate(char *val, char *ev, boolean wr){
     if(evFlag && !(perms&EV))         // notification is not supported for characteristic
       return(StatusCode::NotifyNotAllowed);
       
-    LOG1("Notification Request for aid=%u iid=%u: %s\n",aid,iid,evFlag?"true":"false");
+    LOG1("Notification Request for aid=%lu iid=%lu: %s\n",aid,iid,evFlag?"true":"false");
     HAPClient *hc=&(*(homeSpan.currentClient));
     
     if(evFlag)
@@ -2157,7 +2157,7 @@ StatusCode SpanCharacteristic::loadUpdate(char *val, char *ev, boolean wr){
         newValue.INT=0;
       else if(!strcmp(val,"true"))
         newValue.INT=1;
-      else if(!sscanf(val,"%d",&newValue.INT))
+      else if(!sscanf(val,"%ld",&newValue.INT))
         return(StatusCode::InvalidValue);
       break;
 
@@ -2184,7 +2184,7 @@ StatusCode SpanCharacteristic::loadUpdate(char *val, char *ev, boolean wr){
         newValue.UINT32=0;
       else if(!strcmp(val,"true"))
         newValue.UINT32=1;
-      else if(!sscanf(val,"%u",&newValue.UINT32))
+      else if(!sscanf(val,"%lu",&newValue.UINT32))
         return(StatusCode::InvalidValue);
       break;
       
