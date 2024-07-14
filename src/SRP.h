@@ -90,6 +90,7 @@ struct SRP6A {
   ~SRP6A();
 
   void *operator new(size_t size){return(HS_MALLOC(size));}     // override new operator to use PSRAM when available
+  void operator delete(void *p){free(p);}
   
   void createVerifyCode(const char *setupCode, Verification *vData);                    // generates random s and computes v; writes back resulting Verification Data
   void createPublicKey(const Verification *vData, uint8_t *publicKey);                  // generates random b and computes k and B; writes back resulting Accessory Public Key 

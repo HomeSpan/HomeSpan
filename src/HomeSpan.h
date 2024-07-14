@@ -438,6 +438,8 @@ class SpanAccessory{
   public:
 
   void *operator new(size_t size){return(HS_MALLOC(size));}     // override new operator to use PSRAM when available
+  void operator delete(void *p){free(p);}
+  
   SpanAccessory(uint32_t aid=0);                                // constructor
 };
 
@@ -470,6 +472,8 @@ class SpanService{
   public:
   
   void *operator new(size_t size){return(HS_MALLOC(size));}                               // override new operator to use PSRAM when available
+  void operator delete(void *p){free(p);}
+  
   SpanService(const char *type, const char *hapName, boolean isCustom=false);             // constructor
   SpanService *setPrimary();                                                              // sets the Service Type to be primary and returns pointer to self
   SpanService *setHidden();                                                               // sets the Service Type to be hidden and returns pointer to self
@@ -656,6 +660,7 @@ class SpanCharacteristic{
 
   SpanCharacteristic(HapChar *hapChar, boolean isCustom=false);                               // SpanCharacteristic constructor
   void *operator new(size_t size){return(HS_MALLOC(size));}                                   // override new operator to use PSRAM when available
+  void operator delete(void *p){free(p);}
 
   template <class T=int> T getVal(){return(uvGet<T>(value));}                                 // gets the value for numeric-based Characteristics
   char *getString(){return(getStringGeneric(value));}                                         // gets the value for string-based Characteristics
