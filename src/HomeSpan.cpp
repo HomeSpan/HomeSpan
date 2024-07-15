@@ -230,7 +230,7 @@ void Span::pollTask() {
   if(hapServer->hasClient()){  
  
     auto it=hapList.emplace(hapList.begin());                                // create new HAPClient connection
-    it->client=hapServer->available();
+    it->client=hapServer->accept();
     it->clientNumber=it->client.fd()-LWIP_SOCKET_OFFSET;
             
     HAPClient::pairStatus=pairState_M1;                                      // reset starting PAIR STATE (which may be needed if Accessory failed in middle of pair-setup)    

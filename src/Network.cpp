@@ -161,7 +161,7 @@ void Network_HS::apConfigure(){
 
     dnsServer.processNextRequest();
 
-    if(client=apServer.available()){                    // found a new HTTP client
+    if(client=apServer.accept()){                       // found a new HTTP client
       LOG2("=======================================\n");
       LOG1("** Access Point Client Connected: (");
       LOG1(millis()/1000);
