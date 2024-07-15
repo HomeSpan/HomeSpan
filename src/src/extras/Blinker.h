@@ -28,7 +28,6 @@
 #pragma once
 
 #include <Arduino.h>
-#include <driver/timer.h>
 
 [[maybe_unused]] static const char* BLINKER_TAG = "Blinker";
 
