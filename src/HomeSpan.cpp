@@ -138,7 +138,7 @@ void Span::begin(Category catID, const char *_displayName, const char *_hostName
   #endif
   
   LOG0("\nPWM Resources:    %d channels, %d timers, max %d-bit duty resolution",
-                LEDC_SPEED_MODE_MAX*LEDC_CHANNEL_MAX,LEDC_SPEED_MODE_MAX*LEDC_TIMER_MAX,LEDC_TIMER_BIT_MAX-1);
+                (int)LEDC_SPEED_MODE_MAX*(int)LEDC_CHANNEL_MAX,(int)LEDC_SPEED_MODE_MAX*(int)LEDC_TIMER_MAX,LEDC_TIMER_BIT_MAX-1);
 
   LOG0("\nSodium Version:   %s  Lib %d.%d",sodium_version_string(),sodium_library_version_major(),sodium_library_version_minor());
   char mbtlsv[64];
