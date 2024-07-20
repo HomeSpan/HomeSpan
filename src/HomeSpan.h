@@ -37,7 +37,7 @@
 #include <vector>
 #include <list>
 #include <nvs.h>
-//D#include <ArduinoOTA.h>
+#include <ArduinoOTA.h>
 #include <esp_now.h>
 #include <mbedtls/base64.h>
 
@@ -186,22 +186,22 @@ struct SpanWebLog{                            // optional web status/log data
 
 ///////////////////////////////
 
-//struct SpanOTA{                               // manages OTA process
-//  
-//  char otaPwd[33]="";                         // MD5 Hash of OTA password, represented as a string of hexidecimal characters
-//
-//  static boolean enabled;                     // enables OTA - default if not enabled
-//  static boolean auth;                        // indicates whether OTA password is required
-//  static int otaPercent;
-//  static boolean safeLoad;                    // indicates whether OTA update should reject any application update that is not another HomeSpan sketch
-//  
-//  int init(boolean auth, boolean safeLoad, const char *pwd);
-//  int setPassword(const char *pwd);
-//  static void start();
-//  static void end();
-//  static void progress(uint32_t progress, uint32_t total);
-//  static void error(ota_error_t err);
-//};
+struct SpanOTA{                               // manages OTA process
+  
+  char otaPwd[33]="";                         // MD5 Hash of OTA password, represented as a string of hexidecimal characters
+
+  static boolean enabled;                     // enables OTA - default if not enabled
+  static boolean auth;                        // indicates whether OTA password is required
+  static int otaPercent;
+  static boolean safeLoad;                    // indicates whether OTA update should reject any application update that is not another HomeSpan sketch
+  
+  int init(boolean auth, boolean safeLoad, const char *pwd);
+  int setPassword(const char *pwd);
+  static void start();
+  static void end();
+  static void progress(uint32_t progress, uint32_t total);
+  static void error(ota_error_t err);
+};
 
 //////////////////////////////////////
 //   USER API CLASSES BEGINS HERE   //
@@ -273,7 +273,7 @@ class Span{
   TaskHandle_t loopTaskHandle;                      // Arduino Loop Task handle
   boolean verboseWifiReconnect = true;              // set to false to not print WiFi reconnect attempts messages
     
-//D  SpanOTA spanOTA;                                  // manages OTA process
+  SpanOTA spanOTA;                                  // manages OTA process
   SpanConfig hapConfig;                             // track configuration changes to the HAP Accessory database; used to increment the configuration number (c#) when changes found
 
   list<HAPClient, Mallocator<HAPClient>> hapList;                        // linked-list of HAPClient structures containing HTTP client connections, parsing routines, and state variables
@@ -370,8 +370,8 @@ class Span{
 
   Span& setHostNameSuffix(const char *suffix){asprintf(&hostNameSuffix,"%s",suffix);return(*this);}      // sets the hostName suffix to be used instead of the 6-byte AccessoryID
 
-//D  int enableOTA(boolean auth=true, boolean safeLoad=true){return(spanOTA.init(auth, safeLoad, NULL));}   // enables Over-the-Air updates, with (auth=true) or without (auth=false) authorization password  
-//D  int enableOTA(const char *pwd, boolean safeLoad=true){return(spanOTA.init(true, safeLoad, pwd));}      // enables Over-the-Air updates, with custom authorization password (overrides any password stored with the 'O' command)
+  int enableOTA(boolean auth=true, boolean safeLoad=true){return(spanOTA.init(auth, safeLoad, NULL));}   // enables Over-the-Air updates, with (auth=true) or without (auth=false) authorization password  
+  int enableOTA(const char *pwd, boolean safeLoad=true){return(spanOTA.init(true, safeLoad, pwd));}      // enables Over-the-Air updates, with custom authorization password (overrides any password stored with the 'O' command)
 
   Span& enableWebLog(uint16_t maxEntries=0, const char *serv=NULL, const char *tz="UTC", const char *url=DEFAULT_WEBLOG_URL){     // enable Web Logging
     webLog.init(maxEntries, serv, tz, url);

@@ -40,13 +40,13 @@ void HAPClient::init(){
 
   size_t len;                                   // not used but required to read blobs from NVS
 
-//  if(strlen(homeSpan.spanOTA.otaPwd)==0){                                 // OTA password has not been specified in sketch
-//    if(!nvs_get_str(homeSpan.otaNVS,"OTADATA",NULL,&len)){                // if found OTA data in NVS...
-//    nvs_get_str(homeSpan.otaNVS,"OTADATA",homeSpan.spanOTA.otaPwd,&len);  // ...retrieve data.
-//    } else {                                                              // otherwise...
-//    homeSpan.spanOTA.setPassword(DEFAULT_OTA_PASSWORD);                   // ...use default password
-//    }
-//  }
+  if(strlen(homeSpan.spanOTA.otaPwd)==0){                                 // OTA password has not been specified in sketch
+    if(!nvs_get_str(homeSpan.otaNVS,"OTADATA",NULL,&len)){                // if found OTA data in NVS...
+    nvs_get_str(homeSpan.otaNVS,"OTADATA",homeSpan.spanOTA.otaPwd,&len);  // ...retrieve data.
+    } else {                                                              // otherwise...
+    homeSpan.spanOTA.setPassword(DEFAULT_OTA_PASSWORD);                   // ...use default password
+    }
+  }
   
   if(!strlen(homeSpan.qrID)){                                             // if Setup ID has not been specified in sketch
     if(!nvs_get_str(homeSpan.hapNVS,"SETUPID",NULL,&len)){                // check for saved value

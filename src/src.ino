@@ -32,7 +32,8 @@ void setup() {
   Serial.begin(115200);
 
   homeSpan.enableWebLog(50);
-  homeSpan.begin(Category::Lighting,"HomeSpan LightBulb");
+  homeSpan.enableOTA();
+  homeSpan.begin(Category::Lighting,"HomeSpan OTA Test");
   
   new SpanAccessory();
     new Service::AccessoryInformation();  
