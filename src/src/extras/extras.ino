@@ -27,7 +27,7 @@
  
 #include "PwmPin.h"
 
-ServoPin servo(21,0,500,2200,-60,60);
+LedPin led(13);
 
 void setup() {
  
@@ -35,30 +35,16 @@ void setup() {
   delay(1000);
 
   Serial.print("\n\nReady\n\n");
-
-  for(int count=0;count<3;count++){
-    for(int i=-60;i<61;i++){
-     servo.set(i);
-     delay(10);
-    }
-
-    for(int i=60;i>-61;i--){
-    servo.set(i);
-    delay(10);
-    }
-  }
-
-  delay(5000);
-
-  servo.set(NAN);
-
-  delay(10000);
-
-  servo.set(0);
-
+  
 }
 
 //////////////////////////////////////
 
 void loop(){
+
+  led.fade(100,1000);
+  while(led.fadeStatus()==LedPin::FADING);
+  led.fade(0,1000);
+  while(led.fadeStatus()==LedPin::FADING);
+
 }
