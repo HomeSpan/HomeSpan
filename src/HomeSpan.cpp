@@ -390,6 +390,7 @@ void Span::checkConnect(){
       if(verboseWifiReconnect)
         addWebLog(true,"Trying to connect to %s.  Waiting %d sec...",network.wifiData.ssid,waitTime/1000);
       WiFi.begin(network.wifiData.ssid,network.wifiData.pwd);
+      WiFi.waitForConnectResult(20000);
     }
 
     alarmConnect=millis()+waitTime;
