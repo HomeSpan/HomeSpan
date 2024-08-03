@@ -24,16 +24,12 @@
  *  SOFTWARE.
  *  
  ********************************************************************************/
-
-#ifdef HS_PIXEL
  
 ////////////////////////////////////////////
 //           Addressable LEDs             //
 ////////////////////////////////////////////
 
 #include "Pixel.h"
-
-#warning "Pixel.cpp Compiling"
 
 ////////////////////////////////////////////
 //     Single-Wire RGB/RGBW NeoPixels     //
@@ -207,5 +203,3 @@ void Dot::set(Color *c, int nPixels, boolean multiColor){
 }
 
 ////////////////////////////////////////////
-
-#endif

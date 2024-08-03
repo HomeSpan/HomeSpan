@@ -31,12 +31,13 @@
 
 #pragma once
 
-#warning "RFControl.h Included"
-
 #include <Arduino.h>
-#include <soc/rmt_reg.h>
+//#include <soc/rmt_reg.h>
 #include "driver/rmt.h"
+#include <soc/rmt_struct.h>     // where RMT register structure is defined
 #include <vector>
+
+extern rmt_mem_t RMTMEM;
 
 [[maybe_unused]] static const char* RFControl_TAG = "RFControl";
 

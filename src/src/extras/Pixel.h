@@ -31,11 +31,11 @@
 
 #pragma once
 
-#warning "Pixel.h Included"
-
 #include "RFControl.h"
 #include "PwmPin.h"
 #include "Blinker.h"
+
+#include <soc/gpio_struct.h>
 
 [[maybe_unused]] static const char* PIXEL_TAG = "Pixel";
 

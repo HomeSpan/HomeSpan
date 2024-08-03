@@ -42,10 +42,10 @@
 #include <mbedtls/base64.h>
 
 #include "src/extras/Blinker.h"
-//D #include "src/extras/Pixel.h"
-//D #include "src/extras/RFControl.h"
-//D #include "src/extras/PwmPin.h"
-//D #include "src/extras/StepperControl.h"
+#include "src/extras/Pixel.h"
+#include "src/extras/RFControl.h"
+#include "src/extras/PwmPin.h"
+#include "src/extras/StepperControl.h"
 
 #include "Settings.h"
 #include "Utils.h"
@@ -333,10 +333,10 @@ class Span{
   int getControlPin(){return(controlButton?controlButton->getPin():-1);}                 // get Control Pin (returns -1 if undefined)
 
   Span& setStatusPin(uint8_t pin){statusDevice=new GenericLED(pin);return(*this);}       // sets Status Device to a simple LED on specified pin
-//D   Span& setStatusPixel(uint8_t pin,float h=0,float s=100,float v=100){                   // sets Status Device to an RGB Pixel on specified pin
-//D     statusDevice=((new Pixel(pin))->setOnColor(Pixel::HSV(h,s,v)));
-//D     return(*this);
-//D   }
+   Span& setStatusPixel(uint8_t pin,float h=0,float s=100,float v=100){                   // sets Status Device to an RGB Pixel on specified pin
+     statusDevice=((new Pixel(pin))->setOnColor(Pixel::HSV(h,s,v)));
+     return(*this);
+   }
   Span& setStatusDevice(Blinkable *sDev){statusDevice=sDev;return(*this);}               // sets Status Device to a generic Blinkable object
   
   Span& setStatusAutoOff(uint16_t duration){autoOffLED=duration;return(*this);}          // sets Status LED auto off (seconds)  
