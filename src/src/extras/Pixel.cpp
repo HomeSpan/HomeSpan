@@ -118,16 +118,20 @@ void IRAM_ATTR Pixel::loadData(void *arg){
   int startBit=status.px->map[status.iByte];
   int endBit=startBit-8;
   
-  for(int iBit=startBit;iBit>endBit;iBit--)
-    RMTMEM.chan[status.px->rf->getChannel()].data32[status.iMem++].val=status.px->pattern[(status.color->val>>iBit)&1];
+  for(int iBit=startBit;iBit>endBit;iBit--){
+    RMTMEM.chan[status.px->rf->getChannel()].data32[status.iMem].val=status.px->pattern[(status.color->val>>iBit)&1];
+    status.iMem=status.iMem+1;
+  }
 
-  if(++status.iByte==status.px->bytesPerPixel){
+  status.iByte=status.iByte+1;
+  
+  if(status.iByte==status.px->bytesPerPixel){
     status.iByte=0;
-    status.color+=status.multiColor;
-    status.nPixels--;    
+    status.color=status.color+status.multiColor;
+    status.nPixels=status.nPixels-1;    
   }
   
-  status.iMem%=status.px->memSize;    
+  status.iMem=status.iMem%status.px->memSize;    
 }
 
 ///////////////////
