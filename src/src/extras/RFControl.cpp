@@ -55,8 +55,17 @@ RFControl::RFControl(uint8_t pin, boolean refClock, boolean installDriver){
 
   rmt_config(config);
 
-  if(installDriver)
-    rmt_driver_install(config->channel,0,0);
+  rmt_isr_register(loadData,NULL,0,NULL);               // set custom interrupt handler
+
+  rmt_set_tx_thr_intr_en(config->channel,false,memSize/2);      // disable threshold interrupt
+  txThrMask=RMT.int_ena.val;                                    // save interrupt enable vector
+  rmt_set_tx_thr_intr_en(config->channel,true,memSize/2);       // enable threshold interrupt to trigger every memsize/2 pulses 
+  txThrMask^=RMT.int_ena.val;                                   // find bit that flipped and save as threshold mask for this channel 
+
+  rmt_set_tx_intr_en(config->channel,false);           // disable end-of-transmission interrupt
+  txEndMask=RMT.int_ena.val;                           // save interrupt enable vector
+  rmt_set_tx_intr_en(config->channel,true);            // enable end-of-transmission interrupt
+  txEndMask^=RMT.int_ena.val;                          // find bit that flipped and save as end-of-transmission mask for this channel 
 
   // If specified, set the base clock to 1 MHz so tick-units are in microseconds (before any CLK_DIV is applied), otherwise default will be 80 MHz APB clock
 
@@ -88,8 +97,23 @@ void RFControl::start(uint32_t *data, int nData, uint8_t nCycles, uint8_t tickTi
     
   rmt_set_clk_div(config->channel,tickTime);                  // set clock divider
 
-  for(int i=0;i<nCycles;i++)                                // loop over nCycles
-    rmt_write_items(config->channel, (rmt_item32_t *) data, nData, true);      // start transmission and wait until completed before returning    
+  for(int i=0;i<nCycles;i++){                 // loop over nCycles
+    status.nData=nData;
+    status.iMem=0;
+    status.started=true;
+    status.rf=this;
+    status.pulse=data;
+    
+    loadData(this);
+    loadData(this);
+
+    rmt_tx_start(config->channel,true);
+    while(status.started);                    // wait for transmission to be complete
+  }
+  
+
+//  for(int i=0;i<nCycles;i++)                                // loop over nCycles
+//    rmt_write_items(config->channel, (rmt_item32_t *) data, nData, true);      // start transmission and wait until completed before returning    
 }
 
 ///////////////////
@@ -161,4 +185,30 @@ void RFControl::enableCarrier(uint32_t freq, float duty){
 
 ///////////////////
 
+void IRAM_ATTR RFControl::loadData(void *arg){
+
+  if(RMT.int_st.val & status.rf->txEndMask){
+    RMT.int_clr.val=status.rf->txEndMask;
+    status.started=false;
+    return;
+  }
+  
+  RMT.int_clr.val=status.rf->txThrMask;       // if loadData() is called and it is NOT because of an END interrupt (above) then must either be a pre-load, or a threshold trigger
+
+  int i=0;
+  while(i<status.rf->memSize/2 && status.nData>0){
+    RMTMEM.chan[status.rf->getChannel()].data32[status.iMem].val=*status.pulse;
+    status.iMem=status.iMem+1;    
+    status.pulse=status.pulse+1;
+    status.nData=status.nData-1;
+    status.iMem=status.iMem%status.rf->memSize;    
+  }
+
+  if(i<status.rf->memSize/2)
+    RMTMEM.chan[status.rf->getChannel()].data32[status.iMem].val=0;  
+}
+
+///////////////////
+
 uint8_t RFControl::nChannels=0;
+volatile RFControl::rf_status_t RFControl::status;
