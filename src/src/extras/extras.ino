@@ -61,6 +61,31 @@ void setup() {
 
   RFControl rf(13);               // create an instance of RFControl with signal output to pin 13 of the ESP32
 
+  Serial.printf("%d %d\n",SOC_RMT_MEM_WORDS_PER_CHANNEL,SOC_RMT_TX_CANDIDATES_PER_GROUP);
+
+  rf.clear();                     // clear the pulse train memory buffer
+
+  #define COUNT   641
+  #define ONTIME  500
+  #define OFFTIME 500
+
+  Serial.printf("* %d\n",(COUNT*(ONTIME+OFFTIME)+ONTIME+10000)*4*10/1000);
+
+  for(int i=0;i<COUNT;i++)
+    rf.add(ONTIME,OFFTIME);              // create a pulse train with three 500-tick high/low pulses
+  rf.add(ONTIME,10000);             // double duration of final low period
+
+  Serial.print("Starting 4 cycles of three 50 ms on pulses...\n");
+
+  long int x=millis();
+  rf.start(4,10);                // start transmission of 4 cycles of the pulse train with 1 tick=100 microseconds
+  long int y=millis();
+
+  Serial.println(y-x);
+
+  Serial.print("Done!\n");
+  while(1);
+
   rf.clear();                     // clear the pulse train memory buffer
 
   rf.add(5000,5000);              // create a pulse train with three 5000-tick high/low pulses

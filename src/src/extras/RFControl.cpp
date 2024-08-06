@@ -55,12 +55,12 @@ RFControl::RFControl(uint8_t pin, boolean refClock, boolean installDriver){
 
   rmt_config(config);
 
-  rmt_isr_register(loadData,NULL,0,NULL);               // set custom interrupt handler
+  rmt_isr_register(loadData,NULL,0,NULL);                                             // set custom interrupt handler
 
-  rmt_set_tx_thr_intr_en(config->channel,false,memSize/2);      // disable threshold interrupt
-  txThrMask=RMT.int_ena.val;                                    // save interrupt enable vector
-  rmt_set_tx_thr_intr_en(config->channel,true,memSize/2);       // enable threshold interrupt to trigger every memsize/2 pulses 
-  txThrMask^=RMT.int_ena.val;                                   // find bit that flipped and save as threshold mask for this channel 
+  rmt_set_tx_thr_intr_en(config->channel,false,SOC_RMT_MEM_WORDS_PER_CHANNEL/2);      // disable threshold interrupt
+  txThrMask=RMT.int_ena.val;                                                          // save interrupt enable vector
+  rmt_set_tx_thr_intr_en(config->channel,true,SOC_RMT_MEM_WORDS_PER_CHANNEL/2);       // enable threshold interrupt to trigger every memsize/2 pulses 
+  txThrMask^=RMT.int_ena.val;                                                         // find bit that flipped and save as threshold mask for this channel 
 
   rmt_set_tx_intr_en(config->channel,false);           // disable end-of-transmission interrupt
   txEndMask=RMT.int_ena.val;                           // save interrupt enable vector
@@ -105,7 +105,11 @@ void RFControl::start(uint32_t *data, int nData, uint8_t nCycles, uint8_t tickTi
     status.pulse=data;
     
     loadData(this);
-    loadData(this);
+    if(status.nData>=0)
+      loadData(this);
+
+//    for(int i=0;i<SOC_RMT_MEM_WORDS_PER_CHANNEL;i++)
+//      Serial.printf("%d: %08X\n",i,RMTMEM.chan[status.rf->getChannel()].data32[i].val);
 
     rmt_tx_start(config->channel,true);
     while(status.started);                    // wait for transmission to be complete
@@ -196,16 +200,19 @@ void IRAM_ATTR RFControl::loadData(void *arg){
   RMT.int_clr.val=status.rf->txThrMask;       // if loadData() is called and it is NOT because of an END interrupt (above) then must either be a pre-load, or a threshold trigger
 
   int i=0;
-  while(i<status.rf->memSize/2 && status.nData>0){
+  while(i<SOC_RMT_MEM_WORDS_PER_CHANNEL/2 && status.nData>0){
     RMTMEM.chan[status.rf->getChannel()].data32[status.iMem].val=*status.pulse;
     status.iMem=status.iMem+1;    
     status.pulse=status.pulse+1;
     status.nData=status.nData-1;
-    status.iMem=status.iMem%status.rf->memSize;    
+    status.iMem=status.iMem%SOC_RMT_MEM_WORDS_PER_CHANNEL;
+    i++;
   }
 
-  if(i<status.rf->memSize/2)
+  if(i<SOC_RMT_MEM_WORDS_PER_CHANNEL/2){
     RMTMEM.chan[status.rf->getChannel()].data32[status.iMem].val=0;  
+    status.nData=status.nData-1;
+  }
 }
 
 ///////////////////

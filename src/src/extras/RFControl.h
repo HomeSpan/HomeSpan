@@ -62,9 +62,7 @@ class RFControl {
     static uint8_t nChannels;
     uint32_t txEndMask;            // mask for end-of-transmission interrupt
     uint32_t txThrMask;            // mask for threshold interrupt
-    
-    const int memSize=sizeof(RMTMEM.chan[0].data32)/4;    // determine size (in pulses) of one channel
-     
+         
     static void loadData(void *arg);            // interrupt handler
     volatile static rf_status_t status;      // storage for volatile information modified in interupt handler 
 
