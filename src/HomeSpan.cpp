@@ -390,6 +390,7 @@ void Span::checkConnect(){
       if(verboseWifiReconnect)
         addWebLog(true,"Trying to connect to %s.  Waiting %d sec...",network.wifiData.ssid,waitTime/1000);
       WiFi.begin(network.wifiData.ssid,network.wifiData.pwd);
+      WiFi.waitForConnectResult(20000);
     }
 
     alarmConnect=millis()+waitTime;
@@ -2435,7 +2436,12 @@ void SpanWebLog::vLog(boolean sysMsg, const char *fmt, va_list ap){
     LOG1("WEBLOG: %s\n",buf);
   
   if(maxEntries>0){
-    int index=nEntries%maxEntries;
+    int index=0;
+    // Ensures no two WEBLOGs are being added to the log[] array simultaneously by two (or more) threads. Issue #899.
+    nEntriesMutex.lock();
+    index=nEntries%maxEntries;
+    nEntries++;
+    nEntriesMutex.unlock();
   
     log[index].upTime=esp_timer_get_time();
     if(timeInit)
@@ -2447,7 +2453,6 @@ void SpanWebLog::vLog(boolean sysMsg, const char *fmt, va_list ap){
     strcpy(log[index].message, buf);
     
     log[index].clientIP=homeSpan.lastClientIP;  
-    nEntries++;
   }
 
   free(buf);
