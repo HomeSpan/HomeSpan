@@ -95,9 +95,9 @@ void RFControl::start(uint32_t *data, int nData, uint8_t nCycles, uint8_t tickTi
   if(!config || nData==0)
     return;
     
-  rmt_set_clk_div(config->channel,tickTime);                  // set clock divider
+  rmt_set_clk_div(config->channel,tickTime);    // set clock divider
 
-  for(int i=0;i<nCycles;i++){                 // loop over nCycles
+  for(int i=0;i<nCycles;i++){                   // loop over nCycles
     status.nData=nData;
     status.iMem=0;
     status.started=true;
@@ -108,16 +108,9 @@ void RFControl::start(uint32_t *data, int nData, uint8_t nCycles, uint8_t tickTi
     if(status.nData>=0)
       loadData(this);
 
-//    for(int i=0;i<SOC_RMT_MEM_WORDS_PER_CHANNEL;i++)
-//      Serial.printf("%d: %08X\n",i,RMTMEM.chan[status.rf->getChannel()].data32[i].val);
-
     rmt_tx_start(config->channel,true);
-    while(status.started);                    // wait for transmission to be complete
+    while(status.started);                      // wait for transmission to be complete
   }
-  
-
-//  for(int i=0;i<nCycles;i++)                                // loop over nCycles
-//    rmt_write_items(config->channel, (rmt_item32_t *) data, nData, true);      // start transmission and wait until completed before returning    
 }
 
 ///////////////////

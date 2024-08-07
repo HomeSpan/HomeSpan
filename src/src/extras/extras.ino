@@ -66,8 +66,8 @@ void setup() {
   rf.clear();                     // clear the pulse train memory buffer
 
   #define COUNT   641
-  #define ONTIME  500
-  #define OFFTIME 500
+  #define ONTIME  50
+  #define OFFTIME 50
 
   Serial.printf("* %d\n",(COUNT*(ONTIME+OFFTIME)+ONTIME+10000)*4*10/1000);
 
