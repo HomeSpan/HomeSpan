@@ -1180,12 +1180,19 @@ void HAPClient::getStatusURL(HAPClient *hapClient, void (*callBack)(const char *
   hapOut << "<p></p>";
   
   if(homeSpan.webLog.maxEntries>0){
+    int currentEntries=0;
     hapOut << "<table class=tab2><tr><th>Entry</th><th>Up Time</th><th>Log Time</th><th>Client</th><th>Message</th></tr>\n";
-    int lastIndex=homeSpan.webLog.nEntries-homeSpan.webLog.maxEntries;
+
+    // Ensure that no new WEBLOG entries gets added to the log[] array while the web page is being served
+    homeSpan.webLog.nEntriesMutex.lock();
+    currentEntries=homeSpan.webLog.nEntries;
+    homeSpan.webLog.nEntriesMutex.unlock();
+
+    int lastIndex=currentEntries-homeSpan.webLog.maxEntries;
     if(lastIndex<0)
       lastIndex=0;
     
-    for(int i=homeSpan.webLog.nEntries-1;i>=lastIndex;i--){
+    for(int i=currentEntries-1;i>=lastIndex;i--){
       int index=i%homeSpan.webLog.maxEntries;
       seconds=homeSpan.webLog.log[index].upTime/1e6;
       secs=seconds%60;

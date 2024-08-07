@@ -40,6 +40,7 @@
 #include <ArduinoOTA.h>
 #include <esp_now.h>
 #include <mbedtls/base64.h>
+#include <mutex>
 
 #include "src/extras/Blinker.h"
 #include "src/extras/Pixel.h"
@@ -164,6 +165,7 @@ struct SpanWebLog{                            // optional web status/log data
   boolean isEnabled=false;                    // flag to inidicate WebLog has been enabled
   uint16_t maxEntries=0;                      // max number of log entries;
   int nEntries=0;                             // total cumulative number of log entries
+  std::mutex nEntriesMutex;                   // To prevent concurrent access when caching log entries
   const char *timeServer=NULL;                // optional time server to use for acquiring clock time
   const char *timeZone;                       // optional time-zone specification
   boolean timeInit=false;                     // flag to indicate time has been initialized
