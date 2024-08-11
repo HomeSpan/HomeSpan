@@ -33,9 +33,35 @@
 
 #include <Arduino.h>
 //#include <soc/rmt_reg.h>
-#include "driver/rmt.h"
+//#include "driver/rmt.h"
+//#include <driver/rmt_tx.h>
 #include <soc/rmt_struct.h>     // where RMT register structure is defined
+
+#include <esp_private/periph_ctrl.h>
+#include <soc/rmt_periph.h>
+#include <hal/gpio_hal.h>
+
 #include <vector>
+
+// Original Arduino-ESP32 2.X structures for addressing RMTMEM memory directly - no longer provided in Arduino-ESP32 3.X
+
+typedef struct rmt_item32_s {
+    union {
+        struct {
+            uint32_t duration0 :15;
+            uint32_t level0 :1;
+            uint32_t duration1 :15;
+            uint32_t level1 :1;
+        };
+        uint32_t val;
+    };
+} rmt_item32_t;
+
+typedef volatile struct rmt_mem_s {
+    struct {
+        rmt_item32_t data32[SOC_RMT_MEM_WORDS_PER_CHANNEL];
+    } chan[SOC_RMT_CHANNELS_PER_GROUP];
+} rmt_mem_t;
 
 extern rmt_mem_t RMTMEM;
 
@@ -59,11 +85,13 @@ class RFControl {
     vector<uint32_t> data;
     boolean lowWord=true;
     boolean refClock;
-    static uint8_t nChannels;
     uint32_t txEndMask;            // mask for end-of-transmission interrupt
     uint32_t txThrMask;            // mask for threshold interrupt
+    int channel=-1;                // channel number
          
-    static void loadData(void *arg);            // interrupt handler
+    static uint8_t nChannels;      // total number of channels assigned
+
+    static void loadData(void *arg);         // interrupt handler
     volatile static rf_status_t status;      // storage for volatile information modified in interupt handler 
 
     RFControl(uint8_t pin, boolean refClock, boolean installDriver);        // private constructor (only used by Pixel class)
@@ -80,11 +108,8 @@ class RFControl {
     void enableCarrier(uint32_t freq, float duty=0.5);    // enables carrier wave if freq>0, else disables carrier wave; duty is a fraction from 0-1
     void disableCarrier(){enableCarrier(0);}              // disables carrier wave
 
-    int getPin(){return(config?config->gpio_num:-1);}                             // returns the pin number, or -1 if no channel defined
-    rmt_channel_t getChannel(){return(config?config->channel:RMT_CHANNEL_0);}     // returns channel, or channel_0 is no channel defined
-
     operator bool(){                                      // override boolean operator to return true/false if creation succeeded/failed
-      return(config);    
+      return(channel>=0);    
     }
 };
 

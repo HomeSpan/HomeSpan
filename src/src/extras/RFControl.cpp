@@ -31,15 +31,26 @@
 
 RFControl::RFControl(uint8_t pin, boolean refClock, boolean installDriver){
 
-#if defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32S3)
-  if(nChannels==RMT_CHANNEL_MAX/2){
-#else
-  if(nChannels==RMT_CHANNEL_MAX){
-#endif
+  if(nChannels==0){     
+    periph_module_reset(rmt_periph_signals.groups[0].module);       // reset and enable RMT Peripheral if this is first time RFControl is called
+    periph_module_enable(rmt_periph_signals.groups[0].module);
+  }
+  else if(nChannels==SOC_RMT_TX_CANDIDATES_PER_GROUP){
     ESP_LOGE(RFControl_TAG,"Can't create RFControl(%d) - no open channels",pin);
     return;
   }
 
+  if(!GPIO_IS_VALID_OUTPUT_GPIO(pin)){
+    ESP_LOGE(RFControl_TAG,"Can't create RFControl(%d) - invalid output pin",pin);
+    return;    
+  }
+
+  channel=nChannels++;                                                  // save channel number and increment nChannels
+  
+  gpio_hal_iomux_func_sel(GPIO_PIN_MUX_REG[pin], PIN_FUNC_GPIO);        // set IOMUX for pin to GPIO, OUTPUT, and connect to RMT Transmitter Channel
+  gpio_set_direction(pin, GPIO_MODE_OUTPUT);
+  esp_rom_gpio_connect_out_signal(pin, rmt_periph_signals.groups[0].channels[channel].tx_sig, false, 0);
+  
   config=new rmt_config_t;
   
   config->rmt_mode=RMT_MODE_TX;
