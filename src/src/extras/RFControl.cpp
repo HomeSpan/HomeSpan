@@ -31,9 +31,9 @@
 
 RFControl::RFControl(uint8_t pin, boolean refClock, boolean installDriver){
 
-  if(nChannels==0){     
-    periph_module_reset(rmt_periph_signals.groups[0].module);       // reset and enable RMT Peripheral if this is first time RFControl is called
-    periph_module_enable(rmt_periph_signals.groups[0].module);
+  if(nChannels==0){
+    rmt_ll_enable_bus_clock(0,true);                                  // enable RMT Peripheral clock
+    rmt_ll_reset_register(0);                                         // reset RMT Peripheral registers
   }
   else if(nChannels==SOC_RMT_TX_CANDIDATES_PER_GROUP){
     ESP_LOGE(RFControl_TAG,"Can't create RFControl(%d) - no open channels",pin);

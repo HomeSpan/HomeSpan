@@ -35,9 +35,11 @@
 //#include <soc/rmt_reg.h>
 //#include "driver/rmt.h"
 //#include <driver/rmt_tx.h>
+#include <hal/rmt_ll.h>
+#include <hal/rmt_types.h>
 #include <soc/rmt_struct.h>     // where RMT register structure is defined
 
-#include <esp_private/periph_ctrl.h>
+//#include <esp_private/periph_ctrl.h>
 #include <soc/rmt_periph.h>
 #include <hal/gpio_hal.h>
 
@@ -45,25 +47,32 @@
 
 // Original Arduino-ESP32 2.X structures for addressing RMTMEM memory directly - no longer provided in Arduino-ESP32 3.X
 
-typedef struct rmt_item32_s {
-    union {
-        struct {
-            uint32_t duration0 :15;
-            uint32_t level0 :1;
-            uint32_t duration1 :15;
-            uint32_t level1 :1;
-        };
-        uint32_t val;
-    };
-} rmt_item32_t;
+//typedef struct rmt_item32_s {
+//    union {
+//        struct {
+//            uint32_t duration0 :15;
+//            uint32_t level0 :1;
+//            uint32_t duration1 :15;
+//            uint32_t level1 :1;
+//        };
+//        uint32_t val;
+//    };
+//} rmt_item32_t;
 
-typedef volatile struct rmt_mem_s {
+//typedef volatile struct rmt_mem_s {
+//    struct {
+//        rmt_symbol_word_t data32[SOC_RMT_MEM_WORDS_PER_CHANNEL];
+//    } chan[SOC_RMT_CHANNELS_PER_GROUP];
+//} rmt_mem_t;
+
+//extern rmt_mem_t RMTMEM;
+
+extern struct {
     struct {
-        rmt_item32_t data32[SOC_RMT_MEM_WORDS_PER_CHANNEL];
+        rmt_symbol_word_t data32[SOC_RMT_MEM_WORDS_PER_CHANNEL];
     } chan[SOC_RMT_CHANNELS_PER_GROUP];
-} rmt_mem_t;
+} RMTMEM;
 
-extern rmt_mem_t RMTMEM;
 
 [[maybe_unused]] static const char* RFControl_TAG = "RFControl";
 

@@ -49,6 +49,74 @@
 //
 //}
 
+/*
+ * 
+esp_err_t     err;
+//volatile int iCycles;
+
+#include <driver/rmt_tx.h>
+
+void setup() {
+  
+  Serial.begin(115200);
+  delay(1000);
+  Serial.printf("\n\nREADY\n");
+
+  rmt_channel_handle_t tx_chan = NULL;
+  rmt_tx_channel_config_t tx_chan_config;
+  tx_chan_config.clk_src = RMT_CLK_SRC_REF_TICK;   // select source clock
+//  tx_chan_config.clk_src = RMT_CLK_SRC_APB;
+  tx_chan_config.gpio_num = (gpio_num_t)13;                    // GPIO number
+  tx_chan_config.mem_block_symbols = 64;          // memory block size, 64 * 4 = 256 Bytes
+  tx_chan_config.resolution_hz = 1 * 1000 * 1000; // 1 tick = 100 us
+  tx_chan_config.trans_queue_depth = 4;           // set the number of transactions that can pend in the background
+  tx_chan_config.flags.invert_out = false;        // do not invert output signal
+  tx_chan_config.flags.with_dma = false;          // do not need DMA backend
+  tx_chan_config.intr_priority = 3;               // medium interrupt priority
+  
+  err=rmt_new_tx_channel(&tx_chan_config, &tx_chan);
+  Serial.printf("%s\n",esp_err_to_name(err));
+
+  err=rmt_enable(tx_chan);
+  Serial.printf("%s\n",esp_err_to_name(err));
+
+  #define NSYMBOLS 15
+  rmt_symbol_word_t x[NSYMBOLS];
+  for(int i=0;i<NSYMBOLS;i++){
+    x[i].duration0=5000;
+    x[i].level0=1;
+    x[i].duration1=5000;
+    x[i].level1=0;
+  }
+  x[NSYMBOLS-1].duration1=15000;
+  
+  rmt_transmit_config_t tx_config;
+  tx_config.loop_count=0;
+  tx_config.flags.eot_level=0;
+  tx_config.flags.queue_nonblocking=0;
+  
+  rmt_copy_encoder_config_t copy_config;
+  rmt_encoder_handle_t encoder;
+  
+  err=rmt_new_copy_encoder(&copy_config, &encoder);
+  Serial.printf("%s\n",esp_err_to_name(err));
+
+  uint32_t t0=millis();
+  for(int i=0;i<5;i++){
+    err=rmt_transmit(tx_chan, encoder, x, NSYMBOLS*4, &tx_config);
+//    Serial.printf("%s\n",esp_err_to_name(err));
+    rmt_tx_wait_all_done(tx_chan,-1);
+  }
+  uint32_t t1=millis();
+  Serial.printf("Time = %lu msec\n",t1-t0);
+  
+ * 
+ * 
+ */
+
+
+
+
 #include "RFControl.h"
 
 void setup() {     
