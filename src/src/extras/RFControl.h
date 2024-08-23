@@ -32,83 +32,34 @@
 #pragma once
 
 #include <Arduino.h>
-//#include <soc/rmt_reg.h>
-//#include "driver/rmt.h"
-//#include <driver/rmt_tx.h>
-#include <hal/rmt_ll.h>
-#include <hal/rmt_types.h>
+#include <driver/rmt_tx.h>      // IDF 5 RMT driver
 #include <soc/rmt_struct.h>     // where RMT register structure is defined
-
-//#include <esp_private/periph_ctrl.h>
-#include <soc/rmt_periph.h>
-#include <hal/gpio_hal.h>
+#include <hal/rmt_ll.h>         // where low-level RMT calls are defined
 
 #include <vector>
-
-// Original Arduino-ESP32 2.X structures for addressing RMTMEM memory directly - no longer provided in Arduino-ESP32 3.X
-
-//typedef struct rmt_item32_s {
-//    union {
-//        struct {
-//            uint32_t duration0 :15;
-//            uint32_t level0 :1;
-//            uint32_t duration1 :15;
-//            uint32_t level1 :1;
-//        };
-//        uint32_t val;
-//    };
-//} rmt_item32_t;
-
-//typedef volatile struct rmt_mem_s {
-//    struct {
-//        rmt_symbol_word_t data32[SOC_RMT_MEM_WORDS_PER_CHANNEL];
-//    } chan[SOC_RMT_CHANNELS_PER_GROUP];
-//} rmt_mem_t;
-
-//extern rmt_mem_t RMTMEM;
-
-extern struct {
-    struct {
-        rmt_symbol_word_t data32[SOC_RMT_MEM_WORDS_PER_CHANNEL];
-    } chan[SOC_RMT_CHANNELS_PER_GROUP];
-} RMTMEM;
-
 
 [[maybe_unused]] static const char* RFControl_TAG = "RFControl";
 
 using std::vector;
 
 class RFControl {
-  friend class Pixel;
   
+  friend class Pixel;
+
   private:
-    struct rf_status_t {
-      RFControl *rf;
-      int nData;
-      int iMem;
-      boolean started;
-      uint32_t *pulse;
-    };
-      
-    rmt_config_t *config=NULL;
     vector<uint32_t> data;
     boolean lowWord=true;
     boolean refClock;
-    uint32_t txEndMask;            // mask for end-of-transmission interrupt
-    uint32_t txThrMask;            // mask for threshold interrupt
-    int channel=-1;                // channel number
-         
-    static uint8_t nChannels;      // total number of channels assigned
-
-    static void loadData(void *arg);         // interrupt handler
-    volatile static rf_status_t status;      // storage for volatile information modified in interupt handler 
-
-    RFControl(uint8_t pin, boolean refClock, boolean installDriver);        // private constructor (only used by Pixel class)
+    uint8_t pin;
+    int channel=-1;
+    rmt_channel_handle_t tx_chan = NULL;
+    rmt_encoder_handle_t encoder;
+    rmt_transmit_config_t tx_config;
 
   public:    
-    RFControl(uint8_t pin, boolean refClock=true):RFControl(pin,refClock,true){};     // public constructor to create transmitter on pin, using 1-MHz Ref Tick clock or 80-MHz APB clock
+    RFControl(uint8_t pin, boolean refClock=true);                                    // public constructor to create transmitter on pin, using 1-MHz Ref Tick clock or 80-MHz APB clock
     
-    void start(uint32_t *data, int nData, uint8_t nCycles=1, uint8_t tickTime=1);     // starts transmission of pulses from specified data pointer, repeated for numCycles, where each tick in pulse is tickTime microseconds long
+    void start(uint32_t *data, size_t nData, uint8_t nCycles=1, uint8_t tickTime=1);     // starts transmission of pulses from specified data pointer, repeated for numCycles, where each tick in pulse is tickTime microseconds long
     void start(uint8_t nCycles=1, uint8_t tickTime=1);                                // starts transmission of pulses from internal data structure, repeated for numCycles, where each tick in pulse is tickTime microseconds long    
     
     void clear();                                         // clears transmitter memory

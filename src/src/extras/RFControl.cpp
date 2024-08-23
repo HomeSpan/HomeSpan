@@ -29,99 +29,68 @@
 
 ///////////////////
 
-RFControl::RFControl(uint8_t pin, boolean refClock, boolean installDriver){
+RFControl::RFControl(uint8_t pin, boolean refClock){
 
-  if(nChannels==0){
-    rmt_ll_enable_bus_clock(0,true);                                  // enable RMT Peripheral clock
-    rmt_ll_reset_register(0);                                         // reset RMT Peripheral registers
-  }
-  else if(nChannels==SOC_RMT_TX_CANDIDATES_PER_GROUP){
-    ESP_LOGE(RFControl_TAG,"Can't create RFControl(%d) - no open channels",pin);
-    return;
-  }
+  this->refClock=refClock;
+  this->pin=pin;
 
+  rmt_tx_channel_config_t tx_chan_config;
+  tx_chan_config.clk_src = RMT_CLK_SRC_DEFAULT;                       // use default as a placeholder - will be reset to required clock before each transmission
+  tx_chan_config.gpio_num = (gpio_num_t)pin;                          // GPIO number
+  tx_chan_config.mem_block_symbols = SOC_RMT_MEM_WORDS_PER_CHANNEL;   // set number of symbols to match those in a single channel block
+  tx_chan_config.resolution_hz = 1 * 1000 * 1000;                     // use 1MHz as a placeholder - will be reset to required clock before each transmission
+  tx_chan_config.trans_queue_depth = 4;                               // set the number of transactions that can pend in the background
+  tx_chan_config.flags.invert_out = false;                            // do not invert output signal
+  tx_chan_config.flags.with_dma = false;                              // use RMT channel memory, not DMA (most chips do not support use of DMA anyway)
+  tx_chan_config.intr_priority = 3;                                   // medium interrupt priority
+  
   if(!GPIO_IS_VALID_OUTPUT_GPIO(pin)){
     ESP_LOGE(RFControl_TAG,"Can't create RFControl(%d) - invalid output pin",pin);
     return;    
   }
 
-  channel=nChannels++;                                                  // save channel number and increment nChannels
+  if(rmt_new_tx_channel(&tx_chan_config, &tx_chan)!=ESP_OK){
+    ESP_LOGE(RFControl_TAG,"Can't create RFControl(%d) - no open channels",pin);
+    return;
+  }
+
+  rmt_enable(tx_chan);                            // enable channel
+  channel=((int *)tx_chan)[0];                    // get channel number
+
+  tx_config.loop_count=0;                         // populate tx_config structure
+  tx_config.flags.eot_level=0;
+  tx_config.flags.queue_nonblocking=0;
   
-  gpio_hal_iomux_func_sel(GPIO_PIN_MUX_REG[pin], PIN_FUNC_GPIO);        // set IOMUX for pin to GPIO, OUTPUT, and connect to RMT Transmitter Channel
-  gpio_set_direction(pin, GPIO_MODE_OUTPUT);
-  esp_rom_gpio_connect_out_signal(pin, rmt_periph_signals.groups[0].channels[channel].tx_sig, false, 0);
-  
-  config=new rmt_config_t;
-  
-  config->rmt_mode=RMT_MODE_TX;
-  config->tx_config.carrier_en=false;
-  config->channel=(rmt_channel_t)nChannels;
-  config->flags=0;
-  config->clk_div = 1;
-  config->mem_block_num=1;
-  config->gpio_num=(gpio_num_t)pin;
-  config->tx_config.idle_output_en=false;
-  config->tx_config.idle_level=RMT_IDLE_LEVEL_LOW;
-  config->tx_config.loop_en=false;
-
-  rmt_config(config);
-
-  rmt_isr_register(loadData,NULL,0,NULL);                                             // set custom interrupt handler
-
-  rmt_set_tx_thr_intr_en(config->channel,false,SOC_RMT_MEM_WORDS_PER_CHANNEL/2);      // disable threshold interrupt
-  txThrMask=RMT.int_ena.val;                                                          // save interrupt enable vector
-  rmt_set_tx_thr_intr_en(config->channel,true,SOC_RMT_MEM_WORDS_PER_CHANNEL/2);       // enable threshold interrupt to trigger every memsize/2 pulses 
-  txThrMask^=RMT.int_ena.val;                                                         // find bit that flipped and save as threshold mask for this channel 
-
-  rmt_set_tx_intr_en(config->channel,false);           // disable end-of-transmission interrupt
-  txEndMask=RMT.int_ena.val;                           // save interrupt enable vector
-  rmt_set_tx_intr_en(config->channel,true);            // enable end-of-transmission interrupt
-  txEndMask^=RMT.int_ena.val;                          // find bit that flipped and save as end-of-transmission mask for this channel 
-
-  // If specified, set the base clock to 1 MHz so tick-units are in microseconds (before any CLK_DIV is applied), otherwise default will be 80 MHz APB clock
-
-  this->refClock=refClock;
-  
-  if(refClock)
-#ifdef RMT_SYS_CONF_REG
-  REG_SET_FIELD(RMT_SYS_CONF_REG,RMT_SCLK_DIV_NUM,79);        // ESP32-C3 and ESP32-S3 do not have a 1 MHz REF Tick Clock, but allows the 80 MHz APB clock to be scaled by an additional RMT-specific divider
-#else  
-  rmt_set_source_clk(config->channel,RMT_BASECLK_REF);        // use 1 MHz REF Tick Clock for ESP32 and ESP32-S2
-#endif
-
-  nChannels++;
-
+  rmt_copy_encoder_config_t copy_config;          // required, though nothing to populate
+  rmt_new_copy_encoder(&copy_config, &encoder);   // create copy encoder
 }
  
 ///////////////////
 
-void RFControl::start(uint8_t nCycles, uint8_t tickTime){     // starts transmission of pulses from internal data structure, repeated for nCycles, where each tick in pulse is tickTime microseconds long
+void RFControl::start(uint8_t nCycles, uint8_t tickTime){     // starts transmission of pulses from internal data structure, repeated for nCycles
   start(data.data(), data.size(), nCycles, tickTime);  
 }
 
 ///////////////////
 
-void RFControl::start(uint32_t *data, int nData, uint8_t nCycles, uint8_t tickTime){     // starts transmission of pulses from specified data pointer, repeated for nCycles, where each tick in pulse is tickTime microseconds long
+void RFControl::start(uint32_t *data, size_t nData, uint8_t nCycles, uint8_t tickTime){     // starts transmission of pulses from specified data pointer, repeated for nCycles
 
-  if(!config || nData==0)
+  if(channel<0)
     return;
-    
-  rmt_set_clk_div(config->channel,tickTime);    // set clock divider
 
-  for(int i=0;i<nCycles;i++){                   // loop over nCycles
-    status.nData=nData;
-    status.iMem=0;
-    status.started=true;
-    status.rf=this;
-    status.pulse=data;
-    
-    loadData(this);
-    if(status.nData>=0)
-      loadData(this);
+  rmt_ll_tx_set_channel_clock_div(&RMT, channel, tickTime);      // set clock divider
 
-    rmt_tx_start(config->channel,true);
-    while(status.started);                      // wait for transmission to be complete
+#if defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32S3)  
+  rmt_ll_set_group_clock_src(&RMT, channel, RMT_CLK_SRC_APB, refClock?80:1, 0, 0);      // channel is dummy variable for S3 and C3
+#else  
+  rmt_ll_set_group_clock_src(&RMT, channel, refClock?RMT_CLK_SRC_REF_TICK:RMT_CLK_SRC_APB, 0, 0, 0);    // last three parameters are dummy variables for ESP32 and S2
+#endif
+
+  for(int i=0;i<nCycles;i++){
+    rmt_transmit(tx_chan, encoder, data, nData*4, &tx_config);
+    rmt_tx_wait_all_done(tx_chan,-1);
   }
+
 }
 
 ///////////////////
@@ -165,61 +134,11 @@ void RFControl::enableCarrier(uint32_t freq, float duty){
   if(duty>1)
     duty=1;
 
-  if(freq>0){
-    float period=1.0e6/freq*(refClock?1:80);
-    uint32_t highTime=period*duty+0.5;
-    uint32_t lowTime=period*(1.0-duty)+0.5;
+  rmt_carrier_config_t tx_carrier_cfg;
+  tx_carrier_cfg.duty_cycle=duty;
+  tx_carrier_cfg.frequency_hz=freq;
+  tx_carrier_cfg.flags.polarity_active_low=false;
+  tx_carrier_cfg.flags.always_on=false;
 
-    if(highTime>0xFFFF || lowTime>0xFFFF){
-      ESP_LOGE(RFControl_TAG,"Can't enable carrier frequency=%d Hz for RF Control pin=%d, duty=%0.2f. Frequency is too low!",freq,config->gpio_num,duty);
-      return;      
-    }
-
-    if(highTime==0){
-      ESP_LOGE(RFControl_TAG,"Can't enable carrier frequency=%d Hz for RF Control pin=%d, duty=%0.2f. Duty is too low or frequency is too high!",freq,config->gpio_num,duty);
-      return;
-    }
-    
-    if(lowTime==0){
-      ESP_LOGE(RFControl_TAG,"Can't enable carrier frequency=%d Hz for RF Control pin=%d, duty=%0.2f. Duty is too high or frequency is too high!",freq,config->gpio_num,duty);
-      return;
-    }
-
-    rmt_set_tx_carrier(config->channel,true,highTime,lowTime,RMT_CARRIER_LEVEL_HIGH);       
-  } else {
-    rmt_set_tx_carrier(config->channel,false,0,0,RMT_CARRIER_LEVEL_HIGH);           
-  }
+  rmt_apply_carrier(tx_chan, &tx_carrier_cfg);
 }
-
-///////////////////
-
-void IRAM_ATTR RFControl::loadData(void *arg){
-
-  if(RMT.int_st.val & status.rf->txEndMask){
-    RMT.int_clr.val=status.rf->txEndMask;
-    status.started=false;
-    return;
-  }
-  
-  RMT.int_clr.val=status.rf->txThrMask;       // if loadData() is called and it is NOT because of an END interrupt (above) then must either be a pre-load, or a threshold trigger
-
-  int i=0;
-  while(i<SOC_RMT_MEM_WORDS_PER_CHANNEL/2 && status.nData>0){
-    RMTMEM.chan[status.rf->getChannel()].data32[status.iMem].val=*status.pulse;
-    status.iMem=status.iMem+1;    
-    status.pulse=status.pulse+1;
-    status.nData=status.nData-1;
-    status.iMem=status.iMem%SOC_RMT_MEM_WORDS_PER_CHANNEL;
-    i++;
-  }
-
-  if(i<SOC_RMT_MEM_WORDS_PER_CHANNEL/2){
-    RMTMEM.chan[status.rf->getChannel()].data32[status.iMem].val=0;  
-    status.nData=status.nData-1;
-  }
-}
-
-///////////////////
-
-uint8_t RFControl::nChannels=0;
-volatile RFControl::rf_status_t RFControl::status;
