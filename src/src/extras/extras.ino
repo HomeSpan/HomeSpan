@@ -37,11 +37,13 @@ void setup() {
 
   Serial.print("\n\nHomeSpan RF Transmitter Example\n\n");
 
-  RFControl rf(13);               // create an instance of RFControl with signal output to pin 13 of the ESP32
+  RFControl rf(13,false);               // create an instance of RFControl with signal output to pin 13 of the ESP32
+  RFControl rf1(13);               // create an instance of RFControl with signal output to pin 13 of the ESP32
 
   Serial.printf("%d %d\n",SOC_RMT_MEM_WORDS_PER_CHANNEL,SOC_RMT_TX_CANDIDATES_PER_GROUP);
 
   rf.clear();                     // clear the pulse train memory buffer
+  rf1.clear();
 
   #define COUNT   5
   #define ONTIME  5000
@@ -49,43 +51,37 @@ void setup() {
 
   for(int i=0;i<COUNT;i++)
     rf.add(ONTIME,OFFTIME);         // create a pulse train with three 500-tick high/low pulses
-  rf.add(ONTIME,10000);             // double duration of final low period
+  rf.phase(OFFTIME,LOW);
 
-  Serial.print("Starting 4 cycles of three 50 ms on pulses...\n");
+  for(int i=0;i<COUNT;i++)
+    rf1.add(ONTIME,OFFTIME);         // create a pulse train with three 500-tick high/low pulses
+  rf1.phase(OFFTIME,LOW);  
 
+//  rf.disableCarrier();
+
+  Serial.print("Starting cycles of pulses...\n");
+  
   x=millis();
   rf.start(4,100);                // start transmission of 4 cycles of the pulse train with 1 tick=100 microseconds
   y=millis();
-
   Serial.println(y-x);
 
-  rf.clear();                     // clear the pulse train memory buffer
-
-  rf.add(5000,5000);              // create a pulse train with three 5000-tick high/low pulses
-  rf.add(5000,5000);
-  rf.add(5000,10000);             // double duration of final low period
-
-  Serial.print("Starting 4 cycles of three 500 ms on pulses...");
+  Serial.print("Starting cycles of pulses...\n");
   
-  rf.start(4,100);                // start transmission of 4 cycles of the pulse train with 1 tick=100 microseconds
+  x=millis();
+  rf1.start(4,100);                // start transmission of 4 cycles of the pulse train with 1 tick=100 microseconds
+  y=millis();
+  Serial.println(y-x);
 
+  Serial.print("Starting cycles of pulses...\n");
+  
+  x=millis();
+  rf1.start(4,10);                // start transmission of 4 cycles of the pulse train with 1 tick=100 microseconds
+  y=millis();
+  Serial.println(y-x);
+
+  
   Serial.print("Done!\n");
-
-  delay(2000);
-
-  rf.clear();
-
-  for(int i=1000;i<10000;i+=1000)
-    rf.add(i,10000-i);
-  rf.add(10000,10000);
-  
-  Serial.print("Starting 3 cycles of 100-1000 ms pulses...");
-  
-  rf.start(3,100);                // start transmission of 3 cycles of the pulse train with 1 tick=100 microseconds
-
-  Serial.print("Done!\n");
-  
-  Serial.print("\nEnd Example");
   
 } // end of setup()
 

@@ -75,16 +75,19 @@ void RFControl::start(uint8_t nCycles, uint8_t tickTime){     // starts transmis
 
 void RFControl::start(uint32_t *data, size_t nData, uint8_t nCycles, uint8_t tickTime){     // starts transmission of pulses from specified data pointer, repeated for nCycles
 
-  if(channel<0)
+  if(channel<0 || nData==0)
     return;
 
   rmt_ll_tx_set_channel_clock_div(&RMT, channel, tickTime);      // set clock divider
 
-#if defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32S3)  
-  rmt_ll_set_group_clock_src(&RMT, channel, RMT_CLK_SRC_APB, refClock?80:1, 0, 0);      // channel is dummy variable for S3 and C3
-#else  
-  rmt_ll_set_group_clock_src(&RMT, channel, refClock?RMT_CLK_SRC_REF_TICK:RMT_CLK_SRC_APB, 0, 0, 0);    // last three parameters are dummy variables for ESP32 and S2
+  if(refClock)
+#if defined(SOC_RMT_SUPPORT_REF_TICK)
+    rmt_ll_set_group_clock_src(&RMT, channel, RMT_CLK_SRC_REF_TICK, 0, 0, 0);        // use REF_TICK, which is 1 MHz
+#else
+    rmt_ll_set_group_clock_src(&RMT, channel, RMT_CLK_SRC_DEFAULT, 80, 0, 0);               // use DEFAULT CLOCK, which is always 80 MHz, and scale by 80
 #endif
+  else
+    rmt_ll_set_group_clock_src(&RMT, channel, RMT_CLK_SRC_DEFAULT, 1, 0, 0);                // use DEFAULT CLOCK, which is always 80 MHz, without any scaling
 
   for(int i=0;i<nCycles;i++){
     rmt_transmit(tx_chan, encoder, data, nData*4, &tx_config);
