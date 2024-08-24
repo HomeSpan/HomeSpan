@@ -84,10 +84,10 @@ void RFControl::start(uint32_t *data, size_t nData, uint8_t nCycles, uint8_t tic
 #if defined(SOC_RMT_SUPPORT_REF_TICK)
     rmt_ll_set_group_clock_src(&RMT, channel, RMT_CLK_SRC_REF_TICK, 0, 0, 0);        // use REF_TICK, which is 1 MHz
 #else
-    rmt_ll_set_group_clock_src(&RMT, channel, RMT_CLK_SRC_DEFAULT, 80, 0, 0);               // use DEFAULT CLOCK, which is always 80 MHz, and scale by 80
+    rmt_ll_set_group_clock_src(&RMT, channel, RMT_CLK_SRC_DEFAULT, 80, 0, 0);        // use DEFAULT CLOCK, which is always 80 MHz, and scale by 80 to get 1 MHz
 #endif
   else
-    rmt_ll_set_group_clock_src(&RMT, channel, RMT_CLK_SRC_DEFAULT, 1, 0, 0);                // use DEFAULT CLOCK, which is always 80 MHz, without any scaling
+    rmt_ll_set_group_clock_src(&RMT, channel, RMT_CLK_SRC_DEFAULT, 1, 0, 0);         // use DEFAULT CLOCK, which is always 80 MHz, without any scaling
 
   for(int i=0;i<nCycles;i++){
     rmt_transmit(tx_chan, encoder, data, nData*4, &tx_config);
@@ -132,16 +132,40 @@ void RFControl::phase(uint32_t nTicks, uint8_t phase){
 
 void RFControl::enableCarrier(uint32_t freq, float duty){
 
+  if(channel<0)
+    return;
+    
+  if(freq==0){
+    rmt_ll_tx_enable_carrier_modulation(&RMT, channel, 0);    // disable carrier wave
+    return;
+  }
+
   if(duty<0)
     duty=0;
   if(duty>1)
     duty=1;
+  
+  float period=(refClock?1.0e6:80.0e6)/freq;
+  uint32_t highTime=period*duty+0.5;
+  uint32_t lowTime=period*(1.0-duty)+0.5;
 
-  rmt_carrier_config_t tx_carrier_cfg;
-  tx_carrier_cfg.duty_cycle=duty;
-  tx_carrier_cfg.frequency_hz=freq;
-  tx_carrier_cfg.flags.polarity_active_low=false;
-  tx_carrier_cfg.flags.always_on=false;
+  if(highTime>0xFFFF || lowTime>0xFFFF){
+    ESP_LOGE(RFControl_TAG,"Can't enable carrier frequency=%d Hz for RF Control pin=%d, duty=%0.2f. Frequency is too low!",freq,pin,duty);
+    return;      
+  }
 
-  rmt_apply_carrier(tx_chan, &tx_carrier_cfg);
+  if(highTime==0){
+    ESP_LOGE(RFControl_TAG,"Can't enable carrier frequency=%d Hz for RF Control pin=%d, duty=%0.2f. Duty is too low or frequency is too high!",freq,pin,duty);
+    return;
+  }
+  
+  if(lowTime==0){
+    ESP_LOGE(RFControl_TAG,"Can't enable carrier frequency=%d Hz for RF Control pin=%d, duty=%0.2f. Duty is too high or frequency is too high!",freq,pin,duty);
+    return;
+  }
+
+  rmt_ll_tx_set_carrier_level(&RMT, channel, 1);                              // turn on carrier wave when signal if HIGH
+  rmt_ll_tx_set_carrier_high_low_ticks(&RMT, channel, highTime, lowTime);     // set high/low ticks for carrier wave frequency and duty cycle
+  rmt_ll_tx_enable_carrier_modulation(&RMT, channel, 1);                      // enable carrier wave
+
 }

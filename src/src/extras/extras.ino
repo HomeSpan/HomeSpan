@@ -57,30 +57,26 @@ void setup() {
     rf1.add(ONTIME,OFFTIME);         // create a pulse train with three 500-tick high/low pulses
   rf1.phase(OFFTIME,LOW);  
 
-//  rf.disableCarrier();
+  rf1.enableCarrier(10,0.4);
+
+//  Serial.print("Starting cycles of pulses...\n");
+//  x=millis();
+//  rf.start(4,100);                // start transmission of 4 cycles of the pulse train with 1 tick=100 microseconds
+//  y=millis();
+//  Serial.println(y-x);
 
   Serial.print("Starting cycles of pulses...\n");
-  
-  x=millis();
-  rf.start(4,100);                // start transmission of 4 cycles of the pulse train with 1 tick=100 microseconds
-  y=millis();
-  Serial.println(y-x);
-
-  Serial.print("Starting cycles of pulses...\n");
-  
   x=millis();
   rf1.start(4,100);                // start transmission of 4 cycles of the pulse train with 1 tick=100 microseconds
   y=millis();
   Serial.println(y-x);
 
-  Serial.print("Starting cycles of pulses...\n");
-  
-  x=millis();
-  rf1.start(4,10);                // start transmission of 4 cycles of the pulse train with 1 tick=100 microseconds
-  y=millis();
-  Serial.println(y-x);
+//  Serial.print("Starting cycles of pulses...\n");
+//  x=millis();
+//  rf1.start(4,10);                // start transmission of 4 cycles of the pulse train with 1 tick=100 microseconds
+//  y=millis();
+//  Serial.println(y-x);
 
-  
   Serial.print("Done!\n");
   
 } // end of setup()
