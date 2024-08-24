@@ -164,7 +164,11 @@ void RFControl::enableCarrier(uint32_t freq, float duty){
     return;
   }
 
-  rmt_ll_tx_set_carrier_level(&RMT, channel, 1);                              // turn on carrier wave when signal if HIGH
+#if SOC_RMT_SUPPORT_TX_CARRIER_DATA_ONLY
+  rmt_ll_tx_enable_carrier_always_on(&RMT, channel, 0);                       // for chips that support carrier is always on, disable it
+#endif
+
+  rmt_ll_tx_set_carrier_level(&RMT, channel, 1);                              // turn on carrier wave when signal is HIGH
   rmt_ll_tx_set_carrier_high_low_ticks(&RMT, channel, highTime, lowTime);     // set high/low ticks for carrier wave frequency and duty cycle
   rmt_ll_tx_enable_carrier_modulation(&RMT, channel, 1);                      // enable carrier wave
 
