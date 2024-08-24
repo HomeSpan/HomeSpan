@@ -25,56 +25,72 @@
  *  
  ********************************************************************************/
 
-#include "RFControl.h"
-
-long int x,y;
-
-void setup() {     
+void setup(){     
  
   Serial.begin(115200);           // start the Serial interface
-  Serial.flush();
-  delay(1000);                    // wait for interface to flush
+  delay(1000);
 
-  Serial.print("\n\nHomeSpan RF Transmitter Example\n\n");
-
-  RFControl rf(13,false);         // do not use REF TICK
-  RFControl rf1(21);              // use REF TICK
-
-  Serial.printf("%d %d\n",SOC_RMT_MEM_WORDS_PER_CHANNEL,SOC_RMT_TX_CANDIDATES_PER_GROUP);
-
-  rf.clear();                     // clear the pulse train memory buffer
-  rf1.clear();
-
-  #define COUNT   5
-  #define ONTIME  5000
-  #define OFFTIME 5000  
-
-  for(int i=0;i<COUNT;i++)
-    rf.add(ONTIME*80,OFFTIME*80);
-  rf.phase(OFFTIME*80,LOW);
-
-  for(int i=0;i<COUNT;i++)
-    rf1.add(ONTIME,OFFTIME);
-  rf1.phase(OFFTIME,LOW);  
-
-  rf1.enableCarrier(10,0.4);
-
-  Serial.print("Starting cycles of pulses...\n");
-  x=millis();
-  rf.start(4,100);                // start transmission of 4 cycles of the pulse train with 1 tick=100/80 microseconds
-  y=millis();
-  Serial.println(y-x);
-
-  Serial.print("Starting cycles of pulses...\n");
-  x=millis();
-  rf1.start(4,100);                // start transmission of 4 cycles of the pulse train with 1 tick=100 microseconds
-  y=millis();
-  Serial.println(y-x);
-
-  Serial.print("Done!\n");
-  
-} // end of setup()
+  Serial.print("\n\nHomeSpan Pixel Example\n\n");
+}
 
 void loop(){
+  
+}
 
-} // end of loop()
+
+/////////
+
+//#include "RFControl.h"
+//
+//long int x,y;
+//
+//void setup(){     
+// 
+//  Serial.begin(115200);
+//  delay(1000);
+//
+//  Serial.print("\n\nHomeSpan RF Transmitter Example\n\n");
+//
+//  RFControl rf(13,false);         // do not use REF TICK
+//  RFControl rf1(21);              // use REF TICK
+//
+//  Serial.printf("%d %d\n",SOC_RMT_MEM_WORDS_PER_CHANNEL,SOC_RMT_TX_CANDIDATES_PER_GROUP);
+//
+//  rf.clear();                     // clear the pulse train memory buffer
+//  rf1.clear();
+//
+//  #define COUNT   5
+//  #define ONTIME  5000
+//  #define OFFTIME 5000  
+//
+//  for(int i=0;i<COUNT;i++)
+//    rf.add(ONTIME*80,OFFTIME*80);
+//  rf.phase(OFFTIME*80,LOW);
+//
+//  for(int i=0;i<COUNT;i++)
+//    rf1.add(ONTIME,OFFTIME);
+//  rf1.phase(OFFTIME,LOW);  
+//
+//  rf1.enableCarrier(10,0.4);
+//
+//  Serial.print("Starting cycles of pulses...\n");
+//  x=millis();
+//  rf.start(4,100);                // start transmission of 4 cycles of the pulse train with 1 tick=100/80 microseconds
+//  y=millis();
+//  Serial.println(y-x);
+//
+//  Serial.print("Starting cycles of pulses...\n");
+//  x=millis();
+//  rf1.start(4,100);                // start transmission of 4 cycles of the pulse train with 1 tick=100 microseconds
+//  y=millis();
+//  Serial.println(y-x);
+//
+//  Serial.print("Done!\n");
+//  
+//}
+//
+//void loop(){
+//
+//}
+
+///////////////////
