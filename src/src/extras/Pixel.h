@@ -31,9 +31,9 @@
 
 #pragma once
 
-#include "RFControl.h"
 #include "PwmPin.h"
 #include "Blinker.h"
+#include "RFControl.h"
 
 #include <soc/gpio_struct.h>
 
@@ -138,32 +138,19 @@ class Pixel : public Blinkable {
     }; // Color
   
   private:
-    struct pixel_status_t {
-      int nPixels;
-      Color *color;
-      int iMem;
-      boolean started;
-      Pixel *px;
-      boolean multiColor;
-      int iByte;
-    };
+    uint8_t pin;
+    int channel=-1;
+    rmt_channel_handle_t tx_chan = NULL;
+    rmt_encoder_handle_t encoder;
+    rmt_transmit_config_t tx_config;
   
-    RFControl *rf;                 // Pixel utilizes RFControl
     uint32_t pattern[2];           // storage for zero-bit and one-bit pulses
     uint32_t resetTime;            // minimum time (in usec) between pulse trains
-    uint32_t txEndMask;            // mask for end-of-transmission interrupt
-    uint32_t txThrMask;            // mask for threshold interrupt
     uint8_t bytesPerPixel;         // RGBW=4; RGB=3
     const uint8_t *map;            // color map representing order in which color bytes are transmitted
     Color onColor;                 // color used for on() command
-    
-    const int memSize=sizeof(RMTMEM.chan[0].data32)/4;    // determine size (in pulses) of one channel
-     
-    static void loadData(void *arg);            // interrupt handler 
-    volatile static pixel_status_t status;      // storage for volatile information modified in interupt handler   
   
   public:
-   
     Pixel(int pin, pixelType_t pixelType=PixelType::GRB);            // creates addressable single-wire LED of pixelType connected to pin (such as the SK68 or WS28)   
     void set(Color *c, int nPixels, boolean multiColor=true);        // sets colors of nPixels based on array of Colors c; setting multiColor to false repeats Color in c[0] for all nPixels
     void set(Color c, int nPixels=1){set(&c,nPixels,false);}         // sets color of nPixels to be equal to specific Color c
@@ -171,21 +158,17 @@ class Pixel : public Blinkable {
     static Color RGB(uint8_t r, uint8_t g, uint8_t b, uint8_t w=0){return(Color().RGB(r,g,b,w));}  // an alternative method for returning an RGB Color
     static Color HSV(float h, float s, float v, double w=0){return(Color().HSV(h,s,v,w));}         // an alternative method for returning an HSV Color
               
-    int getPin(){return(rf->getPin());}                                                     // returns pixel pin if valid, else returns -1
+    int getPin(){return(channel>=0?pin:-1);}                                                // returns pixel pin if channel is valid, else returns -1
     boolean isRGBW(){return(bytesPerPixel==4);}                                             // returns true if RGBW LED, else false if RGB LED
     void setTiming(float high0, float low0, float high1, float low1, uint32_t lowReset);    // changes default timings for bit pulse - note parameters are in MICROSECONDS
         
     operator bool(){         // override boolean operator to return true/false if creation succeeded/failed
-      return(*rf);
+      return(channel>=0);
     }
 
     void on() {set(onColor);}
     void off() {set(RGB(0,0,0,0));}
     Pixel *setOnColor(Color c){onColor=c;return(this);}
-
-    [[deprecated("Please use Pixel(int pin, pixelType_t pixelType) constructor instead.")]]
-    Pixel(int pin, boolean isRGBW):Pixel(pin,isRGBW?PixelType::GRBW:PixelType::GRB){};
-
 };
 
 ////////////////////////////////////////////

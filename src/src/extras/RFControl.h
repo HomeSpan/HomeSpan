@@ -44,8 +44,6 @@ using std::vector;
 
 class RFControl {
   
-  friend class Pixel;
-
   private:
     vector<uint32_t> data;
     boolean lowWord=true;
@@ -59,7 +57,7 @@ class RFControl {
   public:    
     RFControl(uint8_t pin, boolean refClock=true);                                    // public constructor to create transmitter on pin, using 1-MHz Ref Tick clock or 80-MHz APB clock
     
-    void start(uint32_t *data, size_t nData, uint8_t nCycles=1, uint8_t tickTime=1);     // starts transmission of pulses from specified data pointer, repeated for numCycles, where each tick in pulse is tickTime microseconds long
+    void start(uint32_t *data, size_t nData, uint8_t nCycles=1, uint8_t tickTime=1);  // starts transmission of pulses from specified data pointer, repeated for numCycles, where each tick in pulse is tickTime microseconds long
     void start(uint8_t nCycles=1, uint8_t tickTime=1);                                // starts transmission of pulses from internal data structure, repeated for numCycles, where each tick in pulse is tickTime microseconds long    
     
     void clear();                                         // clears transmitter memory

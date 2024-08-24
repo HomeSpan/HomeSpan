@@ -29,8 +29,6 @@
 //           Addressable LEDs             //
 ////////////////////////////////////////////
 
-#ifdef HS_PIXEL
-
 #include "Pixel.h"
 
 ////////////////////////////////////////////
@@ -39,9 +37,37 @@
 
 Pixel::Pixel(int pin, pixelType_t pixelType){
     
-  rf=new RFControl(pin,false,false);          // set clock to 1/80 usec, no default driver
-  if(!*rf)
+  this->pin=pin;
+
+  rmt_tx_channel_config_t tx_chan_config;
+  tx_chan_config.clk_src = RMT_CLK_SRC_DEFAULT;                       // always use 80MHz clock source
+  tx_chan_config.gpio_num = (gpio_num_t)pin;                          // GPIO number
+  tx_chan_config.mem_block_symbols = SOC_RMT_MEM_WORDS_PER_CHANNEL;   // set number of symbols to match those in a single channel block
+  tx_chan_config.resolution_hz = 80 * 1000 * 1000;                    // set to 80MHz
+  tx_chan_config.trans_queue_depth = 4;                               // set the number of transactions that can pend in the background
+  tx_chan_config.flags.invert_out = false;                            // do not invert output signal
+  tx_chan_config.flags.with_dma = false;                              // use RMT channel memory, not DMA (most chips do not support use of DMA anyway)
+  tx_chan_config.intr_priority = 3;                                   // medium interrupt priority
+  
+  if(!GPIO_IS_VALID_OUTPUT_GPIO(pin)){
+    ESP_LOGE(RFControl_TAG,"Can't create Pixel(%d) - invalid output pin",pin);
+    return;    
+  }
+
+  if(rmt_new_tx_channel(&tx_chan_config, &tx_chan)!=ESP_OK){
+    ESP_LOGE(RFControl_TAG,"Can't create Pixel(%d) - no open channels",pin);
     return;
+  }
+
+  rmt_enable(tx_chan);                            // enable channel
+  channel=((int *)tx_chan)[0];                    // get channel number
+
+  tx_config.loop_count=0;                         // populate tx_config structure
+  tx_config.flags.eot_level=0;
+  tx_config.flags.queue_nonblocking=0;
+  
+  rmt_simple_encoder_config_t encoder_config;
+  rmt_new_simple_encoder(&encoder_config, &encoder);   // create copy encoder
 
   map=pixelType;
   
@@ -51,18 +77,6 @@ Pixel::Pixel(int pin, pixelType_t pixelType){
     bytesPerPixel=3;
   
   setTiming(0.32, 0.88, 0.64, 0.56, 80.0);    // set default timing parameters (suitable for most SK68 and WS28 RGB pixels)
-
-  rmt_isr_register(loadData,NULL,0,NULL);               // set custom interrupt handler
-  
-  rmt_set_tx_thr_intr_en(rf->getChannel(),false,8);     // disable threshold interrupt
-  txThrMask=RMT.int_ena.val;                            // save interrupt enable vector
-  rmt_set_tx_thr_intr_en(rf->getChannel(),true,8);      // enable threshold interrupt to trigger every 8 pulses 
-  txThrMask^=RMT.int_ena.val;                           // find bit that flipped and save as threshold mask for this channel 
-
-  rmt_set_tx_intr_en(rf->getChannel(),false);           // disable end-of-transmission interrupt
-  txEndMask=RMT.int_ena.val;                            // save interrupt enable vector
-  rmt_set_tx_intr_en(rf->getChannel(),true);            // enable end-of-transmission interrupt
-  txEndMask^=RMT.int_ena.val;                           // find bit that flipped and save as end-of-transmission mask for this channel
 
   onColor.HSV(0,100,100,0);
 }
@@ -79,66 +93,55 @@ void Pixel::setTiming(float high0, float low0, float high1, float low1, uint32_t
 ///////////////////
 
 void Pixel::set(Color *c, int nPixels, boolean multiColor){
-  
-  if(!*rf || nPixels==0)
+
+  if(channel<0 || nPixels==0)
     return;
 
-  status.nPixels=nPixels;
-  status.color=c;
-  status.iMem=0;
-  status.started=true;
-  status.px=this;
-  status.multiColor=multiColor;
-  status.iByte=0;
-
-  loadData(this);         // load first two bytes of data to get started
-  loadData(this);
-
-  rmt_tx_start(rf->getChannel(),true);
-
-  while(status.started);            // wait for transmission to be complete
-  delayMicroseconds(resetTime);     // end-of-marker delay
+  rmt_ll_set_group_clock_src(&RMT, channel, RMT_CLK_SRC_DEFAULT, 1, 0, 0);         // ensure use of DEFAULT CLOCK, which is always 80 MHz, without any scaling
+  rmt_transmit(tx_chan, encoder, c, nPixels*4, &tx_config);                        // transmit data
+  rmt_tx_wait_all_done(tx_chan,-1);                                                // wait until data is transmitted
+  delayMicroseconds(resetTime);                                                    // end-of-marker delay
 }
 
 ///////////////////
 
-void IRAM_ATTR Pixel::loadData(void *arg){
-
-  if(RMT.int_st.val & status.px->txEndMask){
-    RMT.int_clr.val=status.px->txEndMask;
-    status.started=false;
-    return;
-  }
-  
-  RMT.int_clr.val=status.px->txThrMask;       // if loadData() is called and it is NOT because of an END interrupt (above) then must either be a pre-load, or a threshold trigger
-
-  if(status.nPixels==0){
-    RMTMEM.chan[status.px->rf->getChannel()].data32[status.iMem].val=0;
-    return;
-  }
-
-  int startBit=status.px->map[status.iByte];
-  int endBit=startBit-8;
-  
-  for(int iBit=startBit;iBit>endBit;iBit--){
-    RMTMEM.chan[status.px->rf->getChannel()].data32[status.iMem].val=status.px->pattern[(status.color->val>>iBit)&1];
-    status.iMem=status.iMem+1;
-  }
-
-  status.iByte=status.iByte+1;
-  
-  if(status.iByte==status.px->bytesPerPixel){
-    status.iByte=0;
-    status.color=status.color+status.multiColor;
-    status.nPixels=status.nPixels-1;    
-  }
-  
-  status.iMem=status.iMem%status.px->memSize;    
-}
+//void IRAM_ATTR Pixel::loadData(void *arg){
+//
+//  if(RMT.int_st.val & status.px->txEndMask){
+//    RMT.int_clr.val=status.px->txEndMask;
+//    status.started=false;
+//    return;
+//  }
+//  
+//  RMT.int_clr.val=status.px->txThrMask;       // if loadData() is called and it is NOT because of an END interrupt (above) then must either be a pre-load, or a threshold trigger
+//
+//  if(status.nPixels==0){
+//    RMTMEM.chan[status.px->rf->getChannel()].data32[status.iMem].val=0;
+//    return;
+//  }
+//
+//  int startBit=status.px->map[status.iByte];
+//  int endBit=startBit-8;
+//  
+//  for(int iBit=startBit;iBit>endBit;iBit--){
+//    RMTMEM.chan[status.px->rf->getChannel()].data32[status.iMem].val=status.px->pattern[(status.color->val>>iBit)&1];
+//    status.iMem=status.iMem+1;
+//  }
+//
+//  status.iByte=status.iByte+1;
+//  
+//  if(status.iByte==status.px->bytesPerPixel){
+//    status.iByte=0;
+//    status.color=status.color+status.multiColor;
+//    status.nPixels=status.nPixels-1;    
+//  }
+//  
+//  status.iMem=status.iMem%status.px->memSize;    
+//}
 
 ///////////////////
 
-volatile Pixel::pixel_status_t Pixel::status;
+#ifdef HS_DOT
 
 ////////////////////////////////////////////
 //          Two-Wire RGB DotStars         //

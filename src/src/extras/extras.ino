@@ -25,10 +25,14 @@
  *  
  ********************************************************************************/
 
+#include "Pixel.h"
+
 void setup(){     
  
   Serial.begin(115200);           // start the Serial interface
   delay(1000);
+
+  Pixel px(PIN_NEOPIXEL);
 
   Serial.print("\n\nHomeSpan Pixel Example\n\n");
 }
