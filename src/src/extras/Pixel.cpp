@@ -103,16 +103,27 @@ void Pixel::set(Color *c, int nPixels, boolean multiColor){
   if(channel<0 || nPixels==0)
     return;
 
-  uint8_t data[2][5];     // temp structure to store two sets of up to 5-byte color
-
-  data[0][0]=c->green;
-  data[0][1]=c->red;
-  data[0][2]=c->blue;
+  uint8_t data[2][5];     // temp structure to store two sets of up to 5-byte colors
 
   rmt_ll_set_group_clock_src(&RMT, channel, RMT_CLK_SRC_DEFAULT, 1, 0, 0);         // ensure use of DEFAULT CLOCK, which is always 80 MHz, without any scaling
-  rmt_transmit(tx_chan, encoder, data, nPixels*3, &tx_config);                        // transmit data
-  rmt_tx_wait_all_done(tx_chan,-1);                                                // wait until data is transmitted
-  delayMicroseconds(resetTime);                                                    // end-of-marker delay
+
+  int index=0;
+  
+  do {
+    data[index][0]=c->green;
+    data[index][1]=c->red;
+    data[index][2]=c->blue;
+    
+    rmt_tx_wait_all_done(tx_chan,-1);                                       // wait until any outstanding data is transmitted
+    rmt_transmit(tx_chan, encoder, data, bytesPerPixel, &tx_config);        // transmit data
+    
+    index=1-index;                                                          // index flips to second data structure
+    if(multiColor)                                                          // move to next color if multiColor requested
+      c++;
+  } while(--nPixels>0);
+
+  rmt_tx_wait_all_done(tx_chan,-1);                                         // wait until final data is transmitted
+  delayMicroseconds(resetTime);                                             // end-of-marker delay
 }
 
 ///////////////////

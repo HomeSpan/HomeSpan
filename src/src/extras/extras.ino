@@ -36,18 +36,46 @@ void setup(){
 
   Pixel px(23);
 
+  Pixel::Color c[8];
+
   while(1){
-    Serial.printf("RED\n");
-    px.set(Pixel::RGB(255,0,0));
+
+    c[0]=Pixel::RGB(255,0,0);
+    c[1]=c[0];
+    c[2]=c[1];
+    c[3]=Pixel::RGB(0,255,0);
+    c[4]=c[3];
+    c[5]=Pixel::RGB(0,0,255);
+    c[6]=c[5];
+    c[7]=c[6];
+
+    px.set(c,8);
     delay(2000);
 
-    Serial.printf("GREEN\n");
-    px.set(Pixel::RGB(0,255,0));
+
+    c[0]=Pixel::RGB(10,0,0);
+    c[1]=c[0];
+    c[2]=c[1];
+    c[3]=Pixel::RGB(0,10,0);
+    c[4]=c[3];
+    c[5]=Pixel::RGB(0,0,10);
+    c[6]=c[5];
+    c[7]=c[6];
+        
+    px.set(c,8);
     delay(2000);
 
-    Serial.printf("BLUE\n");
-    px.set(Pixel::RGB(0,0,255));
-    delay(2000);
+//    Serial.printf("RED\n");
+//    px.set(Pixel::RGB(255,0,0),3);
+//    delay(2000);
+//
+//    Serial.printf("GREEN\n");
+//    px.set(Pixel::RGB(0,255,0),3);
+//    delay(2000);
+//
+//    Serial.printf("BLUE\n");
+//    px.set(Pixel::RGB(0,0,255),3);
+//    delay(2000);
   }
 
 }
