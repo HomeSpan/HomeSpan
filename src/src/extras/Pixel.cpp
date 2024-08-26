@@ -66,7 +66,7 @@ Pixel::Pixel(int pin, pixelType_t pixelType){
   tx_config.flags.eot_level=0;
   tx_config.flags.queue_nonblocking=0;
   
-  rmt_bytes_encoder_config_t encoder_config;
+  rmt_bytes_encoder_config_t encoder_config;          // can leave blank for now - will populate from within setTiming() below
   rmt_new_bytes_encoder(&encoder_config, &encoder);   // create byte encoder
 
   map=pixelType;
@@ -85,9 +85,15 @@ Pixel::Pixel(int pin, pixelType_t pixelType){
 
 void Pixel::setTiming(float high0, float low0, float high1, float low1, uint32_t lowReset){
   
-  pattern[0]=RF_PULSE(high0*80+0.5,low0*80+0.5);
-  pattern[1]=RF_PULSE(high1*80+0.5,low1*80+0.5);
-  resetTime=lowReset;
+  rmt_bytes_encoder_config_t encoder_config;
+
+  encoder_config.bit0.val=RF_PULSE(high0*80+0.5,low0*80+0.5);     // create bit0 and bit1 pulses
+  encoder_config.bit1.val=RF_PULSE(high1*80+0.5,low1*80+0.5);
+  encoder_config.flags.msb_first=1;                               // MSB of data bytes should be converted and transmitted first
+  
+  rmt_bytes_encoder_update_config(encoder,&encoder_config);       // update config
+  
+  resetTime=lowReset;  
 }
 
 ///////////////////
@@ -97,8 +103,14 @@ void Pixel::set(Color *c, int nPixels, boolean multiColor){
   if(channel<0 || nPixels==0)
     return;
 
+  uint8_t data[2][5];     // temp structure to store two sets of up to 5-byte color
+
+  data[0][0]=c->green;
+  data[0][1]=c->red;
+  data[0][2]=c->blue;
+
   rmt_ll_set_group_clock_src(&RMT, channel, RMT_CLK_SRC_DEFAULT, 1, 0, 0);         // ensure use of DEFAULT CLOCK, which is always 80 MHz, without any scaling
-  rmt_transmit(tx_chan, encoder, c, nPixels*4, &tx_config);                        // transmit data
+  rmt_transmit(tx_chan, encoder, data, nPixels*3, &tx_config);                        // transmit data
   rmt_tx_wait_all_done(tx_chan,-1);                                                // wait until data is transmitted
   delayMicroseconds(resetTime);                                                    // end-of-marker delay
 }

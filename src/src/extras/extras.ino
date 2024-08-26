@@ -32,9 +32,24 @@ void setup(){
   Serial.begin(115200);           // start the Serial interface
   delay(1000);
 
-  Pixel px(PIN_NEOPIXEL);
-
   Serial.print("\n\nHomeSpan Pixel Example\n\n");
+
+  Pixel px(23);
+
+  while(1){
+    Serial.printf("RED\n");
+    px.set(Pixel::RGB(255,0,0));
+    delay(2000);
+
+    Serial.printf("GREEN\n");
+    px.set(Pixel::RGB(0,255,0));
+    delay(2000);
+
+    Serial.printf("BLUE\n");
+    px.set(Pixel::RGB(0,0,255));
+    delay(2000);
+  }
+
 }
 
 void loop(){
