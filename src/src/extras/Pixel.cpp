@@ -66,8 +66,8 @@ Pixel::Pixel(int pin, pixelType_t pixelType){
   tx_config.flags.eot_level=0;
   tx_config.flags.queue_nonblocking=0;
   
-  rmt_simple_encoder_config_t encoder_config;
-  rmt_new_simple_encoder(&encoder_config, &encoder);   // create copy encoder
+  rmt_bytes_encoder_config_t encoder_config;
+  rmt_new_bytes_encoder(&encoder_config, &encoder);   // create byte encoder
 
   map=pixelType;
   
