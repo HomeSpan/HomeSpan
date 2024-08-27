@@ -70,8 +70,8 @@ Pixel::Pixel(int pin, pixelType_t pixelType){
   rmt_new_bytes_encoder(&encoder_config, &encoder);   // create byte encoder
 
   map=pixelType;
-  
-  if(map[3])
+ 
+  if(map[3]<255)
     bytesPerPixel=4;
   else
     bytesPerPixel=3;
@@ -103,64 +103,26 @@ void Pixel::set(Color *c, int nPixels, boolean multiColor){
   if(channel<0 || nPixels==0)
     return;
 
-  uint8_t data[2][5];     // temp structure to store two sets of up to 5-byte colors
+  Color data[2];      // temp ping/pong structure to store re-mapped color bytes
+  int index=0;        // points to current slot in ping/pong structure
 
-  rmt_ll_set_group_clock_src(&RMT, channel, RMT_CLK_SRC_DEFAULT, 1, 0, 0);         // ensure use of DEFAULT CLOCK, which is always 80 MHz, without any scaling
-
-  int index=0;
+  rmt_ll_set_group_clock_src(&RMT, channel, RMT_CLK_SRC_DEFAULT, 1, 0, 0);        // ensure use of DEFAULT CLOCK, which is always 80 MHz, without any scaling
   
   do {
-    data[index][0]=c->green;
-    data[index][1]=c->red;
-    data[index][2]=c->blue;
+    for(int i=0;i<bytesPerPixel;i++)                                              // remap colors into ping/pong structure
+      data[index].col[i]=c->col[map[i]];
+
+    rmt_tx_wait_all_done(tx_chan,-1);                                             // wait until any outstanding data is transmitted
+    rmt_transmit(tx_chan, encoder, data[index].col, bytesPerPixel, &tx_config);   // transmit data
     
-    rmt_tx_wait_all_done(tx_chan,-1);                                       // wait until any outstanding data is transmitted
-    rmt_transmit(tx_chan, encoder, data, bytesPerPixel, &tx_config);        // transmit data
-    
-    index=1-index;                                                          // index flips to second data structure
-    if(multiColor)                                                          // move to next color if multiColor requested
+    index=1-index;                                                                // flips index to second data structure
+    if(multiColor)                                                                // move to next color if multiColor requested
       c++;
   } while(--nPixels>0);
 
-  rmt_tx_wait_all_done(tx_chan,-1);                                         // wait until final data is transmitted
-  delayMicroseconds(resetTime);                                             // end-of-marker delay
+  rmt_tx_wait_all_done(tx_chan,-1);                                               // wait until final data is transmitted
+  delayMicroseconds(resetTime);                                                   // end-of-marker delay
 }
-
-///////////////////
-
-//void IRAM_ATTR Pixel::loadData(void *arg){
-//
-//  if(RMT.int_st.val & status.px->txEndMask){
-//    RMT.int_clr.val=status.px->txEndMask;
-//    status.started=false;
-//    return;
-//  }
-//  
-//  RMT.int_clr.val=status.px->txThrMask;       // if loadData() is called and it is NOT because of an END interrupt (above) then must either be a pre-load, or a threshold trigger
-//
-//  if(status.nPixels==0){
-//    RMTMEM.chan[status.px->rf->getChannel()].data32[status.iMem].val=0;
-//    return;
-//  }
-//
-//  int startBit=status.px->map[status.iByte];
-//  int endBit=startBit-8;
-//  
-//  for(int iBit=startBit;iBit>endBit;iBit--){
-//    RMTMEM.chan[status.px->rf->getChannel()].data32[status.iMem].val=status.px->pattern[(status.color->val>>iBit)&1];
-//    status.iMem=status.iMem+1;
-//  }
-//
-//  status.iByte=status.iByte+1;
-//  
-//  if(status.iByte==status.px->bytesPerPixel){
-//    status.iByte=0;
-//    status.color=status.color+status.multiColor;
-//    status.nPixels=status.nPixels-1;    
-//  }
-//  
-//  status.iMem=status.iMem%status.px->memSize;    
-//}
 
 ///////////////////
 

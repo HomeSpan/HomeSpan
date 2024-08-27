@@ -42,19 +42,43 @@
 typedef const uint8_t pixelType_t[];
 
 namespace PixelType {
+
+  enum {R=0,G=1,B=2,W=3,NA=255};
   
-  pixelType_t RGB={31,23,15,0}; 
-  pixelType_t RBG={31,15,23,0}; 
-  pixelType_t BRG={23,15,31,0}; 
-  pixelType_t BGR={15,23,31,0}; 
-  pixelType_t GBR={15,31,23,0}; 
-  pixelType_t GRB={23,31,15,0};
-  pixelType_t RGBW={31,23,15,7}; 
-  pixelType_t RBGW={31,15,23,7}; 
-  pixelType_t BRGW={23,15,31,7}; 
-  pixelType_t BGRW={15,23,31,7}; 
-  pixelType_t GBRW={15,31,23,7}; 
-  pixelType_t GRBW={23,31,15,7};
+  pixelType_t RGB={R,G,B,NA}; 
+  pixelType_t RBG={R,B,G,NA}; 
+  pixelType_t BRG={B,R,G,NA}; 
+  pixelType_t BGR={B,G,R,NA}; 
+  pixelType_t GBR={G,B,R,NA}; 
+  pixelType_t GRB={G,R,B,NA};
+  
+  pixelType_t RGBW={R,G,B,W}; 
+  pixelType_t RBGW={R,B,G,W}; 
+  pixelType_t BRGW={B,R,G,W}; 
+  pixelType_t BGRW={B,G,R,W}; 
+  pixelType_t GBRW={G,B,R,W}; 
+  pixelType_t GRBW={G,R,B,W};
+
+  pixelType_t RGWB={R,G,W,B}; 
+  pixelType_t RBWG={R,B,W,G}; 
+  pixelType_t BRWG={B,R,W,G}; 
+  pixelType_t BGWR={B,G,W,R}; 
+  pixelType_t GBWR={G,B,W,R}; 
+  pixelType_t GRWB={G,R,W,B};
+
+  pixelType_t RWGB={R,W,G,B}; 
+  pixelType_t RWBG={R,W,B,G}; 
+  pixelType_t BWRG={B,W,R,G}; 
+  pixelType_t BWGR={B,W,G,R}; 
+  pixelType_t GWBR={G,W,B,R}; 
+  pixelType_t GWRB={G,W,R,B};
+
+  pixelType_t WRGB={W,R,G,B}; 
+  pixelType_t WRBG={W,R,B,G}; 
+  pixelType_t WBRG={W,B,R,G}; 
+  pixelType_t WBGR={W,B,G,R}; 
+  pixelType_t WGBR={W,G,B,R}; 
+  pixelType_t WGRB={W,G,R,B};
 };
 
 ////////////////////////////////////////////
@@ -65,73 +89,57 @@ class Pixel : public Blinkable {
 
   public:
     struct Color {
-      union{
-        struct {
-          uint8_t white:8;
-          uint8_t blue:8;
-          uint8_t green:8;
-          uint8_t red:8;
-        };
-        uint32_t val;
-      };
+      uint8_t col[4];
 
       Color RGB(uint8_t r, uint8_t g, uint8_t b, uint8_t w=0){         // returns Color based on provided RGB(W) values where r/g/b/w=[0-255]
-        this->red=r;
-        this->green=g;
-        this->blue=b;
-        this->white=w;
+        col[0]=r;
+        col[1]=g;
+        col[2]=b;
+        col[3]=w;
         return(*this);
       }
 
       Color HSV(float h, float s, float v, double w=0){                // returns Color based on provided HSV(W) values where h=[0,360] and s/v/w=[0,100]
         float r,g,b;
         LedPin::HSVtoRGB(h,s/100.0,v/100.0,&r,&g,&b);
-        this->red=r*255;
-        this->green=g*255;
-        this->blue=b*255;
-        this->white=w*2.555;      
+        col[0]=r*255;
+        col[1]=g*255;
+        col[2]=b*255;
+        col[3]=w*2.555;      
         return(*this);
       }      
 
       bool operator==(const Color& color){
-        return(val==color.val);
+        return(col[0]==color.col[0] && col[1]==color.col[1] && col[2]==color.col[2] && col[3]==color.col[3]);
       }
       
       bool operator!=(const Color& color){
-        return(val!=color.val);
+        return(!(*this==color));
       }
 
       Color operator+(const Color& color){
         Color newColor;
-        newColor.white=white+color.white;
-        newColor.blue=blue+color.blue;
-        newColor.red=red+color.red;
-        newColor.green=green+color.green;
+        for(int i=0;i<4;i++)
+          newColor.col[i]=col[i]+color.col[i];
         return(newColor);
       }
 
       Color& operator+=(const Color& color){
-        white+=color.white;
-        red+=color.red;
-        blue+=color.blue;
-        green+=color.green;
+        for(int i=0;i<4;i++)
+          col[i]+=color.col[i];
         return(*this);
       }
             
       Color operator-(const Color& color){
         Color newColor;
-        newColor.white=white-color.white;
-        newColor.blue=blue-color.blue;
-        newColor.red=red-color.red;
-        newColor.green=green-color.green;
+        for(int i=0;i<4;i++)
+          newColor.col[i]=col[i]-color.col[i];
         return(newColor);
       }
 
       Color& operator-=(const Color& color){
-        white-=color.white;
-        red-=color.red;
-        blue-=color.blue;
-        green-=color.green;
+        for(int i=0;i<4;i++)
+          col[i]-=color.col[i];
         return(*this);
       }
             
@@ -144,7 +152,6 @@ class Pixel : public Blinkable {
     rmt_encoder_handle_t encoder;
     rmt_transmit_config_t tx_config;
   
-    uint32_t pattern[2];           // storage for zero-bit and one-bit pulses
     uint32_t resetTime;            // minimum time (in usec) between pulse trains
     uint8_t bytesPerPixel;         // RGBW=4; RGB=3
     const uint8_t *map;            // color map representing order in which color bytes are transmitted
@@ -199,7 +206,7 @@ class Dot {
         return(*this);
       }
 
-      Color HSV(float h, float s, float v, double drivePercent=100){              // returns Color based on provided HSV values where h=[0,360], s/v=[0,100], and current-limiting drive percent=[0,100]
+      Color HSV(float h, float s, float v, double drivePercent=100){             // returns Color based on provided HSV values where h=[0,360], s/v=[0,100], and current-limiting drive percent=[0,100]
         float r,g,b;
         LedPin::HSVtoRGB(h,s/100.0,v/100.0,&r,&g,&b);
         this->red=r*255;
