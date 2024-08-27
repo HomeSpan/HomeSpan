@@ -87,8 +87,16 @@ void Pixel::setTiming(float high0, float low0, float high1, float low1, uint32_t
   
   rmt_bytes_encoder_config_t encoder_config;
 
-  encoder_config.bit0.val=RF_PULSE(high0*80+0.5,low0*80+0.5);     // create bit0 and bit1 pulses
-  encoder_config.bit1.val=RF_PULSE(high1*80+0.5,low1*80+0.5);
+  encoder_config.bit0.level0=1;
+  encoder_config.bit0.duration0=high0*80+0.5;
+  encoder_config.bit0.level1=0;
+  encoder_config.bit0.duration1=low0*80+0.5;
+  
+  encoder_config.bit1.level0=1;
+  encoder_config.bit1.duration0=high1*80+0.5;
+  encoder_config.bit1.level1=0;
+  encoder_config.bit1.duration1=low1*80+0.5;
+
   encoder_config.flags.msb_first=1;                               // MSB of data bytes should be converted and transmitted first
   
   rmt_bytes_encoder_update_config(encoder,&encoder_config);       // update config
@@ -123,10 +131,6 @@ void Pixel::set(Color *c, int nPixels, boolean multiColor){
   rmt_tx_wait_all_done(tx_chan,-1);                                               // wait until final data is transmitted
   delayMicroseconds(resetTime);                                                   // end-of-marker delay
 }
-
-///////////////////
-
-#ifdef HS_DOT
 
 ////////////////////////////////////////////
 //          Two-Wire RGB DotStars         //
@@ -197,5 +201,3 @@ void Dot::set(Color *c, int nPixels, boolean multiColor){
 }
 
 ////////////////////////////////////////////
-
-#endif

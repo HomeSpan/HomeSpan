@@ -31,6 +31,8 @@
 
 #pragma once
 
+#pragma GCC diagnostic ignored "-Wvolatile"
+
 #include <Arduino.h>
 #include <driver/rmt_tx.h>      // IDF 5 RMT driver
 #include <soc/rmt_struct.h>     // where RMT register structure is defined

@@ -26,19 +26,19 @@
  ********************************************************************************/
 
 #include "Pixel.h"
+#include "RFControl.h"
 
 void setup(){     
  
   Serial.begin(115200);           // start the Serial interface
   delay(1000);
 
-  Serial.print("\n\nHomeSpan Pixel Example\n\n");
+  Serial.print("\n\nHomeSpan Pixel+RF Example\n\n");
 
   Pixel px(23);
-
   Pixel::Color c[8];
 
-  while(1){
+  for(int i=0;i<3;i++){
 
     c[0]=Pixel::RGB(255,0,0);
     c[1]=c[0];
@@ -52,32 +52,65 @@ void setup(){
     px.set(c,8);
     delay(2000);
 
-
-    c[0]=Pixel::RGB(10,0,0);
+    c[0]=Pixel::HSV(0,100,10);
     c[1]=c[0];
     c[2]=c[1];
-    c[3]=Pixel::RGB(0,10,0);
+    c[3]=Pixel::HSV(120,100,10);
     c[4]=c[3];
-    c[5]=Pixel::RGB(0,0,10);
+    c[5]=Pixel::HSV(240,100,10);
     c[6]=c[5];
     c[7]=c[6];
         
     px.set(c,8);
     delay(2000);
-
-//    Serial.printf("RED\n");
-//    px.set(Pixel::RGB(255,0,0),3);
-//    delay(2000);
-//
-//    Serial.printf("GREEN\n");
-//    px.set(Pixel::RGB(0,255,0),3);
-//    delay(2000);
-//
-//    Serial.printf("BLUE\n");
-//    px.set(Pixel::RGB(0,0,255),3);
-//    delay(2000);
   }
 
+  long int x,y;
+
+  RFControl rf(13,false);         // do not use REF TICK
+  RFControl rf1(13);              // use REF TICK  
+
+  rf.clear();                     // clear the pulse train memory buffer
+  rf1.clear();
+
+  #define COUNT   5
+  #define ONTIME  5000
+  #define OFFTIME 5000  
+
+  for(int i=0;i<COUNT;i++)
+    rf.add(ONTIME*80,OFFTIME*80);
+  rf.phase(OFFTIME*80,LOW);
+
+  for(int i=0;i<COUNT;i++)
+    rf1.add(ONTIME,OFFTIME);
+  rf1.phase(OFFTIME,LOW);  
+
+  rf1.enableCarrier(10,0.4);
+
+  Serial.print("Starting cycles of pulses...\n");
+  x=millis();
+  rf.start(4,100);                // start transmission of 4 cycles of the pulse train with 1 tick=100/80 microseconds
+  y=millis();
+  Serial.println(y-x);
+
+  Serial.print("Starting cycles of pulses...\n");
+  x=millis();
+  rf1.start(4,100);               // start transmission of 4 cycles of the pulse train with 1 tick=100 microseconds
+  y=millis();
+  Serial.println(y-x);
+
+  c[0]=Pixel::RGB(0,0,0);
+  c[1]=c[0];
+  c[2]=c[1];
+  c[3]=Pixel::RGB(0,0,0);
+  c[4]=c[3];
+  c[5]=Pixel::RGB(0,0,0);
+  c[6]=c[5];
+  c[7]=c[6];
+
+  px.set(c,8);
+
+  Serial.print("Done!\n");  
 }
 
 void loop(){
