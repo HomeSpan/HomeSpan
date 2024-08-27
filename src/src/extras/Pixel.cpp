@@ -44,10 +44,12 @@ Pixel::Pixel(int pin, pixelType_t pixelType){
   tx_chan_config.gpio_num = (gpio_num_t)pin;                          // GPIO number
   tx_chan_config.mem_block_symbols = SOC_RMT_MEM_WORDS_PER_CHANNEL;   // set number of symbols to match those in a single channel block
   tx_chan_config.resolution_hz = 80 * 1000 * 1000;                    // set to 80MHz
+  tx_chan_config.intr_priority = 3;                                   // medium interrupt priority
   tx_chan_config.trans_queue_depth = 4;                               // set the number of transactions that can pend in the background
   tx_chan_config.flags.invert_out = false;                            // do not invert output signal
   tx_chan_config.flags.with_dma = false;                              // use RMT channel memory, not DMA (most chips do not support use of DMA anyway)
-  tx_chan_config.intr_priority = 3;                                   // medium interrupt priority
+  tx_chan_config.flags.io_loop_back = false;                          // do not use loop-back mode
+  tx_chan_config.flags.io_od_mode = false;                            // do not use open-drain output
   
   if(!GPIO_IS_VALID_OUTPUT_GPIO(pin)){
     ESP_LOGE(RFControl_TAG,"Can't create Pixel(%d) - invalid output pin",pin);

@@ -36,66 +36,67 @@ void setup(){
   Serial.print("\n\nHomeSpan Pixel+RF Example\n\n");
 
   Pixel px(23);
-  Pixel::Color c[8];
+  
+  Pixel::Color c[8]={
+    Pixel::RGB(255,0,0),
+    Pixel::RGB(255,0,0),
+    Pixel::RGB(255,0,0),
+    Pixel::RGB(0,255,0),
+    Pixel::RGB(0,255,0),
+    Pixel::RGB(0,0,255),
+    Pixel::RGB(0,0,255),
+    Pixel::RGB(0,0,255)
+  };
+  
+  Pixel::Color d[8]={
+    Pixel::HSV(0,100,10),
+    Pixel::HSV(0,100,10),
+    Pixel::HSV(0,100,10),
+    Pixel::HSV(120,100,10),
+    Pixel::HSV(120,100,10),
+    Pixel::HSV(240,100,10),
+    Pixel::HSV(240,100,10),
+    Pixel::HSV(240,100,10)
+  };
 
-  for(int i=0;i<3;i++){
-
-    c[0]=Pixel::RGB(255,0,0);
-    c[1]=c[0];
-    c[2]=c[1];
-    c[3]=Pixel::RGB(0,255,0);
-    c[4]=c[3];
-    c[5]=Pixel::RGB(0,0,255);
-    c[6]=c[5];
-    c[7]=c[6];
-
+for(int i=0;i<4;i++){
     px.set(c,8);
-    delay(2000);
-
-    c[0]=Pixel::HSV(0,100,10);
-    c[1]=c[0];
-    c[2]=c[1];
-    c[3]=Pixel::HSV(120,100,10);
-    c[4]=c[3];
-    c[5]=Pixel::HSV(240,100,10);
-    c[6]=c[5];
-    c[7]=c[6];
-        
-    px.set(c,8);
-    delay(2000);
-  }
+    delay(1000);        
+    px.set(d,8);
+    delay(1000);
+}
 
   long int x,y;
 
-  RFControl rf(13,false);         // do not use REF TICK
-  RFControl rf1(13);              // use REF TICK  
+  RFControl rfi(21,false);
+  RFControl rf(13);              // use REF TICK
 
   rf.clear();                     // clear the pulse train memory buffer
-  rf1.clear();
+  rfi.clear();
 
   #define COUNT   5
   #define ONTIME  5000
   #define OFFTIME 5000  
 
   for(int i=0;i<COUNT;i++)
-    rf.add(ONTIME*80,OFFTIME*80);
-  rf.phase(OFFTIME*80,LOW);
-
+    rfi.add(ONTIME*80,OFFTIME*80);
+  rfi.phase(OFFTIME*80,LOW);
+  
   for(int i=0;i<COUNT;i++)
-    rf1.add(ONTIME,OFFTIME);
-  rf1.phase(OFFTIME,LOW);  
+    rf.add(ONTIME,OFFTIME);
+  rf.phase(OFFTIME,LOW);
 
-  rf1.enableCarrier(10,0.4);
+//  rf.enableCarrier(10,0.4);
 
   Serial.print("Starting cycles of pulses...\n");
   x=millis();
-  rf.start(4,100);                // start transmission of 4 cycles of the pulse train with 1 tick=100/80 microseconds
+  rfi.start(4,100);                // start transmission of 4 cycles of the pulse train with 1 tick=100/80 microseconds
   y=millis();
   Serial.println(y-x);
 
   Serial.print("Starting cycles of pulses...\n");
   x=millis();
-  rf1.start(4,100);               // start transmission of 4 cycles of the pulse train with 1 tick=100 microseconds
+  rf.start(4,100);                // start transmission of 4 cycles of the pulse train with 1 tick=100/80 microseconds
   y=millis();
   Serial.println(y-x);
 
