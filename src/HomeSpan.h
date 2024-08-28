@@ -333,7 +333,7 @@ class Span{
   int getControlPin(){return(controlButton?controlButton->getPin():-1);}                 // get Control Pin (returns -1 if undefined)
 
   Span& setStatusPin(uint8_t pin){statusDevice=new GenericLED(pin);return(*this);}       // sets Status Device to a simple LED on specified pin
-   Span& setStatusPixel(uint8_t pin,float h=0,float s=100,float v=100){                   // sets Status Device to an RGB Pixel on specified pin
+   Span& setStatusPixel(uint8_t pin,float h=0,float s=100,float v=100){                  // sets Status Device to an RGB Pixel on specified pin
      statusDevice=((new Pixel(pin))->setOnColor(Pixel::HSV(h,s,v)));
      return(*this);
    }

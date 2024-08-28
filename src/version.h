@@ -27,17 +27,24 @@
 
 #pragma once
 
+#include <Arduino.h>
+
 //////////////////////////////////////////////////////
 //              HomeSpan Version                    //
  
 #define     HS_MAJOR  1
-#define     HS_MINOR  9
-#define     HS_PATCH  1
+#define     HS_MINOR  10
+#define     HS_PATCH  0
 
 //////////////////////////////////////////////////////
 
 #ifndef ARDUINO_ARCH_ESP32
   #error ERROR: HOMESPAN IS ONLY AVAILABLE FOR ESP32 MICROCONTROLLERS!
+  #include <FATAL_ERROR>
+#endif
+
+#if !(defined(CONFIG_IDF_TARGET_ESP32) || defined(CONFIG_IDF_TARGET_ESP32S2) || defined(CONFIG_IDF_TARGET_ESP32S3) || defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32C6))
+  #error ERROR: SELECTED MICROCONTROLLER NOT SUPPORTED. HOMESPAN SUPPORTS THE FOLLOWING CHIPS: ESP32, ESP32-S2, ESP32-S3, ESP32-C3, AND ESP32-C6
   #include <FATAL_ERROR>
 #endif
 

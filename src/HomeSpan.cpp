@@ -88,8 +88,6 @@ void Span::begin(Category catID, const char *_displayName, const char *_hostName
 
   statusLED=new Blinker(statusDevice,autoOffLED);             // create Status LED, even is statusDevice is NULL
 
-//D  esp_task_wdt_delete(xTaskGetIdleTaskHandleForCPU(0));       // required to avoid watchdog timeout messages from ESP32-C3  
-
   hapServer=new WiFiServer(tcpPortNum);                                             // create HAP WIFI SERVER
  
   size_t len;
@@ -140,6 +138,13 @@ void Span::begin(Category catID, const char *_displayName, const char *_hostName
   
   LOG0("\nPWM Resources:    %d channels, %d timers, max %d-bit duty resolution",
                 (int)LEDC_SPEED_MODE_MAX*(int)LEDC_CHANNEL_MAX,(int)LEDC_SPEED_MODE_MAX*(int)LEDC_TIMER_MAX,LEDC_TIMER_BIT_MAX-1);
+  LOG0("\nRMT Resources:    %d transmission channels of %d symbols each",SOC_RMT_TX_CANDIDATES_PER_GROUP,SOC_RMT_MEM_WORDS_PER_CHANNEL);
+  
+  #ifdef SOC_TOUCH_SENSOR_NUM
+    LOG0("\nTouch Sensors:    %d pins",SOC_TOUCH_SENSOR_NUM);
+  #else
+    LOG0("\nTouch Sensors:    none");
+  #endif
 
   LOG0("\nSodium Version:   %s  Lib %d.%d",sodium_version_string(),sodium_library_version_major(),sodium_library_version_minor());
   char mbtlsv[64];
