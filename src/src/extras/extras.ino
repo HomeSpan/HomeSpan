@@ -28,8 +28,8 @@
 #include "Pixel.h"
 #include "RFControl.h"
 
-#define PIXEL_PIN   23
-#define LED_PIN     13
+#define PIXEL_PIN   4
+#define LED_PIN     15
 
 #define NCYCLES     4
 #define COUNT       5

@@ -126,8 +126,7 @@ void Pixel::set(Color *c, int nPixels, boolean multiColor){
     rmt_transmit(tx_chan, encoder, data[index].col, bytesPerPixel, &tx_config);   // transmit data
     
     index=1-index;                                                                // flips index to second data structure
-    if(multiColor)                                                                // move to next color if multiColor requested
-      c++;
+    c+=multiColor;
   } while(--nPixels>0);
 
   rmt_tx_wait_all_done(tx_chan,-1);                                               // wait until final data is transmitted
@@ -148,29 +147,27 @@ Dot::Dot(uint8_t dataPin, uint8_t clockPin){
   dataMask=1<<(dataPin%32);
   clockMask=1<<(clockPin%32);
 
-#ifdef CONFIG_IDF_TARGET_ESP32C3
-  dataSetReg=&GPIO.out_w1ts.val;
-  dataClearReg=&GPIO.out_w1tc.val;
-  clockSetReg=&GPIO.out_w1ts.val;
-  clockClearReg=&GPIO.out_w1tc.val;
+#if defined(CONFIG_IDF_TARGET_ESP32C3)
+  #define OUT_W1TS  &GPIO.out_w1ts.val
+  #define OUT_W1TC  &GPIO.out_w1tc.val
+  #define OUT1_W1TS  NULL
+  #define OUT1_W1TC  NULL
+#elif defined(CONFIG_IDF_TARGET_ESP32C6)
+  #define OUT_W1TS  &GPIO.out_w1ts.val
+  #define OUT_W1TC  &GPIO.out_w1tc.val
+  #define OUT1_W1TS  &GPIO.out1_w1ts.val
+  #define OUT1_W1TC  &GPIO.out1_w1tc.val
 #else
-  if(dataPin<32){
-    dataSetReg=&GPIO.out_w1ts;
-    dataClearReg=&GPIO.out_w1tc;
-  } else {
-    dataSetReg=&GPIO.out1_w1ts.val;
-    dataClearReg=&GPIO.out1_w1tc.val;    
-  }
-
-  if(clockPin<32){
-    clockSetReg=&GPIO.out_w1ts;
-    clockClearReg=&GPIO.out_w1tc;
-  } else {
-    clockSetReg=&GPIO.out1_w1ts.val;
-    clockClearReg=&GPIO.out1_w1tc.val;    
-  }
+  #define OUT_W1TS  &GPIO.out_w1ts
+  #define OUT_W1TC  &GPIO.out_w1tc
+  #define OUT1_W1TS  &GPIO.out1_w1ts.val
+  #define OUT1_W1TC  &GPIO.out1_w1tc.val
 #endif
 
+  dataSetReg=     dataPin<32 ? (OUT_W1TS) : (OUT1_W1TS);
+  dataClearReg=   dataPin<32 ? (OUT_W1TC) : (OUT1_W1TC);
+  clockSetReg=    clockPin<32 ? (OUT_W1TS) : (OUT1_W1TS);
+  clockClearReg=  clockPin<32 ? (OUT_W1TC) : (OUT1_W1TC);
 }
 
 ///////////////////
