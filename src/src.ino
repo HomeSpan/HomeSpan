@@ -31,6 +31,8 @@ void setup() {
  
   Serial.begin(115200);
 
+  homeSpan.setControlPin(25).setStatusPin(26).setLogLevel(2);
+
   homeSpan.enableWebLog(50);
   homeSpan.enableOTA();
   homeSpan.begin(Category::Lighting,"HomeSpan OTA Test");
@@ -40,6 +42,8 @@ void setup() {
       new Characteristic::Identify();
     new Service::LightBulb();
       new Characteristic::On();
+
+  homeSpan.autoPoll();
       
 }
 
@@ -47,5 +51,5 @@ void setup() {
 
 void loop(){
   
-  homeSpan.poll();
+//  homeSpan.poll();
 }

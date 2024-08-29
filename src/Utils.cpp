@@ -51,7 +51,8 @@ char *Utils::readSerial(char *c, int max){
 
   while(1){
 
-    while(!Serial.available());       // wait until there is a new character
+    while(!Serial.available())             // wait until there is a new character
+      vTaskDelay(5);
     
     buf=Serial.read();
     
@@ -281,7 +282,8 @@ int PushButton::type(){
 //////////////////////////////////////
 
 void PushButton::wait(){  
-  while(triggerType(pin));
+  while(triggerType(pin))
+    vTaskDelay(5);
 }
 
 //////////////////////////////////////

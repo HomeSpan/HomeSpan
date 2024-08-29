@@ -229,6 +229,7 @@ void Network_HS::apConfigure(){
 
     } // process Client
 
+    vTaskDelay(5);
   } // while 1
 
 }
