@@ -44,48 +44,6 @@
 
 [[maybe_unused]] static const char* PIXEL_TAG = "Pixel";
 
-typedef const uint8_t pixelType_t[];
-
-namespace PixelType {
-
-  enum {R=0,G=1,B=2,W=3,NA=255};
-  
-  pixelType_t RGB={R,G,B,NA}; 
-  pixelType_t RBG={R,B,G,NA}; 
-  pixelType_t BRG={B,R,G,NA}; 
-  pixelType_t BGR={B,G,R,NA}; 
-  pixelType_t GBR={G,B,R,NA}; 
-  pixelType_t GRB={G,R,B,NA};
-  
-  pixelType_t RGBW={R,G,B,W}; 
-  pixelType_t RBGW={R,B,G,W}; 
-  pixelType_t BRGW={B,R,G,W}; 
-  pixelType_t BGRW={B,G,R,W}; 
-  pixelType_t GBRW={G,B,R,W}; 
-  pixelType_t GRBW={G,R,B,W};
-
-  pixelType_t RGWB={R,G,W,B}; 
-  pixelType_t RBWG={R,B,W,G}; 
-  pixelType_t BRWG={B,R,W,G}; 
-  pixelType_t BGWR={B,G,W,R}; 
-  pixelType_t GBWR={G,B,W,R}; 
-  pixelType_t GRWB={G,R,W,B};
-
-  pixelType_t RWGB={R,W,G,B}; 
-  pixelType_t RWBG={R,W,B,G}; 
-  pixelType_t BWRG={B,W,R,G}; 
-  pixelType_t BWGR={B,W,G,R}; 
-  pixelType_t GWBR={G,W,B,R}; 
-  pixelType_t GWRB={G,W,R,B};
-
-  pixelType_t WRGB={W,R,G,B}; 
-  pixelType_t WRBG={W,R,B,G}; 
-  pixelType_t WBRG={W,B,R,G}; 
-  pixelType_t WBGR={W,B,G,R}; 
-  pixelType_t WGBR={W,G,B,R}; 
-  pixelType_t WGRB={W,G,R,B};
-};
-
 ////////////////////////////////////////////
 //     Single-Wire RGB/RGBW NeoPixels     //
 ////////////////////////////////////////////
@@ -94,28 +52,33 @@ class Pixel : public Blinkable {
 
   public:
     struct Color {
-      uint8_t col[4];
+      uint8_t col[5];
 
-      Color RGB(uint8_t r, uint8_t g, uint8_t b, uint8_t w=0){         // returns Color based on provided RGB(W) values where r/g/b/w=[0-255]
+      Color RGB(uint8_t r, uint8_t g, uint8_t b, uint8_t w=0, uint8_t c=0){         // returns Color based on provided RGB(W) values where r/g/b/w=[0-255]
         col[0]=r;
         col[1]=g;
         col[2]=b;
         col[3]=w;
+        col[4]=c;
         return(*this);
       }
 
-      Color HSV(float h, float s, float v, double w=0){                // returns Color based on provided HSV(W) values where h=[0,360] and s/v/w=[0,100]
+      Color HSV(float h, float s, float v, double w=0, double c=0){                // returns Color based on provided HSV(W) values where h=[0,360] and s/v/w/c=[0,100]
         float r,g,b;
         LedPin::HSVtoRGB(h,s/100.0,v/100.0,&r,&g,&b);
         col[0]=r*255;
         col[1]=g*255;
         col[2]=b*255;
-        col[3]=w*2.555;      
+        col[3]=w*2.555;
+        col[4]=c*2.555;
         return(*this);
       }      
 
       bool operator==(const Color& color){
-        return(col[0]==color.col[0] && col[1]==color.col[1] && col[2]==color.col[2] && col[3]==color.col[3]);
+        boolean eq=true;
+        for(int i=0;i<5;i++)
+          eq&=(col[i]==color.col[i]);
+        return(eq);          
       }
       
       bool operator!=(const Color& color){
@@ -124,26 +87,26 @@ class Pixel : public Blinkable {
 
       Color operator+(const Color& color){
         Color newColor;
-        for(int i=0;i<4;i++)
+        for(int i=0;i<5;i++)
           newColor.col[i]=col[i]+color.col[i];
         return(newColor);
       }
 
       Color& operator+=(const Color& color){
-        for(int i=0;i<4;i++)
+        for(int i=0;i<5;i++)
           col[i]+=color.col[i];
         return(*this);
       }
             
       Color operator-(const Color& color){
         Color newColor;
-        for(int i=0;i<4;i++)
+        for(int i=0;i<5;i++)
           newColor.col[i]=col[i]-color.col[i];
         return(newColor);
       }
 
       Color& operator-=(const Color& color){
-        for(int i=0;i<4;i++)
+        for(int i=0;i<5;i++)
           col[i]-=color.col[i];
         return(*this);
       }
@@ -158,12 +121,12 @@ class Pixel : public Blinkable {
     rmt_transmit_config_t tx_config;
   
     uint32_t resetTime;            // minimum time (in usec) between pulse trains
-    uint8_t bytesPerPixel;         // RGBW=4; RGB=3
-    const uint8_t *map;            // color map representing order in which color bytes are transmitted
+    uint8_t bytesPerPixel;         // WC=2, RGB=3, RGBW=5, RGBWC=5
+    uint8_t map[5];                // color map representing order in which color bytes are transmitted
     Color onColor;                 // color used for on() command
   
   public:
-    Pixel(int pin, pixelType_t pixelType=PixelType::GRB);            // creates addressable single-wire LED of pixelType connected to pin (such as the SK68 or WS28)   
+    Pixel(int pin, const char *pixelType="GRB");                     // creates addressable single-wire LED of pixelType connected to pin (such as the SK68 or WS28)   
     void set(Color *c, int nPixels, boolean multiColor=true);        // sets colors of nPixels based on array of Colors c; setting multiColor to false repeats Color in c[0] for all nPixels
     void set(Color c, int nPixels=1){set(&c,nPixels,false);}         // sets color of nPixels to be equal to specific Color c
     

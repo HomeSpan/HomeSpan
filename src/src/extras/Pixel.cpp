@@ -35,7 +35,7 @@
 //     Single-Wire RGB/RGBW NeoPixels     //
 ////////////////////////////////////////////
 
-Pixel::Pixel(int pin, pixelType_t pixelType){
+Pixel::Pixel(int pin, const char *pixelType){
     
   this->pin=pin;
 
@@ -52,15 +52,34 @@ Pixel::Pixel(int pin, pixelType_t pixelType){
   tx_chan_config.flags.io_od_mode = false;                            // do not use open-drain output
   
   if(!GPIO_IS_VALID_OUTPUT_GPIO(pin)){
-    ESP_LOGE(RFControl_TAG,"Can't create Pixel(%d) - invalid output pin",pin);
+    ESP_LOGE(PIXEL_TAG,"Can't create Pixel(%d) - invalid output pin",pin);
     return;    
   }
 
   if(rmt_new_tx_channel(&tx_chan_config, &tx_chan)!=ESP_OK){
-    ESP_LOGE(RFControl_TAG,"Can't create Pixel(%d) - no open channels",pin);
+    ESP_LOGE(PIXEL_TAG,"Can't create Pixel(%d) - no open channels",pin);
     return;
   }
 
+  // Pixel Type = "RGB", "RGBW", "RGBWC", or "CW", where colors should be listed in order in which they are to be transmitted (i.e. "RGB" vs "BRG")
+  // Pixel Type is NOT case-sensitive (i.e. "RGB" = "rgb" = "rGB")
+  
+  bytesPerPixel=0;
+  size_t len=strlen(pixelType);
+  uint8_t check=0;
+  char v[]="RGBWC";
+  
+  for(int i=0;i<len && i<5;i++){                          // parse and then validate pixelType
+    int index=strchrnul(v,toupper(pixelType[i]))-v;
+    map[bytesPerPixel++]=index;                           // create pixel map and compute number or bytes per pixel
+    check|=(1<<index);
+  }
+
+  if(!(bytesPerPixel==2 && check==0x18) && !(bytesPerPixel==3 && check==0x07) && !(bytesPerPixel==4 && check==0x0F) && !(bytesPerPixel==5 && check==0x1F)){
+    ESP_LOGE(PIXEL_TAG,"Can't create Pixel(%d, \"%s\") - invalid pixelType",pin,pixelType);
+    return;
+  }
+  
   rmt_enable(tx_chan);                            // enable channel
   channel=((int *)tx_chan)[0];                    // get channel number
 
@@ -70,14 +89,7 @@ Pixel::Pixel(int pin, pixelType_t pixelType){
   
   rmt_bytes_encoder_config_t encoder_config;          // can leave blank for now - will populate from within setTiming() below
   rmt_new_bytes_encoder(&encoder_config, &encoder);   // create byte encoder
-
-  map=pixelType;
- 
-  if(map[3]<255)
-    bytesPerPixel=4;
-  else
-    bytesPerPixel=3;
-  
+   
   setTiming(0.32, 0.88, 0.64, 0.56, 80.0);    // set default timing parameters (suitable for most SK68 and WS28 RGB pixels)
 
   onColor.HSV(0,100,100,0);
