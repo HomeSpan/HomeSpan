@@ -28,7 +28,7 @@
 #include "Pixel.h"
 #include "RFControl.h"
 
-#define PIXEL_PIN   32
+#define PIXEL_PIN   26
 #define LED_PIN     15
 
 #define NCYCLES     4
@@ -43,15 +43,15 @@ void setup(){
 
   Serial.print("\n\nHomeSpan Pixel+RF Example\n\n");
 
-  Pixel px(PIXEL_PIN,"grbw");
+  Pixel px(PIXEL_PIN);
   RFControl rf(LED_PIN);
   
   Pixel::Color c[8]={
     Pixel::RGB(255,0,0),
     Pixel::RGB(255,0,0),
     Pixel::RGB(255,0,0),
-    Pixel::RGB(0,255,0),
-    Pixel::RGB(0,255,0),
+    px.RGB(0,255,0),
+    px.RGB(0,255,0),
     Pixel::RGB(0,0,255),
     Pixel::RGB(0,0,255),
     Pixel::RGB(0,0,255)
@@ -77,7 +77,7 @@ void setup(){
       delay(1000);
   }
 
-  px.set(Pixel::RGB(0,0,0,0),60);
+  px.set(Pixel::RGB(0,0,0,0),8);
   while(1);
   
   rf.clear();                    // clear the pulse train memory buffer

@@ -54,7 +54,15 @@ class Pixel : public Blinkable {
     struct Color {
       uint8_t col[5];
 
-      Color RGB(uint8_t r, uint8_t g, uint8_t b, uint8_t w=0, uint8_t c=0){         // returns Color based on provided RGB(W) values where r/g/b/w=[0-255]
+      Color(){
+        col[0]=0;
+        col[1]=0;
+        col[2]=0;
+        col[3]=0;
+        col[4]=0;
+      }
+
+      Color RGB(uint8_t r, uint8_t g, uint8_t b, uint8_t w=0, uint8_t c=0){         // returns Color based on provided RGB(WC) values where r/g/b/w/c=[0-255]
         col[0]=r;
         col[1]=g;
         col[2]=b;
@@ -63,7 +71,16 @@ class Pixel : public Blinkable {
         return(*this);
       }
 
-      Color HSV(float h, float s, float v, double w=0, double c=0){                // returns Color based on provided HSV(W) values where h=[0,360] and s/v/w/c=[0,100]
+      Color WC(uint8_t w, uint8_t c){                                               // returns Color based on provided RGB(WC) values where r/g/b/w/c=[0-255]
+        col[0]=0;
+        col[1]=0;
+        col[2]=0;
+        col[3]=w;
+        col[4]=c;
+        return(*this);
+      }      
+
+      Color HSV(float h, float s, float v, double w=0, double c=0){                // returns Color based on provided HSV(WC) values where h=[0,360] and s/v/w/c=[0,100]
         float r,g,b;
         LedPin::HSVtoRGB(h,s/100.0,v/100.0,&r,&g,&b);
         col[0]=r*255;
@@ -121,7 +138,7 @@ class Pixel : public Blinkable {
     rmt_transmit_config_t tx_config;
   
     uint32_t resetTime;            // minimum time (in usec) between pulse trains
-    uint8_t bytesPerPixel;         // WC=2, RGB=3, RGBW=5, RGBWC=5
+    uint8_t bytesPerPixel;         // WC=2, RGB=3, RGBW=4, RGBWC=5
     uint8_t map[5];                // color map representing order in which color bytes are transmitted
     Color onColor;                 // color used for on() command
   
@@ -130,11 +147,15 @@ class Pixel : public Blinkable {
     void set(Color *c, int nPixels, boolean multiColor=true);        // sets colors of nPixels based on array of Colors c; setting multiColor to false repeats Color in c[0] for all nPixels
     void set(Color c, int nPixels=1){set(&c,nPixels,false);}         // sets color of nPixels to be equal to specific Color c
     
-    static Color RGB(uint8_t r, uint8_t g, uint8_t b, uint8_t w=0){return(Color().RGB(r,g,b,w));}  // an alternative method for returning an RGB Color
-    static Color HSV(float h, float s, float v, double w=0){return(Color().HSV(h,s,v,w));}         // an alternative method for returning an HSV Color
+    static Color RGB(uint8_t r, uint8_t g, uint8_t b, uint8_t w=0, uint8_t c=0){return(Color().RGB(r,g,b,w,c));}   // a static method for returning an RGB(WC) Color
+    static Color HSV(float h, float s, float v, double w=0, double c=0){return(Color().HSV(h,s,v,w,c));}           // a static method for returning an HSV(WC) Color
+    static Color WC(uint8_t w, uint8_t c){return(Color().WC(w,c));}                                                // a static method for returning an Warm-White/Cold-White (WC) Color
               
-    int getPin(){return(channel>=0?pin:-1);}                                                // returns pixel pin if channel is valid, else returns -1
-    boolean isRGBW(){return(bytesPerPixel==4);}                                             // returns true if RGBW LED, else false if RGB LED
+    int getPin(){return(channel);}                                                          // returns pixel pin (=-1 if channel is not valid)
+    boolean isWC(){return(bytesPerPixel==2);}                                               // returns true if WC LED
+    boolean isRGB(){return(bytesPerPixel==3);}                                              // returns true if RGB LED
+    boolean isRGBW(){return(bytesPerPixel==4);}                                             // returns true if RGBW LED
+    boolean isRGBWC(){return(bytesPerPixel==5);}                                            // returns true if RGBWC LED
     void setTiming(float high0, float low0, float high1, float low1, uint32_t lowReset);    // changes default timings for bit pulse - note parameters are in MICROSECONDS
         
     operator bool(){         // override boolean operator to return true/false if creation succeeded/failed
@@ -164,6 +185,14 @@ class Dot {
         };
         uint32_t val;
       };
+
+      Color(){
+        this->red=0;
+        this->green=0;
+        this->blue=0;
+        this->drive=31;
+        this->flags=7;
+      }      
 
       Color RGB(uint8_t r, uint8_t g, uint8_t b, uint8_t driveLevel=31){         // returns Color based on provided RGB values where r/g/b=[0-255] and current-limiting drive level=[0,31]       
         this->red=r;
