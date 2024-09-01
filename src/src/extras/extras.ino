@@ -28,7 +28,7 @@
 #include "Pixel.h"
 #include "RFControl.h"
 
-#define PIXEL_PIN   26
+#define PIXEL_PIN   32
 #define LED_PIN     15
 
 #define NCYCLES     4
@@ -43,8 +43,8 @@ void setup(){
 
   Serial.print("\n\nHomeSpan Pixel+RF Example\n\n");
 
-  Pixel px(PIXEL_PIN);
-  px.setOnColor(Pixel::RGB(0,255,0)).setTemperatures(2000,6000).setTiming(0.32, 0.88, 0.64, 0.56, 80.0);
+  Pixel px(PIXEL_PIN,"GRBWC");
+  px.setOnColor(Pixel::RGB(0,255,0))->setTemperatures(2000,6000)->setTiming(0.32, 0.88, 0.64, 0.56, 80.0);
   RFControl rf(LED_PIN);
 
   Pixel::Color q;
@@ -67,7 +67,6 @@ void setup(){
   Serial.printf("%d %d %d %d %d\n",q.col[0],q.col[1],q.col[2],q.col[3],q.col[4]);
   q=Pixel::CCT(8000,25,2000,7000);  
   Serial.printf("%d %d %d %d %d\n",q.col[0],q.col[1],q.col[2],q.col[3],q.col[4]);
-  while(1);
   
   Pixel::Color c[8]={
     Pixel::RGB(255,0,0),
@@ -100,7 +99,11 @@ void setup(){
       delay(1000);
   }
 
-  px.set(Pixel::RGB(0,0,0,0),8);
+  px.set(Pixel::RGB(0,0,0,255,0),100);
+  delay(2000);
+  px.set(Pixel::RGB(0,0,0,0,255),100);
+  delay(2000);
+  px.set(Pixel::RGB(0,0,0,0,0),100);
   while(1);
   
   rf.clear();                    // clear the pulse train memory buffer

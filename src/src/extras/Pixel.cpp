@@ -97,7 +97,7 @@ Pixel::Pixel(int pin, const char *pixelType){
 
 ///////////////////
 
-Pixel& Pixel::setTiming(float high0, float low0, float high1, float low1, uint32_t lowReset){
+Pixel *Pixel::setTiming(float high0, float low0, float high1, float low1, uint32_t lowReset){
   
   rmt_bytes_encoder_config_t encoder_config;
 
@@ -116,7 +116,7 @@ Pixel& Pixel::setTiming(float high0, float low0, float high1, float low1, uint32
   rmt_bytes_encoder_update_config(encoder,&encoder_config);       // update config
   
   resetTime=lowReset;
-  return(*this);
+  return(this);
 }
 
 ///////////////////

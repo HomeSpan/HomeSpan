@@ -175,8 +175,8 @@ class Pixel : public Blinkable {
     boolean isRGB(){return(bytesPerPixel==3);}                                                      // returns true if RGB LED
     boolean isRGBW(){return(bytesPerPixel==4);}                                                     // returns true if RGBW LED
     boolean isRGBWC(){return(bytesPerPixel==5);}                                                    // returns true if RGBWC LED    
-    Pixel& setTiming(float high0, float low0, float high1, float low1, uint32_t lowReset);          // changes default timings for bit pulse - note parameters are in MICROSECONDS
-    Pixel& setTemperatures(float wTemp, float cTemp){warmTemp=wTemp;coolTemp=cTemp;return(*this);}  // changes default warm-white and cool-white LED temperatures (in Kelvin)
+    Pixel *setTiming(float high0, float low0, float high1, float low1, uint32_t lowReset);          // changes default timings for bit pulse - note parameters are in MICROSECONDS
+    Pixel *setTemperatures(float wTemp, float cTemp){warmTemp=wTemp;coolTemp=cTemp;return(this);}   // changes default warm-white and cool-white LED temperatures (in Kelvin)
         
     operator bool(){         // override boolean operator to return true/false if creation succeeded/failed
       return(channel>=0);
@@ -184,7 +184,7 @@ class Pixel : public Blinkable {
 
     void on() {set(onColor);}
     void off() {set(RGB(0,0,0,0));}
-    Pixel& setOnColor(Color c){onColor=c;return(*this);}
+    Pixel *setOnColor(Color c){onColor=c;return(this);}
 };
 
 ////////////////////////////////////////////
