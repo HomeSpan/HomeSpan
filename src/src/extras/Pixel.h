@@ -89,7 +89,22 @@ class Pixel : public Blinkable {
         col[3]=w*2.555;
         col[4]=c*2.555;
         return(*this);
-      }      
+      }
+
+      Color CCT(float temp, float v, float wTemp, float cTemp){
+        col[0]=0;
+        col[1]=0;
+        col[2]=0;        
+        if(temp<wTemp)
+          temp=wTemp;
+        else if(temp>cTemp)
+          temp=cTemp;
+        col[4]=(temp-wTemp)/(cTemp-wTemp)*255.0;
+        col[3]=255-col[4];
+        col[3]*=v/100.0;
+        col[4]*=v/100.0;        
+        return(*this);
+      }
 
       bool operator==(const Color& color){
         boolean eq=true;
@@ -139,6 +154,8 @@ class Pixel : public Blinkable {
   
     uint32_t resetTime;            // minimum time (in usec) between pulse trains
     uint8_t bytesPerPixel;         // WC=2, RGB=3, RGBW=4, RGBWC=5
+    float warmTemp=2000;           // default temperature (in Kelvin) of warm-white LED
+    float coolTemp=7000;           // defult temperature (in Kelvin) of cool-white LED
     uint8_t map[5];                // color map representing order in which color bytes are transmitted
     Color onColor;                 // color used for on() command
   
@@ -150,13 +167,16 @@ class Pixel : public Blinkable {
     static Color RGB(uint8_t r, uint8_t g, uint8_t b, uint8_t w=0, uint8_t c=0){return(Color().RGB(r,g,b,w,c));}   // a static method for returning an RGB(WC) Color
     static Color HSV(float h, float s, float v, double w=0, double c=0){return(Color().HSV(h,s,v,w,c));}           // a static method for returning an HSV(WC) Color
     static Color WC(uint8_t w, uint8_t c){return(Color().WC(w,c));}                                                // a static method for returning an Warm-White/Cold-White (WC) Color
+    static Color CCT(float temp, float v, float wTemp, float cTemp){return(Color().CCT(temp,v,wTemp,cTemp));}      // a static method for returning a CCT Color    
+    Color CCT(float temp, float v){return(Color().CCT(temp,v,warmTemp,coolTemp));}                                 // a member function for returning a CCT Color using pixel-specific temperatures
               
-    int getPin(){return(channel);}                                                          // returns pixel pin (=-1 if channel is not valid)
-    boolean isWC(){return(bytesPerPixel==2);}                                               // returns true if WC LED
-    boolean isRGB(){return(bytesPerPixel==3);}                                              // returns true if RGB LED
-    boolean isRGBW(){return(bytesPerPixel==4);}                                             // returns true if RGBW LED
-    boolean isRGBWC(){return(bytesPerPixel==5);}                                            // returns true if RGBWC LED
-    void setTiming(float high0, float low0, float high1, float low1, uint32_t lowReset);    // changes default timings for bit pulse - note parameters are in MICROSECONDS
+    int getPin(){return(channel);}                                                                  // returns pixel pin (=-1 if channel is not valid)
+    boolean isWC(){return(bytesPerPixel==2);}                                                       // returns true if WC LED
+    boolean isRGB(){return(bytesPerPixel==3);}                                                      // returns true if RGB LED
+    boolean isRGBW(){return(bytesPerPixel==4);}                                                     // returns true if RGBW LED
+    boolean isRGBWC(){return(bytesPerPixel==5);}                                                    // returns true if RGBWC LED    
+    Pixel& setTiming(float high0, float low0, float high1, float low1, uint32_t lowReset);          // changes default timings for bit pulse - note parameters are in MICROSECONDS
+    Pixel& setTemperatures(float wTemp, float cTemp){warmTemp=wTemp;coolTemp=cTemp;return(*this);}  // changes default warm-white and cool-white LED temperatures (in Kelvin)
         
     operator bool(){         // override boolean operator to return true/false if creation succeeded/failed
       return(channel>=0);
@@ -164,7 +184,7 @@ class Pixel : public Blinkable {
 
     void on() {set(onColor);}
     void off() {set(RGB(0,0,0,0));}
-    Pixel *setOnColor(Color c){onColor=c;return(this);}
+    Pixel& setOnColor(Color c){onColor=c;return(*this);}
 };
 
 ////////////////////////////////////////////
