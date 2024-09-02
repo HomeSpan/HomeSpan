@@ -25,7 +25,7 @@
  *  
  ********************************************************************************/
  
-// HomeSpan Addressable RGBCW LED Example.  Demonstrates use of two separate Accessories to control a single
+// HomeSpan Addressable RGBCW LED Example.  Demonstrates use of two separate Accessories to control a SINGLE
 // NeoPixel LED Strip.  The first controls the RGB LEDs and the second controls the Warm-White and Cool-White LEDs.
 // Both sets can be on at the same time. 
 //
