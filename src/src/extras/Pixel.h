@@ -128,21 +128,7 @@ class Pixel : public Blinkable {
         for(int i=0;i<5;i++)
           col[i]+=color.col[i];
         return(*this);
-      }
-            
-      Color operator-(const Color& color){
-        Color newColor;
-        for(int i=0;i<5;i++)
-          newColor.col[i]=col[i]-color.col[i];
-        return(newColor);
-      }
-
-      Color& operator-=(const Color& color){
-        for(int i=0;i<5;i++)
-          col[i]-=color.col[i];
-        return(*this);
-      }
-            
+      }                        
     }; // Color
   
   private:

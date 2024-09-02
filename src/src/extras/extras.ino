@@ -28,7 +28,7 @@
 #include "Pixel.h"
 #include "RFControl.h"
 
-#define PIXEL_PIN   32
+#define PIXEL_PIN   23
 #define LED_PIN     15
 
 #define NCYCLES     4
