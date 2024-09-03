@@ -181,10 +181,6 @@ class Pixel : public Blinkable {
     Color CCT(float temp, float v){return(Color().CCT(temp,v,warmTemp,coolTemp));}                                 // a member function for returning a CCT Color using pixel-specific temperatures
               
     int getPin(){return(channel);}                                                                  // returns pixel pin (=-1 if channel is not valid)
-    boolean isWC(){return(bytesPerPixel==2);}                                                       // returns true if WC LED
-    boolean isRGB(){return(bytesPerPixel==3);}                                                      // returns true if RGB LED
-    boolean isRGBW(){return(bytesPerPixel==4);}                                                     // returns true if RGBW LED
-    boolean isRGBWC(){return(bytesPerPixel==5);}                                                    // returns true if RGBWC LED    
     Pixel *setTiming(float high0, float low0, float high1, float low1, uint32_t lowReset);          // changes default timings for bit pulse - note parameters are in MICROSECONDS
     Pixel *setTemperatures(float wTemp, float cTemp){warmTemp=wTemp;coolTemp=cTemp;return(this);}   // changes default warm-white and cool-white LED temperatures (in Kelvin)
         
@@ -201,6 +197,9 @@ class Pixel : public Blinkable {
     
     [[deprecated("*** Please use Pixel(int pin, const char *pixelType) constructor instead to ensure future compatibility.")]]
     Pixel(int pin, pixelType_t pixelType) : Pixel(pin, pixelType.c_str()){}
+
+    [[deprecated("*** This method will be deprecated in a future release.")]]
+    boolean isRGBW(){return(bytesPerPixel==4);}
 };
 
 ////////////////////////////////////////////

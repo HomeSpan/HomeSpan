@@ -96,6 +96,9 @@ Pixel::Pixel(int pin, const char *pixelType){
 ///////////////////
 
 Pixel *Pixel::setTiming(float high0, float low0, float high1, float low1, uint32_t lowReset){
+
+  if(channel<0)
+    return(this);
   
   rmt_bytes_encoder_config_t encoder_config;
 
