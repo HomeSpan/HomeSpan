@@ -28,14 +28,24 @@
 /////////////////////// PIXEL TESTER //////////////////////////
 
 // This sketch is designed to help identify the proper settings to use for a NeoPixel, NeoPixel Strip,
-// or any device containing one or more single-wire addressable RGB or RGBW LEDs (the "Pixel Device").
+// or any device containing one or more single-wire addressable RGB-style LEDs (the "Pixel Device").
+//
+// There are a wide variety of NeoPixel-style devices, including:
+//
+// RGB - contains tri-color red/green/blue LEDs
+// WC - contains warm-white and cool-white LEDs (no color LEDs)
+// RGBW - contains tri-color red/green/blue LEDs AND white LEDs (may be warm or cool)
+// RGBWC - contains tri-color red/green/blue LEDs AND separate warm-white and cool-white LEDs
+
+// To properly operate a NeoPixel device, the Pixel library needs to know how many type of LEDs
+// are in the device, as well as the order in which the byte-codes should be sent.
 
 // Before compiling, set PIXEL_PIN to the ESP32 pin that is connected to your Pixel Device, and set NPIXELS to
-// the numnber of Pixels in the Pixel Device.  Note that for some strips a single chip controls more than one LED,
+// the number of Pixels in the Pixel Device.  Note that for some strips a single chip controls more than one LED,
 // in which case NPIXELS should be set to the number of controlling chips, NOT the number of LEDs.
 
 // To start, the second argument of the Pixel constructor for the testPixel object below should remain
-// set to PixelType::RGBW
+// set to "RGBWC", which represents a FIVE-COLOR LED (red/green/blue/warm-white/cool-white).
 
 // When run, the sketch will repeatedly cycle colors by setting ALL pixels in the device first to RED, then GREEN,
 // followed by BLUE, and then finally WHITE.  After a short pause, the cycle repeats.

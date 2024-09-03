@@ -28,7 +28,7 @@
 #include "Pixel.h"
 #include "RFControl.h"
 
-#define PIXEL_PIN   23
+#define PIXEL_PIN   26
 #define LED_PIN     15
 
 #define NCYCLES     4
@@ -43,37 +43,39 @@ void setup(){
 
   Serial.print("\n\nHomeSpan Pixel+RF Example\n\n");
 
-  Pixel px(PIXEL_PIN,"GRBWC");
-  px.setOnColor(Pixel::RGB(0,255,0))->setTemperatures(2000,6000)->setTiming(0.32, 0.88, 0.64, 0.56, 80.0);
+  Pixel px(PIXEL_PIN,"GRB7");
+//  px.setOnColor(Pixel::RGB(0,255,0))->setTemperatures(2000,6000)->setTiming(0.32, 0.88, 0.64, 0.56, 80.0);
   RFControl rf(LED_PIN);
 
   Pixel::Color q;
   
-  q.CCT(1000,100,2000,7000);  
-  Serial.printf("%d %d %d %d %d\n",q.col[0],q.col[1],q.col[2],q.col[3],q.col[4]);
-  q.CCT(2000,100,2000,7000);  
-  Serial.printf("%d %d %d %d %d\n",q.col[0],q.col[1],q.col[2],q.col[3],q.col[4]);
-  q.CCT(3000,100,2000,7000);  
-  Serial.printf("%d %d %d %d %d\n",q.col[0],q.col[1],q.col[2],q.col[3],q.col[4]);
-  q.CCT(4500,100,2000,7000);  
-  Serial.printf("%d %d %d %d %d\n",q.col[0],q.col[1],q.col[2],q.col[3],q.col[4]);
-  q.CCT(6000,10,2000,7000);  
-  Serial.printf("%d %d %d %d %d\n",q.col[0],q.col[1],q.col[2],q.col[3],q.col[4]);
-  q=px.CCT(6000,10,2000,7000);  
-  Serial.printf("%d %d %d %d %d\n",q.col[0],q.col[1],q.col[2],q.col[3],q.col[4]);
-  q=px.CCT(6000,10);  
-  Serial.printf("%d %d %d %d %d\n",q.col[0],q.col[1],q.col[2],q.col[3],q.col[4]);
-  q.CCT(7000,50,2000,7000);  
-  Serial.printf("%d %d %d %d %d\n",q.col[0],q.col[1],q.col[2],q.col[3],q.col[4]);
-  q=Pixel::CCT(8000,25,2000,7000);  
-  Serial.printf("%d %d %d %d %d\n",q.col[0],q.col[1],q.col[2],q.col[3],q.col[4]);
+//  q.CCT(1000,100,2000,7000);  
+//  Serial.printf("%d %d %d %d %d\n",q.col[0],q.col[1],q.col[2],q.col[3],q.col[4]);
+//  q.CCT(2000,100,2000,7000);  
+//  Serial.printf("%d %d %d %d %d\n",q.col[0],q.col[1],q.col[2],q.col[3],q.col[4]);
+//  q.CCT(3000,100,2000,7000);  
+//  Serial.printf("%d %d %d %d %d\n",q.col[0],q.col[1],q.col[2],q.col[3],q.col[4]);
+//  q.CCT(4500,100,2000,7000);  
+//  Serial.printf("%d %d %d %d %d\n",q.col[0],q.col[1],q.col[2],q.col[3],q.col[4]);
+//  q.CCT(6000,10,2000,7000);  
+//  Serial.printf("%d %d %d %d %d\n",q.col[0],q.col[1],q.col[2],q.col[3],q.col[4]);
+//  q=px.CCT(6000,10,2000,7000);  
+//  Serial.printf("%d %d %d %d %d\n",q.col[0],q.col[1],q.col[2],q.col[3],q.col[4]);
+//  q=px.CCT(6000,10);  
+//  Serial.printf("%d %d %d %d %d\n",q.col[0],q.col[1],q.col[2],q.col[3],q.col[4]);
+//  q.CCT(7000,50,2000,7000);  
+//  Serial.printf("%d %d %d %d %d\n",q.col[0],q.col[1],q.col[2],q.col[3],q.col[4]);
+//  q=Pixel::CCT(8000,25,2000,7000);  
+//  Serial.printf("%d %d %d %d %d\n",q.col[0],q.col[1],q.col[2],q.col[3],q.col[4]);
   
   Pixel::Color c[8]={
     Pixel::RGB(255,0,0),
     Pixel::RGB(255,0,0),
     Pixel::RGB(255,0,0),
-    px.RGB(0,255,0),
-    px.RGB(0,255,0),
+//    px.RGB(0,255,0),
+//    px.RGB(0,255,0),
+    Pixel::RGB(0,255,0),
+    Pixel::RGB(0,255,0),
     Pixel::RGB(0,0,255),
     Pixel::RGB(0,0,255),
     Pixel::RGB(0,0,255)

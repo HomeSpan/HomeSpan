@@ -60,22 +60,20 @@ Pixel::Pixel(int pin, const char *pixelType){
     ESP_LOGE(PIXEL_TAG,"Can't create Pixel(%d) - no open channels",pin);
     return;
   }
-
-  // Pixel Type = "RGB", "RGBW", "RGBWC", or "CW", where colors should be listed in order in which they are to be transmitted (i.e. "RGB" vs "BRG")
-  // Pixel Type is NOT case-sensitive (i.e. "RGB" = "rgb" = "rGB")
   
   bytesPerPixel=0;
   size_t len=strlen(pixelType);
-  uint8_t check=0;
-  char v[]="RGBWC";
+  boolean invalidMap=false;
+  char v[]="RGBWC01234-";                                 // list of valid mapping characters for pixelType
   
   for(int i=0;i<len && i<5;i++){                          // parse and then validate pixelType
     int index=strchrnul(v,toupper(pixelType[i]))-v;
-    map[bytesPerPixel++]=index;                           // create pixel map and compute number or bytes per pixel
-    check|=(1<<index);
+    if(index==strlen(v))                                  // invalid mapping character found
+      invalidMap=true;
+    map[bytesPerPixel++]=index%5;                         // create pixel map and compute number of bytes per pixel
   }
 
-  if(!(bytesPerPixel==2 && check==0x18) && !(bytesPerPixel==3 && check==0x07) && !(bytesPerPixel==4 && check==0x0F) && !(bytesPerPixel==5 && check==0x1F)){
+  if(bytesPerPixel<3 || len>5 || invalidMap){
     ESP_LOGE(PIXEL_TAG,"Can't create Pixel(%d, \"%s\") - invalid pixelType",pin,pixelType);
     return;
   }
