@@ -31,6 +31,8 @@
 
 #pragma once
 
+#include "driver/gpio.h"
+
 #pragma GCC diagnostic ignored "-Wvolatile"
 
 #include <Arduino.h>

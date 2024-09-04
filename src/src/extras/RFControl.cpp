@@ -45,12 +45,12 @@ RFControl::RFControl(uint8_t pin, boolean refClock){
   tx_chan_config.flags.with_dma = false;                              // use RMT channel memory, not DMA (most chips do not support use of DMA anyway)
   tx_chan_config.flags.io_loop_back = false;                          // do not use loop-back mode
   tx_chan_config.flags.io_od_mode = false;                            // do not use open-drain output
-  
+
   if(!GPIO_IS_VALID_OUTPUT_GPIO(pin)){
     ESP_LOGE(RFControl_TAG,"Can't create RFControl(%d) - invalid output pin",pin);
     return;    
   }
-
+  
   if(rmt_new_tx_channel(&tx_chan_config, &tx_chan)!=ESP_OK){
     ESP_LOGE(RFControl_TAG,"Can't create RFControl(%d) - no open channels",pin);
     return;
