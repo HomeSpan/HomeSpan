@@ -31,7 +31,7 @@ void setup() {
  
   Serial.begin(115200);
 
-  homeSpan.setControlPin(25).setStatusPin(26).setLogLevel(2);
+  homeSpan.setStatusPin(13).setLogLevel(2);
 
   homeSpan.enableWebLog(50);
   homeSpan.enableOTA();
@@ -43,7 +43,7 @@ void setup() {
     new Service::LightBulb();
       new Characteristic::On();
 
-  homeSpan.autoPoll();
+//  homeSpan.autoPoll();
       
 }
 
@@ -51,5 +51,5 @@ void setup() {
 
 void loop(){
   
-//  homeSpan.poll();
+  homeSpan.poll();
 }
