@@ -1,6 +1,6 @@
 # Addressable RGB LEDs
 
-HomeSpan includes two dedicated classes that provide for easy control of "addressable" RGB LEDs.  The **Pixel()** class is used for RGB and RGBW LEDs that require only a single "data" control wire, such as this 8-pixel [NeoPixel RGB Stick](https://www.adafruit.com/product/1426) or this single-pixel [NeoPixel RGBW LED](https://www.adafruit.com/product/2759).  The **Dot()** class is used for RGB LEDs that require two control wires ("data" and "clock"), such as this 144-pixel [DotStar RGB Strip](https://www.adafruit.com/product/2241) or this 60-pixel [RGB LED Strip](https://www.sparkfun.com/products/14015).
+HomeSpan includes two dedicated classes that provide for easy control of "addressable" RGB LEDs.  The **Pixel()** class is used for RGB, RGBW, RGBWC, and WC LEDs that require only a single "data" control wire, such as this 8-pixel [NeoPixel RGB Stick](https://www.adafruit.com/product/1426) or this single-pixel [NeoPixel RGBW LED](https://www.adafruit.com/product/2759).  The **Dot()** class is used for RGB LEDs that require two control wires ("data" and "clock"), such as this 144-pixel [DotStar RGB Strip](https://www.adafruit.com/product/2241) or this 60-pixel [RGB LED Strip](https://www.sparkfun.com/products/14015).
 
 Both classes allow you to individually set each of the "pixels" in a multi-pixel LED strip to a different 24-bit RGB (red/green/blue) color.  The Pixel class also supports 16-bit WC (warm-white/cool-white) pixels, 32-bit RGBW (red/green/blue/white) pixels, and 40-bit RGBWC pixels (i.e. red/green/blue/warm-white/cool-white).  Alternatively, the classes allow you to simply specify a single color to duplicate across all pixels.
 
@@ -24,15 +24,15 @@ The two main methods to set pixel colors are:
 
 * `void set(Color color, int nPixels=1)`
 
-  * sets the color of a pixel in a single-pixel device, or equivalently, the color of the first *nPixels* in a multi-pixel device, to *color*, where *color* is an object of type **Color** defined below.  If unspecified, *nPixels* defaults to 1 (i.e. a single pixel).  It is not a problem if the value specified for *nPixels* does not match the total number of actual RGB (or RGBW) pixels in your device; if *nPixels* is less than the total number of device pixels, only the first *nPixels* will be set to *color*;  if *nPixels* is greater than the total number of device pixels, the device will simply ignore the additional input
+  * sets the color of a pixel in a single-pixel device, or equivalently, the color of the first *nPixels* in a multi-pixel device, to *color*, where *color* is an object of type **Color** defined below.  If unspecified, *nPixels* defaults to 1 (i.e. a single pixel).  It is not a problem if the value specified for *nPixels* does not match the total number of actual RGB pixels in your device; if *nPixels* is less than the total number of device pixels, only the first *nPixels* will be set to *color*;  if *nPixels* is greater than the total number of device pixels, the device will simply ignore the additional input
   
 * `void set(Color *color, int nPixels)`
 
-  * individually sets the color of each pixel in a multi-pixel device to the color values specified in the **Color** array *\*color*, of *nPixels* size, where the  first pixel of the device is set to the value in *color\[0\]*, the second pixel is set to the value in *color\[1\]* ... and the last pixel is set to the value in *color\[nPixels-1\]*.  Similar to above, it is not a problem if the value specified for *nPixels* does not match the total number of actual RGB (or RGBW, etc.) pixels in your device
+  * individually sets the color of each pixel in a multi-pixel device to the color values specified in the **Color** array *\*color*, of *nPixels* size, where the  first pixel of the device is set to the value in *color\[0\]*, the second pixel is set to the value in *color\[1\]* ... and the last pixel is set to the value in *color\[nPixels-1\]*.  Similar to above, it is not a problem if the value specified for *nPixels* does not match the total number of actual RGB pixels in your device
 
-  * note that the number of LEDs on a light strip may be more than the total number of controllable pixels.  For 5-volt light strips there is usually just one LED per driver chip.  For 12-volt and 24-volt light strips, manufacturers often connect multiple LEDs to each pixel-driver chip.  For instance, a 300-LED strip may contain 100 pixel-driver chips, where each chip controls three LEDs (set to the same color).  Always set *nPixels* to the number of pixel-driver chips in your light strip, NOT to the number of LEDs
+Note that the number of LEDs on a light strip may be more than the total number of controllable pixels.  For 5-volt light strips there is usually just one LED per driver chip.  For 12-volt and 24-volt light strips, manufacturers often connect multiple LEDs to each pixel-driver chip.  For instance, a 300-LED strip may contain 100 pixel-driver chips, where each chip controls three LEDs (set to the same color).  Always set *nPixels* to the number of pixel-driver chips in your light strip, NOT to the number of LEDs
 
-In both of the methods above, colors are natively stored by the Pixel class as 40-bit **Color** object configured to hold five 8-bit values in the order RGBWC (regardless of whether *pixelType* is set to "RGB", "WGRB", "W-C", etc.).  **Color** objects can be instantiated as single variables (e.g. `Pixel::Color myColor;`) or as arrays (e.g. `Pixel::Color myColors[8];`).  Note that the **Color** object used by the **Pixel** class is scoped to the **Pixel** class itself, so you need to use the fully-qualified class name "Pixel::Color".
+In both of the methods above, colors are natively stored by the Pixel class as a 40-bit **Color** object configured to hold five 8-bit values in the order RGBWC (regardless of whether *pixelType* is set to "RGB", "WGRB", "W-C", etc.).  **Color** objects can be instantiated as single variables (e.g. `Pixel::Color myColor;`) or as arrays (e.g. `Pixel::Color myColors[8];`).  Note that the **Color** object used by the **Pixel** class is scoped to the **Pixel** class itself, so you need to use the fully-qualified class name "Pixel::Color".
 Once a **Color** object is created, the color it stores can be set using one of the following methods:
   
 * `Color RGB(uint8_t r, uint8_t g, uint8_t b, uint8_t w=0, uint8_t c=0)`
@@ -40,11 +40,11 @@ Once a **Color** object is created, the color it stores can be set using one of 
   * where *r*, *g*, and *b*, represent 8-bit red, green, and blue values over the range 0-255, *w* represents an optional 8-bit value for warm-white, and *c* represents an optional 8-bit value for cool-white.  The white values may be left unspecified, in which case they default to 0      
   * returns a **Color** object
   * example: `myColor.RGB(255,255,0)` sets myColor to bright yellow
-   * example: `myColor.RGB(255,0,0,128,128) sets myColor to a a combination maximium-intensity red with half-intensity warm- and cool-white
+  * example: `myColor.RGB(255,0,0,128,128) sets myColor to a a combination maximium-intensity red with half-intensity warm- and cool-white
       
 * `Color HSV(float h, float s, float v, double w=0, double c=0)`
     
-  * where *h*=Hue, over the range 0-360; *s*=Saturation percentage from 0-100; and *v*=Brightness percentage from 0-100.  These values are converted to equivalent 8-bit RGB values (0-255) for storage in the **Color** object.  Note the *w* and *c* values are treated separately and represent optional brightness percentages the warm-white and cool-white LEDs.  Similar to above, the warm-white and cool-white values may be left unspecified, in which case they default to 0
+  * where *h*=Hue, over the range 0-360; *s*=Saturation percentage from 0-100; and *v*=Brightness percentage from 0-100.  These values are converted to equivalent 8-bit RGB values (0-255) for storage in the **Color** object.  Note the *w* and *c* values are treated separately and represent optional Brightness percentages (0-100) for the warm-white and cool-white LEDs.  Similar to above, the warm-white and cool-white values may be left unspecified, in which case they default to 0
   * returns a **Color** object
   * example: `myColor.HSV(120,100,50)` sets myColor to fully-saturated green with 50% brightness
 
@@ -60,7 +60,7 @@ Once a **Color** object is created, the color it stores can be set using one of 
   * if the *temp* specified is outside the range of the warm-white and cool-white temperatures, it will be automatically reset to match either the warm-white or cool-white temperature to prevent an out-of-bounds error
   * returns a **Color** object
   * example: `myColor.CCT(4000,100,3000,6500)` sets myColor to a CCT-equivalent of 4000K with 100% brightness by interpolating the user-specified temperatures of the warm-white (3000K) and cool-white (6500K) LEDs.  Note the result of this calculation is equivalent to `myColor.WC(183,72)`
-  * example: `myColor.CCT(4000,25,3000,6500)` sets myColor to a CCT-equivalent of 4000K with 25% brightness by interpolating the user-specified temperatures of the warm-white (3000K) and cool-white (6500K) LEDs, and then scaling these values by a factor of 25%.  Note the result of this calculation is equivalent to `myColor.WC(45,18)`
+  * example: `myColor.CCT(4000,25,3000,6500)` sets myColor to a CCT-equivalent of 4000K with 25% brightness by interpolating the user-specified temperatures of the warm-white (3000K) and cool-white (6500K) LEDs, and then scaling these values by a factor of 25%.  The result of this calculation is equivalent to `myColor.WC(45,18)`
     
 Note both methods above return the completed **Color** object itself and can thus be used wherever a **Color** object is required:  For example: `Pixel p(5); Pixel::Color myColor; p.set(myColor.RGB(255,215,0))` sets the color of a single pixel device attached to pin 5 to bright gold.
 
@@ -74,7 +74,7 @@ The **Pixel** class also supports the following *class-level* methods as a conve
 * `static Color HSV(float h, float s, float v, double w=0, double c=0)`
   * equivalent to `return(Color().HSV(h,s,v,w,c));`
   * returns the resulting new **Color** object
-  * example: `Pixel::Color c[]={Pixel::HSV(120,100,100),Pixel::HSV(60,100,100),Pixel::HSV(0,100,100)};` to create a red-yellow-green traffic light pattern
+  * example: `Pixel::Color c[]={Pixel::HSV(120,100,100),Pixel::HSV(60,100,100),Pixel::HSV(0,100,100)};` to create a green-yellow-red traffic light pattern
 
 * `static Color WC(uint8_t w, uint8_t c)`
   * equivalent to `return(Color().WC(w,c));`
@@ -87,7 +87,7 @@ The **Pixel** class also supports the following *class-level* methods as a conve
   * returns the resulting new **Color** object
   * example: `Pixel p(5);  p.set(Pixel::CCT(4000,100,3000,6500),8);` sets the color of each pixel in an 8-pixel device (attached to pin 5) to full-intensity 4000K white, given that the color temperatures of the warm-white and cool-white LEDs on the device are 3000K and 6500K, respectively.
  
-To avoid having to repeatedly specify the color temperatures of the warm-white and cool-white LEDs for any given light strip every time you create a CCT color, the **Pixel** class includes two *member-level* methods that allows you to specify the color temperatures just once for any given device, and then use them to set CCT colors *for that specific device*:
+To avoid having to repeatedly specify the color temperatures of the warm-white and cool-white LEDs for any given light strip every time you create a CCT color, the **Pixel** class includes two *member-level* methods that allow you to specify the color temperatures just once for any given device, and then use them to set any CCT colors *for that specific device*:
 
 * `Pixel *setTemperatures(float wTemp, float cTemp)`
   *  specifies the warm-white LED (*wTemp*) and cool-white LED (*cTemp) temperatures (in Kelvins) for a particular light strip
@@ -97,7 +97,7 @@ To avoid having to repeatedly specify the color temperatures of the warm-white a
   * creates a CCT color of temperature *temp* (in Kelvins) and with brightness percentage *v* (from 0-100) for a specific pixel device according to whatever warm-white and cool-white LED temperatures were previously specified for the device using `setTemperatures(float wTemp, float cTemp)` above
   * if you have not yet called `setTemperatures()` for this device, default values of 2000K for warm-white and 7000K for cool-white are used
   * effectively equivalent to using the *class-level* method as follows: `return(Color().CCT(temp,v,warmTemp,coolTemp));`
-  * if the *temp* specified is outside the range of the warm-white and cool-white temperatures, it wil be automatically reset to match either the warm-white or cool-white temperature to prevent an out-of-bounds error
+  * if the *temp* specified is outside the range of the warm-white and cool-white temperatures, it will be automatically reset to match either the warm-white or cool-white temperature to prevent an out-of-bounds error
   * returns the resulting new **Color** object
  
 The **Pixel** class also supports the following *member-level* methods: 
@@ -117,7 +117,14 @@ The **Pixel** class also supports the following *member-level* methods:
 
 ### Resource Usage
 
-The **Pixel** class relies on the ESP32's RMT peripheral to create the precise pulse trains required to control single-wire addressable RGB LEDs.  Since each instantiation of **Pixel** consumes an RMT channel, the number of **Pixel** objects you can instantiate (each controlling a separate multi-pixel RGB LED device attached to a specific pin) is limited to the number of RMT available as follows: ESP32 - 8 instances; ESP32-S2 - 4 instances; ESP32-C3 and ESP32-C6 - 2 instances.
+The **Pixel** class relies on the ESP32's RMT peripheral to create the precise pulse trains required to control single-wire addressable RGB LEDs.  Since each instantiation of **Pixel** consumes an RMT channel, the number of **Pixel** objects you can instantiate (each controlling a separate multi-pixel RGB LED device attached to a specific pin) is limited to the number of RMT channels available as follows:
+
+* ESP32 - 8 channels;
+* ESP32-S2 - 4 channels;
+* ESP32-C3 - 2 channels;
+* ESP32-C6 - 2 channel;
+
+Note the **RFControl** class also uses the ESP32's RMT peripheral so any instances of **RFControl** will consume RMT channels as well (for example, on an ESP32-C3 you could create two Pixels, two RFControls, or one Pixel and one RFControl). 
  
 ### Troubleshooting Tips
 
