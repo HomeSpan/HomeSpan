@@ -31,7 +31,7 @@ void setup() {
  
   Serial.begin(115200);
 
-  homeSpan.setStatusPin(13).setLogLevel(2);
+  homeSpan.setLogLevel(2);
 
   homeSpan.enableWebLog(50);
   homeSpan.enableOTA();

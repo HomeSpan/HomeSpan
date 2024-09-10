@@ -49,9 +49,9 @@ void setup(){
 
   Pixel::Color q;
   
-  q.CCT(1000,100,2000,7000);  
+  q.CCT(4000,25,3000,6500);  
   Serial.printf("%d %d %d %d %d\n",q.col[0],q.col[1],q.col[2],q.col[3],q.col[4]);
-  q.CCT(2000,100,2000,7000);  
+  q.CCT(4000,100,3000,6500);  
   Serial.printf("%d %d %d %d %d\n",q.col[0],q.col[1],q.col[2],q.col[3],q.col[4]);
   q.CCT(3000,100,2000,7000);  
   Serial.printf("%d %d %d %d %d\n",q.col[0],q.col[1],q.col[2],q.col[3],q.col[4]);
