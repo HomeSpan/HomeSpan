@@ -121,6 +121,7 @@ The **Pixel** class relies on the ESP32's RMT peripheral to create the precise p
 
 * ESP32 - 8 channels;
 * ESP32-S2 - 4 channels;
+* ESP32-S3 - 4 channels;
 * ESP32-C3 - 2 channels;
 * ESP32-C6 - 2 channel;
 
@@ -130,8 +131,8 @@ Note the **RFControl** class also uses the ESP32's RMT peripheral so any instanc
 
 * If the light strip appears to be functioning but the colors are wrong, check that you have set the *pixelType* correctly by setting all the LED colors on a light strip to RED
   
-  * if all the LEDs shows the *same* but incorrect color (i.e. GREEN instead of RED), then you need to change the order of color characters in the *pixelType* to match accordingl
-  * if each LED shows a different color (or some are unlit entirely), then you likely mis-specified *pixelTYpe* to the wrong number of colors.  For example you specified "RGBW" but your device only supports "RGB" or vice versa
+  * if all the LEDs shows the *same* but incorrect color (i.e. GREEN instead of RED), then you need to change the order of color characters in the *pixelType* to match accordingly
+  * if each LED shows a different color (or some are unlit entirely), then you likely mis-specified *pixelType* to the wrong number of colors.  For example you specified "RGBW" but your device only supports "RGB" or vice versa
 * If the light strip flickers or turns on quickly before turning off, your power supply is likely undersized to drive enough current for all the LEDs in the light strip
   * try lowering the brightness - if the LEDs stabilize and only flicker above a certain brightness level, your power supply is undersized
   * try setting a pure color (i.e. just red or just warm-white).  If the LEDs stabilize and only flicker when you set multiple LED colors at the same time, your power-supply is undersized
@@ -187,7 +188,7 @@ Unlike the **Pixel** class, the **Dot** class does *not* utilize the ESP32's RMT
 
 ### Example Sketches
 
-A fully worked example showing how to use the Pixel library within a HomeSpan sketch to control an RGB Pixel Device, an RGBW Pixel Device, and an RGB DotStar Device, all from the Home App on your iPhone, can be found in the Arduino IDE under [*File → Examples → HomeSpan → Other Examples → Pixel*](../examples/Other%20Examples/Pixel).
+A fully worked example showing how to use the Pixel library within a HomeSpan sketch to control an RGB Pixel Device, an RGBW Pixel Device, and an RGB DotStar Device, all from the Home App on your iPhone, can be found in the Arduino IDE under [*File → Examples → HomeSpan → Other Examples → Pixel*](../examples/Other%20Examples/Pixel).  A second example demonstrating how to implement an RGBWC Pixel light-strip with separate Home App controls for the RGB and WC LEDs can be found in the Arduino IDE under [*File → Examples → HomeSpan → Other Examples → Pixel*](../examples/Other%20Examples/Pixel-RGBWC).
 
 For a more complete showcase of the Pixel library , check out [Holiday Lights](https://github.com/HomeSpan/HolidayLights) on the [HomeSpan Projects page](https://github.com/topics/homespan).  This sketch demonstrates how the Pixel library can be used to generate a variety of special effects with a 60-pixel RGBW strip.  The sketch also showcases the use of HomeSpan's [Custom Characteristic macro](Reference.md#custom-characteristics-and-custom-services-macros) to implement a special-effects "selector" button for use in the Eve for HomeKit App.
 
