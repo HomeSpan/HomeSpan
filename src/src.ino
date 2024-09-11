@@ -31,6 +31,9 @@ void setup() {
  
   Serial.begin(115200);
 
+  delay(1000);
+  Serial.printf("c++: %s\n",STRINGIFY(__cplusplus));
+
   homeSpan.setLogLevel(2);
 
   homeSpan.enableWebLog(50);
