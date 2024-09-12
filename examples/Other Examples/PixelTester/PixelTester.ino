@@ -82,6 +82,8 @@
 
 #include "HomeSpan.h"
 
+boolean testMode=false;
+
 //////////////////////////////////////
 
 #define PIXEL_PIN       26                // set this to whatever pin you are using - note pin cannot be "input only"
@@ -102,7 +104,11 @@ Pixel testPixel(PIXEL_PIN, PIXEL_TYPE);
 //////////////////////////////////////
 
 void setup() {
- 
+
+#ifdef TEST_MODE
+  testMode=true;
+#endif  
+   
   Serial.begin(115200);
   delay(1000);
   
@@ -128,23 +134,17 @@ void flashColor(boolean r, boolean g, boolean b, boolean w, boolean c){
 
 void loop(){
 
-  Serial.printf("Color #0...");
-  flashColor(1,0,0,0,0);
-
-  Serial.printf("Color #1...");
-  flashColor(0,1,0,0,0);
-
-  Serial.printf("Color #2...");
-  flashColor(0,0,1,0,0);
-
-  Serial.printf("Color #3...");
-  flashColor(0,0,0,1,0);
-
-  Serial.printf("Color #4...");
-  flashColor(0,0,0,0,1);
+  if(testMode){
+    for(int i=0;i<5;i++){
+      Serial.printf("Color #%d...",i);
+      flashColor(i==0,i==1,i==2,i==3,i==4);      
+    }
+  } else {
+    char c[]="RGBWC";
+  }
 
   Serial.printf("Pausing.\n");
-  delay(1000);
+  delay(2000);
 }
 
 //////////////////////////////////////
