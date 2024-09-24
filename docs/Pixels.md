@@ -107,6 +107,11 @@ The **Pixel** class also supports the following *member-level* methods:
 * `int getPin()`
 
   * returns the pin number, or -1 if the instantiation failed due to lack of resources (see below) or for any other reason
+ 
+*  `boolean hasColor(char c)`
+  
+   * returns true if the *pixelType* includes *c* (case-insensitive), else returns false
+   * *c* should be one of: 'R', 'G', 'B', 'W', 'C', or their lower-case equivalents
     
 * `Pixel *setTiming(float high0, float low0, float high1, float low1, uint32_t lowReset)`
 
