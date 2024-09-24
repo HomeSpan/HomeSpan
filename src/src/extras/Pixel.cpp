@@ -77,6 +77,8 @@ Pixel::Pixel(int pin, const char *pixelType){
     ESP_LOGE(PIXEL_TAG,"Can't create Pixel(%d, \"%s\") - invalid pixelType",pin,pixelType);
     return;
   }
+
+  sscanf(pixelType,"%ms",&pType);                 // save pixelType for later use with hasColor()
   
   rmt_enable(tx_chan);                            // enable channel
   channel=((int *)tx_chan)[0];                    // get channel number
