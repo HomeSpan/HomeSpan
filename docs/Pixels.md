@@ -48,9 +48,10 @@ Once a **Color** object is created, the color it stores can be set using one of 
   * returns a **Color** object
   * example: `myColor.HSV(120,100,50)` sets myColor to fully-saturated green with 50% brightness
 
-* `Color WC(uint8_t w, uint8_t c)`
+* `Color WC(uint8_t w, uint8_t c=0)`
     
   * sets just the warm-white and cool-white potions of a **Color** object to *w* and *c*, respectively, where values range from 0-255
+  * the cool-white value may be left unspecified, in which case it defaults to 0
   * this method is identical to calling `RGB(0,0,0,w,c);`
   * returns a **Color** object
    
@@ -76,9 +77,10 @@ The **Pixel** class also supports the following *class-level* methods as a conve
   * returns the resulting new **Color** object
   * example: `Pixel::Color c[]={Pixel::HSV(120,100,100),Pixel::HSV(60,100,100),Pixel::HSV(0,100,100)};` to create a green-yellow-red traffic light pattern
 
-* `static Color WC(uint8_t w, uint8_t c)`
+* `static Color WC(uint8_t w, uint8_t c=0)`
   * equivalent to `return(Color().WC(w,c));`
   * returns the resulting new **Color** object
+  * the cool-white value may be left unspecified, in which case it defaults to 0
   * example: `Pixel p(5);  p.set(Pixel::WC(0,128));` sets the color of a single pixel-device (attached to pin 5) to half-intensity cool-white
  
 * `static Color CCT(float temp, float v, float wTemp, float cTemp)`
