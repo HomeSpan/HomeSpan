@@ -130,7 +130,7 @@ The **Pixel** class relies on the ESP32's RMT peripheral to create the precise p
 * ESP32-S2 - 4 channels;
 * ESP32-S3 - 4 channels;
 * ESP32-C3 - 2 channels;
-* ESP32-C6 - 2 channel;
+* ESP32-C6 - 2 channels;
 
 Note the **RFControl** class also uses the ESP32's RMT peripheral so any instances of **RFControl** will consume RMT channels as well (for example, on an ESP32-C3 you could create two Pixels, two RFControls, or one Pixel and one RFControl). 
  
