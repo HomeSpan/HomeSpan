@@ -20,6 +20,9 @@ Creating an instance of this **class** configures the specified *pin* to output 
   * example: `Pixel myDevice(26, "WBRG");` creates a 4-color RGBW device attached to pin 26 where the colors are transmitted in the order white, blue, red, green
   * note that *pixelType* is optional.  If left unspecified, the default value is "GRB"
 
+> [!TIP]
+> Since it is often not obvious which type of LED your specific device may have, HomeSpan includes a sketch designed to help you determine the correct value of *pixelType*.  See [*File → Examples → HomeSpan → Other Examples → PixelTester*](../examples/Other%20Examples/PixelTester) under the Arduino IDE for detailed instructions.  Please use this tester sketch if you find the colors of your Pixel device are not matching what appears in the Home App.
+
 The two main methods to set pixel colors are:
 
 * `void set(Color color, int nPixels=1)`
