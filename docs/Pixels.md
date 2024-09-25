@@ -13,12 +13,14 @@ Creating an instance of this **class** configures the specified *pin* to output 
   * *pin* - the pin on which the RGB control signal will be output; normally connected to the "data" input of the addressable LED device
     
   * *pixelType* - a character string that specifies the type of LEDs to be controlled (e.g. WC, or RBGW) as well as the order in which color data is transmitted (e.g. RGB vs GBR).
-    * for *3-color* devices (e.g. an RGB LED), *pixelType* should be set to the characters "RGB" in whatever order required by your device
+    * for *3-color* devices (e.g. an RGB LED), *pixelType* should be set to the characters "RGB" in whatever order required by your device[^1]
     * for *4-color* devices (e.g. an RGB LED plus a White LED), *pixelType* should be set to the characters "RGBW" in whatever order required by your device
     * for *5-color* devices (e.g. an RGB LED plus separate Warm-White and Cool-White LEDs), *pixelType* should be set to the characters "RGBWC" in whatever order required by your device
     * for *2-color* devices (e.g. Warm-White and Cool-White LEDs only), *pixelType* should be set to the characters "WC-" in whatever order required by your device, where "-" represents a dummy byte since manufacturers of warm-white/cool-white LED strips generally use 3-channel device drivers (designed to operate RGB LEDs) but only connect 2 of the channels, say (Red and Green) to the Warm-White and Cool-White LEDs, leaving a third channel (in this example Blue), unconnected.
   * example: `Pixel myDevice(26, "WBRG");` creates a 4-color RGBW device attached to pin 26 where the colors are transmitted in the order white, blue, red, green
   * note that *pixelType* is optional.  If left unspecified, the default value is "GRB"
+
+[^1]:Some NeoPixel devices have nothing but white LEDs of a fixed temperature connected the usual Red, Green, and Blue outputs of a single Pixel.  If you wish to individually control each of the white LEDs associated with a single Pixel, set *pixelType* to "RGB" and pretend you are operating an RGB NeoPixel device.  Alternatively you can set *pixelType* to "WWW", in which case the **Pixel** library will control all three white LEDs within a single Pixel in tandem. 
 
 > [!TIP]
 > Since it is often not obvious which type of LED your specific device may have, HomeSpan includes a sketch designed to help you determine the correct value of *pixelType*.  See [*File → Examples → HomeSpan → Other Examples → PixelTester*](../examples/Other%20Examples/PixelTester) under the Arduino IDE for detailed instructions.  Please use this tester sketch if you find the colors of your Pixel device are not matching what appears in the Home App.
