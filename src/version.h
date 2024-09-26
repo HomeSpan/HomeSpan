@@ -32,9 +32,10 @@
 //////////////////////////////////////////////////////
 //              HomeSpan Version                    //
  
-#define     HS_MAJOR  1
-#define     HS_MINOR  10
+#define     HS_MAJOR  2
+#define     HS_MINOR  0
 #define     HS_PATCH  0
+#define     HS_EXTENSION  "-rc.1"
 
 //////////////////////////////////////////////////////
 
@@ -58,7 +59,7 @@
 #define     STRINGIFY(x) _STR(x)
 #define     _STR(x) #x
 
-#define     HOMESPAN_VERSION    STRINGIFY(HS_MAJOR) "." STRINGIFY(HS_MINOR) "." STRINGIFY(HS_PATCH)
+#define     HOMESPAN_VERSION    STRINGIFY(HS_MAJOR) "." STRINGIFY(HS_MINOR) "." STRINGIFY(HS_PATCH) HS_EXTENSION
 
 #define     VERSION(major,minor,patch) major*10000+minor*100+patch
 
