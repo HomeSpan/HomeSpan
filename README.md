@@ -4,12 +4,10 @@ Welcome to HomeSpan - a robust and extremely easy-to-use Arduino library for cre
 
 HomeSpan provides a microcontroller-focused implementation of Apple's HomeKit Accessory Protocol Specification Release R2 (HAP-R2) designed specifically for the Espressif ESP32 microcontroller running within the Arduino IDE.  HomeSpan pairs directly to HomeKit via your home WiFi network without the need for any external bridges or components.  With HomeSpan you can use the full power of the ESP32's I/O functionality to create custom control software and/or hardware to automatically operate external devices from the Home App on your iPhone, iPad, or Mac, or with Siri.
 
-HomeSpan requires version 2 of the [Arduino-ESP32 Board Manager](https://github.com/espressif/arduino-esp32).  HomeSpan can be run on the original ESP32 as well as Espressif's ESP32-S2, ESP32-C3, and ESP32-S3 chips.
-
-HomeSpan is currently NOT compatible with version 3.X of the Arduino-ESP32 Board Manager, since version 3 contains many breaking changes and is not backwards-compatible with version 2.X of the Arduino-ESP32 Board Manager.  At present, HomeSpan can only be compiled under version 2.X of the Board Manager. 
+The current "pre-release" of the second-generation of HomeSpan (2.0.0-rc.1) *requires version 3.0.2 or greater* of the [Arduino-ESP32 Board Manager](https://github.com/espressif/arduino-esp32) and will run on the original ESP32 as well as Espressif's S2, S3, C3, and C6 chips.  The final first-generation production release of HomeSpan (1.9.1) requires version 2 (any variation) of the [Arduino-ESP32 Board Manager](https://github.com/espressif/arduino-esp32) and will run on the original ESP32 as well as Espressif's S2, S3, C3 chips, but not on the C6 chip.
 
 > [!NOTE]
-> Apple's new HomeKit architecture [requires the use of a Home Hub](https://support.apple.com/en-us/HT207057) (either a HomePod or Apple TV) for full and proper operation of any HomeKit device, including those based on HomeSpan.  Without a Home Hub, HomeSpan cannot send notifications to the Home App - things like pushbuttons and temperature sensors will not be able to transmit updates to the Home App.  Use of HomeSpan without a Home Hub is NOT recommended.
+> Apple's HomeKit architecture [requires the use of a Home Hub](https://support.apple.com/en-us/HT207057) (either a HomePod or Apple TV) for full and proper operation of any HomeKit device, including those based on HomeSpan.  Use of HomeSpan without a Home Hub is NOT supported.
 
 ### HomeSpan Highlights
 
@@ -35,7 +33,7 @@ HomeSpan is currently NOT compatible with version 3.X of the Arduino-ESP32 Board
   * Physical pushbuttons that connect an ESP32 pin to either ground or VCC
   * Touch pads/sensors connected to an ESP32 pin (for ESP32 devices that support touch pads)
 * Integrated access to the ESP32's on-chip Remote Control peripheral for easy generation of IR and RF signals
-* Dedicated classes to control one- and two-wire addressable RGB and RGBW LEDs and LED strips
+* Dedicated classes to control one- and two-wire addressable RGB LEDs and LED strips
 * Dedicated classes to control stepper motors that can run smoothly in the background without interfering with HomeSpan
 * Dedicated class that faciliates seamless point-to-point communication between ESP32 devices using ESP-NOW
 * Integrated Web Log for user-defined log messages
@@ -54,96 +52,43 @@ HomeSpan is currently NOT compatible with version 3.X of the Arduino-ESP32 Board
   * Launch the WiFi Access Point
 * A standalone, detailed End-User Guide
 
-## ❗Latest Update - HomeSpan 1.9.1 (07/03/2024)
+## ❗Latest Update - HomeSpan 2.0.0-rc.1 (9/27/2024)
 
-* **HomeSpan now supports *Tag-Length-Value ("TLV8")* Characteristics!**
+* **This is an initial "pre-release" of the second-generation of HomeSpan designed for version 3 of the [Arduino-ESP32 Board Manager](https://github.com/espressif/arduino-esp32)**
 
-  * adds new, fully-integrated `TLV8()` class library for the creation and management of TLV8 objects
-  * includes methods to handle standard byte-stream VALUES as well as strings, numerical values, zero-length tags, and sub-TLVs
-  * utilizes standard C++ iterators for easy access to reading and writing TLV8 records
-  * adds new `Characteristic` methods `getTLV()`, `getNewTLV()`, and `setTLV()`
-  * adds new `CUSTOM_CHAR_TLV8()` that allows for easy creation of custom TLV8 Characteristics
-  * includes new [Tutorial Example 22 - TLV8 Characteristics](examples/22-TLV8_Characteristics) demonstrating use of the `TLV8()` class and TLV8 Characteristics
-  * see the new [TLV8 Characteristics](docs/TLV8.md) page for complete details and documentation 
-     
-* **New *DisplayOrder* TLV8 Characteristic**
+  * version 3 of the Arduino-ESP32 Board Manager is based on Espressif's IDF5, which is not backwards compatible with version 2 of the Arduino-ESP32 Board Manager that was based on Espressif's IDF4
+  * the primary focus of HomeSpan 2.0.0-rc.1 was to refactor HomeSpan 1.9.1 as needed to allow it to operate under version 3 of the Arduino-ESP32 board manager ---
+    * while **preserving backwards compatibility for all HomeSpan sketches written under HomeSpan 1.9.1**
+    * in spite of the many [breaking changes](https://docs.espressif.com/projects/esp-idf/en/stable/esp32/migration-guides/release-5.x/5.0/index.html) that Espressif made between IDF4 and IDF5,
+    * and numerous additional breaking changes between version 2 and 3 of the Arduino-ESP32 Board Manager
+      
+* **Support for the ESP32-C6**
   
-  * utlizes HomeSpan's new `TLV8()` library
-  * allows you to specify the exact order in which the Input Sources for a Television Service are displayed in the Home App
-  * see [Tutorial Example 22 - TLV8 Characteristics](examples/22-TLV8_Characteristics) for details
+  * version 3 of the Arduino-ESP32 Board Manager added support for Espressif's ESP32-C6 and ESP32-H2 chips
+    * HomeSpan supports the use of the C6 chip since it contains a WiFi radio, as currently required by HomeSpan, in addition to a Thread radio
+    * HomeSpan does *not* support the use of the H2 chip since it lacks a WiFi radio (contains only a Thread radio)
  
-* **New *AccessoryIdentifier* Tutorial**
+* **Expanded functionality for the HomeSpan Pixel and RFControl libraries**
 
-  * demonstrates how to trigger an Accessory's Identifier Characteristic, optionally used to help identify a device during initial pairing
-  * see [Tutorial Example 21 - AccessoryIdentifier](examples/21-AccessoryIdentifier)
+  * as a result of Espressif deprecating the IDF4-version of the RMT library and replacing it with a completely new library in IDF5, the HomeSpan Pixel and RFControl libraries have been completely written and upgraded:
+    * you can now instantiate both Pixel and RFControl objects in the same sketch (previously these classes were incompatible with eachother and could not be used in the same sketch)
+    * the Pixel class also adds a variety of new functionality:
+      * adds support for 5-color RGBWC (red, green, blue, warm-white, and cool-white) LEDs
+      * adds new method `Pixel::Color::WC()` to support setting warm-white / cool-white color values
+      * adds new methods `Pixel::Color::CCT()` and `Pixel::setTemperatures()` that automatically set the warm-white / cool-white colors of a Pixel device based on whatever correlated color temperature (CCT) the user specifies (e.g. 3000K)
+      * adds new constructor `Pixel(int pin, const char *pixelType)` that provides the ability to both select the colors and specify their transmission order (*pixelType*) to match a very wide variety of Pixel devices (ranging from pure-white LEDs to 5-color RGBWC LEDs)
+        * deprecates constructor `Pixel(int pin, pixelType_t pixelType)` that limited *pixelType* to a pre-defined set of values
+      * adds new method `boolean Pixel::hasColor(char c)` to determine whether an existing Pixel object supports any particular color
+        * deprecates `boolean Pixel::isRGBW()` only distinguished RGB from RGBW devices
+      * upgraded the [PixelTester](../examples/Other%20Examples/PixelTester) sketch to interactively step users through selecting and testing the correct *pixelType* for their device
+      * added new [Pixel-RGBWC](../examples/Other%20Examples/Pixel-RGBWC) example demonstrating how to implement an RGBWC Pixel light-strip with separate Home App controls for the RGB and WC LED
+      * see the [Addressable RGB LEDs](Pixels.md) page for full details
 
-* **Added support for customizing Pixel chips**
-
-  * new constructor `Pixel(uint8_t pin, [pixelType_t pixelType])` allows your to set the order in which colors are transmitted to the pixel chip, where *pixelType* is one of the following:
-    * PixelType::RGB, PixelType::RBG, PixelType::BRG, PixelType::BGR, PixelType::GBR, PixelType::GRB
-    * PixelType::RGBW, PixelType::RBGW, PixelType::BRGW, PixelType::BGRW, PixelType::GBRW, PixelType::GRBW* 
-  * deprecated previous constructor `Pixel(uint8_t pin, boolean isRGBW)`
-    * this constructor will continue to work, but you will receive a warning during compilation that it has been deprecated
-    * users should switch to the new constructor to avoid potential compatibility issues with future versions of HomeSpan
-  * added new method `boolean isRGBW()`
-    * returns *true* if Pixel was constructed as RGBW, else *false* if constructed as RGB only (i.e. no white LED)
-  * added new [PixelTester](examples/Other%20Examples/PixelTester) sketch (found under *Other Examples*) to aid in determining the *pixelType* for any LED Strip
-  * see the [Adressable RGB LEDs](docs/Pixels.md) page for details
-    
-* **New ability to read and set the IIDs of Services and Characteristics**
-
-  * adds new `SpanService` method `getIID()` that returns the IID of a Service
-  * adds new `SpanCharacteristic` method `getIID()` that returns the IID of a Characteristic
-  * adds new `homeSpan` method `resetIID(int newIID)` that resets the IID count for the current Accessory 
-  * see the [API Reference](docs/Reference.md) for details
-  
-* **New ability to read Controller pairing data (for advanced use-cases only)**
-
-  * adds new `homeSpan` methods `controllerListBegin()` and `controllerListEnd()` that returns iterators to HomeSpan's internal linked-list of Controller data records
-  * adds new methods to read each Controller's pairing data:
-    * `getID()` - returns a pointer to the 36-byte Device ID of the controller
-    * `getLTPK()` - a pointer to the 32-byte Long-Term Public Key of the controller
-    * `isAdmin()` - returns true if the controller has admin permission, else returns false
-  * adds new `homeSpan` method `setControllerCallback()` to set optional callback function that HomeSpan calls whenever a controller is added, removed, or updated
-  * see the [API Reference](docs/Reference.md) for details
- 
-* **HomeSpan now supports the *write-response ("WR")* protocol**
-  * added automated handling of the HomeKits's *write-response ("WR")* protocol*
-    * not needed for any Characteristics that are currently supported by HomeSpan, but useful for experimentation and work with Custom Characteristics
-  * added extra checks when using `setVal()`
-    * a warning message is output on the Serial Monitor if `setVal()` is called to change the value of a Characteristic from within the `update()` method at the same time the Home App is sending an update request for that value
-    * does not apply if `setVal()` is called from within `update()` to change the value of a Characteristic in response to a *write-response* request from the Home App
-   
-* **Converted the `getLinks()` SpanService method to a template function**
-  * allows user to automatically cast the elements of the returned vector into any specific Service type
-  * also adds an optional parameter to restrict the elements of the returned vector to match a specified HomeSpan Service
-  * see the [API Reference](docs/Reference.md) for details
- 
-* **New ability to halt the pulse generation for a ServoPin**
-  * calling `set(NAN)` for a ServoPin halts the pulse generation, which (for most analog servos) allows the motor to be freely rotated
-  * calling `set(position)`, where *position* equal the desired number of degrees, restarts the pulse generation and sets the servo position accordingly
-   
-* **Refactored client/slot management to save memory and prepare for future integration of Ethernet support**
-  * fixed-array of Client/Socket connections replaced by dynamic linked-list
-  * serial interface now only shows active client connections (rather than a fixed list of client slots)
-  * **deprecated** `homeSpan.reserveSocketConnections()` since it is no longer needed
-        
-* **Fixed bug introduced in 1.9.0 that prevented `homeSpan.setPairingCode()` from saving (and subsequently using) the request Setup Pairing Code**
-  * this method now operates silently, unless an invalid pairing code is provided, in which case an error is reported to the Serial Monitor and *the sketch is halted*
-  * the process for setting the Pairing Code using the CLI 'S' command or via the Access Point are unchanged - confirmation messages are still output to the Serial Monitor and errors do *not* cause the sketch to halt
-
-* **Fixed memory leak introduced in 1.9.0 that would fail to free a small temporary memory block created when verifying a new connection**
-  * had no practical impact when using a Home Hub since Home Kit only creates a few permanent connections
-  * had significant impact when not using a Home Hub in cases where the Home App repeatedly drops and re-establishes connections, resulting in slow erosion of heap memory and then out-of-memory failure of the device after a few days (note use of HomeSpan without a Home Hub is not formally supported)
-
-* **Fixed latent bug in SpanPoint** 
-  * HomeSpan would crash when printing **SpanPoint** configuration information to the Serial Monitor (the 'i' CLI command) if any of the instances of SpanPoint had *receiveSize=0*
-  * this bug never surfaced before since all the **SpanPoint examples** were based on receiving data and therefore had a non-zero *receiveSize*
- 
-* **Deleted `homeSpan.setMaxConnections()`, which had been *deprecated* many versions ago**
-
-* **Deleted stand-alone `SpanRange` structure, which had been *deprecated* many versions ago**
-  * this has no impact on standard use of the Characteristic method `setRange()`
+* ❗**Size alert**
+  * version 3 of the Arduino-ESP32 Board Manager has a much larger footprint that version 2
+  * the same HomeSpan sketch compiled under 1.9.1 will be approximately 200K larger when compiled under HomeSpan 2.0.0-rc.1!
+  * as a result HomeSpan sketches will no longer fit into a 1.2MB or 1.3MB partition (the ESP32 default) and must be compiled under a larger partition scheme (such as "Minimal SPIFFS" which provides for 1.9MB partitions)
+  * this has implications for upgrading through OTA (see Release Notes for details)
       
 See [Releases](https://github.com/HomeSpan/HomeSpan/releases) for details on all changes and bug fixes included in this update.
 
