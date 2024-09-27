@@ -4,10 +4,14 @@ Welcome to HomeSpan - a robust and extremely easy-to-use Arduino library for cre
 
 HomeSpan provides a microcontroller-focused implementation of Apple's HomeKit Accessory Protocol Specification Release R2 (HAP-R2) designed specifically for the Espressif ESP32 microcontroller running within the Arduino IDE.  HomeSpan pairs directly to HomeKit via your home WiFi network without the need for any external bridges or components.  With HomeSpan you can use the full power of the ESP32's I/O functionality to create custom control software and/or hardware to automatically operate external devices from the Home App on your iPhone, iPad, or Mac, or with Siri.
 
-The current "pre-release" of the second-generation of HomeSpan (2.0.0-rc.1) *requires version 3.0.2 or greater* of the [Arduino-ESP32 Board Manager](https://github.com/espressif/arduino-esp32) and will run on the original ESP32 as well as Espressif's S2, S3, C3, and C6 chips.  The final first-generation production release of HomeSpan (1.9.1) requires version 2 (any variation) of the [Arduino-ESP32 Board Manager](https://github.com/espressif/arduino-esp32) and will run on the original ESP32 as well as Espressif's S2, S3, C3 chips, but not on the C6 chip.
+HomeSpan has recently had its first generational update, transitioning from **version 1.9.1** to **version 2.0.0** (currently available as 2.0.0-rc.1).  This transition was the result of a major, non-backwards-compatible update by Espressif of their core IoT Development Framework (from&nbsp;[IDF-4 to IDF-5](https://docs.espressif.com/projects/esp-idf/en/stable/esp32/migration-guides/release-5.x/5.0/index.html)) and a subsequent update of their [Arduino-ESP32 Board Manager](https://github.com/espressif/arduino-esp32) (from version 2 to version 3) to use the new IDF-5.   Requirements to run HomeSpan depend on which version you choose:
 
-> [!NOTE]
-> Apple's HomeKit architecture [requires the use of a Home Hub](https://support.apple.com/en-us/HT207057) (either a HomePod or Apple TV) for full and proper operation of any HomeKit device, including those based on HomeSpan.  Use of HomeSpan without a Home Hub is NOT supported.
+|HomeSpan Version | Arduino-ESP32 Board Manager | Partition Scheme (for 4MB Flash) | Supported Chips|
+|:---:|:---:|:---:|---|
+|1.9.1 or earlier | v2.0.0 - v2.0.17 | *Default* (1.2MB APP/1.5MB SPIFFS) | ESP32, S2, S3, C3 |
+|2.0.0 or later | v3.0.2 or later | *Minimal SPIFFS* (1.9MB APP/190KB SPIFFS) | ESP32, S2, S3, C3, *and C6* |
+
+**ADDITIONAL REQUIREMENTS**:  Apple's HomeKit architecture [requires the use of a Home Hub](https://support.apple.com/en-us/HT207057) (either a HomePod or Apple TV) for full and proper operation of any HomeKit device, including those based on HomeSpan.  Use of HomeSpan without a Home Hub is NOT supported.
 
 ### HomeSpan Highlights
 
