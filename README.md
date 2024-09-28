@@ -87,7 +87,7 @@ Requirements to run HomeSpan depend on which version you choose:
 * ❗**SIZE ALERT** ❗
   * version 3 of the Arduino-ESP32 Board Manager has a **much** larger footprint than version 2
   * **the same HomeSpan sketch compiled under 1.9.1 will be approximately 200K larger under HomeSpan 2.0.0-rc.1**
-  * HomeSpan sketches will no longer fit into the *Default* parition scheme, which only allocates about 1.3MB to each OTA partition
+  * HomeSpan sketches will no longer fit into the *Default* partition scheme, which only allocates about 1.3MB to each OTA partition
   * sketches must be compiled under a larger partition scheme, such as *Minimal SPIFFS*, which provides for 1.9MB OTA partitions
   * **this has implications for upgrading sketches via OTA (see Release Notes for details)**
       
