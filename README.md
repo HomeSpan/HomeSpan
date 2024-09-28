@@ -8,7 +8,7 @@ HomeSpan has recently had its first generational update, transitioning from **ve
 
 Requirements to run HomeSpan depend on which version you choose:
 
-|HomeSpan Version | Arduino-ESP32 Board Manager | Partition Scheme (for 4MB Flash) | Supported Chips|
+|HomeSpan Version | Arduino-ESP32 Board Manager | Partition Scheme | Supported Chips|
 |:---:|:---:|:---:|---|
 |1.9.1 or earlier | v2.0.0 - v2.0.17 | *Default* (1.3MB APP) | ESP32, S2, S3, C3 |
 |2.0.0 or later | v3.0.2 or later | *Minimal SPIFFS* (1.9MB APP) | ESP32, S2, S3, C3, *and C6* |
