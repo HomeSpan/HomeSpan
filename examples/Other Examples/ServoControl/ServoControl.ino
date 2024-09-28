@@ -26,9 +26,8 @@
  ********************************************************************************/
  
 // This example demonstrates how to control a real-world Servo Motor using HomeSpan's
-// ServoPin Class, as included in "extras/PwmPin.h"  The code builds upon the
-// WindowShade Accessory from Example 13 by adding a Horizontal Tilt Characteristic that
-// is controlled by a Servo connected to the ESP32.
+// ServoPin Class. The code builds upon the WindowShade Accessory from Example 13 by
+// adding a Horizontal Tilt Characteristic that is controlled by a Servo connected to the ESP32.
 
 #include "HomeSpan.h" 
 #include "DEV_DoorsWindows.h" 

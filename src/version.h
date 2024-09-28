@@ -27,12 +27,15 @@
 
 #pragma once
 
+#include <Arduino.h>
+
 //////////////////////////////////////////////////////
 //              HomeSpan Version                    //
  
-#define     HS_MAJOR  1
-#define     HS_MINOR  9
-#define     HS_PATCH  1
+#define     HS_MAJOR  2
+#define     HS_MINOR  0
+#define     HS_PATCH  0
+#define     HS_EXTENSION  "-rc.1"
 
 //////////////////////////////////////////////////////
 
@@ -41,17 +44,22 @@
   #include <FATAL_ERROR>
 #endif
 
+#if !(defined(CONFIG_IDF_TARGET_ESP32) || defined(CONFIG_IDF_TARGET_ESP32S2) || defined(CONFIG_IDF_TARGET_ESP32S3) || defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32C6))
+  #error ERROR: SELECTED MICROCONTROLLER NOT SUPPORTED. HOMESPAN SUPPORTS THE FOLLOWING CHIPS: ESP32, ESP32-S2, ESP32-S3, ESP32-C3, AND ESP32-C6
+  #include <FATAL_ERROR>
+#endif
+
 #include <esp_arduino_version.h>
 
-#if ESP_ARDUINO_VERSION_MAJOR!=2
-  #error ERROR: HOMESPAN REQUIRES VERSION 2 OF THE ARDUINO ESP32 LIBRARY.  HOMESPAN IS NOT COMPATIBLE WITH VERSION 1 OR VERSION 3
+#if ESP_ARDUINO_VERSION < ESP_ARDUINO_VERSION_VAL(3, 0, 2)
+  #error ERROR: THIS VERSION OF HOMESPAN REQUIRES VERSION 3.0.2 OR GREATER OF THE ARDUINO-ESP32 BOARD MANAGER 
   #include <FATAL_ERROR>
 #endif
 
 #define     STRINGIFY(x) _STR(x)
 #define     _STR(x) #x
 
-#define     HOMESPAN_VERSION    STRINGIFY(HS_MAJOR) "." STRINGIFY(HS_MINOR) "." STRINGIFY(HS_PATCH)
+#define     HOMESPAN_VERSION    STRINGIFY(HS_MAJOR) "." STRINGIFY(HS_MINOR) "." STRINGIFY(HS_PATCH) HS_EXTENSION
 
 #define     VERSION(major,minor,patch) major*10000+minor*100+patch
 

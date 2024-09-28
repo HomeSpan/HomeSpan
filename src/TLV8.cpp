@@ -266,7 +266,7 @@ void TLV8::print(TLV8_itc it1, TLV8_itc it2) const {
     if(it1->getLen()==0)
       Serial.printf(" [null]");
     else if(it1->getLen()<=4)
-      Serial.printf(" [%u]",it1->getVal());
+      Serial.printf(" [%lu]",it1->getVal());
     else if(it1->getLen()<=8)
       Serial.printf(" [%llu]",it1->getVal<uint64_t>());
     Serial.printf("\n");

@@ -38,6 +38,7 @@
 #include <esp_sntp.h>
 #include <esp_ota_ops.h>
 #include <esp_wifi.h>
+#include <esp_app_format.h>
 
 #include "HomeSpan.h"
 #include "HAP.h"
@@ -87,8 +88,6 @@ void Span::begin(Category catID, const char *_displayName, const char *_hostName
 
   statusLED=new Blinker(statusDevice,autoOffLED);             // create Status LED, even is statusDevice is NULL
 
-  esp_task_wdt_delete(xTaskGetIdleTaskHandleForCPU(0));       // required to avoid watchdog timeout messages from ESP32-C3  
-
   hapServer=new WiFiServer(tcpPortNum);                                             // create HAP WIFI SERVER
  
   size_t len;
@@ -129,7 +128,7 @@ void Span::begin(Category catID, const char *_displayName, const char *_hostName
   LOG0("\nHomeSpan Version: %s",HOMESPAN_VERSION);
   LOG0("\nArduino-ESP Ver.: %s",ARDUINO_ESP_VERSION);
   LOG0("\nESP-IDF Version:  %d.%d.%d",ESP_IDF_VERSION_MAJOR,ESP_IDF_VERSION_MINOR,ESP_IDF_VERSION_PATCH);
-  LOG0("\nESP32 Chip:       %s Rev %d %s-core %dMB Flash", ESP.getChipModel(),ESP.getChipRevision(),
+  LOG0("\nESP32 Chip:       %s Rev %d %s-core %luMB Flash", ESP.getChipModel(),ESP.getChipRevision(),
                 ESP.getChipCores()==1?"single":"dual",ESP.getFlashChipSize()/1024/1024);
   
   #ifdef ARDUINO_VARIANT
@@ -138,7 +137,14 @@ void Span::begin(Category catID, const char *_displayName, const char *_hostName
   #endif
   
   LOG0("\nPWM Resources:    %d channels, %d timers, max %d-bit duty resolution",
-                LEDC_SPEED_MODE_MAX*LEDC_CHANNEL_MAX,LEDC_SPEED_MODE_MAX*LEDC_TIMER_MAX,LEDC_TIMER_BIT_MAX-1);
+                (int)LEDC_SPEED_MODE_MAX*(int)LEDC_CHANNEL_MAX,(int)LEDC_SPEED_MODE_MAX*(int)LEDC_TIMER_MAX,LEDC_TIMER_BIT_MAX-1);
+  LOG0("\nRMT Resources:    %d transmission channels of %d symbols each",SOC_RMT_TX_CANDIDATES_PER_GROUP,SOC_RMT_MEM_WORDS_PER_CHANNEL);
+  
+  #ifdef SOC_TOUCH_SENSOR_NUM
+    LOG0("\nTouch Sensors:    %d pins",SOC_TOUCH_SENSOR_NUM);
+  #else
+    LOG0("\nTouch Sensors:    none");
+  #endif
 
   LOG0("\nSodium Version:   %s  Lib %d.%d",sodium_version_string(),sodium_library_version_major(),sodium_library_version_minor());
   char mbtlsv[64];
@@ -147,7 +153,7 @@ void Span::begin(Category catID, const char *_displayName, const char *_hostName
 
   LOG0("\nSketch Compiled:  %s %s",__DATE__,__TIME__);
   LOG0("\nPartition:        %s",esp_ota_get_running_partition()->label);
-  LOG0("\nMAC Address:      %s",WiFi.macAddress().c_str());
+  LOG0("\nMAC Address:      %s",Network.macAddress().c_str());
   
   LOG0("\n\nDevice Name:      %s\n\n",displayName);
 
@@ -230,7 +236,7 @@ void Span::pollTask() {
   if(hapServer->hasClient()){  
  
     auto it=hapList.emplace(hapList.begin());                                // create new HAPClient connection
-    it->client=hapServer->available();
+    it->client=hapServer->accept();
     it->clientNumber=it->client.fd()-LWIP_SOCKET_OFFSET;
             
     HAPClient::pairStatus=pairState_M1;                                      // reset starting PAIR STATE (which may be needed if Accessory failed in middle of pair-setup)    
@@ -327,6 +333,7 @@ void Span::commandMode(){
         done=true;
       }
     } // button press
+    vTaskDelay(5);
   } // while
 
   STATUS_UPDATE(start(LED_ALERT),static_cast<HS_STATUS>(HS_ENTERING_CONFIG_MODE+mode+5))
@@ -472,7 +479,7 @@ void Span::checkConnect(){
   
   memcpy(hashInput,qrID,4);                                           // Create the Setup ID for use with optional QR Codes.  This is an undocumented feature of HAP R2!
   memcpy(hashInput+4,id,17);                                          // Step 1: Concatenate 4-character Setup ID and 17-character Accessory ID into hashInput
-  mbedtls_sha512_ret(hashInput,21,hashOutput,0);                      // Step 2: Perform SHA-512 hash on combined 21-byte hashInput to create 64-byte hashOutput
+  mbedtls_sha512(hashInput,21,hashOutput,0);                          // Step 2: Perform SHA-512 hash on combined 21-byte hashInput to create 64-byte hashOutput
   mbedtls_base64_encode((uint8_t *)setupHash,9,&len,hashOutput,4);    // Step 3: Encode the first 4 bytes of hashOutput in base64, which results in an 8-character, null-terminated, setupHash
   mdns_service_txt_item_set("_hap","_tcp","sh",setupHash);            // Step 4: broadcast the resulting Setup Hash
 
@@ -489,7 +496,7 @@ void Span::checkConnect(){
     LOG0("Authorization Password: %s",spanOTA.auth?"Enabled\n\n":"DISABLED!\n\n");
   }
   
-  mdns_service_txt_item_set("_hap","_tcp","ota",spanOTA.enabled?"yes":"no");                     // OTA status (info only - NOT used by HAP)
+  mdns_service_txt_item_set("_hap","_tcp","ota",spanOTA.enabled?"yes":"no");                // OTA status (info only - NOT used by HAP)
 
   if(webLog.isEnabled){
     mdns_service_txt_item_set("_hap","_tcp","logURL",webLog.statusURL.c_str()+4);           // Web Log status (info only - NOT used by HAP)
@@ -816,7 +823,7 @@ void Span::processSerialCommand(const char *c){
       char pNames[][7]={"PR","PW","EV","AA","TW","HD","WR"};
 
       for(auto acc=Accessories.begin(); acc!=Accessories.end(); acc++){
-        LOG0("\u27a4 Accessory:  AID=%u\n",(*acc)->aid);
+        LOG0("\u27a4 Accessory:  AID=%lu\n",(*acc)->aid);
         boolean foundInfo=false;
 
         if(acc==Accessories.begin() && (*acc)->aid!=1)
@@ -829,7 +836,7 @@ void Span::processSerialCommand(const char *c){
         vector<uint32_t, Mallocator<uint32_t>> iidValues;
 
         for(auto svc=(*acc)->Services.begin(); svc!=(*acc)->Services.end(); svc++){
-          LOG0("   \u279f Service %s:  IID=%u, %sUUID=\"%s\"\n",(*svc)->hapName,(*svc)->iid,(*svc)->isCustom?"Custom-":"",(*svc)->type);
+          LOG0("   \u279f Service %s:  IID=%lu, %sUUID=\"%s\"\n",(*svc)->hapName,(*svc)->iid,(*svc)->isCustom?"Custom-":"",(*svc)->type);
 
           if(!strcmp((*svc)->type,"3E")){
             foundInfo=true;
@@ -845,7 +852,7 @@ void Span::processSerialCommand(const char *c){
           iidValues.push_back((*svc)->iid);
 
           for(auto chr=(*svc)->Characteristics.begin(); chr!=(*svc)->Characteristics.end(); chr++){
-            LOG0("      \u21e8 Characteristic %s(%.33s%s):  IID=%u, %sUUID=\"%s\", %sPerms=",
+            LOG0("      \u21e8 Characteristic %s(%.33s%s):  IID=%lu, %sUUID=\"%s\", %sPerms=",
               (*chr)->hapName,(*chr)->uvPrint((*chr)->value).c_str(),strlen((*chr)->uvPrint((*chr)->value).c_str())>33?"...\"":"",(*chr)->iid,(*chr)->isCustom?"Custom-":"",(*chr)->type,(*chr)->perms!=(*chr)->hapChar->perms?"Custom-":"");
 
             int foundPerms=0;
@@ -946,7 +953,7 @@ void Span::processSerialCommand(const char *c){
       for(int i=0;i<Accessories.size();i++){                             // identify all services with over-ridden loop() methods
         for(int j=0;j<Accessories[i]->Services.size();j++){
           SpanService *s=Accessories[i]->Services[j];
-          LOG0("%-30s  %8.8s  %10u  %3u  %6s  %4s  %6s  ",s->hapName,s->type,Accessories[i]->aid,s->iid, 
+          LOG0("%-30s  %8.8s  %10lu  %3lu  %6s  %4s  %6s  ",s->hapName,s->type,Accessories[i]->aid,s->iid, 
                  (void(*)())(s->*(&SpanService::update))!=(void(*)())(&SpanService::update)?"YES":"NO",
                  (void(*)())(s->*(&SpanService::loop))!=(void(*)())(&SpanService::loop)?"YES":"NO",
                  (void(*)(int,boolean))(s->*(&SpanService::button))!=(void(*)(int,boolean))(&SpanService::button)?"YES":"NO"
@@ -954,7 +961,7 @@ void Span::processSerialCommand(const char *c){
           if(s->linkedServices.empty())
             LOG0("-");
           for(int k=0;k<s->linkedServices.size();k++){
-            LOG0("%u",s->linkedServices[k]->iid);
+            LOG0("%lu",s->linkedServices[k]->iid);
             if(k<s->linkedServices.size()-1)
               LOG0(",");
           }
@@ -1340,11 +1347,11 @@ int Span::updateCharacteristics(char *buf, SpanBuf *pObj){
       t1=NULL;
       char *t3;
       if(!strcmp(t2,"aid") && (t3=strtok_r(t1,"}[]:, \"\t\n\r",&p2))){
-        sscanf(t3,"%u",&pObj[nObj].aid);
+        sscanf(t3,"%lu",&pObj[nObj].aid);
         okay|=1;
       } else 
       if(!strcmp(t2,"iid") && (t3=strtok_r(t1,"}[]:, \"\t\n\r",&p2))){
-        sscanf(t3,"%u",&pObj[nObj].iid);
+        sscanf(t3,"%lu",&pObj[nObj].iid);
         okay|=2;
       } else 
       if(!strcmp(t2,"value") && (t3=strtok_r(t1,"}[]:,\"",&p2))){
@@ -1414,7 +1421,7 @@ int Span::updateCharacteristics(char *buf, SpanBuf *pObj){
         
         if(pObj[j].characteristic->service==pObj[i].characteristic->service){                               // if service of this characteristic matches service that was updated
           pObj[j].status=status;                                                                            // save statusCode for this object
-          LOG1("Updating aid=%u iid=%u",pObj[j].characteristic->aid,pObj[j].characteristic->iid);
+          LOG1("Updating aid=%lu iid=%lu",pObj[j].characteristic->aid,pObj[j].characteristic->iid);
           if(status==StatusCode::OK){                                                                       // if status is okay
             pObj[j].characteristic->uvSet(pObj[j].characteristic->value,pObj[j].characteristic->newValue);  // update characteristic value with new value
             if(pObj[j].characteristic->nvsKey){                                                             // if storage key found
@@ -1504,7 +1511,7 @@ boolean Span::printfAttributes(char **ids, int numIDs, int flags){
   StatusCode status[numIDs];
 
   for(int i=0;i<numIDs;i++){              // PASS 1: loop over all ids requested to check status codes - only errors are if characteristic not found, or not readable
-    sscanf(ids[i],"%u.%u",&aid,&iid);     // parse aid and iid
+    sscanf(ids[i],"%lu.%lu",&aid,&iid);   // parse aid and iid
     Characteristics[i]=find(aid,iid);     // find matching chararacteristic
     
     if(Characteristics[i]){                                         // if found
@@ -1528,7 +1535,7 @@ boolean Span::printfAttributes(char **ids, int numIDs, int flags){
     if(Characteristics[i])                                          // if found
       Characteristics[i]->printfAttributes(flags);                  // get JSON attributes for characteristic (may or may not include status=0 attribute)
     else{                                                           // else create JSON status attribute based on requested aid/iid
-      sscanf(ids[i],"%u.%u",&aid,&iid);                             
+      sscanf(ids[i],"%lu.%lu",&aid,&iid);                             
       hapOut << "{\"iid\":" << iid << ",\"aid\":" << aid << ",\"status\":" << (int)status[i] << "}";     
     }
       
@@ -1654,7 +1661,7 @@ SpanAccessory::~SpanAccessory(){
   while((*acc)!=this)
     acc++;
   homeSpan.Accessories.erase(acc);
-  LOG1("Deleted Accessory AID=%d\n",aid);
+  LOG1("Deleted Accessory AID=%lu\n",aid);
 }
 
 ///////////////////////////////
@@ -1722,7 +1729,7 @@ SpanService::~SpanService(){
     }
   }
   
-  LOG1("Deleted Service AID=%u IID=%u\n",accessory->aid,iid); 
+  LOG1("Deleted Service AID=%lu IID=%lu\n",accessory->aid,iid); 
 }
 
 ///////////////////////////////
@@ -1824,7 +1831,7 @@ SpanCharacteristic::~SpanCharacteristic(){
     free(newValue.STRING);
   }
   
-  LOG1("Deleted Characteristic AID=%u IID=%u\n",aid,iid);  
+  LOG1("Deleted Characteristic AID=%lu IID=%lu\n",aid,iid);  
 }
 
 ///////////////////////////////
@@ -2126,7 +2133,7 @@ StatusCode SpanCharacteristic::loadUpdate(char *val, char *ev, boolean wr){
     if(evFlag && !(perms&EV))         // notification is not supported for characteristic
       return(StatusCode::NotifyNotAllowed);
       
-    LOG1("Notification Request for aid=%u iid=%u: %s\n",aid,iid,evFlag?"true":"false");
+    LOG1("Notification Request for aid=%lu iid=%lu: %s\n",aid,iid,evFlag?"true":"false");
     HAPClient *hc=&(*(homeSpan.currentClient));
     
     if(evFlag)
@@ -2157,7 +2164,7 @@ StatusCode SpanCharacteristic::loadUpdate(char *val, char *ev, boolean wr){
         newValue.INT=0;
       else if(!strcmp(val,"true"))
         newValue.INT=1;
-      else if(!sscanf(val,"%d",&newValue.INT))
+      else if(!sscanf(val,"%ld",&newValue.INT))
         return(StatusCode::InvalidValue);
       break;
 
@@ -2184,7 +2191,7 @@ StatusCode SpanCharacteristic::loadUpdate(char *val, char *ev, boolean wr){
         newValue.UINT32=0;
       else if(!strcmp(val,"true"))
         newValue.UINT32=1;
-      else if(!sscanf(val,"%u",&newValue.UINT32))
+      else if(!sscanf(val,"%lu",&newValue.UINT32))
         return(StatusCode::InvalidValue);
       break;
       
@@ -2511,7 +2518,7 @@ void SpanOTA::progress(uint32_t progress, uint32_t total){
   int percent=progress*100/total;
   if(percent/10 != otaPercent/10){
     otaPercent=percent;
-    LOG0("%d%%..",progress*100/total);
+    LOG0("%d%%..",percent);
   }
 
   if(safeLoad && progress==total){
@@ -2598,7 +2605,7 @@ void SpanPoint::init(const char *password){
   esp_wifi_set_config(WIFI_IF_AP,&conf);
     
   uint8_t hash[32];
-  mbedtls_sha256_ret((const unsigned char *)password,strlen(password),hash,0);      // produce 256-bit bit hash from password
+  mbedtls_sha256((const unsigned char *)password,strlen(password),hash,0);      // produce 256-bit bit hash from password
 
   esp_now_init();                           // initialize ESP-NOW
   memcpy(lmk, hash, 16);                    // store first 16 bytes of hash for later use as local key
@@ -2711,7 +2718,9 @@ boolean SpanPoint::send(const void *data){
 
 ///////////////////////////////
 
-void SpanPoint::dataReceived(const uint8_t *mac, const uint8_t *incomingData, int len){
+void SpanPoint::dataReceived(const esp_now_recv_info *info, const uint8_t *incomingData, int len){
+
+  const uint8_t *mac=info->src_addr;
   
   auto it=SpanPoints.begin();
   for(;it!=SpanPoints.end() && memcmp((*it)->peerInfo.peer_addr,mac,6)!=0; it++);

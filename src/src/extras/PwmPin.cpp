@@ -44,10 +44,14 @@ LedC::LedC(uint8_t pin, uint16_t freq, boolean invert){
             timerList[nTimer][nMode]->speed_mode=(ledc_mode_t)nMode;
             timerList[nTimer][nMode]->timer_num=(ledc_timer_t)nTimer;
             timerList[nTimer][nMode]->freq_hz=freq;
+#if defined(SOC_LEDC_SUPPORT_APB_CLOCK)
             timerList[nTimer][nMode]->clk_cfg=LEDC_USE_APB_CLK;
+#elif defined(SOC_LEDC_SUPPORT_PLL_DIV_CLOCK)
+            timerList[nTimer][nMode]->clk_cfg=LEDC_USE_PLL_DIV_CLK;
+#endif
             
             int res=LEDC_TIMER_BIT_MAX-1;                               // find the maximum possible resolution
-            while(getApbFrequency()/(freq*pow(2,res))<1)
+            while(80.0e6/(freq*pow(2,res))<1)
               res--;     
               
             timerList[nTimer][nMode]->duty_resolution=(ledc_timer_bit_t)res;

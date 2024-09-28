@@ -29,7 +29,7 @@
  
 #include <DNSServer.h>
 
-#include "Network.h"
+#include "Network_HS.h"
 #include "HomeSpan.h"
 #include "Utils.h"
 
@@ -37,7 +37,7 @@ using namespace Utils;
 
 ///////////////////////////////
 
-void Network::scan(){
+void Network_HS::scan(){
 
   int n=WiFi.scanNetworks();
 
@@ -62,7 +62,7 @@ void Network::scan(){
 
 ///////////////////////////////
 
-void Network::serialConfigure(){
+void Network_HS::serialConfigure(){
 
   wifiData.ssid[0]='\0';
   wifiData.pwd[0]='\0';
@@ -94,7 +94,7 @@ void Network::serialConfigure(){
 
 ///////////////////////////////
 
-boolean Network::allowedCode(char *s){
+boolean Network_HS::allowedCode(char *s){
   return(
     strcmp(s,"00000000") && strcmp(s,"11111111") && strcmp(s,"22222222") && strcmp(s,"33333333") && 
     strcmp(s,"44444444") && strcmp(s,"55555555") && strcmp(s,"66666666") && strcmp(s,"77777777") &&
@@ -103,7 +103,7 @@ boolean Network::allowedCode(char *s){
 
 ///////////////////////////////
 
-void Network::apConfigure(){
+void Network_HS::apConfigure(){
 
   LOG0("*** Starting Access Point: %s / %s\n",apSSID,apPassword);
 
@@ -161,7 +161,7 @@ void Network::apConfigure(){
 
     dnsServer.processNextRequest();
 
-    if(client=apServer.available()){                    // found a new HTTP client
+    if(client=apServer.accept()){                       // found a new HTTP client
       LOG2("=======================================\n");
       LOG1("** Access Point Client Connected: (");
       LOG1(millis()/1000);
@@ -229,13 +229,14 @@ void Network::apConfigure(){
 
     } // process Client
 
+    vTaskDelay(5);
   } // while 1
 
 }
 
 ///////////////////////////////
 
-void Network::processRequest(char *body, char *formData){
+void Network_HS::processRequest(char *body, char *formData){
   
   String responseHead="HTTP/1.1 200 OK\r\nContent-type: text/html\r\n";
   
@@ -368,7 +369,7 @@ void Network::processRequest(char *body, char *formData){
 
 //////////////////////////////////////
 
-int Network::getFormValue(char *formData, const char *tag, char *value, int maxSize){
+int Network_HS::getFormValue(char *formData, const char *tag, char *value, int maxSize){
 
   char *s=strstr(formData,tag);     // find start of tag
   
@@ -402,7 +403,7 @@ int Network::getFormValue(char *formData, const char *tag, char *value, int maxS
 
 //////////////////////////////////////
 
-int Network::badRequestError(){
+int Network_HS::badRequestError(){
 
   char s[]="HTTP/1.1 400 Bad Request\r\n\r\n";
   LOG2("\n>>>>>>>>>> ");

@@ -118,7 +118,7 @@ struct HAPClient {
 
   // individual structures and data defined for each Hap Client connection
   
-  WiFiClient client;              // handle to client
+  NetworkClient client;           // handle to client
   int clientNumber;               // client number
   Controller *cPair=NULL;         // pointer to info on current, session-verified Paired Controller (NULL=un-verified, and therefore un-encrypted, connection)
    

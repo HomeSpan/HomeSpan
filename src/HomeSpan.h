@@ -49,7 +49,7 @@
 
 #include "Settings.h"
 #include "Utils.h"
-#include "Network.h"
+#include "Network_HS.h"
 #include "HAPConstants.h"
 #include "HapQR.h"
 #include "Characteristics.h"
@@ -93,7 +93,7 @@ enum HS_STATUS {
   HS_WIFI_NEEDED,                         // WiFi Credentials have not yet been set/stored
   HS_WIFI_CONNECTING,                     // HomeSpan is trying to connect to the network specified in the stored WiFi Credentials
   HS_PAIRING_NEEDED,                      // HomeSpan is connected to central WiFi network, but device has not yet been paired to HomeKit
-  HS_PAIRED,                              // HomeSpan is connected to central WiFi network and ther device has been paired to HomeKit
+  HS_PAIRED,                              // HomeSpan is connected to central WiFi network and the device has been paired to HomeKit
   HS_ENTERING_CONFIG_MODE,                // User has requested the device to enter into Command Mode
   HS_CONFIG_MODE_EXIT,                    // HomeSpan is in Command Mode with "Exit Command Mode" specified as choice
   HS_CONFIG_MODE_REBOOT,                  // HomeSpan is in Command Mode with "Reboot" specified as choice
@@ -216,7 +216,7 @@ class Span{
   friend class SpanButton;
   friend class SpanWebLog;
   friend class SpanOTA;
-  friend class Network;
+  friend class Network_HS;
   friend class HAPClient;
   
   char *displayName;                            // display name for this device - broadcast as part of Bonjour MDNS
@@ -267,7 +267,7 @@ class Span{
   Blinker *statusLED;                               // indicates HomeSpan status
   Blinkable *statusDevice = NULL;                   // the device used for the Blinker
   PushButton *controlButton = NULL;                 // controls HomeSpan configuration and resets
-  Network network;                                  // configures WiFi and Setup Code via either serial monitor or temporary Access Point
+  Network_HS network;                               // configures WiFi and Setup Code via either serial monitor or temporary Access Point
   SpanWebLog webLog;                                // optional web status/log
   TaskHandle_t pollTaskHandle = NULL;               // optional task handle to use for poll() function
   TaskHandle_t loopTaskHandle;                      // Arduino Loop Task handle
@@ -333,10 +333,10 @@ class Span{
   int getControlPin(){return(controlButton?controlButton->getPin():-1);}                 // get Control Pin (returns -1 if undefined)
 
   Span& setStatusPin(uint8_t pin){statusDevice=new GenericLED(pin);return(*this);}       // sets Status Device to a simple LED on specified pin
-  Span& setStatusPixel(uint8_t pin,float h=0,float s=100,float v=100){                   // sets Status Device to an RGB Pixel on specified pin
-    statusDevice=((new Pixel(pin))->setOnColor(Pixel::HSV(h,s,v)));
-    return(*this);
-  }
+   Span& setStatusPixel(uint8_t pin,float h=0,float s=100,float v=100){                  // sets Status Device to an RGB Pixel on specified pin
+     statusDevice=((new Pixel(pin))->setOnColor(Pixel::HSV(h,s,v)));
+     return(*this);
+   }
   Span& setStatusDevice(Blinkable *sDev){statusDevice=sDev;return(*this);}               // sets Status Device to a generic Blinkable object
   
   Span& setStatusAutoOff(uint16_t duration){autoOffLED=duration;return(*this);}          // sets Status LED auto off (seconds)  
@@ -438,6 +438,8 @@ class SpanAccessory{
   public:
 
   void *operator new(size_t size){return(HS_MALLOC(size));}     // override new operator to use PSRAM when available
+  void operator delete(void *p){free(p);}
+  
   SpanAccessory(uint32_t aid=0);                                // constructor
 };
 
@@ -470,6 +472,8 @@ class SpanService{
   public:
   
   void *operator new(size_t size){return(HS_MALLOC(size));}                               // override new operator to use PSRAM when available
+  void operator delete(void *p){free(p);}
+  
   SpanService(const char *type, const char *hapName, boolean isCustom=false);             // constructor
   SpanService *setPrimary();                                                              // sets the Service Type to be primary and returns pointer to self
   SpanService *setHidden();                                                               // sets the Service Type to be hidden and returns pointer to self
@@ -622,7 +626,7 @@ class SpanCharacteristic{
       nvsKey=(char *)HS_MALLOC(16);
       uint16_t t;
       sscanf(type,"%hx",&t);
-      sprintf(nvsKey,"%04X%08X%03X",t,aid,iid&0xFFF);
+      sprintf(nvsKey,"%04X%08lX%03lX",t,aid,iid&0xFFF);
       size_t len;    
 
       if(format<FORMAT::STRING){
@@ -656,6 +660,7 @@ class SpanCharacteristic{
 
   SpanCharacteristic(HapChar *hapChar, boolean isCustom=false);                               // SpanCharacteristic constructor
   void *operator new(size_t size){return(HS_MALLOC(size));}                                   // override new operator to use PSRAM when available
+  void operator delete(void *p){free(p);}
 
   template <class T=int> T getVal(){return(uvGet<T>(value));}                                 // gets the value for numeric-based Characteristics
   char *getString(){return(getStringGeneric(value));}                                         // gets the value for string-based Characteristics
@@ -807,7 +812,7 @@ class SpanPoint {
   static QueueHandle_t statusQueue;           // queue for communication between SpanPoint::dataSend and SpanPoint::send
   static nvs_handle pointNVS;                 // NVS storage for channel number (only used for remote devices)
   
-  static void dataReceived(const uint8_t *mac, const uint8_t *incomingData, int len);
+  static void dataReceived(const esp_now_recv_info *info, const uint8_t *incomingData, int len);
   static void init(const char *password="HomeSpan");
   static void setAsHub(){isHub=true;}
   static uint8_t nextChannel();

@@ -26,7 +26,7 @@
  ********************************************************************************/
 
 // For developer use and testing only - provides a common set of pin numbers mapped to the Adafruit Feather Board.
-// Facilitates the testing of identical code on an ESP32, ESP32-S2, and ESP32-C3 using a common jig without rewiring
+// Facilitates the testing of identical code on different ESP32 chips using a common jig without rewiring
 
 #pragma once
  
@@ -68,5 +68,15 @@
     BUILTIN_PIXEL=48                                                  // Built-in Neo-Pixel        
   };
   #define DEVICE_SUFFIX "-S3"
+  
+#elif defined(ARDUINO_ESP32C6_DEV)
+  enum {
+    F12=9,F27=6,F15=11,F32=7,F14=10,F16=13,F17=12,F21=15,             // Digital Only (8 pins)
+    F26=0,F25=1,F34=2,F39=3,F36=4,F4=5,                               // A0-A5
+    F22=22,F23=23,                                                    // I2C SCL/SDA
+    F5=21,F18=19,F19=20,F33=18,                                       // SPI SCK/SDO/SDI/CS
+    BUILTIN_PIXEL=8                                                   // Built-in Neo-Pixel        
+  };
+  #define DEVICE_SUFFIX "-C6"
   
 #endif

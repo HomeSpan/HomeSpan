@@ -1043,7 +1043,7 @@ int HAPClient::putPrepareURL(char *json){
   uint64_t pid;
    
   if((cBuf=strstr(json,ttlToken)))
-    sscanf(cBuf+strlen(ttlToken),"%u",&ttl);
+    sscanf(cBuf+strlen(ttlToken),"%lu",&ttl);
 
   if((cBuf=strstr(json,pidToken)))
     sscanf(cBuf+strlen(ttlToken),"%llu",&pid);
@@ -1233,7 +1233,7 @@ void HAPClient::checkTimedWrites(){
   auto tw=homeSpan.TimedWrites.begin();
   while(tw!=homeSpan.TimedWrites.end()){
     if(cTime>tw->second){                                             // timer has expired
-       LOG2("Removing PID=%llu  ALARM=%u\n",tw->first,tw->second);
+       LOG2("Removing PID=%llu  ALARM=%lu\n",tw->first,tw->second);
        tw=homeSpan.TimedWrites.erase(tw);
       }
     else
@@ -1555,7 +1555,7 @@ HapOut::HapStreamBuffer::HapStreamBuffer(){
   ctx = (mbedtls_sha512_context *)heap_caps_malloc(sizeof(mbedtls_sha512_context),caps);    // space for hash context
   
   mbedtls_sha512_init(ctx);                 // initialize context
-  mbedtls_sha512_starts_ret(ctx,1);         // start SHA-384 hash (note second argument=1)
+  mbedtls_sha512_starts(ctx,1);             // start SHA-384 hash (note second argument=1)
   
   setp(buffer, buffer+bufSize-1);           // assign buffer pointers
 }
@@ -1607,7 +1607,7 @@ void HapOut::HapStreamBuffer::flushBuffer(){
     delay(1);
   }
 
-  mbedtls_sha512_update_ret(ctx,(uint8_t *)buffer,num);   // update hash
+  mbedtls_sha512_update(ctx,(uint8_t *)buffer,num);       // update hash
 
   pbump(-num);                                            // reset buffer pointers
 }
@@ -1643,8 +1643,8 @@ int HapOut::HapStreamBuffer::sync(){
     callBackUserData=NULL;
   }
 
-  mbedtls_sha512_finish_ret(ctx,hash);    // finish SHA-384 and store hash
-  mbedtls_sha512_starts_ret(ctx,1);       // re-start hash for next time
+  mbedtls_sha512_finish(ctx,hash);    // finish SHA-384 and store hash
+  mbedtls_sha512_starts(ctx,1);       // re-start hash for next time
 
   return(0);
 }

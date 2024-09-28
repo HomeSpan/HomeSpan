@@ -51,7 +51,8 @@ char *Utils::readSerial(char *c, int max){
 
   while(1){
 
-    while(!Serial.available());       // wait until there is a new character
+    while(!Serial.available())             // wait until there is a new character
+      vTaskDelay(5);
     
     buf=Serial.read();
     
@@ -125,10 +126,10 @@ PushButton::PushButton(int pin, triggerType_t triggerType){
     threshold/=calibCount;
 #if SOC_TOUCH_VERSION_1
     threshold/=2;
-    LOG0("Touch Sensor at pin=%d used for calibration.  Triggers when sensor reading < %d.\n",pin,threshold);
+    LOG0("Touch Sensor at pin=%d used for calibration.  Triggers when sensor reading < %u.\n",pin,threshold);
 #elif SOC_TOUCH_VERSION_2
     threshold*=2;
-    LOG0("Touch Sensor at pin=%d used for calibration.  Triggers when sensor reading > %d.\n",pin,threshold);
+    LOG0("Touch Sensor at pin=%d used for calibration.  Triggers when sensor reading > %lu.\n",pin,threshold);
 #endif
   }
 #endif
@@ -281,7 +282,8 @@ int PushButton::type(){
 //////////////////////////////////////
 
 void PushButton::wait(){  
-  while(triggerType(pin));
+  while(triggerType(pin))
+    vTaskDelay(5);
 }
 
 //////////////////////////////////////

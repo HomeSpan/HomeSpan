@@ -70,7 +70,7 @@ void setup() {
   homeSpan.setLogLevel(1);
   Serial.begin(115200);
   delay(1000);
-  Serial.printf("Starting Remote Temperature Sensor.  MAC Address of this device = %s\n",WiFi.macAddress().c_str());
+  Serial.printf("Starting Remote Temperature Sensor.  MAC Address of this device = %s\n",Network.macAddress().c_str());
 #endif
 
   // In the line below, replace the MAC Address with that of your MAIN HOMESPAN DEVICE

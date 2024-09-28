@@ -4,7 +4,7 @@ The ESP32 has an on-chip Remote Control (RMT) signal-generator designed to drive
 
 ## *RFControl(int pin, boolean refClock=true)*
 
-Creating an instance of this **class** initializes the RF/IR signal generator and specifies the ESP32 *pin* to output the signal.  You may create more than one instance of this class if driving more than one RF/IR transmitter (each connected to different *pin*), subject to the following limitations:  ESP32 - 8 instances; ESP32-S2 and ESP32-S3 - 4 instances; ESP32-C3 - 2 instances.  The optional parameter *refClock* is more fully described further below under the `start()` method.
+Creating an instance of this **class** initializes the RF/IR signal generator and specifies the ESP32 *pin* to output the signal.  You may create more than one instance of this class if driving more than one RF/IR transmitter (each connected to different *pin*), subject to resource limitations.  The optional parameter *refClock* is more fully described further below under the `start()` method.
 
 Signals are defined as a sequence of HIGH and LOW phases that together form a pulse train where you specify the duration, in *ticks*, of each HIGH and LOW phase, shown respectively as H1-H4 and L1-L4 in the following diagram:  
 
@@ -31,7 +31,7 @@ Details of each function are as follows:
 
   * appends either a HIGH or LOW phase to the pulse train memory buffer for a specific instance of RFControl
 
-    * *numTicks* - the duration, in *ticks* of the pulse phase.  Durations of greater than 32767 ticks allowed (the system automatically creates repeated pulses of a maximum of 32767 ticks each until the specified duration of *numTicks* is reached)
+    * *numTicks* - the duration, in *ticks* of the pulse phase.  Durations of greater than 32767 ticks are allowed (the system automatically creates repeated pulses of a maximum of 32767 ticks each until the specified duration of *numTicks* is reached)
     
     * *phase* - set to 0 to create a LOW phase; set to 1 (or any non-zero number) to create a HIGH phase
     
@@ -81,7 +81,19 @@ rf.start(pulseTrain,3,4,1000);  // start transmission using the same parameters
 ```
 #### Diagnostic Messages
 
-The **RFControl** class outputs *Warning \[W\]* messages to the Serial Monitor based on the *Core Debug Level* selected when compiling the sketch using the Arduino IDE.  A non-fatal warning message is produced when insufficient Channel resources prevent the creation of a new RFControl object.  Calls to the `start()` method for objects that failed to be properly created are silently ignored.
+The **RFControl** class outputs *Error \[E\]* messages to the Serial Monitor based on the *Core Debug Level* selected when compiling the sketch using the Arduino IDE.  A non-fatal error message is produced when insufficient Channel resources prevent the creation of a new RFControl object.  Calls to the `start()` method for objects that failed to be properly created are silently ignored.
+
+#### Resource Usage
+
+The **RFControl** class relies on the ESP32's RMT peripheral to create the precise pulse trains required.  Since each instantiation of **RFControl** consumes an RMT channel, the number of **RFControl** objects you can instantiate (each controlling a separate transmitter attached to a specific pin) is limited to the number of RMT channels available as follows:
+
+* ESP32 - 8 channels;
+* ESP32-S2 - 4 channels;
+* ESP32-S3 - 4 channels;
+* ESP32-C3 - 2 channels;
+* ESP32-C6 - 2 channels;
+
+Note the **Pixel** class also uses the ESP32's RMT peripheral so any instances of **Pixel** will consume RMT channels as well (for example, on an ESP32-C3 you could create two Pixels, two RFControls, or one Pixel and one RFControl).
 
 ## Example RFControl Sketch
 

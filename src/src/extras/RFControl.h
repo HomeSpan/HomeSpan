@@ -31,9 +31,15 @@
 
 #pragma once
 
+#include "driver/gpio.h"
+
+#pragma GCC diagnostic ignored "-Wvolatile"
+
 #include <Arduino.h>
-#include <soc/rmt_reg.h>
-#include "driver/rmt.h"
+#include <driver/rmt_tx.h>      // IDF 5 RMT driver
+#include <soc/rmt_struct.h>     // where RMT register structure is defined
+#include <hal/rmt_ll.h>         // where low-level RMT calls are defined
+
 #include <vector>
 
 [[maybe_unused]] static const char* RFControl_TAG = "RFControl";
@@ -41,21 +47,21 @@
 using std::vector;
 
 class RFControl {
-  friend class Pixel;
   
   private:
-    rmt_config_t *config=NULL;
     vector<uint32_t> data;
     boolean lowWord=true;
     boolean refClock;
-    static uint8_t nChannels;
-
-    RFControl(uint8_t pin, boolean refClock, boolean installDriver);        // private constructor (only used by Pixel class)
+    uint8_t pin;
+    int channel=-1;
+    rmt_channel_handle_t tx_chan = NULL;
+    rmt_encoder_handle_t encoder;
+    rmt_transmit_config_t tx_config;
 
   public:    
-    RFControl(uint8_t pin, boolean refClock=true):RFControl(pin,refClock,true){};     // public constructor to create transmitter on pin, using 1-MHz Ref Tick clock or 80-MHz APB clock
+    RFControl(uint8_t pin, boolean refClock=true);                                    // public constructor to create transmitter on pin, using 1-MHz Ref Tick clock or 80-MHz APB clock
     
-    void start(uint32_t *data, int nData, uint8_t nCycles=1, uint8_t tickTime=1);     // starts transmission of pulses from specified data pointer, repeated for numCycles, where each tick in pulse is tickTime microseconds long
+    void start(uint32_t *data, size_t nData, uint8_t nCycles=1, uint8_t tickTime=1);  // starts transmission of pulses from specified data pointer, repeated for numCycles, where each tick in pulse is tickTime microseconds long
     void start(uint8_t nCycles=1, uint8_t tickTime=1);                                // starts transmission of pulses from internal data structure, repeated for numCycles, where each tick in pulse is tickTime microseconds long    
     
     void clear();                                         // clears transmitter memory
@@ -64,11 +70,8 @@ class RFControl {
     void enableCarrier(uint32_t freq, float duty=0.5);    // enables carrier wave if freq>0, else disables carrier wave; duty is a fraction from 0-1
     void disableCarrier(){enableCarrier(0);}              // disables carrier wave
 
-    int getPin(){return(config?config->gpio_num:-1);}                             // returns the pin number, or -1 if no channel defined
-    rmt_channel_t getChannel(){return(config?config->channel:RMT_CHANNEL_0);}     // returns channel, or channel_0 is no channel defined
-
     operator bool(){                                      // override boolean operator to return true/false if creation succeeded/failed
-      return(config);    
+      return(channel>=0);    
     }
 };
 

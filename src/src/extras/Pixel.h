@@ -31,29 +31,42 @@
 
 #pragma once
 
-#include "RFControl.h"
 #include "PwmPin.h"
 #include "Blinker.h"
 
+#pragma GCC diagnostic ignored "-Wvolatile"
+
+#include <driver/rmt_tx.h>      // IDF 5 RMT driver
+#include <soc/rmt_struct.h>     // where RMT register structure is defined
+#include <hal/rmt_ll.h>         // where low-level RMT calls are defined
+
+#include <soc/gpio_struct.h>
+
 [[maybe_unused]] static const char* PIXEL_TAG = "Pixel";
 
-typedef const uint8_t pixelType_t[];
+
+/***********************************/
+/* TO BE DEPRECATED IN 2.X RELEASE */
+
+typedef const String pixelType_t;
 
 namespace PixelType {
   
-  pixelType_t RGB={31,23,15,0}; 
-  pixelType_t RBG={31,15,23,0}; 
-  pixelType_t BRG={23,15,31,0}; 
-  pixelType_t BGR={15,23,31,0}; 
-  pixelType_t GBR={15,31,23,0}; 
-  pixelType_t GRB={23,31,15,0};
-  pixelType_t RGBW={31,23,15,7}; 
-  pixelType_t RBGW={31,15,23,7}; 
-  pixelType_t BRGW={23,15,31,7}; 
-  pixelType_t BGRW={15,23,31,7}; 
-  pixelType_t GBRW={15,31,23,7}; 
-  pixelType_t GRBW={23,31,15,7};
+  pixelType_t RGB="rgb";
+  pixelType_t RBG="rbg";
+  pixelType_t BRG="brg";
+  pixelType_t BGR="bgr";
+  pixelType_t GBR="gbr";
+  pixelType_t GRB="grb";
+  pixelType_t RGBW="rgbw";
+  pixelType_t RBGW="rbgw";
+  pixelType_t BRGW="brgw";
+  pixelType_t BGRW="bgrw";
+  pixelType_t GBRW="gbrw";
+  pixelType_t GRBW="grbw";
 };
+
+/***********************************/
 
 ////////////////////////////////////////////
 //     Single-Wire RGB/RGBW NeoPixels     //
@@ -63,127 +76,133 @@ class Pixel : public Blinkable {
 
   public:
     struct Color {
-      union{
-        struct {
-          uint8_t white:8;
-          uint8_t blue:8;
-          uint8_t green:8;
-          uint8_t red:8;
-        };
-        uint32_t val;
-      };
+      uint8_t col[5];
 
-      Color RGB(uint8_t r, uint8_t g, uint8_t b, uint8_t w=0){         // returns Color based on provided RGB(W) values where r/g/b/w=[0-255]
-        this->red=r;
-        this->green=g;
-        this->blue=b;
-        this->white=w;
+      Color(){
+        col[0]=0;
+        col[1]=0;
+        col[2]=0;
+        col[3]=0;
+        col[4]=0;
+      }
+
+      Color RGB(uint8_t r, uint8_t g, uint8_t b, uint8_t w=0, uint8_t c=0){         // returns Color based on provided RGB(WC) values where r/g/b/w/c=[0-255]
+        col[0]=r;
+        col[1]=g;
+        col[2]=b;
+        col[3]=w;
+        col[4]=c;
         return(*this);
       }
 
-      Color HSV(float h, float s, float v, double w=0){                // returns Color based on provided HSV(W) values where h=[0,360] and s/v/w=[0,100]
-        float r,g,b;
-        LedPin::HSVtoRGB(h,s/100.0,v/100.0,&r,&g,&b);
-        this->red=r*255;
-        this->green=g*255;
-        this->blue=b*255;
-        this->white=w*2.555;      
+      Color WC(uint8_t w, uint8_t c=0){                                             // returns Color based on provided RGB(WC) values where r/g/b/w/c=[0-255]
+        col[0]=0;
+        col[1]=0;
+        col[2]=0;
+        col[3]=w;
+        col[4]=c;
         return(*this);
       }      
 
+      Color HSV(float h, float s, float v, double w=0, double c=0){                 // returns Color based on provided HSV(WC) values where h=[0,360] and s/v/w/c=[0,100]
+        float r,g,b;
+        LedPin::HSVtoRGB(h,s/100.0,v/100.0,&r,&g,&b);
+        col[0]=r*255;
+        col[1]=g*255;
+        col[2]=b*255;
+        col[3]=w*2.555;
+        col[4]=c*2.555;
+        return(*this);
+      }
+
+      Color CCT(float temp, float v, float wTemp, float cTemp){
+        col[0]=0;
+        col[1]=0;
+        col[2]=0;        
+        if(temp<wTemp)
+          temp=wTemp;
+        else if(temp>cTemp)
+          temp=cTemp;
+        col[4]=(temp-wTemp)/(cTemp-wTemp)*255.0;
+        col[3]=255-col[4];
+        col[3]*=v/100.0;
+        col[4]*=v/100.0;        
+        return(*this);
+      }
+
       bool operator==(const Color& color){
-        return(val==color.val);
+        boolean eq=true;
+        for(int i=0;i<5;i++)
+          eq&=(col[i]==color.col[i]);
+        return(eq);          
       }
       
       bool operator!=(const Color& color){
-        return(val!=color.val);
+        return(!(*this==color));
       }
 
       Color operator+(const Color& color){
         Color newColor;
-        newColor.white=white+color.white;
-        newColor.blue=blue+color.blue;
-        newColor.red=red+color.red;
-        newColor.green=green+color.green;
+        for(int i=0;i<5;i++)
+          newColor.col[i]=col[i]+color.col[i];
         return(newColor);
       }
 
       Color& operator+=(const Color& color){
-        white+=color.white;
-        red+=color.red;
-        blue+=color.blue;
-        green+=color.green;
+        for(int i=0;i<5;i++)
+          col[i]+=color.col[i];
         return(*this);
-      }
-            
-      Color operator-(const Color& color){
-        Color newColor;
-        newColor.white=white-color.white;
-        newColor.blue=blue-color.blue;
-        newColor.red=red-color.red;
-        newColor.green=green-color.green;
-        return(newColor);
-      }
-
-      Color& operator-=(const Color& color){
-        white-=color.white;
-        red-=color.red;
-        blue-=color.blue;
-        green-=color.green;
-        return(*this);
-      }
-            
+      }                        
     }; // Color
   
   private:
-    struct pixel_status_t {
-      int nPixels;
-      Color *color;
-      int iMem;
-      boolean started;
-      Pixel *px;
-      boolean multiColor;
-      int iByte;
-    };
+    uint8_t pin;
+    int channel=-1;
+    char *pType=NULL;
+    rmt_channel_handle_t tx_chan = NULL;
+    rmt_encoder_handle_t encoder;
+    rmt_transmit_config_t tx_config;
   
-    RFControl *rf;                 // Pixel utilizes RFControl
-    uint32_t pattern[2];           // storage for zero-bit and one-bit pulses
     uint32_t resetTime;            // minimum time (in usec) between pulse trains
-    uint32_t txEndMask;            // mask for end-of-transmission interrupt
-    uint32_t txThrMask;            // mask for threshold interrupt
-    uint8_t bytesPerPixel;         // RGBW=4; RGB=3
-    const uint8_t *map;            // color map representing order in which color bytes are transmitted
+    uint8_t bytesPerPixel;         // WC=2, RGB=3, RGBW=4, RGBWC=5
+    float warmTemp=2000;           // default temperature (in Kelvin) of warm-white LED
+    float coolTemp=7000;           // defult temperature (in Kelvin) of cool-white LED
+    uint8_t map[5];                // color map representing order in which color bytes are transmitted
     Color onColor;                 // color used for on() command
-    
-    const int memSize=sizeof(RMTMEM.chan[0].data32)/4;    // determine size (in pulses) of one channel
-     
-    static void loadData(void *arg);            // interrupt handler 
-    volatile static pixel_status_t status;      // storage for volatile information modified in interupt handler   
   
   public:
-   
-    Pixel(int pin, pixelType_t pixelType=PixelType::GRB);            // creates addressable single-wire LED of pixelType connected to pin (such as the SK68 or WS28)   
+    Pixel(int pin, const char *pixelType="GRB");                     // creates addressable single-wire LED of pixelType connected to pin (such as the SK68 or WS28)   
     void set(Color *c, int nPixels, boolean multiColor=true);        // sets colors of nPixels based on array of Colors c; setting multiColor to false repeats Color in c[0] for all nPixels
     void set(Color c, int nPixels=1){set(&c,nPixels,false);}         // sets color of nPixels to be equal to specific Color c
     
-    static Color RGB(uint8_t r, uint8_t g, uint8_t b, uint8_t w=0){return(Color().RGB(r,g,b,w));}  // an alternative method for returning an RGB Color
-    static Color HSV(float h, float s, float v, double w=0){return(Color().HSV(h,s,v,w));}         // an alternative method for returning an HSV Color
+    static Color RGB(uint8_t r, uint8_t g, uint8_t b, uint8_t w=0, uint8_t c=0){return(Color().RGB(r,g,b,w,c));}   // a static method for returning an RGB(WC) Color
+    static Color HSV(float h, float s, float v, double w=0, double c=0){return(Color().HSV(h,s,v,w,c));}           // a static method for returning an HSV(WC) Color
+    static Color WC(uint8_t w, uint8_t c=0){return(Color().WC(w,c));}                                              // a static method for returning an Warm-White/Cold-White (WC) Color
+    static Color CCT(float temp, float v, float wTemp, float cTemp){return(Color().CCT(temp,v,wTemp,cTemp));}      // a static method for returning a CCT Color    
+    Color CCT(float temp, float v){return(Color().CCT(temp,v,warmTemp,coolTemp));}                                 // a member function for returning a CCT Color using pixel-specific temperatures
               
-    int getPin(){return(rf->getPin());}                                                     // returns pixel pin if valid, else returns -1
-    boolean isRGBW(){return(bytesPerPixel==4);}                                             // returns true if RGBW LED, else false if RGB LED
-    void setTiming(float high0, float low0, float high1, float low1, uint32_t lowReset);    // changes default timings for bit pulse - note parameters are in MICROSECONDS
+    int getPin(){return(channel);}                                                                  // returns pixel pin (=-1 if channel is not valid)
+    Pixel *setTiming(float high0, float low0, float high1, float low1, uint32_t lowReset);          // changes default timings for bit pulse - note parameters are in MICROSECONDS
+    Pixel *setTemperatures(float wTemp, float cTemp){warmTemp=wTemp;coolTemp=cTemp;return(this);}   // changes default warm-white and cool-white LED temperatures (in Kelvin)
         
+    boolean hasColor(char c){return(strchr(pType,toupper(c))!=NULL || strchr(pType,tolower(c))!=NULL);}   // returns true if pixelType includes c (case-insensitive)
+
     operator bool(){         // override boolean operator to return true/false if creation succeeded/failed
-      return(*rf);
+      return(channel>=0);
     }
 
     void on() {set(onColor);}
     void off() {set(RGB(0,0,0,0));}
     Pixel *setOnColor(Color c){onColor=c;return(this);}
 
-    [[deprecated("Please use Pixel(int pin, pixelType_t pixelType) constructor instead.")]]
-    Pixel(int pin, boolean isRGBW):Pixel(pin,isRGBW?PixelType::GRBW:PixelType::GRB){};
+    [[deprecated("*** Please use Pixel(int pin, const char *pixelType) constructor instead to ensure future compatibility.")]]
+    Pixel(int pin, boolean isRGBW) : Pixel(pin,isRGBW?"GRBW":"GRB"){}
+    
+    [[deprecated("*** Please use Pixel(int pin, const char *pixelType) constructor instead to ensure future compatibility.")]]
+    Pixel(int pin, pixelType_t pixelType) : Pixel(pin, pixelType.c_str()){}
 
+    [[deprecated("*** This method will be deprecated in a future release.")]]
+    boolean isRGBW(){return(bytesPerPixel==4);}
 };
 
 ////////////////////////////////////////////
@@ -205,6 +224,14 @@ class Dot {
         uint32_t val;
       };
 
+      Color(){
+        this->red=0;
+        this->green=0;
+        this->blue=0;
+        this->drive=31;
+        this->flags=7;
+      }      
+
       Color RGB(uint8_t r, uint8_t g, uint8_t b, uint8_t driveLevel=31){         // returns Color based on provided RGB values where r/g/b=[0-255] and current-limiting drive level=[0,31]       
         this->red=r;
         this->green=g;
@@ -214,7 +241,7 @@ class Dot {
         return(*this);
       }
 
-      Color HSV(float h, float s, float v, double drivePercent=100){              // returns Color based on provided HSV values where h=[0,360], s/v=[0,100], and current-limiting drive percent=[0,100]
+      Color HSV(float h, float s, float v, double drivePercent=100){             // returns Color based on provided HSV values where h=[0,360], s/v=[0,100], and current-limiting drive percent=[0,100]
         float r,g,b;
         LedPin::HSVtoRGB(h,s/100.0,v/100.0,&r,&g,&b);
         this->red=r*255;
