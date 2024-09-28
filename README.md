@@ -78,9 +78,9 @@ HomeSpan has recently had its first generational update, transitioning from **ve
   * as a result of Espressif deprecating the IDF4-version of the RMT library and replacing it with a completely new library in IDF-5, the HomeSpan **Pixel** and **RFControl** libraries have been completely written and upgraded:
     * you can now instantiate both **Pixel** and **RFControl** objects in the same sketch (previously these classes were incompatible with eachother and could not be used in the same sketch)
     * the **Pixel** class also adds a variety of new functionality supporting even more types of Pixel devices, including:
-      * an upgraded [PixelTester](../examples/Other%20Examples/PixelTester) sketch that steps users through selecting and testing the correct *pixelType* for their device
-      * a new [Pixel-RGBWC](../examples/Other%20Examples/Pixel-RGBWC) example demonstrating how to implement an RGBWC Pixel light-strip with separate Home App controls for the RGB and WC LED
-      * see the [Addressable RGB LEDs](Pixels.md) page for full details
+      * an upgraded [PixelTester](examples/Other%20Examples/PixelTester) sketch that steps users through selecting and testing the correct *pixelType* for their device
+      * a new [Pixel-RGBWC](examples/Other%20Examples/Pixel-RGBWC) example demonstrating how to implement an RGBWC Pixel light-strip with separate Home App controls for the RGB and WC LED
+      * see the [Addressable RGB LEDs](docs/Pixels.md) page for full details
 
 * ❗**Size alert**
   * version 3 of the Arduino-ESP32 Board Manager has a **much** larger footprint than version 2
