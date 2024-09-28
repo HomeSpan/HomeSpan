@@ -79,17 +79,17 @@ Requirements to run HomeSpan depend on which version you choose:
 
   * as a result of Espressif deprecating the IDF4-version of the RMT library and replacing it with a completely new library in IDF-5, the HomeSpan **Pixel** and **RFControl** libraries have been completely written and upgraded:
   * you can now instantiate both **Pixel** and **RFControl** objects in the same sketch (previously these classes were incompatible with eachother and could not be used in the same sketch)
-  * the **Pixel** class also adds a variety of new functionality supporting even more types of Pixel devices, including:
+  * the **Pixel** class also adds a variety of new functionality supporting even more types of Pixel devices, including
     * an upgraded [PixelTester](examples/Other%20Examples/PixelTester) sketch that steps users through selecting and testing the correct *pixelType* for their device
     * a new [Pixel-RGBWC](examples/Other%20Examples/Pixel-RGBWC) example demonstrating how to implement an RGBWC Pixel light-strip with separate Home App controls for the RGB and WC LED
     * see the [Addressable RGB LEDs](docs/Pixels.md) page for full details
 
-* ❗**Size alert**
+* ❗**SIZE ALERT** ❗
   * version 3 of the Arduino-ESP32 Board Manager has a **much** larger footprint than version 2
   * **the same HomeSpan sketch compiled under 1.9.1 will be approximately 200K larger under HomeSpan 2.0.0-rc.1**
   * HomeSpan sketches will no longer fit into the *Default* parition scheme, which only allocates about 1.3MB to each OTA partition
   * sketches must be compiled under a larger partition scheme, such as *Minimal SPIFFS*, which provides for 1.9MB OTA partitions
-  * this has implications for upgrading sketches via OTA (see Release Notes for details)
+  * **this has implications for upgrading sketches via OTA (see Release Notes for details)**
       
 See [Releases](https://github.com/HomeSpan/HomeSpan/releases) for details on all changes and bug fixes included in this update.
 
