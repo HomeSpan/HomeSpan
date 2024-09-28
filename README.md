@@ -58,41 +58,36 @@ HomeSpan has recently had its first generational update, transitioning from **ve
 
 ## ❗Latest Update - HomeSpan 2.0.0-rc.1 (9/27/2024)
 
-* **This is an initial "pre-release" of the second-generation of HomeSpan designed for version 3 of the [Arduino-ESP32 Board Manager](https://github.com/espressif/arduino-esp32)**
+* **Compability with version 3 of the [Arduino-ESP32 Board Manager](https://github.com/espressif/arduino-esp32)**
 
-  * version 3 of the Arduino-ESP32 Board Manager is based on Espressif's IDF5, which is not backwards compatible with version 2 of the Arduino-ESP32 Board Manager that was based on Espressif's IDF4
-  * the primary focus of HomeSpan 2.0.0-rc.1 was to refactor HomeSpan 1.9.1 as needed to allow it to operate under version 3 of the Arduino-ESP32 board manager ---
+  * version 3 of the Arduino-ESP32 Board Manager is based on Espressif's IDF-5, which is **not backwards compatible with version 2** of the Arduino-ESP32 Board Manager that was based on Espressif's IDF-4
+  * the primary focus of HomeSpan 2.0.0-rc.1 is to (minimally) refactor HomeSpan 1.9.1 only as needed to allow it to operate under version 3 of the Arduino-ESP32 board manager ---
     * while **preserving backwards compatibility for all HomeSpan sketches written under HomeSpan 1.9.1**
-    * in spite of the many [breaking changes](https://docs.espressif.com/projects/esp-idf/en/stable/esp32/migration-guides/release-5.x/5.0/index.html) that Espressif made between IDF4 and IDF5,
-    * and numerous additional breaking changes between version 2 and 3 of the Arduino-ESP32 Board Manager
+    * in spite of the many [breaking changes](https://docs.espressif.com/projects/esp-idf/en/stable/esp32/migration-guides/release-5.x/5.0/index.html) that Espressif made between IDF-4 and IDF-5,
+    * and numerous additional breaking changes introduced between versions 2 and 3 of the Arduino-ESP32 Board Manager
+    * **requires Arduino-ESP32 Board Manager 3.0.2 or greater**
       
 * **Support for the ESP32-C6**
   
   * version 3 of the Arduino-ESP32 Board Manager added support for Espressif's ESP32-C6 and ESP32-H2 chips
-    * HomeSpan supports the use of the C6 chip since it contains a WiFi radio, as currently required by HomeSpan, in addition to a Thread radio
+    * HomeSpan supports the use of the C6 chip since it contains a WiFi radio, as currently required by HomeSpan
     * HomeSpan does *not* support the use of the H2 chip since it lacks a WiFi radio (contains only a Thread radio)
  
 * **Expanded functionality for the HomeSpan Pixel and RFControl libraries**
 
-  * as a result of Espressif deprecating the IDF4-version of the RMT library and replacing it with a completely new library in IDF5, the HomeSpan Pixel and RFControl libraries have been completely written and upgraded:
-    * you can now instantiate both Pixel and RFControl objects in the same sketch (previously these classes were incompatible with eachother and could not be used in the same sketch)
-    * the Pixel class also adds a variety of new functionality:
-      * adds support for 5-color RGBWC (red, green, blue, warm-white, and cool-white) LEDs
-      * adds new method `Pixel::Color::WC()` to support setting warm-white / cool-white color values
-      * adds new methods `Pixel::Color::CCT()` and `Pixel::setTemperatures()` that automatically set the warm-white / cool-white colors of a Pixel device based on whatever correlated color temperature (CCT) the user specifies (e.g. 3000K)
-      * adds new constructor `Pixel(int pin, const char *pixelType)` that provides the ability to both select the colors and specify their transmission order (*pixelType*) to match a very wide variety of Pixel devices (ranging from pure-white LEDs to 5-color RGBWC LEDs)
-        * deprecates constructor `Pixel(int pin, pixelType_t pixelType)` that limited *pixelType* to a pre-defined set of values
-      * adds new method `boolean Pixel::hasColor(char c)` to determine whether an existing Pixel object supports any particular color
-        * deprecates `boolean Pixel::isRGBW()` only distinguished RGB from RGBW devices
-      * upgraded the [PixelTester](../examples/Other%20Examples/PixelTester) sketch to interactively step users through selecting and testing the correct *pixelType* for their device
-      * added new [Pixel-RGBWC](../examples/Other%20Examples/Pixel-RGBWC) example demonstrating how to implement an RGBWC Pixel light-strip with separate Home App controls for the RGB and WC LED
+  * as a result of Espressif deprecating the IDF4-version of the RMT library and replacing it with a completely new library in IDF-5, the HomeSpan **Pixel** and **RFControl** libraries have been completely written and upgraded:
+    * you can now instantiate both **Pixel** and **RFControl** objects in the same sketch (previously these classes were incompatible with eachother and could not be used in the same sketch)
+    * the **Pixel** class also adds a variety of new functionality supporting even more types of Pixel devices, including:
+      * an upgraded [PixelTester](../examples/Other%20Examples/PixelTester) sketch that steps users through selecting and testing the correct *pixelType* for their device
+      * a new [Pixel-RGBWC](../examples/Other%20Examples/Pixel-RGBWC) example demonstrating how to implement an RGBWC Pixel light-strip with separate Home App controls for the RGB and WC LED
       * see the [Addressable RGB LEDs](Pixels.md) page for full details
 
 * ❗**Size alert**
-  * version 3 of the Arduino-ESP32 Board Manager has a much larger footprint that version 2
-  * the same HomeSpan sketch compiled under 1.9.1 will be approximately 200K larger when compiled under HomeSpan 2.0.0-rc.1!
-  * as a result HomeSpan sketches will no longer fit into a 1.2MB or 1.3MB partition (the ESP32 default) and must be compiled under a larger partition scheme (such as "Minimal SPIFFS" which provides for 1.9MB partitions)
-  * this has implications for upgrading through OTA (see Release Notes for details)
+  * version 3 of the Arduino-ESP32 Board Manager has a **much** larger footprint than version 2
+  * **the same HomeSpan sketch compiled under 1.9.1 will be approximately 200K larger under HomeSpan 2.0.0-rc.1**
+  * HomeSpan sketches will no longer fit into the *Default* parition scheme, which only allocates about 1.3MB to each OTA partition
+  * sketches must be compiled under a larger partition scheme, such as *Minimal SPIFFS*, which provides for 1.9MB OTA partitions
+  * this has implications for upgrading sketches via OTA (see Release Notes for details)
       
 See [Releases](https://github.com/HomeSpan/HomeSpan/releases) for details on all changes and bug fixes included in this update.
 
@@ -131,6 +126,11 @@ Note that all documentation is version-controlled and tied to each branch.  The 
 In addition to HomeSpan resources, developers who are new to HomeKit programming may find useful Chapters 8 and 9 of Apple's HomeKit Accessory Protocol Specification, Non-Commercial Version, Release R2 (HAP-R2). This document is unfortunately no longer available from Apple (perhaps because it was last updated July, 2019, and is now somewhat out-of-date).  However, you may be able find copies of this document elsewhere on the web.  Note Apple has not replaced the HAP-R2 document with any other versions for non-commercial use, and Apple's open-source [HomeKit ADK](https://github.com/apple/HomeKitADK) only reflects the original HAP-R2 specs (rather than all the latest Services and Characteristics available in HomeKit for commercial devices).
 
 ---
+### Matter and Thread
+
+There are no plans to make HomeSpan compatible with Matter since HomeSpan was structured entirely around HAP R2.  In addition, both Apple and Espressif have released Matter SDKs for public use, reducing the need for yet another Matter SDK.
+
+Connecting HomeSpan directly to HomeKit via Thread is not planned (and might not even be possible).  However, Thread may be useful for inter-device communication similar to how HomeSpan uses ESP-NOW to implement remote, battery-operated devices.  This may be added at some point in a future release.
 
 ### Feedback or Questions?
 
