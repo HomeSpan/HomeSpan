@@ -11,7 +11,9 @@ Requirements to run HomeSpan depend on which version you choose:
 |HomeSpan Version | Arduino-ESP32 Board Manager | Partition Scheme | Supported Chips|
 |:---:|:---:|:---:|---|
 |1.9.1 or earlier | v2.0.0 - v2.0.17 | *Default* (1.3MB APP) | ESP32, S2, S3, C3 |
-|2.0.0 or later | v3.0.2 or later | *Minimal SPIFFS* (1.9MB APP) | ESP32, S2, S3, C3, *and C6* |
+|2.0.0 or later | v3.0.2 or later<sup>*</sup> | *Minimal SPIFFS* (1.9MB APP) | ESP32, S2, S3, C3, *and C6* |
+
+<sup>*</sup>HomeSpan has been tested through **version 3.0.5** of the Arduino-ESP32 Board Manager.  Later releases may work fine, but have not (yet) been tested.  Note HomeSpan does not support the use of alpha, beta, or pre-release candidates of the Arduino-ESP32 Board Manager - testing is only done on production releases of the Board Manager.
 
 **ADDITIONAL REQUIREMENTS**:  Apple's HomeKit architecture [requires the use of a Home Hub](https://support.apple.com/en-us/HT207057) (either a HomePod or Apple TV) for full and proper operation of any HomeKit device, including those based on HomeSpan.  Use of HomeSpan without a Home Hub is NOT supported.
 
@@ -58,7 +60,7 @@ Requirements to run HomeSpan depend on which version you choose:
   * Launch the WiFi Access Point
 * A standalone, detailed End-User Guide
 
-## ❗Latest Update - HomeSpan 2.0.0-rc.1 (9/27/2024)
+## ❗Latest Update - HomeSpan 2.0.0 (MM/DD/2024)
 
 * **Compability with version 3 of the [Arduino-ESP32 Board Manager](https://github.com/espressif/arduino-esp32)**
 
