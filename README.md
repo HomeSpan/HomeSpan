@@ -60,7 +60,7 @@ Requirements to run HomeSpan depend on which version you choose:
   * Launch the WiFi Access Point
 * A standalone, detailed End-User Guide
 
-## ❗Latest Update - HomeSpan 2.0.0 (MM/DD/2024)
+## ❗Latest Update - HomeSpan 2.0.0 (10/20/2024)
 
 * **Compability with version 3 of the [Arduino-ESP32 Board Manager](https://github.com/espressif/arduino-esp32)**
 
