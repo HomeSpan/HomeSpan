@@ -15,7 +15,7 @@ Requirements to run HomeSpan depend on which version you choose:
 
 <sup>*</sup>HomeSpan has been tested through **version 3.0.5** of the Arduino-ESP32 Board Manager.  Later releases may work fine, but have not (yet) been tested.  Note HomeSpan does not support the use of alpha, beta, or pre-release candidates of the Arduino-ESP32 Board Manager - testing is only done on production releases of the Board Manager.
 
-**ADDITIONAL REQUIREMENTS**:  Apple's HomeKit architecture [requires the use of a Home Hub](https://support.apple.com/en-us/HT207057) (either a HomePod or Apple TV) for full and proper operation of any HomeKit device, including those based on HomeSpan.  Use of HomeSpan without a Home Hub is NOT supported.
+**ADDITIONAL REQUIREMENTS**:  Apple's HomeKit architecture [requires the use of a Home Hub](https://support.apple.com/en-us/HT207057) (either a HomePod or Apple TV) for full and proper operation of any HomeKit device, including those based on HomeSpan.  ***Use of HomeSpan without a Home Hub is NOT supported.***
 
 ### HomeSpan Highlights
 
