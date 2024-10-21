@@ -35,7 +35,7 @@
 #define     HS_MAJOR  2
 #define     HS_MINOR  0
 #define     HS_PATCH  0
-#define     HS_EXTENSION  "-rc.1"
+#define     HS_EXTENSION  ""
 
 //////////////////////////////////////////////////////
 
