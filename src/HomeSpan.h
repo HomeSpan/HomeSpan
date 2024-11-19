@@ -113,6 +113,34 @@ enum HS_STATUS {
   HS_OTA_STARTED                          // HomeSpan is in the process of recveived an Over-the-Air software update
 };
 
+//////////////////////////////////////////////////////////
+// Paired Controller Structure for Permanently-Stored Data
+
+class Controller {
+  friend class HAPClient;
+  
+  boolean allocated=false;        // DEPRECATED (but needed for backwards compatability with original NVS storage of Controller info)
+  boolean admin;                  // Controller has admin privileges
+  uint8_t ID[36];                 // Pairing ID
+  uint8_t LTPK[32];               // Long Term Ed2519 Public Key
+
+  public:
+
+  Controller(uint8_t *id, uint8_t *ltpk, boolean ad){
+    allocated=true;
+    admin=ad;
+    memcpy(ID,id,36);
+    memcpy(LTPK,ltpk,32);
+  }
+
+  Controller(){}
+
+  const uint8_t *getID() const {return(ID);}
+  const uint8_t *getLTPK() const {return(LTPK);}
+  boolean isAdmin() const {return(admin);}
+
+};
+
 ///////////////////////////////
 
 // Forward-Declarations
@@ -126,7 +154,6 @@ struct SpanButton;
 struct SpanUserCommand;
 
 struct HAPClient;
-class Controller;
 
 extern Span homeSpan;
 
