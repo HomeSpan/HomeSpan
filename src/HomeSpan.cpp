@@ -72,11 +72,12 @@ Span::Span(){
   nvs_set_u8(wifiNVS,"REBOOTS",rebootCount);
   nvs_commit(wifiNVS);
 
+  WiFi.setSortMethod(WIFI_CONNECT_AP_BY_SIGNAL);          // use BSSID with best RSSI
   WiFi.setAutoReconnect(false);                           // allow HomeSpan to handle disconnect/reconnect logic
   WiFi.persistent(false);                                 // do not permanently store WiFi configuration data
-  networkEventQueue=xQueueCreate(10,sizeof(WiFiEvent_t)); // queue to transnmit network events
   
-  WiFi.onEvent([](WiFiEvent_t event){xQueueSend(homeSpan.networkEventQueue, &event, (TickType_t) 0);});
+  networkEventQueue=xQueueCreate(10,sizeof(arduino_event_id_t));    // queue to transmit network events
+  Network.onEvent([](arduino_event_id_t event){xQueueSend(homeSpan.networkEventQueue, &event, (TickType_t) 0);});
 }
 
 ///////////////////////////////
@@ -216,9 +217,6 @@ void Span::pollTask() {
         LOG0("YOU MAY CONFIGURE BY TYPING 'W <RETURN>'.\n\n");
         STATUS_UPDATE(start(LED_WIFI_NEEDED),HS_WIFI_NEEDED)
       }
-    } else {
-      STATUS_UPDATE(start(LED_WIFI_CONNECTING),HS_WIFI_CONNECTING)
-      WiFi.begin(network.wifiData.ssid,network.wifiData.pwd);
     }
           
     if(controlButton)
@@ -229,12 +227,16 @@ void Span::pollTask() {
     
   } // isInitialized
 
-  WiFiEvent_t event;
+  if(strlen(network.wifiData.ssid) && !(connected%2) && millis()>alarmConnect){
+    STATUS_UPDATE(start(LED_WIFI_CONNECTING),HS_WIFI_CONNECTING)
+    addWebLog(true,"Trying to connect to %s...\n",network.wifiData.ssid);
+    alarmConnect=millis()+waitTime;
+    WiFi.begin(network.wifiData.ssid,network.wifiData.pwd);
+  }
+
+  arduino_event_id_t event;
   if(xQueueReceive(networkEventQueue, &event, (TickType_t)0))
     networkCallback(event);
-    
-  if(connected && !networkConfigured)
-    configureNetwork();
 
   char cBuf[65]="?";
   
@@ -378,22 +380,37 @@ void Span::commandMode(){
 
 //////////////////////////////////////
 
-void Span::networkCallback(WiFiEvent_t event){
+void Span::networkCallback(arduino_event_id_t event){
   
-  Serial.printf("[WiFi-event] event: %d\n", event);
-
   switch (event) {
-    case ARDUINO_EVENT_WIFI_READY:               Serial.println("WiFi interface ready"); break;
-    case ARDUINO_EVENT_WIFI_SCAN_DONE:           Serial.println("Completed scan for access points"); break;
-    case ARDUINO_EVENT_WIFI_STA_START:           Serial.println("WiFi client started"); break;
-    case ARDUINO_EVENT_WIFI_STA_STOP:            Serial.println("WiFi clients stopped"); break;
-    case ARDUINO_EVENT_WIFI_STA_CONNECTED:       Serial.println("Connected to access point"); break;
-    case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:    Serial.println("Disconnected from WiFi access point"); break;
-    case ARDUINO_EVENT_WIFI_STA_AUTHMODE_CHANGE: Serial.println("Authentication mode of access point has changed"); break;
+    
+    case ARDUINO_EVENT_WIFI_READY:
+    case ARDUINO_EVENT_WIFI_STA_START:
+    case ARDUINO_EVENT_WIFI_STA_CONNECTED:
+      alarmConnect=millis()+waitTime;
+    break;
+      
+    case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
+      if(connected%2){                        // we are in a connected state
+        connected++;                          // move to unconnected state
+        addWebLog(true,"*** WiFi Connection Lost!");
+        STATUS_UPDATE(start(LED_WIFI_CONNECTING),HS_WIFI_CONNECTING)
+      }
+      alarmConnect=millis()+waitTime;         // wait before trying again
+    break;
+
     case ARDUINO_EVENT_WIFI_STA_GOT_IP:
     case ARDUINO_EVENT_WIFI_STA_GOT_IP6:
-//      homeSpan.connected++;
+      resetStatus();
+      addWebLog(true,"WiFi Connected!  IP Address = %s   (RSI=%d  BSSID=%s)",WiFi.localIP().toString().c_str(),WiFi.RSSI(),WiFi.BSSIDstr().c_str());
+      connected++;
+      if(connected==1)
+        configureNetwork();
     break;
+
+    case ARDUINO_EVENT_WIFI_SCAN_DONE:           Serial.println("Completed scan for access points"); break;
+    case ARDUINO_EVENT_WIFI_STA_STOP:            Serial.println("WiFi clients stopped"); break;
+    case ARDUINO_EVENT_WIFI_STA_AUTHMODE_CHANGE: Serial.println("Authentication mode of access point has changed"); break;
     case ARDUINO_EVENT_WIFI_STA_LOST_IP:        Serial.println("Lost IP address and IP address is reset to 0"); break;
     case ARDUINO_EVENT_WPS_ER_SUCCESS:          Serial.println("WiFi Protected Setup (WPS): succeeded in enrollee mode"); break;
     case ARDUINO_EVENT_WPS_ER_FAILED:           Serial.println("WiFi Protected Setup (WPS): failed in enrollee mode"); break;
@@ -418,98 +435,7 @@ void Span::networkCallback(WiFiEvent_t event){
 
 //////////////////////////////////////
 
-void Span::checkConnect(){
-
-  if(connected%2){
-    if(WiFi.status()==WL_CONNECTED)
-      return;
-      
-    addWebLog(true,"*** WiFi Connection Lost!");
-    connected++;
-    waitTime=60000;
-    alarmConnect=0;
-    STATUS_UPDATE(start(LED_WIFI_CONNECTING),HS_WIFI_CONNECTING)
-    }
-
-  if(WiFi.status()!=WL_CONNECTED){
-    if(millis()<alarmConnect)         // not yet time to try to try connecting
-      return;
-
-    if(waitTime==60000)
-      waitTime=1000;
-    else
-      waitTime*=2;
-      
-    if(waitTime==32000){
-      LOG0("\n*** Can't connect to %s.  You may type 'W <return>' to re-configure WiFi, or 'X <return>' to erase WiFi credentials.  Will try connecting again in 60 seconds.\n\n",network.wifiData.ssid);
-      waitTime=60000;
-    } else {    
-      if(verboseWifiReconnect)
-        addWebLog(true,"Trying to connect to %s.  Waiting %d sec...",network.wifiData.ssid,waitTime/1000);
-
-
-  Serial.println("Scan start");
-  int n=WiFi.scanNetworks(false, false, false, 300, 0, network.wifiData.ssid, nullptr);
-    
-  Serial.println("Scan done");
-  if (n == 0) {
-    Serial.println("no networks found");
-  } else {
-    Serial.print(n);
-    Serial.println(" networks found");
-    Serial.println("Nr | SSID                             | RSSI | CH | Encryption");
-    for (int i = 0; i < n; ++i) {
-      // Print SSID and RSSI for each network found
-      Serial.printf("%2d", i + 1);
-      Serial.print(" | ");
-      Serial.printf("%-32.32s", WiFi.SSID(i).c_str());
-      Serial.print(" | ");
-      Serial.printf("%4ld", WiFi.RSSI(i));
-      Serial.print(" | ");
-      Serial.printf("%s", WiFi.BSSIDstr(i).c_str());
-      Serial.print(" | ");
-      switch (WiFi.encryptionType(i)) {
-        case WIFI_AUTH_OPEN:            Serial.print("open"); break;
-        case WIFI_AUTH_WEP:             Serial.print("WEP"); break;
-        case WIFI_AUTH_WPA_PSK:         Serial.print("WPA"); break;
-        case WIFI_AUTH_WPA2_PSK:        Serial.print("WPA2"); break;
-        case WIFI_AUTH_WPA_WPA2_PSK:    Serial.print("WPA+WPA2"); break;
-        case WIFI_AUTH_WPA2_ENTERPRISE: Serial.print("WPA2-EAP"); break;
-        case WIFI_AUTH_WPA3_PSK:        Serial.print("WPA3"); break;
-        case WIFI_AUTH_WPA2_WPA3_PSK:   Serial.print("WPA2+WPA3"); break;
-        case WIFI_AUTH_WAPI_PSK:        Serial.print("WAPI"); break;
-        default:                        Serial.print("unknown");
-      }
-      Serial.println();
-      delay(10);
-    }
-  }
-  Serial.println("");
-
-  // Delete the scan result to free memory for code below.
-  WiFi.scanDelete();  
-
-
-
-
-      WiFi.setSortMethod(WIFI_CONNECT_AP_BY_SIGNAL);
-      WiFi.begin(network.wifiData.ssid,network.wifiData.pwd);
-    }
-
-    alarmConnect=millis()+waitTime;
-
-    return;
-  }
-}
-
-//////////////////////////////////////
-
 void Span::configureNetwork(){
-
-  resetStatus();  
-  networkConfigured=true;
-
-  addWebLog(true,"WiFi Connected!  IP Address = %s",WiFi.localIP().toString().c_str());
    
   char id[18];                              // create string version of Accessory ID for MDNS broadcast
   memcpy(id,HAPClient::accessory.ID,17);    // copy ID bytes
@@ -813,6 +739,7 @@ void Span::processSerialCommand(const char *c){
         hapServer->end();
         MDNS.end();
         WiFi.disconnect();
+        delay(1000);
       }
 
       network.serialConfigure();
@@ -2886,8 +2813,6 @@ vector<SpanPoint *, Mallocator<SpanPoint *>> SpanPoint::SpanPoints;
 uint16_t SpanPoint::channelMask=0x3FFE;
 QueueHandle_t SpanPoint::statusQueue;
 nvs_handle SpanPoint::pointNVS;
-
-QueueHandle_t Span::networkEventQueue;
 
 ///////////////////////////////
 //          MISC             //
