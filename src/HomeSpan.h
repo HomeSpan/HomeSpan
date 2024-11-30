@@ -271,6 +271,7 @@ class Span{
   nvs_handle hapNVS;                            // handle for non-volatile-storage of HAP data
 
   int connected=0;                              // WiFi connection status (increments upon each connect and disconnect)
+  boolean networkConfigured=false;              // flag to indicate when network has been fully configured
   unsigned long waitTime=60000;                 // time to wait (in milliseconds) between WiFi connection attempts
   unsigned long alarmConnect=0;                 // time after which WiFi connection attempt should be tried again
   
@@ -314,6 +315,7 @@ class Span{
 
   void pollTask();                              // poll HAP Clients and process any new HAP requests
   void checkConnect();                          // check WiFi connection; connect if needed
+  void configureNetwork();                      // configure Network services (MDNS, WebLog,  OTA, etc.) and start HAP Server
   void commandMode();                           // allows user to control and reset HomeSpan settings with the control button
   void resetStatus();                           // resets statusLED and calls statusCallback based on current HomeSpan status
   void reboot();                                // reboots device
@@ -336,7 +338,10 @@ class Span{
     sscanf(uuid,"%*8[0-9a-fA-F]-%*4[0-9a-fA-F]-%*4[0-9a-fA-F]-%*4[0-9a-fA-F]-%*12[0-9a-fA-F]%n",&x);
     return(strlen(uuid)!=36 || x!=36);
   }
-  
+
+  static QueueHandle_t networkEventQueue;                  // queue to transmit network events from callback thread to HomeSpan thread
+  void networkCallback(WiFiEvent_t event);                 // network event handler (works for WiFi as well as Ethernet)
+
   public:
 
   Span();   // constructor

@@ -1155,6 +1155,7 @@ void HAPClient::getStatusURL(HAPClient *hapClient, void (*callBack)(const char *
   
   hapOut << "<tr><td>WiFi Disconnects:</td><td>" << homeSpan.connected/2 << "</td></tr>\n";
   hapOut << "<tr><td>WiFi Signal:</td><td>" << (int)WiFi.RSSI() << " dBm</td></tr>\n";
+  hapOut << "<tr><td>AP MAC:</td><td>" << WiFi.BSSIDstr().c_str() << "</td></tr>\n";
   hapOut << "<tr><td>WiFi Gateway:</td><td>" << WiFi.gatewayIP().toString().c_str() << "</td></tr>\n";
   hapOut << "<tr><td>ESP32 Board:</td><td>" << ARDUINO_BOARD << "</td></tr>\n";
   hapOut << "<tr><td>Arduino-ESP Version:</td><td>" << ARDUINO_ESP_VERSION << "</td></tr>\n";

@@ -71,6 +71,12 @@ Span::Span(){
   rebootCount++;
   nvs_set_u8(wifiNVS,"REBOOTS",rebootCount);
   nvs_commit(wifiNVS);
+
+  WiFi.setAutoReconnect(false);                           // allow HomeSpan to handle disconnect/reconnect logic
+  WiFi.persistent(false);                                 // do not permanently store WiFi configuration data
+  networkEventQueue=xQueueCreate(10,sizeof(WiFiEvent_t)); // queue to transnmit network events
+  
+  WiFi.onEvent([](WiFiEvent_t event){xQueueSend(homeSpan.networkEventQueue, &event, (TickType_t) 0);});
 }
 
 ///////////////////////////////
@@ -212,6 +218,7 @@ void Span::pollTask() {
       }
     } else {
       STATUS_UPDATE(start(LED_WIFI_CONNECTING),HS_WIFI_CONNECTING)
+      WiFi.begin(network.wifiData.ssid,network.wifiData.pwd);
     }
           
     if(controlButton)
@@ -222,9 +229,12 @@ void Span::pollTask() {
     
   } // isInitialized
 
-  if(strlen(network.wifiData.ssid)>0){
-      checkConnect();
-  }
+  WiFiEvent_t event;
+  if(xQueueReceive(networkEventQueue, &event, (TickType_t)0))
+    networkCallback(event);
+    
+  if(connected && !networkConfigured)
+    configureNetwork();
 
   char cBuf[65]="?";
   
@@ -368,6 +378,46 @@ void Span::commandMode(){
 
 //////////////////////////////////////
 
+void Span::networkCallback(WiFiEvent_t event){
+  
+  Serial.printf("[WiFi-event] event: %d\n", event);
+
+  switch (event) {
+    case ARDUINO_EVENT_WIFI_READY:               Serial.println("WiFi interface ready"); break;
+    case ARDUINO_EVENT_WIFI_SCAN_DONE:           Serial.println("Completed scan for access points"); break;
+    case ARDUINO_EVENT_WIFI_STA_START:           Serial.println("WiFi client started"); break;
+    case ARDUINO_EVENT_WIFI_STA_STOP:            Serial.println("WiFi clients stopped"); break;
+    case ARDUINO_EVENT_WIFI_STA_CONNECTED:       Serial.println("Connected to access point"); break;
+    case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:    Serial.println("Disconnected from WiFi access point"); break;
+    case ARDUINO_EVENT_WIFI_STA_AUTHMODE_CHANGE: Serial.println("Authentication mode of access point has changed"); break;
+    case ARDUINO_EVENT_WIFI_STA_GOT_IP:
+    case ARDUINO_EVENT_WIFI_STA_GOT_IP6:
+//      homeSpan.connected++;
+    break;
+    case ARDUINO_EVENT_WIFI_STA_LOST_IP:        Serial.println("Lost IP address and IP address is reset to 0"); break;
+    case ARDUINO_EVENT_WPS_ER_SUCCESS:          Serial.println("WiFi Protected Setup (WPS): succeeded in enrollee mode"); break;
+    case ARDUINO_EVENT_WPS_ER_FAILED:           Serial.println("WiFi Protected Setup (WPS): failed in enrollee mode"); break;
+    case ARDUINO_EVENT_WPS_ER_TIMEOUT:          Serial.println("WiFi Protected Setup (WPS): timeout in enrollee mode"); break;
+    case ARDUINO_EVENT_WPS_ER_PIN:              Serial.println("WiFi Protected Setup (WPS): pin code in enrollee mode"); break;
+    case ARDUINO_EVENT_WIFI_AP_START:           Serial.println("WiFi access point started"); break;
+    case ARDUINO_EVENT_WIFI_AP_STOP:            Serial.println("WiFi access point  stopped"); break;
+    case ARDUINO_EVENT_WIFI_AP_STACONNECTED:    Serial.println("Client connected"); break;
+    case ARDUINO_EVENT_WIFI_AP_STADISCONNECTED: Serial.println("Client disconnected"); break;
+    case ARDUINO_EVENT_WIFI_AP_STAIPASSIGNED:   Serial.println("Assigned IP address to client"); break;
+    case ARDUINO_EVENT_WIFI_AP_PROBEREQRECVED:  Serial.println("Received probe request"); break;
+    case ARDUINO_EVENT_WIFI_AP_GOT_IP6:         Serial.println("AP IPv6 is preferred"); break;
+    case ARDUINO_EVENT_ETH_GOT_IP6:             Serial.println("Ethernet IPv6 is preferred"); break;
+    case ARDUINO_EVENT_ETH_START:               Serial.println("Ethernet started"); break;
+    case ARDUINO_EVENT_ETH_STOP:                Serial.println("Ethernet stopped"); break;
+    case ARDUINO_EVENT_ETH_CONNECTED:           Serial.println("Ethernet connected"); break;
+    case ARDUINO_EVENT_ETH_DISCONNECTED:        Serial.println("Ethernet disconnected"); break;
+    case ARDUINO_EVENT_ETH_GOT_IP:              Serial.println("Obtained IP address"); break;
+    default:                                    break;
+  }
+}
+
+//////////////////////////////////////
+
 void Span::checkConnect(){
 
   if(connected%2){
@@ -396,6 +446,53 @@ void Span::checkConnect(){
     } else {    
       if(verboseWifiReconnect)
         addWebLog(true,"Trying to connect to %s.  Waiting %d sec...",network.wifiData.ssid,waitTime/1000);
+
+
+  Serial.println("Scan start");
+  int n=WiFi.scanNetworks(false, false, false, 300, 0, network.wifiData.ssid, nullptr);
+    
+  Serial.println("Scan done");
+  if (n == 0) {
+    Serial.println("no networks found");
+  } else {
+    Serial.print(n);
+    Serial.println(" networks found");
+    Serial.println("Nr | SSID                             | RSSI | CH | Encryption");
+    for (int i = 0; i < n; ++i) {
+      // Print SSID and RSSI for each network found
+      Serial.printf("%2d", i + 1);
+      Serial.print(" | ");
+      Serial.printf("%-32.32s", WiFi.SSID(i).c_str());
+      Serial.print(" | ");
+      Serial.printf("%4ld", WiFi.RSSI(i));
+      Serial.print(" | ");
+      Serial.printf("%s", WiFi.BSSIDstr(i).c_str());
+      Serial.print(" | ");
+      switch (WiFi.encryptionType(i)) {
+        case WIFI_AUTH_OPEN:            Serial.print("open"); break;
+        case WIFI_AUTH_WEP:             Serial.print("WEP"); break;
+        case WIFI_AUTH_WPA_PSK:         Serial.print("WPA"); break;
+        case WIFI_AUTH_WPA2_PSK:        Serial.print("WPA2"); break;
+        case WIFI_AUTH_WPA_WPA2_PSK:    Serial.print("WPA+WPA2"); break;
+        case WIFI_AUTH_WPA2_ENTERPRISE: Serial.print("WPA2-EAP"); break;
+        case WIFI_AUTH_WPA3_PSK:        Serial.print("WPA3"); break;
+        case WIFI_AUTH_WPA2_WPA3_PSK:   Serial.print("WPA2+WPA3"); break;
+        case WIFI_AUTH_WAPI_PSK:        Serial.print("WAPI"); break;
+        default:                        Serial.print("unknown");
+      }
+      Serial.println();
+      delay(10);
+    }
+  }
+  Serial.println("");
+
+  // Delete the scan result to free memory for code below.
+  WiFi.scanDelete();  
+
+
+
+
+      WiFi.setSortMethod(WIFI_CONNECT_AP_BY_SIGNAL);
       WiFi.begin(network.wifiData.ssid,network.wifiData.pwd);
     }
 
@@ -403,18 +500,17 @@ void Span::checkConnect(){
 
     return;
   }
+}
+
+//////////////////////////////////////
+
+void Span::configureNetwork(){
 
   resetStatus();  
-  connected++;
+  networkConfigured=true;
 
   addWebLog(true,"WiFi Connected!  IP Address = %s",WiFi.localIP().toString().c_str());
-
-  if(connected>1){                           // Do not initialize everything below if this is only a reconnect
-    if(wifiCallbackAll)
-      wifiCallbackAll((connected+1)/2);
-    return;
-  }
-    
+   
   char id[18];                              // create string version of Accessory ID for MDNS broadcast
   memcpy(id,HAPClient::accessory.ID,17);    // copy ID bytes
   id[17]='\0';                              // add terminating null
@@ -485,7 +581,6 @@ void Span::checkConnect(){
 
   if(spanOTA.enabled){
     ArduinoOTA.setHostname(hostName);
-
     if(spanOTA.auth)
       ArduinoOTA.setPasswordHash(spanOTA.otaPwd);
 
@@ -543,13 +638,54 @@ Span& Span::setQRID(const char *id){
 void Span::processSerialCommand(const char *c){
 
   switch(c[0]){
+
+    case 'D': {
+      WiFi.disconnect();
+    }
+      break;
     
     case 'Z': {
-      for(auto it=hapList.begin(); it!=hapList.end(); ++it){
-        (*it).client.stop();
-        delay(5);
-        
+  Serial.println("Scan start");
+
+  // WiFi.scanNetworks will return the number of networks found.
+  int n = WiFi.scanNetworks();
+  Serial.println("Scan done");
+  if (n == 0) {
+    Serial.println("no networks found");
+  } else {
+    Serial.print(n);
+    Serial.println(" networks found");
+    Serial.println("Nr | SSID                             | RSSI | CH | Encryption");
+    for (int i = 0; i < n; ++i) {
+      // Print SSID and RSSI for each network found
+      Serial.printf("%2d", i + 1);
+      Serial.print(" | ");
+      Serial.printf("%-32.32s", WiFi.SSID(i).c_str());
+      Serial.print(" | ");
+      Serial.printf("%4ld", WiFi.RSSI(i));
+      Serial.print(" | ");
+      Serial.printf("%s", WiFi.BSSIDstr(i).c_str());
+      Serial.print(" | ");
+      switch (WiFi.encryptionType(i)) {
+        case WIFI_AUTH_OPEN:            Serial.print("open"); break;
+        case WIFI_AUTH_WEP:             Serial.print("WEP"); break;
+        case WIFI_AUTH_WPA_PSK:         Serial.print("WPA"); break;
+        case WIFI_AUTH_WPA2_PSK:        Serial.print("WPA2"); break;
+        case WIFI_AUTH_WPA_WPA2_PSK:    Serial.print("WPA+WPA2"); break;
+        case WIFI_AUTH_WPA2_ENTERPRISE: Serial.print("WPA2-EAP"); break;
+        case WIFI_AUTH_WPA3_PSK:        Serial.print("WPA3"); break;
+        case WIFI_AUTH_WPA2_WPA3_PSK:   Serial.print("WPA2+WPA3"); break;
+        case WIFI_AUTH_WAPI_PSK:        Serial.print("WAPI"); break;
+        default:                        Serial.print("unknown");
       }
+      Serial.println();
+      delay(10);
+    }
+  }
+  Serial.println("");
+
+  // Delete the scan result to free memory for code below.
+  WiFi.scanDelete();   
     }
     break;
 
@@ -557,7 +693,7 @@ void Span::processSerialCommand(const char *c){
       
       LOG0("\n*** HomeSpan Status ***\n\n");
 
-      LOG0("IP Address:        %s\n",WiFi.localIP().toString().c_str());
+      LOG0("IP Address:        %s   (RSI=%d  BSSID=%s)\n",WiFi.localIP().toString().c_str(),WiFi.RSSI(),WiFi.BSSIDstr().c_str());
        if(webLog.isEnabled && hostName!=NULL)   
         LOG0("Web Logging:       http://%s.local:%d%s\n",hostName,tcpPortNum,webLog.statusURL.c_str()+4);
       LOG0("\nAccessory ID:      ");
@@ -2751,6 +2887,7 @@ uint16_t SpanPoint::channelMask=0x3FFE;
 QueueHandle_t SpanPoint::statusQueue;
 nvs_handle SpanPoint::pointNVS;
 
+QueueHandle_t Span::networkEventQueue;
 
 ///////////////////////////////
 //          MISC             //
