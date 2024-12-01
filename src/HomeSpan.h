@@ -404,6 +404,8 @@ class Span{
   Span& setControllerCallback(void (*f)()){controllerCallback=f;return(*this);}          // sets an optional user-defined function to call whenever a Controller is added/removed/changed
 
   Span& setHostNameSuffix(const char *suffix){asprintf(&hostNameSuffix,"%s",suffix);return(*this);}      // sets the hostName suffix to be used instead of the 6-byte AccessoryID
+
+  void WiFiConnect(const char *ssid, const char *pwd);
  
   int enableOTA(boolean auth=true, boolean safeLoad=true){return(spanOTA.init(auth, safeLoad, NULL));}   // enables Over-the-Air updates, with (auth=true) or without (auth=false) authorization password  
   int enableOTA(const char *pwd, boolean safeLoad=true){return(spanOTA.init(true, safeLoad, pwd));}      // enables Over-the-Air updates, with custom authorization password (overrides any password stored with the 'O' command)

@@ -238,7 +238,7 @@ void Span::pollTask() {
     waitTime*=waitTimeMult;
     if(waitTime>waitTimeMaximum)
       waitTime=waitTimeMinimum;
-    WiFi.begin(network.wifiData.ssid,network.wifiData.pwd);
+    WiFiConnect(network.wifiData.ssid,network.wifiData.pwd);
   }
 
   arduino_event_id_t event;
@@ -404,14 +404,26 @@ Span& Span::setConnectionTimes(uint32_t minTime, uint32_t maxTime, uint8_t nStep
     
 //////////////////////////////////////
 
+void Span::WiFiConnect(const char *ssid, const char *pwd){
+
+  int n=WiFi.scanNetworks(false, false, false, 300, 0, ssid, nullptr);
+
+  if(n>0){
+    LOG0("\n");
+    for(int i=0;i<n;i++)
+      LOG0(" \u27a1 %s - %s:  %ld\n",WiFi.SSID(i).c_str(),WiFi.BSSIDstr(i).c_str(),WiFi.RSSI(i));
+    LOG0("\n");
+  }
+
+  WiFi.begin(ssid, pwd, 0, n>0 ? WiFi.BSSID(0,NULL) : NULL, true);
+  WiFi.scanDelete();
+}
+
+//////////////////////////////////////
+
 void Span::networkCallback(arduino_event_id_t event){
   
   switch (event) {
-    
-//    case ARDUINO_EVENT_WIFI_READY:
-//    case ARDUINO_EVENT_WIFI_STA_START:
-//    case ARDUINO_EVENT_WIFI_STA_CONNECTED:
-//    break;
       
     case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
       if(connected%2){                        // we are in a connected state
@@ -434,7 +446,8 @@ void Span::networkCallback(arduino_event_id_t event){
         wifiCallbackAll((connected+1)/2);
     break;
 
-    case ARDUINO_EVENT_WIFI_SCAN_DONE:           Serial.println("Completed scan for access points"); break;
+//    case ARDUINO_EVENT_WIFI_SCAN_DONE:           Serial.println("Completed scan for access points"); break;
+
     case ARDUINO_EVENT_WIFI_STA_STOP:            Serial.println("WiFi clients stopped"); break;
     case ARDUINO_EVENT_WIFI_STA_AUTHMODE_CHANGE: Serial.println("Authentication mode of access point has changed"); break;
     case ARDUINO_EVENT_WIFI_STA_LOST_IP:        Serial.println("Lost IP address and IP address is reset to 0"); break;
