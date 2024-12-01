@@ -72,9 +72,10 @@ Span::Span(){
   nvs_set_u8(wifiNVS,"REBOOTS",rebootCount);
   nvs_commit(wifiNVS);
 
-  WiFi.setSortMethod(WIFI_CONNECT_AP_BY_SIGNAL);          // use BSSID with best RSSI
   WiFi.setAutoReconnect(false);                           // allow HomeSpan to handle disconnect/reconnect logic
   WiFi.persistent(false);                                 // do not permanently store WiFi configuration data
+
+  setConnectionTimes(5,60,5);                             // default minTime=5 sec, maxTime=60 sec, nSteps=5
   
   networkEventQueue=xQueueCreate(10,sizeof(arduino_event_id_t));    // queue to transmit network events
   Network.onEvent([](arduino_event_id_t event){xQueueSend(homeSpan.networkEventQueue, &event, (TickType_t) 0);});
@@ -218,7 +219,7 @@ void Span::pollTask() {
         STATUS_UPDATE(start(LED_WIFI_NEEDED),HS_WIFI_NEEDED)
       }
     }
-          
+                
     if(controlButton)
       controlButton->reset();        
 
@@ -229,8 +230,14 @@ void Span::pollTask() {
 
   if(strlen(network.wifiData.ssid) && !(connected%2) && millis()>alarmConnect){
     STATUS_UPDATE(start(LED_WIFI_CONNECTING),HS_WIFI_CONNECTING)
-    addWebLog(true,"Trying to connect to %s...\n",network.wifiData.ssid);
+
+    if(verboseWifiReconnect)
+      addWebLog(true,"Trying to connect to %s.  Waiting %ld sec...",network.wifiData.ssid,(waitTime+500)/1000);
+    
     alarmConnect=millis()+waitTime;
+    waitTime*=waitTimeMult;
+    if(waitTime>waitTimeMaximum)
+      waitTime=waitTimeMinimum;
     WiFi.begin(network.wifiData.ssid,network.wifiData.pwd);
   }
 
@@ -380,23 +387,40 @@ void Span::commandMode(){
 
 //////////////////////////////////////
 
+Span& Span::setConnectionTimes(uint32_t minTime, uint32_t maxTime, uint8_t nSteps){
+  
+  if(minTime<1 || maxTime<=minTime || nSteps<1){
+    LOG0("\n*** WARNING!  Call to setConnectionTimes(%ld,%ld,%d) ignored: illegal parameters\n",minTime,maxTime,nSteps);
+  } else {
+    waitTimeMinimum=minTime*1000;
+    waitTimeMaximum=maxTime*1000;
+    waitTimeNumSteps=nSteps;
+    
+    waitTime=waitTimeMinimum;
+    waitTimeMult=pow((double)waitTimeMaximum/(double)waitTimeMinimum,1.0/(double)waitTimeNumSteps);
+  }
+  return(*this);
+}
+    
+//////////////////////////////////////
+
 void Span::networkCallback(arduino_event_id_t event){
   
   switch (event) {
     
-    case ARDUINO_EVENT_WIFI_READY:
-    case ARDUINO_EVENT_WIFI_STA_START:
-    case ARDUINO_EVENT_WIFI_STA_CONNECTED:
-      alarmConnect=millis()+waitTime;
-    break;
+//    case ARDUINO_EVENT_WIFI_READY:
+//    case ARDUINO_EVENT_WIFI_STA_START:
+//    case ARDUINO_EVENT_WIFI_STA_CONNECTED:
+//    break;
       
     case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
       if(connected%2){                        // we are in a connected state
         connected++;                          // move to unconnected state
         addWebLog(true,"*** WiFi Connection Lost!");
         STATUS_UPDATE(start(LED_WIFI_CONNECTING),HS_WIFI_CONNECTING)
+        waitTime=waitTimeMinimum;
+        alarmConnect=millis();
       }
-      alarmConnect=millis()+waitTime;         // wait before trying again
     break;
 
     case ARDUINO_EVENT_WIFI_STA_GOT_IP:
@@ -406,6 +430,8 @@ void Span::networkCallback(arduino_event_id_t event){
       connected++;
       if(connected==1)
         configureNetwork();
+      if(wifiCallbackAll)
+        wifiCallbackAll((connected+1)/2);
     break;
 
     case ARDUINO_EVENT_WIFI_SCAN_DONE:           Serial.println("Completed scan for access points"); break;
@@ -539,9 +565,6 @@ void Span::configureNetwork(){
   
   if(wifiCallback)
     wifiCallback();
-
-  if(wifiCallbackAll)
-    wifiCallbackAll((connected+1)/2);
   
 } // initWiFi
 

@@ -38,7 +38,9 @@ void setup() {
   homeSpan.enableWebLog(50);
   homeSpan.enableOTA();
   homeSpan.begin(Category::Lighting,"HomeSpan OTA Test");
-  
+
+  homeSpan.setConnectionTimes(0,10,5).setConnectionTimes(10,10,5).setConnectionTimes(5,10,0).setConnectionTimes(5,10,1);
+
   new SpanAccessory();
     new Service::AccessoryInformation();  
       new Characteristic::Identify();

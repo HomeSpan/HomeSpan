@@ -271,7 +271,11 @@ class Span{
   nvs_handle hapNVS;                            // handle for non-volatile-storage of HAP data
 
   int connected=0;                              // WiFi connection status (increments upon each connect and disconnect)
-  unsigned long waitTime=5000;                  // time to wait (in milliseconds) between WiFi connection attempts
+  uint32_t waitTime;                            // time to wait (in milliseconds) between WiFi connection attempts
+  uint32_t waitTimeMinimum;                     // minimum time to wait (in milliseconds) between WiFi connection attempts
+  uint32_t waitTimeMaximum;                     // maximum time to wait (in milliseconds) between WiFi connection attempts
+  uint8_t waitTimeNumSteps;                     // number of attempts between minimum and maximum times
+  double waitTimeMult;                          // amount to extend waitTime on subsequent attempts
   unsigned long alarmConnect=0;                 // time after which WiFi connection attempt should be tried again
   
   const char *defaultSetupCode=DEFAULT_SETUP_CODE;            // Setup Code used for pairing
@@ -391,6 +395,7 @@ class Span{
   Span& setApFunction(void (*f)()){apFunction=f;return(*this);}                          // sets an optional user-defined function to call when activating the WiFi Access Point  
   Span& enableAutoStartAP(){autoStartAPEnabled=true;return(*this);}                      // enables auto start-up of Access Point when WiFi Credentials not found
   Span& setWifiCredentials(const char *ssid, const char *pwd);                           // sets WiFi Credentials
+  Span& setConnectionTimes(uint32_t minTime, uint32_t maxTime, uint8_t nSteps);          // sets min/max WiFi connection times (in seconds) and number of steps  
   Span& setStatusCallback(void (*f)(HS_STATUS status)){statusCallback=f;return(*this);}  // sets an optional user-defined function to call when HomeSpan status changes
   const char* statusString(HS_STATUS s);                                                 // returns char string for HomeSpan status change messages
   Span& setPairingCode(const char *s, boolean progCall=true);                            // sets the Pairing Code - use is NOT recommended.  Use 'S' from CLI instead
@@ -399,7 +404,7 @@ class Span{
   Span& setControllerCallback(void (*f)()){controllerCallback=f;return(*this);}          // sets an optional user-defined function to call whenever a Controller is added/removed/changed
 
   Span& setHostNameSuffix(const char *suffix){asprintf(&hostNameSuffix,"%s",suffix);return(*this);}      // sets the hostName suffix to be used instead of the 6-byte AccessoryID
-
+ 
   int enableOTA(boolean auth=true, boolean safeLoad=true){return(spanOTA.init(auth, safeLoad, NULL));}   // enables Over-the-Air updates, with (auth=true) or without (auth=false) authorization password  
   int enableOTA(const char *pwd, boolean safeLoad=true){return(spanOTA.init(true, safeLoad, pwd));}      // enables Over-the-Air updates, with custom authorization password (overrides any password stored with the 'O' command)
 
