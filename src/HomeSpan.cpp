@@ -74,6 +74,8 @@ Span::Span(){
 
   WiFi.setAutoReconnect(false);                           // allow HomeSpan to handle disconnect/reconnect logic
   WiFi.persistent(false);                                 // do not permanently store WiFi configuration data
+  WiFi.setScanMethod(WIFI_ALL_CHANNEL_SCAN);              // scan ALL channels - do NOT stop at first SSID match, else you could connect to weaker BSSID
+  WiFi.setSortMethod(WIFI_CONNECT_AP_BY_SIGNAL);          // sort scan data by RSSI and connect to strongest BSSID with matching SSID
 
   setConnectionTimes(5,60,5);                             // default minTime=5 sec, maxTime=60 sec, nSteps=5
   
@@ -238,7 +240,14 @@ void Span::pollTask() {
     waitTime*=waitTimeMult;
     if(waitTime>waitTimeMaximum)
       waitTime=waitTimeMinimum;
-    WiFiConnect(network.wifiData.ssid,network.wifiData.pwd);
+    WiFi.begin(network.wifiData.ssid,network.wifiData.pwd);
+//    WiFiConnect(network.wifiData.ssid,network.wifiData.pwd);
+  }
+
+  if(rescanStatus==RESCAN_IDLE && millis()>rescanAlarm){
+    rescanStatus=RESCAN_RUNNING;
+    LOG2("Rescanning %s for potentially better BSSID...\n");
+    WiFi.scanNetworks(true, false, false, 300, 0, network.wifiData.ssid, nullptr);     // start scan in background
   }
 
   arduino_event_id_t event;
@@ -409,10 +418,10 @@ void Span::WiFiConnect(const char *ssid, const char *pwd){
   int n=WiFi.scanNetworks(false, false, false, 300, 0, ssid, nullptr);
 
   if(n>0){
-    LOG0("\n");
+    LOG2("\n");
     for(int i=0;i<n;i++)
-      LOG0(" \u27a1 %s - %s:  %ld\n",WiFi.SSID(i).c_str(),WiFi.BSSIDstr(i).c_str(),WiFi.RSSI(i));
-    LOG0("\n");
+      LOG2(" \u27a1 %s - %s:  %ld\n",WiFi.SSID(i).c_str(),WiFi.BSSIDstr(i).c_str(),WiFi.RSSI(i));
+    LOG2("\n");
   }
 
   WiFi.begin(ssid, pwd, 0, n>0 ? WiFi.BSSID(0,NULL) : NULL, true);
@@ -444,9 +453,11 @@ void Span::networkCallback(arduino_event_id_t event){
         configureNetwork();
       if(wifiCallbackAll)
         wifiCallbackAll((connected+1)/2);
+      rescanAlarm=millis()+rescanInitialTime;
+      
     break;
 
-//    case ARDUINO_EVENT_WIFI_SCAN_DONE:           Serial.println("Completed scan for access points"); break;
+    case ARDUINO_EVENT_WIFI_SCAN_DONE:           Serial.println("Completed scan for access points"); break;
 
     case ARDUINO_EVENT_WIFI_STA_STOP:            Serial.println("WiFi clients stopped"); break;
     case ARDUINO_EVENT_WIFI_STA_AUTHMODE_CHANGE: Serial.println("Authentication mode of access point has changed"); break;

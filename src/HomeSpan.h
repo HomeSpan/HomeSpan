@@ -277,6 +277,12 @@ class Span{
   uint8_t waitTimeNumSteps;                     // number of attempts between minimum and maximum times
   double waitTimeMult;                          // amount to extend waitTime on subsequent attempts
   unsigned long alarmConnect=0;                 // time after which WiFi connection attempt should be tried again
+ 
+  uint32_t rescanInitialTime;
+  uint32_t rescanPeriodicTime;
+  int rescanThreshold;
+  unsigned long rescanAlarm;
+  enum {RESCAN_DISABLED, RESCAN_IDLE, RESCAN_RUNNING, RESCAN_SUSPENDED} rescanStatus=RESCAN_DISABLED;
   
   const char *defaultSetupCode=DEFAULT_SETUP_CODE;            // Setup Code used for pairing
   uint16_t autoOffLED=0;                                      // automatic turn-off duration (in seconds) for Status LED
@@ -316,11 +322,12 @@ class Span{
   unordered_map<uint64_t, uint32_t> TimedWrites;                         // map of timed-write PIDs and Alarm Times (based on TTLs)  
   unordered_map<char, SpanUserCommand *> UserCommands;                   // map of pointers to all UserCommands
 
-  void pollTask();                              // poll HAP Clients and process any new HAP requests
-  void configureNetwork();                      // configure Network services (MDNS, WebLog,  OTA, etc.) and start HAP Server
-  void commandMode();                           // allows user to control and reset HomeSpan settings with the control button
-  void resetStatus();                           // resets statusLED and calls statusCallback based on current HomeSpan status
-  void reboot();                                // reboots device
+  void pollTask();                                                       // poll HAP Clients and process any new HAP requests
+  void configureNetwork();                                               // configure Network services (MDNS, WebLog,  OTA, etc.) and start HAP Server
+  void WiFiConnect(const char *ssid, const char *pwd);                   // connects to the BSSID with the best RSSI for the specified SSID
+  void commandMode();                                                    // allows user to control and reset HomeSpan settings with the control button
+  void resetStatus();                                                    // resets statusLED and calls statusCallback based on current HomeSpan status
+  void reboot();                                                         // reboots device
 
   void printfAttributes(int flags=GET_VALUE|GET_META|GET_PERMS|GET_TYPE|GET_DESC);   // writes Attributes JSON database to hapOut stream
   
@@ -404,8 +411,6 @@ class Span{
   Span& setControllerCallback(void (*f)()){controllerCallback=f;return(*this);}          // sets an optional user-defined function to call whenever a Controller is added/removed/changed
 
   Span& setHostNameSuffix(const char *suffix){asprintf(&hostNameSuffix,"%s",suffix);return(*this);}      // sets the hostName suffix to be used instead of the 6-byte AccessoryID
-
-  void WiFiConnect(const char *ssid, const char *pwd);
  
   int enableOTA(boolean auth=true, boolean safeLoad=true){return(spanOTA.init(auth, safeLoad, NULL));}   // enables Over-the-Air updates, with (auth=true) or without (auth=false) authorization password  
   int enableOTA(const char *pwd, boolean safeLoad=true){return(spanOTA.init(true, safeLoad, pwd));}      // enables Over-the-Air updates, with custom authorization password (overrides any password stored with the 'O' command)
@@ -444,6 +449,14 @@ class Span{
   TaskHandle_t getAutoPollTask(){return(pollTaskHandle);}
 
   Span& setTimeServerTimeout(uint32_t tSec){webLog.waitTime=tSec*1000;return(*this);}    // sets wait time (in seconds) for optional web log time server to connect
+  
+  Span& enableWiFiRescan(uint32_t iTime=60, uint32_t pTime=0, int thresh=5){             // enables periodic WiFi rescan to search for stronger BSSID
+    rescanInitialTime=iTime*1000;
+    rescanPeriodicTime=pTime*1000;
+    rescanThreshold=thresh;
+    rescanStatus=RESCAN_IDLE;
+    return(*this);
+  }
 
   list<Controller, Mallocator<Controller>>::const_iterator controllerListBegin();
   list<Controller, Mallocator<Controller>>::const_iterator controllerListEnd();
