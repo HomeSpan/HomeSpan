@@ -37,6 +37,7 @@ void setup() {
 
   homeSpan.enableWebLog(50);
   homeSpan.enableOTA();
+  homeSpan.enableWiFiRescan(1,2);
   homeSpan.begin(Category::Lighting,"HomeSpan OTA Test");
 
   new SpanAccessory();

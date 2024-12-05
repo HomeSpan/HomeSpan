@@ -241,12 +241,12 @@ void Span::pollTask() {
     if(waitTime>waitTimeMaximum)
       waitTime=waitTimeMinimum;
     WiFi.begin(network.wifiData.ssid,network.wifiData.pwd);
-//    WiFiConnect(network.wifiData.ssid,network.wifiData.pwd);
   }
 
-  if(rescanStatus==RESCAN_IDLE && millis()>rescanAlarm){
+  if(rescanStatus==RESCAN_PENDING && millis()>rescanAlarm){
     rescanStatus=RESCAN_RUNNING;
-    LOG2("Rescanning %s for potentially better BSSID...\n");
+    LOG2("Rescanning %s for potentially better BSSID...\n",network.wifiData.ssid);
+    WiFi.scanDelete();
     WiFi.scanNetworks(true, false, false, 300, 0, network.wifiData.ssid, nullptr);     // start scan in background
   }
 
@@ -254,7 +254,7 @@ void Span::pollTask() {
   if(xQueueReceive(networkEventQueue, &event, (TickType_t)0))
     networkCallback(event);
 
-  char cBuf[65]="?";
+  char cBuf[65]="-";
   
   if(!serialInputDisabled && Serial.available()){
     readSerial(cBuf,64);
@@ -410,23 +410,6 @@ Span& Span::setConnectionTimes(uint32_t minTime, uint32_t maxTime, uint8_t nStep
   }
   return(*this);
 }
-    
-//////////////////////////////////////
-
-void Span::WiFiConnect(const char *ssid, const char *pwd){
-
-  int n=WiFi.scanNetworks(false, false, false, 300, 0, ssid, nullptr);
-
-  if(n>0){
-    LOG2("\n");
-    for(int i=0;i<n;i++)
-      LOG2(" \u27a1 %s - %s:  %ld\n",WiFi.SSID(i).c_str(),WiFi.BSSIDstr(i).c_str(),WiFi.RSSI(i));
-    LOG2("\n");
-  }
-
-  WiFi.begin(ssid, pwd, 0, n>0 ? WiFi.BSSID(0,NULL) : NULL, true);
-  WiFi.scanDelete();
-}
 
 //////////////////////////////////////
 
@@ -453,12 +436,29 @@ void Span::networkCallback(arduino_event_id_t event){
         configureNetwork();
       if(wifiCallbackAll)
         wifiCallbackAll((connected+1)/2);
-      rescanAlarm=millis()+rescanInitialTime;
-      
+      if(rescanInitialTime>0){
+        rescanAlarm=millis()+rescanInitialTime;
+        rescanStatus=RESCAN_PENDING;
+      }     
     break;
 
-    case ARDUINO_EVENT_WIFI_SCAN_DONE:           Serial.println("Completed scan for access points"); break;
-
+    case ARDUINO_EVENT_WIFI_SCAN_DONE:
+      if(rescanStatus==RESCAN_RUNNING){
+        if(WiFi.scanComplete()>0 && WiFi.RSSI(0)>=WiFi.RSSI()+rescanThreshold){
+          addWebLog(true,"*** Switching to Access Point with stronger RSSI...");
+          WiFi.disconnect();
+        } else {
+          LOG2("Rescan completed.  No stronger signals found.\n");
+          if(rescanPeriodicTime>0){
+            rescanAlarm=millis()+rescanPeriodicTime;
+            rescanStatus=RESCAN_PENDING;
+          } else {
+            rescanStatus=RESCAN_IDLE;            
+          }
+        }
+      }
+    break;
+            
     case ARDUINO_EVENT_WIFI_STA_STOP:            Serial.println("WiFi clients stopped"); break;
     case ARDUINO_EVENT_WIFI_STA_AUTHMODE_CHANGE: Serial.println("Authentication mode of access point has changed"); break;
     case ARDUINO_EVENT_WIFI_STA_LOST_IP:        Serial.println("Lost IP address and IP address is reset to 0"); break;
@@ -612,53 +612,41 @@ void Span::processSerialCommand(const char *c){
 
   switch(c[0]){
 
+    case '-': {
+      LOG0("Please type '?' for list of commands\n");
+    }
+    break;
+    
     case 'D': {
       WiFi.disconnect();
     }
-      break;
+    break;
     
     case 'Z': {
-  Serial.println("Scan start");
-
-  // WiFi.scanNetworks will return the number of networks found.
-  int n = WiFi.scanNetworks();
-  Serial.println("Scan done");
-  if (n == 0) {
-    Serial.println("no networks found");
-  } else {
-    Serial.print(n);
-    Serial.println(" networks found");
-    Serial.println("Nr | SSID                             | RSSI | CH | Encryption");
-    for (int i = 0; i < n; ++i) {
-      // Print SSID and RSSI for each network found
-      Serial.printf("%2d", i + 1);
-      Serial.print(" | ");
-      Serial.printf("%-32.32s", WiFi.SSID(i).c_str());
-      Serial.print(" | ");
-      Serial.printf("%4ld", WiFi.RSSI(i));
-      Serial.print(" | ");
-      Serial.printf("%s", WiFi.BSSIDstr(i).c_str());
-      Serial.print(" | ");
-      switch (WiFi.encryptionType(i)) {
-        case WIFI_AUTH_OPEN:            Serial.print("open"); break;
-        case WIFI_AUTH_WEP:             Serial.print("WEP"); break;
-        case WIFI_AUTH_WPA_PSK:         Serial.print("WPA"); break;
-        case WIFI_AUTH_WPA2_PSK:        Serial.print("WPA2"); break;
-        case WIFI_AUTH_WPA_WPA2_PSK:    Serial.print("WPA+WPA2"); break;
-        case WIFI_AUTH_WPA2_ENTERPRISE: Serial.print("WPA2-EAP"); break;
-        case WIFI_AUTH_WPA3_PSK:        Serial.print("WPA3"); break;
-        case WIFI_AUTH_WPA2_WPA3_PSK:   Serial.print("WPA2+WPA3"); break;
-        case WIFI_AUTH_WAPI_PSK:        Serial.print("WAPI"); break;
-        default:                        Serial.print("unknown");
+      LOG0("Scanning WiFi Networks...\n");
+      WiFi.scanDelete();   
+      int n=WiFi.scanNetworks();
+      if(n==0){
+        LOG0("No networks found!\n");
+      } else {
+        LOG0("\n");
+        for(int i=0;i<n;i++){
+          LOG0("%-32.32s:  BSSID=%s  RSSI=%4ld  ENC=",WiFi.SSID(i).c_str(),WiFi.BSSIDstr(i).c_str(),WiFi.RSSI(i));
+          switch(WiFi.encryptionType(i)){
+            case WIFI_AUTH_OPEN:            LOG0("OPEN\n"); break;
+            case WIFI_AUTH_WEP:             LOG0("WEP\n"); break;
+            case WIFI_AUTH_WPA_PSK:         LOG0("WPA\n"); break;
+            case WIFI_AUTH_WPA2_PSK:        LOG0("WPA2\n"); break;
+            case WIFI_AUTH_WPA_WPA2_PSK:    LOG0("WPA+WPA2\n"); break;
+            case WIFI_AUTH_WPA2_ENTERPRISE: LOG0("WPA2-EAP\n"); break;
+            case WIFI_AUTH_WPA3_PSK:        LOG0("WPA3\n"); break;
+            case WIFI_AUTH_WPA2_WPA3_PSK:   LOG0("WPA2+WPA3\n"); break;
+            case WIFI_AUTH_WAPI_PSK:        LOG0("WAPI\n"); break;
+            default:                        LOG0("UNKNOWN\n");
+          }
+        }
+        LOG0("\n");
       }
-      Serial.println();
-      delay(10);
-    }
-  }
-  Serial.println("");
-
-  // Delete the scan result to free memory for code below.
-  WiFi.scanDelete();   
     }
     break;
 
@@ -1206,6 +1194,9 @@ void Span::processSerialCommand(const char *c){
       LOG0("\n");      
       LOG0("  P - output Pairing Data that can be saved offline to clone a new device\n");      
       LOG0("  C - clone Pairing Data previously saved offline from another device\n");      
+      LOG0("\n");      
+      LOG0("  D - disconnect/reconnect to WiFi\n");
+      LOG0("  Z - scan for available WiFi networks\n");
       LOG0("\n");      
       LOG0("  R - restart device\n");      
       LOG0("  F - factory reset and restart\n");      
