@@ -38,6 +38,10 @@ void setup() {
   homeSpan.enableWebLog(50);
   homeSpan.enableOTA();
   homeSpan.enableWiFiRescan(1,2);
+  homeSpan.addBssidName("34:98:B5:DB:3E:C0","Great Room")
+          .addBssidName("3A:98:B5:db:53:5e","Upstairs Hallway")
+          .addBssidName("3A:98:B5:EF:BF:69","Kitchen")
+          .addBssidName("3A:98:B5:DB:54:86","Basement");
   homeSpan.begin(Category::Lighting,"HomeSpan OTA Test");
 
   new SpanAccessory();

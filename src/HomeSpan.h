@@ -58,6 +58,7 @@
 using std::vector;
 using std::unordered_map;
 using std::list;
+using std::string;
 
 enum {
   GET_AID=1,
@@ -283,6 +284,7 @@ class Span{
   int rescanThreshold;
   unsigned long rescanAlarm;
   enum {RESCAN_IDLE, RESCAN_PENDING, RESCAN_RUNNING} rescanStatus=RESCAN_IDLE;
+  unordered_map<string, string> bssidNames;
   
   const char *defaultSetupCode=DEFAULT_SETUP_CODE;            // Setup Code used for pairing
   uint16_t autoOffLED=0;                                      // automatic turn-off duration (in seconds) for Status LED
@@ -455,6 +457,8 @@ class Span{
     rescanThreshold=thresh;
     return(*this);
   }
+
+  Span& addBssidName(String bssid, string name){bssid.toUpperCase();bssidNames[bssid.c_str()]=name;return(*this);}
 
   list<Controller, Mallocator<Controller>>::const_iterator controllerListBegin();
   list<Controller, Mallocator<Controller>>::const_iterator controllerListEnd();

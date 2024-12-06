@@ -430,7 +430,10 @@ void Span::networkCallback(arduino_event_id_t event){
     case ARDUINO_EVENT_WIFI_STA_GOT_IP:
     case ARDUINO_EVENT_WIFI_STA_GOT_IP6:
       resetStatus();
-      addWebLog(true,"WiFi Connected!  IP Address = %s   (RSI=%d  BSSID=%s)",WiFi.localIP().toString().c_str(),WiFi.RSSI(),WiFi.BSSIDstr().c_str());
+      if(bssidNames.count(WiFi.BSSIDstr().c_str()))
+        addWebLog(true,"WiFi Connected!  IP Address = %s   (RSI=%d  BSSID=%s  \"%s\")",WiFi.localIP().toString().c_str(),WiFi.RSSI(),WiFi.BSSIDstr().c_str(),bssidNames[WiFi.BSSIDstr().c_str()].c_str());
+      else
+        addWebLog(true,"WiFi Connected!  IP Address = %s   (RSI=%d  BSSID=%s)",WiFi.localIP().toString().c_str(),WiFi.RSSI(),WiFi.BSSIDstr().c_str());      
       connected++;
       if(connected==1)
         configureNetwork();
@@ -444,7 +447,7 @@ void Span::networkCallback(arduino_event_id_t event){
 
     case ARDUINO_EVENT_WIFI_SCAN_DONE:
       if(rescanStatus==RESCAN_RUNNING){
-        if(WiFi.scanComplete()>0 && WiFi.RSSI(0)>=WiFi.RSSI()+rescanThreshold){
+        if(WiFi.scanComplete()>0 && WiFi.BSSIDstr(0)!=WiFi.BSSIDstr() && WiFi.RSSI(0)>=WiFi.RSSI()+rescanThreshold){
           addWebLog(true,"*** Switching to Access Point with stronger RSSI...");
           WiFi.disconnect();
         } else {
@@ -629,21 +632,26 @@ void Span::processSerialCommand(const char *c){
       if(n==0){
         LOG0("No networks found!\n");
       } else {
-        LOG0("\n");
+        char d[]="----------------------------------------";
+        LOG0("\n%-32.32s  %17.17s  %4.4s  %12.12s\n","SSID","BSSID","RSSI","ENCRYPTION");
+        LOG0("%-32.32s  %17.17s  %4.4s  %12.12s\n",d,d,d,d);
         for(int i=0;i<n;i++){
-          LOG0("%-32.32s:  BSSID=%s  RSSI=%4ld  ENC=",WiFi.SSID(i).c_str(),WiFi.BSSIDstr(i).c_str(),WiFi.RSSI(i));
+          LOG0("%-32.32s  %17.17s  %4ld  ",WiFi.SSID(i).c_str(),WiFi.BSSIDstr(i).c_str(),WiFi.RSSI(i));
           switch(WiFi.encryptionType(i)){
-            case WIFI_AUTH_OPEN:            LOG0("OPEN\n"); break;
-            case WIFI_AUTH_WEP:             LOG0("WEP\n"); break;
-            case WIFI_AUTH_WPA_PSK:         LOG0("WPA\n"); break;
-            case WIFI_AUTH_WPA2_PSK:        LOG0("WPA2\n"); break;
-            case WIFI_AUTH_WPA_WPA2_PSK:    LOG0("WPA+WPA2\n"); break;
-            case WIFI_AUTH_WPA2_ENTERPRISE: LOG0("WPA2-EAP\n"); break;
-            case WIFI_AUTH_WPA3_PSK:        LOG0("WPA3\n"); break;
-            case WIFI_AUTH_WPA2_WPA3_PSK:   LOG0("WPA2+WPA3\n"); break;
-            case WIFI_AUTH_WAPI_PSK:        LOG0("WAPI\n"); break;
-            default:                        LOG0("UNKNOWN\n");
+            case WIFI_AUTH_OPEN:            LOG0("%12.12s","OPEN"); break;
+            case WIFI_AUTH_WEP:             LOG0("%12.12s","WEP"); break;
+            case WIFI_AUTH_WPA_PSK:         LOG0("%12.12s","WPA"); break;
+            case WIFI_AUTH_WPA2_PSK:        LOG0("%12.12s","WPA2"); break;
+            case WIFI_AUTH_WPA_WPA2_PSK:    LOG0("%12.12s","WPA+WPA2"); break;
+            case WIFI_AUTH_WPA2_ENTERPRISE: LOG0("%12.12s","WPA2-EAP"); break;
+            case WIFI_AUTH_WPA3_PSK:        LOG0("%12.12s","WPA3"); break;
+            case WIFI_AUTH_WPA2_WPA3_PSK:   LOG0("%12.12s","WPA2+WPA3"); break;
+            case WIFI_AUTH_WAPI_PSK:        LOG0("%12.12s","WAPI"); break;
+            default:                        LOG0("%12.12s","UNKNOWN");
           }
+          if(bssidNames.count(WiFi.BSSIDstr(i).c_str()))
+            LOG0("   \"%s\"",bssidNames[WiFi.BSSIDstr(i).c_str()].c_str());
+          LOG0("\n");
         }
         LOG0("\n");
       }
@@ -654,8 +662,11 @@ void Span::processSerialCommand(const char *c){
       
       LOG0("\n*** HomeSpan Status ***\n\n");
 
-      LOG0("IP Address:        %s   (RSI=%d  BSSID=%s)\n",WiFi.localIP().toString().c_str(),WiFi.RSSI(),WiFi.BSSIDstr().c_str());
-       if(webLog.isEnabled && hostName!=NULL)   
+      LOG0("IP Address:        %s   (RSI=%d  BSSID=%s",WiFi.localIP().toString().c_str(),WiFi.RSSI(),WiFi.BSSIDstr().c_str());
+      if(bssidNames.count(WiFi.BSSIDstr().c_str()))
+        LOG0("  \"%s\"",bssidNames[WiFi.BSSIDstr().c_str()].c_str());
+      LOG0(")\n");
+      if(webLog.isEnabled && hostName!=NULL)   
         LOG0("Web Logging:       http://%s.local:%d%s\n",hostName,tcpPortNum,webLog.statusURL.c_str()+4);
       LOG0("\nAccessory ID:      ");
       HAPClient::charPrintRow(HAPClient::accessory.ID,17);
