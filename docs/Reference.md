@@ -158,9 +158,9 @@ The following **optional** `homeSpan` methods enable additional features and pro
  
 * `Span& setConnectionTimes(uint32_t minTime, uint32_t maxTime, uint8_t nSteps)`
   * overrides HomeSpan's default repeating pattern of increasing wait times when trying to connect to a WiFi network, where
-    * *minTime* is the minimum time (in seconds) that HomeSpan initially waits when first trying to connect to a WiFi network
-    * *maxTime* is the maximum time (in seconds) that HomeSpan will wait on subequent attempts to connect if first attempt fails
-    * *nSteps* is the number of steps HomeSpan uses to set the increasing intermediate times between *minTime* and *maxTime* as each re-attempt to connect is made
+    * *minTime* - the minimum time (in seconds) that HomeSpan initially waits when first trying to connect to a WiFi network
+    * *maxTime* - the maximum time (in seconds) that HomeSpan will wait on subequent attempts to connect if first attempt fails
+    * *nSteps* - the number of steps HomeSpan uses to set the increasing intermediate times between *minTime* and *maxTime* as each re-attempt to connect is made
   * example: `homeSpan.setConnectionTimes(5,60,3);` causes HomeSpan to initially wait 5 seconds when first attempting to connect to a WiFi network, and then wait 11, 26, and finally 60 seconds on the next 3 subsequent attempts. If HomeSpan has still not connected, the pattern repeats indefinitely
   * if either *minTime* or *nSteps* is set to zero, or if *maxTime* is not strictly greater than *minTime*, HomeSpan ignores the request and reports a warning message to the Serial Monitor
   * note this is an optional method. If not called HomeSpan uses default parameters of {5,60,5} which yields a wait pattern of 5, 8, 14, 22, 36, and 60 seconds between connection attempts
@@ -169,13 +169,20 @@ The following **optional** `homeSpan` methods enable additional features and pro
   * when you configure HomeSpan to connect to a WiFi SSID that broadcasts from more than one access point (e.g. a mesh network), HomeSpan connects to the access point with the strongest RSSI signal for that SSID
   * once connected, HomeSpan remains "attached" to that specific access point unless it looses overall connectivity to the network, or is otherwise purposely disconnected, at at which point it will attempt to reconnect once again the strongest access point broadcasting the original SSID
   * calling `enableWiFiRescan()` enables HomeSpan to further optimize WiFi connectivity in the background during normal operation by periodically rescanning all access points with the original SSID, and automatically performing a disconnect/reconnect if it finds an access point with a stronger RSSI signal, where
-    * *iTime* is the time HomeSpan waits (in minutes) between first making a connection to an access point and rescanning to check for other stronger access points
-    * *pTime* is the time HomeSpan waits after its first scan before performing any subsequent rescans
-    * *thresh* is the threshhold difference (in RSSI units) by which the signal strength of a newly-scanned access point must be stronger than that of the access point to which HomeSpan is current connected for HomeSpan to trigger a connect/disconnect
+    * *iTime* - the time HomeSpan waits (in minutes) between first making a connection to an access point and rescanning to check for other stronger access points
+    * *pTime* -  the time HomeSpan waits after its first scan before performing any subsequent rescans
+    * *thresh* -  the threshhold difference (in RSSI units) by which the signal strength of a newly-scanned access point must be stronger than that of the access point to which HomeSpan is current connected for HomeSpan to trigger a connect/disconnect
   * example: `homeSpan.enableWiFiRescan(2, 5, 3)` causes HomeSpan to rescan all access points 2 minutes after initially connecting, and then every 5 minutes thereafter; if after any rescan HomeSpan finds a different access point with an RSSI signal that is 3 or more units stronger than the currently-connect access point, it will disconnect from the existing access point and connect to the stronger one
   * the default is for HomeSpan to NOT perform any background rescans unless you specifically enable this by calling `homeSpan.enableWiFiRescan()` from your sketch
     * if *iTime* is set to zero, rescanning is disabled
     * if *iTime* is greater than zero but *pTime* is set to zero, rescanning occurs only once at *iTime* minutes after connecting, but not thereafter
+
+* `Span& addBssidName(String bssid, string name)`
+  * creates a friendly display name for any given WiFi access point that HomeSpan can display (in both the Serial Monitor and the Web Log) alongside the BSSID whenever needed, where
+    * *bssid* - the 6-byte BSSID MAC address of an access point, in the form "XX:XX:XX:XX:XX:XX"
+    * *name* - a friendly display name for the access point
+  * most useful when HomeSpan is connected to mesh WiFi network containing multiple access points sharing the same SSID, and you want to keep track of which access point is being used withouth having to memorize the BSSIDs of each access point
+  * example: `homeSpan.addBssidName("3A:98:B5:EF:BF:69","Kitchen").addBssidName("3A:98:B5:DB:54:86","Basement");` creates display names "Kitchen" and "Basement" for access points with BSSIDs "3A:98:B5:EF:BF:69" and "3A:98:B5:DB:54:86", respectively
  
 * `Span& setVerboseWifiReconnect(bool verbose)`
   * when trying connecting to WiFi, HomeSpan normally logs "Trying to connect to..." messages to the Serial Monitor and the Web Log
