@@ -218,21 +218,20 @@ void Span::pollTask() {
         processSerialCommand("A");
       } else {
         LOG0("YOU MAY CONFIGURE BY TYPING 'W <RETURN>'.\n\n");
-        STATUS_UPDATE(start(LED_WIFI_NEEDED),HS_WIFI_NEEDED)
       }
     }
                 
     if(controlButton)
-      controlButton->reset();        
+      controlButton->reset();
 
+    resetStatus();     
+  
     LOG0("%s is READY!\n\n",displayName);
     isInitialized=true;    
     
   } // isInitialized
 
   if(strlen(network.wifiData.ssid) && !(connected%2) && millis()>alarmConnect){
-    STATUS_UPDATE(start(LED_WIFI_CONNECTING),HS_WIFI_CONNECTING)
-
     if(verboseWifiReconnect)
       addWebLog(true,"Trying to connect to %s.  Waiting %ld sec...",network.wifiData.ssid,(waitTime+500)/1000);
     
@@ -247,6 +246,7 @@ void Span::pollTask() {
     rescanStatus=RESCAN_RUNNING;
     LOG2("Rescanning %s for potentially better BSSID...\n",network.wifiData.ssid);
     WiFi.scanDelete();
+    STATUS_UPDATE(start(LED_WIFI_SCANNING),HS_WIFI_SCANNING)
     WiFi.scanNetworks(true, false, false, 300, 0, network.wifiData.ssid, nullptr);     // start scan in background
   }
 
@@ -370,7 +370,6 @@ void Span::commandMode(){
   switch(mode){
 
     case 1:
-      resetStatus();
     break;
 
     case 2:
@@ -392,6 +391,7 @@ void Span::commandMode(){
   } // switch
   
   LOG0("*** EXITING COMMAND MODE ***\n\n");
+  resetStatus();
 }
 
 //////////////////////////////////////
@@ -425,11 +425,11 @@ void Span::networkCallback(arduino_event_id_t event){
         waitTime=waitTimeMinimum;
         alarmConnect=millis();
       }
+      resetStatus();     
     break;
 
     case ARDUINO_EVENT_WIFI_STA_GOT_IP:
     case ARDUINO_EVENT_WIFI_STA_GOT_IP6:
-      resetStatus();
       if(bssidNames.count(WiFi.BSSIDstr().c_str()))
         addWebLog(true,"WiFi Connected!  IP Address = %s   (RSI=%d  BSSID=%s  \"%s\")",WiFi.localIP().toString().c_str(),WiFi.RSSI(),WiFi.BSSIDstr().c_str(),bssidNames[WiFi.BSSIDstr().c_str()].c_str());
       else
@@ -442,7 +442,8 @@ void Span::networkCallback(arduino_event_id_t event){
       if(rescanInitialTime>0){
         rescanAlarm=millis()+rescanInitialTime;
         rescanStatus=RESCAN_PENDING;
-      }     
+      }
+      resetStatus();     
     break;
 
     case ARDUINO_EVENT_WIFI_SCAN_DONE:
@@ -460,6 +461,7 @@ void Span::networkCallback(arduino_event_id_t event){
           }
         }
       }
+      resetStatus();     
     break;
             
     case ARDUINO_EVENT_WIFI_STA_STOP:            Serial.println("WiFi clients stopped"); break;
@@ -627,7 +629,8 @@ void Span::processSerialCommand(const char *c){
     
     case 'Z': {
       LOG0("Scanning WiFi Networks...\n");
-      WiFi.scanDelete();   
+      WiFi.scanDelete();
+      STATUS_UPDATE(start(LED_WIFI_SCANNING),HS_WIFI_SCANNING)
       int n=WiFi.scanNetworks();
       if(n==0){
         LOG0("No networks found!\n");
@@ -1260,7 +1263,7 @@ void Span::getWebLog(void (*f)(const char *, void *), void *user_data){
 void Span::resetStatus(){
   if(strlen(network.wifiData.ssid)==0)
     STATUS_UPDATE(start(LED_WIFI_NEEDED),HS_WIFI_NEEDED)
-  else if(WiFi.status()!=WL_CONNECTED)
+  else if(!(connected%2))
     STATUS_UPDATE(start(LED_WIFI_CONNECTING),HS_WIFI_CONNECTING)
   else if(!HAPClient::nAdminControllers())
     STATUS_UPDATE(start(LED_PAIRING_NEEDED),HS_PAIRING_NEEDED)
@@ -1301,6 +1304,7 @@ const char* Span::statusString(HS_STATUS s){
     case HS_AP_CONNECTED: return("Access Point Connected");
     case HS_AP_TERMINATED: return("Access Point Terminated");
     case HS_OTA_STARTED: return("OTA Update Started");
+    case HS_WIFI_SCANNING: return("WiFi Scanning Started");
     default: return("Unknown");
   }
 }

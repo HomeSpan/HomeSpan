@@ -39,6 +39,7 @@ using namespace Utils;
 
 void Network_HS::scan(){
 
+  STATUS_UPDATE(start(LED_WIFI_SCANNING),HS_WIFI_SCANNING)
   int n=WiFi.scanNetworks();
 
   free(ssidList);
@@ -106,15 +107,15 @@ boolean Network_HS::allowedCode(char *s){
 void Network_HS::apConfigure(){
 
   LOG0("*** Starting Access Point: %s / %s\n",apSSID,apPassword);
-
-  STATUS_UPDATE(start(LED_AP_STARTED),HS_AP_STARTED)
-        
+          
   LOG0("\nScanning for Networks...\n\n");
   
   scan();                   // scan for networks    
 
   for(int i=0;i<numSSID;i++)
     LOG0("  %d) %s\n",i+1,ssidList[i]);
+
+  STATUS_UPDATE(start(LED_AP_STARTED),HS_AP_STARTED)    
 
   WiFiServer apServer(80);
   client=0;
