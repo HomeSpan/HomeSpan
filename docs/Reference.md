@@ -156,6 +156,15 @@ The following **optional** `homeSpan` methods enable additional features and pro
   * note that the saved values are truncated if they exceed the maximum allowable characters (ssid=32; pwd=64)
   * :warning: SECURITY WARNING: The purpose of this function is to allow advanced users to *dynamically* set the device's WiFi Credentials using a customized Access Point function specified by `setApFunction(func)`. It it NOT recommended to use this function to hardcode your WiFi SSID and password directly into your sketch.  Instead, use one of the more secure methods provided by HomeSpan, such as typing 'W' from the CLI, or launching HomeSpan's Access Point, to set your WiFi credentials without hardcoding them into your sketch
  
+* `Span& setConnectionTimes(uint32_t minTime, uint32_t maxTime, uint8_t nSteps)`
+  * overrides HomeSpan's default repeating pattern of increasing wait times when trying to connect to a WiFi network, where
+    * *minTime* is the minimum time (in seconds) that HomeSpan initially waits when first trying to connect to a WiFi network
+    * *maxTime* is the maximum time (in seconds) that HomeSpan will wait on subequent attempts to connect if first attempt fails
+    * *nSteps* is the number of steps HomeSpan uses to set the increasing intermediate times between *minTime* and *maxTime* as each re-attempt to connect is made
+  * example: `homeSpan.setConnectionTimes(5,60,3);` causes HomeSpan to initially wait 5 seconds when first attempting to connect to a WiFi network, and then wait 11, 26, and finally 60 seconds on the next 3 subsequent attempts. If HomeSpan has still not connected, the pattern repeats indefinitely
+  * if either *minTime* or *nSteps* is set to zero, or if *maxTime* is not strictly greater than *minTime*, HomeSpan ignores the request and reports a warning message to the Serial Monitor
+  * note this is an optional method. If not called HomeSpan uses default parameters of {5,60,5} which yields a wait pattern of 5, 8, 14, 22, 36, and 60 seconds between connection attempts
+
 * `Span& setVerboseWifiReconnect(bool verbose)`
   * when trying connecting to WiFi, HomeSpan normally logs "Trying to connect to..." messages to the Serial Monitor and the Web Log
   * calling this method with *verbose* set to *false* supresses these messages
