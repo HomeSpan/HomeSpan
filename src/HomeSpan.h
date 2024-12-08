@@ -38,6 +38,7 @@
 #include <list>
 #include <nvs.h>
 #include <ArduinoOTA.h>
+#include <ETH.h>
 #include <esp_now.h>
 #include <mbedtls/base64.h>
 
@@ -265,6 +266,7 @@ class Span{
   boolean serialInputDisabled=false;            // flag indiating that serial input is disabled
   uint8_t rebootCount=0;                        // counts number of times device was rebooted (used in optional Reboot callback)
   uint32_t rebootCallbackTime;                  // length of time to wait (in milliseconds) before calling optional Reboot callback
+  boolean ethernetEnabled=false;                // flag to indicate whether Ethernet is being used instead of WiFi
   
   nvs_handle charNVS;                           // handle for non-volatile-storage of Characteristics data
   nvs_handle wifiNVS=0;                         // handle for non-volatile-storage of WiFi data
