@@ -4,8 +4,6 @@ Welcome to HomeSpan - a robust and extremely easy-to-use Arduino library for cre
 
 HomeSpan provides a microcontroller-focused implementation of Apple's HomeKit Accessory Protocol Specification Release R2 (HAP-R2) designed specifically for the Espressif ESP32 microcontroller running within the Arduino IDE.  HomeSpan pairs directly to HomeKit via your home WiFi network without the need for any external bridges or components.  With HomeSpan you can use the full power of the ESP32's I/O functionality to create custom control software and/or hardware to automatically operate external devices from the Home App on your iPhone, iPad, or Mac, or with Siri.
 
-HomeSpan has recently had its first generational update, transitioning from **version 1.9.1** to **version 2.0.0**.  This transition was the result of a major, non-backwards-compatible update by Espressif of their core IoT Development Framework (from&nbsp;[IDF-4 to IDF-5](https://docs.espressif.com/projects/esp-idf/en/stable/esp32/migration-guides/release-5.x/5.0/index.html)) and a subsequent update of their [Arduino-ESP32 Board Manager](https://github.com/espressif/arduino-esp32) (from version 2 to version 3) to use the new IDF-5.
-
 Requirements to run HomeSpan depend on which version you choose:
 
 |HomeSpan Version | Arduino-ESP32 Board Manager | Partition Scheme | Supported Chips|
@@ -13,7 +11,7 @@ Requirements to run HomeSpan depend on which version you choose:
 |1.9.1 or earlier | v2.0.0 - v2.0.17 | *Default* (1.3MB APP) | ESP32, S2, S3, C3 |
 |2.0.0 or later | v3.0.2 or later<sup>*</sup> | *Minimal SPIFFS* (1.9MB APP) | ESP32, S2, S3, C3, *and C6* |
 
-<sup>*</sup>HomeSpan has been tested through **version 3.0.5** of the Arduino-ESP32 Board Manager.  Later releases may work fine, but have not (yet) been tested.  Note HomeSpan does not support the use of alpha, beta, or pre-release candidates of the Arduino-ESP32 Board Manager - testing is only done on production releases of the Board Manager.
+<sup>*</sup>HomeSpan has been tested through **version 3.0.7** of the Arduino-ESP32 Board Manager.  Later releases may work fine, but have not (yet) been tested.  Note HomeSpan does not support the use of alpha, beta, or pre-release candidates of the Arduino-ESP32 Board Manager - testing is only done on production releases of the Board Manager.
 
 **ADDITIONAL REQUIREMENTS**:  Apple's HomeKit architecture [requires the use of a Home Hub](https://support.apple.com/en-us/HT207057) (either a HomePod or Apple TV) for full and proper operation of any HomeKit device, including those based on HomeSpan.  ***Use of HomeSpan without a Home Hub is NOT supported.***
 
@@ -60,38 +58,32 @@ Requirements to run HomeSpan depend on which version you choose:
   * Launch the WiFi Access Point
 * A standalone, detailed End-User Guide
 
-## ❗Latest Update - HomeSpan 2.0.0 (10/20/2024)
+## ❗Latest Update - HomeSpan 2.1.0 (MM/DD/YYYY)
 
-* **Compability with version 3 of the [Arduino-ESP32 Board Manager](https://github.com/espressif/arduino-esp32)**
+* **WiFi Enhancements and New WiFi Management Methods**
 
-  * version 3 of the Arduino-ESP32 Board Manager is based on Espressif's IDF-5, which is **not backwards compatible with version 2** of the Arduino-ESP32 Board Manager that was based on Espressif's IDF-4
-  * the primary focus of HomeSpan 2.0.0-rc.1 is to (minimally) refactor HomeSpan 1.9.1 only as needed to allow it to operate under version 3 of the Arduino-ESP32 board manager ---
-    * while **preserving backwards compatibility for all HomeSpan sketches written under HomeSpan 1.9.1**
-    * in spite of the many [breaking changes](https://docs.espressif.com/projects/esp-idf/en/stable/esp32/migration-guides/release-5.x/5.0/index.html) that Espressif made between IDF-4 and IDF-5,
-    * and numerous additional breaking changes introduced between versions 2 and 3 of the Arduino-ESP32 Board Manager
-    * **requires Arduino-ESP32 Board Manager 3.0.2 or greater**
-      
-* **Support for the ESP32-C6**
+  * when connecting to a WiFi mesh network with multiple access points, HomeSpan now **automatically connects to the access point with the strongest WiFi signal** (i.e. the greatest RSSI)
+    * previously HomeSpan would simply connect to the first access point it found that matched the SSID specified by the user, even if other access points with the same SSID had stronger signals
+    * the BSSID (6-byte MAC address) of the access point to which HomeSpan is currently connected is provided in the Web Log as well as in the Serial Monitor in response to the 's' CLI command
+
+  * added new homeSpan method `setConnectionTimes()` that allows users to fine-tune how long HomeSpan waits for each connection attempt when trying to connect to a WiFi network
+    
+  * added new homeSpan method `enableWiFiRescan()` that causes HomeSpan to periodically re-scan for all access points matching the configured SSID and automatically switches to the access point with the strongest signal
+     * useful after a mesh network is rebooted and HomeSpan initially reconnects to a more distance access point because a closer one with a stronger signal has not yet fully rebooted
+       
+  * added new homeSpan method `addBssidName()` that allows users to create optional display names for each access point in a WiFi mesh network according to their 6-byte BSSID addresses
+     * when defined, HomeSpan will display both this name and the BSSID of an access point whenever presenting info on the Serial Monitor or writing to the Web Log
+       
+  * see the [API Reference](docs/Reference.md) page for full details
+
+* **New CLI Commands**
   
-  * version 3 of the Arduino-ESP32 Board Manager added support for Espressif's ESP32-C6 and ESP32-H2 chips
-    * HomeSpan supports the use of the C6 chip since it contains a WiFi radio, as currently required by HomeSpan
-    * HomeSpan does *not* support the use of the H2 chip since it lacks a WiFi radio (contains only a Thread radio)
- 
-* **Expanded functionality for the HomeSpan Pixel and RFControl libraries**
+  * 'D' - forces HomeSpan to disconnect and then automatically re-connect to the configured WiFi network
+  * 'Z' - scans a user's WiFi network environment and displays information about each SSID (including each BSSID for mesh networks with multiple access points broadcasting the same SSID) on the Serial Monitor
+  * see the [Command Line Interface (CLI)](docs/CLI.md) page for full details
 
-  * as a result of Espressif deprecating the IDF4-version of the RMT library and replacing it with a completely new library in IDF-5, the HomeSpan **Pixel** and **RFControl** libraries have been completely written and upgraded:
-  * you can now instantiate both **Pixel** and **RFControl** objects in the same sketch (previously these classes were incompatible with eachother and could not be used in the same sketch)
-  * the **Pixel** class also adds a variety of new functionality supporting even more types of Pixel devices, including
-    * an upgraded [PixelTester](examples/Other%20Examples/PixelTester) sketch that steps users through selecting and testing the correct *pixelType* for their device
-    * a new [Pixel-RGBWC](examples/Other%20Examples/Pixel-RGBWC) example demonstrating how to implement an RGBWC Pixel light-strip with separate Home App controls for the RGB and WC LED
-    * see the [Addressable RGB LEDs](docs/Pixels.md) page for full details
-
-* ❗**SIZE ALERT** ❗
-  * version 3 of the Arduino-ESP32 Board Manager has a **much** larger footprint than version 2
-  * **the same HomeSpan sketch compiled under 1.9.1 will be approximately 200K larger under HomeSpan 2.0.0-rc.1**
-  * HomeSpan sketches will no longer fit into the *Default* partition scheme, which only allocates about 1.3MB to each OTA partition
-  * sketches must be compiled under a larger partition scheme, such as *Minimal SPIFFS*, which provides for 1.9MB OTA partitions
-  * **this has implications for upgrading sketches via OTA (see Release Notes for details)**
+* **Bug Fixes**
+  * Fixes a latent bug that prevented compilation when the homeSpan methods `controllerListBegin()` and `controllerListEnd()` were used in a sketch
       
 See [Releases](https://github.com/HomeSpan/HomeSpan/releases) for details on all changes and bug fixes included in this update.
 
