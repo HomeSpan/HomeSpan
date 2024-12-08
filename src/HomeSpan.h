@@ -58,6 +58,7 @@
 using std::vector;
 using std::unordered_map;
 using std::list;
+using std::string;
 
 enum {
   GET_AID=1,
@@ -110,7 +111,8 @@ enum HS_STATUS {
   HS_AP_STARTED,                          // HomeSpan has started the Access Point but no one has yet connected
   HS_AP_CONNECTED,                        // The Access Point is started and a user device has been connected
   HS_AP_TERMINATED,                       // HomeSpan has terminated the Access Point 
-  HS_OTA_STARTED                          // HomeSpan is in the process of recveived an Over-the-Air software update
+  HS_OTA_STARTED,                         // HomeSpan is in the process of recveived an Over-the-Air software update
+  HS_WIFI_SCANNING                        // HomeSpan is in process of scanning for WiFi networks
 };
 
 //////////////////////////////////////////////////////////
@@ -271,8 +273,19 @@ class Span{
   nvs_handle hapNVS;                            // handle for non-volatile-storage of HAP data
 
   int connected=0;                              // WiFi connection status (increments upon each connect and disconnect)
-  unsigned long waitTime=60000;                 // time to wait (in milliseconds) between WiFi connection attempts
+  uint32_t waitTime;                            // time to wait (in milliseconds) between WiFi connection attempts
+  uint32_t waitTimeMinimum;                     // minimum time to wait (in milliseconds) between WiFi connection attempts
+  uint32_t waitTimeMaximum;                     // maximum time to wait (in milliseconds) between WiFi connection attempts
+  uint8_t waitTimeNumSteps;                     // number of attempts between minimum and maximum times
+  double waitTimeMult;                          // amount to extend waitTime on subsequent attempts
   unsigned long alarmConnect=0;                 // time after which WiFi connection attempt should be tried again
+ 
+  uint32_t rescanInitialTime=0;
+  uint32_t rescanPeriodicTime=0;
+  int rescanThreshold;
+  unsigned long rescanAlarm;
+  enum {RESCAN_IDLE, RESCAN_PENDING, RESCAN_RUNNING} rescanStatus=RESCAN_IDLE;
+  unordered_map<string, string> bssidNames;
   
   const char *defaultSetupCode=DEFAULT_SETUP_CODE;            // Setup Code used for pairing
   uint16_t autoOffLED=0;                                      // automatic turn-off duration (in seconds) for Status LED
@@ -312,11 +325,11 @@ class Span{
   unordered_map<uint64_t, uint32_t> TimedWrites;                         // map of timed-write PIDs and Alarm Times (based on TTLs)  
   unordered_map<char, SpanUserCommand *> UserCommands;                   // map of pointers to all UserCommands
 
-  void pollTask();                              // poll HAP Clients and process any new HAP requests
-  void checkConnect();                          // check WiFi connection; connect if needed
-  void commandMode();                           // allows user to control and reset HomeSpan settings with the control button
-  void resetStatus();                           // resets statusLED and calls statusCallback based on current HomeSpan status
-  void reboot();                                // reboots device
+  void pollTask();                                                       // poll HAP Clients and process any new HAP requests
+  void configureNetwork();                                               // configure Network services (MDNS, WebLog,  OTA, etc.) and start HAP Server
+  void commandMode();                                                    // allows user to control and reset HomeSpan settings with the control button
+  void resetStatus();                                                    // resets statusLED and calls statusCallback based on current HomeSpan status
+  void reboot();                                                         // reboots device
 
   void printfAttributes(int flags=GET_VALUE|GET_META|GET_PERMS|GET_TYPE|GET_DESC);   // writes Attributes JSON database to hapOut stream
   
@@ -336,7 +349,10 @@ class Span{
     sscanf(uuid,"%*8[0-9a-fA-F]-%*4[0-9a-fA-F]-%*4[0-9a-fA-F]-%*4[0-9a-fA-F]-%*12[0-9a-fA-F]%n",&x);
     return(strlen(uuid)!=36 || x!=36);
   }
-  
+
+  QueueHandle_t networkEventQueue;                         // queue to transmit network events from callback thread to HomeSpan thread
+  void networkCallback(WiFiEvent_t event);                 // network event handler (works for WiFi as well as Ethernet)
+
   public:
 
   Span();   // constructor
@@ -388,6 +404,7 @@ class Span{
   Span& setApFunction(void (*f)()){apFunction=f;return(*this);}                          // sets an optional user-defined function to call when activating the WiFi Access Point  
   Span& enableAutoStartAP(){autoStartAPEnabled=true;return(*this);}                      // enables auto start-up of Access Point when WiFi Credentials not found
   Span& setWifiCredentials(const char *ssid, const char *pwd);                           // sets WiFi Credentials
+  Span& setConnectionTimes(uint32_t minTime, uint32_t maxTime, uint8_t nSteps);          // sets min/max WiFi connection times (in seconds) and number of steps  
   Span& setStatusCallback(void (*f)(HS_STATUS status)){statusCallback=f;return(*this);}  // sets an optional user-defined function to call when HomeSpan status changes
   const char* statusString(HS_STATUS s);                                                 // returns char string for HomeSpan status change messages
   Span& setPairingCode(const char *s, boolean progCall=true);                            // sets the Pairing Code - use is NOT recommended.  Use 'S' from CLI instead
@@ -396,7 +413,7 @@ class Span{
   Span& setControllerCallback(void (*f)()){controllerCallback=f;return(*this);}          // sets an optional user-defined function to call whenever a Controller is added/removed/changed
 
   Span& setHostNameSuffix(const char *suffix){asprintf(&hostNameSuffix,"%s",suffix);return(*this);}      // sets the hostName suffix to be used instead of the 6-byte AccessoryID
-
+ 
   int enableOTA(boolean auth=true, boolean safeLoad=true){return(spanOTA.init(auth, safeLoad, NULL));}   // enables Over-the-Air updates, with (auth=true) or without (auth=false) authorization password  
   int enableOTA(const char *pwd, boolean safeLoad=true){return(spanOTA.init(true, safeLoad, pwd));}      // enables Over-the-Air updates, with custom authorization password (overrides any password stored with the 'O' command)
 
@@ -434,6 +451,15 @@ class Span{
   TaskHandle_t getAutoPollTask(){return(pollTaskHandle);}
 
   Span& setTimeServerTimeout(uint32_t tSec){webLog.waitTime=tSec*1000;return(*this);}    // sets wait time (in seconds) for optional web log time server to connect
+  
+  Span& enableWiFiRescan(uint32_t iTime=1, uint32_t pTime=0, int thresh=3){              // enables periodic WiFi rescan to search for stronger BSSID
+    rescanInitialTime=iTime*60000;
+    rescanPeriodicTime=pTime*60000;
+    rescanThreshold=thresh;
+    return(*this);
+  }
+
+  Span& addBssidName(String bssid, string name){bssid.toUpperCase();bssidNames[bssid.c_str()]=name;return(*this);}
 
   list<Controller, Mallocator<Controller>>::const_iterator controllerListBegin();
   list<Controller, Mallocator<Controller>>::const_iterator controllerListEnd();

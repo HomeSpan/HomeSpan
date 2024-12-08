@@ -33,7 +33,7 @@
 //              HomeSpan Version                    //
  
 #define     HS_MAJOR  2
-#define     HS_MINOR  0
+#define     HS_MINOR  1
 #define     HS_PATCH  0
 #define     HS_EXTENSION  ""
 
