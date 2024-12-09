@@ -584,7 +584,7 @@ void Span::configureNetwork(){
     ArduinoOTA.onStart(spanOTA.start).onEnd(spanOTA.end).onProgress(spanOTA.progress).onError(spanOTA.error);  
     
     ArduinoOTA.begin();
-    LOG0("Starting OTA Server:    %s at %s\n",displayName,WiFi.localIP().toString().c_str());
+    LOG0("Starting OTA Server:    %s at %s\n",displayName,ethernetEnabled?ETH.localIP().toString().c_str():WiFi.localIP().toString().c_str());
     LOG0("Authorization Password: %s",spanOTA.auth?"Enabled\n\n":"DISABLED!\n\n");
   }
   
