@@ -27,15 +27,15 @@
 
 #include "HomeSpan.h"
 
-#define ETH_PHY_TYPE     ETH_PHY_W5500
-#define ETH_PHY_ADDR     1
-#define ETH_PHY_CS       33
-#define ETH_PHY_IRQ      -1
-#define ETH_PHY_RST      -1
-#define ETH_PHY_SPI_HOST SPI2_HOST
-#define ETH_PHY_SPI_SCK  SCK
-#define ETH_PHY_SPI_MISO MISO
-#define ETH_PHY_SPI_MOSI MOSI
+//#define ETH_PHY_TYPE     ETH_PHY_W5500
+//#define ETH_PHY_ADDR     1
+//#define ETH_PHY_CS       33
+//#define ETH_PHY_IRQ      -1
+//#define ETH_PHY_RST      -1
+//#define ETH_PHY_SPI_HOST SPI2_HOST
+//#define ETH_PHY_SPI_SCK  SCK
+//#define ETH_PHY_SPI_MISO MISO
+//#define ETH_PHY_SPI_MOSI MOSI
 
 void setup() {
  
@@ -53,8 +53,12 @@ void setup() {
           .addBssidName("3A:98:B5:EF:BF:69","Kitchen")
           .addBssidName("3A:98:B5:DB:54:86","Basement");
 
-  ETH.begin(ETH_PHY_TYPE, ETH_PHY_ADDR, ETH_PHY_CS, ETH_PHY_IRQ, ETH_PHY_RST, ETH_PHY_SPI_HOST, ETH_PHY_SPI_SCK, ETH_PHY_SPI_MISO, ETH_PHY_SPI_MOSI);
-          
+//  ETH.begin(ETH_PHY_TYPE, ETH_PHY_ADDR, ETH_PHY_CS, ETH_PHY_IRQ, ETH_PHY_RST, ETH_PHY_SPI_HOST, ETH_PHY_SPI_SCK, ETH_PHY_SPI_MISO, ETH_PHY_SPI_MOSI);
+//  ETH.begin(0, -1, 16, 17, ETH_PHY_RTL8201);
+//  ETH.begin();
+
+ETH.begin(ETH_PHY_RTL8201, 0, 16, 17, -1, ETH_CLOCK_GPIO0_IN);
+            
   homeSpan.begin(Category::Lighting,"HomeSpan OTA Test");
 
   new SpanAccessory();
