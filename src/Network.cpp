@@ -117,7 +117,7 @@ void Network_HS::apConfigure(){
 
   STATUS_UPDATE(start(LED_AP_STARTED),HS_AP_STARTED)    
 
-  WiFiServer apServer(80);
+  NetworkServer apServer(80);
   client=0;
     
   const byte DNS_PORT = 53;

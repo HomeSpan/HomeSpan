@@ -56,8 +56,7 @@ void setup() {
 //  ETH.begin(ETH_PHY_TYPE, ETH_PHY_ADDR, ETH_PHY_CS, ETH_PHY_IRQ, ETH_PHY_RST, ETH_PHY_SPI_HOST, ETH_PHY_SPI_SCK, ETH_PHY_SPI_MISO, ETH_PHY_SPI_MOSI);
 //  ETH.begin(0, -1, 16, 17, ETH_PHY_RTL8201);
 //  ETH.begin();
-
-ETH.begin(ETH_PHY_RTL8201, 0, 16, 17, -1, ETH_CLOCK_GPIO0_IN);
+// ETH.begin(ETH_PHY_RTL8201, 0, 16, 17, -1, ETH_CLOCK_GPIO0_IN);
             
   homeSpan.begin(Category::Lighting,"HomeSpan OTA Test");
 
@@ -67,8 +66,17 @@ ETH.begin(ETH_PHY_RTL8201, 0, 16, 17, -1, ETH_CLOCK_GPIO0_IN);
     new Service::LightBulb();
       new Characteristic::On();
 
+//  homeSpan.setWifiBegin(myWifi);
+
 //  homeSpan.autoPoll();
       
+}
+
+//////////////////////////////////////
+
+void myWifi(const char *ssid, const char *pwd){
+  Serial.printf("\nHERE: ssid=%s, pwd=%s\n",ssid,pwd);
+  WiFi.begin(ssid,pwd);
 }
 
 //////////////////////////////////////

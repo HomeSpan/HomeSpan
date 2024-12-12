@@ -99,7 +99,7 @@ void Span::begin(Category catID, const char *_displayName, const char *_hostName
 
   statusLED=new Blinker(statusDevice,autoOffLED);             // create Status LED, even is statusDevice is NULL
 
-  hapServer=new WiFiServer(tcpPortNum);                                             // create HAP WIFI SERVER
+  hapServer=new NetworkServer(tcpPortNum);                    // create HAP Server (can be WiFi or Ethernet)
  
   size_t len;
 
@@ -241,7 +241,8 @@ void Span::pollTask() {
     waitTime*=waitTimeMult;
     if(waitTime>waitTimeMaximum)
       waitTime=waitTimeMinimum;
-    WiFi.begin(network.wifiData.ssid,network.wifiData.pwd);
+//    WiFi.begin(network.wifiData.ssid,network.wifiData.pwd);
+    wifiBegin(network.wifiData.ssid,network.wifiData.pwd);
   }
 
   if(rescanStatus==RESCAN_PENDING && millis()>rescanAlarm){
