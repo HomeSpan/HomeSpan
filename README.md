@@ -67,6 +67,10 @@ Requirements to run HomeSpan depend on which version you choose:
     * the BSSID (6-byte MAC address) of the access point to which HomeSpan is currently connected is provided in the Web Log as well as in the Serial Monitor in response to the 's' CLI command
 
   * added new homeSpan method `setConnectionTimes()` that allows users to fine-tune how long HomeSpan waits for each connection attempt when trying to connect to a WiFi network
+  
+  * added new homeSpan method `setWifiBegin()` that allows users to create an alternative function HomeSpan calls **instead of** `WiFi.begin()` when attempting to connect to a WiFi network
+
+    * provides ability to create customizations, such as connecting to an enterprise network, or changing the WiFi power while connectivity is being established (required for some ESP32 boards with a misconfigured WiFi radio)
     
   * added new homeSpan method `enableWiFiRescan()` that causes HomeSpan to periodically re-scan for all access points matching the configured SSID and automatically switches to the access point with the strongest signal
      * useful after a mesh network is rebooted and HomeSpan initially reconnects to a more distance access point because a closer one with a stronger signal has not yet fully rebooted
