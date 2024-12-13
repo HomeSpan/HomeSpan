@@ -24,6 +24,7 @@ Requirements to run HomeSpan depend on which version you choose:
 * Dozens of integrated HomeKit Services
 * Operates in either Accessory or Bridge mode
 * Supports pairing with Setup Codes or QR Codes
+* Supports both WiFi and Ethernet connectivity to your home network
 
 ### For the HomeSpan Developer
 
@@ -59,6 +60,18 @@ Requirements to run HomeSpan depend on which version you choose:
 * A standalone, detailed End-User Guide
 
 ## ❗Latest Update - HomeSpan 2.1.0 (MM/DD/YYYY)
+
+### Integrated Support for Ethernet Connectivity!
+
+* **Users can now readily connect HomeSpan to their home networks via Ethernet as an alternative to WiFi**
+
+  * no new homeSpan methods are required - during start-up HomeSpan checks if you've instructed the ESP32 to establish an Ethernet connection, and if so it will switch into "Ethernet mode" and not attempt to connect to your network via WiFi
+  * once in Ethernet mode, HomeSpan customizes some of the output to the Serial Monitor and Web Log so it is clear Ethernet, and not WiFi, connectivity is being used
+  * HomeSpan handles all reporting of connects/disconnects/reconnects just as it normally does for WiFi connections
+  * to establish Ethernet connectivity, simply use the Arduino-ESP32's ETH library by calling `ETH.begin()` in your sketch with the appropriate parameters for your Ethernet board (assuming the Arduino-ESP32 library supports your board)
+    * you must call `ETH.begin()` before calling `homeSpan.begin()`
+    * you do **not** need to include `ETH.h` in your sketch
+    * note the Aruidno-ESP32 ETH library supports both direct-connect PHY as well as standalone SPI-based Ethernet boards
 
 * **WiFi Enhancements and New WiFi Management Methods**
 
