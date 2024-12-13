@@ -81,6 +81,7 @@ Span::Span(){
   
   networkEventQueue=xQueueCreate(10,sizeof(arduino_event_id_t));    // queue to transmit network events
   Network.onEvent([](arduino_event_id_t event){xQueueSend(homeSpan.networkEventQueue, &event, (TickType_t) 0);});
+  Network.onEvent([](arduino_event_id_t event){homeSpan.ethernetEnabled=true;},arduino_event_id_t::ARDUINO_EVENT_ETH_START);  
 }
 
 ///////////////////////////////
@@ -98,7 +99,7 @@ void Span::begin(Category catID, const char *_displayName, const char *_hostName
 
   statusLED=new Blinker(statusDevice,autoOffLED);             // create Status LED, even is statusDevice is NULL
 
-  hapServer=new WiFiServer(tcpPortNum);                                             // create HAP WIFI SERVER
+  hapServer=new NetworkServer(tcpPortNum);                    // create HAP Server (can be WiFi or Ethernet)
  
   size_t len;
 
@@ -164,6 +165,7 @@ void Span::begin(Category catID, const char *_displayName, const char *_hostName
   LOG0("\nSketch Compiled:  %s %s",__DATE__,__TIME__);
   LOG0("\nPartition:        %s",esp_ota_get_running_partition()->label);
   LOG0("\nMAC Address:      %s",Network.macAddress().c_str());
+  LOG0("\nInterface:        %s",ethernetEnabled?"ETHERNET":"WIFI");
   
   LOG0("\n\nDevice Name:      %s\n\n",displayName);
 
@@ -211,7 +213,7 @@ void Span::pollTask() {
       LOG0("\n**** WARNING!  Internal Free Heap of %d bytes is less than Low-Memory Threshold of %d bytes.  Device *may* run out of Internal memory.\n\n",
           heap_caps_get_free_size(MALLOC_CAP_DEFAULT|MALLOC_CAP_INTERNAL),DEFAULT_LOW_MEM_THRESHOLD);
 
-    if(!strlen(network.wifiData.ssid)){
+    if(!ethernetEnabled && !strlen(network.wifiData.ssid)){
       LOG0("*** WIFI CREDENTIALS DATA NOT FOUND.  ");
       if(autoStartAPEnabled){
         LOG0("AUTO-START OF ACCESS POINT ENABLED...\n\n");
@@ -231,7 +233,7 @@ void Span::pollTask() {
     
   } // isInitialized
 
-  if(strlen(network.wifiData.ssid) && !(connected%2) && millis()>alarmConnect){
+  if(!ethernetEnabled && strlen(network.wifiData.ssid) && !(connected%2) && millis()>alarmConnect){
     if(verboseWifiReconnect)
       addWebLog(true,"Trying to connect to %s.  Waiting %ld sec...",network.wifiData.ssid,(waitTime+500)/1000);
     
@@ -239,7 +241,8 @@ void Span::pollTask() {
     waitTime*=waitTimeMult;
     if(waitTime>waitTimeMaximum)
       waitTime=waitTimeMinimum;
-    WiFi.begin(network.wifiData.ssid,network.wifiData.pwd);
+//    WiFi.begin(network.wifiData.ssid,network.wifiData.pwd);
+    wifiBegin(network.wifiData.ssid,network.wifiData.pwd);
   }
 
   if(rescanStatus==RESCAN_PENDING && millis()>rescanAlarm){
@@ -421,7 +424,6 @@ void Span::networkCallback(arduino_event_id_t event){
       if(connected%2){                        // we are in a connected state
         connected++;                          // move to unconnected state
         addWebLog(true,"*** WiFi Connection Lost!");
-        STATUS_UPDATE(start(LED_WIFI_CONNECTING),HS_WIFI_CONNECTING)
         waitTime=waitTimeMinimum;
         alarmConnect=millis();
       }
@@ -463,28 +465,28 @@ void Span::networkCallback(arduino_event_id_t event){
       }
       resetStatus();     
     break;
-            
-    case ARDUINO_EVENT_WIFI_STA_STOP:            Serial.println("WiFi clients stopped"); break;
-    case ARDUINO_EVENT_WIFI_STA_AUTHMODE_CHANGE: Serial.println("Authentication mode of access point has changed"); break;
-    case ARDUINO_EVENT_WIFI_STA_LOST_IP:        Serial.println("Lost IP address and IP address is reset to 0"); break;
-    case ARDUINO_EVENT_WPS_ER_SUCCESS:          Serial.println("WiFi Protected Setup (WPS): succeeded in enrollee mode"); break;
-    case ARDUINO_EVENT_WPS_ER_FAILED:           Serial.println("WiFi Protected Setup (WPS): failed in enrollee mode"); break;
-    case ARDUINO_EVENT_WPS_ER_TIMEOUT:          Serial.println("WiFi Protected Setup (WPS): timeout in enrollee mode"); break;
-    case ARDUINO_EVENT_WPS_ER_PIN:              Serial.println("WiFi Protected Setup (WPS): pin code in enrollee mode"); break;
-    case ARDUINO_EVENT_WIFI_AP_START:           Serial.println("WiFi access point started"); break;
-    case ARDUINO_EVENT_WIFI_AP_STOP:            Serial.println("WiFi access point  stopped"); break;
-    case ARDUINO_EVENT_WIFI_AP_STACONNECTED:    Serial.println("Client connected"); break;
-    case ARDUINO_EVENT_WIFI_AP_STADISCONNECTED: Serial.println("Client disconnected"); break;
-    case ARDUINO_EVENT_WIFI_AP_STAIPASSIGNED:   Serial.println("Assigned IP address to client"); break;
-    case ARDUINO_EVENT_WIFI_AP_PROBEREQRECVED:  Serial.println("Received probe request"); break;
-    case ARDUINO_EVENT_WIFI_AP_GOT_IP6:         Serial.println("AP IPv6 is preferred"); break;
-    case ARDUINO_EVENT_ETH_GOT_IP6:             Serial.println("Ethernet IPv6 is preferred"); break;
-    case ARDUINO_EVENT_ETH_START:               Serial.println("Ethernet started"); break;
-    case ARDUINO_EVENT_ETH_STOP:                Serial.println("Ethernet stopped"); break;
-    case ARDUINO_EVENT_ETH_CONNECTED:           Serial.println("Ethernet connected"); break;
-    case ARDUINO_EVENT_ETH_DISCONNECTED:        Serial.println("Ethernet disconnected"); break;
-    case ARDUINO_EVENT_ETH_GOT_IP:              Serial.println("Obtained IP address"); break;
-    default:                                    break;
+
+    case ARDUINO_EVENT_ETH_GOT_IP:
+    case ARDUINO_EVENT_ETH_GOT_IP6:
+      addWebLog(true,"Ethernet Connected!  IP Address = %s",ETH.localIP().toString().c_str());      
+      connected++;
+      if(connected==1)
+        configureNetwork();
+      if(wifiCallbackAll)
+        wifiCallbackAll((connected+1)/2);
+      resetStatus();     
+    break;
+
+    case ARDUINO_EVENT_ETH_DISCONNECTED:
+      if(connected%2){                        // we are in a connected state
+        connected++;                          // move to unconnected state
+        addWebLog(true,"*** Ethernet Connection Lost!");
+      }
+      resetStatus();     
+    break;
+                
+    default:
+    break;
   }
 }
 
@@ -568,7 +570,7 @@ void Span::configureNetwork(){
     ArduinoOTA.onStart(spanOTA.start).onEnd(spanOTA.end).onProgress(spanOTA.progress).onError(spanOTA.error);  
     
     ArduinoOTA.begin();
-    LOG0("Starting OTA Server:    %s at %s\n",displayName,WiFi.localIP().toString().c_str());
+    LOG0("Starting OTA Server:    %s at %s\n",displayName,ethernetEnabled?ETH.localIP().toString().c_str():WiFi.localIP().toString().c_str());
     LOG0("Authorization Password: %s",spanOTA.auth?"Enabled\n\n":"DISABLED!\n\n");
   }
   
@@ -665,10 +667,15 @@ void Span::processSerialCommand(const char *c){
       
       LOG0("\n*** HomeSpan Status ***\n\n");
 
-      LOG0("IP Address:        %s   (RSI=%d  BSSID=%s",WiFi.localIP().toString().c_str(),WiFi.RSSI(),WiFi.BSSIDstr().c_str());
-      if(bssidNames.count(WiFi.BSSIDstr().c_str()))
-        LOG0("  \"%s\"",bssidNames[WiFi.BSSIDstr().c_str()].c_str());
-      LOG0(")\n");
+      if(!ethernetEnabled){
+        LOG0("IP Address:        %s   (RSI=%d  BSSID=%s",WiFi.localIP().toString().c_str(),WiFi.RSSI(),WiFi.BSSIDstr().c_str());
+        if(bssidNames.count(WiFi.BSSIDstr().c_str()))
+          LOG0("  \"%s\"",bssidNames[WiFi.BSSIDstr().c_str()].c_str());
+        LOG0(")\n");
+      } else {
+        LOG0("IP Address:        %s   (Ethernet)\n",ETH.localIP().toString().c_str());        
+      }
+      
       if(webLog.isEnabled && hostName!=NULL)   
         LOG0("Web Logging:       http://%s.local:%d%s\n",hostName,tcpPortNum,webLog.statusURL.c_str()+4);
       LOG0("\nAccessory ID:      ");
@@ -1261,7 +1268,7 @@ void Span::getWebLog(void (*f)(const char *, void *), void *user_data){
 ///////////////////////////////
 
 void Span::resetStatus(){
-  if(strlen(network.wifiData.ssid)==0)
+  if(!ethernetEnabled && strlen(network.wifiData.ssid)==0)
     STATUS_UPDATE(start(LED_WIFI_NEEDED),HS_WIFI_NEEDED)
   else if(!(connected%2))
     STATUS_UPDATE(start(LED_WIFI_CONNECTING),HS_WIFI_CONNECTING)

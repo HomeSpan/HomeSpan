@@ -165,6 +165,21 @@ The following **optional** `homeSpan` methods enable additional features and pro
   * if either *minTime* or *nSteps* is set to zero, or if *maxTime* is not strictly greater than *minTime*, HomeSpan ignores the request and reports a warning message to the Serial Monitor
   * note this is an optional method. If not called HomeSpan uses default parameters of {5,60,5} which yields a wait pattern of 5, 8, 14, 22, 36, and 60 seconds between connection attempts
 
+* `Span& setWifiBegin(void (*func)(const char *ssid, const char *pwd))`
+  * sets an **alternative** user-defined function, *func*, to be called by HomeSpan when it tries to connect to a WiFi network with specified credentials SSID=*ssid* and password=*pwd*, **instead** of HomeSpan's default behavior of simply calling `WiFi.begin(ssid, pwd)`
+  * this ability to define an alternative *func* is provided for users that either need to use a different type of call to establish WiFi connectivity (e.g. connectivity to an enterprise network), or that require additional functionality to be called when connectivity is established (e.g. changing the WiFi power)
+  * note *func* is called every time HomeSpan tries to connect to WiFi network, including during repeated wait periods as well as reconnects after a disconnect
+  * the function *func* must be of type *void* and accept two argument into which HomeSpan will pass whatever SSID and Password you previously saved as HomeSpan's WiFi Credentials, or that you explicitly set in the sketch using `setWifiCredentials()` above
+    * *func* does not necessarily need to use this information, but it must must be able to accept the data
+  * example: `homeSpan.setWifiBegin(myWifi)` where *myWifi* is defined below would address the issue on some ESP32 boards that will not connect to a WiFi network unless the WiFi radio power is changed to a lower value immediately after calling `WiFi.begin()`:
+
+```C++
+ void myWifi(const char *ssid, const char *pwd){
+   WiFi.begin(ssid,pwd);                 // don't forget to call WiFi.begin(), if still needed, in your alternative function
+   WiFi.setTxPower(WIFI_POWER_8_5dBm);   // set power immediately after as required for some ESP32 boards
+}
+```
+
 * `Span& enableWiFiRescan(uint32_t iTime=1, uint32_t pTime=0, int thresh=3)`
   * when you configure HomeSpan to connect to a WiFi SSID that broadcasts from more than one access point (e.g. a mesh network), HomeSpan connects to the access point with the strongest RSSI signal for that SSID
   * once connected, HomeSpan remains "attached" to that specific access point unless it looses overall connectivity to the network, or is otherwise purposely disconnected, at at which point it will attempt to reconnect once again the strongest access point broadcasting the original SSID

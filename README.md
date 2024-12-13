@@ -24,6 +24,7 @@ Requirements to run HomeSpan depend on which version you choose:
 * Dozens of integrated HomeKit Services
 * Operates in either Accessory or Bridge mode
 * Supports pairing with Setup Codes or QR Codes
+* Supports both WiFi and Ethernet connectivity to your home network
 
 ### For the HomeSpan Developer
 
@@ -60,6 +61,18 @@ Requirements to run HomeSpan depend on which version you choose:
 
 ## ❗Latest Update - HomeSpan 2.1.0 (MM/DD/YYYY)
 
+### Integrated Support for Ethernet Connectivity!
+
+* **Users can now readily connect HomeSpan to their home networks via Ethernet as an alternative to WiFi**
+
+  * no new homeSpan methods are required - during start-up HomeSpan checks if you've instructed the ESP32 to establish an Ethernet connection, and if so it will switch into "Ethernet mode" and not attempt to connect to your network via WiFi
+  * once in Ethernet mode, HomeSpan customizes some of the output to the Serial Monitor and Web Log so it is clear Ethernet, and not WiFi, connectivity is being used
+  * HomeSpan handles all reporting of connects/disconnects/reconnects just as it normally does for WiFi connections
+  * to establish Ethernet connectivity, simply use the Arduino-ESP32's ETH library by calling `ETH.begin()` in your sketch with the appropriate parameters for your Ethernet board (assuming the Arduino-ESP32 library supports your board)
+    * you must call `ETH.begin()` before calling `homeSpan.begin()`
+    * you do **not** need to include `ETH.h` in your sketch
+    * note the Aruidno-ESP32 ETH library supports both direct-connect PHY as well as standalone SPI-based Ethernet boards
+
 * **WiFi Enhancements and New WiFi Management Methods**
 
   * when connecting to a WiFi mesh network with multiple access points, HomeSpan now **automatically connects to the access point with the strongest WiFi signal** (i.e. the greatest RSSI)
@@ -67,6 +80,10 @@ Requirements to run HomeSpan depend on which version you choose:
     * the BSSID (6-byte MAC address) of the access point to which HomeSpan is currently connected is provided in the Web Log as well as in the Serial Monitor in response to the 's' CLI command
 
   * added new homeSpan method `setConnectionTimes()` that allows users to fine-tune how long HomeSpan waits for each connection attempt when trying to connect to a WiFi network
+  
+  * added new homeSpan method `setWifiBegin()` that allows users to create an alternative function HomeSpan calls **instead of** `WiFi.begin()` when attempting to connect to a WiFi network
+
+    * provides ability to create customizations, such as connecting to an enterprise network, or changing the WiFi power while connectivity is being established (required for some ESP32 boards with a misconfigured WiFi radio)
     
   * added new homeSpan method `enableWiFiRescan()` that causes HomeSpan to periodically re-scan for all access points matching the configured SSID and automatically switches to the access point with the strongest signal
      * useful after a mesh network is rebooted and HomeSpan initially reconnects to a more distance access point because a closer one with a stronger signal has not yet fully rebooted

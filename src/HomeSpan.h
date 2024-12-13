@@ -38,6 +38,7 @@
 #include <list>
 #include <nvs.h>
 #include <ArduinoOTA.h>
+#include <ETH.h>
 #include <esp_now.h>
 #include <mbedtls/base64.h>
 
@@ -265,6 +266,7 @@ class Span{
   boolean serialInputDisabled=false;            // flag indiating that serial input is disabled
   uint8_t rebootCount=0;                        // counts number of times device was rebooted (used in optional Reboot callback)
   uint32_t rebootCallbackTime;                  // length of time to wait (in milliseconds) before calling optional Reboot callback
+  boolean ethernetEnabled=false;                // flag to indicate whether Ethernet is being used instead of WiFi
   
   nvs_handle charNVS;                           // handle for non-volatile-storage of Characteristics data
   nvs_handle wifiNVS=0;                         // handle for non-volatile-storage of WiFi data
@@ -279,6 +281,8 @@ class Span{
   uint8_t waitTimeNumSteps;                     // number of attempts between minimum and maximum times
   double waitTimeMult;                          // amount to extend waitTime on subsequent attempts
   unsigned long alarmConnect=0;                 // time after which WiFi connection attempt should be tried again
+  
+  void (*wifiBegin)(const char *s, const char *p)=[](const char *s, const char *p){WiFi.begin(s,p);};     // default call to WiFi.begin()
  
   uint32_t rescanInitialTime=0;
   uint32_t rescanPeriodicTime=0;
@@ -303,7 +307,7 @@ class Span{
   void (*rebootCallback)(uint8_t)=NULL;                       // optional callback when device reboots
   void (*controllerCallback)()=NULL;                          // optional callback when Controller is added/removed/changed
   
-  WiFiServer *hapServer;                            // pointer to the HAP Server connection
+  NetworkServer *hapServer;                         // pointer to the HAP Server connection
   Blinker *statusLED;                               // indicates HomeSpan status
   Blinkable *statusDevice = NULL;                   // the device used for the Blinker
   PushButton *controlButton = NULL;                 // controls HomeSpan configuration and resets
@@ -410,7 +414,8 @@ class Span{
   Span& setPairingCode(const char *s, boolean progCall=true);                            // sets the Pairing Code - use is NOT recommended.  Use 'S' from CLI instead
   void deleteStoredValues(){processSerialCommand("V");}                                  // deletes stored Characteristic values from NVS
   Span& resetIID(uint32_t newIID);                                                       // resets the IID count for the current Accessory to start at newIID
-  Span& setControllerCallback(void (*f)()){controllerCallback=f;return(*this);}          // sets an optional user-defined function to call whenever a Controller is added/removed/changed
+  Span& setControllerCallback(void (*f)()){controllerCallback=f;return(*this);}          // sets an optional user-defined function to call whenever a Controller is added/removed
+  Span& setWifiBegin(void (*f)(const char *, const char *)){wifiBegin=f;return(*this);}  // sets an optional user-defined function to over-ride WiFi.begin() with additional logic
 
   Span& setHostNameSuffix(const char *suffix){asprintf(&hostNameSuffix,"%s",suffix);return(*this);}      // sets the hostName suffix to be used instead of the 6-byte AccessoryID
  
