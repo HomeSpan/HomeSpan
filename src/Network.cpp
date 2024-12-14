@@ -27,8 +27,6 @@
 
 #include "version.h" 
  
-#include <DNSServer.h>
-
 #include "Network_HS.h"
 #include "HomeSpan.h"
 #include "Utils.h"

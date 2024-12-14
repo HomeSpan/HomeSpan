@@ -28,6 +28,7 @@
 #pragma once
 
 #include <Arduino.h>
+#include <DNSServer.h>
 #include <WiFi.h>
 #include "Settings.h"
 
