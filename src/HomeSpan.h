@@ -113,7 +113,8 @@ enum HS_STATUS {
   HS_AP_CONNECTED,                        // The Access Point is started and a user device has been connected
   HS_AP_TERMINATED,                       // HomeSpan has terminated the Access Point 
   HS_OTA_STARTED,                         // HomeSpan is in the process of receiving an Over-the-Air software update
-  HS_WIFI_SCANNING                        // HomeSpan is in the process of scanning for WiFi networks
+  HS_WIFI_SCANNING,                       // HomeSpan is in the process of scanning for WiFi networks
+  HS_ETH_CONNECTING                       // HomeSpan is trying to connect to an Ethernet network
 };
 
 //////////////////////////////////////////////////////////

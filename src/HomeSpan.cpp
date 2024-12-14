@@ -1271,7 +1271,7 @@ void Span::resetStatus(){
   if(!ethernetEnabled && strlen(network.wifiData.ssid)==0)
     STATUS_UPDATE(start(LED_WIFI_NEEDED),HS_WIFI_NEEDED)
   else if(!(connected%2))
-    STATUS_UPDATE(start(LED_WIFI_CONNECTING),HS_WIFI_CONNECTING)
+    STATUS_UPDATE(start(LED_WIFI_CONNECTING),ethernetEnabled?HS_ETH_CONNECTING:HS_WIFI_CONNECTING)
   else if(!HAPClient::nAdminControllers())
     STATUS_UPDATE(start(LED_PAIRING_NEEDED),HS_PAIRING_NEEDED)
   else
@@ -1292,6 +1292,7 @@ const char* Span::statusString(HS_STATUS s){
   switch(s){
     case HS_WIFI_NEEDED: return("WiFi Credentials Needed");
     case HS_WIFI_CONNECTING: return("WiFi Connecting");
+    case HS_ETH_CONNECTING: return("Ethernet Connecting");
     case HS_PAIRING_NEEDED: return("Device not yet Paired");
     case HS_PAIRED: return("Device Paired");
     case HS_ENTERING_CONFIG_MODE: return("Entering Command Mode");
