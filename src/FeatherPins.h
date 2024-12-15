@@ -82,4 +82,13 @@
   };
   #define DEVICE_SUFFIX "-C6"
   
+#elif defined(ARDUINO_WESP32)
+  enum {
+    F12=2,F27=32,                                                     // Digital w/Touch (2 pins)
+    F26=12,F25=14,F32=18,F14=23,F21=5,F33=13,                         // Digital Only (6 pins)
+    F34=35,F39=34,F36=36,F4=33,                                       // A2-A5
+    F22=4,F23=15                                                      // I2C SCL/SDA
+  };
+  #define DEVICE_SUFFIX "-WESP32"
+
 #endif
