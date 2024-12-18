@@ -276,11 +276,7 @@ class Span{
   nvs_handle hapNVS;                            // handle for non-volatile-storage of HAP data
 
   int connected=0;                              // WiFi connection status (increments upon each connect and disconnect)
-  uint32_t waitTime;                            // time to wait (in milliseconds) between WiFi connection attempts
-  uint32_t waitTimeMinimum;                     // minimum time to wait (in milliseconds) between WiFi connection attempts
-  uint32_t waitTimeMaximum;                     // maximum time to wait (in milliseconds) between WiFi connection attempts
-  uint8_t waitTimeNumSteps;                     // number of attempts between minimum and maximum times
-  double waitTimeMult;                          // amount to extend waitTime on subsequent attempts
+  HS_ExpCounter wifiTimeCounter;                // exponentially-increasing wait time counter between WiFi connection attempts
   unsigned long alarmConnect=0;                 // time after which WiFi connection attempt should be tried again
   
   void (*wifiBegin)(const char *s, const char *p)=[](const char *s, const char *p){WiFi.begin(s,p);};     // default call to WiFi.begin()

@@ -36,6 +36,8 @@ void setup() {
 
   homeSpan.setLogLevel(2);
 
+  homeSpan.setConnectionTimes(5,10,2);
+
   homeSpan.enableWebLog(50);
   homeSpan.enableOTA();
   homeSpan.enableWiFiRescan(1,2);
