@@ -2545,6 +2545,8 @@ void SpanWebLog::initTime(void *args){
 
 void SpanWebLog::vLog(boolean sysMsg, const char *fmt, va_list ap){
 
+  std::unique_lock writeLock(mux);        // wait for mux to be unlocked and then lock *exclusively* so write can proceed uninterrupted
+  
   char *buf;
   vasprintf(&buf,fmt,ap);
 

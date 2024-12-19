@@ -36,6 +36,7 @@
 #include <unordered_map>
 #include <vector>
 #include <list>
+#include <shared_mutex>
 #include <nvs.h>
 #include <ArduinoOTA.h>
 #include <ETH.h>
@@ -202,6 +203,7 @@ struct SpanWebLog{                            // optional web status/log data
   String statusURL;                           // URL of status log
   uint32_t waitTime=120000;                   // number of milliseconds to wait for initial connection to time server
   String css="";                              // optional user-defined style sheet for web log
+  std::shared_mutex mux;                      // shared read/write lock
     
   struct log_t {                              // log entry type
     uint64_t upTime;                          // number of seconds since booting

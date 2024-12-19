@@ -1075,7 +1075,9 @@ int HAPClient::putPrepareURL(char *json){
 //////////////////////////////////////
 
 void HAPClient::getStatusURL(HAPClient *hapClient, void (*callBack)(const char *, void *), void *user_data){
-  
+
+  std::shared_lock readLock(homeSpan.webLog.mux);        // wait for mux to be unlocked, or already locked non-exclusively, and then lock *non-exclusively* to prevent writing in vLog
+
   char clocktime[33];
 
   if(homeSpan.webLog.timeInit){
