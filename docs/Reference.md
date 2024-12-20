@@ -268,8 +268,8 @@ The following **optional** `homeSpan` methods enable additional features and pro
 
 * `Span& setWebLogCallback(void (*func)(String &htmlText))`
   * sets an optional user-defined callback function, *func*, to be called by HomeSpan whenever the Web Log is produced
-  * allows user to add additional custom data to the initial table of the Web Log by **extending** the String *htmlText*, which is passed as a reference to *func*
-  * the function *func* must be of type *void* and accept one argument of type *String*
+  * allows user to add additional custom data to the initial table of the Web Log by setting the String *htmlText*, which is passed as a reference to *func*
+  * the function *func* must be of type *void* and accept one argument of type *String \&*
   * see [Message Logging](Logging.md) for details on how to construct *htmlText*
 
 * `void getWebLog(void (*f)(const char *htmlBuf, void *args), void *userData)`
