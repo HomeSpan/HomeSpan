@@ -84,19 +84,19 @@ Note that HomeSpan outputs the full content of the Web Log HTML, including whate
 
 ### Adding User-Defined Data and/or Custom HTML
 
-Homespan provides a hook into the text used to generate the Web Log that you can extend to add your own data to the initial table as well as more generally add any custom HTML.
+Homespan provides a hook into the text used to generate the Web Log that you can extend to add your own data to the **initial table** as well as more generally add any custom HTML.
 
 To access this text, set a Web Log callback using `homeSpan.setWebLogCallback(void (*func)(String &htmlText))` where
 
   * *func* is a function of type *void* that takes a single argument of type *String*, and
-  * *htmlText* will be set by HomeSpan to a String reference containing all the HTML text that the Web Log has already generated to produce the initial table.
+  * *htmlText* is a String reference for you to add your custom HTML text
 
-To add your own data to the table, simply extend the String *htmlText* by adding as many `<tr>` and `<td>` HTML tags as needed.  If you wish to end the table and add any other HTML, simple include the `</table>` tag in *htmlText*, and then add any other custom HTML.  For example, the following function could be used to extend the initial Web Log table to show free DRAM, end the table, and provide a hot link to the HomeSpan Repo:
+To add your own data to the table, simply place it the String *htmlText* by adding as many `<tr>` and `<td>` HTML tags as needed.  If you wish to end the table and add any other HTML, simple include the `</table>` tag in *htmlText*, and then add any other custom HTML.  For example, the following function could be used to extend the initial Web Log table to show free DRAM, end the table, and provide a hot link to the HomeSpan Repo:
 
 ```C++
 void extraData(String &r){
-  r+="<tr><td>Free DRAM:</td><td>" + String(esp_get_free_internal_heap_size()) + " bytes</td></tr>\n"; 
-  r+="</table><p><a href=\"https://github.com/HomeSpan/HomeSpan\">Click Here to Access HomeSpan Repo</a></p>";
+  r="<tr><td>Free DRAM:</td><td>" + String(esp_get_free_internal_heap_size()) + " bytes</td></tr>\n" +
+    "</table><p><a href=\"https://github.com/HomeSpan/HomeSpan\">Click Here to Access HomeSpan Repo</a></p>";
 }
 ```
 
