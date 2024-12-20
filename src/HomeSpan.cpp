@@ -2045,6 +2045,7 @@ char *SpanCharacteristic::getStringGeneric(UVal &val){
 
 void SpanCharacteristic::setString(const char *val, boolean notify){ 
 
+  std::unique_lock writeLock(mux);
   setValCheck();
   uvSet(value,val);
   setValFinish(notify);    
@@ -2074,6 +2075,7 @@ size_t SpanCharacteristic::getDataGeneric(uint8_t *data, size_t len, UVal &val){
 
 void SpanCharacteristic::setData(const uint8_t *data, size_t len, boolean notify){
 
+  std::unique_lock writeLock(mux);
   setValCheck();
   uvSet(value,{data,len});
   setValFinish(notify);
@@ -2121,6 +2123,7 @@ return(tlv.pack_size());
 
 void SpanCharacteristic::setTLV(const TLV8 &tlv, boolean notify){
 
+  std::unique_lock writeLock(mux);
   setValCheck();
   uvSet(value,tlv);
   setValFinish(notify);
