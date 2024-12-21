@@ -602,8 +602,7 @@ class SpanCharacteristic{
   unsigned long updateTime=0;              // last time value was updated (in millis) either by PUT /characteristic OR by setVal()
   UVal newValue;                           // the updated value requested by PUT /characteristic
   SpanService *service=NULL;               // pointer to Service containing this Characteristic
-  EVLIST evList;                           // vector of current connections that have subscribed to EV notifications for this Characteristic
-  std::shared_mutex mux;                   // shared read/write lock
+  EVLIST evList;                           // vector of current connections that have subscribed to EV notifications for this Characteristic 
     
   void printfAttributes(int flags);                           // writes Characteristic JSON to hapOut stream
   StatusCode loadUpdate(char *val, char *ev, boolean wr);     // load updated val/ev from PUT /characteristic JSON request.  Return intitial HAP status code (checks to see if characteristic is found, is writable, etc.)  
@@ -614,7 +613,7 @@ class SpanCharacteristic{
   void uvSet(UVal &u, DATA_t data);                           // copies DATA data into UVal u (after transforming to a char *)
   void uvSet(UVal &u, TLV_ENC_t tlv);                         // copies TLV8 tlv into UVal u (after transforming to a char *)
 
-  template <typename T> void uvSet(UVal &u, T val){           // copies numeric val into UVal u
+  template <typename T> void uvSet(UVal &u, T val){           // copies numeric val into UVal u  
     switch(format){
       case FORMAT::BOOL:
         u.BOOL=(boolean)val;
@@ -720,15 +719,15 @@ class SpanCharacteristic{
   void *operator new(size_t size){return(HS_MALLOC(size));}                                   // override new operator to use PSRAM when available
   void operator delete(void *p){free(p);}
 
-  template <class T=int> T getVal(){std::shared_lock readLock(homeSpan.webLog.mux);return(uvGet<T>(value));}                                 // gets the value for numeric-based Characteristics
-  char *getString(){std::shared_lock readLock(homeSpan.webLog.mux);return(getStringGeneric(value));}                                         // gets the value for string-based Characteristics
-  size_t getData(uint8_t *data, size_t len){std::shared_lock readLock(homeSpan.webLog.mux);return(getDataGeneric(data,len,value));}          // gets the value for data-based Characteristics
-  size_t getTLV(TLV8 &tlv){std::shared_lock readLock(homeSpan.webLog.mux);return(getTLVGeneric(tlv,value));}                                 // gets the value for tlv8-based Characteristics
+  template <class T=int> T getVal(){return(uvGet<T>(value));}                                 // gets the value for numeric-based Characteristics
+  char *getString(){return(getStringGeneric(value));}                                         // gets the value for string-based Characteristics
+  size_t getData(uint8_t *data, size_t len){return(getDataGeneric(data,len,value));}          // gets the value for data-based Characteristics
+  size_t getTLV(TLV8 &tlv){return(getTLVGeneric(tlv,value));}                                 // gets the value for tlv8-based Characteristics
 
-  template <class T=int> T getNewVal(){std::shared_lock readLock(homeSpan.webLog.mux);return(uvGet<T>(newValue));}                           // gets the newValue for numeric-based Characteristics
-  char *getNewString(){std::shared_lock readLock(homeSpan.webLog.mux);return(getStringGeneric(newValue));}                                   // gets the newValue for string-based Characteristics
-  size_t getNewData(uint8_t *data, size_t len){std::shared_lock readLock(homeSpan.webLog.mux);return(getDataGeneric(data,len,newValue));}    // gets the newValue for data-based Characteristics
-  size_t getNewTLV(TLV8 &tlv){std::shared_lock readLock(homeSpan.webLog.mux);return(getTLVGeneric(tlv,newValue));}                           // gets the newValue for tlv8-based Characteristics
+  template <class T=int> T getNewVal(){return(uvGet<T>(newValue));}                           // gets the newValue for numeric-based Characteristics
+  char *getNewString(){return(getStringGeneric(newValue));}                                   // gets the newValue for string-based Characteristics
+  size_t getNewData(uint8_t *data, size_t len){return(getDataGeneric(data,len,newValue));}    // gets the newValue for data-based Characteristics
+  size_t getNewTLV(TLV8 &tlv){return(getTLVGeneric(tlv,newValue));}                           // gets the newValue for tlv8-based Characteristics
 
   void setString(const char *val, boolean notify=true);                                       // sets the value and newValue for string-based Characteristic
   void setData(const uint8_t *data, size_t len, boolean notify=true);                         // sets the value and newValue for data-based Characteristic
@@ -736,7 +735,6 @@ class SpanCharacteristic{
   
   template <typename T> void setVal(T val, boolean notify=true){                              // sets the value and newValue for numeric-based Characteristics
 
-    std::unique_lock writeLock(mux);
     setValCheck();
     
     if(!((val >= uvGet<T>(minValue)) && (val <= uvGet<T>(maxValue)))){
