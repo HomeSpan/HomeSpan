@@ -88,6 +88,9 @@ typedef std::pair<const uint8_t *, size_t> DATA_t;
 static DATA_t NULL_DATA={NULL,0};
 static TLV8 NULL_TLV{};
 
+#define homeSpanPAUSE std::shared_lock pollLock(homeSpan.getMutex());
+#define homeSpanRESUME if(pollLock.owns_lock()){pollLock.unlock();}
+
 ///////////////////////////////
 
 #define STATUS_UPDATE(LED_UPDATE,MESSAGE_UPDATE)  {homeSpan.statusLED->LED_UPDATE;if(homeSpan.statusCallback)homeSpan.statusCallback(MESSAGE_UPDATE);}
@@ -315,6 +318,7 @@ class Span{
   TaskHandle_t pollTaskHandle = NULL;               // optional task handle to use for poll() function
   TaskHandle_t loopTaskHandle;                      // Arduino Loop Task handle
   boolean verboseWifiReconnect = true;              // set to false to not print WiFi reconnect attempts messages
+  std::shared_mutex pollMutex;                      // mutex lock for poll task
     
   SpanOTA spanOTA;                                  // manages OTA process
   SpanConfig hapConfig;                             // track configuration changes to the HAP Accessory database; used to increment the configuration number (c#) when changes found
@@ -440,6 +444,8 @@ class Span{
   Span& setVerboseWifiReconnect(bool verbose=true){verboseWifiReconnect=verbose;return(*this);}
 
   Span& setRebootCallback(void (*f)(uint8_t),uint32_t t=DEFAULT_REBOOT_CALLBACK_TIME){rebootCallback=f;rebootCallbackTime=t;return(*this);}
+
+  std::shared_mutex& getMutex(){return(pollMutex);}
 
   void autoPoll(uint32_t stackSize=8192, uint32_t priority=1, uint32_t cpu=0){     // start pollTask()
     xTaskCreateUniversal([](void *parms){

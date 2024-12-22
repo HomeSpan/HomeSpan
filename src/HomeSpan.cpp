@@ -196,6 +196,8 @@ void Span::poll() {
 
 void Span::pollTask() {
 
+  std::unique_lock pollLock(homeSpan.pollMutex);
+
   if(!strlen(category)){
     LOG0("\n** FATAL ERROR: Cannot start homeSpan polling without an initial call to homeSpan.begin()!\n** PROGRAM HALTED **\n\n");
     while(1);    
