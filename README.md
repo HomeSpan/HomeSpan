@@ -97,6 +97,17 @@ Requirements to run HomeSpan depend on which version you choose:
   * 'Z' - scans a user's WiFi network environment and displays information about each SSID (including each BSSID for mesh networks with multiple access points broadcasting the same SSID) on the Serial Monitor
   * see the [Command Line Interface (CLI)](docs/CLI.md) page for full details
 
+* **New Multi-Threading Management**
+
+  * made Web Log writing/reading thread-safe
+    * fixes a latent bug related to a race condition between displaying the web log and writing a log record when the separate thread HomeSpan creates at start-up to handle initial contact with an NTP server records the time found
+
+  * made HomeSpan autopolling thread-safe
+    * adds two new macros, `homeSpanPAUSE` and `homeSpanRESUME`, that allow users to temporarily suspend the HomeSpan polling task once it completes its current run
+    * allows users to make modifications to HomeSpan Characteristics and perform any other HomeSpan functions from a separate thread without worrying about inconsistencies if HomeSpan polling was being run at the same time
+    * typically used when your sketch calls `homeSpan.autoPoll()` to run HomeSpan polling in a separate background task *and* you also want to make separate modifications to existing HomeSpan Characteristics by using `getVal()` and `setVal()` from within the main Arduino `loop()` (instead of, or in addition to, modifying these Characteristics from within their Service loops)
+  * see the [API Reference](docs/Reference.md) page for full details
+
 * **Bug Fixes**
   * Fixes a latent bug that prevented compilation when the homeSpan methods `controllerListBegin()` and `controllerListEnd()` were used in a sketch
       
