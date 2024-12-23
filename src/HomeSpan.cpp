@@ -429,8 +429,8 @@ void Span::networkCallback(arduino_event_id_t event){
       connected++;
       if(connected==1)
         configureNetwork();
-      if(wifiCallbackAll)
-        wifiCallbackAll((connected+1)/2);
+      if(connectionCallback)
+        connectionCallback((connected+1)/2);
       if(rescanInitialTime>0){
         rescanAlarm=millis()+rescanInitialTime;
         rescanStatus=RESCAN_PENDING;
@@ -462,8 +462,8 @@ void Span::networkCallback(arduino_event_id_t event){
       connected++;
       if(connected==1)
         configureNetwork();
-      if(wifiCallbackAll)
-        wifiCallbackAll((connected+1)/2);
+      if(connectionCallback)
+        connectionCallback((connected+1)/2);
       resetStatus();     
     break;
 
