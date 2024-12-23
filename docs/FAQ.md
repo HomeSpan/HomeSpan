@@ -56,7 +56,7 @@
 
 #### Can you use HomeSpan with an Ethernet connection instead of a WiFi connection?
 
-* Yes, provided that you are using HomeSpan 2.0.0 or later and that the Ethernet board you are using is supported by the Arduino-ESP32 library.  Users are responsible for establishing Ethernet connectivity by calling the Arduino library `ETH.begin()` function from the `setup()` portion of their sketch with parameters appropriate for their specific Ethernet board.  At startup, if HomeSpan detects an Ethernet connection it will automatically switch into "Ethernet mode" and use Ethernet instead of WiFi for all communications to and from your home network.
+* Yes, provided that you are using HomeSpan 2.0.0 or later and that the Ethernet board you are using is supported by the Arduino-ESP32 library.  Users are responsible for establishing Ethernet connectivity by calling the Arduino library `ETH.begin()` function from the `setup()` portion of their sketch with parameters appropriate for their specific Ethernet board.  At startup, if HomeSpan detects an Ethernet interface device has been properly configured and found (even if the Ethernet cable itself is not yet plugged in) it will automatically switch into "Ethernet mode" and use Ethernet instead of WiFi for all communications to and from your home network.
 
 #### Does HomeSpan work with SPI and I2C?
 
