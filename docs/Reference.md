@@ -402,6 +402,8 @@ The following **optional** `homeSpan` methods are for creating and managing mult
   * returns a reference to the *shared_mutex* used by the `homeSpanPAUSE` and `homeSpanRESUME` macros to lock and unlock the HomeSpan polling thread
   * only needed for advanced users who want to manually lock and unlock the HomeSpan polling thread using their own logic instead of simply calling these macros
  
+A fully worked example showing how to use `autoPoll()` and `homeSpanPAUSE` to automaticlly flip the power of a Simple LightBulb Accessory from a separate thread can be found in the Arduino IDE under [*File → Examples → HomeSpan → Other Examples → MultiThreading*](../examples/Other%20Examples/MultiThreading).
+ 
 ## *SpanAccessory(uint32_t aid)*
 
 Creating an instance of this **class** adds a new HAP Accessory to the HomeSpan HAP Database.
