@@ -63,13 +63,14 @@ Requirements to run HomeSpan depend on which version you choose:
 
 * **Integrated Support for Ethernet Connectivity!**
 
-  * no new homeSpan methods are required - during start-up HomeSpan checks if you've instructed the ESP32 to establish an Ethernet connection, and if so it will switch into "Ethernet mode" and not attempt to connect to your network via WiFi
+  * no new homeSpan methods are required.  Instead, during start-up HomeSpan checks if you've instructed the ESP32 to establish an Ethernet connection, and if so it will switch into "Ethernet mode" and not attempt to connect to your network via WiFi
   * once in Ethernet mode, HomeSpan customizes some of the output to the Serial Monitor and Web Log so it is clear Ethernet, and not WiFi, connectivity is being used
   * HomeSpan handles all reporting of connects/disconnects/reconnects just as it normally does for WiFi connections
   * to establish Ethernet connectivity, simply use the Arduino-ESP32's ETH library by calling `ETH.begin()` in your sketch with the appropriate parameters for your Ethernet board (assuming the Arduino-ESP32 library supports your board)
     * you must call `ETH.begin()` before calling `homeSpan.begin()`
     * you do **not** need to include `ETH.h` in your sketch
-    * note the Aruidno-ESP32 ETH library supports both direct-connect PHY as well as standalone SPI-based Ethernet boards
+    * note the Arduino-ESP32 ETH library supports both direct-connect PHY as well as standalone SPI-based Ethernet boards
+  * adds new homeSpan method `setConnectionCallback()`, which is a renamed version of the `setWifiCallbackAll()` method (now deprecated, see below) to reflect the fact that this method can be used with both Ethernet and WiFi connections
 
 * **WiFi Enhancements and New WiFi Management Methods**
 
@@ -89,7 +90,13 @@ Requirements to run HomeSpan depend on which version you choose:
   * added new homeSpan method `addBssidName()` that allows users to create optional display names for each access point in a WiFi mesh network according to their 6-byte BSSID addresses
      * when defined, HomeSpan will display both this name and the BSSID of an access point whenever presenting info on the Serial Monitor or writing to the Web Log
        
-  * see the [API Reference](docs/Reference.md) page for full details
+  * see the [API Reference](docs/Reference.md) page for full details, as well as the new [HomeSpan WiFi and Ethernet Connectivity Options](docs/Networks.md) page for a high-level discussion of HomeSpan's connectivity options
+
+* **DEPRECATIONS**
+  * `setWifiCallbackAll()` has been deprecated and renamed to `setConnectionCallback()` to reflect the fact this callback can be used for both WiFi and Ethernet connections
+  * `setWifiCallback()` has been deprecated --- the more generic `setConnectionCallback()` should be used instead
+    * requires any existing callbacks to be upgraded to add a single integer argument representing the number of connection attempts, similar to how `setWifiCallbackAll()`, and now `setConnectionCallback()`, work
+  * both `setWifiCallbackAll()` and `setWifiCallback()` will be removed in a future version of HomeSpan.  Please update your sketches to avoid incompatibility with these future versions 
 
 * **New CLI Commands**
   
@@ -124,6 +131,7 @@ HomeSpan includes the following documentation:
 * [HomeSpan Services and Characteristics](docs/ServiceList.md) - a list of all HAP Services and Characterstics supported by HomeSpan
 * [HomeSpan Accessory Categories](docs/Categories.md) - a list of all HAP Accessory Categories defined by HomeSpan
 * [HomeSpan Command-Line Interface (CLI)](docs/CLI.md) - configure a HomeSpan device's WiFi Credentials, modify its HomeKit Setup Code, monitor and update its status, and access detailed, real-time device diagnostics from the Arduino IDE Serial Monitor
+* [HomeSpan WiFi and Ethernet Connectivity Options](docs/Networks.md) - a high-level discussion of HomeSpan's WiFi and Ethernet connectivity options
 * [HomeSpan User Guide](docs/UserGuide.md) - turnkey instructions on how to configure an already-programmed HomeSpan device's WiFi Credentials, modify its HomeKit Setup Code, and pair the device to HomeKit.  No computer needed!
 * [HomeSpan API Reference](docs/Reference.md) - a complete guide to the HomeSpan Library API
 * [HomeSpan QR Codes](docs/QRCodes.md) - create and use QR Codes for pairing HomeSpan devices
