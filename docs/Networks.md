@@ -1,3 +1,19 @@
-# WiFi and Ethernet Connections
+# Overview of WiFi and Ethernet Connectivity
 
-HomeSpan supports can connect to your home network via either WiFi or Ethernet. All of the ESP32 chips supported by HomeSpan come with built-in WiFi so no additional hardware is needed.
+HomeSpan can connect to your home network via either WiFi or Ethernet. All of the ESP32 chips supported by HomeSpan come with built-in WiFi so no additional hardware is needed. Only a small number of ESP32 development boards come with an Ethernet interface (such as this [Silicognition wESP32](https://wesp32.com)) so additional hardware (such as this [Adafruit Ethernet FeatherWing](https://www.adafruit.com/product/3201)) would be needed to connect via Ethernet.
+
+## HomeSpan WiFi connectivity
+
+Unless HomeSpan detects that you installed and configured an Ethernet interface (see below), it will default to using WiFi to connect to your home network.  To make the connection HomeSpan requires the SSID and password for your network, which it saves in non-volatile storage (NVS) for retention even when power is lost.  At start-up HomeSpan checks its NVS for the SSID and password you saved.  If found, it is used to make the WiFi connection.  If not, HomeSpan outputs a message to the Serial Interface (if your device is connected to a computer) and flashes the HomeSpan Status LED (if you've added one) indicating that it requires you to provide your network SSID and password.  There are three ways of doing so:
+
+* If your device is connected to a computer via USB you can type 'W' into the Serial Monitor interface.  HomeSpan will scan your WiFi environment and display all network SSIDs found.  You can then choose which SSID to use, or type your own, and provide its password.  HomeSpan stores this information in NVS, reboots, and then uses the SSID and password just stored to connect to your network.
+
+* If your device is not connected to a computer but you've added both a HomeSpan Control Button and a HomeSpan Status LED you can activate command mode (see the [User Guide](UserGuide.md) for details) and start the HomeSpan Setup Access Point, which launches a captive WiFi Access Point hosting a web page from your device and into which you can enter the SSID and password for your home network.  HomeSpan then tries to connect to the network you specified, and if successful will save the info in NVS, reboot, and proceed as per above.
+  * you can alternatively start the HomeSpan Setup Access Point by typing 'A' intp the Serial Monitor interface if your device is connected to a computer via USB, though this is primarily for testing purposes since if you are connected to a computer you might as well use the 'W' method above
+
+  * you can change the name, password, and time-out of the HomeSpan Setup Access Point using the following homeSpan methods: `setApSSID()`, `setApPassword()`, and `setApTimeout()` (see the [API Reference](Reference.md) page for details on all homeSpan methods)
+  * you can also program HomeSpan to automatically launch its Setup Access Point if it does not find an SSID and password stored in NVS upon start-up by adding the homeSpan `enableAutoStartAP()` method to your sketch
+  * if you really don't like the look and feel of the HomeSpan Setup Access Point you can create your own method of having HomeSpan acquire your home network SSID and password by implement the homeSpan `setApFunction()` method in your sketch
+  * note that Apple provides more automated methods for WiFi-based HomeKit devices to seemlessly acquire your WiFi SSID and password from your iPhone when configuring your device.  Unfortunatelyt Apple restricts this feature to licensed commercial devices only and it is not possible to do this with non-commercial HomeKit devices, such as HomeSpan
+* If neither of the above methods is appealing, you can have the option of hard-coding your SSID and password into your sketch using the homeSpan `setWifiCredentials()` method, though this is not considered a good practice for security reasons
+
