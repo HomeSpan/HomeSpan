@@ -1,4 +1,4 @@
-# WiFi and Ethernet Connectivity Options
+# WiFi and Ethernet Connectivity
 
 HomeSpan can connect to your home network via either WiFi or Ethernet. All of the ESP32 chips supported by HomeSpan come with built-in WiFi so no additional hardware is needed. Only a small number of ESP32 development boards come with an Ethernet interface (such as this [Silicognition wESP32](https://wesp32.com)) so additional hardware (such as this [Adafruit Ethernet FeatherWing](https://www.adafruit.com/product/3201)) would be needed to connect via Ethernet.
 
