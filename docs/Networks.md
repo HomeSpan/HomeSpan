@@ -17,3 +17,12 @@ Unless HomeSpan detects that you installed and configured an Ethernet interface 
   * note that Apple provides more automated methods for WiFi-based HomeKit devices to seemlessly acquire your WiFi SSID and password from your iPhone when configuring your device.  Unfortunatelyt Apple restricts this feature to licensed commercial devices only and it is not possible to do this with non-commercial HomeKit devices, such as HomeSpan
 * If neither of the above methods is appealing, you can have the option of hard-coding your SSID and password into your sketch using the homeSpan `setWifiCredentials()` method, though this is not considered a good practice for security reasons
 
+When HomeSpan tries to connect to your home network using the SSSID and password you provided, it makes the requests and then waits for a response.  If after a certain time it does not connect, it makes another request and waits a bit longer for a response.  After each failed attempt, HomeSpan increases the wait time using a specified pattern, after which the pattern repeats.  The default wait-time pattern is to wait 5 seconds, then 8, 14, 22, 36, and 60 seconds, before re-starting this pattern.  If desired, you can create your own request/response wait-time pattern using the homeSpan `setConnectionTimes()` method.
+
+Once connected, HomeSpan automatically manages all reconnects if connectivity is lost (using the same request/response wait pattern as above).  If you have enabled Web Logging, all disconnect/reconnects events are tallied and recorded.
+
+If your home network is based on a mesh router with multiple access points sharing the same SSID, HomeSpan automatically connects the access point with the strongest RSSI signal. 
+
+Internally, HomeSpan manages WiFi connectivity using the Arduino-ESP32 Library's global `WiFi` object and iniaties connections using the `WiFi.begin()` method.  This method assumes connectivity to standard WiFi network requiring an SSID and password.  If you are trying to connect to an enterprise WiFi network, or if you have other specialized configuration requirements that need to be made while connecting to your WiFi network (such as changing the power of your WiFi antenna), you can HomeSpan call your own "begin" function instead of simply calling `WiFi.begin()` by implementing the homeSpan `setWifiBegin()` method in your sketch.
+
+
