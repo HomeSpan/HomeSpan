@@ -1,4 +1,4 @@
-# Overview of WiFi and Ethernet Connectivity
+# WiFi and Ethernet Connectivity Options
 
 HomeSpan can connect to your home network via either WiFi or Ethernet. All of the ESP32 chips supported by HomeSpan come with built-in WiFi so no additional hardware is needed. Only a small number of ESP32 development boards come with an Ethernet interface (such as this [Silicognition wESP32](https://wesp32.com)) so additional hardware (such as this [Adafruit Ethernet FeatherWing](https://www.adafruit.com/product/3201)) would be needed to connect via Ethernet.
 
@@ -25,7 +25,7 @@ If your home network is based on a mesh router with multiple access points shari
 
 Internally, HomeSpan manages WiFi connectivity using the Arduino-ESP32 Library's global `WiFi` object and iniaties connections using the `WiFi.begin()` method.  This method assumes connectivity to standard WiFi network requiring an SSID and password.  If you are trying to connect to an enterprise WiFi network, or if you have other specialized configuration requirements that need to be made while connecting to your WiFi network (such as changing the power of your WiFi antenna), you can HomeSpan call your own "begin" function instead of simply calling `WiFi.begin()` by implementing the homeSpan `setWifiBegin()` method in your sketch.
 
-Lastly, if you need to run a custom function either once, or every time a WiFi connection is established (or re-established after a disconnect) you can implement one, or both, of the homeSpan `setWifiCallback()` and `setWifiCallbackAll()` methods in your sketch.
+Lastly, if you need to run a custom function either once, or every time, a WiFi connection is established (or re-established after a disconnect) you can implement the homeSpan `setConnectionCallback()` method in your sketch.
 
 ## HomeSpan Ethernet connectivity
 
@@ -33,5 +33,10 @@ HomeSpan utilizes the Arduino-ESP32 Library's global `ETH` object to manage Ethe
 
 There is nothing you need to do in HomeSpan to inform it that you will be using an Ethernet connection instead of WiFi.  Rather, at startup, if HomeSpan detects an Ethernet interface device has been properly configured (using `ETH.begin()`) and any external hardware needed is connected to the ESP device, HomeSpan will automatically switch into "Ethernet mode" and use Ethernet instead of WiFi for all communications to and from your home network.  Note that the Ethernet cable itself does not need to be plugged into your router for HomeSpan to switch into "Ethernet mode" during start-up.
 
-Similar to WiFi connectivity, HomeSpan automatically handles all disconnects/reconnects (e.g. if you unplug the Ethernet cable and then plug it back into the router, or if the router itself reboots) and records such events in the Web Log (if enabled). 
+Similar to WiFi connectivity, HomeSpan automatically handles all disconnects/reconnects (e.g. if you unplug the Ethernet cable and then plug it back into the router, or if the router itself reboots) and records such events in the Web Log (if enabled).  To run a custom function either once, or every time, an Ethernet connection is established (or re-established after a disconnect) you can implement the homeSpan `setConnectionCallback()` method in your sketch.
+
+---
+
+[↩️](../README.md) Back to the Welcome page
+
 
