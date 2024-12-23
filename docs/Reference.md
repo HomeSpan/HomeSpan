@@ -204,11 +204,8 @@ The following **optional** `homeSpan` methods enable additional features and pro
   * calling this method with *verbose* set to *false* supresses these messages
   * calling this method a second time with *verbose* set to *true* re-activates these messages (default behavior)
 
-* `Span& setWifiCallback(void (*func)())`
-  * sets an optional user-defined callback function, *func*, to be called by HomeSpan upon start-up just after WiFi connectivity has been initially established.  This one-time call to *func* is provided for users that are implementing other network-related services as part of their sketch, but that cannot be started until WiFi connectivity is established.  The function *func* must be of type *void* and have no arguments
-
-* `Span& setWifiCallbackAll(void (*func)(int count))`
-  * similar to `setWiFiCallback()` above, but the user-defined callback function, *func*, is called by HomeSpan *every* time WiFi connectivity has been established or re-established after a disconnect.  The function *func* must be of type *void* and accept a single *int* argument, *count*, into which HomeSpan passes the number of times WiFi has been established or re-established (i.e. *count*=1 on initial WiFi connection; *count*=2 if re-established after the first disconnect, etc.)
+* `Span& setConnectionCallback(void (*func)(int count))`
+  * sets an optional user-defined callback function, *func*, to be called by HomeSpan every time WiFi or Ethernet connectivity has been established or re-established after a disconnect.  The function *func* must be of type *void* and accept a single *int* argument, *count*, into which HomeSpan passes the number of times WiFi or Ethernet connectivity has been established or re-established (i.e. *count*=1 on initial WiFi or Ethernet connection; *count*=2 if re-established after the first disconnect, etc.)
     
 * `Span& setPairCallback(void (*func)(boolean status))`
   * sets an optional user-defined callback function, *func*, to be called by HomeSpan upon completion of pairing to a controller (*status=true*) or unpairing from a controller (*status=false*)
