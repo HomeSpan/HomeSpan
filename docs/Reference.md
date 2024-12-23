@@ -370,7 +370,7 @@ The following **optional** `homeSpan` methods provide additional run-time functi
  
 ---
 
-The following `homeSpan` methods are considered experimental, since not all use cases have been explored or debugged.  Use with caution:
+The following **optional** `homeSpan` methods are for creating and managing multi-threaded sketches:
  
 * `void autoPoll(uint32_t stackSize, uint32_t priority, uint32_t cpu)`
  
@@ -382,10 +382,25 @@ The following `homeSpan` methods are considered experimental, since not all use 
   * if used, **must** be placed in a sketch as the last line in the Arduino `setup()` method
   * HomeSpan will throw and error and halt if both `poll()`and `autoPoll()` are used in the same sketch - either place `poll()` in the Arduino `loop()` method **or** place `autoPoll()` at the the end of the Arduino `setup()` method
   * if this method is used, and you have no need to add your own code to the main Arduino `loop()`, you can safely skip defining a blank `void loop(){}` function in your sketch
-  * warning: if any code you add to the Arduino `loop()` method tries to alter any HomeSpan settings or functions running in the background `poll()` task, race conditions may yield undefined results
  
 * `TaskHandle_t getAutoPollTask()`
   * returns the task handle for the Auto Poll Task, or NULL if Auto Polling has not been used
+   
+* `homeSpanPAUSE`
+  * when called, this **MACRO** waits for the current iteration of HomeSpan's polling task to complete and then pauses that process so you can separately call HomeSpan functions from your own thread, typically the main Arduino `loop`
+  * allows you to safely read and write values of Characteristics using `setVal` and `getVal` without worrying about race conditions that would have occured if HomeSpan's polling function were running while you were trying to change Characteristics
+  * pausing lasts until the end of the scope of the code block in which the `homeSpanPAUSE` macro was called, after which HomeSpan's polling process automatically resumes normal operations
+  * **warning:** this macro should only be used from a thread that is distinct from HomeSpan's polling process.  **DO NOT** use this macro from within any code that is managed by the HomeSpan polling process, which is basically all the `update`, `loop` and other methods you created inside your SpanService structures.  However, you **CAN** call these methods directly from a separate thread, provided that you first call the `homeSpanPAUSE` macro
+ 
+* `homeSpanRESUME`
+  * call this *optional* **MACRO** if you want to prematurely resume HomeSpan polling after it has been paused via the `homeSpanPAUSE` macro but before reaching the end of the scope of the code block (at which point HomeSpan polling automatically resumes, as noted above)
+  * this macro can only be called **AFTER** the `homeSpanPAUSE` macro has already been called, and it must be from within the same scope of the code block (or sub-block)
+  * you will get a compilation error if you try to use this macro before calling `homeSpanPAUSE` or if it is not called within the same scope of the code block
+  * it is okay to call `homeSpanRESUME` multiple times after calling `homeSpanPAUSE`.  The first instance restarts the HomeSpan polling process; subsequent instances are ignored
+ 
+* `std::shared_mutex& getMutex()`
+  * returns a reference to the *shared_mutex* used by the `homeSpanPAUSE` and `homeSpanRESUME` macros to lock and unlock the HomeSpan polling thread
+  * only needed for advanced users who want to manually lock and unlock the HomeSpan polling thread using their own logic instead of simply calling these macros
  
 ## *SpanAccessory(uint32_t aid)*
 
