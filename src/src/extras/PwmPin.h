@@ -91,6 +91,7 @@ class LedPin : public LedC {
   private:
     int fadeState=NOT_FADING;
     static bool fadeCallback(const ledc_cb_param_t *param, void *arg);
+    static boolean fadeInitialized;
 
   public:
     LedPin(uint8_t pin, float level=0, uint16_t freq=DEFAULT_PWM_FREQ, boolean invert=false);   // assigns LED pin

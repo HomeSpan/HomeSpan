@@ -100,8 +100,11 @@ LedPin::LedPin(uint8_t pin, float level, uint16_t freq, boolean invert) : LedC(p
       timer->duty_resolution,
       channel->flags.output_invert?"(inverted)":""
       );
-            
-  ledc_fade_func_install(0);
+
+  if(!fadeInitialized){
+    ledc_fade_func_install(0);
+    fadeInitialized=true;
+  }
   ledc_cbs_t fadeCallbackList = {.fade_cb = fadeCallback};                          // for some reason, ledc_cb_register requires the function to be wrapped in a structure
   ledc_cb_register(channel->speed_mode,channel->channel,&fadeCallbackList,this);
 
@@ -277,3 +280,4 @@ void ServoPin::set(double degrees){
 
 ledc_channel_config_t *LedC::channelList[LEDC_CHANNEL_MAX][LEDC_SPEED_MODE_MAX]={};
 ledc_timer_config_t *LedC::timerList[LEDC_TIMER_MAX][LEDC_SPEED_MODE_MAX]={};
+boolean LedPin::fadeInitialized=false;
