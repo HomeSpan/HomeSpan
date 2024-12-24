@@ -233,6 +233,8 @@ void HAPClient::processRequest(){
   } // PUT request           
       
   if(!strncmp(body,"GET ",4)){                                                                                         // this is a GET request
+
+    int refreshTime;
                     
     if(!strncmp(body,"GET /accessories ",17))                                                                          // GET ACCESSORIES
       getAccessoriesURL();
@@ -240,8 +242,8 @@ void HAPClient::processRequest(){
     else if(!strncmp(body,"GET /characteristics?",21))                                                                 // GET CHARACTERISTICS
       getCharacteristicsURL(body+21);
 
-    else if(homeSpan.webLog.isEnabled && !strncmp(body,homeSpan.webLog.statusURL.c_str(),homeSpan.webLog.statusURL.length()))       // GET STATUS - AN OPTIONAL, NON-HAP-R2 FEATURE
-      getStatusURL(this,NULL,NULL);
+    else if(homeSpan.webLog.isEnabled && (refreshTime=homeSpan.webLog.check(body+4))>=0)                               // OPTIONAL (NON-HAP) STATUS REQUEST
+      getStatusURL(this,NULL,NULL,refreshTime);
 
     else {
       notFoundError();
@@ -1074,7 +1076,7 @@ int HAPClient::putPrepareURL(char *json){
 
 //////////////////////////////////////
 
-void HAPClient::getStatusURL(HAPClient *hapClient, void (*callBack)(const char *, void *), void *user_data){
+void HAPClient::getStatusURL(HAPClient *hapClient, void (*callBack)(const char *, void *), void *user_data, int refreshTime){
 
   std::shared_lock readLock(homeSpan.webLog.mux);        // wait for mux to be unlocked, or already locked non-exclusively, and then lock *non-exclusively* to prevent writing in vLog
 
@@ -1102,8 +1104,12 @@ void HAPClient::getStatusURL(HAPClient *hapClient, void (*callBack)(const char *
     
   hapOut.setHapClient(hapClient).setLogLevel(2).setCallback(callBack).setCallbackUserData(user_data);
 
-  if(!callBack)
-    hapOut << "HTTP/1.1 200 OK\r\nContent-type: text/html; charset=utf-8\r\n\r\n";
+  if(!callBack){
+    hapOut << "HTTP/1.1 200 OK\r\nContent-type: text/html; charset=utf-8\r\n";
+    if(refreshTime>0)
+      hapOut << "Refresh: " << refreshTime << "\r\n";
+    hapOut << "\r\n";
+  }
     
   hapOut << "<html><head><title>" << homeSpan.displayName << "</title>\n";
   hapOut << "<style>body {background-color:lightblue;} th, td {padding-right: 10px; padding-left: 10px; border:1px solid black;}" << homeSpan.webLog.css.c_str() << "</style></head>\n";

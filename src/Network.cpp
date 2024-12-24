@@ -369,9 +369,9 @@ void Network_HS::processRequest(char *body, char *formData){
 
 //////////////////////////////////////
 
-int Network_HS::getFormValue(char *formData, const char *tag, char *value, int maxSize){
+int Network_HS::getFormValue(const char *formData, const char *tag, char *value, int maxSize){
 
-  char *s=strstr(formData,tag);     // find start of tag
+  char *s=strcasestr(formData,tag); // find start of tag
   
   if(!s)                            // if not found, return -1
     return(-1);
@@ -381,7 +381,7 @@ int Network_HS::getFormValue(char *formData, const char *tag, char *value, int m
   if(!v)                            // if not found, return -1 (this should not happen)
     return(-1);
 
-  v++;                              // point to begining of value 
+  v++;                              // point to beginning of value 
   int len=0;                        // track length of value
   
   while(*v!='\0' && *v!='&' && len<maxSize){      // copy the value until null, '&', or maxSize is reached

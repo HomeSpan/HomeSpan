@@ -147,7 +147,7 @@ struct HAPClient {
   static void checkTimedWrites();                                                      // checks for expired Timed Write PIDs, and clears any found (HAP Section 6.7.2.4)
   static void eventNotify(SpanBuf *pObj, int nObj, HAPClient *ignore=NULL);            // transmits EVENT Notifications for nObj SpanBuf objects, pObj, with optional flag to ignore a specific client
 
-  static void getStatusURL(HAPClient *, void (*)(const char *, void *), void *);       // GET / status (an optional, non-HAP feature)
+  static void getStatusURL(HAPClient *, void (*)(const char *, void *), void *, int refreshTime=0);       // GET / status (an optional, non-HAP feature)
 
   class HAPTLV : public TLV8 {   // dedicated class for HAP TLV8 records
     public:

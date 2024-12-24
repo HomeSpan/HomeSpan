@@ -567,9 +567,9 @@ void Span::configureNetwork(){
   mdns_service_txt_item_set("_hap","_tcp","ota",spanOTA.enabled?"yes":"no");                // OTA status (info only - NOT used by HAP)
 
   if(webLog.isEnabled){
-    mdns_service_txt_item_set("_hap","_tcp","logURL",webLog.statusURL.c_str()+4);           // Web Log status (info only - NOT used by HAP)
+    mdns_service_txt_item_set("_hap","_tcp","logURL",webLog.statusURL);                     // Web Log status (info only - NOT used by HAP)
     
-    LOG0("Web Logging enabled at http://%s.local:%d%swith max number of entries=%d\n\n",hostName,tcpPortNum,webLog.statusURL.c_str()+4,webLog.maxEntries);
+    LOG0("Web Logging enabled at http://%s.local:%d%s with max number of entries=%d\n\n",hostName,tcpPortNum,webLog.statusURL,webLog.maxEntries);
   }
 
   if(webLog.timeServer)
@@ -667,7 +667,7 @@ void Span::processSerialCommand(const char *c){
       }
       
       if(webLog.isEnabled && hostName!=NULL)   
-        LOG0("Web Logging:       http://%s.local:%d%s\n",hostName,tcpPortNum,webLog.statusURL.c_str()+4);
+        LOG0("Web Logging:       http://%s.local:%d%s\n",hostName,tcpPortNum,webLog.statusURL);
       LOG0("\nAccessory ID:      ");
       HAPClient::charPrintRow(HAPClient::accessory.ID,17);
       LOG0("                               LTPK: ");
@@ -2517,7 +2517,7 @@ void SpanWebLog::init(uint16_t maxEntries, const char *serv, const char *tz, con
   timeServer=serv;
   timeZone=tz;
   if(url){
-    statusURL="GET /" + String(url) + " ";
+    asprintf(&statusURL,"/%s",url);
     isEnabled=true;
   }
   log = (log_t *)HS_CALLOC(maxEntries,sizeof(log_t));
@@ -2541,6 +2541,24 @@ void SpanWebLog::initTime(void *args){
 
   vTaskDelete(NULL);
   
+}
+
+///////////////////////////////
+
+int SpanWebLog::check(const char *uri){
+
+  size_t n=strlen(statusURL);
+
+  if(strncasecmp(uri,statusURL,n)!=0)        // no partial match of statusURL
+    return(-1);
+  if(uri[n]==' ')                            // match without query string
+    return(0);
+  if(uri[n]=='?'){                           // match with query string
+    char val[6]="0";
+    Network_HS::getFormValue(uri+n+1,"refresh",val,5);
+    return(atoi(val)>0?atoi(val):0);
+  }
+  return(-1);                                // no match
 }
 
 ///////////////////////////////

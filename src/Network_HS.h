@@ -63,9 +63,10 @@ struct Network_HS {
   boolean allowedCode(char *s);                                             // checks if Setup Code is allowed (HAP defines a list of disallowed codes)
   void apConfigure();                                                       // configure homeSpan WiFi and Setup Code using temporary Captive Access Point; only returns if sucessful, else ESP restarts
   void processRequest(char *body, char *formData);                          // process the HTTP request
-  int getFormValue(char *formData, const char *tag, char *value, int maxSize);    // search for 'tag' in 'formData' and copy result into 'value' up to 'maxSize' characters; returns number of characters, else -1 if 'tag' not found
   int badRequestError();                                                    // return 400 error
-  
+
+  static int getFormValue(const char *formData, const char *tag, char *value, int maxSize);    // search for 'tag' in 'formData' and copy result into 'value' up to 'maxSize' characters; returns number of characters, else -1 if 'tag' not found
+
 };
 
 ///////////////////////////////

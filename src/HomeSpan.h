@@ -203,7 +203,7 @@ struct SpanWebLog{                            // optional web status/log data
   const char *timeZone;                       // optional time-zone specification
   boolean timeInit=false;                     // flag to indicate time has been initialized
   char bootTime[33]="Unknown";                // boot time
-  String statusURL;                           // URL of status log
+  char *statusURL=NULL;                       // URL of status log
   uint32_t waitTime=120000;                   // number of milliseconds to wait for initial connection to time server
   String css="";                              // optional user-defined style sheet for web log
   std::shared_mutex mux;                      // shared read/write lock
@@ -218,6 +218,7 @@ struct SpanWebLog{                            // optional web status/log data
   void init(uint16_t maxEntries, const char *serv, const char *tz, const char *url);
   static void initTime(void *args);  
   void vLog(boolean sysMsg, const char *fmr, va_list ap);
+  int check(const char *uri);
 };
 
 ///////////////////////////////
