@@ -116,6 +116,15 @@ Requirements to run HomeSpan depend on which version you choose:
       
   * see the [API Reference](docs/Reference.md) page for full details, as well as a new [MultiThreading](examples/Other%20Examples/MultiThreading) Example that demonstrates the use of multi-threading using these macros
 
+* **Web Log Enhancements**
+
+  * Web Log can now auto-refresh from browser
+    * if a Web Log request from a browser includes the query string, *refresh=N*, HomeSpan will add an HTTP Refresh response header to the HTML it serves back to the browser to cause it to auto-refresh the Web Log request every *N* seconds
+    * example: *http<nolink>://homespan-4e8eb8504e59.local/status?refresh=10* 
+
+  * Web Log requests are now case-insensitive
+    * example: *http<nolink>://homespan-4e8eb8504e59.local/STATUS?REFRESH=10* is equivalent to above
+ 
 * **Bug Fixes**
   * Fixes a latent bug that prevented compilation when the homeSpan methods `controllerListBegin()` and `controllerListEnd()` were used in a sketch
       
