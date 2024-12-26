@@ -124,10 +124,10 @@ PushButton::PushButton(int pin, triggerType_t triggerType){
     for(int i=0;i<calibCount;i++)
       threshold+=touchRead(pin);
     threshold/=calibCount;
-#if SOC_TOUCH_VERSION_1
+#if defined(SOC_TOUCH_VERSION_1) || SOC_TOUCH_SENSOR_VERSION==1
     threshold/=2;
     LOG0("Touch Sensor at pin=%d used for calibration.  Triggers when sensor reading < %u.\n",pin,threshold);
-#elif SOC_TOUCH_VERSION_2
+#else
     threshold*=2;
     LOG0("Touch Sensor at pin=%d used for calibration.  Triggers when sensor reading > %lu.\n",pin,threshold);
 #endif
