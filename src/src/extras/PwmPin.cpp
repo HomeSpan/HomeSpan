@@ -49,6 +49,11 @@ LedC::LedC(uint8_t pin, uint16_t freq, boolean invert){
 #elif defined(SOC_LEDC_SUPPORT_PLL_DIV_CLOCK)
             timerList[nTimer][nMode]->clk_cfg=LEDC_USE_PLL_DIV_CLK;
 #endif
+
+#if ESP_IDF_VERSION > ESP_IDF_VERSION_VAL(5, 1, 5)
+            timerList[nTimer][nMode]->deconfigure=false;
+#endif
+            
             
             int res=LEDC_TIMER_BIT_MAX-1;                               // find the maximum possible resolution
             while(80.0e6/(freq*pow(2,res))<1)
