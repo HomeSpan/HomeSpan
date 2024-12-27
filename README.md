@@ -127,6 +127,9 @@ Requirements to run HomeSpan depend on which version you choose:
  
 * **Bug Fixes**
   * Fixes a latent bug that prevented compilation when the homeSpan methods `controllerListBegin()` and `controllerListEnd()` were used in a sketch
+ 
+* **Known Issues**
+  * Under v3.1.0 of the Arduino-ESP32 Board Manager, it is not possible to call an external NTP Server to set the time on C6 chips (all other chips unaffected).  See https://github.com/espressif/arduino-esp32/issues/10754 for details.
       
 See [Releases](https://github.com/HomeSpan/HomeSpan/releases) for details on all changes and bug fixes included in this update.
 
