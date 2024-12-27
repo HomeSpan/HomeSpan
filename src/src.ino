@@ -26,6 +26,7 @@
  ********************************************************************************/
 
 #include "HomeSpan.h"
+#include "FeatherPins.h"
 
 void setup() {
  
@@ -34,19 +35,14 @@ void setup() {
   delay(1000);
 
   homeSpan.setLogLevel(2);
+           
+  homeSpan.begin(Category::Lighting,"HomeSpan Test");
 
-  homeSpan.enableWebLog(50);
-  homeSpan.enableOTA();
-  homeSpan.begin(Category::Lighting,"HomeSpan OTA Test");
-  
   new SpanAccessory();
     new Service::AccessoryInformation();  
       new Characteristic::Identify();
     new Service::LightBulb();
-      new Characteristic::On();
-
-//  homeSpan.autoPoll();
-      
+      new Characteristic::On();      
 }
 
 //////////////////////////////////////

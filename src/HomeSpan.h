@@ -36,8 +36,10 @@
 #include <unordered_map>
 #include <vector>
 #include <list>
+#include <shared_mutex>
 #include <nvs.h>
 #include <ArduinoOTA.h>
+#include <ETH.h>
 #include <esp_now.h>
 #include <mbedtls/base64.h>
 
@@ -58,6 +60,7 @@
 using std::vector;
 using std::unordered_map;
 using std::list;
+using std::string;
 
 enum {
   GET_AID=1,
@@ -85,6 +88,9 @@ typedef std::pair<const uint8_t *, size_t> DATA_t;
 static DATA_t NULL_DATA={NULL,0};
 static TLV8 NULL_TLV{};
 
+#define homeSpanPAUSE std::shared_lock pollLock(homeSpan.getMutex());
+#define homeSpanRESUME if(pollLock.owns_lock()){pollLock.unlock();}
+
 ///////////////////////////////
 
 #define STATUS_UPDATE(LED_UPDATE,MESSAGE_UPDATE)  {homeSpan.statusLED->LED_UPDATE;if(homeSpan.statusCallback)homeSpan.statusCallback(MESSAGE_UPDATE);}
@@ -110,7 +116,37 @@ enum HS_STATUS {
   HS_AP_STARTED,                          // HomeSpan has started the Access Point but no one has yet connected
   HS_AP_CONNECTED,                        // The Access Point is started and a user device has been connected
   HS_AP_TERMINATED,                       // HomeSpan has terminated the Access Point 
-  HS_OTA_STARTED                          // HomeSpan is in the process of recveived an Over-the-Air software update
+  HS_OTA_STARTED,                         // HomeSpan is in the process of receiving an Over-the-Air software update
+  HS_WIFI_SCANNING,                       // HomeSpan is in the process of scanning for WiFi networks
+  HS_ETH_CONNECTING                       // HomeSpan is trying to connect to an Ethernet network
+};
+
+//////////////////////////////////////////////////////////
+// Paired Controller Structure for Permanently-Stored Data
+
+class Controller {
+  friend class HAPClient;
+  
+  boolean allocated=false;        // DEPRECATED (but needed for backwards compatability with original NVS storage of Controller info)
+  boolean admin;                  // Controller has admin privileges
+  uint8_t ID[36];                 // Pairing ID
+  uint8_t LTPK[32];               // Long Term Ed2519 Public Key
+
+  public:
+
+  Controller(uint8_t *id, uint8_t *ltpk, boolean ad){
+    allocated=true;
+    admin=ad;
+    memcpy(ID,id,36);
+    memcpy(LTPK,ltpk,32);
+  }
+
+  Controller(){}
+
+  const uint8_t *getID() const {return(ID);}
+  const uint8_t *getLTPK() const {return(LTPK);}
+  boolean isAdmin() const {return(admin);}
+
 };
 
 ///////////////////////////////
@@ -126,7 +162,6 @@ struct SpanButton;
 struct SpanUserCommand;
 
 struct HAPClient;
-class Controller;
 
 extern Span homeSpan;
 
@@ -168,9 +203,10 @@ struct SpanWebLog{                            // optional web status/log data
   const char *timeZone;                       // optional time-zone specification
   boolean timeInit=false;                     // flag to indicate time has been initialized
   char bootTime[33]="Unknown";                // boot time
-  String statusURL;                           // URL of status log
+  char *statusURL=NULL;                       // URL of status log
   uint32_t waitTime=120000;                   // number of milliseconds to wait for initial connection to time server
   String css="";                              // optional user-defined style sheet for web log
+  std::shared_mutex mux;                      // shared read/write lock
     
   struct log_t {                              // log entry type
     uint64_t upTime;                          // number of seconds since booting
@@ -182,6 +218,7 @@ struct SpanWebLog{                            // optional web status/log data
   void init(uint16_t maxEntries, const char *serv, const char *tz, const char *url);
   static void initTime(void *args);  
   void vLog(boolean sysMsg, const char *fmr, va_list ap);
+  int check(const char *uri);
 };
 
 ///////////////////////////////
@@ -236,6 +273,7 @@ class Span{
   boolean serialInputDisabled=false;            // flag indiating that serial input is disabled
   uint8_t rebootCount=0;                        // counts number of times device was rebooted (used in optional Reboot callback)
   uint32_t rebootCallbackTime;                  // length of time to wait (in milliseconds) before calling optional Reboot callback
+  boolean ethernetEnabled=false;                // flag to indicate whether Ethernet is being used instead of WiFi
   
   nvs_handle charNVS;                           // handle for non-volatile-storage of Characteristics data
   nvs_handle wifiNVS=0;                         // handle for non-volatile-storage of WiFi data
@@ -244,8 +282,17 @@ class Span{
   nvs_handle hapNVS;                            // handle for non-volatile-storage of HAP data
 
   int connected=0;                              // WiFi connection status (increments upon each connect and disconnect)
-  unsigned long waitTime=60000;                 // time to wait (in milliseconds) between WiFi connection attempts
+  HS_ExpCounter wifiTimeCounter;                // exponentially-increasing wait time counter between WiFi connection attempts
   unsigned long alarmConnect=0;                 // time after which WiFi connection attempt should be tried again
+  
+  void (*wifiBegin)(const char *s, const char *p)=[](const char *s, const char *p){WiFi.begin(s,p);};     // default call to WiFi.begin()
+ 
+  uint32_t rescanInitialTime=0;
+  uint32_t rescanPeriodicTime=0;
+  int rescanThreshold;
+  unsigned long rescanAlarm;
+  enum {RESCAN_IDLE, RESCAN_PENDING, RESCAN_RUNNING} rescanStatus=RESCAN_IDLE;
+  unordered_map<string, string> bssidNames;
   
   const char *defaultSetupCode=DEFAULT_SETUP_CODE;            // Setup Code used for pairing
   uint16_t autoOffLED=0;                                      // automatic turn-off duration (in seconds) for Status LED
@@ -253,8 +300,8 @@ class Span{
   unsigned long comModeLife=DEFAULT_COMMAND_TIMEOUT*1000;     // length of time (in milliseconds) to keep Command Mode alive before resuming normal operations
   uint16_t tcpPortNum=DEFAULT_TCP_PORT;                       // port for TCP communications between HomeKit and HomeSpan
   char qrID[5]="";                                            // Setup ID used for pairing with QR Code
-  void (*wifiCallback)()=NULL;                                // optional callback function to invoke once WiFi connectivity is initially established
-  void (*wifiCallbackAll)(int)=NULL;                          // optional callback function to invoke every time WiFi connectivity is established or re-established
+  void (*wifiCallback)()=NULL;                                // optional callback function to invoke once WiFi connectivity is initially established *** TO BE DEPRECATED ***
+  void (*connectionCallback)(int)=NULL;                       // optional callback function to invoke every time WiFi or Ethernet connectivity is established or re-established
   void (*weblogCallback)(String &)=NULL;                      // optional callback function to invoke after header table in Web Log is produced
   void (*pairCallback)(boolean isPaired)=NULL;                // optional callback function to invoke when pairing is established (true) or lost (false)
   boolean autoStartAPEnabled=false;                           // enables auto start-up of Access Point when WiFi Credentials not found
@@ -263,7 +310,7 @@ class Span{
   void (*rebootCallback)(uint8_t)=NULL;                       // optional callback when device reboots
   void (*controllerCallback)()=NULL;                          // optional callback when Controller is added/removed/changed
   
-  WiFiServer *hapServer;                            // pointer to the HAP Server connection
+  NetworkServer *hapServer;                         // pointer to the HAP Server connection
   Blinker *statusLED;                               // indicates HomeSpan status
   Blinkable *statusDevice = NULL;                   // the device used for the Blinker
   PushButton *controlButton = NULL;                 // controls HomeSpan configuration and resets
@@ -272,6 +319,7 @@ class Span{
   TaskHandle_t pollTaskHandle = NULL;               // optional task handle to use for poll() function
   TaskHandle_t loopTaskHandle;                      // Arduino Loop Task handle
   boolean verboseWifiReconnect = true;              // set to false to not print WiFi reconnect attempts messages
+  std::shared_mutex pollMutex;                      // mutex lock for poll task
     
   SpanOTA spanOTA;                                  // manages OTA process
   SpanConfig hapConfig;                             // track configuration changes to the HAP Accessory database; used to increment the configuration number (c#) when changes found
@@ -285,11 +333,11 @@ class Span{
   unordered_map<uint64_t, uint32_t> TimedWrites;                         // map of timed-write PIDs and Alarm Times (based on TTLs)  
   unordered_map<char, SpanUserCommand *> UserCommands;                   // map of pointers to all UserCommands
 
-  void pollTask();                              // poll HAP Clients and process any new HAP requests
-  void checkConnect();                          // check WiFi connection; connect if needed
-  void commandMode();                           // allows user to control and reset HomeSpan settings with the control button
-  void resetStatus();                           // resets statusLED and calls statusCallback based on current HomeSpan status
-  void reboot();                                // reboots device
+  void pollTask();                                                       // poll HAP Clients and process any new HAP requests
+  void configureNetwork();                                               // configure Network services (MDNS, WebLog,  OTA, etc.) and start HAP Server
+  void commandMode();                                                    // allows user to control and reset HomeSpan settings with the control button
+  void resetStatus();                                                    // resets statusLED and calls statusCallback based on current HomeSpan status
+  void reboot();                                                         // reboots device
 
   void printfAttributes(int flags=GET_VALUE|GET_META|GET_PERMS|GET_TYPE|GET_DESC);   // writes Attributes JSON database to hapOut stream
   
@@ -309,7 +357,10 @@ class Span{
     sscanf(uuid,"%*8[0-9a-fA-F]-%*4[0-9a-fA-F]-%*4[0-9a-fA-F]-%*4[0-9a-fA-F]-%*12[0-9a-fA-F]%n",&x);
     return(strlen(uuid)!=36 || x!=36);
   }
-  
+
+  QueueHandle_t networkEventQueue;                         // queue to transmit network events from callback thread to HomeSpan thread
+  void networkCallback(WiFiEvent_t event);                 // network event handler (works for WiFi as well as Ethernet)
+
   public:
 
   Span();   // constructor
@@ -355,21 +406,22 @@ class Span{
   Span& setQRID(const char *id);                                                         // sets the Setup ID for optional pairing with a QR Code
   Span& setSketchVersion(const char *sVer){sketchVersion=sVer;return(*this);}            // set optional sketch version number
   const char *getSketchVersion(){return sketchVersion;}                                  // get sketch version number
-  Span& setWifiCallback(void (*f)()){wifiCallback=f;return(*this);}                      // sets an optional user-defined function to call once WiFi connectivity is initially established
-  Span& setWifiCallbackAll(void (*f)(int)){wifiCallbackAll=f;return(*this);}             // sets an optional user-defined function to call every time WiFi connectivity is established or re-established
+  Span& setConnectionCallback(void (*f)(int)){connectionCallback=f;return(*this);}       // sets an optional user-defined function to call every time WiFi or Ethernet connectivity is established or re-established
   Span& setPairCallback(void (*f)(boolean isPaired)){pairCallback=f;return(*this);}      // sets an optional user-defined function to call when Pairing is established (true) or lost (false)
   Span& setApFunction(void (*f)()){apFunction=f;return(*this);}                          // sets an optional user-defined function to call when activating the WiFi Access Point  
   Span& enableAutoStartAP(){autoStartAPEnabled=true;return(*this);}                      // enables auto start-up of Access Point when WiFi Credentials not found
   Span& setWifiCredentials(const char *ssid, const char *pwd);                           // sets WiFi Credentials
+  Span& setConnectionTimes(uint32_t minTime, uint32_t maxTime, uint8_t nSteps);          // sets min/max WiFi connection times (in seconds) and number of steps  
   Span& setStatusCallback(void (*f)(HS_STATUS status)){statusCallback=f;return(*this);}  // sets an optional user-defined function to call when HomeSpan status changes
   const char* statusString(HS_STATUS s);                                                 // returns char string for HomeSpan status change messages
   Span& setPairingCode(const char *s, boolean progCall=true);                            // sets the Pairing Code - use is NOT recommended.  Use 'S' from CLI instead
   void deleteStoredValues(){processSerialCommand("V");}                                  // deletes stored Characteristic values from NVS
   Span& resetIID(uint32_t newIID);                                                       // resets the IID count for the current Accessory to start at newIID
-  Span& setControllerCallback(void (*f)()){controllerCallback=f;return(*this);}          // sets an optional user-defined function to call whenever a Controller is added/removed/changed
+  Span& setControllerCallback(void (*f)()){controllerCallback=f;return(*this);}          // sets an optional user-defined function to call whenever a Controller is added/removed
+  Span& setWifiBegin(void (*f)(const char *, const char *)){wifiBegin=f;return(*this);}  // sets an optional user-defined function to over-ride WiFi.begin() with additional logic
 
   Span& setHostNameSuffix(const char *suffix){asprintf(&hostNameSuffix,"%s",suffix);return(*this);}      // sets the hostName suffix to be used instead of the 6-byte AccessoryID
-
+ 
   int enableOTA(boolean auth=true, boolean safeLoad=true){return(spanOTA.init(auth, safeLoad, NULL));}   // enables Over-the-Air updates, with (auth=true) or without (auth=false) authorization password  
   int enableOTA(const char *pwd, boolean safeLoad=true){return(spanOTA.init(true, safeLoad, pwd));}      // enables Over-the-Air updates, with custom authorization password (overrides any password stored with the 'O' command)
 
@@ -393,6 +445,8 @@ class Span{
 
   Span& setRebootCallback(void (*f)(uint8_t),uint32_t t=DEFAULT_REBOOT_CALLBACK_TIME){rebootCallback=f;rebootCallbackTime=t;return(*this);}
 
+  std::shared_mutex& getMutex(){return(pollMutex);}
+
   void autoPoll(uint32_t stackSize=8192, uint32_t priority=1, uint32_t cpu=0){     // start pollTask()
     xTaskCreateUniversal([](void *parms){
       for(;;){
@@ -407,13 +461,24 @@ class Span{
   TaskHandle_t getAutoPollTask(){return(pollTaskHandle);}
 
   Span& setTimeServerTimeout(uint32_t tSec){webLog.waitTime=tSec*1000;return(*this);}    // sets wait time (in seconds) for optional web log time server to connect
+  
+  Span& enableWiFiRescan(uint32_t iTime=1, uint32_t pTime=0, int thresh=3){              // enables periodic WiFi rescan to search for stronger BSSID
+    rescanInitialTime=iTime*60000;
+    rescanPeriodicTime=pTime*60000;
+    rescanThreshold=thresh;
+    return(*this);
+  }
+
+  Span& addBssidName(String bssid, string name){bssid.toUpperCase();bssidNames[bssid.c_str()]=name;return(*this);}
 
   list<Controller, Mallocator<Controller>>::const_iterator controllerListBegin();
   list<Controller, Mallocator<Controller>>::const_iterator controllerListEnd();
 
-  [[deprecated("This function has been deprecated (it is not needed) and no longer does anything.  Please remove from sketch to ensure backwards compatilibilty with future versions.")]]
-  Span& reserveSocketConnections(uint8_t n){return(*this);}
-  
+  [[deprecated("This homeSpan method has been deprecated and will be removed in a future version.  Please use the more generic setNetworkCallback() method instead.")]]
+  Span& setWifiCallback(void (*f)()){wifiCallback=f;return(*this);}                      // sets an optional user-defined function to call once WiFi connectivity is initially established
+
+  [[deprecated("This homeSpan method has been deprecated and will be removed in a future version.  Please use the more generic setNetworkCallback() method instead.")]]
+  Span& setWifiCallbackAll(void (*f)(int)){connectionCallback=f;return(*this);}          // sets an optional user-defined function to call every time WiFi connectivity is established or re-established  
 };
 
 ///////////////////////////////

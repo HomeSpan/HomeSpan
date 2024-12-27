@@ -59,6 +59,8 @@ Additional notes:
  
   * it is okay to include WEBLOG() messages in your sketch even if Web Logging is *not* enabled.  In such cases HomeSpan will not serve a Web Log page, but WEBLOG() messages will still be output to the Arduino Serial Monitor if the *Log Level* is set to 1 or greater
   * messages are **not** stored in NVS and are thus **not** saved between reboots
+  * calling the Web Log from your browser with an optional query string, *refresh=N*, will cause the Web Log to auto-refresh in your browser every *N* seconds.  It does this by adding an HTTP "Refresh" response header to the HTML it serves up to the browser.  For example *http<nolink>://homespan-4e8eb8504e59.local/myLog?refresh=10* refreshes the Web Log page in your browser every 10 seconds.  If *refresh* is set to less than 1, or if the query string is not well-formed, HomeSpan will not add a Refresh response header to the HTML and no refreshing occurs 
+  * HomeSpan is case-insensitive with regard to intepreting Web Log requests from the browser.  For example *http<nolink>://homespan-4e8eb8504e59.local/MYLOG?REFRESH=10* works fine in the example above 
  
 See [Example 19 - WebLog](Tutorials.md#example-19---weblog) for a tutorial sketch demonstrating the use of `homeSpan.enableWebLog()` and the WEBLOG() macro.
  
@@ -84,19 +86,19 @@ Note that HomeSpan outputs the full content of the Web Log HTML, including whate
 
 ### Adding User-Defined Data and/or Custom HTML
 
-Homespan provides a hook into the text used to generate the Web Log that you can extend to add your own data to the initial table as well as more generally add any custom HTML.
+Homespan provides a hook into the text used to generate the Web Log that you can extend to add your own data to the **initial table** as well as more generally add any custom HTML.
 
 To access this text, set a Web Log callback using `homeSpan.setWebLogCallback(void (*func)(String &htmlText))` where
 
   * *func* is a function of type *void* that takes a single argument of type *String*, and
-  * *htmlText* will be set by HomeSpan to a String reference containing all the HTML text that the Web Log has already generated to produce the initial table.
+  * *htmlText* is a String reference for you to add your custom HTML text
 
-To add your own data to the table, simply extend the String *htmlText* by adding as many `<tr>` and `<td>` HTML tags as needed.  If you wish to end the table and add any other HTML, simple include the `</table>` tag in *htmlText*, and then add any other custom HTML.  For example, the following function could be used to extend the initial Web Log table to show free DRAM, end the table, and provide a hot link to the HomeSpan Repo:
+To add your own data to the table, simply place it the String *htmlText* by adding as many `<tr>` and `<td>` HTML tags as needed.  If you wish to end the table and add any other HTML, simple include the `</table>` tag in *htmlText*, and then add any other custom HTML.  For example, the following function could be used to extend the initial Web Log table to show free DRAM, end the table, and provide a hot link to the HomeSpan Repo:
 
 ```C++
 void extraData(String &r){
-  r+="<tr><td>Free DRAM:</td><td>" + String(esp_get_free_internal_heap_size()) + " bytes</td></tr>\n"; 
-  r+="</table><p><a href=\"https://github.com/HomeSpan/HomeSpan\">Click Here to Access HomeSpan Repo</a></p>";
+  r="<tr><td>Free DRAM:</td><td>" + String(esp_get_free_internal_heap_size()) + " bytes</td></tr>\n" +
+    "</table><p><a href=\"https://github.com/HomeSpan/HomeSpan\">Click Here to Access HomeSpan Repo</a></p>";
 }
 ```
 

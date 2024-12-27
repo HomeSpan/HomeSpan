@@ -62,9 +62,13 @@
 // Note that once HomeSpan is paired with HomeKit, additional NVS records will be consumed to store the
 // pairing information for each verified HomeKit Controller.
 
-// Note also that when compiling under the Arduino IDE, the IDE reports the size of partition based on the
-// Partition Scheme you selected in the IDE menu, even though that scheme is not actually used if you have your
-// own "partition.csv" file, as in this example.  This may lead the IDE to report an incorrect partition size.
+// IMPORTANT!! When compiling under the Arduino IDE, the IDE itself first needs to make sure the size of your
+// sketch is not larger than the size of the application partitions in your partition table.  However, the IDE
+// has no access to your custom "partition.csv" file and instead computes the size of the application partitions
+// based on the Partition Scheme you selected in the IDE menu, even though that scheme is not actually used if
+// you have your own "partitions.csv" file, as in this example.  Before compiling, you MUST select a Partition Scheme
+// in the IDE that has an application partition size matching the size of the application parititions in your
+// custom "partitions.csv" file.
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 

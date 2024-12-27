@@ -48,7 +48,6 @@ struct Network_HS {
   int numSSID;
 
   NetworkClient client;                   // client used for HTTP calls
-  int waitTime;                           // time to wait between HTTP refreshed when checking for WiFi connection
   unsigned long alarmTimeOut;             // alarm time after which access point is shut down and HomeSpan is re-started
   int apStatus;                           // tracks access point status (0=timed-out, -1=cancel, 1=save)
 
@@ -64,7 +63,28 @@ struct Network_HS {
   boolean allowedCode(char *s);                                             // checks if Setup Code is allowed (HAP defines a list of disallowed codes)
   void apConfigure();                                                       // configure homeSpan WiFi and Setup Code using temporary Captive Access Point; only returns if sucessful, else ESP restarts
   void processRequest(char *body, char *formData);                          // process the HTTP request
-  int getFormValue(char *formData, const char *tag, char *value, int maxSize);    // search for 'tag' in 'formData' and copy result into 'value' up to 'maxSize' characters; returns number of characters, else -1 if 'tag' not found
   int badRequestError();                                                    // return 400 error
-  
+
+  static int getFormValue(const char *formData, const char *tag, char *value, int maxSize);    // search for 'tag' in 'formData' and copy result into 'value' up to 'maxSize' characters; returns number of characters, else -1 if 'tag' not found
+
 };
+
+///////////////////////////////
+
+class HS_ExpCounter{
+  uint8_t nStep;
+  uint32_t minCount;
+  uint32_t maxCount;
+  uint8_t totalSteps;
+
+  public:
+  
+  HS_ExpCounter(uint32_t _minCount=5000, uint32_t _maxCount=60000, uint8_t _totalSteps=5);
+  void config(uint32_t _minCount, uint32_t _maxCount, uint8_t _totalSteps);
+  void reset();
+  operator uint32_t();
+  HS_ExpCounter& operator++();
+  HS_ExpCounter operator++(int);
+};
+
+///////////////////////////////

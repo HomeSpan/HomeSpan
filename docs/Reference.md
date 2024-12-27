@@ -156,16 +156,56 @@ The following **optional** `homeSpan` methods enable additional features and pro
   * note that the saved values are truncated if they exceed the maximum allowable characters (ssid=32; pwd=64)
   * :warning: SECURITY WARNING: The purpose of this function is to allow advanced users to *dynamically* set the device's WiFi Credentials using a customized Access Point function specified by `setApFunction(func)`. It it NOT recommended to use this function to hardcode your WiFi SSID and password directly into your sketch.  Instead, use one of the more secure methods provided by HomeSpan, such as typing 'W' from the CLI, or launching HomeSpan's Access Point, to set your WiFi credentials without hardcoding them into your sketch
  
+* `Span& setConnectionTimes(uint32_t minTime, uint32_t maxTime, uint8_t nSteps)`
+  * overrides HomeSpan's default repeating pattern of increasing wait times when trying to connect to a WiFi network, where
+    * *minTime* - the minimum time (in seconds) that HomeSpan initially waits when first trying to connect to a WiFi network
+    * *maxTime* - the maximum time (in seconds) that HomeSpan will wait on subequent attempts to connect if first attempt fails
+    * *nSteps* - the number of steps HomeSpan uses to set the increasing intermediate times between *minTime* and *maxTime* as each re-attempt to connect is made
+  * example: `homeSpan.setConnectionTimes(5,60,3);` causes HomeSpan to initially wait 5 seconds when first attempting to connect to a WiFi network, and then wait 11, 26, and finally 60 seconds on the next 3 subsequent attempts. If HomeSpan has still not connected, the pattern repeats indefinitely
+  * if either *minTime* or *nSteps* is set to zero, or if *maxTime* is not strictly greater than *minTime*, HomeSpan ignores the request and reports a warning message to the Serial Monitor
+  * note this is an optional method. If not called HomeSpan uses default parameters of {5,60,5} which yields a wait pattern of 5, 8, 14, 22, 36, and 60 seconds between connection attempts
+
+* `Span& setWifiBegin(void (*func)(const char *ssid, const char *pwd))`
+  * sets an **alternative** user-defined function, *func*, to be called by HomeSpan when it tries to connect to a WiFi network with specified credentials SSID=*ssid* and password=*pwd*, **instead** of HomeSpan's default behavior of simply calling `WiFi.begin(ssid, pwd)`
+  * this ability to define an alternative *func* is provided for users that either need to use a different type of call to establish WiFi connectivity (e.g. connectivity to an enterprise network), or that require additional functionality to be called when connectivity is established (e.g. changing the WiFi power)
+  * note *func* is called every time HomeSpan tries to connect to WiFi network, including during repeated wait periods as well as reconnects after a disconnect
+  * the function *func* must be of type *void* and accept two argument into which HomeSpan will pass whatever SSID and Password you previously saved as HomeSpan's WiFi Credentials, or that you explicitly set in the sketch using `setWifiCredentials()` above
+    * *func* does not necessarily need to use this information, but it must must be able to accept the data
+  * example: `homeSpan.setWifiBegin(myWifi)` where *myWifi* is defined below would address the issue on some ESP32 boards that will not connect to a WiFi network unless the WiFi radio power is changed to a lower value immediately after calling `WiFi.begin()`:
+
+```C++
+ void myWifi(const char *ssid, const char *pwd){
+   WiFi.begin(ssid,pwd);                 // don't forget to call WiFi.begin(), if still needed, in your alternative function
+   WiFi.setTxPower(WIFI_POWER_8_5dBm);   // set power immediately after as required for some ESP32 boards
+}
+```
+
+* `Span& enableWiFiRescan(uint32_t iTime=1, uint32_t pTime=0, int thresh=3)`
+  * when you configure HomeSpan to connect to a WiFi SSID that broadcasts from more than one access point (e.g. a mesh network), HomeSpan connects to the access point with the strongest RSSI signal for that SSID
+  * once connected, HomeSpan remains "attached" to that specific access point unless it looses overall connectivity to the network, or is otherwise purposely disconnected, at at which point it will attempt to reconnect once again the strongest access point broadcasting the original SSID
+  * calling `enableWiFiRescan()` enables HomeSpan to further optimize WiFi connectivity in the background during normal operation by periodically rescanning all access points with the original SSID, and automatically performing a disconnect/reconnect if it finds an access point with a stronger RSSI signal, where
+    * *iTime* - the time HomeSpan waits (in minutes) between first making a connection to an access point and rescanning to check for other stronger access points
+    * *pTime* -  the time HomeSpan waits after its first scan before performing any subsequent rescans
+    * *thresh* -  the threshhold difference (in RSSI units) by which the signal strength of a newly-scanned access point must be stronger than that of the access point to which HomeSpan is current connected for HomeSpan to trigger a connect/disconnect.  This prevents the HomeSpan from switching back and forth between two access points with very similar RSSI strengths
+  * example: `homeSpan.enableWiFiRescan(2, 5, 3)` causes HomeSpan to rescan all access points 2 minutes after initially connecting, and then every 5 minutes thereafter; if after any rescan HomeSpan finds a different access point with an RSSI signal that is 3 or more units stronger than the currently-connect access point, it will disconnect from the existing access point and connect to the stronger one
+  * the default is for HomeSpan to NOT perform any background rescans unless you specifically enable this by calling `homeSpan.enableWiFiRescan()` from your sketch
+    * if *iTime* is set to zero, rescanning is disabled
+    * if *iTime* is greater than zero but *pTime* is set to zero, rescanning occurs only once at *iTime* minutes after connecting, but not thereafter
+
+* `Span& addBssidName(String bssid, string name)`
+  * creates a friendly display name for any given WiFi access point that HomeSpan can display (in both the Serial Monitor and the Web Log) alongside the BSSID whenever needed, where
+    * *bssid* - the 6-byte BSSID MAC address of an access point, in the form "XX:XX:XX:XX:XX:XX"
+    * *name* - a friendly display name for the access point
+  * most useful when HomeSpan is connected to mesh WiFi network containing multiple access points sharing the same SSID, and you want to keep track of which access point is being used withouth having to memorize the BSSIDs of each access point
+  * example: `homeSpan.addBssidName("3A:98:B5:EF:BF:69","Kitchen").addBssidName("3A:98:B5:DB:54:86","Basement");` creates display names "Kitchen" and "Basement" for access points with BSSIDs "3A:98:B5:EF:BF:69" and "3A:98:B5:DB:54:86", respectively
+ 
 * `Span& setVerboseWifiReconnect(bool verbose)`
   * when trying connecting to WiFi, HomeSpan normally logs "Trying to connect to..." messages to the Serial Monitor and the Web Log
   * calling this method with *verbose* set to *false* supresses these messages
   * calling this method a second time with *verbose* set to *true* re-activates these messages (default behavior)
 
-* `Span& setWifiCallback(void (*func)())`
-  * sets an optional user-defined callback function, *func*, to be called by HomeSpan upon start-up just after WiFi connectivity has been initially established.  This one-time call to *func* is provided for users that are implementing other network-related services as part of their sketch, but that cannot be started until WiFi connectivity is established.  The function *func* must be of type *void* and have no arguments
-
-* `Span& setWifiCallbackAll(void (*func)(int count))`
-  * similar to `setWiFiCallback()` above, but the user-defined callback function, *func*, is called by HomeSpan *every* time WiFi connectivity has been established or re-established after a disconnect.  The function *func* must be of type *void* and accept a single *int* argument, *count*, into which HomeSpan passes the number of times WiFi has been established or re-established (i.e. *count*=1 on initial WiFi connection; *count*=2 if re-established after the first disconnect, etc.)
+* `Span& setConnectionCallback(void (*func)(int count))`
+  * sets an optional user-defined callback function, *func*, to be called by HomeSpan every time WiFi or Ethernet connectivity has been established or re-established after a disconnect.  The function *func* must be of type *void* and accept a single *int* argument, *count*, into which HomeSpan passes the number of times WiFi or Ethernet connectivity has been established or re-established (i.e. *count*=1 on initial WiFi or Ethernet connection; *count*=2 if re-established after the first disconnect, etc.)
     
 * `Span& setPairCallback(void (*func)(boolean status))`
   * sets an optional user-defined callback function, *func*, to be called by HomeSpan upon completion of pairing to a controller (*status=true*) or unpairing from a controller (*status=false*)
@@ -225,8 +265,8 @@ The following **optional** `homeSpan` methods enable additional features and pro
 
 * `Span& setWebLogCallback(void (*func)(String &htmlText))`
   * sets an optional user-defined callback function, *func*, to be called by HomeSpan whenever the Web Log is produced
-  * allows user to add additional custom data to the initial table of the Web Log by **extending** the String *htmlText*, which is passed as a reference to *func*
-  * the function *func* must be of type *void* and accept one argument of type *String*
+  * allows user to add additional custom data to the initial table of the Web Log by setting the String *htmlText*, which is passed as a reference to *func*
+  * the function *func* must be of type *void* and accept one argument of type *String \&*
   * see [Message Logging](Logging.md) for details on how to construct *htmlText*
 
 * `void getWebLog(void (*f)(const char *htmlBuf, void *args), void *userData)`
@@ -327,7 +367,7 @@ The following **optional** `homeSpan` methods provide additional run-time functi
  
 ---
 
-The following `homeSpan` methods are considered experimental, since not all use cases have been explored or debugged.  Use with caution:
+The following **optional** `homeSpan` methods are for creating and managing multi-threaded sketches:
  
 * `void autoPoll(uint32_t stackSize, uint32_t priority, uint32_t cpu)`
  
@@ -339,10 +379,27 @@ The following `homeSpan` methods are considered experimental, since not all use 
   * if used, **must** be placed in a sketch as the last line in the Arduino `setup()` method
   * HomeSpan will throw and error and halt if both `poll()`and `autoPoll()` are used in the same sketch - either place `poll()` in the Arduino `loop()` method **or** place `autoPoll()` at the the end of the Arduino `setup()` method
   * if this method is used, and you have no need to add your own code to the main Arduino `loop()`, you can safely skip defining a blank `void loop(){}` function in your sketch
-  * warning: if any code you add to the Arduino `loop()` method tries to alter any HomeSpan settings or functions running in the background `poll()` task, race conditions may yield undefined results
  
 * `TaskHandle_t getAutoPollTask()`
   * returns the task handle for the Auto Poll Task, or NULL if Auto Polling has not been used
+   
+* `homeSpanPAUSE`
+  * when called, this **MACRO** waits for the current iteration of HomeSpan's polling task to complete and then pauses that process so you can separately call HomeSpan functions from your own thread, typically the main Arduino `loop`
+  * allows you to safely read and write values of Characteristics using `setVal` and `getVal` without worrying about race conditions that would have occured if HomeSpan's polling function were running while you were trying to change Characteristics
+  * pausing lasts until the end of the scope of the code block in which the `homeSpanPAUSE` macro was called, after which HomeSpan's polling process automatically resumes normal operations
+  * **warning:** this macro should only be used from a thread that is distinct from HomeSpan's polling process.  **DO NOT** use this macro from within any code that is managed by the HomeSpan polling process, which is basically all the `update`, `loop` and other methods you created inside your SpanService structures.  However, you **CAN** call these methods directly from a separate thread, provided that you first call the `homeSpanPAUSE` macro
+ 
+* `homeSpanRESUME`
+  * call this *optional* **MACRO** if you want to prematurely resume HomeSpan polling after it has been paused via the `homeSpanPAUSE` macro but before reaching the end of the scope of the code block (at which point HomeSpan polling automatically resumes, as noted above)
+  * this macro can only be called **AFTER** the `homeSpanPAUSE` macro has already been called, and it must be from within the same scope of the code block (or sub-block)
+  * you will get a compilation error if you try to use this macro before calling `homeSpanPAUSE` or if it is not called within the same scope of the code block
+  * it is okay to call `homeSpanRESUME` multiple times after calling `homeSpanPAUSE`.  The first instance restarts the HomeSpan polling process; subsequent instances are ignored
+ 
+* `std::shared_mutex& getMutex()`
+  * returns a reference to the *shared_mutex* used by the `homeSpanPAUSE` and `homeSpanRESUME` macros to lock and unlock the HomeSpan polling thread
+  * only needed for advanced users who want to manually lock and unlock the HomeSpan polling thread using their own logic instead of simply calling these macros
+ 
+A fully worked example showing how to use `autoPoll()` and `homeSpanPAUSE` to automaticlly flip the power of a Simple LightBulb Accessory from a separate thread can be found in the Arduino IDE under [*File → Examples → HomeSpan → Other Examples → MultiThreading*](../examples/Other%20Examples/MultiThreading).
  
 ## *SpanAccessory(uint32_t aid)*
 

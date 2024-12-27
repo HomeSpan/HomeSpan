@@ -51,7 +51,7 @@ struct RemoteTempSensor : Service::TemperatureSensor {
   const char *name;
   float temperature;
   
-  RemoteTempSensor(const char *name, const char*macAddress) : Service::TemperatureSensor(){
+  RemoteTempSensor(const char *name, const char*macAddress, boolean is8266=false) : Service::TemperatureSensor(){
 
     this->name=name;
     
@@ -60,7 +60,7 @@ struct RemoteTempSensor : Service::TemperatureSensor {
 
     fault=new Characteristic::StatusFault(1);                // set initial state = fault
 
-    remoteTemp=new SpanPoint(macAddress,0,sizeof(float));    // create a SpanPoint with send size=0 and receive size=sizeof(float)
+    remoteTemp=new SpanPoint(macAddress,0,sizeof(float),1,is8266);    // create a SpanPoint with send size=0 and receive size=sizeof(float)
 
   } // end constructor
 
@@ -99,13 +99,13 @@ void setup() {
     new Service::AccessoryInformation();
       new Characteristic::Identify();
       new Characteristic::Name("Indoor Temp");
-    new RemoteTempSensor("Device 1","AC:67:B2:77:42:20");        // pass MAC Address of Remote Device
+    new RemoteTempSensor("Device 1","BC:FF:4D:40:8E:71",true);        // pass MAC Address of Remote Device with flag noting it is an ESP8266
 
   new SpanAccessory();
     new Service::AccessoryInformation();
       new Characteristic::Identify(); 
       new Characteristic::Name("Outdoor Temp");
-    new RemoteTempSensor("Device 2","84:CC:A8:11:B4:84");        // pass MAC Address of Remote Device
+    new RemoteTempSensor("Device 2","84:CC:A8:11:B4:84");             // pass MAC Address of Remote Device
 
   
 } // end of setup()

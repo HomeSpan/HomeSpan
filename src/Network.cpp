@@ -39,6 +39,8 @@ using namespace Utils;
 
 void Network_HS::scan(){
 
+  WiFi.scanDelete();
+  STATUS_UPDATE(start(LED_WIFI_SCANNING),HS_WIFI_SCANNING)
   int n=WiFi.scanNetworks();
 
   free(ssidList);
@@ -106,9 +108,7 @@ boolean Network_HS::allowedCode(char *s){
 void Network_HS::apConfigure(){
 
   LOG0("*** Starting Access Point: %s / %s\n",apSSID,apPassword);
-
-  STATUS_UPDATE(start(LED_AP_STARTED),HS_AP_STARTED)
-        
+          
   LOG0("\nScanning for Networks...\n\n");
   
   scan();                   // scan for networks    
@@ -116,7 +116,9 @@ void Network_HS::apConfigure(){
   for(int i=0;i<numSSID;i++)
     LOG0("  %d) %s\n",i+1,ssidList[i]);
 
-  WiFiServer apServer(80);
+  STATUS_UPDATE(start(LED_AP_STARTED),HS_AP_STARTED)    
+
+  NetworkServer apServer(80);
   client=0;
     
   const byte DNS_PORT = 53;
@@ -161,7 +163,7 @@ void Network_HS::apConfigure(){
 
     dnsServer.processNextRequest();
 
-    if(client=apServer.accept()){                       // found a new HTTP client
+    if((client=apServer.accept())){                       // found a new HTTP client
       LOG2("=======================================\n");
       LOG1("** Access Point Client Connected: (");
       LOG1(millis()/1000);
@@ -262,9 +264,10 @@ void Network_HS::processRequest(char *body, char *formData){
 
     STATUS_UPDATE(start(LED_WIFI_CONNECTING),HS_WIFI_CONNECTING)
         
-    responseBody+="<meta http-equiv = \"refresh\" content = \"" + String(waitTime) + "; url = /wifi-status\" />"
-                  "<p>Initiating WiFi connection to:</p><p><b>" + String(wifiData.ssid) + "</p>";
-
+    responseBody+="<meta http-equiv = \"refresh\" content = \"" + String(homeSpan.wifiTimeCounter/1000) + "; url = /wifi-status\" />"
+                  "<p>Initiating WiFi connection to:</p><p><b>" + String(wifiData.ssid) + "</b></p>"
+                  "<p>(waiting " + String((homeSpan.wifiTimeCounter++)/1000) + " seconds to check for response)</p>";
+                  
     WiFi.begin(wifiData.ssid,wifiData.pwd);              
   
   } else
@@ -295,12 +298,9 @@ void Network_HS::processRequest(char *body, char *formData){
     LOG1("In Get WiFi Status...\n");
 
     if(WiFi.status()!=WL_CONNECTED){
-      waitTime+=2;
-      if(waitTime==12)
-        waitTime=2;
-      responseHead+="Refresh: " + String(waitTime) + "\r\n";     
+      responseHead+="Refresh: " + String(homeSpan.wifiTimeCounter/1000) + "\r\n";     
       responseBody+="<p>Re-initiating connection to:</p><p><b>" + String(wifiData.ssid) + "</b></p>";
-      responseBody+="<p>(waiting " + String(waitTime) + " seconds to check for response)</p>";
+      responseBody+="<p>(waiting " + String((homeSpan.wifiTimeCounter++)/1000) + " seconds to check for response)</p>";
       responseBody+="<p>Access Point termination in " + String((alarmTimeOut-millis())/1000) + " seconds.</p>";
       responseBody+="<center><button onclick=\"document.location='/hotspot-detect.html'\">Cancel</button></center>";
       WiFi.begin(wifiData.ssid,wifiData.pwd);
@@ -328,7 +328,7 @@ void Network_HS::processRequest(char *body, char *formData){
     LOG1("In Landing Page...\n");
 
     STATUS_UPDATE(start(LED_AP_CONNECTED),HS_AP_CONNECTED)
-    waitTime=2;
+    homeSpan.wifiTimeCounter.reset();
 
     responseBody+="<p>Welcome to HomeSpan! This page allows you to configure the above HomeSpan device to connect to your WiFi network.</p>"
                   "<p>The LED on this device should be <em>double-blinking</em> during this configuration.</p>"
@@ -369,9 +369,9 @@ void Network_HS::processRequest(char *body, char *formData){
 
 //////////////////////////////////////
 
-int Network_HS::getFormValue(char *formData, const char *tag, char *value, int maxSize){
+int Network_HS::getFormValue(const char *formData, const char *tag, char *value, int maxSize){
 
-  char *s=strstr(formData,tag);     // find start of tag
+  char *s=strcasestr(formData,tag); // find start of tag
   
   if(!s)                            // if not found, return -1
     return(-1);
@@ -381,7 +381,7 @@ int Network_HS::getFormValue(char *formData, const char *tag, char *value, int m
   if(!v)                            // if not found, return -1 (this should not happen)
     return(-1);
 
-  v++;                              // point to begining of value 
+  v++;                              // point to beginning of value 
   int len=0;                        // track length of value
   
   while(*v!='\0' && *v!='&' && len<maxSize){      // copy the value until null, '&', or maxSize is reached
@@ -417,6 +417,44 @@ int Network_HS::badRequestError(){
   client.stop();
 
   return(-1);
+}
+
+//////////////////////////////////////
+  
+HS_ExpCounter::HS_ExpCounter(uint32_t _minCount, uint32_t _maxCount, uint8_t _totalSteps){
+  config(_minCount,_maxCount,_totalSteps);
+}
+
+void HS_ExpCounter::config(uint32_t _minCount, uint32_t _maxCount, uint8_t _totalSteps){  
+  if(_minCount==0 || _maxCount==0 || _totalSteps==0){
+    ESP_LOGE("HS_Counter","call to config(%ld,%ld,%d) ignored: all parameters must be non-zero\n",_minCount,_maxCount,_totalSteps);
+  } else {
+    minCount=_minCount;
+    maxCount=_maxCount;
+    totalSteps=_totalSteps;
+  }
+  reset();
+}
+
+void HS_ExpCounter::reset(){
+  nStep=0;
+}
+
+HS_ExpCounter::operator uint32_t(){
+  return(minCount*pow((double)maxCount/(double)minCount,(double)nStep/(double)totalSteps));
+}
+
+HS_ExpCounter& HS_ExpCounter::operator++(){
+  nStep++;
+  if(nStep>totalSteps)
+    nStep=0;
+  return(*this);    
+}
+
+HS_ExpCounter HS_ExpCounter::operator++(int){
+  HS_ExpCounter temp=*this;
+  operator++();
+  return(temp);
 }
 
 //////////////////////////////////////

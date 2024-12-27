@@ -24,7 +24,9 @@ enum HS_STATUS {
   HS_AP_STARTED,                          // HomeSpan has started the Access Point but no one has yet connected
   HS_AP_CONNECTED,                        // The Access Point is started and a user device has been connected
   HS_AP_TERMINATED,                       // HomeSpan has terminated the Access Point 
-  HS_OTA_STARTED                          // HomeSpan is in the process of recveived an Over-the-Air software update   
+  HS_OTA_STARTED,                         // HomeSpan is in the process of receiving an Over-the-Air software update  
+  HS_WIFI_SCANNING,                       // HomeSpan is in the process of scanning for WiFi networks
+  HS_ETH_CONNECTING                       // HomeSpan is trying to connect to an Ethernet network
 };
 ```
 
@@ -35,6 +37,7 @@ const char* Span::statusString(HS_STATUS s){
   switch(s){
     case HS_WIFI_NEEDED: return("WiFi Credentials Needed");
     case HS_WIFI_CONNECTING: return("WiFi Connecting");
+    case HS_ETH_CONNECTING: return("Ethernet Connecting");
     case HS_PAIRING_NEEDED: return("Device not yet Paired");
     case HS_PAIRED: return("Device Paired");
     case HS_ENTERING_CONFIG_MODE: return("Entering Command Mode");
@@ -54,6 +57,7 @@ const char* Span::statusString(HS_STATUS s){
     case HS_AP_CONNECTED: return("Access Point Connected");
     case HS_AP_TERMINATED: return("Access Point Terminated");
     case HS_OTA_STARTED: return("OTA Update Started");
+    case HS_WIFI_SCANNING: return("WiFi Scanning Started");
     default: return("Unknown");
   }
 }

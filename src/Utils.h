@@ -112,11 +112,11 @@ class PushButton{
   uint32_t doubleAlarm;
   uint32_t longAlarm;
 
-#if SOC_TOUCH_VERSION_2
-  typedef uint32_t touch_value_t;
-#else
+#if defined(SOC_TOUCH_VERSION_1) || SOC_TOUCH_SENSOR_VERSION==1
   typedef uint16_t touch_value_t;
-#endif  
+#else
+  typedef uint32_t touch_value_t;
+#endif
   
   static touch_value_t threshold;
   static const int calibCount=20;
@@ -145,10 +145,10 @@ class PushButton{
   static boolean TRIGGER_ON_HIGH(int pin){return(digitalRead(pin));}
 
 #if SOC_TOUCH_SENSOR_NUM > 0
-#if SOC_TOUCH_VERSION_2
-  static boolean TRIGGER_ON_TOUCH(int pin){return(touchRead(pin)>threshold);}
-#else
+#if defined(SOC_TOUCH_VERSION_1) || SOC_TOUCH_SENSOR_VERSION==1
   static boolean TRIGGER_ON_TOUCH(int pin){return(touchRead(pin)<threshold);}
+#else
+  static boolean TRIGGER_ON_TOUCH(int pin){return(touchRead(pin)>threshold);}
 #endif
 #endif
 

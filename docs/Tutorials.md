@@ -166,6 +166,9 @@ Demonstrates how to create a Custom Partition Scheme for your sketch by adding a
 ### [ExternalReference](../examples/Other%20Examples/ExternalReference)
 Demonstrates how to access Characteristics of Services from outside those Services, such as from within the main Arduino `loop()`.  In this sketch we re-create the two LEDs in Example 5 with an added function in the main Arduino `loop()` that checks if both LEDs are on at the same time, and if so, they are automatically turned off
 
+### [MultiThreading](../examples/Other%20Examples/MultiThreading)
+Demonstrates how to use HomeSpan in a multi-threaded environment.  In this sketch we re-create a multi-threaded version of the Simple LightBulb in Example 1, but instead of calling `poll()` from the main Arduino `loop()`, we implement logic that sleeps for 10 second intervals (without interefering with HomeSpan!) and then automatically flips the power of the LightBulb from ON to OFF, or OFF to ON, depending on its current setting
+
 ---
 
 [↩️](../README.md) Back to the Welcome page

@@ -53,7 +53,7 @@
 
 #elif defined(ARDUINO_ESP32C3_DEV)
   enum {
-    F27=19,F32=2,F14=10,F16=20,F17=21,F21=18,                         // Digital Only (6 pins)
+    F27=19,F32=2,F14=10,F16=20,F17=21,F21=18,                         // Digital Only (6 pins, but F16 and F17 used for Serial)
     F26=0,F25=1,F4=3,                                                 // A0/A1/A5
     F22=9,F23=8,                                                      // I2C SCL/SDA
     F5=4,F18=6,F19=5,F33=7,                                           // SPI SCK/SDO/SDI/CS
@@ -82,4 +82,13 @@
   };
   #define DEVICE_SUFFIX "-C6"
   
+#elif defined(ARDUINO_WESP32)
+  enum {
+    F12=2,F27=32,                                                     // Digital w/Touch (2 pins)
+    F26=12,F25=14,F32=18,F14=23,F21=5,F33=13,                         // Digital Only (6 pins)
+    F34=35,F39=34,F36=36,F4=33,                                       // A2-A5
+    F22=4,F23=15                                                      // I2C SCL/SDA
+  };
+  #define DEVICE_SUFFIX "-WESP32"
+
 #endif
