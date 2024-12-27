@@ -64,7 +64,7 @@ float temp=-10.0;         // this global variable represents our "simulated" tem
 // in your ESP32 sketch.  This  output includes the MAC Address at which SpanPoint will be listening for incoming data from Remote Devices.  The MAC Address
 // shown for the instance of SpanPoint corresponding to this Remote Deivce (i.e. this sketch) is the MAC Address you should use below.
  
-uint8_t main_mac[6]={0x84,0xCC,0xA8,0x11,0xB4,0x85};        // this is the **AP MAC Address** of the Main Device running HomeSpan on an ESP32 as reported in the HomeSpan Serial Monitor
+uint8_t main_mac[6]={0xAC,0x67,0xB2,0x77,0x42,0x21};        // this is the **AP MAC Address** of the Main Device running HomeSpan on an ESP32 as reported in the HomeSpan Serial Monitor
 
 // Next we create a simple, standard ESP-NOW callback function to report on the status of each data transmission
 
@@ -81,7 +81,7 @@ void setup() {
   Serial.printf("\nMAC Address: %s\n",WiFi.macAddress().c_str());         // enter this MAC address as the first argument of the matching SpanPoint object on the ESP32 running HomeSpan
   
   WiFi.mode(WIFI_STA);            // set the mode to Station
-  wifi_set_channel(6);            // you also need to manually set the channel to match whatever channel is used by the ESP32 after it connects to your WiFi network
+  wifi_set_channel(3);            // you also need to manually set the channel to match whatever channel is used by the ESP32 after it connects to your WiFi network
 
   // Hint: As an alterntive, you can add code to this sketch to connect to the same WiFi network that HomeSpan uses.  Though this sketch won't make any use of that WiFi network,
   // by establishing the connection the ESP8266 automatically configures the channel, which will now match the ESP32.
