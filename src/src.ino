@@ -35,39 +35,14 @@ void setup() {
   delay(1000);
 
   homeSpan.setLogLevel(2);
-
-  homeSpan.setConnectionTimes(5,10,2);
-
-  homeSpan.enableWebLog(50);
-  homeSpan.enableOTA();
-  homeSpan.enableWiFiRescan(1,2);
-  homeSpan.addBssidName("34:98:B5:DB:3E:C0","Great Room")
-          .addBssidName("3A:98:B5:db:53:5e","Upstairs Hallway")
-          .addBssidName("3A:98:B5:EF:BF:69","Kitchen")
-          .addBssidName("3A:98:B5:DB:54:86","Basement");
-
-//  ETH.begin(ETH_PHY_W5500, 1, F16, -1, -1, SPI2_HOST, SCK, MISO, MOSI);
-//  ETH.begin(ETH_PHY_RTL8201, 0, 16, 17, -1, ETH_CLOCK_GPIO0_IN);
-            
-  homeSpan.begin(Category::Lighting,"HomeSpan OTA Test");
+           
+  homeSpan.begin(Category::Lighting,"HomeSpan Test");
 
   new SpanAccessory();
     new Service::AccessoryInformation();  
       new Characteristic::Identify();
     new Service::LightBulb();
-      new Characteristic::On();
-
-//  homeSpan.setWifiBegin(myWifi);
-
-//  homeSpan.autoPoll();
-      
-}
-
-//////////////////////////////////////
-
-void myWifi(const char *ssid, const char *pwd){
-  Serial.printf("\nHERE: ssid=%s, pwd=%s\n",ssid,pwd);
-  WiFi.begin(ssid,pwd);
+      new Characteristic::On();      
 }
 
 //////////////////////////////////////
