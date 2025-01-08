@@ -474,10 +474,10 @@ class Span{
   list<Controller, Mallocator<Controller>>::const_iterator controllerListBegin();
   list<Controller, Mallocator<Controller>>::const_iterator controllerListEnd();
 
-  [[deprecated("This homeSpan method has been deprecated and will be removed in a future version.  Please use the more generic setNetworkCallback() method instead.")]]
+  [[deprecated("This homeSpan method has been deprecated and will be removed in a future version.  Please use the more generic setConnectionCallback() method instead.")]]
   Span& setWifiCallback(void (*f)()){wifiCallback=f;return(*this);}                      // sets an optional user-defined function to call once WiFi connectivity is initially established
 
-  [[deprecated("This homeSpan method has been deprecated and will be removed in a future version.  Please use the more generic setNetworkCallback() method instead.")]]
+  [[deprecated("This homeSpan method has been deprecated and will be removed in a future version.  Please use the more generic setConnectionCallback() method instead.")]]
   Span& setWifiCallbackAll(void (*f)(int)){connectionCallback=f;return(*this);}          // sets an optional user-defined function to call every time WiFi connectivity is established or re-established  
 };
 
