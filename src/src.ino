@@ -28,6 +28,10 @@
 #include "HomeSpan.h"
 #include "FeatherPins.h"
 
+//extern "C" bool verifyRollbackLater() {
+//  return true;
+//}
+
 void setup() {
  
   Serial.begin(115200);
@@ -35,6 +39,8 @@ void setup() {
   delay(1000);
 
   homeSpan.setLogLevel(2);
+  homeSpan.enableOTA();
+  homeSpan.setSketchVersion("1.1");
            
   homeSpan.begin(Category::Lighting,"HomeSpan Test");
 

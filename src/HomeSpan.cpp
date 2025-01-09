@@ -60,7 +60,7 @@ HapCharacteristics hapChars;        // Instantiation of all HAP Characteristics 
 // It gets called at the end of initArduino(), which in turn is called just before the loopTask that then calls setup() and loop().
 // Defining init() here allows HomeSpan to perform late-stage initializations immediately before setup() is called
 
-void init(){                        
+extern "C" void init(){                        
   static boolean initialized=false;         // ensure this function is only called once
   if(initialized)
     return;
@@ -92,7 +92,9 @@ Span::Span(){
 ///////////////////////////////
 
 void Span::init(){
-  
+
+  log_i("Initializing Span");
+
   WiFi.setAutoReconnect(false);                           // allow HomeSpan to handle disconnect/reconnect logic
   WiFi.persistent(false);                                 // do not permanently store WiFi configuration data
   WiFi.setScanMethod(WIFI_ALL_CHANNEL_SCAN);              // scan ALL channels - do NOT stop at first SSID match, else you could connect to weaker BSSID
