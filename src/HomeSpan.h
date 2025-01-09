@@ -255,6 +255,7 @@ class Span{
   friend class SpanOTA;
   friend class Network_HS;
   friend class HAPClient;
+  friend void init();
   
   char *displayName;                            // display name for this device - broadcast as part of Bonjour MDNS
   char *hostNameBase;                           // base of hostName of this device - full host name broadcast by Bonjour MDNS will have 6-byte accessoryID as well as '.local' automatically appended
@@ -361,9 +362,11 @@ class Span{
   QueueHandle_t networkEventQueue;                         // queue to transmit network events from callback thread to HomeSpan thread
   void networkCallback(WiFiEvent_t event);                 // network event handler (works for WiFi as well as Ethernet)
 
+  void init();    // performs all late-stage initializations needed
+
   public:
 
-  Span();   // constructor
+  Span();         // constructor
 
   void begin(Category catID=DEFAULT_CATEGORY,
              const char *displayName=DEFAULT_DISPLAY_NAME,

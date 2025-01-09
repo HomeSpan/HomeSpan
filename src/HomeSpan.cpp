@@ -53,6 +53,22 @@ Span homeSpan;                      // HAP Attributes database and all related c
 HapCharacteristics hapChars;        // Instantiation of all HAP Characteristics used to create SpanCharacteristics (global-scoped variable)
 
 ///////////////////////////////
+//        init()             //
+///////////////////////////////
+
+// init() is a global "weak" function pre-defined in the Arduino-ESP32 library.
+// It gets called at the end of initArduino(), which in turn is called just before the loopTask that then calls setup() and loop().
+// Defining init() here allows HomeSpan to perform late-stage initializations immediately before setup() is called
+
+void init(){                        
+  static boolean initialized=false;         // ensure this function is only called once
+  if(initialized)
+    return;
+  initialized=true;
+  homeSpan.init();                          // call the init() method in homeSpan
+}
+
+///////////////////////////////
 //         Span              //
 ///////////////////////////////
 
@@ -71,7 +87,12 @@ Span::Span(){
   rebootCount++;
   nvs_set_u8(wifiNVS,"REBOOTS",rebootCount);
   nvs_commit(wifiNVS);
+}
 
+///////////////////////////////
+
+void Span::init(){
+  
   WiFi.setAutoReconnect(false);                           // allow HomeSpan to handle disconnect/reconnect logic
   WiFi.persistent(false);                                 // do not permanently store WiFi configuration data
   WiFi.setScanMethod(WIFI_ALL_CHANNEL_SCAN);              // scan ALL channels - do NOT stop at first SSID match, else you could connect to weaker BSSID
@@ -79,7 +100,7 @@ Span::Span(){
   
   networkEventQueue=xQueueCreate(10,sizeof(arduino_event_id_t));    // queue to transmit network events
   Network.onEvent([](arduino_event_id_t event){xQueueSend(homeSpan.networkEventQueue, &event, (TickType_t) 0);});
-  Network.onEvent([](arduino_event_id_t event){homeSpan.ethernetEnabled=true;},arduino_event_id_t::ARDUINO_EVENT_ETH_START);  
+  Network.onEvent([](arduino_event_id_t event){homeSpan.ethernetEnabled=true;},arduino_event_id_t::ARDUINO_EVENT_ETH_START);   
 }
 
 ///////////////////////////////
