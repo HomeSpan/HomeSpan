@@ -13,7 +13,7 @@ This is possible because the QR Code includes a 4-character *Setup ID* that is u
 
 HomeSpan supports pairing with QR Codes and uses "HSPN" as its default *Setup ID*.  However, if you have more than one device that you intend on pairing with a QR Code, you'll need to enure each has a unique *Setup ID*.  You can change the *Setup ID* on your device in one of two ways:
 
-* Store a new code in the device NVS by typing 'O \<code\>' into the HomeSpan [Command Line Interface](https://github.com/HomeSpan/HomeSpan/blob/master/docs/CLI.md); or
+* Store a new code in the device NVS by typing 'Q \<code\>' into the HomeSpan [Command Line Interface](https://github.com/HomeSpan/HomeSpan/blob/master/docs/CLI.md); or
 * Specify the QR *Setup ID* directly in your sketch using the method `homeSpan.setQRID(const char *ID)`. 
   
 The order of preference is as follows:  If your sketch contains a call to `homeSpan.setQRID(const char *ID)`, the specified ID is used.  If not, HomeSpan will instead search the NVS for a stored *Setup ID*.  If not found, HomeSpan defaults to using "HSPN" as the *Setup ID*.
