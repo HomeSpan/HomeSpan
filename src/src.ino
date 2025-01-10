@@ -28,9 +28,11 @@
 #include "HomeSpan.h"
 #include "FeatherPins.h"
 
-//extern "C" bool verifyRollbackLater() {
-//  return true;
-//}
+extern "C" bool verifyRollbackLater() {
+  return true;
+}
+
+char *xxx=NULL;
 
 void setup() {
  
@@ -40,7 +42,8 @@ void setup() {
 
   homeSpan.setLogLevel(2);
   homeSpan.enableOTA();
-  homeSpan.setSketchVersion("1.1");
+  homeSpan.setSketchVersion("1.4");
+  homeSpan.enableWebLog();
            
   homeSpan.begin(Category::Lighting,"HomeSpan Test");
 
@@ -49,7 +52,9 @@ void setup() {
       new Characteristic::Identify();
     new Service::LightBulb();
       new Characteristic::On();      
+
 }
+
 
 //////////////////////////////////////
 
