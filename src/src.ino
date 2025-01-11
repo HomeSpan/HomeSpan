@@ -28,9 +28,9 @@
 #include "HomeSpan.h"
 #include "FeatherPins.h"
 
-extern "C" bool verifyRollbackLater() {
-  return true;
-}
+//extern "C" bool verifyRollbackLater() {
+//  return true;
+//}
 
 char *xxx=NULL;
 

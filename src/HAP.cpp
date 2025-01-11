@@ -1161,6 +1161,8 @@ void HAPClient::getStatusURL(HAPClient *hapClient, void (*callBack)(const char *
   
   hapOut << " (" << esp_reset_reason() << ")</td></tr>\n";
 
+  hapOut << "<tr><td>Compile Time:</td><td>" << __DATE__ << " " << __TIME__ << "</td></tr>\n";
+
   if(!homeSpan.ethernetEnabled){
     hapOut << "<tr><td>WiFi Disconnects:</td><td>" << homeSpan.connected/2 << "</td></tr>\n";
     hapOut << "<tr><td>WiFi Signal:</td><td>" << (int)WiFi.RSSI() << " dBm</td></tr>\n";
