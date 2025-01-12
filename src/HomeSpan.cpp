@@ -182,7 +182,7 @@ void Span::begin(Category catID, const char *_displayName, const char *_hostName
   mbedtls_version_get_string_full(mbtlsv);
   LOG0("\nMbedTLS Version:  %s",mbtlsv);
 
-  LOG0("\nSketch Compiled:  %s %s",__DATE__,__TIME__);
+  LOG0("\nSketch Compiled:  %s",compileTime?compileTime:"N/A");
   LOG0("\nPartition:        %s",esp_ota_get_running_partition()->label);
   LOG0("\nMAC Address:      %s",Network.macAddress().c_str());
   LOG0("\nInterface:        %s",ethernetEnabled?"ETHERNET":"WIFI");

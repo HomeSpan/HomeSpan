@@ -28,7 +28,7 @@
 #include "HomeSpan.h"
 #include "FeatherPins.h"
 
-extern "C" bool verifyRollbackLater() {return true;}
+//extern "C" bool verifyRollbackLater() {return true;}
 
 char *xxx=NULL;
 
@@ -42,6 +42,8 @@ void setup() {
   homeSpan.enableOTA();
   homeSpan.setSketchVersion("1.5");
   homeSpan.enableWebLog();
+//  homeSpan.setCompileTime(__DATE__ " " __TIME__);
+  HS_SET_COMPILE_TIME;
            
   homeSpan.begin(Category::Lighting,"HomeSpan Test");
 

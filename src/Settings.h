@@ -62,6 +62,11 @@
 #define     HOMESPAN_MAGIC_COOKIE     "HomeSpanMagicCookie##2022"
 
 /////////////////////////////////////////////////////
+//               USER MACROS                       //
+
+#define     HS_SET_COMPILE_TIME       homeSpan.setCompileTime(__DATE__ " " __TIME__);
+
+/////////////////////////////////////////////////////
 //              STATUS LED SETTINGS                //
 
 #define     LED_WIFI_NEEDED       300,0.5,1,2700      // slow single-blink

@@ -277,6 +277,7 @@ class Span{
   uint32_t rebootCallbackTime;                  // length of time to wait (in milliseconds) before calling optional Reboot callback
   boolean ethernetEnabled=false;                // flag to indicate whether Ethernet is being used instead of WiFi
   boolean initialPollingCompleted=false;        // flag to indicate whether polling task has initially completed
+  char *compileTime=NULL;                       // compile time --- must be set with call to setCompileTime() or HS_SET_COMPILE_TIME macro in users sketch
   
   nvs_handle charNVS;                           // handle for non-volatile-storage of Characteristics data
   nvs_handle wifiNVS=0;                         // handle for non-volatile-storage of WiFi data
@@ -428,6 +429,7 @@ class Span{
   Span& setPollingCallback(void (*f)()){pollingCallback=f;return(*this);}                // sets an optional user-defined function to call upon INITIAL completion of the polling task (only called once)
 
   Span& setHostNameSuffix(const char *suffix){asprintf(&hostNameSuffix,"%s",suffix);return(*this);}      // sets the hostName suffix to be used instead of the 6-byte AccessoryID
+  Span& setCompileTime(const char *compTime){asprintf(&compileTime,"%s",compTime);return(*this);}        // sets the hostName suffix to be used instead of the 6-byte AccessoryID
  
   int enableOTA(boolean auth=true, boolean safeLoad=true){return(spanOTA.init(auth, safeLoad, NULL));}   // enables Over-the-Air updates, with (auth=true) or without (auth=false) authorization password  
   int enableOTA(const char *pwd, boolean safeLoad=true){return(spanOTA.init(true, safeLoad, pwd));}      // enables Over-the-Air updates, with custom authorization password (overrides any password stored with the 'O' command)
