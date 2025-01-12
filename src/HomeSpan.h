@@ -42,6 +42,7 @@
 #include <ETH.h>
 #include <esp_now.h>
 #include <mbedtls/base64.h>
+#include <esp_ota_ops.h>
 
 #include "src/extras/Blinker.h"
 #include "src/extras/Pixel.h"
@@ -275,6 +276,7 @@ class Span{
   uint8_t rebootCount=0;                        // counts number of times device was rebooted (used in optional Reboot callback)
   uint32_t rebootCallbackTime;                  // length of time to wait (in milliseconds) before calling optional Reboot callback
   boolean ethernetEnabled=false;                // flag to indicate whether Ethernet is being used instead of WiFi
+  boolean initialPollingCompleted=false;        // flag to indicate whether polling task has initially completed
   
   nvs_handle charNVS;                           // handle for non-volatile-storage of Characteristics data
   nvs_handle wifiNVS=0;                         // handle for non-volatile-storage of WiFi data
@@ -310,6 +312,7 @@ class Span{
   void (*statusCallback)(HS_STATUS status)=NULL;              // optional callback when HomeSpan status changes
   void (*rebootCallback)(uint8_t)=NULL;                       // optional callback when device reboots
   void (*controllerCallback)()=NULL;                          // optional callback when Controller is added/removed/changed
+  void (*pollingCallback)()=NULL;                             // optional callback when polling task reaching initial completion (only called once)
   
   NetworkServer *hapServer;                         // pointer to the HAP Server connection
   Blinker *statusLED;                               // indicates HomeSpan status
@@ -422,6 +425,7 @@ class Span{
   Span& resetIID(uint32_t newIID);                                                       // resets the IID count for the current Accessory to start at newIID
   Span& setControllerCallback(void (*f)()){controllerCallback=f;return(*this);}          // sets an optional user-defined function to call whenever a Controller is added/removed
   Span& setWifiBegin(void (*f)(const char *, const char *)){wifiBegin=f;return(*this);}  // sets an optional user-defined function to over-ride WiFi.begin() with additional logic
+  Span& setPollingCallback(void (*f)()){pollingCallback=f;return(*this);}                // sets an optional user-defined function to call upon INITIAL completion of the polling task (only called once)
 
   Span& setHostNameSuffix(const char *suffix){asprintf(&hostNameSuffix,"%s",suffix);return(*this);}      // sets the hostName suffix to be used instead of the 6-byte AccessoryID
  

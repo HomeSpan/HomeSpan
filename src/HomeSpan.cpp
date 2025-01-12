@@ -36,7 +36,6 @@
 #include <mbedtls/sha256.h>
 #include <esp_task_wdt.h>
 #include <esp_sntp.h>
-#include <esp_ota_ops.h>
 #include <esp_wifi.h>
 #include <esp_app_format.h>
 
@@ -349,7 +348,12 @@ void Span::pollTask() {
     nvs_set_u8(wifiNVS,"REBOOTS",rebootCount);
     nvs_commit(wifiNVS);    
   }
-    
+
+  if(!initialPollingCompleted && pollingCallback){
+    initialPollingCompleted=true;
+    pollingCallback();
+  }
+  
 } // poll
 
 //////////////////////////////////////
