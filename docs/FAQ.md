@@ -91,6 +91,11 @@ getLocalTime(&myTime);   // populate the tm structure with current date and time
 Serial.printf("Current Date = %02d/%02d/%04d\n", myTime.tm_mon+1, myTime.tm_mday, myTime.tm_year+1900);
 Serial.printf("Current Time = %02d:%02d:%02d\n", myTime.tm_hour, myTime.tm_min, myTime.tm_sec);
 ```
+#### I am getting a "Sketch Too Big" error when I compile
+
+* As a result of increases in the size of the Arduino-ESP32 Board Manager, HomeSpan sketches will no longer fit into the Default partition scheme which only allocates 1.3MB to an App partition.  HomeSpan sketches must instead be compiled under a larger partition scheme, such as Minimal SPIFFS, which provides for 1.9MB partitions.  You can select this partition scheme (or any other that has an App or OTA partition that is large enough to fit your sketch) from with Tools menu in the Arduino IDE.
+
+* Note that it is NOT possible to change the partition scheme on remote devices via OTA.  The device MUST be connected via USB to your computer.  If you change the partition table on the Arduino IDE and upload your sketch via OTA to a remote device, the remote device will IGNORE the request to change the partition table and if the size of the sketch is too large for the previous partition table on the remote device, the new sketch will not be saved.  To solve this, you need to connect the device to your computer via USB, change the partition table, and then upload. Once the partition table is changed, you can then disconnect and use OTA again.
   
 ---
 
