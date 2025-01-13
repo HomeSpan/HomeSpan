@@ -588,7 +588,8 @@ void Span::configureNetwork(){
     
     ArduinoOTA.begin();
     LOG0("Starting OTA Server:    %s at %s\n",displayName,ethernetEnabled?ETH.localIP().toString().c_str():WiFi.localIP().toString().c_str());
-    LOG0("Authorization Password: %s",spanOTA.auth?"Enabled\n\n":"DISABLED!\n\n");
+    LOG0("Authorization Password: %s",spanOTA.auth?"Enabled\n":"DISABLED!\n");
+    LOG0("Auto Rollback:          %s",verifyRollbackLater()?"Enabled\n\n":"Disabled\n\n");
   }
   
   mdns_service_txt_item_set("_hap","_tcp","ota",spanOTA.enabled?"yes":"no");                // OTA status (info only - NOT used by HAP)

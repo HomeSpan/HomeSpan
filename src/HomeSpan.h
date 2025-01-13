@@ -92,6 +92,12 @@ static TLV8 NULL_TLV{};
 #define homeSpanPAUSE std::shared_lock pollLock(homeSpan.getMutex());
 #define homeSpanRESUME if(pollLock.owns_lock()){pollLock.unlock();}
 
+#if defined(HOMESPAN_AUTO_ROLLBACK)
+extern "C" bool verifyRollbackLater() {return true;}
+#else
+extern "C" bool verifyRollbackLater();
+#endif
+
 ///////////////////////////////
 
 #define STATUS_UPDATE(LED_UPDATE,MESSAGE_UPDATE)  {homeSpan.statusLED->LED_UPDATE;if(homeSpan.statusCallback)homeSpan.statusCallback(MESSAGE_UPDATE);}
@@ -433,6 +439,8 @@ class Span{
  
   int enableOTA(boolean auth=true, boolean safeLoad=true){return(spanOTA.init(auth, safeLoad, NULL));}   // enables Over-the-Air updates, with (auth=true) or without (auth=false) authorization password  
   int enableOTA(const char *pwd, boolean safeLoad=true){return(spanOTA.init(true, safeLoad, pwd));}      // enables Over-the-Air updates, with custom authorization password (overrides any password stored with the 'O' command)
+
+  void markSketchOK(){esp_ota_mark_app_valid_cancel_rollback();}
 
   Span& enableWebLog(uint16_t maxEntries=0, const char *serv=NULL, const char *tz="UTC", const char *url=DEFAULT_WEBLOG_URL){     // enable Web Logging
     webLog.init(maxEntries, serv, tz, url);

@@ -25,12 +25,10 @@
  *  
  ********************************************************************************/
 
+//#define HOMESPAN_AUTO_ROLLBACK
+
 #include "HomeSpan.h"
 #include "FeatherPins.h"
-
-//extern "C" bool verifyRollbackLater() {return true;}
-
-char *xxx=NULL;
 
 void setup() {
  
@@ -40,9 +38,8 @@ void setup() {
 
   homeSpan.setLogLevel(2);
   homeSpan.enableOTA();
-  homeSpan.setSketchVersion("1.5");
+  homeSpan.setSketchVersion("1.7");
   homeSpan.enableWebLog();
-//  homeSpan.setCompileTime(__DATE__ " " __TIME__);
   HS_SET_COMPILE_TIME;
            
   homeSpan.begin(Category::Lighting,"HomeSpan Test");
@@ -53,12 +50,9 @@ void setup() {
     new Service::LightBulb();
       new Characteristic::On();
 
-  
+//  homeSpan.setPollingCallback([](){homeSpan.markSketchOK();});
 
-  homeSpan.setConnectionCallback([](int x){esp_ota_mark_app_valid_cancel_rollback();});
-
-//  homeSpan.setSketchVersion(NULL);
-
+  // sprintf(NULL,"HERE IS AN ERROR!");
 }
 
 
