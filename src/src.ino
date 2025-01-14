@@ -39,8 +39,8 @@ void setup() {
   homeSpan.enableOTA();
   homeSpan.setSketchVersion("1.7");
   homeSpan.enableWebLog();
-  HS_SET_COMPILE_TIME;
-           
+  homeSpan.setCompileTime();
+             
   homeSpan.begin(Category::Lighting,"HomeSpan Test");
 
   new SpanAccessory();
