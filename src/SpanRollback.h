@@ -1,7 +1,7 @@
 /*********************************************************************************
  *  MIT License
  *  
- *  Copyright (c) 2020-2024 Gregg E. Berman
+ *  Copyright (c) 2020-2025 Gregg E. Berman
  *  
  *  https://github.com/HomeSpan/HomeSpan
  *  
@@ -24,40 +24,9 @@
  *  SOFTWARE.
  *  
  ********************************************************************************/
-
-#include "HomeSpan.h"
-#include "FeatherPins.h"
-
-void setup() {
  
-  Serial.begin(115200);
+#pragma once
 
-  delay(1000);
+// Override of weakly-defined Arduino-ESP32 function to enable auto rollback
 
-  homeSpan.enablePollWatchdog(10);
-  homeSpan.setLogLevel(2);
-  homeSpan.enableOTA();
-  homeSpan.setSketchVersion("1.7");
-  homeSpan.enableWebLog();
-  HS_SET_COMPILE_TIME;
-           
-  homeSpan.begin(Category::Lighting,"HomeSpan Test");
-
-  new SpanAccessory();
-    new Service::AccessoryInformation();  
-      new Characteristic::Identify();
-    new Service::LightBulb();
-      new Characteristic::On();
-
-  homeSpan.setPollingCallback([](){homeSpan.markSketchOK();});
-
-  // sprintf(NULL,"HERE IS AN ERROR!");
-}
-
-
-//////////////////////////////////////
-
-void loop(){
-  
-  homeSpan.poll();
-}
+extern "C" bool verifyRollbackLater() {return true;}

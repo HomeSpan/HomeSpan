@@ -43,6 +43,7 @@
 #include <esp_now.h>
 #include <mbedtls/base64.h>
 #include <esp_ota_ops.h>
+#include <esp_task_wdt.h>
 
 #include "src/extras/Blinker.h"
 #include "src/extras/Pixel.h"
@@ -89,14 +90,15 @@ typedef std::pair<const uint8_t *, size_t> DATA_t;
 static DATA_t NULL_DATA={NULL,0};
 static TLV8 NULL_TLV{};
 
+///////////////////////////////
+// Macros to lock/unlock poll() mutex
+
 #define homeSpanPAUSE std::shared_lock pollLock(homeSpan.getMutex());
 #define homeSpanRESUME if(pollLock.owns_lock()){pollLock.unlock();}
 
-#if defined(HOMESPAN_AUTO_ROLLBACK)
-extern "C" bool verifyRollbackLater() {return true;}
-#else
-extern "C" bool verifyRollbackLater();
-#endif
+///////////////////////////////
+
+extern "C" bool verifyRollbackLater();    // declare pre-defined Arduino-ESP32 version, unless over-ridden in user sketch with #include "SpanRollback.h"
 
 ///////////////////////////////
 
@@ -284,6 +286,8 @@ class Span{
   boolean ethernetEnabled=false;                // flag to indicate whether Ethernet is being used instead of WiFi
   boolean initialPollingCompleted=false;        // flag to indicate whether polling task has initially completed
   char *compileTime=NULL;                       // compile time --- must be set with call to setCompileTime() or HS_SET_COMPILE_TIME macro in users sketch
+  esp_task_wdt_user_handle_t pollWatchdog=NULL; // optional watchdog timer for poll() function
+  boolean pollWatchdogEnabled=false;            // flag to indicate whether watchdog timer for poll() function is enabled
   
   nvs_handle charNVS;                           // handle for non-volatile-storage of Characteristics data
   nvs_handle wifiNVS=0;                         // handle for non-volatile-storage of WiFi data
@@ -373,6 +377,18 @@ class Span{
   void networkCallback(WiFiEvent_t event);                 // network event handler (works for WiFi as well as Ethernet)
 
   void init();    // performs all late-stage initializations needed
+  
+  void setPollWatchdog(boolean enable){
+    if(enable==true && pollWatchdogEnabled==false){
+      esp_task_wdt_add_user("HomeSpan Poll Task",&pollWatchdog);
+      log_i("HomeSpan poll() watchdog enabled");
+    } else
+    if(enable==false && pollWatchdogEnabled==true){
+      esp_task_wdt_delete_user(pollWatchdog);
+      log_i("HomeSpan poll() watchdog disabled");
+    }
+    pollWatchdogEnabled=enable;
+  }
 
   public:
 
@@ -483,6 +499,16 @@ class Span{
     rescanInitialTime=iTime*60000;
     rescanPeriodicTime=pTime*60000;
     rescanThreshold=thresh;
+    return(*this);
+  }
+
+  Span& enablePollWatchdog(uint32_t nSeconds){                                           // enables poll() function watchdog with timeout of nSeconds
+    esp_task_wdt_config_t twdtConfig;
+    twdtConfig.timeout_ms=nSeconds*1000;
+    twdtConfig.idle_core_mask=(1 << CONFIG_FREERTOS_NUMBER_OF_CORES)-1;
+    twdtConfig.trigger_panic=true;
+    esp_task_wdt_reconfigure(&twdtConfig);
+    setPollWatchdog(true);
     return(*this);
   }
 
