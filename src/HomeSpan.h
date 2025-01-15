@@ -43,7 +43,6 @@
 #include <esp_now.h>
 #include <mbedtls/base64.h>
 #include <esp_ota_ops.h>
-#include <esp_task_wdt.h>
 
 #include "src/extras/Blinker.h"
 #include "src/extras/Pixel.h"
@@ -286,9 +285,7 @@ class Span{
   boolean ethernetEnabled=false;                // flag to indicate whether Ethernet is being used instead of WiFi
   boolean initialPollingCompleted=false;        // flag to indicate whether polling task has initially completed
   char *compileTime=NULL;                       // compile time --- must be set with call to setCompileTime() or HS_SET_COMPILE_TIME macro in users sketch
-  esp_task_wdt_user_handle_t pollWatchdog=NULL; // optional watchdog timer for poll() function
-  boolean pollWatchdogEnabled=false;            // flag to indicate whether watchdog timer for poll() function is enabled
-  
+   
   nvs_handle charNVS;                           // handle for non-volatile-storage of Characteristics data
   nvs_handle wifiNVS=0;                         // handle for non-volatile-storage of WiFi data
   nvs_handle otaNVS;                            // handle for non-volatile storage of OTA data
@@ -335,6 +332,7 @@ class Span{
   TaskHandle_t loopTaskHandle;                      // Arduino Loop Task handle
   boolean verboseWifiReconnect = true;              // set to false to not print WiFi reconnect attempts messages
   std::shared_mutex pollMutex;                      // mutex lock for poll task
+  hsWatchdogTimer hsWDT;                            // general homeSpan watchdog timer
     
   SpanOTA spanOTA;                                  // manages OTA process
   SpanConfig hapConfig;                             // track configuration changes to the HAP Accessory database; used to increment the configuration number (c#) when changes found
@@ -378,18 +376,6 @@ class Span{
 
   void init();    // performs all late-stage initializations needed
   
-  void setPollWatchdog(boolean enable){
-    if(enable==true && pollWatchdogEnabled==false){
-      esp_task_wdt_add_user("HomeSpan Poll Task",&pollWatchdog);
-      log_i("HomeSpan poll() watchdog enabled");
-    } else
-    if(enable==false && pollWatchdogEnabled==true){
-      esp_task_wdt_delete_user(pollWatchdog);
-      log_i("HomeSpan poll() watchdog disabled");
-    }
-    pollWatchdogEnabled=enable;
-  }
-
   public:
 
   Span();         // constructor
@@ -502,15 +488,8 @@ class Span{
     return(*this);
   }
 
-  Span& enablePollWatchdog(uint32_t nSeconds){                                           // enables poll() function watchdog with timeout of nSeconds
-    esp_task_wdt_config_t twdtConfig;
-    twdtConfig.timeout_ms=nSeconds*1000;
-    twdtConfig.idle_core_mask=(1 << CONFIG_FREERTOS_NUMBER_OF_CORES)-1;
-    twdtConfig.trigger_panic=true;
-    esp_task_wdt_reconfigure(&twdtConfig);
-    setPollWatchdog(true);
-    return(*this);
-  }
+  Span& enableWatchdog(uint16_t nSeconds=15){hsWDT.enable(nSeconds);return(*this);}      // enables HomeSpan watchdog with timeout of nSeconds
+  void resetWatchdog(){hsWDT.reset();}                                                   // resets HomeSpan watchdog
 
   Span& addBssidName(String bssid, string name){bssid.toUpperCase();bssidNames[bssid.c_str()]=name;return(*this);}
 

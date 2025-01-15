@@ -36,6 +36,7 @@
 //  Utils::mask             - masks a string with asterisks (good for displaying passwords)
 //
 //  class PushButton        - tracks Single, Double, and Long Presses of a pushbutton that connects a specified pin to ground
+//  class hsWatchdogTimer   - a generic watchdog timer that reboots the ESP32 device if not reset periodically
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -51,8 +52,10 @@ char *Utils::readSerial(char *c, int max){
 
   while(1){
 
-    while(!Serial.available())             // wait until there is a new character
+    while(!Serial.available()){            // wait until there is a new character
       vTaskDelay(5);
+      homeSpan.resetWatchdog();
+    }
     
     buf=Serial.read();
     
@@ -295,3 +298,38 @@ void PushButton::reset(){
 //////////////////////////////////////
 
 PushButton::touch_value_t PushButton::threshold=0;
+
+////////////////////////////////
+//      hsWatchdogTimer       //
+////////////////////////////////
+
+void hsWatchdogTimer::enable(uint16_t nSeconds){
+
+  this->nSeconds=nSeconds;
+  
+  if(nSeconds>0){
+    esp_task_wdt_config_t twdtConfig;
+    twdtConfig.timeout_ms=nSeconds*1000;
+    twdtConfig.idle_core_mask=(1 << CONFIG_FREERTOS_NUMBER_OF_CORES)-1;
+    twdtConfig.trigger_panic=false;
+    esp_task_wdt_reconfigure(&twdtConfig);
+    if(!wdtHandle)
+      esp_task_wdt_add_user("HomeSpan Watchdog",&wdtHandle);
+  } else if(wdtHandle){
+      esp_task_wdt_delete_user(wdtHandle);
+      wdtHandle=NULL;
+  }
+}
+
+//////////////////////////////////////
+    
+void hsWatchdogTimer::reset(){
+  if(wdtHandle)
+    esp_task_wdt_reset_user(wdtHandle);      
+}    
+
+//////////////////////////////////////
+
+uint16_t hsWatchdogTimer::getSeconds(){
+  return(nSeconds);
+}

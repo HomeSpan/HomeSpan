@@ -184,7 +184,10 @@ void Span::begin(Category catID, const char *_displayName, const char *_hostName
 
   LOG0("\nSketch Compiled:  %s",compileTime?compileTime:"N/A");
   LOG0("\nPartition:        %s",esp_ota_get_running_partition()->label);
-  LOG0("\nPolling Watchdog: %s",pollWatchdogEnabled?"Enabled":"Disabled");
+  if(hsWDT.getSeconds())
+    LOG0("\nHS Watchdog:      %d seconds",hsWDT.getSeconds());
+  else
+    LOG0("\nHS Watchdog:      DISABLED");  
   LOG0("\nMAC Address:      %s",Network.macAddress().c_str());
   LOG0("\nInterface:        %s",ethernetEnabled?"ETHERNET":"WIFI");
   
@@ -355,8 +358,7 @@ void Span::pollTask() {
     pollingCallback();
   }
 
-  if(pollWatchdog)
-    esp_task_wdt_reset_user(pollWatchdog);
+  hsWDT.reset();      // reset watchdog timer
   
 } // poll
 
@@ -756,7 +758,6 @@ void Span::processSerialCommand(const char *c){
     break;
     
     case 'O': {
-      setPollWatchdog(false);
 
       char textPwd[34]="\0";
       
@@ -782,8 +783,6 @@ void Span::processSerialCommand(const char *c){
       if(!spanOTA.enabled)
         LOG0("... Note: OTA has not been enabled in this sketch.\n");
       LOG0("\n");
-      
-      setPollWatchdog(true);
     }
     break;
 

@@ -34,12 +34,14 @@ void setup() {
 
   delay(1000);
 
-  homeSpan.enablePollWatchdog(10);
+  homeSpan.enableWatchdog(5);
   homeSpan.setLogLevel(2);
   homeSpan.enableOTA();
   homeSpan.setSketchVersion("1.7");
   homeSpan.enableWebLog();
   homeSpan.setCompileTime();
+
+  new SpanUserCommand('T', " - time delay",[](const char *buf){homeSpan.enableWatchdog(0);delay(10000);homeSpan.enableWatchdog(5);});
              
   homeSpan.begin(Category::Lighting,"HomeSpan Test");
 
