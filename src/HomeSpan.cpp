@@ -2683,6 +2683,9 @@ void SpanOTA::end(){
 ///////////////////////////////
 
 void SpanOTA::progress(uint32_t progress, uint32_t total){
+
+  homeSpan.resetWatchdog();
+
   int percent=progress*100/total;
   if(percent/10 != otaPercent/10){
     otaPercent=percent;

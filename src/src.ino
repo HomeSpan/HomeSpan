@@ -27,6 +27,7 @@
 
 #include "HomeSpan.h"
 #include "FeatherPins.h"
+//#include "SpanRollback.h"
 
 void setup() {
  
@@ -34,14 +35,15 @@ void setup() {
 
   delay(1000);
 
-  homeSpan.enableWatchdog(5);
+//  homeSpan.enableWatchdog(5);
   homeSpan.setLogLevel(2);
   homeSpan.enableOTA();
   homeSpan.setSketchVersion("1.7");
   homeSpan.enableWebLog();
   homeSpan.setCompileTime();
 
-  new SpanUserCommand('T', " - time delay",[](const char *buf){homeSpan.enableWatchdog(0);delay(10000);homeSpan.enableWatchdog(5);});
+  new SpanUserCommand('T'," - time delay",[](const char *buf){delay(10000);});
+  new SpanUserCommand('B'," - rollback",[](const char *buf){esp_ota_mark_app_invalid_rollback_and_reboot();});
              
   homeSpan.begin(Category::Lighting,"HomeSpan Test");
 
@@ -51,9 +53,9 @@ void setup() {
     new Service::LightBulb();
       new Characteristic::On();
 
-  homeSpan.setPollingCallback([](){homeSpan.markSketchOK();});
+ // homeSpan.setPollingCallback([](){homeSpan.markSketchOK();});
 
-  // sprintf(NULL,"HERE IS AN ERROR!");
+ // sprintf(NULL,"HERE IS AN ERROR!");
 }
 
 
