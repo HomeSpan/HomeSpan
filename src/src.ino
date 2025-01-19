@@ -35,12 +35,16 @@ void setup() {
 
   delay(1000);
 
-//  homeSpan.enableWatchdog(5);
+  homeSpan.setStatusPixel(PIN_NEOPIXEL);
+  homeSpan.setControlPin(0);
+  
+  homeSpan.enableWatchdog(5);
   homeSpan.setLogLevel(2);
   homeSpan.enableOTA();
   homeSpan.setSketchVersion("1.7");
   homeSpan.enableWebLog();
   homeSpan.setCompileTime();
+  homeSpan.setStatusCallback([](HS_STATUS status){Serial.printf("\n*** HOMESPAN STATUS: %s\n\n",homeSpan.statusString(status));});
 
   new SpanUserCommand('T'," - time delay",[](const char *buf){delay(10000);});
   new SpanUserCommand('B'," - rollback",[](const char *buf){esp_ota_mark_app_invalid_rollback_and_reboot();});

@@ -311,7 +311,7 @@ void hsWatchdogTimer::enable(uint16_t nSeconds){
     esp_task_wdt_config_t twdtConfig;
     twdtConfig.timeout_ms=nSeconds*1000;
     twdtConfig.idle_core_mask=(1 << CONFIG_FREERTOS_NUMBER_OF_CORES)-1;
-    twdtConfig.trigger_panic=false;
+    twdtConfig.trigger_panic=true;
     esp_task_wdt_reconfigure(&twdtConfig);
     if(!wdtHandle)
       esp_task_wdt_add_user("HomeSpan Watchdog",&wdtHandle);

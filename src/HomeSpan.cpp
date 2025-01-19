@@ -394,6 +394,7 @@ void Span::commandMode(){
       }
     } // button press
     vTaskDelay(5);
+    homeSpan.resetWatchdog();
   } // while
 
   STATUS_UPDATE(start(LED_ALERT),static_cast<HS_STATUS>(HS_ENTERING_CONFIG_MODE+mode+5))
