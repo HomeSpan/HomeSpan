@@ -27,7 +27,7 @@
 
 #include "HomeSpan.h"
 #include "FeatherPins.h"
-//#include "SpanRollback.h"
+#include "SpanRollback.h"
 
 void setup() {
  

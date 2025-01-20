@@ -649,6 +649,23 @@ void Span::processSerialCommand(const char *c){
     }
     break;
     
+    case 'p': {
+      Serial.printf("\OTA Partition       Size (bytes)   State");
+      Serial.printf("\n----------------   ------------   ----- \n");
+      auto it=esp_partition_find(ESP_PARTITION_TYPE_APP,ESP_PARTITION_SUBTYPE_ANY,NULL);
+      while(it){
+        const esp_partition_t *part=esp_partition_get(it);
+        esp_ota_img_states_t state;
+        if(esp_ota_get_state_partition(part,&state)==ESP_OK){
+          Serial.printf("%-16.16s  %12d  %d\n",part->label,part->size,state);
+        }
+        it=esp_partition_next(it);
+      }
+      esp_partition_iterator_release(it);
+      LOG0("\n");
+    }
+    break;
+
     case 'D': {
       WiFi.disconnect();
     }
