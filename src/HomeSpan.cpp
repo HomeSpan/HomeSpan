@@ -38,6 +38,7 @@
 #include <esp_sntp.h>
 #include <esp_wifi.h>
 #include <esp_app_format.h>
+#include <esp_flash.h>
 
 #include "HomeSpan.h"
 #include "HAP.h"
@@ -650,19 +651,35 @@ void Span::processSerialCommand(const char *c){
     break;
     
     case 'p': {
-      Serial.printf("\OTA Partition       Size (bytes)   State");
-      Serial.printf("\n----------------   ------------   ----- \n");
-      auto it=esp_partition_find(ESP_PARTITION_TYPE_APP,ESP_PARTITION_SUBTYPE_ANY,NULL);
+      LOG0("\nPartition              Size   OTA State");
+      LOG0("\n----------------   --------   --------- \n");
+      auto it=esp_partition_find(ESP_PARTITION_TYPE_ANY,ESP_PARTITION_SUBTYPE_ANY,NULL);
+      uint32_t totalSize=0;
+      uint32_t flashSize;
       while(it){
         const esp_partition_t *part=esp_partition_get(it);
-        esp_ota_img_states_t state;
-        if(esp_ota_get_state_partition(part,&state)==ESP_OK){
-          Serial.printf("%-16.16s  %12d  %d\n",part->label,part->size,state);
+        if(totalSize==0){
+          totalSize=part->address;      // add in offset of first partition
+          esp_flash_get_physical_size(part->flash_chip,&flashSize);
         }
+        totalSize+=part->size;
+        LOG0("%-16.16s   %8lu   ",part->label,part->size);
+        esp_ota_img_states_t state;
+        if(ESP_OK==esp_ota_get_state_partition(part,&state)){
+          switch(state){
+            case ESP_OTA_IMG_VALID:           LOG0("    VALID"); break;
+            case ESP_OTA_IMG_UNDEFINED:       LOG0("UNDEFINED"); break;
+            case ESP_OTA_IMG_INVALID:         LOG0("  INVALID"); break;
+            case ESP_OTA_IMG_ABORTED:         LOG0("  ABORTED"); break;
+            case ESP_OTA_IMG_PENDING_VERIFY:  LOG0("  PENDING"); break;
+            default:                          LOG0("      ???");
+          }
+        }
+        LOG0("\n");
         it=esp_partition_next(it);
       }
       esp_partition_iterator_release(it);
-      LOG0("\n");
+      LOG0("\nTotal Size Allocated (including any offset): %lu of %lu available\n\n",totalSize,flashSize);
     }
     break;
 
