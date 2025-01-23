@@ -101,7 +101,7 @@ void Span::init(){
   
   networkEventQueue=xQueueCreate(10,sizeof(arduino_event_id_t));    // queue to transmit network events
   Network.onEvent([](arduino_event_id_t event){xQueueSend(homeSpan.networkEventQueue, &event, (TickType_t) 0);});
-  Network.onEvent([](arduino_event_id_t event){homeSpan.ethernetEnabled=true;},arduino_event_id_t::ARDUINO_EVENT_ETH_START);   
+  Network.onEvent([](arduino_event_id_t event){homeSpan.useEthernet();},arduino_event_id_t::ARDUINO_EVENT_ETH_START);   
 }
 
 ///////////////////////////////
