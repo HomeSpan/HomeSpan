@@ -663,7 +663,7 @@ void Span::processSerialCommand(const char *c){
           esp_flash_get_physical_size(part->flash_chip,&flashSize);
         }
         totalSize+=part->size;
-        LOG0("%1.1s %-16.16s   0x%06lX   %8lu   ",esp_ota_get_running_partition()==part?"✓":" ",part->label,part->address,part->size);
+        LOG0("%1.1s %-16.16s   0x%06lX   %8lu   ",esp_ota_get_running_partition()==part?"*":" ",part->label,part->address,part->size);
         esp_ota_img_states_t state;
         if(ESP_OK==esp_ota_get_state_partition(part,&state)){
           switch(state){
@@ -679,7 +679,7 @@ void Span::processSerialCommand(const char *c){
         it=esp_partition_next(it);
       }
       esp_partition_iterator_release(it);
-      LOG0("\nTotal Size Allocated (including any offset): %lu of %lu available\n\n",totalSize,flashSize);
+      LOG0("\nTotal Size Allocated (including any initial offset): %lu of %lu available\n\n",totalSize,flashSize);
     }
     break;
 
