@@ -38,7 +38,7 @@ void setup() {
 //  homeSpan.setStatusPixel(18);
   homeSpan.setControlPin(0);
   
-  homeSpan.enableWatchdog(5);
+//  homeSpan.enableWatchdog(5);
   homeSpan.setLogLevel(2);
   homeSpan.enableOTA();
   homeSpan.setSketchVersion("1.9");

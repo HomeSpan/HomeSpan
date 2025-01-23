@@ -651,8 +651,8 @@ void Span::processSerialCommand(const char *c){
     break;
     
     case 'p': {
-      LOG0("\nPartition              Size   OTA State");
-      LOG0("\n----------------   --------   --------- \n");
+      LOG0("\n  Partition           Address       Size   OTA State");
+      LOG0("\n  ----------------   --------   --------   --------- \n");
       auto it=esp_partition_find(ESP_PARTITION_TYPE_ANY,ESP_PARTITION_SUBTYPE_ANY,NULL);
       uint32_t totalSize=0;
       uint32_t flashSize;
@@ -663,7 +663,7 @@ void Span::processSerialCommand(const char *c){
           esp_flash_get_physical_size(part->flash_chip,&flashSize);
         }
         totalSize+=part->size;
-        LOG0("%-16.16s   %8lu   ",part->label,part->size);
+        LOG0("%1.1s %-16.16s   0x%06lX   %8lu   ",esp_ota_get_running_partition()==part?"✓":" ",part->label,part->address,part->size);
         esp_ota_img_states_t state;
         if(ESP_OK==esp_ota_get_state_partition(part,&state)){
           switch(state){
