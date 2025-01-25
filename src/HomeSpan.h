@@ -377,7 +377,7 @@ class Span{
   public:
 
   Span();         // constructor
-
+  void useEthernet() {ethernetEnabled=true;}               // use Ethernet instead of WiFi
   void begin(Category catID=DEFAULT_CATEGORY,
              const char *displayName=DEFAULT_DISPLAY_NAME,
              const char *hostNameBase=DEFAULT_HOST_NAME,
