@@ -98,6 +98,7 @@ static TLV8 NULL_TLV{};
 ///////////////////////////////
 
 extern "C" bool verifyRollbackLater();    // declare pre-defined Arduino-ESP32 version, unless over-ridden in user sketch with #include "SpanRollback.h"
+void yieldIfNecessary(void);              // declare pre-defined Arduino-ESP32 version implemented for single-core processors
 
 ///////////////////////////////
 
@@ -466,15 +467,9 @@ class Span{
 
   std::shared_mutex& getMutex(){return(pollMutex);}
 
-  void autoPoll(uint32_t stackSize=8192, uint32_t priority=1, uint32_t cpu=0){     // start pollTask()
-    xTaskCreateUniversal([](void *parms){
-      for(;;){
-        homeSpan.pollTask();
-        vTaskDelay(5);
-        }
-      },
-      "pollTask", stackSize, NULL, priority, &pollTaskHandle, cpu);
-    LOG0("\n*** AutoPolling Task started with priority=%d\n\n",uxTaskPriorityGet(pollTaskHandle)); 
+  void autoPoll(uint32_t stackSize=8192, uint32_t priority=1, uint32_t core=ARDUINO_RUNNING_CORE){
+    xTaskCreateUniversal( [](void *parms){for(;;)homeSpan.pollTask();}, "pollTask", stackSize, NULL, priority, &pollTaskHandle, core);
+    LOG0("\n*** AutoPolling Task started on Core-%ld with priority=%d\n\n",core,uxTaskPriorityGet(pollTaskHandle)); 
   }
 
   TaskHandle_t getAutoPollTask(){return(pollTaskHandle);}

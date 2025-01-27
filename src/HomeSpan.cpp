@@ -69,6 +69,25 @@ extern "C" void init(){
 }
 
 ///////////////////////////////
+//    yieldIfNecessary()     //
+///////////////////////////////
+
+// yieldIfNecessary() calls vTaskDelay() if 2 or more seconds has elapsed since last call.
+// It is defined in Arduino-ESP32 main.cpp, but ONLY for single-core processors. Here we
+// define it for multi-core processors as well (based on whether CONFIG_FREERTOS_UNICORE is defined).
+
+#ifndef CONFIG_FREERTOS_UNICORE
+void yieldIfNecessary(void){               // duplicates Arduino-ESP32 version that is defined for single-core devices
+  static uint64_t lastYield = 0;
+  uint64_t now = millis();
+  if ((now - lastYield) > 2000) {
+    lastYield = now;
+    vTaskDelay(5);
+  }
+}
+#endif
+
+///////////////////////////////
 //         Span              //
 ///////////////////////////////
 
@@ -359,8 +378,7 @@ void Span::pollTask() {
     pollingCallback();
   }
 
-  hsWDT.reset();      // reset watchdog timer
-  
+  resetWatchdog();      // reset watchdog timer  
 } // poll
 
 //////////////////////////////////////
@@ -394,8 +412,8 @@ void Span::commandMode(){
         done=true;
       }
     } // button press
-    vTaskDelay(5);
-    homeSpan.resetWatchdog();
+    
+    resetWatchdog();
   } // while
 
   STATUS_UPDATE(start(LED_ALERT),static_cast<HS_STATUS>(HS_ENTERING_CONFIG_MODE+mode+5))

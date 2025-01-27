@@ -231,7 +231,6 @@ void Network_HS::apConfigure(){
 
     } // process Client
 
-    vTaskDelay(5);
     homeSpan.resetWatchdog();
   } // while 1
 

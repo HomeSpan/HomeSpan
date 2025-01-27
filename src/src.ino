@@ -29,6 +29,8 @@
 #include "FeatherPins.h"
 #include "SpanRollback.h"
 
+int watchDogSeconds=0;
+
 void setup() {
  
   Serial.begin(115200);
@@ -48,7 +50,18 @@ void setup() {
 
   new SpanUserCommand('T'," - time delay",[](const char *buf){delay(10000);});
   new SpanUserCommand('B'," - rollback",[](const char *buf){esp_ota_mark_app_invalid_rollback_and_reboot();});
-  new SpanUserCommand('v'," - rollback",[](const char *buf){homeSpan.markSketchOK();});
+  new SpanUserCommand('v'," - validate sketch",[](const char *buf){homeSpan.markSketchOK();});
+  
+  new SpanUserCommand('w'," - watchdog",[](const char *buf){
+    for(int i=0;i<CONFIG_FREERTOS_NUMBER_OF_CORES;i++){
+    TaskHandle_t th;
+    th=xTaskGetIdleTaskHandleForCore(i);
+    char *name=pcTaskGetName(th);
+    boolean wdt=(ESP_OK==esp_task_wdt_status(th));
+    Serial.printf("Core %d Name: %s %d\n",i,name,wdt);
+  }});
+  
+  new SpanUserCommand('t'," - toggle watchdog",[](const char *buf){if(watchDogSeconds)homeSpan.enableWatchdog(0);else homeSpan.enableWatchdog(5);});
              
   homeSpan.begin(Category::Lighting,"HomeSpan Test");
 
@@ -59,8 +72,7 @@ void setup() {
       new Characteristic::On();
 
 //  homeSpan.setPollingCallback([](){homeSpan.markSketchOK();});
-
- // sprintf(NULL,"HERE IS AN ERROR!");
+//  sprintf(NULL,"HERE IS AN ERROR!");
 }
 
 
