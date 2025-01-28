@@ -303,40 +303,42 @@ PushButton::touch_value_t PushButton::threshold=0;
 
 void hsWatchdogTimer::enable(uint16_t nSeconds){
 
+  if(nSeconds<CONFIG_ESP_TASK_WDT_TIMEOUT_S)      // minimum allowed value is CONFIG_ESP_TASK_WDT_TIMEOUT_S
+    nSeconds=CONFIG_ESP_TASK_WDT_TIMEOUT_S;
+    
   this->nSeconds=nSeconds;
   esp_task_wdt_config_t twdtConfig;
   
-  if(nSeconds>0){
-    twdtConfig.timeout_ms=nSeconds*1000;
-    twdtConfig.idle_core_mask=(1 << CONFIG_FREERTOS_NUMBER_OF_CORES)-1;   // subscribe IDLE task for each core to task watchdog timer
-    twdtConfig.trigger_panic=true;
-    esp_task_wdt_reconfigure(&twdtConfig);
-    if(!wdtHandle)
-      esp_task_wdt_add_user("HomeSpan Watchdog",&wdtHandle);
-  } else if(wdtHandle){
-    esp_task_wdt_delete_user(wdtHandle);        // remove homeSpan from task watchdog timer
-    wdtHandle=NULL;
-    
-    twdtConfig.idle_core_mask=0;
-    twdtConfig.trigger_panic=false;
+  twdtConfig.timeout_ms=nSeconds*1000;
+  twdtConfig.trigger_panic=false;
+  twdtConfig.idle_core_mask=0;
 
-    twdtConfig.timeout_ms=CONFIG_ESP_TASK_WDT_TIMEOUT_S*1000;     // restore default watchdog timer settings based on those compiled into the Arduino-ESP32 library
-    
-#if CONFIG_ESP_TASK_WDT_PANIC
-    twdtConfig.trigger_panic=true;
-#endif
-#if CONFIG_ESP_TASK_WDT_CHECK_IDLE_TASK_CPU0
-    twdtConfig.idle_core_mask |= (1 << 0);
-#endif
-#if CONFIG_ESP_TASK_WDT_CHECK_IDLE_TASK_CPU1
-    twdtConfig.idle_core_mask |= (1 << 1);
-#endif  
-  }
+  for(int i=0;i<CONFIG_FREERTOS_NUMBER_OF_CORES;i++)
+    twdtConfig.idle_core_mask |= (ESP_OK==esp_task_wdt_status(xTaskGetIdleTaskHandleForCore(i))) << i;      // replicate existing idle task subscriptions to task watchdog
+  
+  esp_task_wdt_reconfigure(&twdtConfig);      // reconfigure task watchdog with new time=nSeconds but DO NOT alter state of idle task subscriptions on either core
+  
+  if(!wdtHandle)
+    esp_task_wdt_add_user(WATCHDOG_TAG,&wdtHandle);
+
+  ESP_LOGI(WATCHDOG_TAG,"Enabled with %d-second timeout. Idle Task Mask = %d",nSeconds,twdtConfig.idle_core_mask);
 }
+
+//////////////////////////////////////
+
+void hsWatchdogTimer::disable(){
+  
+  if(wdtHandle)
+    esp_task_wdt_delete_user(wdtHandle);  
+  wdtHandle=NULL;    
+
+  ESP_LOGI(WATCHDOG_TAG,"Disabled");
+} 
 
 //////////////////////////////////////
     
 void hsWatchdogTimer::reset(){
+  
   yieldIfNecessary();
   if(wdtHandle)
     esp_task_wdt_reset_user(wdtHandle);      

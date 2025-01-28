@@ -467,9 +467,9 @@ class Span{
 
   std::shared_mutex& getMutex(){return(pollMutex);}
 
-  void autoPoll(uint32_t stackSize=8192, uint32_t priority=1, uint32_t core=ARDUINO_RUNNING_CORE){
+  void autoPoll(uint32_t stackSize=8192, uint32_t priority=1, uint32_t core=0){
     xTaskCreateUniversal( [](void *parms){for(;;)homeSpan.pollTask();}, "pollTask", stackSize, NULL, priority, &pollTaskHandle, core);
-    LOG0("\n*** AutoPolling Task started on Core-%ld with priority=%d\n\n",core,uxTaskPriorityGet(pollTaskHandle)); 
+    LOG0("\n*** AutoPolling Task started on Core-%d with priority=%d\n\n",xTaskGetCoreID(pollTaskHandle),uxTaskPriorityGet(pollTaskHandle)); 
   }
 
   TaskHandle_t getAutoPollTask(){return(pollTaskHandle);}
@@ -483,8 +483,9 @@ class Span{
     return(*this);
   }
 
-  Span& enableWatchdog(uint16_t nSeconds=15){hsWDT.enable(nSeconds);return(*this);}      // enables HomeSpan watchdog with timeout of nSeconds
-  void resetWatchdog(){hsWDT.reset();}                                                   // resets HomeSpan watchdog
+  Span& enableWatchdog(uint16_t nSeconds=CONFIG_ESP_TASK_WDT_TIMEOUT_S){hsWDT.enable(nSeconds);return(*this);}      // enables HomeSpan watchdog with timeout of nSeconds
+  Span& disableWatchdog(){hsWDT.disable();return(*this);}                                                           // disables HomeSpan watchdog
+  void resetWatchdog(){hsWDT.reset();}                                                                              // resets HomeSpan watchdog
 
   Span& addBssidName(String bssid, string name){bssid.toUpperCase();bssidNames[bssid.c_str()]=name;return(*this);}
 

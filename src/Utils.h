@@ -32,6 +32,8 @@
 
 #include "PSRAM.h"
 
+[[maybe_unused]] static const char* WATCHDOG_TAG = "HomeSpan Watchdog";
+
 namespace Utils {
 
 char *readSerial(char *c, int max);   // read serial port into 'c' until <newline>, but storing only first 'max' characters (the rest are discarded)
@@ -250,6 +252,7 @@ class hsWatchdogTimer {
 
   hsWatchdogTimer(){};
   void enable(uint16_t nSeconds);
+  void disable();
   void reset();
   uint16_t getSeconds();
 };

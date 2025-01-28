@@ -40,7 +40,7 @@ void setup() {
 //  homeSpan.setStatusPixel(18);
   homeSpan.setControlPin(0);
   
-//  homeSpan.enableWatchdog(5);
+  homeSpan.enableWatchdog();
   homeSpan.setLogLevel(2);
   homeSpan.enableOTA();
   homeSpan.setSketchVersion("1.9");
@@ -48,7 +48,7 @@ void setup() {
   homeSpan.setCompileTime();
   homeSpan.setStatusCallback([](HS_STATUS status){Serial.printf("\n*** HOMESPAN STATUS: %s\n\n",homeSpan.statusString(status));});
 
-  new SpanUserCommand('T'," - time delay",[](const char *buf){delay(10000);});
+  new SpanUserCommand('T'," - time delay",[](const char *buf){delay(20000);});
   new SpanUserCommand('B'," - rollback",[](const char *buf){esp_ota_mark_app_invalid_rollback_and_reboot();});
   new SpanUserCommand('v'," - validate sketch",[](const char *buf){homeSpan.markSketchOK();});
   
@@ -58,10 +58,11 @@ void setup() {
     th=xTaskGetIdleTaskHandleForCore(i);
     char *name=pcTaskGetName(th);
     boolean wdt=(ESP_OK==esp_task_wdt_status(th));
-    Serial.printf("Core %d Name: %s %d\n",i,name,wdt);
+    Serial.printf("%s: %s\n",name,wdt?"Enabled":"Disabled");
   }});
   
-  new SpanUserCommand('t'," - toggle watchdog",[](const char *buf){if(watchDogSeconds)homeSpan.enableWatchdog(0);else homeSpan.enableWatchdog(5);});
+  new SpanUserCommand('e'," - enable HomeSpan watchdog",[](const char *buf){homeSpan.enableWatchdog(atoi(buf+1));});
+  new SpanUserCommand('d'," - disable HomeSpan watchdog",[](const char *buf){homeSpan.disableWatchdog();});
              
   homeSpan.begin(Category::Lighting,"HomeSpan Test");
 
@@ -73,6 +74,12 @@ void setup() {
 
 //  homeSpan.setPollingCallback([](){homeSpan.markSketchOK();});
 //  sprintf(NULL,"HERE IS AN ERROR!");
+
+homeSpan.autoPoll(8192,1,1);
+
+//delay(20000);
+int i=0; while(1) i++;
+
 }
 
 
@@ -80,5 +87,5 @@ void setup() {
 
 void loop(){
   
-  homeSpan.poll();
+//  homeSpan.poll();
 }
