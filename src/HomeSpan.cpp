@@ -38,6 +38,7 @@
 #include <esp_sntp.h>
 #include <esp_wifi.h>
 #include <esp_app_format.h>
+#include <esp_flash.h>
 
 #include "HomeSpan.h"
 #include "HAP.h"
@@ -66,6 +67,25 @@ extern "C" void init(){
   initialized=true;
   homeSpan.init();                          // call the init() method in homeSpan
 }
+
+///////////////////////////////
+//    yieldIfNecessary()     //
+///////////////////////////////
+
+// yieldIfNecessary() calls vTaskDelay() if 2 or more seconds has elapsed since last call.
+// It is defined in Arduino-ESP32 main.cpp, but ONLY for single-core processors. Here we
+// define it for multi-core processors as well (based on whether CONFIG_FREERTOS_UNICORE is defined).
+
+#ifndef CONFIG_FREERTOS_UNICORE
+void yieldIfNecessary(void){               // duplicates Arduino-ESP32 version that is defined for single-core devices
+  static uint64_t lastYield = 0;
+  uint64_t now = millis();
+  if ((now - lastYield) > 2000) {
+    lastYield = now;
+    vTaskDelay(5);
+  }
+}
+#endif
 
 ///////////////////////////////
 //         Span              //
@@ -135,7 +155,7 @@ void Span::begin(Category catID, const char *_displayName, const char *_hostName
 
   LOG0("\n************************************************************\n"
                  "Welcome to HomeSpan!\n"
-                 "Apple HomeKit for the Espressif ESP-32 WROOM and Arduino IDE\n"
+                 "Apple HomeKit for the Espressif ESP-32/S2/S3/C3/C6 chips\n"
                  "************************************************************\n\n"
                  "** Please ensure serial monitor is set to transmit <newlines>\n\n");
 
@@ -184,6 +204,14 @@ void Span::begin(Category catID, const char *_displayName, const char *_hostName
 
   LOG0("\nSketch Compiled:  %s",compileTime?compileTime:"N/A");
   LOG0("\nPartition:        %s",esp_ota_get_running_partition()->label);
+  if(hsWDT.getSeconds())
+    LOG0("\nHS Watchdog:      %d seconds",hsWDT.getSeconds());
+  else
+    LOG0("\nHS Watchdog:      DISABLED");
+
+  for(int i=0;i<CONFIG_FREERTOS_NUMBER_OF_CORES;i++)
+    LOG0("\nIDLE-%d Watchdog:  %s",i,(ESP_OK==esp_task_wdt_status(xTaskGetIdleTaskHandleForCore(i)))?"ENABLED":"DISABLED");
+  
   LOG0("\nMAC Address:      %s",Network.macAddress().c_str());
   LOG0("\nInterface:        %s",ethernetEnabled?"ETHERNET":"WIFI");
   
@@ -353,7 +381,8 @@ void Span::pollTask() {
     initialPollingCompleted=true;
     pollingCallback();
   }
-  
+
+  resetWatchdog();      // reset watchdog timer  
 } // poll
 
 //////////////////////////////////////
@@ -387,7 +416,8 @@ void Span::commandMode(){
         done=true;
       }
     } // button press
-    vTaskDelay(5);
+    
+    resetWatchdog();
   } // while
 
   STATUS_UPDATE(start(LED_ALERT),static_cast<HS_STATUS>(HS_ENTERING_CONFIG_MODE+mode+5))
@@ -642,6 +672,39 @@ void Span::processSerialCommand(const char *c){
     }
     break;
     
+    case 'p': {
+      LOG0("\n  Partition           Address       Size   OTA State");
+      LOG0("\n  ----------------   --------   --------   --------- \n");
+      auto it=esp_partition_find(ESP_PARTITION_TYPE_ANY,ESP_PARTITION_SUBTYPE_ANY,NULL);
+      uint32_t totalSize=0;
+      uint32_t flashSize;
+      while(it){
+        const esp_partition_t *part=esp_partition_get(it);
+        if(totalSize==0){
+          totalSize=part->address;      // add in offset of first partition
+          esp_flash_get_physical_size(part->flash_chip,&flashSize);
+        }
+        totalSize+=part->size;
+        LOG0("%1.1s %-16.16s   0x%06lX   %8lu   ",esp_ota_get_running_partition()==part?"*":" ",part->label,part->address,part->size);
+        esp_ota_img_states_t state;
+        if(ESP_OK==esp_ota_get_state_partition(part,&state)){
+          switch(state){
+            case ESP_OTA_IMG_VALID:           LOG0("    VALID"); break;
+            case ESP_OTA_IMG_UNDEFINED:       LOG0("UNDEFINED"); break;
+            case ESP_OTA_IMG_INVALID:         LOG0("  INVALID"); break;
+            case ESP_OTA_IMG_ABORTED:         LOG0("  ABORTED"); break;
+            case ESP_OTA_IMG_PENDING_VERIFY:  LOG0("  PENDING"); break;
+            default:                          LOG0("      ???");
+          }
+        }
+        LOG0("\n");
+        it=esp_partition_next(it);
+      }
+      esp_partition_iterator_release(it);
+      LOG0("\nTotal Size Allocated (including any initial offset): %lu of %lu available\n\n",totalSize,flashSize);
+    }
+    break;
+
     case 'D': {
       WiFi.disconnect();
     }
@@ -1219,6 +1282,7 @@ void Span::processSerialCommand(const char *c){
       LOG0("  i - print summary information about the HAP Database\n");
       LOG0("  d - print the full HAP Accessory Attributes Database in JSON format\n");
       LOG0("  m - print free heap memory\n");
+      LOG0("  p - print flash partition table\n");
       LOG0("\n");      
       LOG0("  W - configure WiFi Credentials and restart\n");      
       LOG0("  X - delete WiFi Credentials and restart\n");      
@@ -2677,6 +2741,9 @@ void SpanOTA::end(){
 ///////////////////////////////
 
 void SpanOTA::progress(uint32_t progress, uint32_t total){
+
+  homeSpan.resetWatchdog();
+
   int percent=progress*100/total;
   if(percent/10 != otaPercent/10){
     otaPercent=percent;

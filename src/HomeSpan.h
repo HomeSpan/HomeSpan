@@ -89,14 +89,16 @@ typedef std::pair<const uint8_t *, size_t> DATA_t;
 static DATA_t NULL_DATA={NULL,0};
 static TLV8 NULL_TLV{};
 
+///////////////////////////////
+// Macros to lock/unlock poll() mutex
+
 #define homeSpanPAUSE std::shared_lock pollLock(homeSpan.getMutex());
 #define homeSpanRESUME if(pollLock.owns_lock()){pollLock.unlock();}
 
-#if defined(HOMESPAN_AUTO_ROLLBACK)
-extern "C" bool verifyRollbackLater() {return true;}
-#else
-extern "C" bool verifyRollbackLater();
-#endif
+///////////////////////////////
+
+extern "C" bool verifyRollbackLater();    // declare pre-defined Arduino-ESP32 version, unless over-ridden in user sketch with #include "SpanRollback.h"
+void yieldIfNecessary(void);              // declare pre-defined Arduino-ESP32 version implemented for single-core processors
 
 ///////////////////////////////
 
@@ -284,7 +286,7 @@ class Span{
   boolean ethernetEnabled=false;                // flag to indicate whether Ethernet is being used instead of WiFi
   boolean initialPollingCompleted=false;        // flag to indicate whether polling task has initially completed
   char *compileTime=NULL;                       // compile time --- must be set with call to setCompileTime() or HS_SET_COMPILE_TIME macro in users sketch
-  
+   
   nvs_handle charNVS;                           // handle for non-volatile-storage of Characteristics data
   nvs_handle wifiNVS=0;                         // handle for non-volatile-storage of WiFi data
   nvs_handle otaNVS;                            // handle for non-volatile storage of OTA data
@@ -331,6 +333,7 @@ class Span{
   TaskHandle_t loopTaskHandle;                      // Arduino Loop Task handle
   boolean verboseWifiReconnect = true;              // set to false to not print WiFi reconnect attempts messages
   std::shared_mutex pollMutex;                      // mutex lock for poll task
+  hsWatchdogTimer hsWDT;                            // general homeSpan watchdog timer
     
   SpanOTA spanOTA;                                  // manages OTA process
   SpanConfig hapConfig;                             // track configuration changes to the HAP Accessory database; used to increment the configuration number (c#) when changes found
@@ -373,7 +376,7 @@ class Span{
   void networkCallback(WiFiEvent_t event);                 // network event handler (works for WiFi as well as Ethernet)
 
   void init();    // performs all late-stage initializations needed
-
+  
   public:
 
   Span();         // constructor
@@ -434,8 +437,8 @@ class Span{
   Span& setWifiBegin(void (*f)(const char *, const char *)){wifiBegin=f;return(*this);}  // sets an optional user-defined function to over-ride WiFi.begin() with additional logic
   Span& setPollingCallback(void (*f)()){pollingCallback=f;return(*this);}                // sets an optional user-defined function to call upon INITIAL completion of the polling task (only called once)
 
-  Span& setHostNameSuffix(const char *suffix){asprintf(&hostNameSuffix,"%s",suffix);return(*this);}      // sets the hostName suffix to be used instead of the 6-byte AccessoryID
-  Span& setCompileTime(const char *compTime){asprintf(&compileTime,"%s",compTime);return(*this);}        // sets the hostName suffix to be used instead of the 6-byte AccessoryID
+  Span& setHostNameSuffix(const char *suffix){asprintf(&hostNameSuffix,"%s",suffix);return(*this);}                            // sets the hostName suffix to be used instead of the 6-byte AccessoryID
+  Span& setCompileTime(const char *compTime=__DATE__ " " __TIME__){asprintf(&compileTime,"%s",compTime);return(*this);}        // sets the compile time to compTime; default is to use compiler-provided date/time
  
   int enableOTA(boolean auth=true, boolean safeLoad=true){return(spanOTA.init(auth, safeLoad, NULL));}   // enables Over-the-Air updates, with (auth=true) or without (auth=false) authorization password  
   int enableOTA(const char *pwd, boolean safeLoad=true){return(spanOTA.init(true, safeLoad, pwd));}      // enables Over-the-Air updates, with custom authorization password (overrides any password stored with the 'O' command)
@@ -464,15 +467,9 @@ class Span{
 
   std::shared_mutex& getMutex(){return(pollMutex);}
 
-  void autoPoll(uint32_t stackSize=8192, uint32_t priority=1, uint32_t cpu=0){     // start pollTask()
-    xTaskCreateUniversal([](void *parms){
-      for(;;){
-        homeSpan.pollTask();
-        vTaskDelay(5);
-        }
-      },
-      "pollTask", stackSize, NULL, priority, &pollTaskHandle, cpu);
-    LOG0("\n*** AutoPolling Task started with priority=%d\n\n",uxTaskPriorityGet(pollTaskHandle)); 
+  void autoPoll(uint32_t stackSize=8192, uint32_t priority=1, uint32_t core=0){
+    xTaskCreateUniversal( [](void *parms){for(;;)homeSpan.pollTask();}, "pollTask", stackSize, NULL, priority, &pollTaskHandle, core);
+    LOG0("\n*** AutoPolling Task started on Core-%d with priority=%d\n\n",xTaskGetCoreID(pollTaskHandle),uxTaskPriorityGet(pollTaskHandle)); 
   }
 
   TaskHandle_t getAutoPollTask(){return(pollTaskHandle);}
@@ -485,6 +482,10 @@ class Span{
     rescanThreshold=thresh;
     return(*this);
   }
+
+  Span& enableWatchdog(uint16_t nSeconds=CONFIG_ESP_TASK_WDT_TIMEOUT_S){hsWDT.enable(nSeconds);return(*this);}      // enables HomeSpan watchdog with timeout of nSeconds
+  Span& disableWatchdog(){hsWDT.disable();return(*this);}                                                           // disables HomeSpan watchdog
+  void resetWatchdog(){hsWDT.reset();}                                                                              // resets HomeSpan watchdog
 
   Span& addBssidName(String bssid, string name){bssid.toUpperCase();bssidNames[bssid.c_str()]=name;return(*this);}
 

@@ -36,6 +36,7 @@
 //  Utils::mask             - masks a string with asterisks (good for displaying passwords)
 //
 //  class PushButton        - tracks Single, Double, and Long Presses of a pushbutton that connects a specified pin to ground
+//  class hsWatchdogTimer   - a generic watchdog timer that reboots the ESP32 device if not reset periodically
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -51,8 +52,8 @@ char *Utils::readSerial(char *c, int max){
 
   while(1){
 
-    while(!Serial.available())             // wait until there is a new character
-      vTaskDelay(5);
+    while(!Serial.available())            // wait until there is a new character
+      homeSpan.resetWatchdog();
     
     buf=Serial.read();
     
@@ -283,7 +284,7 @@ int PushButton::type(){
 
 void PushButton::wait(){  
   while(triggerType(pin))
-    vTaskDelay(5);
+    homeSpan.resetWatchdog();
 }
 
 //////////////////////////////////////
@@ -295,3 +296,56 @@ void PushButton::reset(){
 //////////////////////////////////////
 
 PushButton::touch_value_t PushButton::threshold=0;
+
+////////////////////////////////
+//      hsWatchdogTimer       //
+////////////////////////////////
+
+void hsWatchdogTimer::enable(uint16_t nSeconds){
+
+  if(nSeconds<CONFIG_ESP_TASK_WDT_TIMEOUT_S)      // minimum allowed value is CONFIG_ESP_TASK_WDT_TIMEOUT_S
+    nSeconds=CONFIG_ESP_TASK_WDT_TIMEOUT_S;
+    
+  this->nSeconds=nSeconds;
+  esp_task_wdt_config_t twdtConfig;
+  
+  twdtConfig.timeout_ms=nSeconds*1000;
+  twdtConfig.trigger_panic=true;
+  twdtConfig.idle_core_mask=0;
+
+  for(int i=0;i<CONFIG_FREERTOS_NUMBER_OF_CORES;i++)
+    twdtConfig.idle_core_mask |= (ESP_OK==esp_task_wdt_status(xTaskGetIdleTaskHandleForCore(i))) << i;      // replicate existing idle task subscriptions to task watchdog
+  
+  esp_task_wdt_reconfigure(&twdtConfig);      // reconfigure task watchdog with new time=nSeconds but DO NOT alter state of idle task subscriptions on either core
+  
+  if(!wdtHandle)
+    esp_task_wdt_add_user(WATCHDOG_TAG,&wdtHandle);
+
+  ESP_LOGI(WATCHDOG_TAG,"Enabled with %d-second timeout. Idle Task Mask = %d",nSeconds,twdtConfig.idle_core_mask);
+}
+
+//////////////////////////////////////
+
+void hsWatchdogTimer::disable(){
+  
+  if(wdtHandle)
+    esp_task_wdt_delete_user(wdtHandle);  
+  wdtHandle=NULL;    
+
+  ESP_LOGI(WATCHDOG_TAG,"Disabled");
+} 
+
+//////////////////////////////////////
+    
+void hsWatchdogTimer::reset(){
+  
+  yieldIfNecessary();
+  if(wdtHandle)
+    esp_task_wdt_reset_user(wdtHandle);      
+}    
+
+//////////////////////////////////////
+
+uint16_t hsWatchdogTimer::getSeconds(){
+  return(nSeconds);
+}

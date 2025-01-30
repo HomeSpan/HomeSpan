@@ -28,8 +28,11 @@
 #pragma once
 
 #include <Arduino.h>
+#include <esp_task_wdt.h>
 
 #include "PSRAM.h"
+
+[[maybe_unused]] static const char* WATCHDOG_TAG = "HomeSpan Watchdog";
 
 namespace Utils {
 
@@ -234,4 +237,22 @@ class PushButton{
 
 #endif
 
+};
+
+////////////////////////////////
+//      hsWatchdogTimer       //
+////////////////////////////////
+
+class hsWatchdogTimer {
+
+  uint16_t nSeconds=0;
+  esp_task_wdt_user_handle_t wdtHandle=NULL;
+
+  public:
+
+  hsWatchdogTimer(){};
+  void enable(uint16_t nSeconds);
+  void disable();
+  void reset();
+  uint16_t getSeconds();
 };
