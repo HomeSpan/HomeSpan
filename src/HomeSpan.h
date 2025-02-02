@@ -284,7 +284,7 @@ class Span{
   uint32_t rebootCallbackTime;                  // length of time to wait (in milliseconds) before calling optional Reboot callback
   boolean ethernetEnabled=false;                // flag to indicate whether Ethernet is being used instead of WiFi
   boolean initialPollingCompleted=false;        // flag to indicate whether polling task has initially completed
-  char *compileTime=NULL;                       // compile time --- must be set with call to setCompileTime() or HS_SET_COMPILE_TIME macro in users sketch
+  char *compileTime=NULL;                       // optional compile time string --- can be set with call to setCompileTime()
    
   nvs_handle charNVS;                           // handle for non-volatile-storage of Characteristics data
   nvs_handle wifiNVS=0;                         // handle for non-volatile-storage of WiFi data
