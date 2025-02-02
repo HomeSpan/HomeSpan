@@ -98,7 +98,6 @@ static TLV8 NULL_TLV{};
 ///////////////////////////////
 
 extern "C" bool verifyRollbackLater();    // declare pre-defined Arduino-ESP32 version, unless over-ridden in user sketch with #include "SpanRollback.h"
-void yieldIfNecessary(void);              // declare pre-defined Arduino-ESP32 version implemented for single-core processors
 
 ///////////////////////////////
 

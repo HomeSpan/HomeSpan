@@ -339,7 +339,7 @@ void hsWatchdogTimer::disable(){
     
 void hsWatchdogTimer::reset(){
   
-  yieldIfNecessary();
+  vTaskDelay(1);
   if(wdtHandle)
     esp_task_wdt_reset_user(wdtHandle);      
 }    
