@@ -68,6 +68,7 @@ Requirements to run HomeSpan depend on which version you choose:
   * adds new header file `SpanRollback.h`
     * when included at the top of a user's sketch this disables the auto-validation of any newly-updated OTA partition that the ESP32-Arduino library otherwise would perform at startup
     * users can instead *manually* validate their sketch in software, which allows the device to automatically rollback to a prior sketch if the new sketch is not marked as valid
+      
   * adds new homeSpan method `markSketchOK()` allowing users to mark the currently running partition as valid after uploading a new sketch via OTA
   * adds new homeSpan method `setPollingCallback(void (*f)())` allowing users to add a callback function, *f*,  that HomeSpan calls *one time* after the very first call to `poll()` has completed
     * provides a good check-point for users to mark new sketches uploaded via OTA as valid
@@ -77,13 +78,14 @@ Requirements to run HomeSpan depend on which version you choose:
     * the compile date/time string provided is indicated in Serial Monitor during start-up as well as in the top table of the Web Log output
     * if this method is called without a parameter HomeSpan uses the macros `__DATE__` and ` __TIME__` as provided by the compiler during compilation to create a date/time string
     * setting the compile date/time with this method allows users to easily determine which version of their sketch is running after an OTA update by simply looking at the Web Log output, which is very helpful when OTA Rollbacks are enabled
-  * see OTA.md for details on how to use OTA Rollbacks
+  * see the [HomeSpan OTA](docs/OTA.md) page for details on how to use OTA Rollbacks
 
 ### HomeSpan Watchdog Timer
 
 * **Users can now configure HomeSpan to add a watchdog task that reboots the device if it has frozen or gone into an infinite loop preventing normal HomeSpan operations**
 
   * works especially well when used in conjunction with the OTA rollback functionality above by allowing the operating system itself to automatically rollback a newly-uploaded sketch via OTA that freezes or hangs the device completely before the sketch is validated
+    
   * adds new homeSpan method `enableWatchdog(uint16_t nSeconds)`
     * creates a separate HomeSpan **task watchdog timer** designed to trigger a reboot of the device if not periodically reset at least every *nSeconds*
     * calling this method after the HomeSpan watchdog timer has already been enabled changes the timeout to a new value of *nSeconds*
@@ -92,7 +94,7 @@ Requirements to run HomeSpan depend on which version you choose:
     * users ***DO NOT*** need to call `resetWatchdog()` themselves in their own sketch *unless* they have created a process that delays the normal operation of `homeSpan.poll()`
   * adds new homeSpan method `disableWatchdog()` to disable the HomeSpan watchdog timer after it has been enabled
     * has no effect if the HomeSpan watchdog timer is not currently enabled
-  * see WDT.md for a complete discussion of the HomeSpan and other system watchdog timer
+  * see the [HomeSpan Watchdog Timer](WDT.md) page for a complete discussion of the HomeSpan and other system watchdog timers
 
 ### Bug Fixes
 
