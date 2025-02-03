@@ -39,13 +39,17 @@ The Espressif operating systems marks each OTA APP partition in a partition tabl
 
 By default, the Arduino-ESP32 library automatically re-marks any partition booted with an OTA State of PENDING_VERIFY to VALID.  This occurs during initialization and *before* the Arduino `setup()` function  is called.  In other words, the default behavior of the Arduino-ESP32 library is to automaticalluy self-validate every OTA sketch upon boot-up before the user's sketch even has a chance to perform any self-tests.  As a result, the same partition will be run again ande again even if it panics and crashes immediately after calling the Arduino `setup()` function.
 
-Fortunately, the Arduino-ESP32 library contains a hook that allows a sketch to cancel the default behavior of automatically valididating every OTA sketch.  Because this behavior occurs before the `setup()` function is called, it cannot be canceled using a homeSpan method called from withing the `setup()` function.  Instead, to cancel this default behavior, simple add the following to the top of your sketch:
+Fortunately, the Arduino-ESP32 library contains a hook that allows a sketch to disable this default behavior that automatically validates every sketch uploaded via OTA.  But because such auto-validation occurs before the `setup()` function is called, it cannot be disabled by calling a homeSpan method from within the `setup()` function --- it is too late by that point.  Instead, to disable auto-validation by the Arduino-ESP32, simply add the following to the top of your sketch:
 
 ```C++
 #include "SpanRollback.h"
 ```
 
-By including this header file in your sketch, the Arduino-ESP#2 library will NOT automatically validate a sketch uploaded via OTA and the OTA State of the partition will instead remain marked as PENDING_VERIFY, providing an opportunity for the sketch to realize any of the three outcomes described above yielding a VALID, INVALID, or ABORTED partition.
+By including this header file in your sketch, the Arduino-ESP#2 library will NOT automatically validate sketches uploaded via OTA, and the OTA State of the partition will instead remain marked as PENDING_VERIFY.  This then provides an opportunity for the sketch to realize any of the three outcomes described above yielding either a VALID, INVALID, or ABORTED partition.
+
+When this header is included, it is the users responsibility to re-mark the OTA State of the partition as VALID somewhere within the sketch.  If not, then upon rebooting (either purposefully or as the result of a panic), outcome (iii) above will be realized and upon rebooting the bootloader will *Rollback* to a prior sketch in a previously-validated partition. If the sketch you've just uploaded and has a bug that caused it to panic and crash early on, the resulting *Rollback* is beneficial and will allow you to fix your issue and re-upload a new sketch.
+
+
 
 
  
