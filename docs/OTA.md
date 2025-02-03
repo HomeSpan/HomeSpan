@@ -49,7 +49,7 @@ By including this header file in your sketch, the Arduino-ESP#2 library will NOT
 
 When this header is included, it is the users responsibility to re-mark the OTA State of the partition as VALID somewhere within the sketch.  If not, then upon rebooting (either purposefully or as the result of a panic), outcome (iii) above will be realized and upon rebooting the bootloader will *Rollback* to a prior sketch in a previously-validated partition. If the sketch you've just uploaded and has a bug that caused it to panic and crash early on, the resulting *Rollback* is beneficial and will allow you to fix your issue and re-upload a new sketch.
 
-
+***** TO BE CONTINUED ****
 
 
  
