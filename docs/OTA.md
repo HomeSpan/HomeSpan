@@ -26,6 +26,37 @@ HomeSpan includes two additional safety checks when using OTA to upload a sketch
 
 Note that these check are *only* applicable when uploading sketches via OTA.  They are ignored whenever sketches are uploaded via the serial port.  Also, though these safety checks are enabled by default, they can be disabled when you first enable OTA by setting the second (optional) argument to *false* as such: `homeSpan.enableOTA(..., false)`.  See the API for details.
 
+### OTA Verify/Rollback
+
+The Espressif operating systems marks each OTA APP partition in a partition table with one of the following "OTA States": NEW, PENDING_VERIFY, VALID, INVALID, ABORTED, or UNDEFINED.  The OTA State of each OTA App partition determines whether or not that partition is *selectable* by the bootloader for running when the device is rebooted.
+
+* Whenever a new sketch is successfully uploaded via OTA, the OTA State of the OTA APP partition into which the sketch was uploaded is marked NEW and the device is immediately rebooted.
+* Upon rebooting the bootloader selects the partition marked NEW, automatically changes its OTA State to PENDING_VERIFY, and then runs the code in that partition.
+* Once the new sketch is running, one of three things can occur:
+  1. the sketch, perhaps after performing some self-tests, re-marks the OTA State of the partition to VALID, in which case the code continues to run uninterrupted.  If the device is subsequently rebooted, the bootloader will select this same partition to run since its OTA State is marked VALID.
+  2. the sketch, perhaps after performing some self-tests, re-marks the OTA State of the partition to INVALID, in which case the device immediately reboots.  Upon reboot the bootloader will NOT select this partition to run since its OTA State is market INVALID.  Instead the bootloader will *Rollback* to a previous version of the sketch by selecting the latest partition marked as either VALID or UNDEFINED.
+  3. the sketch, perhaps as a result of a panic, reboots before the sketch changes the OTA State of the partition, in which case it remains marked as PENDING_VERIFY.  If the device is subsequently rebooted, the bootloader will automatically change the OTA State of the partition from PENDING_VERIFY to ABORTED and then *Rollback* to a previous version of the sketch by selecting the latest partition marked as either VALID or UNDEFINED.
+
+By default, the Arduino-ESP32 library automatically re-marks any partition booted with an OTA State of PENDING_VERIFY to VALID.  This occurs during initialization and *before* the Arduino `setup()` function  is called.  In other words, the default behavior of the Arduino-ESP32 library is to automaticalluy self-validate every OTA sketch upon boot-up before the user's sketch even has a chance to perform any self-tests.  As a result, the same partition will be run again ande again even if it panics and crashes immediately after calling the Arduino `setup()` function.
+
+Fortunately, the Arduino-ESP32 library contains a hook that allows a sketch to cancel the default behavior of automatically valididating every OTA sketch.  Because this behavior occurs before the `setup()` function is called, it cannot be canceled using a homeSpan method called from withing the `setup()` function.  Instead, to cancel this default behavior, simple add the following to the top of your sketch:
+
+```C++
+#include "SpanRollback.h"
+```
+
+By including this header file in your sketch, the Arduino-ESP#2 library will NOT automatically validate a sketch uploaded via OTA and the OTA State of the partition will instead remain marked as PENDING_VERIFY, providing an opportunity for the sketch to realize any of the three outcomes described above yielding a VALID, INVALID, or ABORTED partition.
+
+
+ 
+
+
+* Sketches uploaded via USB are generally placed into the first APP partition and its OTA State is automatically marked as UNDEFINED upon completion of the upload.  An APP partition marked as UNDEFINED is selectable for booting at start-up.
+
+
+
+
+
 ### OTA Best Practices
 
 * The name of the device HomeSpan uses for OTA is the same as the name you assigned in your call to `homeSpan.begin()`.  If you have multiple devices you intend to maintain with OTA, use `homeSpan.begin()` to give them each different names so you can tell them apart when selecting which one to connect to from the Arduino IDE.
@@ -34,7 +65,7 @@ Note that these check are *only* applicable when uploading sketches via OTA.  Th
 
 * Use the `homeSpan.setCompileTime()` method without specifying any parameter to have HomeSpan automatically set the compile time using the `__DATE__` and `__TIME__` macros provided by the compiler itself during compilation (see the [HomeSpan API](Reference.md) for details).  This compile time is shown in the Web Log and is thus useful when trying to determine if a new sketch uploaded via OTA is in fact the one running, or if the upload has failed or been marked invalid resulting in the rollback to a previous version of the sketch.
 
-* If a sketch you've uploaded with OTA does not operate as expected, you can continue making modifications to the code and re-upload again.  Or, you can upload a prior version that was working properly.  However, the Safe Load features described above cannot protect against a HomeSpan sketch that has major run-time problems, such as causing a kernel panic that leads to an endless cycle of device reboots, or an infinite loop at start-up that freezes the device.  If these occur HomeSpan won't be able to run the OTA Server code, and further OTA updates will *not* be possible.  **To protect against this type of scenario use the OTA Rollback mechanism described above.**
+* If a sketch you've uploaded with OTA does not operate as expected, you can continue making modifications to the code and re-upload again.  Or, you can upload a prior version that was working properly.  However, the Safe Load features described above cannot protect against a HomeSpan sketch that has major run-time problems, such as causing a kernel panic that leads to an endless cycle of device reboots, or an infinite loop at start-up that freezes the device.  If these occur HomeSpan won't be able to run the OTA Server code, and further OTA updates will *not* be possible.  **To protect against this type of scenario use the OTA Verify/Rollback mechanism described above.**
 
 > [!TIP]
 > Whenever possible you should always fully test out a new sketch on a local device connected to your computer *before* uploading it to a remote, hard-to-access device via OTA!
