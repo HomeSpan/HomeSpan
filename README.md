@@ -85,7 +85,7 @@ Requirements to run HomeSpan depend on which version you choose:
   * adds new homeSpan method `resetWatchdog()` used to periodically reset the HomeSpan watchdog timer 
     * this method has been embedded in all HomeSpan library functions as needed
   * adds new homeSpan method `disableWatchdog()` to disable the HomeSpan watchdog timer after it has been enabled
-  * see the [HomeSpan Watchdog Timer](WDT.md) page for a complete discussion of the HomeSpan and other system watchdog timers
+  * see the [HomeSpan Watchdog Timer](docs/WDT.md) page for a complete discussion of the HomeSpan and other system watchdog timers
 
 ### Bug Fixes
 
