@@ -229,6 +229,10 @@ The following **optional** `homeSpan` methods enable additional features and pro
   * returns a pre-defined character string message representing *s*, which must be of enum type [HS_STATUS](HS_STATUS.md)
   * typically used in conjunction with `setStatusCallback()` above
 
+* `Span& setPollingCallback(void (*func)())`
+  * sets an optional user-defined callback function, *func*, to be called by HomeSpan *one time* upon completing its first pass through the HomeSpan `poll()` function
+  * the function *func* must be of type *void* and have no arguments
+
 * `Span& setPairingCode(const char *s)`
   * sets the Setup Pairing Code to *s*, which **must** be exactly eight numerical digits (no dashes)
   * example: `homeSpan.setPairingCode("46637726");`
