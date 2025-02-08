@@ -241,10 +241,15 @@ The following **optional** `homeSpan` methods enable additional features and pro
   * if unspecified, HomeSpan uses "n/a" as the default version text
   * HomeSpan displays the version of the sketch in the Arduino IDE Serial Monitor upon start-up
   * HomeSpan also includes both the version of the sketch, as well as the version of the HomeSpan library used to compile the sketch, as part of its HAP MDNS broadcast.  This data is *not* used by HAP.  Rather, it is for informational purposes and allows you to identify the version of a sketch for a device that is updated via [OTA](OTA.md), rather than connected to a computer
-  
+
 * `const char *getSketchVersion()`
-  * returns the version of a HomeSpan sketch, as set using `void setSketchVersion(const char *sVer)`, or "n/a" if not set
+  * returns the version of a HomeSpan sketch, as set using `setSketchVersion(const char *sVer)` above, or "n/a" if not set
   * can by called from anywhere in a sketch
+
+* `Span& setCompileTime(const char *compTime)`
+  * sets the compilation time of a HomeSpan sketch to *compTime*, which can be any arbitrary character string
+  * if unspecified, HomeSpan derives a compTime string from the `__DATE__` and `__TIME__` macros provided by the compiler when the sketch is compiled
+  * HomeSpan displays the compilation time of the sketch in the Arduino IDE Serial Monitor upon start-up
 
 * `Span& enableWebLog(uint16_t maxEntries, const char *timeServerURL, const char *timeZone, const char *logURL)`
   * enables a rolling Web Log that displays the most recent *maxEntries* entries created by the user with the `WEBLOG()` macro.  Parameters, and their default values if unspecified, are as follows:
