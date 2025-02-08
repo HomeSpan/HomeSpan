@@ -87,7 +87,7 @@ Requirements to run HomeSpan depend on which version you choose:
   * adds new homeSpan method `disableWatchdog()` to disable the HomeSpan watchdog timer after it has been enabled
   * see the [HomeSpan Watchdog Timer](docs/WDT.md) page for a complete discussion of the HomeSpan and other system watchdog timers
 
-### Bug Fixes
+### Bug Fixes!
 
 * **Fixes a bug introduced in HomeSpan 2.1.0 that improperly initialized the WiFi and Ethernet stacks depending on how code was compiled**
       
@@ -108,6 +108,7 @@ HomeSpan includes the following documentation:
 * [HomeSpan API Reference](docs/Reference.md) - a complete guide to the HomeSpan Library API
 * [HomeSpan QR Codes](docs/QRCodes.md) - create and use QR Codes for pairing HomeSpan devices
 * [HomeSpan OTA](docs/OTA.md) - update your sketches Over-the-Air directly from the Arduino IDE without a serial connection
+* [HomeSpan Watchdog Timer](docs/WDT.md) - optional protection that can trigger an automatic reboot if your sketch hangs or freezes for an extended period of time
 * [HomeSpan PWM](docs/PWM.md) - integrated control of standard LEDs and Servo Motors using the ESP32's on-chip PWM peripheral
 * [HomeSpan RFControl](docs/RMT.md) - easy generation of RF and IR Remote Control signals using the ESP32's on-chip RMT peripheral
 * [HomeSpan Pixels](docs/Pixels.md) - integrated control of addressable one- and two-wire RGB and RGBW LEDs and LED strips
