@@ -136,6 +136,12 @@ The following **optional** `homeSpan` methods enable additional features and pro
   * this command causes HomeSpan to ignore, but does not otherwise alter, any password stored using the 'O' command 
   * returns 0 if enabling OTA was successful, or -1 and reports an error to the Serial Monitor if not
 
+* `void markSketchOK()`
+  * marks the OTA State of the currently-running partition as *VALID*
+  * must be called from within a sketch when the HomeSpan OTA Rollback mechanism has been enabled to avoid the bootloader from automatically rolling back to a prior version of your sketch upon the next reboot of the device
+  * to enable the HomeSpan OTA Rollback mechanism add `#include "SpanRollback.h"` to the top of your sketch
+  * see [HomeSpan OTA Rollback](OTA.md#ota-rollback) for details 
+
 * `Span& enableAutoStartAP()`
   * enables automatic start-up of WiFi Access Point if WiFi Credentials are **not** found at boot time
   * methods to alter the behavior of HomeSpan's Access Point, such as `setApTimeout()`, must be called prior to `enableAutoStartAP()` to have an effect  
