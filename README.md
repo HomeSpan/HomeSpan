@@ -87,6 +87,10 @@ Requirements to run HomeSpan depend on which version you choose:
   * adds new homeSpan method `disableWatchdog()` to disable the HomeSpan watchdog timer after it has been enabled
   * see the [HomeSpan Watchdog Timer](docs/WDT.md) page for a complete discussion of the HomeSpan and other system watchdog timers
 
+### Other Updates
+
+* Added homeSpan method `Span& useEthernet()` to force HomeSpan to use Ethernet instead of WiFi, even if ETH has not yet been called or an Ethernet card has not been found prior to `homeSpan.begin()` being called
+
 ### Bug Fixes!
 
 * **Fixes a bug introduced in HomeSpan 2.1.0 that improperly initialized the WiFi and Ethernet stacks depending on how code was compiled**

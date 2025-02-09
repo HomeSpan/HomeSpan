@@ -40,6 +40,8 @@ HomeSpan utilizes the Arduino-ESP32 library's global `ETH` object to manage Ethe
 
 There is nothing you need to add in your HomeSpan sketch to inform it that you will be using an Ethernet connection instead of WiFi.  Rather, at startup, if HomeSpan detects an Ethernet interface device has been *properly* configured and initialized using `ETH.begin()`, HomeSpan will automatically switch into "Ethernet mode" and use Ethernet instead of WiFi for all communications to and from your home network.  Note that the Ethernet cable itself does not need to be plugged into your router for HomeSpan to switch into "Ethernet mode" during start-up.
 
+However, if for some reason HomeSpan is not able to auto-detect an Ethernet interface has been configured, or initialization of your Ethernet interface using `ETH.begin()` is being done outside of the main Arduino `setup()` function, you can force HomeSpan into using Ethernet mode instead of WiFi by calling `homeSpan.useEthernet()` prior to `homeSpan.begin()`
+
 Similar to WiFi connectivity, HomeSpan automatically handles all Ethernet disconnects/reconnects (e.g. if you unplug the Ethernet cable and then plug it back into the router, or if the router itself reboots) and records such events in the Web Log (if enabled).  Also similar to using WiFi, to run a custom function either once, or every time, an Ethernet connection is established (or re-established after a disconnect) you can implement the homeSpan `setConnectionCallback()` method in your sketch.
 
 ---
