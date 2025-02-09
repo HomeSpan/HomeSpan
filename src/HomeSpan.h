@@ -469,7 +469,6 @@ class Span{
 
   void autoPoll(uint32_t stackSize=8192, uint32_t priority=1, uint32_t core=0){
     xTaskCreateUniversal( [](void *parms){for(;;)homeSpan.pollTask();}, "pollTask", stackSize, NULL, priority, &pollTaskHandle, core);
-    LOG0("\n*** AutoPolling Task started on Core-%d with priority=%d\n\n",xTaskGetCoreID(pollTaskHandle),uxTaskPriorityGet(pollTaskHandle)); 
   }
 
   TaskHandle_t getAutoPollTask(){return(pollTaskHandle);}

@@ -240,8 +240,11 @@ void Span::pollTask() {
            
     HAPClient::init();                // read NVS and load HAP settings  
 
+    if(pollTaskHandle)
+      LOG0("*** AutoPolling Task started on Core-%d with priority=%d\n\n",xTaskGetCoreID(pollTaskHandle),uxTaskPriorityGet(pollTaskHandle));
+
     if(heap_caps_get_free_size(MALLOC_CAP_DEFAULT|MALLOC_CAP_INTERNAL)<DEFAULT_LOW_MEM_THRESHOLD)
-      LOG0("\n**** WARNING!  Internal Free Heap of %d bytes is less than Low-Memory Threshold of %d bytes.  Device *may* run out of Internal memory.\n\n",
+      LOG0("\n*** WARNING!  Internal Free Heap of %d bytes is less than Low-Memory Threshold of %d bytes.  Device *may* run out of Internal memory.\n\n",
           heap_caps_get_free_size(MALLOC_CAP_DEFAULT|MALLOC_CAP_INTERNAL),DEFAULT_LOW_MEM_THRESHOLD);
 
     if(!ethernetEnabled && !strlen(network.wifiData.ssid)){
@@ -251,7 +254,7 @@ void Span::pollTask() {
         processSerialCommand("A");
       } else {
         LOG0("YOU MAY CONFIGURE BY TYPING 'W <RETURN>'.\n\n");
-      }
+      }      
     }
                 
     if(controlButton)
