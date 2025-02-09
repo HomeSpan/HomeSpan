@@ -379,6 +379,28 @@ The following **optional** `homeSpan` methods provide additional run-time functi
     }
     ```
     </details>
+
+* `Span& enableWatchdog(uint16_t nSeconds)`
+  * creates a HomeSpan *task watchdog* that triggers a reboot of the device if the HomeSpan `poll()` function is not run at least once every *nSeconds*
+    * *nSeconds* must be equal to, or greater than, the ESP32 default task watchdog timeout period specified in the IDF macro `CONFIG_ESP_TASK_WDT_TIMEOUT_S` (typically 5 seconds)
+    * if *nSeconds* is set to a duration less than `CONFIG_ESP_TASK_WDT_TIMEOUT_S`, or if it is left blank, the timeout duration will be set to `CONFIG_ESP_TASK_WDT_TIMEOUT_S`
+  * enabling the HomeSpan task watchdog timer does not alter whether any other tasks, including the ESP32's IDLE tasks, are, or are not, also subscribed to the task watchdog timer
+  * note the ESP32 task watchdog timer only supports a single timeout duration for all tasks subscribing to the task watchdog
+    * when the HomeSpan watchdog is enabled, *nSeconds* will therefore be used as the new timeout duration for any and all other tasks (including any of the ESP32's IDLE tasks) that are also subscribed to the tasks watchdog timer
+  * calling `enableWatchdog(nSeconds)` when the HomeSpan watchdog has already been enabled with a different value of *nSeconds* changes the timeout duration to the new value of *nSeconds* specified 
+  * see the [HomeSpan Watchdog Timer](WDT.md) page for details
+
+* `Span& disableWatchdog()`
+  * disables the HomeSpan *task watchdog* if enabled, else has no effect
+  * has no impact any other tasks that may also be subscribed to the task watchdog timer
+  * has no impact on the timeout duration
+  * see the [HomeSpan Watchdog Timer](WDT.md) page for details
+
+* `void resetWatchdog()`
+  * resets the HomeSpan watchdog timer, if it has been enabled, else does nothing
+   * users generally **do not** need to call this method since HomeSpan already does so whenever the `poll()` function runs
+   * this is needed only if you enable the HomeSpan watchdog **and** you add code to a HomeSpan sketch that blocks the `poll()` function or prevents it from running for extended periods of time
+  * see the [HomeSpan Watchdog Timer](WDT.md) page for details
  
 ---
 
