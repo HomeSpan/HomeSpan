@@ -483,7 +483,7 @@ class Span{
   }
 
   Span& enableWatchdog(uint16_t nSeconds=CONFIG_ESP_TASK_WDT_TIMEOUT_S){hsWDT.enable(nSeconds);return(*this);}      // enables HomeSpan watchdog with timeout of nSeconds
-  Span& disableWatchdog(){hsWDT.disable();return(*this);}                                                           // disables HomeSpan watchdog
+  void disableWatchdog(){hsWDT.disable();}                                                                          // disables HomeSpan watchdog
   void resetWatchdog(){hsWDT.reset();}                                                                              // resets HomeSpan watchdog
 
   Span& addBssidName(String bssid, string name){bssid.toUpperCase();bssidNames[bssid.c_str()]=name;return(*this);}
