@@ -34,6 +34,7 @@
 //
 //  Utils::readSerial       - reads all characters from Serial port and saves only up to max specified
 //  Utils::mask             - masks a string with asterisks (good for displaying passwords)
+//  Utils::resetReason      - returns literal string description of esp_reset_reason()
 //
 //  class PushButton        - tracks Single, Double, and Long Presses of a pushbutton that connects a specified pin to ground
 //  class hsWatchdogTimer   - a generic watchdog timer that reboots the ESP32 device if not reset periodically
@@ -102,6 +103,32 @@ String Utils::mask(char *c, int n){
   
   return(s);  
 } // mask
+
+//////////////////////////////////////
+
+const char *Utils::resetReason(){
+
+  switch(esp_reset_reason()) {
+    case ESP_RST_UNKNOWN:     return "Cannot be determined"; break;
+    case ESP_RST_POWERON:     return "Power-on event"; break;
+    case ESP_RST_EXT:         return "External pin"; break;
+    case ESP_RST_SW:          return "Software reboot via esp_restart"; break;
+    case ESP_RST_PANIC:       return "Software Exception/Panic"; break;
+    case ESP_RST_INT_WDT:     return "Interrupt watchdog"; break;
+    case ESP_RST_TASK_WDT:    return "Task watchdog"; break;
+    case ESP_RST_WDT:         return "Other watchdogs"; break;
+    case ESP_RST_DEEPSLEEP:   return "Exiting deep sleep mode"; break;
+    case ESP_RST_BROWNOUT:    return "Brownout"; break;
+    case ESP_RST_SDIO:        return "SDIO"; break;
+    case ESP_RST_USB:         return "USB peripheral"; break;
+    case ESP_RST_JTAG:        return "JTAG"; break;
+    case ESP_RST_EFUSE:       return "Efuse error"; break;
+    case ESP_RST_PWR_GLITCH:  return "Power glitch"; break;
+    case ESP_RST_CPU_LOCKUP:  return "CPU Lockup"; break;
+    default: break;
+  }
+  return "Unknown Reset Code";    
+}
 
 ////////////////////////////////
 //         PushButton         //

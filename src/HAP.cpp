@@ -1119,47 +1119,7 @@ void HAPClient::getStatusURL(HAPClient *hapClient, void (*callBack)(const char *
   hapOut << "<tr><td>Up Time:</td><td>" << uptime << "</td></tr>\n";
   hapOut << "<tr><td>Current Time:</td><td>" << clocktime << "</td></tr>\n";
   hapOut << "<tr><td>Boot Time:</td><td>" << homeSpan.webLog.bootTime << "</td></tr>\n"; 
-  hapOut << "<tr><td>Reset Reason:</td><td>";
-  
-  switch(esp_reset_reason()) {
-    case ESP_RST_UNKNOWN:
-      hapOut << "Cannot be determined";
-      break;
-    case ESP_RST_POWERON:
-      hapOut << "Power-on event";
-      break;
-    case ESP_RST_EXT:
-      hapOut << "External pin";
-      break;
-    case ESP_RST_SW:
-      hapOut << "Software reboot via esp_restart";
-      break;
-    case ESP_RST_PANIC:
-      hapOut << "Software Exception/Panic";
-      break;
-    case ESP_RST_INT_WDT:
-      hapOut << "Interrupt watchdog";
-      break;
-    case ESP_RST_TASK_WDT:
-      hapOut << "Task watchdog";
-      break;
-    case ESP_RST_WDT:
-      hapOut << "Other watchdogs";
-      break;
-    case ESP_RST_DEEPSLEEP:
-      hapOut << "Exiting deep sleep mode";
-      break;
-    case ESP_RST_BROWNOUT:
-      hapOut << "Brownout";
-      break;
-    case ESP_RST_SDIO:
-      hapOut << "SDIO";
-      break;
-    default:
-      hapOut << "Unknown Reset Code";
-  }
-  
-  hapOut << " (" << esp_reset_reason() << ")</td></tr>\n";
+  hapOut << "<tr><td>Reset Reason:</td><td>" << Utils::resetReason() << " (" << esp_reset_reason() << ")</td></tr>\n";
 
   if(homeSpan.compileTime)
     hapOut << "<tr><td>Compile Time:</td><td>" << homeSpan.compileTime << "</td></tr>\n";

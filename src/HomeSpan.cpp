@@ -192,7 +192,8 @@ void Span::begin(Category catID, const char *_displayName, const char *_hostName
 
   for(int i=0;i<CONFIG_FREERTOS_NUMBER_OF_CORES;i++)
     LOG0("\nIDLE-%d Watchdog:  %s",i,(ESP_OK==esp_task_wdt_status(xTaskGetIdleTaskHandleForCore(i)))?"ENABLED":"DISABLED");
-  
+
+  LOG0("\nReset Reason:     %s",Utils::resetReason());
   LOG0("\nMAC Address:      %s",Network.macAddress().c_str());
   LOG0("\nInterface:        %s",ethernetEnabled?"ETHERNET":"WIFI");
   
