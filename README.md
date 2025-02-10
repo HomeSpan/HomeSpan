@@ -59,7 +59,7 @@ Requirements to run HomeSpan depend on which version you choose:
   * Launch the WiFi Access Point
 * A standalone, detailed End-User Guide
 
-## ❗Latest Update - HomeSpan 2.1.1 (2/2/2025)
+## ❗Latest Update - HomeSpan 2.1.1 (2/10/2025)
 
 ### Integrated Support for OTA Partition Rollbacks
 
