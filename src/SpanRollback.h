@@ -27,17 +27,6 @@
  
 #pragma once
 
-#include <Arduino.h>
+// Override of weakly-defined Arduino-ESP32 function to enable auto rollback
 
-/////////////////////////////////////////////////
-// HKDF-SHA-512 Structure
-//
-// This is a wrapper around mbedtls_hkdf, which is NOT
-// included in the normal Arduino-ESP32 library.
-// Code was instead sourced directly from MBED GitHub and 
-// incorporated under hkdf.cpp, with a wrapper to always
-// use SHA-512 with 32 bytes of output as required by HAP.
-
-namespace HKDF{
-  int create(uint8_t *outputKey, uint8_t *inputKey, int inputLen, const char *salt, const char *info);    // output of HKDF is always a 32-byte key derived from an input key, a salt string, and an info string
-};
+extern "C" bool verifyRollbackLater() {return true;}

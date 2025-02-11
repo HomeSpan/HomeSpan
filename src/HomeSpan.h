@@ -1,7 +1,7 @@
 /*********************************************************************************
  *  MIT License
  *  
- *  Copyright (c) 2020-2024 Gregg E. Berman
+ *  Copyright (c) 2020-2025 Gregg E. Berman
  *  
  *  https://github.com/HomeSpan/HomeSpan
  *  
@@ -42,6 +42,7 @@
 #include <ETH.h>
 #include <esp_now.h>
 #include <mbedtls/base64.h>
+#include <esp_ota_ops.h>
 
 #include "src/extras/Blinker.h"
 #include "src/extras/Pixel.h"
@@ -88,8 +89,15 @@ typedef std::pair<const uint8_t *, size_t> DATA_t;
 static DATA_t NULL_DATA={NULL,0};
 static TLV8 NULL_TLV{};
 
+///////////////////////////////
+// Macros to lock/unlock poll() mutex
+
 #define homeSpanPAUSE std::shared_lock pollLock(homeSpan.getMutex());
 #define homeSpanRESUME if(pollLock.owns_lock()){pollLock.unlock();}
+
+///////////////////////////////
+
+extern "C" bool verifyRollbackLater();    // declare pre-defined Arduino-ESP32 version, unless over-ridden in user sketch with #include "SpanRollback.h"
 
 ///////////////////////////////
 
@@ -255,6 +263,7 @@ class Span{
   friend class SpanOTA;
   friend class Network_HS;
   friend class HAPClient;
+  friend void init();
   
   char *displayName;                            // display name for this device - broadcast as part of Bonjour MDNS
   char *hostNameBase;                           // base of hostName of this device - full host name broadcast by Bonjour MDNS will have 6-byte accessoryID as well as '.local' automatically appended
@@ -274,7 +283,9 @@ class Span{
   uint8_t rebootCount=0;                        // counts number of times device was rebooted (used in optional Reboot callback)
   uint32_t rebootCallbackTime;                  // length of time to wait (in milliseconds) before calling optional Reboot callback
   boolean ethernetEnabled=false;                // flag to indicate whether Ethernet is being used instead of WiFi
-  
+  boolean initialPollingCompleted=false;        // flag to indicate whether polling task has initially completed
+  char *compileTime=NULL;                       // optional compile time string --- can be set with call to setCompileTime()
+   
   nvs_handle charNVS;                           // handle for non-volatile-storage of Characteristics data
   nvs_handle wifiNVS=0;                         // handle for non-volatile-storage of WiFi data
   nvs_handle otaNVS;                            // handle for non-volatile storage of OTA data
@@ -309,6 +320,7 @@ class Span{
   void (*statusCallback)(HS_STATUS status)=NULL;              // optional callback when HomeSpan status changes
   void (*rebootCallback)(uint8_t)=NULL;                       // optional callback when device reboots
   void (*controllerCallback)()=NULL;                          // optional callback when Controller is added/removed/changed
+  void (*pollingCallback)()=NULL;                             // optional callback when polling task reaching initial completion (only called once)
   
   NetworkServer *hapServer;                         // pointer to the HAP Server connection
   Blinker *statusLED;                               // indicates HomeSpan status
@@ -320,6 +332,7 @@ class Span{
   TaskHandle_t loopTaskHandle;                      // Arduino Loop Task handle
   boolean verboseWifiReconnect = true;              // set to false to not print WiFi reconnect attempts messages
   std::shared_mutex pollMutex;                      // mutex lock for poll task
+  hsWatchdogTimer hsWDT;                            // general homeSpan watchdog timer
     
   SpanOTA spanOTA;                                  // manages OTA process
   SpanConfig hapConfig;                             // track configuration changes to the HAP Accessory database; used to increment the configuration number (c#) when changes found
@@ -361,9 +374,11 @@ class Span{
   QueueHandle_t networkEventQueue;                         // queue to transmit network events from callback thread to HomeSpan thread
   void networkCallback(WiFiEvent_t event);                 // network event handler (works for WiFi as well as Ethernet)
 
+  void init();    // performs all late-stage initializations needed
+  
   public:
 
-  Span();   // constructor
+  Span();         // constructor
 
   void begin(Category catID=DEFAULT_CATEGORY,
              const char *displayName=DEFAULT_DISPLAY_NAME,
@@ -419,11 +434,16 @@ class Span{
   Span& resetIID(uint32_t newIID);                                                       // resets the IID count for the current Accessory to start at newIID
   Span& setControllerCallback(void (*f)()){controllerCallback=f;return(*this);}          // sets an optional user-defined function to call whenever a Controller is added/removed
   Span& setWifiBegin(void (*f)(const char *, const char *)){wifiBegin=f;return(*this);}  // sets an optional user-defined function to over-ride WiFi.begin() with additional logic
+  Span& setPollingCallback(void (*f)()){pollingCallback=f;return(*this);}                // sets an optional user-defined function to call upon INITIAL completion of the polling task (only called once)
+  Span& useEthernet(){ethernetEnabled=true;return(*this);}                               // force use of Ethernet instead of WiFi, even if ETH not called or Ethernet card not detected
 
-  Span& setHostNameSuffix(const char *suffix){asprintf(&hostNameSuffix,"%s",suffix);return(*this);}      // sets the hostName suffix to be used instead of the 6-byte AccessoryID
+  Span& setHostNameSuffix(const char *suffix){asprintf(&hostNameSuffix,"%s",suffix);return(*this);}                            // sets the hostName suffix to be used instead of the 6-byte AccessoryID
+  Span& setCompileTime(const char *compTime=__DATE__ " " __TIME__){asprintf(&compileTime,"%s",compTime);return(*this);}        // sets the compile time to compTime; default is to use compiler-provided date/time
  
   int enableOTA(boolean auth=true, boolean safeLoad=true){return(spanOTA.init(auth, safeLoad, NULL));}   // enables Over-the-Air updates, with (auth=true) or without (auth=false) authorization password  
   int enableOTA(const char *pwd, boolean safeLoad=true){return(spanOTA.init(true, safeLoad, pwd));}      // enables Over-the-Air updates, with custom authorization password (overrides any password stored with the 'O' command)
+
+  void markSketchOK(){esp_ota_mark_app_valid_cancel_rollback();}
 
   Span& enableWebLog(uint16_t maxEntries=0, const char *serv=NULL, const char *tz="UTC", const char *url=DEFAULT_WEBLOG_URL){     // enable Web Logging
     webLog.init(maxEntries, serv, tz, url);
@@ -447,15 +467,8 @@ class Span{
 
   std::shared_mutex& getMutex(){return(pollMutex);}
 
-  void autoPoll(uint32_t stackSize=8192, uint32_t priority=1, uint32_t cpu=0){     // start pollTask()
-    xTaskCreateUniversal([](void *parms){
-      for(;;){
-        homeSpan.pollTask();
-        vTaskDelay(5);
-        }
-      },
-      "pollTask", stackSize, NULL, priority, &pollTaskHandle, cpu);
-    LOG0("\n*** AutoPolling Task started with priority=%d\n\n",uxTaskPriorityGet(pollTaskHandle)); 
+  void autoPoll(uint32_t stackSize=8192, uint32_t priority=1, uint32_t core=0){
+    xTaskCreateUniversal( [](void *parms){for(;;)homeSpan.pollTask();}, "pollTask", stackSize, NULL, priority, &pollTaskHandle, core);
   }
 
   TaskHandle_t getAutoPollTask(){return(pollTaskHandle);}
@@ -469,15 +482,19 @@ class Span{
     return(*this);
   }
 
+  Span& enableWatchdog(uint16_t nSeconds=CONFIG_ESP_TASK_WDT_TIMEOUT_S){hsWDT.enable(nSeconds);return(*this);}      // enables HomeSpan watchdog with timeout of nSeconds
+  void disableWatchdog(){hsWDT.disable();}                                                                          // disables HomeSpan watchdog
+  void resetWatchdog(){hsWDT.reset();}                                                                              // resets HomeSpan watchdog
+
   Span& addBssidName(String bssid, string name){bssid.toUpperCase();bssidNames[bssid.c_str()]=name;return(*this);}
 
   list<Controller, Mallocator<Controller>>::const_iterator controllerListBegin();
   list<Controller, Mallocator<Controller>>::const_iterator controllerListEnd();
 
-  [[deprecated("This homeSpan method has been deprecated and will be removed in a future version.  Please use the more generic setNetworkCallback() method instead.")]]
+  [[deprecated("This homeSpan method has been deprecated and will be removed in a future version.  Please use the more generic setConnectionCallback() method instead.")]]
   Span& setWifiCallback(void (*f)()){wifiCallback=f;return(*this);}                      // sets an optional user-defined function to call once WiFi connectivity is initially established
 
-  [[deprecated("This homeSpan method has been deprecated and will be removed in a future version.  Please use the more generic setNetworkCallback() method instead.")]]
+  [[deprecated("This homeSpan method has been deprecated and will be removed in a future version.  Please use the more generic setConnectionCallback() method instead.")]]
   Span& setWifiCallbackAll(void (*f)(int)){connectionCallback=f;return(*this);}          // sets an optional user-defined function to call every time WiFi connectivity is established or re-established  
 };
 

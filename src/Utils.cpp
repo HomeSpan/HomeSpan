@@ -1,7 +1,7 @@
 /*********************************************************************************
  *  MIT License
  *  
- *  Copyright (c) 2020-2024 Gregg E. Berman
+ *  Copyright (c) 2020-2025 Gregg E. Berman
  *  
  *  https://github.com/HomeSpan/HomeSpan
  *  
@@ -34,8 +34,10 @@
 //
 //  Utils::readSerial       - reads all characters from Serial port and saves only up to max specified
 //  Utils::mask             - masks a string with asterisks (good for displaying passwords)
+//  Utils::resetReason      - returns literal string description of esp_reset_reason()
 //
 //  class PushButton        - tracks Single, Double, and Long Presses of a pushbutton that connects a specified pin to ground
+//  class hsWatchdogTimer   - a generic watchdog timer that reboots the ESP32 device if not reset periodically
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -51,8 +53,8 @@ char *Utils::readSerial(char *c, int max){
 
   while(1){
 
-    while(!Serial.available())             // wait until there is a new character
-      vTaskDelay(5);
+    while(!Serial.available())            // wait until there is a new character
+      homeSpan.resetWatchdog();
     
     buf=Serial.read();
     
@@ -101,6 +103,32 @@ String Utils::mask(char *c, int n){
   
   return(s);  
 } // mask
+
+//////////////////////////////////////
+
+const char *Utils::resetReason(){
+
+  switch(esp_reset_reason()) {
+    case ESP_RST_UNKNOWN:     return "Cannot be determined"; break;
+    case ESP_RST_POWERON:     return "Power-on event"; break;
+    case ESP_RST_EXT:         return "External pin"; break;
+    case ESP_RST_SW:          return "Software reboot via esp_restart"; break;
+    case ESP_RST_PANIC:       return "Software Exception/Panic"; break;
+    case ESP_RST_INT_WDT:     return "Interrupt watchdog"; break;
+    case ESP_RST_TASK_WDT:    return "Task watchdog"; break;
+    case ESP_RST_WDT:         return "Other watchdogs"; break;
+    case ESP_RST_DEEPSLEEP:   return "Exiting deep sleep mode"; break;
+    case ESP_RST_BROWNOUT:    return "Brownout"; break;
+    case ESP_RST_SDIO:        return "SDIO"; break;
+    case ESP_RST_USB:         return "USB peripheral"; break;
+    case ESP_RST_JTAG:        return "JTAG"; break;
+    case ESP_RST_EFUSE:       return "Efuse error"; break;
+    case ESP_RST_PWR_GLITCH:  return "Power glitch"; break;
+    case ESP_RST_CPU_LOCKUP:  return "CPU Lockup"; break;
+    default: break;
+  }
+  return "Unknown Reset Code";    
+}
 
 ////////////////////////////////
 //         PushButton         //
@@ -283,7 +311,7 @@ int PushButton::type(){
 
 void PushButton::wait(){  
   while(triggerType(pin))
-    vTaskDelay(5);
+    homeSpan.resetWatchdog();
 }
 
 //////////////////////////////////////
@@ -295,3 +323,56 @@ void PushButton::reset(){
 //////////////////////////////////////
 
 PushButton::touch_value_t PushButton::threshold=0;
+
+////////////////////////////////
+//      hsWatchdogTimer       //
+////////////////////////////////
+
+void hsWatchdogTimer::enable(uint16_t nSeconds){
+
+  if(nSeconds<CONFIG_ESP_TASK_WDT_TIMEOUT_S)      // minimum allowed value is CONFIG_ESP_TASK_WDT_TIMEOUT_S
+    nSeconds=CONFIG_ESP_TASK_WDT_TIMEOUT_S;
+    
+  this->nSeconds=nSeconds;
+  esp_task_wdt_config_t twdtConfig;
+  
+  twdtConfig.timeout_ms=nSeconds*1000;
+  twdtConfig.trigger_panic=true;
+  twdtConfig.idle_core_mask=0;
+
+  for(int i=0;i<CONFIG_FREERTOS_NUMBER_OF_CORES;i++)
+    twdtConfig.idle_core_mask |= (ESP_OK==esp_task_wdt_status(xTaskGetIdleTaskHandleForCore(i))) << i;      // replicate existing idle task subscriptions to task watchdog
+  
+  esp_task_wdt_reconfigure(&twdtConfig);      // reconfigure task watchdog with new time=nSeconds but DO NOT alter state of idle task subscriptions on either core
+  
+  if(!wdtHandle)
+    esp_task_wdt_add_user(WATCHDOG_TAG,&wdtHandle);
+
+  ESP_LOGI(WATCHDOG_TAG,"Enabled with %d-second timeout. Idle Task Mask = %d",nSeconds,twdtConfig.idle_core_mask);
+}
+
+//////////////////////////////////////
+
+void hsWatchdogTimer::disable(){
+  
+  if(wdtHandle)
+    esp_task_wdt_delete_user(wdtHandle);  
+  wdtHandle=NULL;    
+
+  ESP_LOGI(WATCHDOG_TAG,"Disabled");
+} 
+
+//////////////////////////////////////
+    
+void hsWatchdogTimer::reset(){
+  
+  vTaskDelay(1);
+  if(wdtHandle)
+    esp_task_wdt_reset_user(wdtHandle);      
+}    
+
+//////////////////////////////////////
+
+uint16_t hsWatchdogTimer::getSeconds(){
+  return(nSeconds);
+}

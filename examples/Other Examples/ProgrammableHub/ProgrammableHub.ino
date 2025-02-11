@@ -79,9 +79,9 @@ void setup() {
 
   homeSpan.setLogLevel(1);
 
-  homeSpan.setHostNameSuffix("");         // use null string for suffix (rather than the HomeSpan device ID)
-  homeSpan.setPortNum(1201);              // change port number for HomeSpan so we can use port 80 for the Web Server
-  homeSpan.setWifiCallback(setupWeb);     // need to start Web Server after WiFi is established   
+  homeSpan.setHostNameSuffix("");             // use null string for suffix (rather than the HomeSpan device ID)
+  homeSpan.setPortNum(1201);                  // change port number for HomeSpan so we can use port 80 for the Web Server
+  homeSpan.setConnectionCallback(setupWeb);   // need to start Web Server after WiFi is established   
 
   homeSpan.begin(Category::Lighting,"HomeSpan Light Hub",HUB_NAME);
 
@@ -264,7 +264,10 @@ void listAccessories(const char *buf){
 
 ///////////////////////////
 
-void setupWeb(){
+void setupWeb(int count){
+
+  if(count>1)
+    return;
   
   Serial.printf("Starting Light Server Hub at %s.local\n\n",HUB_NAME);
   webServer.begin();

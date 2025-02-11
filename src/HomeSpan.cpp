@@ -1,7 +1,7 @@
 /*********************************************************************************
  *  MIT License
  *  
- *  Copyright (c) 2020-2024 Gregg E. Berman
+ *  Copyright (c) 2020-2025 Gregg E. Berman
  *  
  *  https://github.com/HomeSpan/HomeSpan
  *  
@@ -36,9 +36,9 @@
 #include <mbedtls/sha256.h>
 #include <esp_task_wdt.h>
 #include <esp_sntp.h>
-#include <esp_ota_ops.h>
 #include <esp_wifi.h>
 #include <esp_app_format.h>
+#include <esp_flash.h>
 
 #include "HomeSpan.h"
 #include "HAP.h"
@@ -51,6 +51,22 @@ using namespace Utils;
 HapOut hapOut;                      // Specialized output stream that can both print to serial monitor and encrypt/transmit to HAP Clients with minimal memory usage (global-scoped variable)
 Span homeSpan;                      // HAP Attributes database and all related control functions for this Accessory (global-scoped variable)
 HapCharacteristics hapChars;        // Instantiation of all HAP Characteristics used to create SpanCharacteristics (global-scoped variable)
+
+///////////////////////////////
+//        init()             //
+///////////////////////////////
+
+// init() is a global "weak" function pre-defined in the Arduino-ESP32 library.
+// It gets called at the end of initArduino(), which in turn is called just before the loopTask that then calls setup() and loop().
+// Defining init() here allows HomeSpan to perform late-stage initializations immediately before setup() is called
+
+extern "C" void init(){                        
+  static boolean initialized=false;         // ensure this function is only called once
+  if(initialized)
+    return;
+  initialized=true;
+  homeSpan.init();                          // call the init() method in homeSpan
+}
 
 ///////////////////////////////
 //         Span              //
@@ -71,6 +87,13 @@ Span::Span(){
   rebootCount++;
   nvs_set_u8(wifiNVS,"REBOOTS",rebootCount);
   nvs_commit(wifiNVS);
+}
+
+///////////////////////////////
+
+void Span::init(){
+
+  log_i("Initializing Span");
 
   WiFi.setAutoReconnect(false);                           // allow HomeSpan to handle disconnect/reconnect logic
   WiFi.persistent(false);                                 // do not permanently store WiFi configuration data
@@ -79,7 +102,7 @@ Span::Span(){
   
   networkEventQueue=xQueueCreate(10,sizeof(arduino_event_id_t));    // queue to transmit network events
   Network.onEvent([](arduino_event_id_t event){xQueueSend(homeSpan.networkEventQueue, &event, (TickType_t) 0);});
-  Network.onEvent([](arduino_event_id_t event){homeSpan.ethernetEnabled=true;},arduino_event_id_t::ARDUINO_EVENT_ETH_START);  
+  Network.onEvent([](arduino_event_id_t event){homeSpan.useEthernet();},arduino_event_id_t::ARDUINO_EVENT_ETH_START);   
 }
 
 ///////////////////////////////
@@ -113,7 +136,7 @@ void Span::begin(Category catID, const char *_displayName, const char *_hostName
 
   LOG0("\n************************************************************\n"
                  "Welcome to HomeSpan!\n"
-                 "Apple HomeKit for the Espressif ESP-32 WROOM and Arduino IDE\n"
+                 "Apple HomeKit for the Espressif ESP-32/S2/S3/C3/C6 chips\n"
                  "************************************************************\n\n"
                  "** Please ensure serial monitor is set to transmit <newlines>\n\n");
 
@@ -160,8 +183,17 @@ void Span::begin(Category catID, const char *_displayName, const char *_hostName
   mbedtls_version_get_string_full(mbtlsv);
   LOG0("\nMbedTLS Version:  %s",mbtlsv);
 
-  LOG0("\nSketch Compiled:  %s %s",__DATE__,__TIME__);
+  LOG0("\nSketch Compiled:  %s",compileTime?compileTime:"N/A");
   LOG0("\nPartition:        %s",esp_ota_get_running_partition()->label);
+  if(hsWDT.getSeconds())
+    LOG0("\nHS Watchdog:      %d seconds",hsWDT.getSeconds());
+  else
+    LOG0("\nHS Watchdog:      DISABLED");
+
+  for(int i=0;i<CONFIG_FREERTOS_NUMBER_OF_CORES;i++)
+    LOG0("\nIDLE-%d Watchdog:  %s",i,(ESP_OK==esp_task_wdt_status(xTaskGetIdleTaskHandleForCore(i)))?"ENABLED":"DISABLED");
+
+  LOG0("\nReset Reason:     %s",Utils::resetReason());
   LOG0("\nMAC Address:      %s",Network.macAddress().c_str());
   LOG0("\nInterface:        %s",ethernetEnabled?"ETHERNET":"WIFI");
   
@@ -209,8 +241,11 @@ void Span::pollTask() {
            
     HAPClient::init();                // read NVS and load HAP settings  
 
+    if(pollTaskHandle)
+      LOG0("*** AutoPolling Task started on Core-%d with priority=%d\n\n",xTaskGetCoreID(pollTaskHandle),uxTaskPriorityGet(pollTaskHandle));
+
     if(heap_caps_get_free_size(MALLOC_CAP_DEFAULT|MALLOC_CAP_INTERNAL)<DEFAULT_LOW_MEM_THRESHOLD)
-      LOG0("\n**** WARNING!  Internal Free Heap of %d bytes is less than Low-Memory Threshold of %d bytes.  Device *may* run out of Internal memory.\n\n",
+      LOG0("\n*** WARNING!  Internal Free Heap of %d bytes is less than Low-Memory Threshold of %d bytes.  Device *may* run out of Internal memory.\n\n",
           heap_caps_get_free_size(MALLOC_CAP_DEFAULT|MALLOC_CAP_INTERNAL),DEFAULT_LOW_MEM_THRESHOLD);
 
     if(!ethernetEnabled && !strlen(network.wifiData.ssid)){
@@ -220,7 +255,7 @@ void Span::pollTask() {
         processSerialCommand("A");
       } else {
         LOG0("YOU MAY CONFIGURE BY TYPING 'W <RETURN>'.\n\n");
-      }
+      }      
     }
                 
     if(controlButton)
@@ -326,7 +361,14 @@ void Span::pollTask() {
     nvs_set_u8(wifiNVS,"REBOOTS",rebootCount);
     nvs_commit(wifiNVS);    
   }
-    
+
+  if(!initialPollingCompleted && pollingCallback){
+    initialPollingCompleted=true;
+    pollingCallback();
+  }
+
+  pollLock.unlock();
+  resetWatchdog();      // reset watchdog timer  
 } // poll
 
 //////////////////////////////////////
@@ -360,7 +402,8 @@ void Span::commandMode(){
         done=true;
       }
     } // button press
-    vTaskDelay(5);
+    
+    resetWatchdog();
   } // while
 
   STATUS_UPDATE(start(LED_ALERT),static_cast<HS_STATUS>(HS_ENTERING_CONFIG_MODE+mode+5))
@@ -561,7 +604,8 @@ void Span::configureNetwork(){
     
     ArduinoOTA.begin();
     LOG0("Starting OTA Server:    %s at %s\n",displayName,ethernetEnabled?ETH.localIP().toString().c_str():WiFi.localIP().toString().c_str());
-    LOG0("Authorization Password: %s",spanOTA.auth?"Enabled\n\n":"DISABLED!\n\n");
+    LOG0("Authorization Password: %s",spanOTA.auth?"Enabled\n":"DISABLED!\n");
+    LOG0("Auto Rollback:          %s",verifyRollbackLater()?"Enabled\n\n":"Disabled\n\n");
   }
   
   mdns_service_txt_item_set("_hap","_tcp","ota",spanOTA.enabled?"yes":"no");                // OTA status (info only - NOT used by HAP)
@@ -614,6 +658,39 @@ void Span::processSerialCommand(const char *c){
     }
     break;
     
+    case 'p': {
+      LOG0("\n  Partition           Address       Size   OTA State");
+      LOG0("\n  ----------------   --------   --------   --------- \n");
+      auto it=esp_partition_find(ESP_PARTITION_TYPE_ANY,ESP_PARTITION_SUBTYPE_ANY,NULL);
+      uint32_t totalSize=0;
+      uint32_t flashSize;
+      while(it){
+        const esp_partition_t *part=esp_partition_get(it);
+        if(totalSize==0){
+          totalSize=part->address;      // add in offset of first partition
+          esp_flash_get_physical_size(part->flash_chip,&flashSize);
+        }
+        totalSize+=part->size;
+        LOG0("%1.1s %-16.16s   0x%06lX   %8lu   ",esp_ota_get_running_partition()==part?"*":" ",part->label,part->address,part->size);
+        esp_ota_img_states_t state;
+        if(ESP_OK==esp_ota_get_state_partition(part,&state)){
+          switch(state){
+            case ESP_OTA_IMG_VALID:           LOG0("    VALID"); break;
+            case ESP_OTA_IMG_UNDEFINED:       LOG0("UNDEFINED"); break;
+            case ESP_OTA_IMG_INVALID:         LOG0("  INVALID"); break;
+            case ESP_OTA_IMG_ABORTED:         LOG0("  ABORTED"); break;
+            case ESP_OTA_IMG_PENDING_VERIFY:  LOG0("  PENDING"); break;
+            default:                          LOG0("      ???");
+          }
+        }
+        LOG0("\n");
+        it=esp_partition_next(it);
+      }
+      esp_partition_iterator_release(it);
+      LOG0("\nTotal Size Allocated (including any initial offset): %lu of %lu available\n\n",totalSize,flashSize);
+    }
+    break;
+
     case 'D': {
       WiFi.disconnect();
     }
@@ -1191,6 +1268,7 @@ void Span::processSerialCommand(const char *c){
       LOG0("  i - print summary information about the HAP Database\n");
       LOG0("  d - print the full HAP Accessory Attributes Database in JSON format\n");
       LOG0("  m - print free heap memory\n");
+      LOG0("  p - print flash partition table\n");
       LOG0("\n");      
       LOG0("  W - configure WiFi Credentials and restart\n");      
       LOG0("  X - delete WiFi Credentials and restart\n");      
@@ -2649,6 +2727,9 @@ void SpanOTA::end(){
 ///////////////////////////////
 
 void SpanOTA::progress(uint32_t progress, uint32_t total){
+
+  homeSpan.resetWatchdog();
+
   int percent=progress*100/total;
   if(percent/10 != otaPercent/10){
     otaPercent=percent;
@@ -2890,6 +2971,7 @@ nvs_handle SpanPoint::pointNVS;
 ///////////////////////////////
 
 void __attribute__((weak)) loop(){
+  vTaskDelay(1);
 }
 
 ///////////////////////////////

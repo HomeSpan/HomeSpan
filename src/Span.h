@@ -1,7 +1,7 @@
 /*********************************************************************************
  *  MIT License
  *  
- *  Copyright (c) 2020-2024 Gregg E. Berman
+ *  Copyright (c) 2020-2025 Gregg E. Berman
  *  
  *  https://github.com/HomeSpan/HomeSpan
  *  
@@ -475,7 +475,7 @@ namespace Service {
 // Macro to define Span Characteristic structures based on name of HAP Characteristic, default value, and min/max value (not applicable for STRING or BOOL which default to min=0, max=1)
 
 #define CREATE_CHAR(TYPE,HAPCHAR,DEFVAL,MINVAL,MAXVAL,...) \
-  struct HAPCHAR : SpanCharacteristic { __VA_OPT__(enum{) __VA_ARGS__ __VA_OPT__(};) HAPCHAR(TYPE val=DEFVAL, boolean nvsStore=false) : SpanCharacteristic {&hapChars.HAPCHAR} { init<TYPE>(val,nvsStore,MINVAL,MAXVAL); } };
+  struct HAPCHAR : SpanCharacteristic { __VA_OPT__(enum Value_t {) __VA_ARGS__ __VA_OPT__(};) HAPCHAR(TYPE val=DEFVAL, boolean nvsStore=false) : SpanCharacteristic {&hapChars.HAPCHAR} { init<TYPE>(val,nvsStore,MINVAL,MAXVAL); } };
 
 namespace Characteristic {
   

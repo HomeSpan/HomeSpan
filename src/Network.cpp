@@ -1,7 +1,7 @@
 /*********************************************************************************
  *  MIT License
  *  
- *  Copyright (c) 2020-2024 Gregg E. Berman
+ *  Copyright (c) 2020-2025 Gregg E. Berman
  *  
  *  https://github.com/HomeSpan/HomeSpan
  *  
@@ -231,7 +231,7 @@ void Network_HS::apConfigure(){
 
     } // process Client
 
-    vTaskDelay(5);
+    homeSpan.resetWatchdog();
   } // while 1
 
 }
