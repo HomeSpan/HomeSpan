@@ -2709,6 +2709,16 @@ int SpanOTA::setPassword(const char *pwd){
 ///////////////////////////////
 
 void SpanOTA::start(){
+  if (ArduinoOTA.getCommand() == U_SPIFFS) {
+    LOG0("!!! SPIFFS OTA not supported. Aborting.\n");
+    Update.abort();
+    return;
+  } else if (ArduinoOTA.getCommand() != U_FLASH) {
+    LOG0("!!! Unsupported OTA (%d). Aborting.\n", ArduinoOTA.getCommand());
+    Update.abort();
+    return;
+  }
+
   LOG0("\n*** Current Partition: %s\n*** New Partition: %s\n*** OTA Starting..",
     esp_ota_get_running_partition()->label,esp_ota_get_next_update_partition(NULL)->label);
   otaPercent=0;
