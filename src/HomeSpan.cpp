@@ -1024,6 +1024,9 @@ void Span::processSerialCommand(const char *c){
         for(auto svc=(*acc)->Services.begin(); svc!=(*acc)->Services.end(); svc++){
           LOG0("   \u279f Service %s:  IID=%lu, %sUUID=\"%s\"\n",(*svc)->hapName,(*svc)->iid,(*svc)->isCustom?"Custom-":"",(*svc)->type);
 
+          if(invalidUUID((*svc)->type))
+            LOG0("     *** ERROR #%d!  Format of UUID is invalid ***\n",++nErrors);         
+
           if(!strcmp((*svc)->type,"3E")){
             foundInfo=true;
             if((*svc)->iid!=1)
@@ -1033,7 +1036,7 @@ void Span::processSerialCommand(const char *c){
             isBridge=false;                  // ...this is not a bridge device
 
           if(std::find(iidValues.begin(),iidValues.end(),(*svc)->iid)!=iidValues.end())
-            LOG0("   *** ERROR #%d!  IID already in use for another Service or Characteristic within this Accessory ***\n",++nErrors);
+            LOG0("     *** ERROR #%d!  IID already in use for another Service or Characteristic within this Accessory ***\n",++nErrors);
 
           iidValues.push_back((*svc)->iid);
 
