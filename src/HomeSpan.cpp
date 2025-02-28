@@ -2742,9 +2742,11 @@ void SpanOTA::progress(uint32_t progress, uint32_t total){
   if(safeLoad && progress==total){
     SpanPartition newSpanPartition;   
     esp_partition_read(esp_ota_get_next_update_partition(NULL), sizeof(esp_image_header_t) + sizeof(esp_image_segment_header_t) + sizeof(esp_app_desc_t), &newSpanPartition, sizeof(newSpanPartition));
-    LOG0("Checking for HomeSpan Magic Cookie: %s..",newSpanPartition.magicCookie);
-    if(strcmp(newSpanPartition.magicCookie,spanPartition.magicCookie))
+    LOG0("Checking for HomeSpan Magic Cookie: %s..",spanPartition.magicCookie);
+    if(strcmp(newSpanPartition.magicCookie,spanPartition.magicCookie)){
+      LOG0("  *** NOT FOUND!  ABORTING\n");
       Update.abort();
+    }
   }
 }
 
