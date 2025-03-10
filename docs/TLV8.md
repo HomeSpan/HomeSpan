@@ -304,7 +304,7 @@ Though the procedure is complex, HomeSpan handles all of the protocol details.  
 * next, create a *second* TLV8 object and use the TLV8 library methods above to create the appropriate TAGS and VALUES needed to respond to the information request (again, based on the on the specs for the Characteristic);
 * finally, use `setVal()` to update the TLV8 Characteristic with the second TLV8 object
 
-HomeSpan will automatically send the new TLV8 data you placed in the TLV8 Characterstic back to the Home App in its response at the conclusion of the `update()` loop. 
+HomeSpan will automatically send the new TLV8 data you placed in the TLV8 Characteristic back to the Home App in its response at the conclusion of the `update()` loop. 
 
 ---
 
