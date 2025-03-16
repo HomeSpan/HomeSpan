@@ -2279,6 +2279,10 @@ void SpanCharacteristic::printfAttributes(int flags){
     if(validValues){
       hapOut << ",\"valid-values\":" << validValues;
     }
+
+    if(maxLen){
+      hapOut << ",\"maxLen\":" << (int)maxLen;
+    }
   }
     
   if(desc && (flags&GET_DESC)){
@@ -2477,6 +2481,14 @@ SpanCharacteristic *SpanCharacteristic::setUnit(const char *c){
   strcpy(unit, c);
   return(this);
 }  
+
+///////////////////////////////
+
+SpanCharacteristic *SpanCharacteristic::setMaxStringLength(uint8_t n){
+  if(format==FORMAT::STRING)
+    maxLen=n;
+  return(this);
+}
 
 ///////////////////////////////
 

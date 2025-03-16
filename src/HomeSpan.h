@@ -614,6 +614,7 @@ class SpanCharacteristic{
   UVal minValue;                           // Characteristic minimum (not applicable for STRING)
   UVal maxValue;                           // Characteristic maximum (not applicable for STRING)
   UVal stepValue;                          // Characteristic step size (not applicable for STRING)
+  uint8_t maxLen=0;                        // Characteristic maximum length (only applicable for STRING, 0=default)
   boolean staticRange;                     // Flag that indicates whether Range is static and cannot be changed with setRange()
   boolean customRange=false;               // Flag for custom ranges
   char *validValues=NULL;                  // Optional JSON array of valid values.  Applicable only to uint8 Characteristics
@@ -800,6 +801,7 @@ class SpanCharacteristic{
   SpanCharacteristic *setDescription(const char *c);  // sets description of a Characteristic
   SpanCharacteristic *setUnit(const char *c);         // set unit of a Characteristic  
   SpanCharacteristic *setValidValues(int n, ...);     // sets a list of 'n' valid values allowed for a Characteristic - only applicable if format=INT, UINT8, UINT16, or UINT32
+  SpanCharacteristic *setMaxStringLength(uint8_t n);  // sets maximum length of STRING Characteristics
 
   template <typename A, typename B, typename S=int> SpanCharacteristic *setRange(A min, B max, S step=0){     // sets the allowed range of a Characteristic
 
