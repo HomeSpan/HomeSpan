@@ -984,12 +984,13 @@ int HAPClient::putCharacteristicsURL(char *json){
 
   LOG1("In Put Characteristics #%d (%s)...\n",clientNumber,client.remoteIP().toString().c_str());
 
-  int n=homeSpan.countCharacteristics(json);    // count number of objects in JSON request
+  int n=homeSpan.countCharacteristics(json);    // count maximum number of objects in JSON request
   if(n==0)                                      // if no objects found, return
     return(0);
  
-  SpanBuf pObj[n];                                        // reserve space for objects
-  if(!homeSpan.updateCharacteristics(json, pObj))         // perform update
+  SpanBuf pObj[n];                                        // reserve space for maximum number of objects
+  n=homeSpan.updateCharacteristics(json, pObj);           // perform update and return actual number of objects found, or zero if failure to parse JSON
+  if(n==0)                                                
     return(0);                                            // return if failed to update (error message will have been printed in update)
 
   boolean multiCast=false;                     

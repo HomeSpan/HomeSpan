@@ -1524,7 +1524,7 @@ int Span::updateCharacteristics(char *buf, SpanBuf *pObj){
   boolean twFail=false;
   
   while(char *t1=strtok_r(buf,"{",&p1)){           // parse 'buf' and extract objects into 'pObj' unless NULL
-   buf=NULL;
+    buf=NULL;
     char *p2;
     int okay=0;
     
@@ -1541,26 +1541,26 @@ int Span::updateCharacteristics(char *buf, SpanBuf *pObj){
       
       t1=NULL;
       char *t3;
-      if(!strcmp(t2,"aid") && (t3=strtok_r(t1,"}[]:, \"\t\n\r",&p2))){
+      if(!strcmp(t2,"aid") && (t3=strtok_r(NULL,"}[]:, \"\t\n\r",&p2))){
         sscanf(t3,"%lu",&pObj[nObj].aid);
         okay|=1;
       } else 
-      if(!strcmp(t2,"iid") && (t3=strtok_r(t1,"}[]:, \"\t\n\r",&p2))){
+      if(!strcmp(t2,"iid") && (t3=strtok_r(NULL,"}[]:, \"\t\n\r",&p2))){
         sscanf(t3,"%lu",&pObj[nObj].iid);
         okay|=2;
       } else 
-      if(!strcmp(t2,"value") && (t3=strtok_r(t1,"}[]:,\"",&p2))){
+      if(!strcmp(t2,"value") && (t3=strtok_r(NULL,"}[]:,\"",&p2))){
         pObj[nObj].val=t3;
         okay|=4;
       } else 
-      if(!strcmp(t2,"ev") && (t3=strtok_r(t1,"}[]:, \"\t\n\r",&p2))){
+      if(!strcmp(t2,"ev") && (t3=strtok_r(NULL,"}[]:, \"\t\n\r",&p2))){
         pObj[nObj].ev=t3;
         okay|=8;
       } else 
-      if(!strcmp(t2,"r") && (t3=strtok_r(t1,"}[]:, \"\t\n\r",&p2))){
+      if(!strcmp(t2,"r") && (t3=strtok_r(NULL,"}[]:, \"\t\n\r",&p2))){
         pObj[nObj].wr=(t3 && (!strcmp(t3,"1") || !strcmp(t3,"true")));
       } else 
-      if(!strcmp(t2,"pid") && (t3=strtok_r(t1,"}[]:, \"\t\n\r",&p2))){        
+      if(!strcmp(t2,"pid") && (t3=strtok_r(NULL,"}[]:, \"\t\n\r",&p2))){        
         uint64_t pid=strtoull(t3,NULL,0);        
         if(!TimedWrites.count(pid)){
           LOG0("\n*** ERROR:  Timed Write PID not found\n\n");
@@ -1638,7 +1638,7 @@ int Span::updateCharacteristics(char *buf, SpanBuf *pObj){
     } // object had TBD status
   } // loop over all objects
       
-  return(1);
+  return(nObj);
 }
 
 ///////////////////////////////
