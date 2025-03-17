@@ -1522,13 +1522,15 @@ int Span::updateCharacteristics(char *buf, SpanBuf *pObj){
   char *p1;
   int cFound=0;
   boolean twFail=false;
+
+  const char *tokens="}[]:, \"\t\n\r";
   
   while(char *t1=strtok_r(buf,"{",&p1)){           // parse 'buf' and extract objects into 'pObj' unless NULL
     buf=NULL;
     char *p2;
     int okay=0;
     
-    while(char *t2=strtok_r(t1,"}[]:, \"\t\n\r",&p2)){
+    while(char *t2=strtok_r(t1,tokens,&p2)){
 
       if(!cFound){                                 // first token found
         if(strcmp(t2,"characteristics")){
@@ -1540,27 +1542,33 @@ int Span::updateCharacteristics(char *buf, SpanBuf *pObj){
       }
       
       t1=NULL;
-      char *t3;
-      if(!strcmp(t2,"aid") && (t3=strtok_r(NULL,"}[]:, \"\t\n\r",&p2))){
+      char *t3=strtok_r(NULL,tokens,&p2);
+      
+      if(!t3){
+        LOG0("\n*** ERROR:  Problems parsing JSON characteristics object - can't find data for property \"%s\"\n\n",t2);
+        return(0);
+      }
+      
+      if(!strcmp(t2,"aid")){
         sscanf(t3,"%lu",&pObj[nObj].aid);
         okay|=1;
       } else 
-      if(!strcmp(t2,"iid") && (t3=strtok_r(NULL,"}[]:, \"\t\n\r",&p2))){
+      if(!strcmp(t2,"iid")){
         sscanf(t3,"%lu",&pObj[nObj].iid);
         okay|=2;
       } else 
-      if(!strcmp(t2,"value") && (t3=strtok_r(NULL,"}[]:,\"",&p2))){
+      if(!strcmp(t2,"value")){
         pObj[nObj].val=t3;
         okay|=4;
       } else 
-      if(!strcmp(t2,"ev") && (t3=strtok_r(NULL,"}[]:, \"\t\n\r",&p2))){
+      if(!strcmp(t2,"ev")){
         pObj[nObj].ev=t3;
         okay|=8;
       } else 
-      if(!strcmp(t2,"r") && (t3=strtok_r(NULL,"}[]:, \"\t\n\r",&p2))){
-        pObj[nObj].wr=(t3 && (!strcmp(t3,"1") || !strcmp(t3,"true")));
+      if(!strcmp(t2,"r")){
+        pObj[nObj].wr=(!strcmp(t3,"1") || !strcmp(t3,"true"));
       } else 
-      if(!strcmp(t2,"pid") && (t3=strtok_r(NULL,"}[]:, \"\t\n\r",&p2))){        
+      if(!strcmp(t2,"pid")){        
         uint64_t pid=strtoull(t3,NULL,0);        
         if(!TimedWrites.count(pid)){
           LOG0("\n*** ERROR:  Timed Write PID not found\n\n");
