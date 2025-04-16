@@ -295,6 +295,10 @@ class Span{
   int connected=0;                              // WiFi connection status (increments upon each connect and disconnect)
   HS_ExpCounter wifiTimeCounter;                // exponentially-increasing wait time counter between WiFi connection attempts
   unsigned long alarmConnect=0;                 // time after which WiFi connection attempt should be tried again
+
+  static constexpr char delims[]="\"{[:,]}"; 
+  static const uint8_t DELIM = 0xF5;
+  static const uint8_t END_DELIM = DELIM+strlen(delims)-1;  
   
   void (*wifiBegin)(const char *s, const char *p)=[](const char *s, const char *p){WiFi.begin(s,p);};     // default call to WiFi.begin()
  
@@ -361,6 +365,8 @@ class Span{
   boolean printfAttributes(char **ids, int numIDs, int flags);            // writes accessory requested characteristic ids to hapOut stream - returns true if all characteristics are found and readable, else returns false
   void clearNotify(HAPClient *hc);                                        // clear all notifications related to specific client connection
   void printfNotify(SpanBuf *pObj, int nObj, HAPClient *hc);              // writes notification JSON to hapOut stream based on SpanBuf objects and specified connection
+  char *escapeJSON(char *jObj);                                           // remove all whitespace not within double-quotes, and converts special characters to unused UTF-8 bytes as a placeholder
+  char *unEscapeJSON(char *jObj);                                         // converts UTF-8 placeholder bytes back to original special characters
 
   static boolean invalidUUID(const char *uuid){
     int x=0;

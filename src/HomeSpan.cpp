@@ -1517,6 +1517,54 @@ int Span::countCharacteristics(char *buf){
 
 ///////////////////////////////
 
+char *Span::escapeJSON(char *jObj){
+ 
+  boolean quoting=false;
+  char *p;
+  
+  for(int i=0,k=0;;i++){          // remove all whitespace not within double-quotes, and "escape" special characters
+    
+    if(jObj[i]=='\0'){
+      jObj[k]='\0';
+      break;
+    }
+
+    if(!quoting){
+      if(strchr(" \t\n\r",jObj[i]))
+        continue;
+    if(jObj[i]=='"')
+      quoting=true;
+    } else {
+      if(jObj[i]=='"' && i>0 && jObj[i-1]!='\\')
+        quoting=false;
+      else if((p=strchr(delims,jObj[i])))
+        jObj[i]=DELIM+p-delims;
+    }
+          
+    jObj[k++]=jObj[i];
+  }    
+
+  return(jObj);
+}
+
+///////////////////////////////
+
+char *Span::unEscapeJSON(char *jObj){
+
+  for(int i=0;;i++){
+    
+    if(jObj[i]=='\0')
+      break;
+
+    if(jObj[i]>=DELIM && jObj[i]<=END_DELIM)
+      jObj[i]=delims[jObj[i]-DELIM];
+  }
+    
+  return(jObj);
+}
+
+///////////////////////////////
+
 int Span::updateCharacteristics(char *buf, SpanBuf *pObj){
 
   int nObj=0;
