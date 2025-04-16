@@ -1522,7 +1522,7 @@ char *Span::escapeJSON(char *jObj){
   boolean quoting=false;
   char *p;
   
-  for(int i=0,k=0;;i++){          // remove all whitespace not within double-quotes, and "escape" special characters
+  for(int i=0,k=0;;i++){
     
     if(jObj[i]=='\0'){
       jObj[k]='\0';
@@ -1568,57 +1568,71 @@ char *Span::unEscapeJSON(char *jObj){
 int Span::updateCharacteristics(char *buf, SpanBuf *pObj){
 
   int nObj=0;
-  char *p1;
-  int cFound=0;
+//  char *p1;
+//  int cFound=0;
   boolean twFail=false;
 
-  const char *tokens="}[]:, \"\t\n\r";
-  
-  while(char *t1=strtok_r(buf,"{",&p1)){           // parse 'buf' and extract objects into 'pObj' unless NULL
-    buf=NULL;
-    char *p2;
-    int okay=0;
-    
-    while(char *t2=strtok_r(t1,tokens,&p2)){
+  char *jObj=escapeJSON(buf);
+  size_t end=0;
 
-      if(!cFound){                                 // first token found
-        if(strcmp(t2,"characteristics")){
-          LOG0("\n*** ERROR:  Problems parsing JSON - initial \"characteristics\" tag not found\n\n");
-          return(0);
-        }
-        cFound=1;
-        break;
-      }
-      
-      t1=NULL;
-      char *t3=strtok_r(NULL,tokens,&p2);
-      
-      if(!t3){
-        LOG0("\n*** ERROR:  Problems parsing JSON characteristics object - can't find data for property \"%s\"\n\n",t2);
+  if(sscanf(jObj,"{\"characteristics\":[%[^]]]}%n",jObj,&end)!=1 || strlen(jObj+end)){
+    LOG0("\n*** ERROR: Cannot extract properly-formatted \"characteristics\" array from JSON text\n\n");
+    return(0);
+  }
+
+  for(;;){                // loop over objects in characteristics array
+    int okay=0;
+    end=0;
+    if(!sscanf(jObj,"{%[^}]}%n",jObj,&end) || end==0){
+      LOG0("\n*** ERROR: Cannot extract properly-formatted object from \"characteristics\" array\n\n");
+      return(0);
+    }
+
+    for(;;){              // loop over all name-value pairs in the object 
+      end=0;
+      char *name=jObj;
+      if(sscanf(name,"\"%[^\"]\"%n",name,&end)!=1  || end==0){
+        LOG0("\n*** ERROR: Cannot extract name from \"characteristics\" object\n\n");
         return(0);
       }
+      char *value=name+end;
+      if(sscanf(value,":%[^,]%n",value,&end)!=1){
+        LOG0("\n*** ERROR: Cannot extract value from \"characteristics\" object\n\n");
+        return(0);        
+      }
+
+      if(*value=='\"'){
+        value++;
+        end--;
+        if(value[end-2]=='\"'){
+          value[end-2]='\0';
+          unEscapeJSON(value);
+        }          
+      }
       
-      if(!strcmp(t2,"aid")){
-        sscanf(t3,"%lu",&pObj[nObj].aid);
+      // Serial.printf("%s : %s\n",name,value);
+
+      if(!strcmp(name,"aid")){
+        sscanf(value,"%lu",&pObj[nObj].aid);
         okay|=1;
       } else 
-      if(!strcmp(t2,"iid")){
-        sscanf(t3,"%lu",&pObj[nObj].iid);
+      if(!strcmp(name,"iid")){
+        sscanf(value,"%lu",&pObj[nObj].iid);
         okay|=2;
       } else 
-      if(!strcmp(t2,"value")){
-        pObj[nObj].val=t3;
+      if(!strcmp(name,"value")){
+        pObj[nObj].val=value;
         okay|=4;
       } else 
-      if(!strcmp(t2,"ev")){
-        pObj[nObj].ev=t3;
+      if(!strcmp(name,"ev")){
+        pObj[nObj].ev=value;
         okay|=8;
       } else 
-      if(!strcmp(t2,"r")){
-        pObj[nObj].wr=(!strcmp(t3,"1") || !strcmp(t3,"true"));
+      if(!strcmp(name,"r")){
+        pObj[nObj].wr=(!strcmp(value,"1") || !strcmp(value,"true"));
       } else 
-      if(!strcmp(t2,"pid")){        
-        uint64_t pid=strtoull(t3,NULL,0);        
+      if(!strcmp(name,"pid")){        
+        uint64_t pid=strtoull(value,NULL,0);        
         if(!TimedWrites.count(pid)){
           LOG0("\n*** ERROR:  Timed Write PID not found\n\n");
           twFail=true;
@@ -1628,23 +1642,112 @@ int Span::updateCharacteristics(char *buf, SpanBuf *pObj){
           twFail=true;
         }        
       } else {
-        LOG0("\n*** ERROR:  Problems parsing JSON characteristics object - unexpected property \"%s\"\n\n",t2);
+        LOG0("\n*** ERROR:  Problems parsing JSON characteristics object - unexpected property \"%s\"\n\n",name);
         return(0);
       }
-    } // parse property tokens
-
-    if(!t1){                                                                  // at least one token was found that was not initial "characteristics"
-      if(okay==7 || okay==11  || okay==15){                                   // all required properties found
-        if(!pObj[nObj].val)                                                   // if value is NOT being updated
-          pObj[nObj].wr=false;                                                // ignore any request for write-response
-        nObj++;                                                               // increment number of characteristic objects found        
-      } else {
-        LOG0("\n*** ERROR:  Problems parsing JSON characteristics object - missing required properties\n\n");
-        return(0);
-      }
-    }
       
-  } // parse objects
+      jObj=value+end;
+      if(*jObj++=='\0')
+        break;
+    }
+
+    if(okay==7 || okay==11  || okay==15){                                   // all required properties found
+      if(!pObj[nObj].val)                                                   // if value is NOT being updated
+        pObj[nObj].wr=false;                                                // ignore any request for write-response
+      nObj++;                                                               // increment number of characteristic objects found        
+    } else {
+      LOG0("\n*** ERROR:  Problems parsing JSON characteristics object - missing required properties\n\n");
+      return(0);
+    }
+    
+    if(*++jObj=='\0')
+      break;
+    else if(*jObj++!=','){
+      LOG0("\n*** ERROR: Unexpected characters trailing last object in \"characteristics\" array\n\n");
+      return(0);
+    }
+  }
+
+
+
+
+
+
+  
+
+//  const char *tokens="}[]:, \"\t\n\r";
+//  
+//  while(char *t1=strtok_r(buf,"{",&p1)){           // parse 'buf' and extract objects into 'pObj' unless NULL
+//    buf=NULL;
+//    char *p2;
+//    int okay=0;
+//    
+//    while(char *t2=strtok_r(t1,tokens,&p2)){
+//
+//      if(!cFound){                                 // first token found
+//        if(strcmp(t2,"characteristics")){
+//          LOG0("\n*** ERROR:  Problems parsing JSON - initial \"characteristics\" tag not found\n\n");
+//          return(0);
+//        }
+//        cFound=1;
+//        break;
+//      }
+//      
+//      t1=NULL;
+//      char *t3=strtok_r(NULL,tokens,&p2);
+//      
+//      if(!t3){
+//        LOG0("\n*** ERROR:  Problems parsing JSON characteristics object - can't find data for property \"%s\"\n\n",t2);
+//        return(0);
+//      }
+//      
+//      if(!strcmp(t2,"aid")){
+//        sscanf(t3,"%lu",&pObj[nObj].aid);
+//        okay|=1;
+//      } else 
+//      if(!strcmp(t2,"iid")){
+//        sscanf(t3,"%lu",&pObj[nObj].iid);
+//        okay|=2;
+//      } else 
+//      if(!strcmp(t2,"value")){
+//        pObj[nObj].val=t3;
+//        okay|=4;
+//      } else 
+//      if(!strcmp(t2,"ev")){
+//        pObj[nObj].ev=t3;
+//        okay|=8;
+//      } else 
+//      if(!strcmp(t2,"r")){
+//        pObj[nObj].wr=(!strcmp(t3,"1") || !strcmp(t3,"true"));
+//      } else 
+//      if(!strcmp(t2,"pid")){        
+//        uint64_t pid=strtoull(t3,NULL,0);        
+//        if(!TimedWrites.count(pid)){
+//          LOG0("\n*** ERROR:  Timed Write PID not found\n\n");
+//          twFail=true;
+//        } else        
+//        if(millis()>TimedWrites[pid]){
+//          LOG0("\n*** ERROR:  Timed Write Expired\n\n");
+//          twFail=true;
+//        }        
+//      } else {
+//        LOG0("\n*** ERROR:  Problems parsing JSON characteristics object - unexpected property \"%s\"\n\n",t2);
+//        return(0);
+//      }
+//    } // parse property tokens
+//
+//    if(!t1){                                                                  // at least one token was found that was not initial "characteristics"
+//      if(okay==7 || okay==11  || okay==15){                                   // all required properties found
+//        if(!pObj[nObj].val)                                                   // if value is NOT being updated
+//          pObj[nObj].wr=false;                                                // ignore any request for write-response
+//        nObj++;                                                               // increment number of characteristic objects found        
+//      } else {
+//        LOG0("\n*** ERROR:  Problems parsing JSON characteristics object - missing required properties\n\n");
+//        return(0);
+//      }
+//    }
+//      
+//  } // parse objects
 
   snapTime=millis();                                           // timestamp for this series of updates, assigned to each characteristic in loadUpdate()
 
