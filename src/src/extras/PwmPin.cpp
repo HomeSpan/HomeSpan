@@ -69,7 +69,7 @@ LedC::LedC(uint8_t pin, uint16_t freq, boolean invert){
           }
           
           if(timerList[nTimer][nMode]->freq_hz==freq){                      // if timer matches desired frequency (always true if newly-created above)
-            channelList[nChannel][nMode]=new ledc_channel_config_t;         // create new channel instance
+            channelList[nChannel][nMode]=new ledc_channel_config_t();       // create new channel instance
             channelList[nChannel][nMode]->speed_mode=(ledc_mode_t)nMode;
             channelList[nChannel][nMode]->channel=(ledc_channel_t)nChannel;
             channelList[nChannel][nMode]->timer_sel=(ledc_timer_t)nTimer;
