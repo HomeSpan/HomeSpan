@@ -2484,6 +2484,9 @@ StatusCode SpanCharacteristic::loadUpdate(char *val, char *ev, boolean wr){
       break;
 
     case STRING:
+      uvSet(newValue,(const char *)val);
+      break;
+      
     case DATA:
     case TLV_ENC:
       uvSet(newValue,(const char *)stripBackslash(val));
