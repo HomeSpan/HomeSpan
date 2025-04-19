@@ -575,6 +575,12 @@ This is a **base class** from which all HomeSpan Characteristics are derived, an
 
 * `void setString(const char *value [,boolean notify])`
   * equivalent to `setVal(value)`, but used exclusively for string-characteristics (i.e. a null-terminated array of characters)
+
+* `SpanCharacteristic *setMaxStringLength(uint8_t n)`
+  * changes the maximum allowed length of a string-characteristic from the HAP default (64) to *n*
+  * note the Home App seems to properly process strings that exceed 64 characters without needing to reset the maximum length
+  * this method is included in HomeSpan only for completeness with HAP - it is likely not needed
+  * returns a pointer to the Characteristic itself so that the method can be chained during instantiation
  
 #### The following methods are supported for DATA (i.e. byte-array) Characteristics:
 
