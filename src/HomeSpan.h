@@ -200,6 +200,8 @@ struct SpanBuf{                               // temporary storage buffer for us
   StatusCode status;                          // return status (HAP Table 6-11)
   SpanCharacteristic *characteristic=NULL;    // Characteristic to update (NULL if not found)
 };
+
+typedef vector<SpanBuf, Mallocator<SpanBuf>> SpanBufVec;
   
 ///////////////////////////////
 
@@ -295,6 +297,10 @@ class Span{
   int connected=0;                              // WiFi connection status (increments upon each connect and disconnect)
   HS_ExpCounter wifiTimeCounter;                // exponentially-increasing wait time counter between WiFi connection attempts
   unsigned long alarmConnect=0;                 // time after which WiFi connection attempt should be tried again
+
+  static constexpr char delims[]="\"{[:,]}"; 
+  static const uint8_t DELIM = 0xF5;
+  static const uint8_t END_DELIM = DELIM+strlen(delims)-1;  
   
   void (*wifiBegin)(const char *s, const char *p)=[](const char *s, const char *p){WiFi.begin(s,p);};     // default call to WiFi.begin()
  
@@ -341,7 +347,7 @@ class Span{
   list<HAPClient, Mallocator<HAPClient>>::iterator currentClient;        // iterator to current client
   vector<SpanAccessory *, Mallocator<SpanAccessory *>> Accessories;      // vector of pointers to all Accessories
   vector<SpanService *, Mallocator<SpanService *>> Loops;                // vector of pointer to all Services that have over-ridden loop() methods
-  vector<SpanBuf, Mallocator<SpanBuf>> Notifications;                    // vector of SpanBuf objects that store info for Characteristics that are updated with setVal() and require a Notification Event
+  SpanBufVec Notifications;                                              // vector of SpanBuf objects that store info for Characteristics that are updated with setVal() and require a Notification Event
   vector<SpanButton *,  Mallocator<SpanButton *>> PushButtons;           // vector of pointer to all PushButtons
   unordered_map<uint64_t, uint32_t> TimedWrites;                         // map of timed-write PIDs and Alarm Times (based on TTLs)  
   unordered_map<char, SpanUserCommand *> UserCommands;                   // map of pointers to all UserCommands
@@ -354,13 +360,14 @@ class Span{
 
   void printfAttributes(int flags=GET_VALUE|GET_META|GET_PERMS|GET_TYPE|GET_DESC);   // writes Attributes JSON database to hapOut stream
   
-  SpanCharacteristic *find(uint32_t aid, uint32_t iid);                   // return Characteristic with matching aid and iid (else NULL if not found)
-  int countCharacteristics(char *buf);                                    // return number of characteristic objects referenced in PUT /characteristics JSON request
-  int updateCharacteristics(char *buf, SpanBuf *pObj);                    // parses PUT /characteristics JSON request 'buf into 'pObj' and updates referenced characteristics; returns 1 on success, 0 on fail
-  void printfAttributes(SpanBuf *pObj, int nObj);                         // writes SpanBuf objects to hapOut stream
-  boolean printfAttributes(char **ids, int numIDs, int flags);            // writes accessory requested characteristic ids to hapOut stream - returns true if all characteristics are found and readable, else returns false
-  void clearNotify(HAPClient *hc);                                        // clear all notifications related to specific client connection
-  void printfNotify(SpanBuf *pObj, int nObj, HAPClient *hc);              // writes notification JSON to hapOut stream based on SpanBuf objects and specified connection
+  SpanCharacteristic *find(uint32_t aid, uint32_t iid);             // return Characteristic with matching aid and iid (else NULL if not found)
+  void printfAttributes(SpanBufVec &pVec);                          // writes SpanBuf objects to hapOut stream
+  boolean printfAttributes(char **ids, int numIDs, int flags);      // writes accessory requested characteristic ids to hapOut stream - returns true if all characteristics are found and readable, else returns false
+  void clearNotify(HAPClient *hc);                                  // clear all notifications related to specific client connection
+  void printfNotify(SpanBufVec &pVec, HAPClient *hc);               // writes notification JSON to hapOut stream based on SpanBuf objects and specified connection
+  char *escapeJSON(char *jObj);                                     // remove all whitespace not within double-quotes, and converts special characters to unused UTF-8 bytes as a placeholder
+  char *unEscapeJSON(char *jObj);                                   // converts UTF-8 placeholder bytes back to original special characters
+  boolean updateCharacteristics(char *buf, SpanBufVec &pVec);       // parses PUT /characteristics JSON request and updates referenced characteristics; returns true on success, false on fail
 
   static boolean invalidUUID(const char *uuid){
     int x=0;
