@@ -9,9 +9,9 @@ Requirements to run HomeSpan depend on which version you choose:
 |HomeSpan Version | Arduino-ESP32 Board Manager | Partition Scheme | Supported Chips|
 |:---:|:---:|:---:|---|
 |1.9.1 or earlier | v2.0.0 - v2.0.17 | *Default* (1.3MB APP) | ESP32, S2, S3, C3 |
-|2.0.0 or later | v3.0.2 - **v3.1.1**<sup>*</sup> | *Minimal SPIFFS* (1.9MB APP) | ESP32, S2, S3, C3, *and C6* |
+|2.0.0 or later | v3.0.2 - **v3.2.0**<sup>*</sup> | *Minimal SPIFFS* (1.9MB APP) | ESP32, S2, S3, C3, *and C6* |
 
-<sup>*</sup>HomeSpan has been tested through **version 3.1.1** of the Arduino-ESP32 Board Manager (built on IDF 5.3.2).  Later releases may work fine, but have not (yet) been tested.  Note HomeSpan does not support the use of alpha, beta, or pre-release candidates of the Arduino-ESP32 Board Manager - testing is only done on production releases of the Board Manager.
+<sup>*</sup>HomeSpan has been tested through **version 3.2.0** of the Arduino-ESP32 Board Manager (built on IDF 5.3.2).  Later releases may work fine, but have not (yet) been tested.  Note HomeSpan does not support the use of alpha, beta, or pre-release candidates of the Arduino-ESP32 Board Manager - testing is only done on production releases of the Board Manager.
 
 **ADDITIONAL REQUIREMENTS**:  Apple's HomeKit architecture [requires the use of a Home Hub](https://support.apple.com/en-us/HT207057) (either a HomePod or Apple TV) for full and proper operation of any HomeKit device, including those based on HomeSpan.  ***Use of HomeSpan without a Home Hub is NOT supported.***
 
@@ -59,42 +59,34 @@ Requirements to run HomeSpan depend on which version you choose:
   * Launch the WiFi Access Point
 * A standalone, detailed End-User Guide
 
-## ❗Latest Update - HomeSpan 2.1.1 (2/10/2025)
+## ❗Latest Update - HomeSpan 2.1.2 (MM/DD/2025)
 
-### Integrated Support for OTA Partition Rollbacks
+### Updates and Corrections
 
-* **Users can now configure HomeSpan to automatically rollback new sketches uploaded via OTA to a previous version if the new sketch crashes the device before being validated**
+* **Added UUID validation for Custom Services**
+  * reports an error in CLI at startup if invalid Service UUID is found
+  * similar to existing UUID validation for Custom Characteristics
 
-  * adds new header file `SpanRollback.h`
-    * when included at the top of a user's sketch this disables the auto-validation of any newly-updated OTA partition that the ESP32-Arduino library otherwise would perform at startup
-    * users can instead *manually* validate their sketch in software, which allows the device to automatically rollback to a prior sketch if the new sketch is not marked as valid
-      
-  * adds new homeSpan method `markSketchOK()` allowing users to mark the currently running partition as valid after uploading a new sketch via OTA
-  * adds new homeSpan method `setPollingCallback()` allowing users to add a callback function that HomeSpan calls *one time* after the very first call to `poll()` has completed
-  * adds new CLI 'p' command that prints partition full table to the Serial Monitor
-  * adds new homeSpan method `setCompileTime()` allowing users to set the compile date/time **of the sketch** to any arbitrary string
-  * see the [HomeSpan OTA](docs/OTA.md) page for details on how to use OTA Rollbacks
+* **Renamed example sketch *RemoteDevice8286.ino* to *RemoteDevice8266.ino***
+  * corrects a long-standing typo in the filename
 
-### HomeSpan Watchdog Timer
+* **Modified OTA updating so that the HomeSpan check for its Magic Cookie is only made if uploading a new *sketch***
+  * avoids OTA aborting when OTA is used to upload SPIFFS data
 
-* **Users can now configure HomeSpan to add a watchdog task that reboots the device if it has frozen or gone into an infinite loop preventing normal HomeSpan operations**
-    
-  * adds new homeSpan method `enableWatchdog(uint16_t nSeconds)`
-    * creates a separate HomeSpan **task watchdog timer** designed to trigger a reboot of the device if not periodically reset at least every *nSeconds*
-  
-  * adds new homeSpan method `resetWatchdog()` used to periodically reset the HomeSpan watchdog timer 
-    * this method has been embedded in all HomeSpan library functions as needed
-  * adds new homeSpan method `disableWatchdog()` to disable the HomeSpan watchdog timer after it has been enabled
-  * see the [HomeSpan Watchdog Timer](docs/WDT.md) page for a complete discussion of the HomeSpan and other system watchdog timers
+* **Refactored the JSON parsing logic that handles PUT Characteristic requests from HomeKit**  
+  * now properly supports any JSON-allowed Unicode character used in a JSON string value, from U+0020 to U+10FFFF
+ 
+    * allows string-based Characteristics to include escaped quotes, escaped solidus and reverse solidus, and any of the JSON token characters *,:[]{}* that would have previously caused a parsing error
+  * also now allows for empty string-based Characteristics (previously would have led to a parsing error)
 
-### Other Updates
+* **Added new `setMaxStringLength(uint8_t n)` method to Characteristics**
+  * allows user to change maximum length of string-based Characteristics from HAP default of 64 to *n* (less than 256)
+  * though specified by HAP, this value does not seem to be used by HomeKit, and this method does not appear necessary
 
-* Added homeSpan method `Span& useEthernet()` to force HomeSpan to use Ethernet instead of WiFi, even if ETH has not yet been called or an Ethernet card has not been found prior to `homeSpan.begin()` being called
+* **Explicitly added added `#include <mutex>` to *HomeSpan.cpp* to address compatibility issue with Arduino-ESP32 v3.2.0**
 
-### Bug Fixes!
-
-* **Fixes a bug introduced in HomeSpan 2.1.0 that improperly initialized the WiFi and Ethernet stacks depending on how code was compiled**
-      
+* **Fixed bug in `Pixel::getPin()` that would report channel number instead of pin number**
+        
 See [Releases](https://github.com/HomeSpan/HomeSpan/releases) for details on all changes and bug fixes included in this update.
 
 # HomeSpan Resources
