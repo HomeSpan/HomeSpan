@@ -1502,21 +1502,6 @@ SpanCharacteristic *Span::find(uint32_t aid, uint32_t iid){
 
 ///////////////////////////////
 
-int Span::countCharacteristics(char *buf){
-
-  int nObj=0;
-  
-  const char tag[]="\"aid\"";
-  while((buf=strstr(buf,tag))){         // count number of characteristic objects in PUT JSON request
-    nObj++;
-    buf+=strlen(tag);
-  }
-
-  return(nObj);
-}
-
-///////////////////////////////
-
 char *Span::escapeJSON(char *jObj){
  
   boolean quoting=false;
@@ -1565,17 +1550,15 @@ char *Span::unEscapeJSON(char *jObj){
 
 ///////////////////////////////
 
-int Span::updateCharacteristics(char *buf, SpanBuf *pObj){
+boolean Span::updateCharacteristics(char *buf, SpanBufVec &pVec){
 
-  int nObj=0;
   boolean twFail=false;
-
   char *jObj=escapeJSON(buf);
   size_t end=0;
 
   if(sscanf(jObj,"{\"characteristics\":[%[^]]]}%n",jObj,&end)!=1 || strlen(jObj+end)){
     LOG0("\n*** ERROR: Cannot extract properly-formatted \"characteristics\" array from JSON text\n\n");
-    return(0);
+    return(false);
   }
 
   for(;;){                // loop over objects in characteristics array
@@ -1583,20 +1566,22 @@ int Span::updateCharacteristics(char *buf, SpanBuf *pObj){
     end=0;
     if(!sscanf(jObj,"{%[^}]}%n",jObj,&end) || end==0){
       LOG0("\n*** ERROR: Cannot extract properly-formatted object from \"characteristics\" array\n\n");
-      return(0);
+      return(false);
     }
 
+    SpanBuf sBuf;
+    
     for(;;){              // loop over all name-value pairs in the object 
       end=0;
       char *name=jObj;
       if(sscanf(name,"\"%[^\"]\"%n",name,&end)!=1  || end==0){
         LOG0("\n*** ERROR: Cannot extract name from \"characteristics\" object\n\n");
-        return(0);
+        return(false);
       }
       char *value=name+end;
       if(sscanf(value,":%[^,]%n",value,&end)!=1){
         LOG0("\n*** ERROR: Cannot extract value from \"characteristics\" object\n\n");
-        return(0);        
+        return(false);        
       }
 
       if(*value=='\"'){
@@ -1609,23 +1594,23 @@ int Span::updateCharacteristics(char *buf, SpanBuf *pObj){
       }
       
       if(!strcmp(name,"aid")){
-        sscanf(value,"%lu",&pObj[nObj].aid);
+        sscanf(value,"%lu",&sBuf.aid);
         okay|=1;
       } else 
       if(!strcmp(name,"iid")){
-        sscanf(value,"%lu",&pObj[nObj].iid);
+        sscanf(value,"%lu",&sBuf.iid);
         okay|=2;
       } else 
       if(!strcmp(name,"value")){
-        pObj[nObj].val=value;
+        sBuf.val=value;
         okay|=4;
       } else 
       if(!strcmp(name,"ev")){
-        pObj[nObj].ev=value;
+        sBuf.ev=value;
         okay|=8;
       } else 
       if(!strcmp(name,"r")){
-        pObj[nObj].wr=(!strcmp(value,"1") || !strcmp(value,"true"));
+        sBuf.wr=(!strcmp(value,"1") || !strcmp(value,"true"));
       } else 
       if(!strcmp(name,"pid")){        
         uint64_t pid=strtoull(value,NULL,0);        
@@ -1639,7 +1624,7 @@ int Span::updateCharacteristics(char *buf, SpanBuf *pObj){
         }        
       } else {
         LOG0("\n*** ERROR:  Problems parsing JSON characteristics object - unexpected property \"%s\"\n\n",name);
-        return(0);
+        return(false);
       }
       
       jObj=value+end;
@@ -1647,73 +1632,73 @@ int Span::updateCharacteristics(char *buf, SpanBuf *pObj){
         break;
     }
 
-    if(okay==7 || okay==11  || okay==15){                                   // all required properties found
-      if(!pObj[nObj].val)                                                   // if value is NOT being updated
-        pObj[nObj].wr=false;                                                // ignore any request for write-response
-      nObj++;                                                               // increment number of characteristic objects found        
+    if(okay==7 || okay==11  || okay==15){                             // all required properties found
+      if(!sBuf.val)                                                   // if value is NOT being updated
+        sBuf.wr=false;                                                // ignore any request for write-response
+      pVec.push_back(sBuf);                                           // add sBuf to pVec vector
     } else {
       LOG0("\n*** ERROR:  Problems parsing JSON characteristics object - missing required properties\n\n");
-      return(0);
+      return(false);
     }
     
     if(*++jObj=='\0')
       break;
     else if(*jObj++!=','){
       LOG0("\n*** ERROR: Unexpected characters trailing last object in \"characteristics\" array\n\n");
-      return(0);
+      return(false);
     }
   }
 
   snapTime=millis();                                           // timestamp for this series of updates, assigned to each characteristic in loadUpdate()
 
-  for(int i=0;i<nObj;i++){                                     // PASS 1: loop over all objects, identify characteristics, and initialize update for those found
+  for(auto it=pVec.begin();it!=pVec.end();it++){               // PASS 1: loop over all objects, identify characteristics, and initialize update for those found
 
     if(twFail){                                                // this is a timed-write request that has either expired or for which there was no PID
-      pObj[i].status=StatusCode::InvalidValue;                 // set error for all characteristics      
+      (*it).status=StatusCode::InvalidValue;                   // set error for all characteristics      
       
     } else {
-      pObj[i].characteristic = find(pObj[i].aid,pObj[i].iid);  // find characteristic with matching aid/iid and store pointer          
+      (*it).characteristic = find((*it).aid,(*it).iid);        // find characteristic with matching aid/iid and store pointer          
 
-      if(pObj[i].characteristic)                                                                 // if found, initialize characterstic update with new val/ev
-        pObj[i].status=pObj[i].characteristic->loadUpdate(pObj[i].val,pObj[i].ev,pObj[i].wr);    // save status code, which is either an error, or TBD (in which case updateFlag for the characteristic has been set to either 1 or 2) 
+      if((*it).characteristic)                                                           // if found, initialize characteristic update with new val/ev
+        (*it).status=(*it).characteristic->loadUpdate((*it).val,(*it).ev,(*it).wr);      // save status code, which is either an error, or TBD (in which case updateFlag for the characteristic has been set to either 1 or 2) 
       else
-        pObj[i].status=StatusCode::UnknownResource;                                              // if not found, set HAP error            
+        (*it).status=StatusCode::UnknownResource;                                        // if not found, set HAP error            
     }
       
   } // first pass
       
-  for(int i=0;i<nObj;i++){                                     // PASS 2: loop again over all objects       
-    if(pObj[i].status==StatusCode::TBD){                       // if object status still TBD
+  for(auto it=pVec.begin();it!=pVec.end();it++){               // PASS 2: loop again over all objects       
+    if((*it).status==StatusCode::TBD){                         // if object status still TBD
 
-      StatusCode status=pObj[i].characteristic->service->update()?StatusCode::OK:StatusCode::Unable;        // update service and save statusCode as OK or Unable depending on whether return is true or false
+      StatusCode status=(*it).characteristic->service->update()?StatusCode::OK:StatusCode::Unable;          // update service and save statusCode as OK or Unable depending on whether return is true or false
 
-      for(int j=i;j<nObj;j++){                                                                              // loop over this object plus any remaining objects to update values and save status for any other characteristics in this service
+      for(auto jt=it;jt!=pVec.end();jt++){                                                                  // loop over this object plus any remaining objects to update values and save status for any other characteristics in this service
         
-        if(pObj[j].characteristic->service==pObj[i].characteristic->service){                               // if service of this characteristic matches service that was updated
-          pObj[j].status=status;                                                                            // save statusCode for this object
-          LOG1("Updating aid=%lu iid=%lu",pObj[j].characteristic->aid,pObj[j].characteristic->iid);
+        if((*jt).characteristic->service==(*it).characteristic->service){                                   // if service of this characteristic matches service that was updated
+          (*jt).status=status;                                                                              // save statusCode for this object
+          LOG1("Updating aid=%lu iid=%lu",(*jt).characteristic->aid,(*jt).characteristic->iid);
           if(status==StatusCode::OK){                                                                       // if status is okay
-            pObj[j].characteristic->uvSet(pObj[j].characteristic->value,pObj[j].characteristic->newValue);  // update characteristic value with new value
-            if(pObj[j].characteristic->nvsKey){                                                             // if storage key found
-              if(pObj[j].characteristic->format<FORMAT::STRING)
-                nvs_set_u64(charNVS,pObj[j].characteristic->nvsKey,pObj[j].characteristic->value.UINT64);   // store data as uint64_t regardless of actual type (it will be read correctly when access through uvGet())         
+            (*jt).characteristic->uvSet((*jt).characteristic->value,(*jt).characteristic->newValue);        // update characteristic value with new value
+            if((*jt).characteristic->nvsKey){                                                               // if storage key found
+              if((*jt).characteristic->format<FORMAT::STRING)
+                nvs_set_u64(charNVS,(*jt).characteristic->nvsKey,(*jt).characteristic->value.UINT64);       // store data as uint64_t regardless of actual type (it will be read correctly when access through uvGet())         
               else
-                nvs_set_str(charNVS,pObj[j].characteristic->nvsKey,pObj[j].characteristic->value.STRING);   // store data
+                nvs_set_str(charNVS,(*jt).characteristic->nvsKey,(*jt).characteristic->value.STRING);       // store data
               nvs_commit(charNVS);
             }
             LOG1(" (okay)\n");
           } else {                                                                                          // if status not okay
-            pObj[j].characteristic->uvSet(pObj[j].characteristic->newValue,pObj[j].characteristic->value);  // replace characteristic new value with original value
+            (*jt).characteristic->uvSet((*jt).characteristic->newValue,(*jt).characteristic->value);        // replace characteristic new value with original value
             LOG1(" (failed)\n");
           }
-          pObj[j].characteristic->updateFlag=0;                                                             // reset updateFlag for characteristic
+          (*jt).characteristic->updateFlag=0;                                                               // reset updateFlag for characteristic
         }
       }
 
     } // object had TBD status
   } // loop over all objects
       
-  return(nObj);
+  return(true);
 }
 
 ///////////////////////////////
@@ -1728,21 +1713,21 @@ void Span::clearNotify(HAPClient *hc){
 
 ///////////////////////////////
 
-void Span::printfNotify(SpanBuf *pObj, int nObj, HAPClient *hc){
+void Span::printfNotify(SpanBufVec &pVec, HAPClient *hc){
 
   boolean notifyFlag=false;
   
-  for(int i=0;i<nObj;i++){                                       // loop over all objects
+  for(auto it=pVec.begin();it!=pVec.end();it++){                 // loop over all objects
     
-    if(pObj[i].status==StatusCode::OK && pObj[i].val){           // characteristic was successfully updated with a new value (i.e. not just an EV request)
-      if(pObj[i].characteristic->evList.has(hc)){                // if connection hc is subscribed to EV notifications for this characteristic
+    if((*it).status==StatusCode::OK && (*it).val){               // characteristic was successfully updated with a new value (i.e. not just an EV request)
+      if((*it).characteristic->evList.has(hc)){                  // if connection hc is subscribed to EV notifications for this characteristic
       
         if(!notifyFlag)                                          // this is first notification for any characteristic
           hapOut << "{\"characteristics\":[";                    // print start of JSON array
         else                                                     // else already printed at least one other characteristic
           hapOut << ",";                                         // add preceeding comma before printing this characteristic
         
-        pObj[i].characteristic->printfAttributes(GET_VALUE|GET_AID|GET_NV);    // print JSON attributes for this characteristic
+        (*it).characteristic->printfAttributes(GET_VALUE|GET_AID|GET_NV);    // print JSON attributes for this characteristic
         notifyFlag=true;        
       }
     }
@@ -1754,17 +1739,17 @@ void Span::printfNotify(SpanBuf *pObj, int nObj, HAPClient *hc){
 
 ///////////////////////////////
 
-void Span::printfAttributes(SpanBuf *pObj, int nObj){
+void Span::printfAttributes(SpanBufVec &pVec){
 
   hapOut << "{\"characteristics\":[";
 
-  for(int i=0;i<nObj;i++){
-    hapOut << "{\"aid\":" << pObj[i].aid << ",\"iid\":" << pObj[i].iid << ",\"status\":" << (int)pObj[i].status;
-    if(pObj[i].status==StatusCode::OK && pObj[i].wr && pObj[i].characteristic)
-      hapOut << ",\"value\":" << pObj[i].characteristic->uvPrint(pObj[i].characteristic->value).c_str();
-    hapOut << "}";
-    if(i+1<nObj)
+  for(auto it=pVec.begin();it!=pVec.end();it++){
+    if(it!=pVec.begin())
       hapOut << ",";
+    hapOut << "{\"aid\":" << (*it).aid << ",\"iid\":" << (*it).iid << ",\"status\":" << (int)(*it).status;
+    if((*it).status==StatusCode::OK && (*it).wr && (*it).characteristic)
+      hapOut << ",\"value\":" << (*it).characteristic->uvPrint((*it).characteristic->value).c_str();
+    hapOut << "}";
   }
 
   hapOut << "]}";

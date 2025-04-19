@@ -145,7 +145,7 @@ struct HAPClient {
   static void tearDown(uint8_t *id);                                                   // tears down connections using Controller with ID=id; tears down all connections if id=NULL
   static void checkNotifications();                                                    // checks for Event Notifications and reports to controllers as needed (HAP Section 6.8)
   static void checkTimedWrites();                                                      // checks for expired Timed Write PIDs, and clears any found (HAP Section 6.7.2.4)
-  static void eventNotify(SpanBuf *pObj, int nObj, HAPClient *ignore=NULL);            // transmits EVENT Notifications for nObj SpanBuf objects, pObj, with optional flag to ignore a specific client
+  static void eventNotify(SpanBufVec &pVec, HAPClient *ignore=NULL);                   // transmits EVENT Notifications for SpanBuf objects with optional flag to ignore a specific client
 
   static void getStatusURL(HAPClient *, void (*)(const char *, void *), void *, int refreshTime=0);       // GET / status (an optional, non-HAP feature)
 

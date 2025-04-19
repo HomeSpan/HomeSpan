@@ -984,18 +984,14 @@ int HAPClient::putCharacteristicsURL(char *json){
 
   LOG1("In Put Characteristics #%d (%s)...\n",clientNumber,client.remoteIP().toString().c_str());
 
-  int n=homeSpan.countCharacteristics(json);    // count maximum number of objects in JSON request
-  if(n==0)                                      // if no objects found, return
-    return(0);
- 
-  SpanBuf pObj[n];                                        // reserve space for maximum number of objects
-  n=homeSpan.updateCharacteristics(json, pObj);           // perform update and return actual number of objects found, or zero if failure to parse JSON
-  if(n==0)                                                
+  SpanBufVec pVec;
+   
+  if(!homeSpan.updateCharacteristics(json, pVec))         // perform update and check for success
     return(0);                                            // return if failed to update (error message will have been printed in update)
 
-  boolean multiCast=false;                     
-  for(int i=0;i<n && !multiCast;i++)                      // for each characterstic, check if any status is either NOT OKAY, or if WRITE-RESPONSE is requested
-    if(pObj[i].status!=StatusCode::OK || pObj[i].wr)      // if so, to use multicast response
+  boolean multiCast=false;
+  for(auto it=pVec.begin();it!=pVec.end() && !multiCast;it++)   // for each characteristic, check if any status is either NOT OKAY, or if WRITE-RESPONSE is requested
+    if((*it).status!=StatusCode::OK || (*it).wr)                // if so, must use multicast response
       multiCast=true;    
 
   LOG2("\n>>>>>>>>>> %s >>>>>>>>>>\n",client.remoteIP().toString().c_str());
@@ -1008,13 +1004,13 @@ int HAPClient::putCharacteristicsURL(char *json){
         
   } else {                                                // multicast respose is required
 
-    homeSpan.printfAttributes(pObj,n);
+    homeSpan.printfAttributes(pVec);
     size_t nBytes=hapOut.getSize();
     hapOut.flush();
   
     hapOut.setLogLevel(2).setHapClient(this);
     hapOut << "HTTP/1.1 207 Multi-Status\r\nContent-Type: application/hap+json\r\nContent-Length: " << nBytes << "\r\n\r\n";
-    homeSpan.printfAttributes(pObj,n);
+    homeSpan.printfAttributes(pVec);
     hapOut.flush(); 
   }
 
@@ -1022,7 +1018,7 @@ int HAPClient::putCharacteristicsURL(char *json){
 
   // Create and send Event Notifications if needed
 
-  eventNotify(pObj,n,this);                               // transmit EVENT Notification for "n" pObj objects, except DO NOT notify client making request
+  eventNotify(pVec,this);                                 // transmit EVENT Notification for objects, except DO NOT notify client making request
     
   return(1);
 }
@@ -1202,9 +1198,9 @@ void HAPClient::getStatusURL(HAPClient *hapClient, void (*callBack)(const char *
 
 void HAPClient::checkNotifications(){
 
-  if(!homeSpan.Notifications.empty()){                                          // if there are Notifications to process    
-    eventNotify(&homeSpan.Notifications[0],homeSpan.Notifications.size());      // transmit EVENT Notifications
-    homeSpan.Notifications.clear();                                             // clear Notifications vector
+  if(!homeSpan.Notifications.empty()){       // if there are Notifications to process    
+    eventNotify(homeSpan.Notifications);     // transmit EVENT Notifications
+    homeSpan.Notifications.clear();          // clear Notifications vector
   }
 }
 
@@ -1227,22 +1223,22 @@ void HAPClient::checkTimedWrites(){
 
 //////////////////////////////////////
 
-void HAPClient::eventNotify(SpanBuf *pObj, int nObj, HAPClient *ignore){
+void HAPClient::eventNotify(SpanBufVec &pVec, HAPClient *ignore){
 
   for(auto it=homeSpan.hapList.begin(); it!=homeSpan.hapList.end(); ++it){          // loop over all connection slots
     if(&(*it)!=ignore){                                                             // if NOT flagged to be ignored (in cases where it is the client making a PUT request)
 
-      homeSpan.printfNotify(pObj,nObj,&(*it));               // create JSON (which may be of zero length if there are no applicable notifications for this cNum)
+      homeSpan.printfNotify(pVec,&(*it));              // create JSON (which may be of zero length if there are no applicable notifications for this cNum)
       size_t nBytes=hapOut.getSize();
       hapOut.flush();
 
-      if(nBytes>0){                                         // if there ARE notifications to send to client cNum
+      if(nBytes>0){                                    // if there ARE notifications to send to client cNum
         
         LOG2("\n>>>>>>>>>> %s >>>>>>>>>>\n",it->client.remoteIP().toString().c_str());
 
         hapOut.setLogLevel(2).setHapClient(&(*it));    
         hapOut << "EVENT/1.0 200 OK\r\nContent-Type: application/hap+json\r\nContent-Length: " << nBytes << "\r\n\r\n";
-        homeSpan.printfNotify(pObj,nObj,&(*it));
+        homeSpan.printfNotify(pVec,&(*it));
         hapOut.flush();
 
         LOG2("\n-------- SENT ENCRYPTED! --------\n");
