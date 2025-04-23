@@ -295,6 +295,11 @@ The following **optional** `homeSpan` methods enable additional features and pro
    * to avoid creating a single large text buffer, HomeSpan splits the HTML for the Web Log into chunks of 1024 bytes and repeatedly calls *f()* until all the HTML has been streamed; HomeSpan then makes a final call to *f()* with *htmlBuf* set to NULL indicating to the user that the end of the HTML text has been reached
    * this command is primarily used to redirect Web Log pages to a user-defined process for alternative handling, display, or transmission
    * see [Message Logging](Logging.md) for more details
+
+* `void assumeTimeAcquired()`
+  * calling this method tells HomeSpan to assume that you have acquired the time using your own code
+  * useful if you don't want to specify a *timeServerURL* when enabling the Web Log, but would rather acquire it manually
+    * note if a *timeServerURL* is not specified when enabling the Web Log, the Web Log records will show the time as "Unknown" unless and until you call this method   
   
 * `void processSerialCommand(const char *CLIcommand)`
   * processes the *CLIcommand* just as if were typed into the Serial Monitor
