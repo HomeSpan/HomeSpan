@@ -83,6 +83,10 @@ Requirements to run HomeSpan depend on which version you choose:
   * allows user to change maximum length of string-based Characteristics from HAP default of 64 to *n* (less than 256)
   * though specified by HAP, this value does not seem to be used by HomeKit, and this method does not appear necessary
 
+* **Added new *homeSpan* method `void assumeTimeAcquired()`**
+  * calling this method tells HomeSpan to assume that you have acquired the time using your own code
+  * useful if you don't want to specify a *timeServerURL* when enabling the Web Log, but would rather acquire it manually
+
 * **Explicitly added added `#include <mutex>` to *HomeSpan.cpp* to address compatibility issue with Arduino-ESP32 v3.2.0**
 
 * **Fixed bug in `Pixel::getPin()` that would report channel number instead of pin number**
