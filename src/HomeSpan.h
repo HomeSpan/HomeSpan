@@ -327,6 +327,7 @@ class Span{
   void (*rebootCallback)(uint8_t)=NULL;                       // optional callback when device reboots
   void (*controllerCallback)()=NULL;                          // optional callback when Controller is added/removed/changed
   void (*pollingCallback)()=NULL;                             // optional callback when polling task reaching initial completion (only called once)
+  void (*getCharacteristicsCallback)(const char *)=NULL;      // optional callback function to invoke every time HomeKit sends a getCharacteristics request
   
   NetworkServer *hapServer;                         // pointer to the HAP Server connection
   Blinker *statusLED;                               // indicates HomeSpan status
@@ -444,6 +445,7 @@ class Span{
   Span& setPollingCallback(void (*f)()){pollingCallback=f;return(*this);}                // sets an optional user-defined function to call upon INITIAL completion of the polling task (only called once)
   Span& useEthernet(){ethernetEnabled=true;return(*this);}                               // force use of Ethernet instead of WiFi, even if ETH not called or Ethernet card not detected
 
+  Span& setGetCharacteristicsCallback(void (*f)(const char *)){getCharacteristicsCallback=f;return(*this);}                    // sets an optional callback called whenever HomeKit sends a getCharacteristics request
   Span& setHostNameSuffix(const char *suffix){asprintf(&hostNameSuffix,"%s",suffix);return(*this);}                            // sets the hostName suffix to be used instead of the 6-byte AccessoryID
   Span& setCompileTime(const char *compTime=__DATE__ " " __TIME__){asprintf(&compileTime,"%s",compTime);return(*this);}        // sets the compile time to compTime; default is to use compiler-provided date/time
  
@@ -531,6 +533,7 @@ class SpanAccessory{
   void operator delete(void *p){free(p);}
   
   SpanAccessory(uint32_t aid=0);                                // constructor
+  uint32_t getAID(){return(aid);}
 };
 
 ///////////////////////////////
@@ -579,6 +582,7 @@ class SpanService{
   }
 
   uint32_t getIID(){return(iid);}                         // returns IID of Service
+  uint32_t getAID(){return(accessory->aid);}              // returns AID of enclosing Accessory
 
   virtual boolean update() {return(true);}                // placeholder for code that is called when a Service is updated via a Controller.  Must return true/false depending on success of update
   virtual void loop(){}                                   // loops for each Service - called every cycle if over-ridden with user-defined code
@@ -611,6 +615,7 @@ class SpanCharacteristic{
   };
 
   uint32_t iid=0;                          // Instance ID (HAP Table 6-3)
+  uint32_t aid=0;                          // AID for the enclosing Accessory
   HapChar *hapChar;                        // pointer to HAP Characteristic structure
   const char *type;                        // Characteristic Type
   const char *hapName;                     // HAP Name
@@ -631,7 +636,6 @@ class SpanCharacteristic{
   boolean setRangeError=false;             // flag to indicate attempt to set Range on Characteristic that does not support changes to Range
   boolean setValidValuesError=false;       // flag to indicate attempt to set Valid Values on Characteristic that does not support changes to Valid Values
   
-  uint32_t aid=0;                          // Accessory ID - passed through from Service containing this Characteristic
   uint8_t updateFlag=0;                    // set to either 1 (for normal write) or 2 (for write-response) inside update() when Characteristic is successfully updated via Home App
   unsigned long updateTime=0;              // last time value was updated (in millis) either by PUT /characteristic OR by setVal()
   UVal newValue;                           // the updated value requested by PUT /characteristic
@@ -802,6 +806,7 @@ class SpanCharacteristic{
   boolean updated();                                  // returns true within update() if Characteristic was updated by Home App 
   unsigned long timeVal();                            // returns time elapsed (in millis) since value was last updated, either by Home App or by using setVal()
   uint32_t getIID();                                  // returns IID of Characteristic
+  uint32_t getAID();                                  // returns AID of enclosing Accessory
 
   SpanCharacteristic *setPerms(uint8_t perms);        // sets permissions of a Characteristic
   SpanCharacteristic *addPerms(uint8_t dPerms);       // add permissions of a Characteristic  

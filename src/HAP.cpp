@@ -916,6 +916,9 @@ int HAPClient::getCharacteristicsURL(char *urlBuf){
 
   LOG1("In Get Characteristics #%d (%s)...\n",clientNumber,client.remoteIP().toString().c_str());
 
+  if(homeSpan.getCharacteristicsCallback)
+    homeSpan.getCharacteristicsCallback(urlBuf);
+
   int len=strlen(urlBuf);           // determine number of IDs specified by counting commas in URL
   int numIDs=1;
   for(int i=0;i<len;i++)

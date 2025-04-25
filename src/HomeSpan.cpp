@@ -2510,6 +2510,13 @@ uint32_t SpanCharacteristic::getIID(){
 
 ///////////////////////////////
 
+uint32_t SpanCharacteristic::getAID(){
+  
+  return(aid);
+}
+
+///////////////////////////////
+
 SpanCharacteristic *SpanCharacteristic::setPerms(uint8_t perms){
   perms&=0x7F;
   if(perms>0)
