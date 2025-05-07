@@ -2517,6 +2517,18 @@ uint32_t SpanCharacteristic::getAID(){
 
 ///////////////////////////////
 
+boolean SpanCharacteristic::foundIn(const char *getCharList){
+
+  char *charID;
+
+  asprintf(&charID,"%lu.%lu",getAID(),getIID());
+  boolean res=strstr(getCharList,charID);
+  free(charID);
+  return(res);
+}
+
+///////////////////////////////
+
 SpanCharacteristic *SpanCharacteristic::setPerms(uint8_t perms){
   perms&=0x7F;
   if(perms>0)

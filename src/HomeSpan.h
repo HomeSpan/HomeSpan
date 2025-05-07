@@ -807,6 +807,7 @@ class SpanCharacteristic{
   unsigned long timeVal();                            // returns time elapsed (in millis) since value was last updated, either by Home App or by using setVal()
   uint32_t getIID();                                  // returns IID of Characteristic
   uint32_t getAID();                                  // returns AID of enclosing Accessory
+  boolean foundIn(const char *getCharList);           // returns true if Characteristics is found in getCharList, else returns false
 
   SpanCharacteristic *setPerms(uint8_t perms);        // sets permissions of a Characteristic
   SpanCharacteristic *addPerms(uint8_t dPerms);       // add permissions of a Characteristic  
