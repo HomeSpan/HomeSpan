@@ -242,6 +242,16 @@ The following **optional** `homeSpan` methods enable additional features and pro
   * sets an optional user-defined callback function, *func*, to be called by HomeSpan *one time* upon completing its first pass through the HomeSpan `poll()` function
   * the function *func* must be of type *void* and have no arguments
 
+* `Span& setGetCharacteristicsCallback(void (*func)(const char *getCharList))`
+  * sets an optional user-defined callback function, *func*, to be called by HomeSpan whenever it receives a *GET /characteristics* request from HomeKit
+    * HomeKit generally sends this request to every paired device each time the Home App is opened on an iPhone or Mac
+  * note *func* is called **prior** to HomeSpan reading the requested Characteristics and sending their values back to HomeKit
+    * this callback is useful in circumstances where the current state of a sensor-style Characteristic must be read by HomeSpan using a separate "expensive" process that should be called only when needed as opposed to being continuously updated in a Services `loop()` method
+  * the function *func* must be of type *void* and accept one argument of type *const char \** into which HomeSpan passes the list of Characteristic AID/IID pairs that HomeKit provided in its HTTP GET request
+    * *getCharList* can be used to determine if the HTTP GET request includes the AID/IID pair for any specific Characteristic
+    * this allows the user to act on the callback based on which specific Characteristics were requested by HomeKit
+    * see `SpanCharacteristic::foundIn(const char *getCharList)`
+
 * `Span& setPairingCode(const char *s)`
   * sets the Setup Pairing Code to *s*, which **must** be exactly eight numerical digits (no dashes)
   * example: `homeSpan.setPairingCode("46637726");`
