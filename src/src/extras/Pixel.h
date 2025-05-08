@@ -181,7 +181,7 @@ class Pixel : public Blinkable {
     static Color CCT(float temp, float v, float wTemp, float cTemp){return(Color().CCT(temp,v,wTemp,cTemp));}      // a static method for returning a CCT Color    
     Color CCT(float temp, float v){return(Color().CCT(temp,v,warmTemp,coolTemp));}                                 // a member function for returning a CCT Color using pixel-specific temperatures
               
-    int getPin(){return(channel);}                                                                  // returns pixel pin (=-1 if channel is not valid)
+    int getPin(){return(channel>=0?pin:-1);}                                                        // returns pixel pin (=-1 if channel is not valid)
     Pixel *setTiming(float high0, float low0, float high1, float low1, uint32_t lowReset);          // changes default timings for bit pulse - note parameters are in MICROSECONDS
     Pixel *setTemperatures(float wTemp, float cTemp){warmTemp=wTemp;coolTemp=cTemp;return(this);}   // changes default warm-white and cool-white LED temperatures (in Kelvin)
         

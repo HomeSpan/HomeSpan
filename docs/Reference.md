@@ -242,6 +242,16 @@ The following **optional** `homeSpan` methods enable additional features and pro
   * sets an optional user-defined callback function, *func*, to be called by HomeSpan *one time* upon completing its first pass through the HomeSpan `poll()` function
   * the function *func* must be of type *void* and have no arguments
 
+* `Span& setGetCharacteristicsCallback(void (*func)(const char *getCharList))`
+  * sets an optional user-defined callback function, *func*, to be called by HomeSpan whenever it receives a *GET /characteristics* request from HomeKit
+    * HomeKit generally sends this request to every paired device each time the Home App is opened on an iPhone or Mac
+  * note *func* is called **prior** to HomeSpan reading the requested Characteristics and sending their values back to HomeKit
+    * this callback is useful in circumstances where the current state of a sensor-style Characteristic must be read by HomeSpan using a separate "expensive" process that should be called only when needed as opposed to being continuously updated in a Services `loop()` method
+  * the function *func* must be of type *void* and accept one argument of type *const char \** into which HomeSpan passes the list of Characteristic AID/IID pairs that HomeKit provided in its HTTP GET request
+    * *getCharList* can be used to determine if the HTTP GET request includes the AID/IID pair for any specific Characteristic
+    * this allows the user to act on the callback based on which specific Characteristics were requested by HomeKit
+    * see `SpanCharacteristic::foundIn(const char *getCharList)`
+
 * `Span& setPairingCode(const char *s)`
   * sets the Setup Pairing Code to *s*, which **must** be exactly eight numerical digits (no dashes)
   * example: `homeSpan.setPairingCode("46637726");`
@@ -295,6 +305,11 @@ The following **optional** `homeSpan` methods enable additional features and pro
    * to avoid creating a single large text buffer, HomeSpan splits the HTML for the Web Log into chunks of 1024 bytes and repeatedly calls *f()* until all the HTML has been streamed; HomeSpan then makes a final call to *f()* with *htmlBuf* set to NULL indicating to the user that the end of the HTML text has been reached
    * this command is primarily used to redirect Web Log pages to a user-defined process for alternative handling, display, or transmission
    * see [Message Logging](Logging.md) for more details
+
+* `void assumeTimeAcquired()`
+  * calling this method tells HomeSpan to assume that you have acquired the time using your own code
+  * useful if you don't want to specify a *timeServerURL* when enabling the Web Log, but would rather acquire it manually
+    * note if a *timeServerURL* is not specified when enabling the Web Log, the Web Log records will show the time as "Unknown" unless and until you call this method   
   
 * `void processSerialCommand(const char *CLIcommand)`
   * processes the *CLIcommand* just as if were typed into the Serial Monitor
@@ -444,18 +459,21 @@ A fully worked example showing how to use `autoPoll()` and `homeSpanPAUSE` to au
 
 Creating an instance of this **class** adds a new HAP Accessory to the HomeSpan HAP Database.
 
-  * every HomeSpan sketch requires at least one Accessory
-  * a sketch can contain a maximum of 150 Accessories per sketch (if exceeded, a runtime error will the thrown and the sketch will halt)
-  * there are no associated methods
-  * the argument *aid* is optional.
-  
-    * if specified and *not* zero, the Accessory ID is set to *aid*.
-    * if unspecified, or equal to zero, the Accessory ID will be set to one more than the ID of the previously-instantiated Accessory, or to 1 if this is the first Accessory.
-    * the first Accessory instantiated must always have an ID=1 (which is the default if *aid* is unspecified).
-    * setting the *aid* of the first Accessory to anything but 1 throws an error during initialization.
-    
-  * you must call `homeSpan.begin()` before instantiating any Accessories
-  * example: `new SpanAccessory();`
+* every HomeSpan sketch requires at least one Accessory
+* a sketch can contain a maximum of 150 Accessories per sketch (if exceeded, a runtime error will the thrown and the sketch will halt)
+* there are no associated methods
+* the argument *aid* is optional:
+  * if specified and *not* zero, the Accessory ID is set to *aid*
+  * if unspecified, or equal to zero, the Accessory ID will be set to one more than the ID of the previously-instantiated Accessory, or to 1 if this is the first Accessory
+  * the first Accessory instantiated must always have an ID=1 (which is the default if *aid* is unspecified)
+  * setting the *aid* of the first Accessory to anything but 1 throws an error during initialization
+* you must call `homeSpan.begin()` before instantiating any Accessories
+* example: `new SpanAccessory();`
+
+The following methods are supported:
+
+* `uint32_t getAID()`
+  * returns the Accessory ID (AID)
   
 ## *SpanService()*
 
@@ -508,7 +526,10 @@ The following methods are supported:
      
 * `uint32_t getIID()`
   * returns the IID of the Service
-    
+
+* `uint32_t getAID()`
+  * returns the AID of the Accessory to which the Service belongs
+      
 ## *SpanCharacteristic(value [,boolean nvsStore])*
   
 This is a **base class** from which all HomeSpan Characteristics are derived, and should **not** be directly instantiated.  Rather, to create a new Characteristic instantiate one of the HomeSpan Characteristics defined in the [Characteristic](ServiceList.md) namespace.
@@ -575,6 +596,12 @@ This is a **base class** from which all HomeSpan Characteristics are derived, an
 
 * `void setString(const char *value [,boolean notify])`
   * equivalent to `setVal(value)`, but used exclusively for string-characteristics (i.e. a null-terminated array of characters)
+
+* `SpanCharacteristic *setMaxStringLength(uint8_t n)`
+  * changes the maximum allowed length of a string-characteristic from the HAP default (64) to *n*
+  * note the Home App seems to properly process strings that exceed 64 characters without needing to reset the maximum length
+  * this method is included in HomeSpan only for completeness with HAP - it is likely not needed
+  * returns a pointer to the Characteristic itself so that the method can be chained during instantiation
  
 #### The following methods are supported for DATA (i.e. byte-array) Characteristics:
 
@@ -654,6 +681,13 @@ This is a **base class** from which all HomeSpan Characteristics are derived, an
 * `uint32_t getIID()`
   * returns the IID of the Characteristic
 
+* `uint32_t getAID()`
+  * returns the AID of the Accessory to which the Characteristic belongs
+
+* `boolean foundIn(const char *getCharList)`
+  * returns *true* if the AID/IID pair for the Characteristic is found in *getCharList*, else returns *false*
+  * *getCharList* is typically passed by HomeSpan to an optional user-defined callback function as specified in *homeSpan.setGetCharacteristicsCallback()*
+  
 ### *SpanButton(int pin, uint16_t longTime, uint16_t singleTime, uint16_t doubleTime, boolean (\*triggerType)(int))*
 
 Creating an instance of this **class** attaches a pushbutton handler to the ESP32 *pin* specified.

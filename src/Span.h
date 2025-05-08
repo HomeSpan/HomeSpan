@@ -525,7 +525,7 @@ namespace Characteristic {
   CREATE_CHAR(UINT32_t,Identifier,0,0,255); // numerical Identifer of the <b>InputSource</b>.
   CREATE_CHAR(UINT8_t,InputDeviceType,0,0,6); // not used
   CREATE_CHAR(UINT8_t,InputSourceType,0,0,10);  // not used
-  CREATE_CHAR(UINT8_t,InUse,0,0,1,NOT_IN_USE,IN_USE);   // if Service is set to active, this indictes whether it is currently in use
+  CREATE_CHAR(UINT8_t,InUse,0,0,1,NOT_IN_USE,IN_USE);   // if Service is set to active, this indicates whether it is currently in use
   CREATE_CHAR(UINT8_t,IsConfigured,0,0,1,NOT_CONFIGURED,CONFIGURED);  // indicates if a predefined Service has been configured
   CREATE_CHAR(UINT8_t,LeakDetected,0,0,1,NOT_DETECTED,DETECTED);  // indictates if a leak is detected
   CREATE_CHAR(UINT8_t,LockCurrentState,0,0,3,UNLOCKED,LOCKED,JAMMED,UNKNOWN);  // indicates state of a lock
