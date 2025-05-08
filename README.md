@@ -83,9 +83,19 @@ Requirements to run HomeSpan depend on which version you choose:
   * allows user to change maximum length of string-based Characteristics from HAP default of 64 to *n* (less than 256)
   * though specified by HAP, this value does not seem to be used by HomeKit, and this method does not appear necessary
 
-* **Added new *homeSpan* method `void assumeTimeAcquired()`**
+* **Added new *homeSpan* method `assumeTimeAcquired()`**
   * calling this method tells HomeSpan to assume that you have acquired the time using your own code
   * useful if you don't want to specify a *timeServerURL* when enabling the Web Log, but would rather acquire it manually
+
+* **Added new *homeSpan* method `setGetCharacteristicsCallback(void (*func)(const char *getCharList))`**
+  * sets an optional user-defined callback function, *func*, to be called by HomeSpan whenever it receives a *GET /characteristics* request from HomeKit
+  * HomeKit generally sends this request to every paired device each time the Home App is opened on an iPhone or Mac
+  * this callback is useful in circumstances where the current state of a sensor-style Characteristic must be read by HomeSpan using a separate "expensive" process that should be called only when needed as opposed to being continuously updated in a Services `loop()` method
+  * the function *func* must be of type void and accept one argument of type *const char \** into which HomeSpan passes the list of Characteristic AID/IID pairs that HomeKit provided in its HTTP *GET* request
+  * *getCharList* can be used to determine if the HTTP *GET* request includes the AID/IID pair for any specific Characteristic
+    * this allows the user to act on the callback based on which specific Characteristics were requested by HomeKit
+    * see **new helper SpanCharacteristic method `foundIn(const char *getCharList)`** that returns *true* or *false* depending on whether the AID/IID for a specific Characteristic is found in *getCharList*
+    * for completeness, **also added `uint32_t getAID()` methods** to each of the SpanAccessory, SpanService, and SpanCharacteristic classes
 
 * **Explicitly added added `#include <mutex>` to *HomeSpan.cpp* to address compatibility issue with Arduino-ESP32 v3.2.0**
 
