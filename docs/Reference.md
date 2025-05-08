@@ -449,18 +449,21 @@ A fully worked example showing how to use `autoPoll()` and `homeSpanPAUSE` to au
 
 Creating an instance of this **class** adds a new HAP Accessory to the HomeSpan HAP Database.
 
-  * every HomeSpan sketch requires at least one Accessory
-  * a sketch can contain a maximum of 150 Accessories per sketch (if exceeded, a runtime error will the thrown and the sketch will halt)
-  * there are no associated methods
-  * the argument *aid* is optional.
-  
-    * if specified and *not* zero, the Accessory ID is set to *aid*.
-    * if unspecified, or equal to zero, the Accessory ID will be set to one more than the ID of the previously-instantiated Accessory, or to 1 if this is the first Accessory.
-    * the first Accessory instantiated must always have an ID=1 (which is the default if *aid* is unspecified).
-    * setting the *aid* of the first Accessory to anything but 1 throws an error during initialization.
-    
-  * you must call `homeSpan.begin()` before instantiating any Accessories
-  * example: `new SpanAccessory();`
+* every HomeSpan sketch requires at least one Accessory
+* a sketch can contain a maximum of 150 Accessories per sketch (if exceeded, a runtime error will the thrown and the sketch will halt)
+* there are no associated methods
+* the argument *aid* is optional:
+  * if specified and *not* zero, the Accessory ID is set to *aid*
+  * if unspecified, or equal to zero, the Accessory ID will be set to one more than the ID of the previously-instantiated Accessory, or to 1 if this is the first Accessory
+  * the first Accessory instantiated must always have an ID=1 (which is the default if *aid* is unspecified)
+  * setting the *aid* of the first Accessory to anything but 1 throws an error during initialization
+* you must call `homeSpan.begin()` before instantiating any Accessories
+* example: `new SpanAccessory();`
+
+The following methods are supported:
+
+* `uint32_t getAID()`
+  * returns the Accessory ID (AID)
   
 ## *SpanService()*
 
@@ -513,7 +516,10 @@ The following methods are supported:
      
 * `uint32_t getIID()`
   * returns the IID of the Service
-    
+
+* `uint32_t getAID()`
+  * returns the AID of the Accessory to which the Service belongs
+      
 ## *SpanCharacteristic(value [,boolean nvsStore])*
   
 This is a **base class** from which all HomeSpan Characteristics are derived, and should **not** be directly instantiated.  Rather, to create a new Characteristic instantiate one of the HomeSpan Characteristics defined in the [Characteristic](ServiceList.md) namespace.
@@ -665,6 +671,9 @@ This is a **base class** from which all HomeSpan Characteristics are derived, an
 * `uint32_t getIID()`
   * returns the IID of the Characteristic
 
+* `uint32_t getAID()`
+  * returns the AID of the Accessory to which the Characteristic belongs
+  
 ### *SpanButton(int pin, uint16_t longTime, uint16_t singleTime, uint16_t doubleTime, boolean (\*triggerType)(int))*
 
 Creating an instance of this **class** attaches a pushbutton handler to the ESP32 *pin* specified.
