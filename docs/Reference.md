@@ -683,6 +683,10 @@ This is a **base class** from which all HomeSpan Characteristics are derived, an
 
 * `uint32_t getAID()`
   * returns the AID of the Accessory to which the Characteristic belongs
+
+* `boolean foundIn(const char *getCharList)`
+  * returns *true* if the AID/IID pair for the Characteristic is found in *getCharList*, else returns *false*
+  * *getCharList* is typically passed by HomeSpan to an optional user-defined callback function as specified in *homeSpan.setGetCharacteristicsCallback()*
   
 ### *SpanButton(int pin, uint16_t longTime, uint16_t singleTime, uint16_t doubleTime, boolean (\*triggerType)(int))*
 
