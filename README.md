@@ -59,7 +59,7 @@ Requirements to run HomeSpan depend on which version you choose:
   * Launch the WiFi Access Point
 * A standalone, detailed End-User Guide
 
-## ❗Latest Update - HomeSpan 2.1.2 (MM/DD/2025)
+## ❗Latest Update - HomeSpan 2.1.2 (05/08/2025)
 
 ### Updates and Corrections
 
