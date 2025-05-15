@@ -286,6 +286,7 @@ class Span{
   uint32_t rebootCallbackTime;                  // length of time to wait (in milliseconds) before calling optional Reboot callback
   boolean ethernetEnabled=false;                // flag to indicate whether Ethernet is being used instead of WiFi
   boolean initialPollingCompleted=false;        // flag to indicate whether polling task has initially completed
+  boolean forceConfigIncrement=false;           // flag to indicate whether configuration number (MDNS C# value) should be incremented even if database config has not changed
   char *compileTime=NULL;                       // optional compile time string --- can be set with call to setCompileTime()
    
   nvs_handle charNVS;                           // handle for non-volatile-storage of Characteristics data
@@ -396,9 +397,9 @@ class Span{
   void poll();                                  // calls pollTask() with some error checking
   void processSerialCommand(const char *c);     // process command 'c' (typically from readSerial, though can be called with any 'c')
   
-  boolean updateDatabase(boolean updateMDNS=true);   // updates HAP Configuration Number and Loop vector; if updateMDNS=true and config number has changed, re-broadcasts MDNS 'c#' record; returns true if config number changed
-  boolean deleteAccessory(uint32_t aid);             // deletes Accessory with matching aid; returns true if found, else returns false 
-
+  boolean updateDatabase(boolean updateMDNS=true);           // updates HAP Configuration Number and Loop vector; if updateMDNS=true and config number has changed, re-broadcasts MDNS 'c#' record; returns true if config number changed
+  boolean deleteAccessory(uint32_t aid);                     // deletes Accessory with matching aid; returns true if found, else returns false 
+  
   Span& setControlPin(uint8_t pin, PushButton::triggerType_t triggerType=PushButton::TRIGGER_ON_LOW){            // sets Control Pin, with optional trigger type   
     controlButton=new PushButton(pin, triggerType);
     return(*this);
@@ -444,6 +445,7 @@ class Span{
   Span& setWifiBegin(void (*f)(const char *, const char *)){wifiBegin=f;return(*this);}  // sets an optional user-defined function to over-ride WiFi.begin() with additional logic
   Span& setPollingCallback(void (*f)()){pollingCallback=f;return(*this);}                // sets an optional user-defined function to call upon INITIAL completion of the polling task (only called once)
   Span& useEthernet(){ethernetEnabled=true;return(*this);}                               // force use of Ethernet instead of WiFi, even if ETH not called or Ethernet card not detected
+  Span& forceNewConfigNumber(){forceConfigIncrement=true;return(*this);}                 // force configuration increment when updateDatabase() is called even if database has not changed 
 
   Span& setGetCharacteristicsCallback(void (*f)(const char *)){getCharacteristicsCallback=f;return(*this);}                    // sets an optional callback called whenever HomeKit sends a getCharacteristics request
   Span& setHostNameSuffix(const char *suffix){asprintf(&hostNameSuffix,"%s",suffix);return(*this);}                            // sets the hostName suffix to be used instead of the 6-byte AccessoryID

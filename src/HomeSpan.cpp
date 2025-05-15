@@ -1832,11 +1832,11 @@ boolean Span::updateDatabase(boolean updateMDNS){
 
   boolean changed=false;
 
-  if(memcmp(hapOut.getHash(),hapConfig.hashCode,48)){       // if hash code of current HAP database does not match stored hash code
-    memcpy(hapConfig.hashCode,hapOut.getHash(),48);         // update stored hash code
-    hapConfig.configNumber++;                               // increment configuration number
-    if(hapConfig.configNumber==65536)                       // reached max value
-      hapConfig.configNumber=1;                             // reset to 1
+  if(forceConfigIncrement || memcmp(hapOut.getHash(),hapConfig.hashCode,48)){       // if hash code of current HAP database does not match stored hash code, or force-increment is requested
+    memcpy(hapConfig.hashCode,hapOut.getHash(),48);                                 // update stored hash code
+    hapConfig.configNumber++;                                                       // increment configuration number
+    if(hapConfig.configNumber==65536)                                               // reached max value
+      hapConfig.configNumber=1;                                                     // reset to 1
                    
     nvs_set_blob(hapNVS,"HAPHASH",&hapConfig,sizeof(hapConfig));     // update data
     nvs_commit(hapNVS);                                              // commit to NVS
