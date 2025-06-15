@@ -1125,7 +1125,7 @@ void HAPClient::getStatusURL(HAPClient *hapClient, void (*callBack)(const char *
     hapOut << "<tr><td>Compile Time:</td><td>" << homeSpan.compileTime << "</td></tr>\n";
 
   if(!homeSpan.ethernetEnabled){
-    hapOut << "<tr><td>WiFi Disconnects:</td><td>" << homeSpan.connected/2 << "</td></tr>\n";
+    hapOut << "<tr><td>WiFi Disconnects:</td><td>" << homeSpan.connected/2 << "</td></tr>\n"; // TODO: change this
     hapOut << "<tr><td>WiFi Signal:</td><td>" << (int)WiFi.RSSI() << " dBm</td></tr>\n";
     if(homeSpan.bssidNames.count(WiFi.BSSIDstr().c_str()))
       hapOut << "<tr><td>BSSID:</td><td>" << WiFi.BSSIDstr().c_str() << " \"" << homeSpan.bssidNames[WiFi.BSSIDstr().c_str()].c_str() << "\"" << "</td></tr>\n";
@@ -1134,7 +1134,7 @@ void HAPClient::getStatusURL(HAPClient *hapClient, void (*callBack)(const char *
     hapOut << "<tr><td>WiFi Local IP:</td><td>" << WiFi.localIP().toString().c_str() << "</td></tr>\n";
     hapOut << "<tr><td>WiFi Gateway:</td><td>" << WiFi.gatewayIP().toString().c_str() << "</td></tr>\n";
   } else {
-    hapOut << "<tr><td>Ethernet Disconnects:</td><td>" << homeSpan.connected/2 << "</td></tr>\n";
+    hapOut << "<tr><td>Ethernet Disconnects:</td><td>" << homeSpan.connected/2 << "</td></tr>\n"; // TODO: change this
     hapOut << "<tr><td>Ethernet Local IP:</td><td>" << ETH.localIP().toString().c_str() << "</td></tr>\n";    
     hapOut << "<tr><td>Ethernet Gateway:</td><td>" << ETH.gatewayIP().toString().c_str() << "</td></tr>\n";    
   }

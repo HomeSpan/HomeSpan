@@ -294,7 +294,10 @@ class Span{
   nvs_handle srpNVS;                            // handle for non-volatile storage of SRP data
   nvs_handle hapNVS;                            // handle for non-volatile-storage of HAP data
 
+  // odd = not connected, even = connected
   int connected=0;                              // WiFi connection status (increments upon each connect and disconnect)
+  int connectionCount=0;                        // number of times WiFi has been connected (increments upon each connect)
+  boolean wifiConnected=false;                  // flag indicating whether WiFi is connected
   HS_ExpCounter wifiTimeCounter;                // exponentially-increasing wait time counter between WiFi connection attempts
   unsigned long alarmConnect=0;                 // time after which WiFi connection attempt should be tried again
 
