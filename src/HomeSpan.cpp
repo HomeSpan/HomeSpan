@@ -269,7 +269,7 @@ void Span::pollTask() {
     
   } // isInitialized
 
-  if(!ethernetEnabled && strlen(network.wifiData.ssid) && !(connected%2) && millis()>alarmConnect){ // Note: if disconnected
+  if(!ethernetEnabled && strlen(network.wifiData.ssid) && !wifiConnected && millis()>alarmConnect){ // Note: if disconnected
     if(verboseWifiReconnect)
       addWebLog(true,"Trying to connect to %s.  Waiting %ld sec...",network.wifiData.ssid,wifiTimeCounter/1000);
     
@@ -455,8 +455,8 @@ void Span::networkCallback(arduino_event_id_t event){
   switch (event) {
       
     case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
-      if(connected%2){ // NOTE: if connected                       // we are in a connected state
-        connected++;   // NOTE: move to unconnected                        // move to unconnected state
+      if(wifiConnected){ // NOTE: if connected                       // we are in a connected state
+        wifiConnected=false;   // NOTE: move to unconnected                        // move to unconnected state
         addWebLog(true,"*** WiFi Connection Lost!");
         wifiTimeCounter.reset();
         alarmConnect=millis();
@@ -470,11 +470,11 @@ void Span::networkCallback(arduino_event_id_t event){
         addWebLog(true,"WiFi Connected!  IP Address = %s   (RSI=%d  BSSID=%s  \"%s\")",WiFi.localIP().toString().c_str(),WiFi.RSSI(),WiFi.BSSIDstr().c_str(),bssidNames[WiFi.BSSIDstr().c_str()].c_str());
       else
         addWebLog(true,"WiFi Connected!  IP Address = %s   (RSI=%d  BSSID=%s)",WiFi.localIP().toString().c_str(),WiFi.RSSI(),WiFi.BSSIDstr().c_str());      
-      connected++;  // NOTE: set to connected
-      if(connected==1) // NOTE: if connected
+      wifiConnected=true;  // NOTE: set to connected
+      if(wifiConnected) // NOTE: if connected
         configureNetwork();
       if(connectionCallback)
-        connectionCallback((connected+1)/2); // NOTE: send number of connection events
+        connectionCallback(connectionCount); // NOTE: send number of connection events
       if(rescanInitialTime>0){
         rescanAlarm=millis()+rescanInitialTime;
         rescanStatus=RESCAN_PENDING;
@@ -503,17 +503,17 @@ void Span::networkCallback(arduino_event_id_t event){
     case ARDUINO_EVENT_ETH_GOT_IP:
     case ARDUINO_EVENT_ETH_GOT_IP6:
       addWebLog(true,"Ethernet Connected!  IP Address = %s",ETH.localIP().toString().c_str());      
-      connected++; // NOTE: set to connected
-      if(connected==1) // NOTE: set to connected
+      wifiConnected=true; // NOTE: set to connected
+      if(wifiConnected) // NOTE: set to connected
         configureNetwork();
       if(connectionCallback)
-        connectionCallback((connected+1)/2); // NOTE: send number of connection events
+        connectionCallback(connectionCount); // NOTE: send number of connection events
       resetStatus();     
     break;
 
     case ARDUINO_EVENT_ETH_DISCONNECTED:
-      if(connected%2){   // NOTE: if connected                       // we are in a connected state
-        connected++;   // NOTE: set unconnected                        // move to unconnected state
+      if(wifiConnected){   // NOTE: if connected                       // we are in a connected state
+        wifiConnected=false   // NOTE: set unconnected                        // move to unconnected state
         addWebLog(true,"*** Ethernet Connection Lost!");
       }
       resetStatus();     
@@ -1342,7 +1342,7 @@ void Span::getWebLog(void (*f)(const char *, void *), void *user_data){
 void Span::resetStatus(){
   if(!ethernetEnabled && strlen(network.wifiData.ssid)==0)
     STATUS_UPDATE(start(LED_WIFI_NEEDED),HS_WIFI_NEEDED)
-  else if(!(connected%2)) // NOTE: if Connected
+  else if(wifiConnected) // NOTE: if Connected
     STATUS_UPDATE(start(LED_WIFI_CONNECTING),ethernetEnabled?HS_ETH_CONNECTING:HS_WIFI_CONNECTING)
   else if(!HAPClient::nAdminControllers())
     STATUS_UPDATE(start(LED_PAIRING_NEEDED),HS_PAIRING_NEEDED)
