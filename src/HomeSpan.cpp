@@ -454,6 +454,12 @@ void Span::networkCallback(arduino_event_id_t event){
   
   switch (event) {
       
+    case ARDUINO_EVENT_WIFI_STA_CONNECTED:
+      connected=true;
+      connectionCount++;
+      addWebLog(true,"WiFi Connected! (RSI=%d  BSSID=%s)",WiFi.RSSI(),WiFi.BSSIDstr().c_str());
+    break;
+    
     case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
       if(connected){ // we are in a connected state
         connected=false; // move to unconnected state
@@ -464,18 +470,12 @@ void Span::networkCallback(arduino_event_id_t event){
       resetStatus();     
     break;
       
-    case ARDUINO_EVENT_WIFI_STA_CONNECTED:
-      connected=true;
-      connectionCount++;
-      addWebLog(true,"WiFi Connected! (RSI=%d  BSSID=%s)",WiFi.RSSI(),WiFi.BSSIDstr().c_str());
-      break;
-      
     case ARDUINO_EVENT_WIFI_STA_GOT_IP:
     case ARDUINO_EVENT_WIFI_STA_GOT_IP6:
       if(bssidNames.count(WiFi.BSSIDstr().c_str()))
-        addWebLog(true,"WiFi Connected!  IP Address = %s   (RSI=%d  BSSID=%s  \"%s\")",WiFi.localIP().toString().c_str(),WiFi.RSSI(),WiFi.BSSIDstr().c_str(),bssidNames[WiFi.BSSIDstr().c_str()].c_str());
+        addWebLog(true,"WiFi got an IP!  IP Address = %s   (RSI=%d  BSSID=%s  \"%s\")",WiFi.localIP().toString().c_str(),WiFi.RSSI(),WiFi.BSSIDstr().c_str(),bssidNames[WiFi.BSSIDstr().c_str()].c_str());
       else
-        addWebLog(true,"WiFi Connected!  IP Address = %s   (RSI=%d  BSSID=%s)",WiFi.localIP().toString().c_str(),WiFi.RSSI(),WiFi.BSSIDstr().c_str());      
+        addWebLog(true,"WiFi got an IP!  IP Address = %s   (RSI=%d  BSSID=%s)",WiFi.localIP().toString().c_str(),WiFi.RSSI(),WiFi.BSSIDstr().c_str());      
       if(connected)
         configureNetwork();
       if(connectionCallback)
@@ -507,13 +507,19 @@ void Span::networkCallback(arduino_event_id_t event){
 
     case ARDUINO_EVENT_ETH_GOT_IP:
     case ARDUINO_EVENT_ETH_GOT_IP6:
-      addWebLog(true,"Ethernet Connected!  IP Address = %s",ETH.localIP().toString().c_str());      
+      addWebLog(true,"Ethernet got an IP!  IP Address = %s",ETH.localIP().toString().c_str());      
       if(connected)
         configureNetwork();
       if(connectionCallback)
         connectionCallback(connectionCount);
       resetStatus();     
     break;
+    
+    case ARDUINO_EVENT_ETH_CONNECTED:
+      connected=true;
+      connectionCount++;
+      addWebLog(true,"Ethernet Connected!");
+      break;
 
     case ARDUINO_EVENT_ETH_DISCONNECTED:
       if(connected){ // we are in a connected state
