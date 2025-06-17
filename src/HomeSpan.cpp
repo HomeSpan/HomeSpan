@@ -471,6 +471,7 @@ void Span::networkCallback(arduino_event_id_t event){
       else
         addWebLog(true,"WiFi Connected!  IP Address = %s   (RSI=%d  BSSID=%s)",WiFi.localIP().toString().c_str(),WiFi.RSSI(),WiFi.BSSIDstr().c_str());      
       wifiConnected=true;  // NOTE: set to connected
+      connectionCount++; // NOTE: increment connection count
       if(wifiConnected) // NOTE: if connected
         configureNetwork();
       if(connectionCallback)
@@ -504,6 +505,7 @@ void Span::networkCallback(arduino_event_id_t event){
     case ARDUINO_EVENT_ETH_GOT_IP6:
       addWebLog(true,"Ethernet Connected!  IP Address = %s",ETH.localIP().toString().c_str());      
       wifiConnected=true; // NOTE: set to connected
+      connectionCount++; // NOTE: increment connection count
       if(wifiConnected) // NOTE: set to connected
         configureNetwork();
       if(connectionCallback)
