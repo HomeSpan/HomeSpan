@@ -513,7 +513,7 @@ void Span::networkCallback(arduino_event_id_t event){
 
     case ARDUINO_EVENT_ETH_DISCONNECTED:
       if(wifiConnected){   // NOTE: if connected                       // we are in a connected state
-        wifiConnected=false   // NOTE: set unconnected                        // move to unconnected state
+        wifiConnected=false;   // NOTE: set unconnected                        // move to unconnected state
         addWebLog(true,"*** Ethernet Connection Lost!");
       }
       resetStatus();     
