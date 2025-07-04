@@ -39,6 +39,8 @@ void setup() {
 
 //  homeSpan.setStatusPixel(18);
   homeSpan.setControlPin(0);
+
+  WiFi.enableIPv6();
   
 //  homeSpan.enableWatchdog();
   homeSpan.setLogLevel(2);

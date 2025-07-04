@@ -453,33 +453,49 @@ Span& Span::setConnectionTimes(uint32_t minTime, uint32_t maxTime, uint8_t nStep
 void Span::networkCallback(arduino_event_id_t event){
   
   switch (event) {
-      
+
     case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
-      if(connected%2){                        // we are in a connected state
-        connected++;                          // move to unconnected state
+      if(connected%2){
+        connected++;
         addWebLog(true,"*** WiFi Connection Lost!");
         wifiTimeCounter.reset();
         alarmConnect=millis();
+        resetStatus();
+        if(rescanInitialTime>0){
+          rescanAlarm=millis()+rescanInitialTime;
+          rescanStatus=RESCAN_PENDING;
+        }
       }
-      resetStatus();     
     break;
 
     case ARDUINO_EVENT_WIFI_STA_GOT_IP:
     case ARDUINO_EVENT_WIFI_STA_GOT_IP6:
-      if(bssidNames.count(WiFi.BSSIDstr().c_str()))
-        addWebLog(true,"WiFi Connected!  IP Address = %s   (RSI=%d  BSSID=%s  \"%s\")",WiFi.localIP().toString().c_str(),WiFi.RSSI(),WiFi.BSSIDstr().c_str(),bssidNames[WiFi.BSSIDstr().c_str()].c_str());
-      else
-        addWebLog(true,"WiFi Connected!  IP Address = %s   (RSI=%d  BSSID=%s)",WiFi.localIP().toString().c_str(),WiFi.RSSI(),WiFi.BSSIDstr().c_str());      
-      connected++;
-      if(connected==1)
-        configureNetwork();
-      if(connectionCallback)
-        connectionCallback((connected+1)/2);
-      if(rescanInitialTime>0){
-        rescanAlarm=millis()+rescanInitialTime;
-        rescanStatus=RESCAN_PENDING;
+      if(event==ARDUINO_EVENT_WIFI_STA_GOT_IP6){
+        esp_ip6_addr_t if_ip6[CONFIG_LWIP_IPV6_NUM_ADDRESSES];
+        int v6addrs = esp_netif_get_all_ip6(WiFi.STA.netif(), if_ip6);
+        if(v6addrs<1 || esp_netif_ip6_get_addr_type(&if_ip6[v6addrs-1])!=ESP_IP6_ADDR_IS_UNIQUE_LOCAL)
+          return;
+        IPAddress ip6=IPAddress(IPv6, (const uint8_t *)if_ip6[v6addrs-1].addr, if_ip6[v6addrs-1].zone);
+        addWebLog(true,"Received IPv6 Address: %s",ip6.toString().c_str());
+      } else {
+        addWebLog(true,"Received IPv4 Address: %s",WiFi.localIP().toString().c_str());
       }
-      resetStatus();     
+      if(!(connected%2)){
+        if(bssidNames.count(WiFi.BSSIDstr().c_str()))
+          addWebLog(true,"WiFi Connected! (RSI=%d  BSSID=%s  \"%s\")",WiFi.RSSI(),WiFi.BSSIDstr().c_str(),bssidNames[WiFi.BSSIDstr().c_str()].c_str());
+        else
+          addWebLog(true,"WiFi Connected! (RSI=%d  BSSID=%s)",WiFi.RSSI(),WiFi.BSSIDstr().c_str());      
+        connected++;
+        if(connected==1)
+          configureNetwork();
+        if(connectionCallback)
+          connectionCallback((connected+1)/2);
+        if(rescanInitialTime>0){
+          rescanAlarm=millis()+rescanInitialTime;
+          rescanStatus=RESCAN_PENDING;
+        }
+       resetStatus();
+      }
     break;
 
     case ARDUINO_EVENT_WIFI_SCAN_DONE:
@@ -740,9 +756,12 @@ void Span::processSerialCommand(const char *c){
         if(bssidNames.count(WiFi.BSSIDstr().c_str()))
           LOG0("  \"%s\"",bssidNames[WiFi.BSSIDstr().c_str()].c_str());
         LOG0(")\n");
+        LOG0("IPv6 Addresses:    %s (local) %s (global)\n",WiFi.linkLocalIPv6().toString().c_str(),WiFi.globalIPv6().toString().c_str());
       } else {
         LOG0("IP Address:        %s   (Ethernet)\n",ETH.localIP().toString().c_str());        
       }
+
+      WiFi.STA.printTo(Serial);
       
       if(webLog.isEnabled && hostName!=NULL)   
         LOG0("Web Logging:       http://%s.local:%d%s\n",hostName,tcpPortNum,webLog.statusURL);
