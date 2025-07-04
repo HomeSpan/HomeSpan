@@ -384,7 +384,7 @@ class Span{
   void networkCallback(WiFiEvent_t event);                 // network event handler (works for WiFi as well as Ethernet)
 
   void init();    // performs all late-stage initializations needed
-  
+    
   public:
 
   Span();         // constructor
@@ -502,6 +502,9 @@ class Span{
 
   list<Controller, Mallocator<Controller>>::const_iterator controllerListBegin();
   list<Controller, Mallocator<Controller>>::const_iterator controllerListEnd();
+
+  IPAddress getUniqueLocalIPv6(NetworkInterface &nif);
+  IPAddress getUniqueLocalIPv6(WiFiSTAClass &wifi){return(getUniqueLocalIPv6(wifi.STA));} 
 
   [[deprecated("This homeSpan method has been deprecated and will be removed in a future version.  Please use the more generic setConnectionCallback() method instead.")]]
   Span& setWifiCallback(void (*f)()){wifiCallback=f;return(*this);}                      // sets an optional user-defined function to call once WiFi connectivity is initially established

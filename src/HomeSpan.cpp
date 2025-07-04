@@ -475,8 +475,7 @@ void Span::networkCallback(arduino_event_id_t event){
         int v6addrs = esp_netif_get_all_ip6(WiFi.STA.netif(), if_ip6);
         if(v6addrs<1 || esp_netif_ip6_get_addr_type(&if_ip6[v6addrs-1])!=ESP_IP6_ADDR_IS_UNIQUE_LOCAL)
           return;
-        IPAddress ip6=IPAddress(IPv6, (const uint8_t *)if_ip6[v6addrs-1].addr, if_ip6[v6addrs-1].zone);
-        addWebLog(true,"Received IPv6 Address: %s",ip6.toString().c_str());
+        addWebLog(true,"Received IPv6 Address: %s",getUniqueLocalIPv6(WiFi).toString().c_str());
       } else {
         addWebLog(true,"Received IPv4 Address: %s",WiFi.localIP().toString().c_str());
       }
@@ -541,6 +540,20 @@ void Span::networkCallback(arduino_event_id_t event){
 }
 
 //////////////////////////////////////
+
+IPAddress Span::getUniqueLocalIPv6(NetworkInterface &nif){
+
+  esp_ip6_addr_t if_ip6[CONFIG_LWIP_IPV6_NUM_ADDRESSES];
+  int v6addrs = esp_netif_get_all_ip6(nif.netif(), if_ip6);
+  for(int i=0;i<v6addrs;i++){
+    if(esp_netif_ip6_get_addr_type(&if_ip6[i])==ESP_IP6_ADDR_IS_UNIQUE_LOCAL)
+    return(IPAddress(IPv6, (const uint8_t *)if_ip6[v6addrs-1].addr, if_ip6[v6addrs-1].zone));
+  }
+  return(IPAddress(IPv6));
+}
+
+//////////////////////////////////////
+
 
 void Span::configureNetwork(){
    
@@ -752,16 +765,13 @@ void Span::processSerialCommand(const char *c){
       LOG0("\n*** HomeSpan Status ***\n\n");
 
       if(!ethernetEnabled){
-        LOG0("IP Address:        %s   (RSI=%d  BSSID=%s",WiFi.localIP().toString().c_str(),WiFi.RSSI(),WiFi.BSSIDstr().c_str());
+        LOG0("IP Addresses:      IPv4 = %s  IPv6 = %s  (RSI=%d  BSSID=%s",WiFi.localIP().toString().c_str(),getUniqueLocalIPv6(WiFi).toString().c_str(),WiFi.RSSI(),WiFi.BSSIDstr().c_str());
         if(bssidNames.count(WiFi.BSSIDstr().c_str()))
           LOG0("  \"%s\"",bssidNames[WiFi.BSSIDstr().c_str()].c_str());
         LOG0(")\n");
-        LOG0("IPv6 Addresses:    %s (local) %s (global)\n",WiFi.linkLocalIPv6().toString().c_str(),WiFi.globalIPv6().toString().c_str());
       } else {
-        LOG0("IP Address:        %s   (Ethernet)\n",ETH.localIP().toString().c_str());        
+        LOG0("IP Addresses:      IPv4 = %s  IPv6 = %s  (Ethernet)\n",ETH.localIP().toString().c_str(),getUniqueLocalIPv6(ETH).toString().c_str());        
       }
-
-      WiFi.STA.printTo(Serial);
       
       if(webLog.isEnabled && hostName!=NULL)   
         LOG0("Web Logging:       http://%s.local:%d%s\n",hostName,tcpPortNum,webLog.statusURL);
