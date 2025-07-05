@@ -473,9 +473,10 @@ void Span::networkCallback(arduino_event_id_t event){
       if(event==ARDUINO_EVENT_WIFI_STA_GOT_IP6){
         esp_ip6_addr_t if_ip6[CONFIG_LWIP_IPV6_NUM_ADDRESSES];
         int v6addrs = esp_netif_get_all_ip6(WiFi.STA.netif(), if_ip6);
-        if(v6addrs<1 || esp_netif_ip6_get_addr_type(&if_ip6[v6addrs-1])!=ESP_IP6_ADDR_IS_UNIQUE_LOCAL)
+        if(v6addrs<1)
           return;
-        addWebLog(true,"Received IPv6 Address: %s",getUniqueLocalIPv6(WiFi).toString().c_str());
+        IPAddress ip6=IPAddress(IPv6, (const uint8_t *)if_ip6[v6addrs-1].addr, if_ip6[v6addrs-1].zone);
+        addWebLog(true,"Received IPv6 Address: %s",ip6.toString(true).c_str());
       } else {
         addWebLog(true,"Received IPv4 Address: %s",WiFi.localIP().toString().c_str());
       }
