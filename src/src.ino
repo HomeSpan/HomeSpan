@@ -46,7 +46,7 @@ void setup() {
   homeSpan.setLogLevel(2);
   homeSpan.enableOTA();
   homeSpan.setSketchVersion("1.9");
-  homeSpan.enableWebLog();
+  homeSpan.enableWebLog(50);
   homeSpan.setCompileTime();
   homeSpan.setStatusCallback([](HS_STATUS status){Serial.printf("\n*** HOMESPAN STATUS: %s\n\n",homeSpan.statusString(status));});
 

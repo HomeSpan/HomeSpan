@@ -1131,7 +1131,8 @@ void HAPClient::getStatusURL(HAPClient *hapClient, void (*callBack)(const char *
       hapOut << "<tr><td>BSSID:</td><td>" << WiFi.BSSIDstr().c_str() << " \"" << homeSpan.bssidNames[WiFi.BSSIDstr().c_str()].c_str() << "\"" << "</td></tr>\n";
     else
       hapOut << "<tr><td>BSSID:</td><td>" << WiFi.BSSIDstr().c_str() << "</td></tr>\n";
-    hapOut << "<tr><td>WiFi Local IP:</td><td>" << WiFi.localIP().toString().c_str() << "</td></tr>\n";
+    hapOut << "<tr><td>WiFi Local IPv4:</td><td>" << WiFi.localIP().toString().c_str() << "</td></tr>\n";
+    hapOut << "<tr><td>WiFi Local IPv6:</td><td>" << homeSpan.getUniqueLocalIPv6(WiFi).toString().c_str() << "</td></tr>\n";
     hapOut << "<tr><td>WiFi Gateway:</td><td>" << WiFi.gatewayIP().toString().c_str() << "</td></tr>\n";
   } else {
     hapOut << "<tr><td>Ethernet Disconnects:</td><td>" << homeSpan.connected/2 << "</td></tr>\n";
