@@ -1136,7 +1136,8 @@ void HAPClient::getStatusURL(HAPClient *hapClient, void (*callBack)(const char *
     hapOut << "<tr><td>WiFi Gateway:</td><td>" << WiFi.gatewayIP().toString().c_str() << "</td></tr>\n";
   } else {
     hapOut << "<tr><td>Ethernet Disconnects:</td><td>" << homeSpan.connected/2 << "</td></tr>\n";
-    hapOut << "<tr><td>Ethernet Local IP:</td><td>" << ETH.localIP().toString().c_str() << "</td></tr>\n";    
+    hapOut << "<tr><td>Ethernet Local IPv4:</td><td>" << ETH.localIP().toString().c_str() << "</td></tr>\n";    
+    hapOut << "<tr><td>Ethernet Local IPv6:</td><td>" << homeSpan.getUniqueLocalIPv6(ETH).toString().c_str() << "</td></tr>\n";
     hapOut << "<tr><td>Ethernet Gateway:</td><td>" << ETH.gatewayIP().toString().c_str() << "</td></tr>\n";    
   }
   
