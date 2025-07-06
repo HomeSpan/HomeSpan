@@ -454,6 +454,10 @@ void Span::networkCallback(arduino_event_id_t event){
   
   switch (event) {
 
+    case ARDUINO_EVENT_WIFI_STA_CONNECTED:
+      LOG2("Acquiring WiFi IP Addresses...\n");
+    break;
+
     case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
       if(connected%2){
         connected++;
@@ -464,8 +468,8 @@ void Span::networkCallback(arduino_event_id_t event){
           rescanAlarm=millis()+rescanInitialTime;
           rescanStatus=RESCAN_PENDING;
         }
+        resetStatus();
       }
-      resetStatus();
     break;
 
     case ARDUINO_EVENT_WIFI_STA_GOT_IP:
@@ -494,8 +498,8 @@ void Span::networkCallback(arduino_event_id_t event){
           rescanAlarm=millis()+rescanInitialTime;
           rescanStatus=RESCAN_PENDING;
         }
+        resetStatus();
       }
-      resetStatus();
     break;
 
     case ARDUINO_EVENT_WIFI_SCAN_DONE:
@@ -516,14 +520,19 @@ void Span::networkCallback(arduino_event_id_t event){
       resetStatus();     
     break;
 
+    case ARDUINO_EVENT_ETH_CONNECTED:
+      LOG2("Acquiring Ethernet IP Addresses...\n");
+    break;
+
     case ARDUINO_EVENT_ETH_GOT_IP:
     case ARDUINO_EVENT_ETH_GOT_IP6:
       if(event==ARDUINO_EVENT_ETH_GOT_IP6){
         esp_ip6_addr_t if_ip6[CONFIG_LWIP_IPV6_NUM_ADDRESSES];
         int v6addrs = esp_netif_get_all_ip6(ETH.netif(), if_ip6);
-        if(v6addrs<1 || esp_netif_ip6_get_addr_type(&if_ip6[v6addrs-1])!=ESP_IP6_ADDR_IS_UNIQUE_LOCAL)
+        if(v6addrs<1)
           return;
-        addWebLog(true,"Received IPv6 Address: %s",getUniqueLocalIPv6(ETH).toString().c_str());
+        IPAddress ip6=IPAddress(IPv6, (const uint8_t *)if_ip6[v6addrs-1].addr, if_ip6[v6addrs-1].zone);
+        addWebLog(true,"Received IPv6 Address: %s",ip6.toString(true).c_str());
       } else {
         addWebLog(true,"Received IPv4 Address: %s",ETH.localIP().toString().c_str());
       }
@@ -534,16 +543,16 @@ void Span::networkCallback(arduino_event_id_t event){
           configureNetwork();
         if(connectionCallback)
           connectionCallback((connected+1)/2);
+        resetStatus();     
       }
-      resetStatus();     
     break;
 
     case ARDUINO_EVENT_ETH_DISCONNECTED:
       if(connected%2){
         connected++;
         addWebLog(true,"*** Ethernet Connection Lost!");
+        resetStatus();     
       }
-      resetStatus();     
     break;
                 
     default:
@@ -645,7 +654,7 @@ void Span::configureNetwork(){
     ArduinoOTA.onStart(spanOTA.start).onEnd(spanOTA.end).onProgress(spanOTA.progress).onError(spanOTA.error);  
     
     ArduinoOTA.begin();
-    LOG0("Starting OTA Server:    %s at %s\n",displayName,ethernetEnabled?ETH.localIP().toString().c_str():WiFi.localIP().toString().c_str());
+    LOG0("Starting OTA Server:    %s\n",displayName);
     LOG0("Authorization Password: %s",spanOTA.auth?"Enabled\n":"DISABLED!\n");
     LOG0("Auto Rollback:          %s",verifyRollbackLater()?"Enabled\n\n":"Disabled\n\n");
   }
