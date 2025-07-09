@@ -381,7 +381,7 @@ class Span{
   }
 
   QueueHandle_t networkEventQueue;                         // queue to transmit network events from callback thread to HomeSpan thread
-  void networkCallback(WiFiEvent_t event);                 // network event handler (works for WiFi as well as Ethernet)
+  void networkCallback(const arduino_event_t &event);      // network event handler (works for WiFi as well as Ethernet)
 
   void init();    // performs all late-stage initializations needed
     

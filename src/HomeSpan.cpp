@@ -101,8 +101,9 @@ void Span::init(){
   WiFi.setScanMethod(WIFI_ALL_CHANNEL_SCAN);              // scan ALL channels - do NOT stop at first SSID match, else you could connect to weaker BSSID
   WiFi.setSortMethod(WIFI_CONNECT_AP_BY_SIGNAL);          // sort scan data by RSSI and connect to strongest BSSID with matching SSID
   
-  networkEventQueue=xQueueCreate(10,sizeof(arduino_event_id_t));    // queue to transmit network events
-  Network.onEvent([](arduino_event_id_t event){xQueueSend(homeSpan.networkEventQueue, &event, (TickType_t) 0);});
+  networkEventQueue=xQueueCreate(10,sizeof(arduino_event_t));             // queue to transmit network events
+  
+  Network.onEvent([](arduino_event_t *event){xQueueSend(homeSpan.networkEventQueue, event, (TickType_t) 0);});
   Network.onEvent([](arduino_event_id_t event){homeSpan.useEthernet();},arduino_event_id_t::ARDUINO_EVENT_ETH_START);   
 }
 
@@ -285,7 +286,7 @@ void Span::pollTask() {
     WiFi.scanNetworks(true, false, false, 300, 0, network.wifiData.ssid, nullptr);     // start scan in background
   }
 
-  arduino_event_id_t event;
+  arduino_event_t event;
   if(xQueueReceive(networkEventQueue, &event, (TickType_t)0))
     networkCallback(event);
 
@@ -450,9 +451,9 @@ Span& Span::setConnectionTimes(uint32_t minTime, uint32_t maxTime, uint8_t nStep
 
 //////////////////////////////////////
 
-void Span::networkCallback(arduino_event_id_t event){
+void Span::networkCallback(const arduino_event_t &event){
   
-  switch (event) {
+  switch (event.event_id) {
 
     case ARDUINO_EVENT_WIFI_STA_CONNECTED:
       LOG2("Acquiring WiFi IP Addresses...\n");
@@ -474,12 +475,8 @@ void Span::networkCallback(arduino_event_id_t event){
 
     case ARDUINO_EVENT_WIFI_STA_GOT_IP:
     case ARDUINO_EVENT_WIFI_STA_GOT_IP6:
-      if(event==ARDUINO_EVENT_WIFI_STA_GOT_IP6){
-        esp_ip6_addr_t if_ip6[CONFIG_LWIP_IPV6_NUM_ADDRESSES];
-        int v6addrs = esp_netif_get_all_ip6(WiFi.STA.netif(), if_ip6);
-        if(v6addrs<1)
-          return;
-        IPAddress ip6=IPAddress(IPv6, (const uint8_t *)if_ip6[v6addrs-1].addr, if_ip6[v6addrs-1].zone);
+      if(event.event_id==ARDUINO_EVENT_WIFI_STA_GOT_IP6){
+        IPAddress ip6=IPAddress(IPv6, (const uint8_t *)event.event_info.got_ip6.ip6_info.ip.addr, event.event_info.got_ip6.ip6_info.ip.zone);
         addWebLog(true,"Received IPv6 Address: %s",ip6.toString(true).c_str());
       } else {
         addWebLog(true,"Received IPv4 Address: %s",WiFi.localIP().toString().c_str());
@@ -526,12 +523,8 @@ void Span::networkCallback(arduino_event_id_t event){
 
     case ARDUINO_EVENT_ETH_GOT_IP:
     case ARDUINO_EVENT_ETH_GOT_IP6:
-      if(event==ARDUINO_EVENT_ETH_GOT_IP6){
-        esp_ip6_addr_t if_ip6[CONFIG_LWIP_IPV6_NUM_ADDRESSES];
-        int v6addrs = esp_netif_get_all_ip6(ETH.netif(), if_ip6);
-        if(v6addrs<1)
-          return;
-        IPAddress ip6=IPAddress(IPv6, (const uint8_t *)if_ip6[v6addrs-1].addr, if_ip6[v6addrs-1].zone);
+      if(event.event_id==ARDUINO_EVENT_ETH_GOT_IP6){
+        IPAddress ip6=IPAddress(IPv6, (const uint8_t *)event.event_info.got_ip6.ip6_info.ip.addr, event.event_info.got_ip6.ip6_info.ip.zone);
         addWebLog(true,"Received IPv6 Address: %s",ip6.toString(true).c_str());
       } else {
         addWebLog(true,"Received IPv4 Address: %s",ETH.localIP().toString().c_str());
@@ -556,6 +549,7 @@ void Span::networkCallback(arduino_event_id_t event){
     break;
                 
     default:
+      // LOG2("Event Callback: %s\n",Network.eventName(event.event_id));
     break;
   }
 }
