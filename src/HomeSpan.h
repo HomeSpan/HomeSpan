@@ -369,6 +369,7 @@ class Span{
   void printfNotify(SpanBufVec &pVec, HAPClient *hc);               // writes notification JSON to hapOut stream based on SpanBuf objects and specified connection
   char *escapeJSON(char *jObj);                                     // remove all whitespace not within double-quotes, and converts special characters to unused UTF-8 bytes as a placeholder
   char *unEscapeJSON(char *jObj);                                   // converts UTF-8 placeholder bytes back to original special characters
+  char *strstr_r(const char *haystack, const char *needle);         // same as standard-C strstr(), but returns pointer to character AFTER end of matched string (or NULL if no match)
   boolean updateCharacteristics(char *buf, SpanBufVec &pVec);       // parses PUT /characteristics JSON request and updates referenced characteristics; returns true on success, false on fail
 
   static boolean invalidUUID(const char *uuid){
