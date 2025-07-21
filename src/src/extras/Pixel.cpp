@@ -40,6 +40,7 @@ Pixel::Pixel(int pin, const char *pixelType){
   this->pin=pin;
 
   rmt_tx_channel_config_t tx_chan_config;
+  memset((void *)&tx_chan_config, 0, sizeof(rmt_tx_channel_config_t));
   tx_chan_config.clk_src = RMT_CLK_SRC_DEFAULT;                       // always use 80MHz clock source
   tx_chan_config.gpio_num = (gpio_num_t)pin;                          // GPIO number
   tx_chan_config.mem_block_symbols = SOC_RMT_MEM_WORDS_PER_CHANNEL;   // set number of symbols to match those in a single channel block
@@ -83,12 +84,9 @@ Pixel::Pixel(int pin, const char *pixelType){
   rmt_enable(tx_chan);                            // enable channel
   channel=((int *)tx_chan)[0];                    // get channel number
 
-  tx_config.loop_count=0;                         // populate tx_config structure
-  tx_config.flags.eot_level=0;
-  tx_config.flags.queue_nonblocking=0;
-  
-  rmt_bytes_encoder_config_t encoder_config;          // can leave blank for now - will populate from within setTiming() below
-  rmt_new_bytes_encoder(&encoder_config, &encoder);   // create byte encoder
+  memset((void *)&tx_config, 0, sizeof(rmt_transmit_config_t));  
+  rmt_bytes_encoder_config_t encoder_config;                    // can leave blank for now - will update from within setTiming() below
+  rmt_new_bytes_encoder(&encoder_config, &encoder);             // create byte encoder
    
   setTiming(0.32, 0.88, 0.64, 0.56, 80.0);    // set default timing parameters (suitable for most SK68 and WS28 RGB pixels)
 
@@ -103,6 +101,7 @@ Pixel *Pixel::setTiming(float high0, float low0, float high1, float low1, uint32
     return(this);
   
   rmt_bytes_encoder_config_t encoder_config;
+  memset((void *)&encoder_config, 0, sizeof(rmt_bytes_encoder_config_t));
 
   encoder_config.bit0.level0=1;
   encoder_config.bit0.duration0=high0*80+0.5;

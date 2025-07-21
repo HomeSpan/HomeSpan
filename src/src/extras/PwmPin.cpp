@@ -40,7 +40,7 @@ LedC::LedC(uint8_t pin, uint16_t freq, boolean invert){
         if(!channelList[nChannel][nMode]){
           
           if(!timerList[nTimer][nMode]){                                // if this timer slot is free, use it
-            timerList[nTimer][nMode]=new ledc_timer_config_t;           // create new timer instance
+            timerList[nTimer][nMode]=new ledc_timer_config_t();         // create new timer instance
             timerList[nTimer][nMode]->speed_mode=(ledc_mode_t)nMode;
             timerList[nTimer][nMode]->timer_num=(ledc_timer_t)nTimer;
             timerList[nTimer][nMode]->freq_hz=freq;
