@@ -44,6 +44,16 @@ However, if for some reason HomeSpan is not able to auto-detect an Ethernet inte
 
 Similar to WiFi connectivity, HomeSpan automatically handles all Ethernet disconnects/reconnects (e.g. if you unplug the Ethernet cable and then plug it back into the router, or if the router itself reboots) and records such events in the Web Log (if enabled).  Also similar to using WiFi, to run a custom function either once, or every time, an Ethernet connection is established (or re-established after a disconnect) you can implement the homeSpan `setConnectionCallback()` method in your sketch.
 
+## IPv6 Compatability
+
+The Arduino-ESP32 library and the Espressif IDF natively supports the simultaneous use of both IPv4 and IPv6 addresses, though unless IPv6 addresses are enabled, the default behavior for any given sketch is to use only IPv4.  To enable the additional use of IPv6 addresses on the ESP32 WiFi interface, add `WiFi.enableIPv6()` to your sketch.  To enable the additional use of IPv6 addresses on the ESP32 ETH interface, add `ETH.enableIPv6()` to your sketch.
+
+When the use of IPv6 addresses is enabled, HomeSpan will automatically handle all HTTP requests received from either an IPv4 or IPv6 address.  Note that whereas the ESP32 will typically receives only one IPv4 adddress from the router when connecting to a network, it may receive up to three IPv6 addresses: a Link Local Address, a Unique Local Address, and (optionally) a Global Address.  HomeSpan considers network connectivity to be established upon receiving the first IP address (whether IPv4 or IPv6) and will call any user-defined callback set by `homeSpan.setConnectionCallback()` only once upon reception of the first address.  HomeSpan does not call the callback when recediving any addiitonl IP addresses but it does creates a Web Log entry (along with a report to the Serial Monitor) for each address it receives.
+
+
+
+ 
+
 ---
 
 [↩️](../README.md) Back to the Welcome page
