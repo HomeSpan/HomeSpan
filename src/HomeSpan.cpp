@@ -44,6 +44,7 @@
 #include "HAP.h"
 #include <mutex>
 #include <algorithm>
+#include <mutex>
 
 const __attribute__((section(".rodata_custom_desc"))) SpanPartition spanPartition = {HOMESPAN_MAGIC_COOKIE,0};
 
