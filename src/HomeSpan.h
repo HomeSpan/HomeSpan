@@ -915,13 +915,18 @@ class SpanPoint {
   static uint16_t channelMask;                // channel mask (only used for remote devices)
   static QueueHandle_t statusQueue;           // queue for communication between SpanPoint::dataSend and SpanPoint::send
   static nvs_handle pointNVS;                 // NVS storage for channel number (only used for remote devices)
-  
+
   static void dataReceived(const esp_now_recv_info *info, const uint8_t *incomingData, int len);
   static void init(const char *password="HomeSpan");
   static void setAsHub(){isHub=true;}
   static uint8_t nextChannel();
   
+
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 5, 0)
+  static void dataSent(const esp_now_send_info_t *mac, esp_now_send_status_t status) {
+#else
   static void dataSent(const uint8_t *mac, esp_now_send_status_t status) {
+#endif
     xQueueOverwrite( statusQueue, &status );
   }
   
