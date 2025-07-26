@@ -363,6 +363,9 @@ The following **optional** `homeSpan` methods provide additional run-time functi
   * **important**: once you delete an Accessory, you cannot re-use the same *aid* when adding a new Accessory (on the same device) unless the new Accessory is configured with the exact same Services and Characteristics as the deleted Accessory
   * note: this method is **not** needed if you have a static Accessory database that is fully defined in the Arduino `setup()` function of a sketch
 
+* `Span& forceNewConfigNumber()`
+  * forces HomeSpan to update the database configuration number at start-up, as well as anytime `updateDatabase()` is called from a sketch, regardless of whether there has been any change to the database configuration  
+
 * `Span& resetIID(uint32_t newIID)`
   * resets the IID count for the current Accessory to *newIID*, which must be greater than 0
   * throws an error and halts program if called before at least one Accessory is created
