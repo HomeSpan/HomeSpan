@@ -213,7 +213,7 @@ The following **optional** `homeSpan` methods enable additional features and pro
 * `Span& setConnectionCallback(void (*func)(int count))`
   * sets an optional user-defined callback function, *func*, to be called by HomeSpan every time WiFi or Ethernet connectivity has been established or re-established after a disconnect.  The function *func* must be of type *void* and accept a single *int* argument, *count*, into which HomeSpan passes the number of times WiFi or Ethernet connectivity has been established or re-established (i.e. *count*=1 on initial WiFi or Ethernet connection; *count*=2 if re-established after the first disconnect, etc.)
   * note HomeSpan considers a connection to be established as soon as it acquires an IP address from the router.  If IPv6 has been enabled, HomeSpan will typically receive multiple IP addresses from the router over the course of a few seconds.  HomeSpan calls *func* only once upon receipt of the *first* IP address (regardless of whether is it IPv4 or IPv6).  It does *not* call *func* upon receipt of any subsequent IP addresses it may receive from the router
-  * see [WiFi and Ethernet Connectivity](Network.md) for more details about HomeSpan's use of IPv4 and IPv6 addresses
+  * see [WiFi and Ethernet Connectivity](Networks.md) for more details about HomeSpan's use of IPv4 and IPv6 addresses
  
 * `Span& useEthernet()`
   * forces HomeSpan to use Ethernet instead of WiFi, even if ETH has not yet been called or an Ethernet card has not been found prior to `homeSpan.begin()` being called
