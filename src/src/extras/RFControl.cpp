@@ -35,6 +35,7 @@ RFControl::RFControl(uint8_t pin, boolean refClock){
   this->pin=pin;
 
   rmt_tx_channel_config_t tx_chan_config;
+  memset((void *)&tx_chan_config, 0, sizeof(rmt_tx_channel_config_t));
   tx_chan_config.clk_src = RMT_CLK_SRC_DEFAULT;                       // use default as a placeholder - will be reset to required clock before each transmission
   tx_chan_config.gpio_num = (gpio_num_t)pin;                          // GPIO number
   tx_chan_config.mem_block_symbols = SOC_RMT_MEM_WORDS_PER_CHANNEL;   // set number of symbols to match those in a single channel block
@@ -59,12 +60,10 @@ RFControl::RFControl(uint8_t pin, boolean refClock){
   rmt_enable(tx_chan);                            // enable channel
   channel=((int *)tx_chan)[0];                    // get channel number
 
-  tx_config.loop_count=0;                         // populate tx_config structure
-  tx_config.flags.eot_level=0;
-  tx_config.flags.queue_nonblocking=0;
-  
-  rmt_copy_encoder_config_t copy_config;          // required, though nothing to populate
-  rmt_new_copy_encoder(&copy_config, &encoder);   // create copy encoder
+  memset((void *)&tx_config, 0, sizeof(rmt_transmit_config_t));    
+  rmt_copy_encoder_config_t copy_config;                                  // required, though nothing to populate
+  memset((void *)&copy_config, 0, sizeof(rmt_copy_encoder_config_t));
+  rmt_new_copy_encoder(&copy_config, &encoder);                           // create copy encoder
 }
  
 ///////////////////

@@ -369,6 +369,7 @@ class Span{
   void printfNotify(SpanBufVec &pVec, HAPClient *hc);               // writes notification JSON to hapOut stream based on SpanBuf objects and specified connection
   char *escapeJSON(char *jObj);                                     // remove all whitespace not within double-quotes, and converts special characters to unused UTF-8 bytes as a placeholder
   char *unEscapeJSON(char *jObj);                                   // converts UTF-8 placeholder bytes back to original special characters
+  char *strstr_r(const char *haystack, const char *needle);         // same as standard-C strstr(), but returns pointer to character AFTER end of matched string (or NULL if no match)
   boolean updateCharacteristics(char *buf, SpanBufVec &pVec);       // parses PUT /characteristics JSON request and updates referenced characteristics; returns true on success, false on fail
 
   static boolean invalidUUID(const char *uuid){
@@ -914,13 +915,18 @@ class SpanPoint {
   static uint16_t channelMask;                // channel mask (only used for remote devices)
   static QueueHandle_t statusQueue;           // queue for communication between SpanPoint::dataSend and SpanPoint::send
   static nvs_handle pointNVS;                 // NVS storage for channel number (only used for remote devices)
-  
+
   static void dataReceived(const esp_now_recv_info *info, const uint8_t *incomingData, int len);
   static void init(const char *password="HomeSpan");
   static void setAsHub(){isHub=true;}
   static uint8_t nextChannel();
   
+
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 5, 0)
+  static void dataSent(const esp_now_send_info_t *mac, esp_now_send_status_t status) {
+#else
   static void dataSent(const uint8_t *mac, esp_now_send_status_t status) {
+#endif
     xQueueOverwrite( statusQueue, &status );
   }
   

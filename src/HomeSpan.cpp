@@ -1594,13 +1594,37 @@ char *Span::unEscapeJSON(char *jObj){
 
 ///////////////////////////////
 
+char *Span::strstr_r(const char *haystack, const char *needle){
+  char *s=strstr(haystack,needle);
+  if(s)
+    s+=strlen(needle);
+  return(s);  
+}
+
+///////////////////////////////
+
 boolean Span::updateCharacteristics(char *buf, SpanBufVec &pVec){
 
   boolean twFail=false;
   char *jObj=escapeJSON(buf);
   size_t end=0;
 
-  if(sscanf(jObj,"{\"characteristics\":[%[^]]]}%n",jObj,&end)!=1 || strlen(jObj+end)){
+  char *pidObj=strstr_r(jObj,"\"pid\":");
+  if(pidObj){
+    uint64_t pid=strtoull(pidObj,NULL,0);
+    if(!TimedWrites.count(pid)){
+      LOG0("\n*** ERROR:  Timed Write PID not found\n\n");
+      twFail=true;
+    } else        
+    if(millis()>TimedWrites[pid]){
+      LOG0("\n*** ERROR:  Timed Write Expired\n\n");
+      twFail=true;
+    }        
+  }
+
+  jObj=strstr_r(jObj,"\"characteristics\":");
+
+  if(!jObj || !sscanf(jObj,"[%[^]]]%n",jObj,&end) || !end){
     LOG0("\n*** ERROR: Cannot extract properly-formatted \"characteristics\" array from JSON text\n\n");
     return(false);
   }
@@ -1655,17 +1679,6 @@ boolean Span::updateCharacteristics(char *buf, SpanBufVec &pVec){
       } else 
       if(!strcmp(name,"r")){
         sBuf.wr=(!strcmp(value,"1") || !strcmp(value,"true"));
-      } else 
-      if(!strcmp(name,"pid")){        
-        uint64_t pid=strtoull(value,NULL,0);        
-        if(!TimedWrites.count(pid)){
-          LOG0("\n*** ERROR:  Timed Write PID not found\n\n");
-          twFail=true;
-        } else        
-        if(millis()>TimedWrites[pid]){
-          LOG0("\n*** ERROR:  Timed Write Expired\n\n");
-          twFail=true;
-        }        
       } else {
         LOG0("\n*** ERROR:  Problems parsing JSON characteristics object - unexpected property \"%s\"\n\n",name);
         return(false);
