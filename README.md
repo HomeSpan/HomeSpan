@@ -9,9 +9,9 @@ Requirements to run HomeSpan depend on which version you choose:
 |HomeSpan Version | Arduino-ESP32 Board Manager | Partition Scheme | Supported Chips|
 |:---:|:---:|:---:|---|
 |1.9.1 or earlier | v2.0.0 - v2.0.17 | *Default* (1.3MB APP) | ESP32, S2, S3, C3 |
-|2.0.0 or later | v3.0.2 - **v3.2.0**<sup>*</sup> | *Minimal SPIFFS* (1.9MB APP) | ESP32, S2, S3, C3, *and C6* |
+|2.0.0 or later | v3.0.2 - **v3.3.0**<sup>*</sup> | *Minimal SPIFFS* (1.9MB APP) | ESP32, S2, S3, C3, *and C6* |
 
-<sup>*</sup>HomeSpan has been tested through **version 3.2.0** of the Arduino-ESP32 Board Manager (built on IDF 5.4.1).  Later releases may work fine, but have not (yet) been tested.  Note HomeSpan does not support the use of alpha, beta, or pre-release candidates of the Arduino-ESP32 Board Manager - testing is only done on production releases of the Board Manager.
+<sup>*</sup>HomeSpan has been tested through **version 3.3.0** of the Arduino-ESP32 Board Manager (built on IDF 5.5.0).  Later releases may work fine, but have not (yet) been tested.  Note HomeSpan does not support the use of alpha, beta, or pre-release candidates of the Arduino-ESP32 Board Manager - testing is only done on production releases of the Board Manager.
 
 **ADDITIONAL REQUIREMENTS**:  Apple's HomeKit architecture [requires the use of a Home Hub](https://support.apple.com/en-us/HT207057) (either a HomePod or Apple TV) for full and proper operation of any HomeKit device, including those based on HomeSpan.  ***Use of HomeSpan without a Home Hub is NOT supported.***
 
@@ -25,6 +25,7 @@ Requirements to run HomeSpan depend on which version you choose:
 * Operates in either Accessory or Bridge mode
 * Supports pairing with Setup Codes or QR Codes
 * Supports both WiFi and Ethernet connectivity to your home network
+* Supports dual-stack use of both IPv4 and IPv6 addresses
 
 ### For the HomeSpan Developer
 
@@ -59,47 +60,33 @@ Requirements to run HomeSpan depend on which version you choose:
   * Launch the WiFi Access Point
 * A standalone, detailed End-User Guide
 
-## ❗Latest Update - HomeSpan 2.1.2 (05/08/2025)
+## ❗Latest Update - HomeSpan 2.1.3 (MM/DD/2025)
 
 ### Updates and Corrections
 
-* **Added UUID validation for Custom Services**
-  * reports an error in CLI at startup if invalid Service UUID is found
-  * similar to existing UUID validation for Custom Characteristics
+* **Added support for IPv6 addresses**
+  * IPv6 can be enabled by adding the Arduino-ESP32 functions `WiFi.enableIPv6()` or `ETH.enableIPv6()` to a sketch
+  * when IPv6 is enabled, HomeSpan reports the IPv6 **Unique Link Address (ULA)** alongside the IPv4 address in the Serial Monitor and Web Log (if IPv6 is not enabled, the IPv6 address is reported as "::")
+  * each IP address acquired (whether IPv6 or IPv4) is logged to the Serial Monitor and Web Log at the time it is received from the router
+  * note that if `homeSpan.setConnectionCallback()` is used to set a callback function upon initial WiFi or ETH connection, the callback function is called only ONCE upon acquisition of the very first IP address received from the router (regardless of whether it is an IPv4 or IPv6 address)
+  * see  [WiFi and Ethernet Connectivity](docs/Networks.md) for details
 
-* **Renamed example sketch *RemoteDevice8286.ino* to *RemoteDevice8266.ino***
-  * corrects a long-standing typo in the filename
+* **Updated the HomeSpan Access Point code to (hopefully) address issues that previously prevented the HomeSpan Setup pages from being displayed on non-Apple devices**
 
-* **Modified OTA updating so that the HomeSpan check for its Magic Cookie is only made if uploading a new *sketch***
-  * avoids OTA aborting when OTA is used to upload SPIFFS data
+* **Fixed bug in PID interpretation for HAP Timed Writes that was introduced when the JSON-parser was refactored in HomeSpan 2.1.2**
 
-* **Refactored the JSON parsing logic that handles PUT Characteristic requests from HomeKit**  
-  * now properly supports any JSON-allowed Unicode character used in a JSON string value, from U+0020 to U+10FFFF
+* **Added new *homeSpan* method `forceNewConfigNumber()`**
+  * when included in a sketch, this forces HomeSpan to update the database configuration number upon start-up, as well as anytime `homeSpan.updateDatabase()` is called, regardless of whether there has been any change to the database configuration
+  * purpose of this function is an attempt to encourage the HomeKit backend architecture to more quickly re-establish a connection to a HomeSpan device that has been rebooted without the user opening the Home App (in which case HomeKit would immediately connect to the device)
+  * prompting HomeKit in this fashion has had limited success (hopefully Apple will address this shortcoming more generally in iOS26)
+
+### Compatibility Issues
+
+* **Addressed compatibility issues with HomeSpan's *LedPin*, *RFControl* and *Pixel* modules when run under Arduino-ESP32 version 3.2 or later as a result of new fields added by Espressif to various *LEDC* and *RMT* configuration structures in IDF 5.4**
+  * the initialization routines in these  modules has been modified to always pre-clear all relevant IDF config structures so that such issues will (hopefully) not re-surface in the future if/when Espressif adds any additional config fields in subsequent IDF updates
  
-    * allows string-based Characteristics to include escaped quotes, escaped solidus and reverse solidus, and any of the JSON token characters *,:[]{}* that would have previously caused a parsing error
-  * also now allows for empty string-based Characteristics (previously would have led to a parsing error)
-
-* **Added new `setMaxStringLength(uint8_t n)` method to Characteristics**
-  * allows user to change maximum length of string-based Characteristics from HAP default of 64 to *n* (less than 256)
-  * though specified by HAP, this value does not seem to be used by HomeKit, and this method does not appear necessary
-
-* **Added new *homeSpan* method `assumeTimeAcquired()`**
-  * calling this method tells HomeSpan to assume that you have acquired the time using your own code
-  * useful if you don't want to specify a *timeServerURL* when enabling the Web Log, but would rather acquire it manually
-
-* **Added new *homeSpan* method `setGetCharacteristicsCallback(void (*func)(const char *getCharList))`**
-  * sets an optional user-defined callback function, *func*, to be called by HomeSpan whenever it receives a *GET /characteristics* request from HomeKit
-  * HomeKit generally sends this request to every paired device each time the Home App is opened on an iPhone or Mac
-  * this callback is useful in circumstances where the current state of a sensor-style Characteristic must be read by HomeSpan using a separate "expensive" process that should be called only when needed as opposed to being continuously updated in a Services `loop()` method
-  * the function *func* must be of type void and accept one argument of type *const char \** into which HomeSpan passes the list of Characteristic AID/IID pairs that HomeKit provided in its HTTP *GET* request
-  * *getCharList* can be used to determine if the HTTP *GET* request includes the AID/IID pair for any specific Characteristic
-    * this allows the user to act on the callback based on which specific Characteristics were requested by HomeKit
-    * see **new helper SpanCharacteristic method `foundIn(const char *getCharList)`** that returns *true* or *false* depending on whether the AID/IID for a specific Characteristic is found in *getCharList*
-    * for completeness, **also added `uint32_t getAID()` methods** to each of the SpanAccessory, SpanService, and SpanCharacteristic classes
-
-* **Explicitly added added `#include <mutex>` to *HomeSpan.cpp* to address compatibility issue with Arduino-ESP32 v3.2.0**
-
-* **Fixed bug in `Pixel::getPin()` that would report channel number instead of pin number**
+* **Addressed compatibility issue with change in function signature for ESP-NOW callback under IDF 5.5 / Arduino-ESP32 3.3.0**
+  * adjusted signature of callback as per ESP-NOW IDF 5.5 [breaking change](https://docs.espressif.com/projects/esp-idf/en/stable/esp32/migration-guides/release-5.x/5.5/wifi.html)
         
 See [Releases](https://github.com/HomeSpan/HomeSpan/releases) for details on all changes and bug fixes included in this update.
 
