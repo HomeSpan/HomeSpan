@@ -962,6 +962,8 @@ int HAPClient::getCharacteristicsURL(char *urlBuf){
   if(!numIDs)           // could not find any IDs
     return(0);
 
+  LOG2("\n>>>>>>>>>> %s >>>>>>>>>>\n",client.remoteIP().toString().c_str());
+
   boolean statusFlag=homeSpan.printfAttributes(ids,numIDs,flags);     // get statusFlag returned to use below
   size_t nBytes=hapOut.getSize();
   hapOut.flush();
@@ -1005,7 +1007,7 @@ int HAPClient::putCharacteristicsURL(char *json){
     hapOut << "HTTP/1.1 204 No Content\r\n\r\n";
     hapOut.flush();
         
-  } else {                                                // multicast respose is required
+  } else {                                                // multicast response is required
 
     homeSpan.printfAttributes(pVec);
     size_t nBytes=hapOut.getSize();
@@ -1041,8 +1043,8 @@ int HAPClient::putPrepareURL(char *json){
   char pidToken[]="\"pid\":";
   
   char *cBuf;
-  uint32_t ttl;
-  uint64_t pid;
+  uint32_t ttl=0;
+  uint64_t pid=0;
    
   if((cBuf=strstr(json,ttlToken)))
     sscanf(cBuf+strlen(ttlToken),"%lu",&ttl);
@@ -1131,11 +1133,13 @@ void HAPClient::getStatusURL(HAPClient *hapClient, void (*callBack)(const char *
       hapOut << "<tr><td>BSSID:</td><td>" << WiFi.BSSIDstr().c_str() << " \"" << homeSpan.bssidNames[WiFi.BSSIDstr().c_str()].c_str() << "\"" << "</td></tr>\n";
     else
       hapOut << "<tr><td>BSSID:</td><td>" << WiFi.BSSIDstr().c_str() << "</td></tr>\n";
-    hapOut << "<tr><td>WiFi Local IP:</td><td>" << WiFi.localIP().toString().c_str() << "</td></tr>\n";
+    hapOut << "<tr><td>WiFi Local IPv4:</td><td>" << WiFi.localIP().toString().c_str() << "</td></tr>\n";
+    hapOut << "<tr><td>WiFi Local IPv6:</td><td>" << homeSpan.getUniqueLocalIPv6(WiFi).toString().c_str() << "</td></tr>\n";
     hapOut << "<tr><td>WiFi Gateway:</td><td>" << WiFi.gatewayIP().toString().c_str() << "</td></tr>\n";
   } else {
     hapOut << "<tr><td>Ethernet Disconnects:</td><td>" << homeSpan.connected/2 << "</td></tr>\n";
-    hapOut << "<tr><td>Ethernet Local IP:</td><td>" << ETH.localIP().toString().c_str() << "</td></tr>\n";    
+    hapOut << "<tr><td>Ethernet Local IPv4:</td><td>" << ETH.localIP().toString().c_str() << "</td></tr>\n";    
+    hapOut << "<tr><td>Ethernet Local IPv6:</td><td>" << homeSpan.getUniqueLocalIPv6(ETH).toString().c_str() << "</td></tr>\n";
     hapOut << "<tr><td>Ethernet Gateway:</td><td>" << ETH.gatewayIP().toString().c_str() << "</td></tr>\n";    
   }
   

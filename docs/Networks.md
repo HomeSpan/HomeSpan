@@ -44,6 +44,24 @@ However, if for some reason HomeSpan is not able to auto-detect an Ethernet inte
 
 Similar to WiFi connectivity, HomeSpan automatically handles all Ethernet disconnects/reconnects (e.g. if you unplug the Ethernet cable and then plug it back into the router, or if the router itself reboots) and records such events in the Web Log (if enabled).  Also similar to using WiFi, to run a custom function either once, or every time, an Ethernet connection is established (or re-established after a disconnect) you can implement the homeSpan `setConnectionCallback()` method in your sketch.
 
+## IPv6 Compatability
+
+The Arduino-ESP32 library and the Espressif IDF natively supports the simultaneous use of both IPv4 and IPv6 addresses, though unless IPv6 addresses are enabled, the default behavior for any given sketch is to use only IPv4.[^ipv6]  To enable IPv6 addresses on the ESP32 WiFi interface, add `WiFi.enableIPv6()` to your sketch.  To enable IPv6 addresses on the ESP32 Ethernet interface, add `ETH.enableIPv6()` to your sketch.
+
+[^ipv6]:IPv4 addresses are 4 bytes long and usually written as 4 decimal numbers (from 0-255) separated by periods, such as 192.168.1.10.  IPv6 addresses are 16 bytes long and usually written as 8 groups of 2 bytes each, separated by colons, such as 2001:0db8:85a3:0000:0000:8a2e:0370:7334.  By convention, leading zeros for each 2-byte group are usually omitted, and the longest *repeated* group of zero can be abbreviated by "::" as such: 2001:db8:85a3::8a2e:370:7334. 
+
+When the use of IPv6 addresses is enabled, HomeSpan will automatically handle all HTTP requests received from either an IPv4 or IPv6 address.  Note that whereas the ESP32 will typically receive only one IPv4 adddress from the router when connecting to a network, it may receive up to three IPv6 addresses: a *Link Local Address*, a *Unique Local Address*, and (optionally) a *Global Address*.  The exact order in which IPv4 and IPv6 addresses are acquired is indeterminant and can change everytime the device reboots and tries to connect to your network.
+
+HomeSpan considers network connectivity to be established upon receiving the first IP address (whether IPv4 or IPv6) and will call any user-defined callback function set by `homeSpan.setConnectionCallback()` *only once upon reception of the first address*.  HomeSpan does not call the callback when receiving any additional IP addresses but it does creates a Web Log entry (along with a report to the Serial Monitor) for each IP address when acquired.[^events]
+
+[^events]:If you need more advanced callback handling for network connectivity events, such as calling a function for *each* IP address acquired (instead of just the first one), please use the Arduino-ESP32's built-in network event handling methods: `WiFi.onEvent()` and `ETH.onEvent()`, or more generically, `Network.onEvent()`.
+
+In addition, HomeSpan reports the device's IPv6 *Unique Local Address* alongside its IPv4 address whenever displayed in either the Serial Monitor or the Web Log.  If IPv6 addressing has not been enabled, or if it has been enabled but an IPv6 *Unique Local Address* has not been acquired, the IPv6 address will be shown as "::".
+
+
+
+ 
+
 ---
 
 [↩️](../README.md) Back to the Welcome page

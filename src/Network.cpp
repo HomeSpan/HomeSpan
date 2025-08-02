@@ -291,6 +291,7 @@ void Network_HS::processRequest(char *body, char *formData){
     responseBody+="<p><b>Configuration Canceled!</b></p><p>Restarting HomeSpan.</p><p>Closing window...</p>";
     alarmTimeOut=millis()+2000;
     apStatus=-1;
+    
   } else
 
   if(!strncmp(body,"GET /wifi-status ",17)){                              // GET WIFI-STATUS
@@ -323,8 +324,7 @@ void Network_HS::processRequest(char *body, char *formData){
   
   } else                                                                
 
-  if(!strstr(body,"wispr") && !strncmp(body,"GET /hotspot-detect.html ",25)){                             // GET LANDING-PAGE, but only if request does NOT contain "wispr" user agent
-
+  if(!strncmp(body,"GET /homespan-landing ",22)){
     LOG1("In Landing Page...\n");
 
     STATUS_UPDATE(start(LED_AP_CONNECTED),HS_AP_CONNECTED)
@@ -350,6 +350,10 @@ void Network_HS::processRequest(char *body, char *formData){
 
     responseBody+="<center><button style=\"font-size:300%\" onclick=\"document.location='/cancel'\">CANCEL Configuration</button></center>";                  
                   
+  } else 
+  
+  if(!strstr(body,"wispr")){
+    responseHead="HTTP/1.1 302 Found\r\nLocation: /homespan-landing\r\n";    
   }
 
   responseHead+="\r\n";               // add blank line between reponse header and body

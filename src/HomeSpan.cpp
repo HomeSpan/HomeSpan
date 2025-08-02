@@ -101,8 +101,9 @@ void Span::init(){
   WiFi.setScanMethod(WIFI_ALL_CHANNEL_SCAN);              // scan ALL channels - do NOT stop at first SSID match, else you could connect to weaker BSSID
   WiFi.setSortMethod(WIFI_CONNECT_AP_BY_SIGNAL);          // sort scan data by RSSI and connect to strongest BSSID with matching SSID
   
-  networkEventQueue=xQueueCreate(10,sizeof(arduino_event_id_t));    // queue to transmit network events
-  Network.onEvent([](arduino_event_id_t event){xQueueSend(homeSpan.networkEventQueue, &event, (TickType_t) 0);});
+  networkEventQueue=xQueueCreate(10,sizeof(arduino_event_t));             // queue to transmit network events
+  
+  Network.onEvent([](arduino_event_t *event){xQueueSend(homeSpan.networkEventQueue, event, (TickType_t) 0);});
   Network.onEvent([](arduino_event_id_t event){homeSpan.useEthernet();},arduino_event_id_t::ARDUINO_EVENT_ETH_START);   
 }
 
@@ -285,7 +286,7 @@ void Span::pollTask() {
     WiFi.scanNetworks(true, false, false, 300, 0, network.wifiData.ssid, nullptr);     // start scan in background
   }
 
-  arduino_event_id_t event;
+  arduino_event_t event;
   if(xQueueReceive(networkEventQueue, &event, (TickType_t)0))
     networkCallback(event);
 
@@ -450,36 +451,52 @@ Span& Span::setConnectionTimes(uint32_t minTime, uint32_t maxTime, uint8_t nStep
 
 //////////////////////////////////////
 
-void Span::networkCallback(arduino_event_id_t event){
+void Span::networkCallback(const arduino_event_t &event){
   
-  switch (event) {
-      
+  switch (event.event_id) {
+
+    case ARDUINO_EVENT_WIFI_STA_CONNECTED:
+      LOG2("Acquiring WiFi IP Addresses...\n");
+    break;
+
     case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
-      if(connected%2){                        // we are in a connected state
-        connected++;                          // move to unconnected state
+      if(connected%2){
+        connected++;
         addWebLog(true,"*** WiFi Connection Lost!");
         wifiTimeCounter.reset();
         alarmConnect=millis();
+        if(rescanInitialTime>0){
+          rescanAlarm=millis()+rescanInitialTime;
+          rescanStatus=RESCAN_PENDING;
+        }
+        resetStatus();
       }
-      resetStatus();     
     break;
 
     case ARDUINO_EVENT_WIFI_STA_GOT_IP:
     case ARDUINO_EVENT_WIFI_STA_GOT_IP6:
-      if(bssidNames.count(WiFi.BSSIDstr().c_str()))
-        addWebLog(true,"WiFi Connected!  IP Address = %s   (RSI=%d  BSSID=%s  \"%s\")",WiFi.localIP().toString().c_str(),WiFi.RSSI(),WiFi.BSSIDstr().c_str(),bssidNames[WiFi.BSSIDstr().c_str()].c_str());
-      else
-        addWebLog(true,"WiFi Connected!  IP Address = %s   (RSI=%d  BSSID=%s)",WiFi.localIP().toString().c_str(),WiFi.RSSI(),WiFi.BSSIDstr().c_str());      
-      connected++;
-      if(connected==1)
-        configureNetwork();
-      if(connectionCallback)
-        connectionCallback((connected+1)/2);
-      if(rescanInitialTime>0){
-        rescanAlarm=millis()+rescanInitialTime;
-        rescanStatus=RESCAN_PENDING;
+      if(event.event_id==ARDUINO_EVENT_WIFI_STA_GOT_IP6){
+        IPAddress ip6=IPAddress(IPv6, (const uint8_t *)event.event_info.got_ip6.ip6_info.ip.addr, event.event_info.got_ip6.ip6_info.ip.zone);
+        addWebLog(true,"Received IPv6 Address: %s",ip6.toString(true).c_str());
+      } else {
+        addWebLog(true,"Received IPv4 Address: %s",WiFi.localIP().toString().c_str());
       }
-      resetStatus();     
+      if(!(connected%2)){
+        if(bssidNames.count(WiFi.BSSIDstr().c_str()))
+          addWebLog(true,"WiFi Connected! (RSI=%d  BSSID=%s  \"%s\")",WiFi.RSSI(),WiFi.BSSIDstr().c_str(),bssidNames[WiFi.BSSIDstr().c_str()].c_str());
+        else
+          addWebLog(true,"WiFi Connected! (RSI=%d  BSSID=%s)",WiFi.RSSI(),WiFi.BSSIDstr().c_str());      
+        connected++;
+        if(connected==1)
+          configureNetwork();
+        if(connectionCallback)
+          connectionCallback((connected+1)/2);
+        if(rescanInitialTime>0){
+          rescanAlarm=millis()+rescanInitialTime;
+          rescanStatus=RESCAN_PENDING;
+        }
+        resetStatus();
+      }
     break;
 
     case ARDUINO_EVENT_WIFI_SCAN_DONE:
@@ -500,31 +517,58 @@ void Span::networkCallback(arduino_event_id_t event){
       resetStatus();     
     break;
 
+    case ARDUINO_EVENT_ETH_CONNECTED:
+      LOG2("Acquiring Ethernet IP Addresses...\n");
+    break;
+
     case ARDUINO_EVENT_ETH_GOT_IP:
     case ARDUINO_EVENT_ETH_GOT_IP6:
-      addWebLog(true,"Ethernet Connected!  IP Address = %s",ETH.localIP().toString().c_str());      
-      connected++;
-      if(connected==1)
-        configureNetwork();
-      if(connectionCallback)
-        connectionCallback((connected+1)/2);
-      resetStatus();     
+      if(event.event_id==ARDUINO_EVENT_ETH_GOT_IP6){
+        IPAddress ip6=IPAddress(IPv6, (const uint8_t *)event.event_info.got_ip6.ip6_info.ip.addr, event.event_info.got_ip6.ip6_info.ip.zone);
+        addWebLog(true,"Received IPv6 Address: %s",ip6.toString(true).c_str());
+      } else {
+        addWebLog(true,"Received IPv4 Address: %s",ETH.localIP().toString().c_str());
+      }
+      if(!(connected%2)){
+        addWebLog(true,"Ethernet Connected!");      
+        connected++;
+        if(connected==1)
+          configureNetwork();
+        if(connectionCallback)
+          connectionCallback((connected+1)/2);
+        resetStatus();     
+      }
     break;
 
     case ARDUINO_EVENT_ETH_DISCONNECTED:
-      if(connected%2){                        // we are in a connected state
-        connected++;                          // move to unconnected state
+      if(connected%2){
+        connected++;
         addWebLog(true,"*** Ethernet Connection Lost!");
+        resetStatus();     
       }
-      resetStatus();     
     break;
                 
     default:
+      // LOG2("Event Callback: %s\n",Network.eventName(event.event_id));
     break;
   }
 }
 
 //////////////////////////////////////
+
+IPAddress Span::getUniqueLocalIPv6(NetworkInterface &nif){
+
+  esp_ip6_addr_t if_ip6[CONFIG_LWIP_IPV6_NUM_ADDRESSES];
+  int v6addrs = esp_netif_get_all_ip6(nif.netif(), if_ip6);
+  for(int i=0;i<v6addrs;i++){
+    if(esp_netif_ip6_get_addr_type(&if_ip6[i])==ESP_IP6_ADDR_IS_UNIQUE_LOCAL)
+    return(IPAddress(IPv6, (const uint8_t *)if_ip6[v6addrs-1].addr, if_ip6[v6addrs-1].zone));
+  }
+  return(IPAddress(IPv6));
+}
+
+//////////////////////////////////////
+
 
 void Span::configureNetwork(){
    
@@ -604,7 +648,7 @@ void Span::configureNetwork(){
     ArduinoOTA.onStart(spanOTA.start).onEnd(spanOTA.end).onProgress(spanOTA.progress).onError(spanOTA.error);  
     
     ArduinoOTA.begin();
-    LOG0("Starting OTA Server:    %s at %s\n",displayName,ethernetEnabled?ETH.localIP().toString().c_str():WiFi.localIP().toString().c_str());
+    LOG0("Starting OTA Server:    %s\n",displayName);
     LOG0("Authorization Password: %s",spanOTA.auth?"Enabled\n":"DISABLED!\n");
     LOG0("Auto Rollback:          %s",verifyRollbackLater()?"Enabled\n\n":"Disabled\n\n");
   }
@@ -736,12 +780,12 @@ void Span::processSerialCommand(const char *c){
       LOG0("\n*** HomeSpan Status ***\n\n");
 
       if(!ethernetEnabled){
-        LOG0("IP Address:        %s   (RSI=%d  BSSID=%s",WiFi.localIP().toString().c_str(),WiFi.RSSI(),WiFi.BSSIDstr().c_str());
+        LOG0("IP Addresses:      IPv4 = %s  IPv6 = %s  (RSI=%d  BSSID=%s",WiFi.localIP().toString().c_str(),getUniqueLocalIPv6(WiFi).toString().c_str(),WiFi.RSSI(),WiFi.BSSIDstr().c_str());
         if(bssidNames.count(WiFi.BSSIDstr().c_str()))
           LOG0("  \"%s\"",bssidNames[WiFi.BSSIDstr().c_str()].c_str());
         LOG0(")\n");
       } else {
-        LOG0("IP Address:        %s   (Ethernet)\n",ETH.localIP().toString().c_str());        
+        LOG0("IP Addresses:      IPv4 = %s  IPv6 = %s  (Ethernet)\n",ETH.localIP().toString().c_str(),getUniqueLocalIPv6(ETH).toString().c_str());        
       }
       
       if(webLog.isEnabled && hostName!=NULL)   
@@ -1550,13 +1594,37 @@ char *Span::unEscapeJSON(char *jObj){
 
 ///////////////////////////////
 
+char *Span::strstr_r(const char *haystack, const char *needle){
+  char *s=strstr(haystack,needle);
+  if(s)
+    s+=strlen(needle);
+  return(s);  
+}
+
+///////////////////////////////
+
 boolean Span::updateCharacteristics(char *buf, SpanBufVec &pVec){
 
   boolean twFail=false;
   char *jObj=escapeJSON(buf);
   size_t end=0;
 
-  if(sscanf(jObj,"{\"characteristics\":[%[^]]]}%n",jObj,&end)!=1 || strlen(jObj+end)){
+  char *pidObj=strstr_r(jObj,"\"pid\":");
+  if(pidObj){
+    uint64_t pid=strtoull(pidObj,NULL,0);
+    if(!TimedWrites.count(pid)){
+      LOG0("\n*** ERROR:  Timed Write PID not found\n\n");
+      twFail=true;
+    } else        
+    if(millis()>TimedWrites[pid]){
+      LOG0("\n*** ERROR:  Timed Write Expired\n\n");
+      twFail=true;
+    }        
+  }
+
+  jObj=strstr_r(jObj,"\"characteristics\":");
+
+  if(!jObj || !sscanf(jObj,"[%[^]]]%n",jObj,&end) || !end){
     LOG0("\n*** ERROR: Cannot extract properly-formatted \"characteristics\" array from JSON text\n\n");
     return(false);
   }
@@ -1611,17 +1679,6 @@ boolean Span::updateCharacteristics(char *buf, SpanBufVec &pVec){
       } else 
       if(!strcmp(name,"r")){
         sBuf.wr=(!strcmp(value,"1") || !strcmp(value,"true"));
-      } else 
-      if(!strcmp(name,"pid")){        
-        uint64_t pid=strtoull(value,NULL,0);        
-        if(!TimedWrites.count(pid)){
-          LOG0("\n*** ERROR:  Timed Write PID not found\n\n");
-          twFail=true;
-        } else        
-        if(millis()>TimedWrites[pid]){
-          LOG0("\n*** ERROR:  Timed Write Expired\n\n");
-          twFail=true;
-        }        
       } else {
         LOG0("\n*** ERROR:  Problems parsing JSON characteristics object - unexpected property \"%s\"\n\n",name);
         return(false);
@@ -1832,11 +1889,11 @@ boolean Span::updateDatabase(boolean updateMDNS){
 
   boolean changed=false;
 
-  if(memcmp(hapOut.getHash(),hapConfig.hashCode,48)){       // if hash code of current HAP database does not match stored hash code
-    memcpy(hapConfig.hashCode,hapOut.getHash(),48);         // update stored hash code
-    hapConfig.configNumber++;                               // increment configuration number
-    if(hapConfig.configNumber==65536)                       // reached max value
-      hapConfig.configNumber=1;                             // reset to 1
+  if(forceConfigIncrement || memcmp(hapOut.getHash(),hapConfig.hashCode,48)){       // if hash code of current HAP database does not match stored hash code, or force-increment is requested
+    memcpy(hapConfig.hashCode,hapOut.getHash(),48);                                 // update stored hash code
+    hapConfig.configNumber++;                                                       // increment configuration number
+    if(hapConfig.configNumber==65536)                                               // reached max value
+      hapConfig.configNumber=1;                                                     // reset to 1
                    
     nvs_set_blob(hapNVS,"HAPHASH",&hapConfig,sizeof(hapConfig));     // update data
     nvs_commit(hapNVS);                                              // commit to NVS

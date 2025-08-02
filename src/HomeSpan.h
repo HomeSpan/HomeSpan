@@ -286,6 +286,7 @@ class Span{
   uint32_t rebootCallbackTime;                  // length of time to wait (in milliseconds) before calling optional Reboot callback
   boolean ethernetEnabled=false;                // flag to indicate whether Ethernet is being used instead of WiFi
   boolean initialPollingCompleted=false;        // flag to indicate whether polling task has initially completed
+  boolean forceConfigIncrement=false;           // flag to indicate whether configuration number (MDNS C# value) should be incremented even if database config has not changed
   char *compileTime=NULL;                       // optional compile time string --- can be set with call to setCompileTime()
    
   nvs_handle charNVS;                           // handle for non-volatile-storage of Characteristics data
@@ -368,6 +369,7 @@ class Span{
   void printfNotify(SpanBufVec &pVec, HAPClient *hc);               // writes notification JSON to hapOut stream based on SpanBuf objects and specified connection
   char *escapeJSON(char *jObj);                                     // remove all whitespace not within double-quotes, and converts special characters to unused UTF-8 bytes as a placeholder
   char *unEscapeJSON(char *jObj);                                   // converts UTF-8 placeholder bytes back to original special characters
+  char *strstr_r(const char *haystack, const char *needle);         // same as standard-C strstr(), but returns pointer to character AFTER end of matched string (or NULL if no match)
   boolean updateCharacteristics(char *buf, SpanBufVec &pVec);       // parses PUT /characteristics JSON request and updates referenced characteristics; returns true on success, false on fail
 
   static boolean invalidUUID(const char *uuid){
@@ -380,10 +382,10 @@ class Span{
   }
 
   QueueHandle_t networkEventQueue;                         // queue to transmit network events from callback thread to HomeSpan thread
-  void networkCallback(WiFiEvent_t event);                 // network event handler (works for WiFi as well as Ethernet)
+  void networkCallback(const arduino_event_t &event);      // network event handler (works for WiFi as well as Ethernet)
 
   void init();    // performs all late-stage initializations needed
-  
+    
   public:
 
   Span();         // constructor
@@ -396,9 +398,9 @@ class Span{
   void poll();                                  // calls pollTask() with some error checking
   void processSerialCommand(const char *c);     // process command 'c' (typically from readSerial, though can be called with any 'c')
   
-  boolean updateDatabase(boolean updateMDNS=true);   // updates HAP Configuration Number and Loop vector; if updateMDNS=true and config number has changed, re-broadcasts MDNS 'c#' record; returns true if config number changed
-  boolean deleteAccessory(uint32_t aid);             // deletes Accessory with matching aid; returns true if found, else returns false 
-
+  boolean updateDatabase(boolean updateMDNS=true);           // updates HAP Configuration Number and Loop vector; if updateMDNS=true and config number has changed, re-broadcasts MDNS 'c#' record; returns true if config number changed
+  boolean deleteAccessory(uint32_t aid);                     // deletes Accessory with matching aid; returns true if found, else returns false 
+  
   Span& setControlPin(uint8_t pin, PushButton::triggerType_t triggerType=PushButton::TRIGGER_ON_LOW){            // sets Control Pin, with optional trigger type   
     controlButton=new PushButton(pin, triggerType);
     return(*this);
@@ -444,6 +446,7 @@ class Span{
   Span& setWifiBegin(void (*f)(const char *, const char *)){wifiBegin=f;return(*this);}  // sets an optional user-defined function to over-ride WiFi.begin() with additional logic
   Span& setPollingCallback(void (*f)()){pollingCallback=f;return(*this);}                // sets an optional user-defined function to call upon INITIAL completion of the polling task (only called once)
   Span& useEthernet(){ethernetEnabled=true;return(*this);}                               // force use of Ethernet instead of WiFi, even if ETH not called or Ethernet card not detected
+  Span& forceNewConfigNumber(){forceConfigIncrement=true;return(*this);}                 // force configuration increment when updateDatabase() is called even if database has not changed 
 
   Span& setGetCharacteristicsCallback(void (*f)(const char *)){getCharacteristicsCallback=f;return(*this);}                    // sets an optional callback called whenever HomeKit sends a getCharacteristics request
   Span& setHostNameSuffix(const char *suffix){asprintf(&hostNameSuffix,"%s",suffix);return(*this);}                            // sets the hostName suffix to be used instead of the 6-byte AccessoryID
@@ -500,6 +503,9 @@ class Span{
 
   list<Controller, Mallocator<Controller>>::const_iterator controllerListBegin();
   list<Controller, Mallocator<Controller>>::const_iterator controllerListEnd();
+
+  IPAddress getUniqueLocalIPv6(NetworkInterface &nif);
+  IPAddress getUniqueLocalIPv6(WiFiSTAClass &wifi){return(getUniqueLocalIPv6(wifi.STA));} 
 
   [[deprecated("This homeSpan method has been deprecated and will be removed in a future version.  Please use the more generic setConnectionCallback() method instead.")]]
   Span& setWifiCallback(void (*f)()){wifiCallback=f;return(*this);}                      // sets an optional user-defined function to call once WiFi connectivity is initially established
@@ -909,13 +915,18 @@ class SpanPoint {
   static uint16_t channelMask;                // channel mask (only used for remote devices)
   static QueueHandle_t statusQueue;           // queue for communication between SpanPoint::dataSend and SpanPoint::send
   static nvs_handle pointNVS;                 // NVS storage for channel number (only used for remote devices)
-  
+
   static void dataReceived(const esp_now_recv_info *info, const uint8_t *incomingData, int len);
   static void init(const char *password="HomeSpan");
   static void setAsHub(){isHub=true;}
   static uint8_t nextChannel();
   
+
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 5, 0)
+  static void dataSent(const esp_now_send_info_t *mac, esp_now_send_status_t status) {
+#else
   static void dataSent(const uint8_t *mac, esp_now_send_status_t status) {
+#endif
     xQueueOverwrite( statusQueue, &status );
   }
   
