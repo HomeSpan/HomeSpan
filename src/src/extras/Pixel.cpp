@@ -38,18 +38,18 @@
 IRAM_ATTR size_t Pixel::pixelEncodeCallback(const void *data, size_t data_size,
                      size_t symbols_written, size_t symbols_free,
                      rmt_symbol_word_t *symbols, bool *done, void *arg) {
-  Pixel::rmt_pixel_encoder_config_t* encoder_config = (Pixel::rmt_pixel_encoder_config_t *)arg;
+  rmt_pixel_encoder_config_t* encoder_config = (rmt_pixel_encoder_config_t *)arg;
   Pixel* pixel = encoder_config->pixel;
-  Pixel::Color* colors = (Pixel::Color *)data;
+  Color* colors = (Color *)data;
   int bytesPerPixel = pixel->bytesPerPixel;
   int symbolsPerPixel = 8 * bytesPerPixel;
-  int totalPixelCount = data_size / sizeof(Pixel::Color);
+  int totalPixelCount = data_size / sizeof(Color);
   int pixelsWritten = symbols_written / symbolsPerPixel;
   bool multiColor = encoder_config->multiColor;
   size_t symbolsGenerated = 0;
 
   while (pixelsWritten < totalPixelCount && symbols_free >= symbolsPerPixel) {
-    Pixel::Color* srcColor = colors + (multiColor ? pixelsWritten : 0);
+    Color* srcColor = colors + (multiColor ? pixelsWritten : 0);
 
     for (auto i=0; i<bytesPerPixel; i++) {
       uint8_t byte = srcColor->col[pixel->map[i]];
