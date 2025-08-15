@@ -156,6 +156,19 @@ class Pixel : public Blinkable {
     }; // Color
   
   private:
+    typedef struct {
+      rmt_symbol_word_t bit0; /*!< How to represent BIT0 in RMT symbol */
+      rmt_symbol_word_t bit1; /*!< How to represent BIT1 in RMT symbol */
+      Pixel* pixel;
+      bool multiColor;
+    } rmt_pixel_encoder_config_t;
+    
+    rmt_pixel_encoder_config_t encoder_config;
+
+    static IRAM_ATTR size_t pixelEncodeCallback(const void *data, size_t data_size,
+                     size_t symbols_written, size_t symbols_free,
+                     rmt_symbol_word_t *symbols, bool *done, void *arg);
+
     uint8_t pin;
     int channel=-1;
     char *pType=NULL;
