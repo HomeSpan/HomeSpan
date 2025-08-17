@@ -160,7 +160,6 @@ void Pixel::set(Color *c, size_t nPixels, boolean multiColor){
   encoder_config.multiColor = multiColor;
   encoder_config.nPixels = nPixels;
 
-//  rmt_encoder_reset(encoder);                           // reset encoder (needed to clear out encoder overflow buffer and all counters)
   rmt_transmit(tx_chan, encoder, c, 1, &tx_config);     // transmit data (note size parameter is not used with simple callback encoder -- set to 1 as placeholder)
   rmt_tx_wait_all_done(tx_chan,-1);                     // wait until final data is transmitted
   delayMicroseconds(resetTime);                         // end-of-marker delay

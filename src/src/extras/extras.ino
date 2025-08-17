@@ -28,14 +28,14 @@
 #include "Pixel.h"
 
 Pixel p(1, "GRBW");
-Pixel::Color empty[5]={};
-Pixel::Color colors[5]={Pixel::RGB(0, 50, 0),  Pixel::RGB(50, 50, 0), Pixel::RGB(0, 0, 50) ,Pixel::RGB(0, 0, 0), Pixel::RGB(0, 0, 255)};
+Pixel::Color empty[7]={};
+Pixel::Color colors[7]={Pixel::RGB(0, 50, 0),  Pixel::RGB(50, 50, 0), Pixel::RGB(50, 0, 0) ,Pixel::RGB(0, 0, 0), Pixel::RGB(0, 0, 255), Pixel::RGB(0,0,0), Pixel::RGB(0,0,0,255)};
 
 void setup() {
   for(int i=0;i<5;i++){
-    p.set(colors, 5);
+    p.set(colors, 7);
     delay(1000);
-    p.set(empty, 5);
+    p.set(empty, 7);
     delay(1000);    
   }
 }
