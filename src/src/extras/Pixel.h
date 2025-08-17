@@ -158,16 +158,14 @@ class Pixel : public Blinkable {
   private:
     typedef struct {
       Pixel* pixel;
-      rmt_symbol_word_t bit0;
-      rmt_symbol_word_t bit1;
-      size_t nPixels;
+
       bool multiColor;
     } rmt_pixel_encoder_config_t;
     
     rmt_pixel_encoder_config_t encoder_config;
 
-    static IRAM_ATTR size_t pixelEncodeCallback(const void *data, size_t data_size,
-                     size_t symbols_written, size_t symbols_free,
+    static IRAM_ATTR size_t pixelEncodeCallback(const void *colors, size_t symbolsTotal,
+                     size_t symbolsWritten, size_t symbolsFree,
                      rmt_symbol_word_t *symbols, bool *done, void *arg);
 
     uint8_t pin;
@@ -176,9 +174,12 @@ class Pixel : public Blinkable {
     rmt_channel_handle_t tx_chan = NULL;
     rmt_encoder_handle_t encoder;
     rmt_transmit_config_t tx_config={0};
-  
+
+    rmt_symbol_word_t bit0;        // timing symbol for bit0
+    rmt_symbol_word_t bit1;        // timing symbol for bit1
     uint32_t resetTime;            // minimum time (in usec) between pulse trains
     uint8_t bytesPerPixel;         // WC=2, RGB=3, RGBW=4, RGBWC=5
+    uint8_t symbolsPerPixel;       // will be set to bytesPerPixel * 8
     float warmTemp=2000;           // default temperature (in Kelvin) of warm-white LED
     float coolTemp=7000;           // defult temperature (in Kelvin) of cool-white LED
     uint8_t map[5];                // color map representing order in which color bytes are transmitted

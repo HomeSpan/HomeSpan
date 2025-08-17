@@ -35,32 +35,31 @@
 //     Single-Wire RGB/RGBW NeoPixels     //
 ////////////////////////////////////////////
 
-IRAM_ATTR size_t Pixel::pixelEncodeCallback(const void *data, size_t data_size,
-                     size_t symbols_written, size_t symbols_free,
+IRAM_ATTR size_t Pixel::pixelEncodeCallback(const void *colors, size_t symbolsTotal,
+                     size_t symbolsWritten, size_t symbolsFree,
                      rmt_symbol_word_t *symbols, bool *done, void *arg) {
-                      
-  rmt_pixel_encoder_config_t* encoder_config = (rmt_pixel_encoder_config_t *)arg;
-  Color* colors = (Color *)data;
-  int bytesPerPixel = encoder_config->pixel->bytesPerPixel;
-  int symbolsPerPixel = 8 * bytesPerPixel;
-  int pixelsWritten = symbols_written / symbolsPerPixel;
-  size_t symbolsGenerated = 0;
 
-  while (pixelsWritten < encoder_config->nPixels && symbols_free >= symbolsPerPixel) {
-    Color* srcColor = colors + (encoder_config->multiColor ? pixelsWritten : 0);
-
-    for (auto i=0; i<encoder_config->pixel->bytesPerPixel; i++) {
-      uint8_t byte = srcColor->col[encoder_config->pixel->map[i]];
-      for (auto j = 7; j >= 0; j--) {
-        symbols[symbolsGenerated++] = (byte & (1 << j)) ? encoder_config->bit1 : encoder_config->bit0;
-        symbols_free--;
-      }
-    }
-    pixelsWritten++;
+  if(symbolsWritten==symbolsTotal){         // all symbols have been written
+    *done=true;
+    return(0);
+  } else {
+    *done=false;
   }
 
-  *done = (pixelsWritten >= encoder_config->nPixels) && symbolsGenerated==0;
-  return symbolsGenerated;
+  rmt_pixel_encoder_config_t* encoder_config = (rmt_pixel_encoder_config_t *)arg;
+  
+  if(symbolsFree < encoder_config->pixel->symbolsPerPixel)         // not enough space to write an entire pixel
+    return(0);
+
+  Color *color = (Color *)colors + (encoder_config->multiColor ? (symbolsWritten/encoder_config->pixel->symbolsPerPixel) : 0);
+
+  for(auto i=0; i<encoder_config->pixel->bytesPerPixel; i++){
+    uint8_t colorByte = color->col[encoder_config->pixel->map[i]];
+    for(auto j = 7; j >= 0; j--)
+      *symbols++ = (colorByte & (1 << j)) ? encoder_config->pixel->bit1 : encoder_config->pixel->bit0;
+  }
+  
+  return(encoder_config->pixel->symbolsPerPixel);
 };
 
 ///////////////////
@@ -109,6 +108,7 @@ Pixel::Pixel(int pin, const char *pixelType){
     return;
   }
 
+  symbolsPerPixel=bytesPerPixel*8;                // pre-compute and store to save time in callback
   sscanf(pixelType,"%ms",&pType);                 // save pixelType for later use with hasColor()
   
   rmt_enable(tx_chan);                            // enable channel
@@ -116,7 +116,7 @@ Pixel::Pixel(int pin, const char *pixelType){
   
   rmt_simple_encoder_config_t simple_config;
   simple_config.callback = pixelEncodeCallback;               // set callback function to encode data
-  simple_config.min_chunk_size = 8 * bytesPerPixel;
+  simple_config.min_chunk_size=symbolsPerPixel;
   simple_config.arg = &encoder_config;
   rmt_new_simple_encoder(&simple_config, &encoder);           // create simple encoder
 
@@ -134,15 +134,15 @@ Pixel *Pixel::setTiming(float high0, float low0, float high1, float low1, uint32
   if(channel<0)
     return(this);
   
-  encoder_config.bit0.level0=1;
-  encoder_config.bit0.duration0=high0*80+0.5;
-  encoder_config.bit0.level1=0;
-  encoder_config.bit0.duration1=low0*80+0.5;
+  bit0.level0=1;
+  bit0.duration0=high0*80+0.5;
+  bit0.level1=0;
+  bit0.duration1=low0*80+0.5;
   
-  encoder_config.bit1.level0=1;
-  encoder_config.bit1.duration0=high1*80+0.5;
-  encoder_config.bit1.level1=0;
-  encoder_config.bit1.duration1=low1*80+0.5;
+  bit1.level0=1;
+  bit1.duration0=high1*80+0.5;
+  bit1.level1=0;
+  bit1.duration1=low1*80+0.5;
 
   resetTime=lowReset;
   return(this);
@@ -155,14 +155,13 @@ void Pixel::set(Color *c, size_t nPixels, boolean multiColor){
   if(channel<0 || nPixels==0)
     return;
 
-  rmt_ll_set_group_clock_src(&RMT, channel, RMT_CLK_SRC_DEFAULT, 1, 0, 0);        // ensure use of DEFAULT CLOCK, which is always 80 MHz, without any scaling
+  rmt_ll_set_group_clock_src(&RMT, channel, RMT_CLK_SRC_DEFAULT, 1, 0, 0);    // ensure use of DEFAULT CLOCK, which is always 80 MHz, without any scaling
 
   encoder_config.multiColor = multiColor;
-  encoder_config.nPixels = nPixels;
 
-  rmt_transmit(tx_chan, encoder, c, 1, &tx_config);     // transmit data (note size parameter is not used with simple callback encoder -- set to 1 as placeholder)
-  rmt_tx_wait_all_done(tx_chan,-1);                     // wait until final data is transmitted
-  delayMicroseconds(resetTime);                         // end-of-marker delay
+  rmt_transmit(tx_chan, encoder, c, nPixels*bytesPerPixel*8, &tx_config);     // transmit data (size parameter set to total number of symbols to be written)
+  rmt_tx_wait_all_done(tx_chan,-1);                                           // wait until final data is transmitted
+  delayMicroseconds(resetTime);                                               // end-of-marker delay
 }
 
 ////////////////////////////////////////////
