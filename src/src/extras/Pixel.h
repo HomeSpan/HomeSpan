@@ -157,9 +157,10 @@ class Pixel : public Blinkable {
   
   private:
     typedef struct {
-      rmt_symbol_word_t bit0; /*!< How to represent BIT0 in RMT symbol */
-      rmt_symbol_word_t bit1; /*!< How to represent BIT1 in RMT symbol */
       Pixel* pixel;
+      rmt_symbol_word_t bit0;
+      rmt_symbol_word_t bit1;
+      size_t nPixels;
       bool multiColor;
     } rmt_pixel_encoder_config_t;
     
@@ -174,7 +175,7 @@ class Pixel : public Blinkable {
     char *pType=NULL;
     rmt_channel_handle_t tx_chan = NULL;
     rmt_encoder_handle_t encoder;
-    rmt_transmit_config_t tx_config;
+    rmt_transmit_config_t tx_config={0};
   
     uint32_t resetTime;            // minimum time (in usec) between pulse trains
     uint8_t bytesPerPixel;         // WC=2, RGB=3, RGBW=4, RGBWC=5
@@ -185,8 +186,8 @@ class Pixel : public Blinkable {
   
   public:
     Pixel(int pin, const char *pixelType="GRB");                     // creates addressable single-wire LED of pixelType connected to pin (such as the SK68 or WS28)   
-    void set(Color *c, int nPixels, boolean multiColor=true);        // sets colors of nPixels based on array of Colors c; setting multiColor to false repeats Color in c[0] for all nPixels
-    void set(Color c, int nPixels=1){set(&c,nPixels,false);}         // sets color of nPixels to be equal to specific Color c
+    void set(Color *c, size_t nPixels, boolean multiColor=true);     // sets colors of nPixels based on array of Colors c; setting multiColor to false repeats Color in c[0] for all nPixels
+    void set(Color c, size_t nPixels=1){set(&c,nPixels,false);}      // sets color of nPixels to be equal to specific Color c
     
     static Color RGB(uint8_t r, uint8_t g, uint8_t b, uint8_t w=0, uint8_t c=0){return(Color().RGB(r,g,b,w,c));}   // a static method for returning an RGB(WC) Color
     static Color HSV(float h, float s, float v, double w=0, double c=0){return(Color().HSV(h,s,v,w,c));}           // a static method for returning an HSV(WC) Color
@@ -315,8 +316,8 @@ class Dot {
 
   public:
     Dot(uint8_t dataPin, uint8_t clockPin);                                                 // creates addressable two-wire RGB LED connected to dataPin and clockPin (such as the DotStar SK9822 or APA102)
-    void set(Color *c, int nPixels, boolean multiColor=true);                               // sets colors of nPixels based on array of Colors c; setting multiColor to false repeats Color in c[0] for all nPixels
-    void set(Color c, int nPixels=1){set(&c,nPixels,false);}                                // sets color of nPixels to be equal to specific Color c
+    void set(Color *c, size_t nPixels, boolean multiColor=true);                            // sets colors of nPixels based on array of Colors c; setting multiColor to false repeats Color in c[0] for all nPixels
+    void set(Color c, size_t nPixels=1){set(&c,nPixels,false);}                             // sets color of nPixels to be equal to specific Color c
     
     static Color RGB(uint8_t r, uint8_t g, uint8_t b, uint8_t driveLevel=31){return(Color().RGB(r,g,b,driveLevel));}  // an alternative method for returning an RGB Color
     static Color HSV(float h, float s, float v, double drivePercent=100){return(Color().HSV(h,s,v,drivePercent));}    // an alternative method for returning an HSV Color
