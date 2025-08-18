@@ -27,7 +27,7 @@
 
 #include "Pixel.h"
 
-Pixel p(1, "GRBW");
+Pixel p(26, "GRB");
 Pixel::Color empty[7]={};
 Pixel::Color colors[7]={Pixel::RGB(0, 50, 0),  Pixel::RGB(50, 50, 0), Pixel::RGB(50, 0, 0) ,Pixel::RGB(0, 0, 0), Pixel::RGB(0, 0, 255), Pixel::RGB(0,0,0), Pixel::RGB(0,0,0,255)};
 
