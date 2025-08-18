@@ -158,12 +158,9 @@ class Pixel : public Blinkable {
   private:
     typedef struct {
       Pixel* pixel;
-
       bool multiColor;
-    } rmt_pixel_encoder_config_t;
+    } callbackArgs_t;
     
-    rmt_pixel_encoder_config_t encoder_config;
-
     static IRAM_ATTR size_t pixelEncodeCallback(const void *colors, size_t symbolsTotal,
                      size_t symbolsWritten, size_t symbolsFree,
                      rmt_symbol_word_t *symbols, bool *done, void *arg);
@@ -173,7 +170,7 @@ class Pixel : public Blinkable {
     char *pType=NULL;
     rmt_channel_handle_t tx_chan = NULL;
     rmt_encoder_handle_t encoder;
-    rmt_transmit_config_t tx_config={0};
+    callbackArgs_t callbackArgs;
 
     rmt_symbol_word_t bit0;        // timing symbol for bit0
     rmt_symbol_word_t bit1;        // timing symbol for bit1

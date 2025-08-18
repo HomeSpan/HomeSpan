@@ -46,20 +46,20 @@ IRAM_ATTR size_t Pixel::pixelEncodeCallback(const void *colors, size_t symbolsTo
     *done=false;
   }
 
-  rmt_pixel_encoder_config_t* encoder_config = (rmt_pixel_encoder_config_t *)arg;
+  callbackArgs_t *callbackArgs=(callbackArgs_t *)arg;
   
-  if(symbolsFree < encoder_config->pixel->symbolsPerPixel)         // not enough space to write an entire pixel
+  if(symbolsFree < callbackArgs->pixel->symbolsPerPixel)         // not enough space to write an entire pixel
     return(0);
 
-  Color *color = (Color *)colors + (encoder_config->multiColor ? (symbolsWritten/encoder_config->pixel->symbolsPerPixel) : 0);
+  Color *color = (Color *)colors + (callbackArgs->multiColor ? (symbolsWritten / callbackArgs->pixel->symbolsPerPixel) : 0);
 
-  for(auto i=0; i<encoder_config->pixel->bytesPerPixel; i++){
-    uint8_t colorByte = color->col[encoder_config->pixel->map[i]];
+  for(auto i=0; i<callbackArgs->pixel->bytesPerPixel; i++){
+    uint8_t colorByte = color->col[callbackArgs->pixel->map[i]];
     for(auto j = 7; j >= 0; j--)
-      *symbols++ = (colorByte & (1 << j)) ? encoder_config->pixel->bit1 : encoder_config->pixel->bit0;
+      *symbols++ = (colorByte & (1 << j)) ? callbackArgs->pixel->bit1 : callbackArgs->pixel->bit0;
   }
   
-  return(encoder_config->pixel->symbolsPerPixel);
+  return(callbackArgs->pixel->symbolsPerPixel);
 };
 
 ///////////////////
@@ -108,23 +108,21 @@ Pixel::Pixel(int pin, const char *pixelType){
     return;
   }
 
-  symbolsPerPixel=bytesPerPixel*8;                // pre-compute and store to save time in callback
-  sscanf(pixelType,"%ms",&pType);                 // save pixelType for later use with hasColor()
+  symbolsPerPixel=bytesPerPixel*8;                        // pre-compute and store to save time in callback
+  sscanf(pixelType,"%ms",&pType);                         // save pixelType for later use with hasColor()
   
-  rmt_enable(tx_chan);                            // enable channel
-  channel=((int *)tx_chan)[0];                    // get channel number
+  rmt_enable(tx_chan);                                    // enable channel
+  channel=((int *)tx_chan)[0];                            // get channel number
   
-  rmt_simple_encoder_config_t simple_config;
-  simple_config.callback = pixelEncodeCallback;               // set callback function to encode data
-  simple_config.min_chunk_size=symbolsPerPixel;
-  simple_config.arg = &encoder_config;
-  rmt_new_simple_encoder(&simple_config, &encoder);           // create simple encoder
+  rmt_simple_encoder_config_t simple_config;              // create simple_encoder configuration  
+  simple_config.callback = pixelEncodeCallback;           // set callback function to encode data
+  simple_config.min_chunk_size=symbolsPerPixel;           // set minimum size to handle a full pixel
+  simple_config.arg = &callbackArgs;                      // set callback args  
+  rmt_new_simple_encoder(&simple_config, &encoder);       // create simple_encoder using above configuration
 
-  encoder_config.pixel = this;
-   
-  setTiming(0.32, 0.88, 0.64, 0.56, 80.0);    // set default timing parameters (suitable for most SK68 and WS28 RGB pixels)
-
-  onColor.HSV(0,100,100,0);
+  callbackArgs.pixel=this;                                // set callback arg to point back to this pixel instance   
+  setTiming(0.32, 0.88, 0.64, 0.56, 80.0);                // set default timing parameters (suitable for most SK68 and WS28 RGB pixels)
+  onColor.HSV(0,100,100,0);                               // set onColor
 }
 
 ///////////////////
@@ -157,7 +155,8 @@ void Pixel::set(Color *c, size_t nPixels, boolean multiColor){
 
   rmt_ll_set_group_clock_src(&RMT, channel, RMT_CLK_SRC_DEFAULT, 1, 0, 0);    // ensure use of DEFAULT CLOCK, which is always 80 MHz, without any scaling
 
-  encoder_config.multiColor = multiColor;
+  callbackArgs.multiColor = multiColor;
+  rmt_transmit_config_t tx_config{};
 
   rmt_transmit(tx_chan, encoder, c, nPixels*bytesPerPixel*8, &tx_config);     // transmit data (size parameter set to total number of symbols to be written)
   rmt_tx_wait_all_done(tx_chan,-1);                                           // wait until final data is transmitted
