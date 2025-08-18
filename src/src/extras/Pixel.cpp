@@ -158,7 +158,7 @@ void Pixel::set(Color *c, size_t nPixels, boolean multiColor){
   callbackArgs.multiColor = multiColor;
   rmt_transmit_config_t tx_config{};
 
-  rmt_transmit(tx_chan, encoder, c, nPixels*bytesPerPixel*8, &tx_config);     // transmit data (size parameter set to total number of symbols to be written)
+  rmt_transmit(tx_chan, encoder, c, nPixels*symbolsPerPixel, &tx_config);     // transmit data (size parameter set to total number of symbols to be written)
   rmt_tx_wait_all_done(tx_chan,-1);                                           // wait until final data is transmitted
   delayMicroseconds(resetTime);                                               // end-of-marker delay
 }
