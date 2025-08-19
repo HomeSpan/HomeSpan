@@ -44,30 +44,6 @@
 
 [[maybe_unused]] static const char* PIXEL_TAG = "Pixel";
 
-
-/***********************************/
-/* TO BE DEPRECATED IN 2.X RELEASE */
-
-typedef const String pixelType_t;
-
-namespace PixelType {
-  
-  pixelType_t RGB="rgb";
-  pixelType_t RBG="rbg";
-  pixelType_t BRG="brg";
-  pixelType_t BGR="bgr";
-  pixelType_t GBR="gbr";
-  pixelType_t GRB="grb";
-  pixelType_t RGBW="rgbw";
-  pixelType_t RBGW="rbgw";
-  pixelType_t BRGW="brgw";
-  pixelType_t BGRW="bgrw";
-  pixelType_t GBRW="gbrw";
-  pixelType_t GRBW="grbw";
-};
-
-/***********************************/
-
 ////////////////////////////////////////////
 //     Single-Wire RGB/RGBW NeoPixels     //
 ////////////////////////////////////////////
@@ -206,15 +182,6 @@ class Pixel : public Blinkable {
     void on() {set(onColor);}
     void off() {set(RGB(0,0,0,0));}
     Pixel *setOnColor(Color c){onColor=c;return(this);}
-
-    [[deprecated("*** Please use Pixel(int pin, const char *pixelType) constructor instead to ensure future compatibility.")]]
-    Pixel(int pin, boolean isRGBW) : Pixel(pin,isRGBW?"GRBW":"GRB"){}
-    
-    [[deprecated("*** Please use Pixel(int pin, const char *pixelType) constructor instead to ensure future compatibility.")]]
-    Pixel(int pin, pixelType_t pixelType) : Pixel(pin, pixelType.c_str()){}
-
-    [[deprecated("*** This method will be deprecated in a future release.")]]
-    boolean isRGBW(){return(bytesPerPixel==4);}
 };
 
 ////////////////////////////////////////////
