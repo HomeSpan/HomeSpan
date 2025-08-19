@@ -60,33 +60,18 @@ Requirements to run HomeSpan depend on which version you choose:
   * Launch the WiFi Access Point
 * A standalone, detailed End-User Guide
 
-## ❗Latest Update - HomeSpan 2.1.3 (02 Aug 2025)
+## ❗Latest Update - HomeSpan 2.1.4 (XX Aug 2025)
 
 ### Updates and Corrections
 
-* **Added support for IPv6 addresses**
-  * IPv6 can be enabled by adding the Arduino-ESP32 functions `WiFi.enableIPv6()` or `ETH.enableIPv6()` to a sketch
-  * when IPv6 is enabled, HomeSpan reports the IPv6 **Unique Link Address (ULA)** alongside the IPv4 address in the Serial Monitor and Web Log (if IPv6 is not enabled, the IPv6 address is reported as "::")
-  * each IP address acquired (whether IPv6 or IPv4) is logged to the Serial Monitor and Web Log at the time it is received from the router
-  * note that if `homeSpan.setConnectionCallback()` is used to set a callback function upon initial WiFi or ETH connection, the callback function is called only ONCE upon acquisition of the very first IP address received from the router (regardless of whether it is an IPv4 or IPv6 address)
-  * see  [WiFi and Ethernet Connectivity](docs/Networks.md) for details
-
-* **Updated the HomeSpan Access Point code to (hopefully) address issues that previously prevented the HomeSpan Setup pages from being displayed on non-Apple devices**
-
-* **Fixed bug in PID interpretation for HAP Timed Writes that was introduced when the JSON-parser was refactored in HomeSpan 2.1.2**
-
-* **Added new *homeSpan* method `forceNewConfigNumber()`**
-  * when included in a sketch, this forces HomeSpan to update the database configuration number upon start-up, as well as anytime `homeSpan.updateDatabase()` is called, regardless of whether there has been any change to the database configuration
-  * purpose of this function is an attempt to encourage the HomeKit backend architecture to more quickly re-establish a connection to a HomeSpan device that has been rebooted without the user opening the Home App (in which case HomeKit would immediately connect to the device)
-  * prompting HomeKit in this fashion has had limited success (hopefully Apple will address this shortcoming more generally in iOS26)
-
-### Compatibility Issues
-
-* **Addressed compatibility issues with HomeSpan's *LedPin*, *RFControl* and *Pixel* modules when run under Arduino-ESP32 version 3.2 or later as a result of new fields added by Espressif to various *LEDC* and *RMT* configuration structures in IDF 5.4**
-  * the initialization routines in these  modules has been modified to always pre-clear all relevant IDF config structures so that such issues will (hopefully) not re-surface in the future if/when Espressif adds any additional config fields in subsequent IDF updates
- 
-* **Addressed compatibility issue with change in function signature for ESP-NOW callback under IDF 5.5 / Arduino-ESP32 3.3.0**
-  * adjusted signature of callback as per ESP-NOW IDF 5.5 [breaking change](https://docs.espressif.com/projects/esp-idf/en/stable/esp32/migration-guides/release-5.x/5.5/wifi.html)
+* **Refactored *Pixel* Library for Improved Performance**
+  
+  * also addresses a latent issue introduced during the original re-factoring of the Pixel library in HomeSpan 2.0.0 that prevented certain pixels strands from operating
+  * kudos to @rubillos for identifying the issue and providing a solution
+  * IMPORTANT: this fix utilizes IDF functionality only available since IDF 5.3.  As a result:
+    
+    * **HomeSpan 2.1.4 requires Arduino-ESP32 version 3.1.0 or later**
+    * **HomeSpan will *not* compile on prior versions of the Arduino-ESP32 library**
         
 See [Releases](https://github.com/HomeSpan/HomeSpan/releases) for details on all changes and bug fixes included in this update.
 
