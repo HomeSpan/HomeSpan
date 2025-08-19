@@ -68,7 +68,7 @@ Requirements to run HomeSpan depend on which version you choose:
 * **Refactored *Pixel* Library for Improved Performance**
   
   * also addresses a latent issue introduced during the original re-factoring of the Pixel library in HomeSpan 2.0.0 that prevented certain pixels strands from operating
-  * kudos to Randy for for [identifying the issue and providing a solution](https://github.com/HomeSpan/HomeSpan/pull/1102)
+  * kudos to Randy for [identifying the issue and providing a solution](https://github.com/HomeSpan/HomeSpan/pull/1102)!
   * IMPORTANT: this fix utilizes IDF functionality only available since IDF 5.3.  As a result:
     
     * **HomeSpan 2.1.4 requires Arduino-ESP32 version 3.1.0 or later**
