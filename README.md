@@ -9,9 +9,10 @@ Requirements to run HomeSpan depend on which version you choose:
 |HomeSpan Version | Arduino-ESP32 Board Manager | Partition Scheme | Supported Chips|
 |:---:|:---:|:---:|---|
 |1.9.1 or earlier | v2.0.0 - v2.0.17 | *Default* (1.3MB APP) | ESP32, S2, S3, C3 |
-|2.0.0 or later | v3.0.2 - **v3.3.0**<sup>*</sup> | *Minimal SPIFFS* (1.9MB APP) | ESP32, S2, S3, C3, *and C6* |
+|2.0.0 - 2.1.3 | v3.0.2 - 3.3.0 | *Minimal SPIFFS* (1.9MB APP) | ESP32, S2, S3, C3, *and C6* |
+|**2.1.4 or later** | **v3.1.0 - 3.3.0**<sup>*</sup> | *Minimal SPIFFS* (1.9MB APP) | ESP32, S2, S3, C3, *and C6* |
 
-<sup>*</sup>HomeSpan has been tested through **version 3.3.0** of the Arduino-ESP32 Board Manager (built on IDF 5.5.0).  Later releases may work fine, but have not (yet) been tested.  Note HomeSpan does not support the use of alpha, beta, or pre-release candidates of the Arduino-ESP32 Board Manager - testing is only done on production releases of the Board Manager.
+<sup>*</sup>The *current* production version of HomeSpan (2.1.4) requires **version 3.1.0 through version 3.3.0** of the Arduino-ESP32 Board Manager.  Compilation will fail under earlier releases.  Later releases may work fine, but have not (yet) been tested.  Note HomeSpan does not support the use of alpha, beta, or pre-release candidates of the Arduino-ESP32 Board Manager - testing is only done on production releases of the Board Manager.
 
 **ADDITIONAL REQUIREMENTS**:  Apple's HomeKit architecture [requires the use of a Home Hub](https://support.apple.com/en-us/HT207057) (either a HomePod or Apple TV) for full and proper operation of any HomeKit device, including those based on HomeSpan.  ***Use of HomeSpan without a Home Hub is NOT supported.***
 
@@ -67,7 +68,7 @@ Requirements to run HomeSpan depend on which version you choose:
 * **Refactored *Pixel* Library for Improved Performance**
   
   * also addresses a latent issue introduced during the original re-factoring of the Pixel library in HomeSpan 2.0.0 that prevented certain pixels strands from operating
-  * kudos to @rubillos for identifying the issue and providing a solution
+  * kudos to Randy for for [identifying the issue and providing a solution](https://github.com/HomeSpan/HomeSpan/pull/1102)
   * IMPORTANT: this fix utilizes IDF functionality only available since IDF 5.3.  As a result:
     
     * **HomeSpan 2.1.4 requires Arduino-ESP32 version 3.1.0 or later**
