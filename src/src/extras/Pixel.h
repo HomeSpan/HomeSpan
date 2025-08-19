@@ -44,30 +44,6 @@
 
 [[maybe_unused]] static const char* PIXEL_TAG = "Pixel";
 
-
-/***********************************/
-/* TO BE DEPRECATED IN 2.X RELEASE */
-
-typedef const String pixelType_t;
-
-namespace PixelType {
-  
-  pixelType_t RGB="rgb";
-  pixelType_t RBG="rbg";
-  pixelType_t BRG="brg";
-  pixelType_t BGR="bgr";
-  pixelType_t GBR="gbr";
-  pixelType_t GRB="grb";
-  pixelType_t RGBW="rgbw";
-  pixelType_t RBGW="rbgw";
-  pixelType_t BRGW="brgw";
-  pixelType_t BGRW="bgrw";
-  pixelType_t GBRW="gbrw";
-  pixelType_t GRBW="grbw";
-};
-
-/***********************************/
-
 ////////////////////////////////////////////
 //     Single-Wire RGB/RGBW NeoPixels     //
 ////////////////////////////////////////////
@@ -156,15 +132,27 @@ class Pixel : public Blinkable {
     }; // Color
   
   private:
+    typedef struct {
+      Pixel* pixel;
+      bool multiColor;
+    } callbackArgs_t;
+    
+    static IRAM_ATTR size_t pixelEncodeCallback(const void *colors, size_t symbolsTotal,
+                     size_t symbolsWritten, size_t symbolsFree,
+                     rmt_symbol_word_t *symbols, bool *done, void *arg);
+
     uint8_t pin;
     int channel=-1;
     char *pType=NULL;
     rmt_channel_handle_t tx_chan = NULL;
     rmt_encoder_handle_t encoder;
-    rmt_transmit_config_t tx_config;
-  
+    callbackArgs_t callbackArgs;
+
+    rmt_symbol_word_t bit0;        // timing symbol for bit0
+    rmt_symbol_word_t bit1;        // timing symbol for bit1
     uint32_t resetTime;            // minimum time (in usec) between pulse trains
     uint8_t bytesPerPixel;         // WC=2, RGB=3, RGBW=4, RGBWC=5
+    uint8_t symbolsPerPixel;       // will be set to bytesPerPixel * 8
     float warmTemp=2000;           // default temperature (in Kelvin) of warm-white LED
     float coolTemp=7000;           // defult temperature (in Kelvin) of cool-white LED
     uint8_t map[5];                // color map representing order in which color bytes are transmitted
@@ -172,8 +160,8 @@ class Pixel : public Blinkable {
   
   public:
     Pixel(int pin, const char *pixelType="GRB");                     // creates addressable single-wire LED of pixelType connected to pin (such as the SK68 or WS28)   
-    void set(Color *c, int nPixels, boolean multiColor=true);        // sets colors of nPixels based on array of Colors c; setting multiColor to false repeats Color in c[0] for all nPixels
-    void set(Color c, int nPixels=1){set(&c,nPixels,false);}         // sets color of nPixels to be equal to specific Color c
+    void set(Color *c, size_t nPixels, boolean multiColor=true);     // sets colors of nPixels based on array of Colors c; setting multiColor to false repeats Color in c[0] for all nPixels
+    void set(Color c, size_t nPixels=1){set(&c,nPixels,false);}      // sets color of nPixels to be equal to specific Color c
     
     static Color RGB(uint8_t r, uint8_t g, uint8_t b, uint8_t w=0, uint8_t c=0){return(Color().RGB(r,g,b,w,c));}   // a static method for returning an RGB(WC) Color
     static Color HSV(float h, float s, float v, double w=0, double c=0){return(Color().HSV(h,s,v,w,c));}           // a static method for returning an HSV(WC) Color
@@ -194,15 +182,6 @@ class Pixel : public Blinkable {
     void on() {set(onColor);}
     void off() {set(RGB(0,0,0,0));}
     Pixel *setOnColor(Color c){onColor=c;return(this);}
-
-    [[deprecated("*** Please use Pixel(int pin, const char *pixelType) constructor instead to ensure future compatibility.")]]
-    Pixel(int pin, boolean isRGBW) : Pixel(pin,isRGBW?"GRBW":"GRB"){}
-    
-    [[deprecated("*** Please use Pixel(int pin, const char *pixelType) constructor instead to ensure future compatibility.")]]
-    Pixel(int pin, pixelType_t pixelType) : Pixel(pin, pixelType.c_str()){}
-
-    [[deprecated("*** This method will be deprecated in a future release.")]]
-    boolean isRGBW(){return(bytesPerPixel==4);}
 };
 
 ////////////////////////////////////////////
@@ -302,8 +281,8 @@ class Dot {
 
   public:
     Dot(uint8_t dataPin, uint8_t clockPin);                                                 // creates addressable two-wire RGB LED connected to dataPin and clockPin (such as the DotStar SK9822 or APA102)
-    void set(Color *c, int nPixels, boolean multiColor=true);                               // sets colors of nPixels based on array of Colors c; setting multiColor to false repeats Color in c[0] for all nPixels
-    void set(Color c, int nPixels=1){set(&c,nPixels,false);}                                // sets color of nPixels to be equal to specific Color c
+    void set(Color *c, size_t nPixels, boolean multiColor=true);                            // sets colors of nPixels based on array of Colors c; setting multiColor to false repeats Color in c[0] for all nPixels
+    void set(Color c, size_t nPixels=1){set(&c,nPixels,false);}                             // sets color of nPixels to be equal to specific Color c
     
     static Color RGB(uint8_t r, uint8_t g, uint8_t b, uint8_t driveLevel=31){return(Color().RGB(r,g,b,driveLevel));}  // an alternative method for returning an RGB Color
     static Color HSV(float h, float s, float v, double drivePercent=100){return(Color().HSV(h,s,v,drivePercent));}    // an alternative method for returning an HSV Color
