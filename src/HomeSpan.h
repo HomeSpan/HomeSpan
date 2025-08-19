@@ -911,6 +911,7 @@ class SpanPoint {
   static boolean initialized;
   static boolean isHub;
   static boolean useEncryption;
+  static boolean useQueueOverwrite;
   static vector<SpanPoint *, Mallocator<SpanPoint *>> SpanPoints;
   static uint16_t channelMask;                // channel mask (only used for remote devices)
   static QueueHandle_t statusQueue;           // queue for communication between SpanPoint::dataSend and SpanPoint::send
@@ -932,7 +933,7 @@ class SpanPoint {
   
   public:
 
-  SpanPoint(const char *macAddress, int sendSize, int receiveSize, int queueDepth=1, boolean useAPaddress=false);
+  SpanPoint(const char *macAddress, int sendSize, int receiveSize, int queueDepth=1, boolean useAPaddress=false, boolean useQueueOverwrite=false);
   static void setPassword(const char *pwd){init(pwd);}
   static void setChannelMask(uint16_t mask);
   static void setEncryption(boolean encrypt){useEncryption=encrypt;}
