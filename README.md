@@ -73,6 +73,19 @@ Requirements to run HomeSpan depend on which version you choose:
     
     * **HomeSpan 2.1.4 requires Arduino-ESP32 version 3.1.0 or later**
     * **HomeSpan will *not* compile on prior versions of the Arduino-ESP32 library**
+
+  * removed the following *deprecated* Pixel constructors and method methods:
+    
+    * `Pixel(uint8_t pin, boolean isRGBW)`
+      
+      * deprecated since HomeSpan 1.9.1
+      * use `Pixel(int pin, const char *pixelType)` instead
+    * `Pixel(int pin, pixelType_t pixelType)`
+      * deprecated since HomeSpan 2.0.0
+      * use `Pixel(int pin, const char *pixelType)` instead
+    * `boolean isRGBW()`
+      *  deprecated since HomeSpan 2.0.0
+      *  use `boolean hasColor(char c)` instead
         
 See [Releases](https://github.com/HomeSpan/HomeSpan/releases) for details on all changes and bug fixes included in this update.
 
