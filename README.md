@@ -76,8 +76,7 @@ Requirements to run HomeSpan depend on which version you choose:
 
   * removed the following *deprecated* Pixel constructors and method methods:
     
-    * `Pixel(uint8_t pin, boolean isRGBW)`
-      
+    * `Pixel(uint8_t pin, boolean isRGBW)`      
       * deprecated since HomeSpan 1.9.1
       * use `Pixel(int pin, const char *pixelType)` instead
     * `Pixel(int pin, pixelType_t pixelType)`
