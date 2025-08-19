@@ -36,7 +36,7 @@
 
 #include "HomeSpan.h"
 
-#define MAX_BRIGHTNESS  255     // lower this value (max=255) if pixels LEDs are too bright to look at when perfoming this test
+#define MAX_BRIGHTNESS  255     // lower this value (max=255) if pixels LEDs are too bright to look at when performing this test
 
 int pin=-1;
 int nPixels=0;
