@@ -4,17 +4,26 @@ Welcome to HomeSpan - a robust and extremely easy-to-use Arduino library for cre
 
 HomeSpan provides a microcontroller-focused implementation of Apple's HomeKit Accessory Protocol Specification Release R2 (HAP-R2) designed specifically for the Espressif ESP32 microcontroller running within the Arduino IDE.  HomeSpan pairs directly to HomeKit via your home WiFi network without the need for any external bridges or components.  With HomeSpan you can use the full power of the ESP32's I/O functionality to create custom control software and/or hardware to automatically operate external devices from the Home App on your iPhone, iPad, or Mac, or with Siri.
 
-Requirements to run HomeSpan depend on which version you choose:
+### Requirements
 
-|HomeSpan Version | Arduino-ESP32 Board Manager | Partition Scheme | Supported Chips|
-|:---:|:---:|:---:|---|
-|1.9.1 or earlier | v2.0.0 - v2.0.17 | *Default* (1.3MB APP) | ESP32, S2, S3, C3 |
-|2.0.0 - 2.1.3 | v3.0.2 - 3.3.0 | *Minimal SPIFFS* (1.9MB APP) | ESP32, S2, S3, C3, *and C6* |
-|**2.1.4 or later** | **v3.1.0 - 3.3.0**<sup>*</sup> | *Minimal SPIFFS* (1.9MB APP) | ESP32, S2, S3, C3, *and C6* |
+|Component | Requirement | See Note |
+|---|:---:|:---:|
+|Current HomeSpan Production Release | **2.1.4** | - |
+| Supported Chips | **ESP32, S2, S3, C3, and C6** | [^8266] |
+| Minimum Required [Arduino-ESP32 Core](https://github.com/espressif/arduino-esp32) | **3.1.0** | [^fail] |
+| Latest Core fully tested with HomeSpan | **3.3.0** | [^tested] |
+| Minimum Flash Partition Size | **1.9MB** | - |
+| Recommended Partition Scheme | **Minimal SPIFFS (1.9MB APP)** | - |
+| HomeKit Hub | **HomePod or Apple TV** | [^homehub] |
 
-<sup>*</sup>The *current* production version of HomeSpan (2.1.4) requires **version 3.1.0 through version 3.3.0** of the Arduino-ESP32 Board Manager.  Compilation will fail under earlier releases.  Later releases may work fine, but have not (yet) been tested.  Note HomeSpan does not support the use of alpha, beta, or pre-release candidates of the Arduino-ESP32 Board Manager - testing is only done on production releases of the Board Manager.
 
-**ADDITIONAL REQUIREMENTS**:  Apple's HomeKit architecture [requires the use of a Home Hub](https://support.apple.com/en-us/HT207057) (either a HomePod or Apple TV) for full and proper operation of any HomeKit device, including those based on HomeSpan.  ***Use of HomeSpan without a Home Hub is NOT supported.***
+[^8266]:HomeSpan cannot be run on an ESP-8266, though an ESP-8266 can be used as a remote sensor in conjunction with HomeSpan's SpanPoint functionality
+
+[^fail]: Compilation will fail under earlier releases
+
+[^tested]: Later releases may work fine, but have not (yet) been tested.  Note HomeSpan does *not* support the use of alpha, beta, or pre-release candidates of the Arduino-ESP32 Core - testing is only done on production releases of the Board Manager.
+
+[^homehub]: Apple's HomeKit architecture [requires the use of a Home Hub](https://support.apple.com/en-us/HT207057) (either a HomePod or Apple TV) for full and proper operation of any HomeKit device, including those based on HomeSpan.  ***Use of HomeSpan without a Home Hub is NOT supported.***
 
 ### HomeSpan Highlights
 
