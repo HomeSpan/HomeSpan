@@ -13,17 +13,19 @@ HomeSpan provides a microcontroller-focused implementation of Apple's HomeKit Ac
 | Minimum Required [Arduino-ESP32 Core](https://github.com/espressif/arduino-esp32) | **3.1.0** | [^fail] |
 | Latest Core fully tested with HomeSpan | **3.3.0** | [^tested] |
 | Minimum Flash Partition Size | **1.9MB** | - |
-| Recommended Partition Scheme | **Minimal SPIFFS (1.9MB APP with OTA)** | - |
+| Recommended Partition Scheme | **Minimal SPIFFS (1.9MB APP with OTA)** | [^partition] |
 | HomeKit Hub | **HomePod or Apple TV** | [^homehub] |
 
 
 [^8266]:HomeSpan cannot be run on an ESP-8266, though an ESP-8266 can be used as a remote sensor in conjunction with HomeSpan's SpanPoint functionality
 
-[^fail]: Compilation will fail under earlier releases
+[^fail]: The current production release of HomeSpan will fail to compile under any Arduino-ESP32 Core release earlier than the minimum version listed.  However, prior versions of HomeSpan can be compiled and run under earlier versions of the core.  The README file under the [HomeSpan branch](https://github.com/HomeSpan/HomeSpan/branches/all) for each release provides details on which version of the Core can be used for that release
 
-[^tested]: Later releases may work fine, but have not (yet) been tested.  Note HomeSpan does *not* support the use of alpha, beta, or pre-release candidates of the Arduino-ESP32 Core - testing is only done on production releases of the Board Manager.
+[^tested]: Later releases may work fine, but have not (yet) been tested.  Note HomeSpan does *not* support the use of alpha, beta, or pre-release candidates of the Arduino-ESP32 Core - testing is only done on production releases of the Core.
 
 [^homehub]: Apple's HomeKit architecture [requires the use of a Home Hub](https://support.apple.com/en-us/HT207057) (either a HomePod or Apple TV) for full and proper operation of any HomeKit device, including those based on HomeSpan.  ***Use of HomeSpan without a Home Hub is NOT supported.***
+
+[^partition]: This recommendation assumes an ESP device with 4MB of flash memory.  For devices with 8MB or more of flash memory you may choose any partition scheme that provides at least 1.9MB APP space and 1.9MB of OTA space (if using OTA)
 
 ### HomeSpan Highlights
 
