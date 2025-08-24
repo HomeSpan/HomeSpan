@@ -30,15 +30,24 @@
 //  * HomeSpan Pixel Class that provides for control of single-wire addressable RGB and RGBW LEDs, such as the WS2812 and SK6812
 //  * HomeSpan Dot Class that provides for control of two-wire addressable RGB LEDs, such as the APA102 and SK9822
 //
-// IMPORTANT:  COMPILATION WILL FAIL UNTIL YOU CHANGE THE PIN NUMBERS BELOW TO MATCH YOUR SPECIFIC ESP32 BOARD
-//
+
+#ifndef HS_FEATHER_PINS
+
+  #define NEOPIXEL_RGB_PIN       26         // CHANGE THESE PINS TO MATCH YOUR BOARD
+  #define NEOPIXEL_RGBW_PIN      32
+  #define DOTSTAR_DATA_PIN       33
+  #define DOTSTAR_CLOCK_PIN      27
+  
+#else
+
+  #define NEOPIXEL_RGB_PIN       F26        // FEATHER PIN MAPPING - FOR HOMESPAN DEVELOPER USE ONLY
+  #define NEOPIXEL_RGBW_PIN      F32
+  #define DOTSTAR_DATA_PIN       F33
+  #define DOTSTAR_CLOCK_PIN      F27
+  
+#endif
 
 #include "HomeSpan.h"
-
-#define NEOPIXEL_RGB_PIN       F26        // REPLACE THESE WITH ACTUAL PIN NUMBER (WITHOUT THE "F")
-#define NEOPIXEL_RGBW_PIN      F32
-#define DOTSTAR_DATA_PIN       F33
-#define DOTSTAR_CLOCK_PIN      F27
 
 ///////////////////////////////
 
