@@ -1,7 +1,11 @@
-##### DEFINE HOMESPAN DEFAULTS MENU THAT WILL OVERRIDE OTHER SETTINGS #####
 
-# Always use Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
-# Always enable PSRAM if it is available but not already enabled 
+###############################################################################
+# DEFINE "HOMESPAN DEFAULTS" MENU THAT WILL OVERRIDE OTHER ARDUINO IDE SETTINGS 
+#
+#  - set Partition to "Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)"
+#  - enable PSRAM if it is available but not already enabled 
+#
+###############################################################################
 
 menu.HomeSpan=HomeSpan Defaults
 
@@ -63,11 +67,13 @@ esp32c6.menu.HomeSpan.enable.build.partitions=min_spiffs
 esp32c6.menu.HomeSpan.enable.upload.maximum_size=1966080
 esp32c6.menu.HomeSpan.disable=Disable Defaults
 
-##################################################
-##### ADD CONVENIENCE "FEATHER" PIN MAPPINGS #####
+##########################################
+# ADD CONVENIENCE "FEATHER" PIN MAPPINGS #
+##########################################
 
-####################
-### FEATHER_ESP32 ##
+########################
+# Adafruit ESP32 Feather
+########################
 
 # F13=13,F12=12,F27=27                                             // Digital w/Touch (3 pins)
 # F15=15,F32=32,F14=14,F16=16,F17=17,F21=21                        // Digital Only (6 pins)
@@ -77,8 +83,9 @@ esp32c6.menu.HomeSpan.disable=Disable Defaults
 
 featheresp32.compiler.cpp.extra_flags=-DF13=13 -DF12=12 -DF27=27 -DF15=15 -DF32=32 -DF14=14 -DF16=16 -DF17=17 -DF21=21 -DF26=26 -DF25=25 -DF34=34 -DF39=39 -DF36=36 -DF4=4 -DF22=22 -DF23=23 -DF5=5 -DF18=18 -DF19=19 -DF33=33 -DDEVICE_SUFFIX=""
 
-###################
-### ESP32S2_DEV ###
+####################
+# ESP32S2 Dev Module
+####################
 
 # F13=1,F12=3,F27=7                                                // Digital w/Touch (3 pins)
 # F15=10,F32=42,F14=11,F16=20,F17=21,F21=16                        // Digital Only (6 pins)
@@ -88,8 +95,9 @@ featheresp32.compiler.cpp.extra_flags=-DF13=13 -DF12=12 -DF27=27 -DF15=15 -DF32=
 
 esp32s2.compiler.cpp.extra_flags=-DF13=1 -DF12=3 -DF27=7 -DF15=10 -DF32=42 -DF14=11 -DF16=20 -DF17=21 -DF21=16 -DF26=17 -DF25=14 -DF34=13 -DF39=12 -DF36=18 -DF4=19  -DF22=9 -DF23=8 -DF5=36 -DF18=35 -DF19=37 -DF33=34 -DBUILTIN_PIXEL=18 -DDEVICE_SUFFIX="-S2"
 
-###################
-### ESP32C3_DEV ###
+####################
+# ESP32C3 Dev Module
+####################
 
 # F27=19,F32=2,F14=10,F16=20,F17=21,F21=18                         // Digital Only (6 pins, but F16 and F17 used for Serial)
 # F26=0,F25=1,F4=3                                                 // A0/A1/A5
@@ -99,7 +107,8 @@ esp32s2.compiler.cpp.extra_flags=-DF13=1 -DF12=3 -DF27=7 -DF15=10 -DF32=42 -DF14
 esp32c3.compiler.cpp.extra_flags=-DF27=19 -DF32=2 -DF14=10 -DF16=20 -DF17=21 -DF21=18 -DF26=0 -DF25=1 -DF4=3 -DF22=9 -DF23=8 -DF5=4 -DF18=6 -DF19=5 -DF33=7 -DBUILTIN_PIXEL=8 -DDEVICE_SUFFIX="-C3"
 
 ###################
-### ESP32S3_DEV ###
+# ESP32S3 Dev Module
+####################
 
 # F13=5,F12=6,F27=7                                                // Digital w/Touch (3 pins)
 # F15=16,F32=17,F14=18,F16=41,F17=40,F21=38                        // Digital Only (6 pins)
@@ -109,8 +118,9 @@ esp32c3.compiler.cpp.extra_flags=-DF27=19 -DF32=2 -DF14=10 -DF16=20 -DF17=21 -DF
 
 esp32s3.compiler.cpp.extra_flags=-DF13=5 -DF12=6 -DF27=7 -DF15=16 -DF32=17 -DF14=18 -DF16=41 -DF17=40 -DF21=38 -DF26=1 -DF25=2 -DF34=20 -DF39=19 -DF36=15 -DF4=4 -DF22=9 -DF23=8 -DF5=12 -DF18=11 -DF19=13 -DF33=10 -DBUILTIN_PIXEL=48 -DDEVICE_SUFFIX="-S3"
 
-###################  
-### ESP32C6_DEV ###
+#################### 
+# ESP32C6 Dev Module
+####################
 
 # F12=9,F27=6,F15=7,F32=10,F14=11,F16=13,F17=12,F21=15             // Digital Only (8 pins)
 # F26=3,F25=2,F34=1,F39=0,F36=5,F4=4                               // A0-A5
@@ -119,8 +129,9 @@ esp32s3.compiler.cpp.extra_flags=-DF13=5 -DF12=6 -DF27=7 -DF15=16 -DF32=17 -DF14
 
 esp32c6.compiler.cpp.extra_flags=-DF12=9 -DF27=6 -DF15=7 -DF32=10 -DF14=11 -DF16=13 -DF17=12 -DF21=15 -DF26=3 -DF25=2 -DF34=1 -DF39=0 -DF36=5 -DF4=4 -DF22=22 -DF23=23 -DF5=21 -DF18=19 -DF19=20 -DF33=18 -DBUILTIN_PIXEL=8 -DDEVICE_SUFFIX="-C6"
 
-##############  
-### WESP32 ###
+######################
+# Silicognition wESP32
+####################
 
 # F12=2,F27=32                                                     // Digital w/Touch (2 pins)
 # F26=12,F25=14,F32=18,F14=23,F21=5,F33=13                         // Digital Only (6 pins)
@@ -129,8 +140,9 @@ esp32c6.compiler.cpp.extra_flags=-DF12=9 -DF27=6 -DF15=7 -DF32=10 -DF14=11 -DF16
 
 wesp32.compiler.cpp.extra_flags=-DF12=2 -DF27=32 -DF26=12 -DF25=14 -DF32=18 -DF14=23 -DF21=5 -DF33=13 -DF34=35 -DF39=34 -DF36=36 -DF4=33 -DF22=4 -DF23=15 -DDEVICE_SUFFIX="-WESP32"
 
-##################################################     
-##### HIDE ALL OTHER BOARDS FROM ARDUINO IDE #####
+##########################################
+# HIDE ALL OTHER BOARDS FROM ARDUINO IDE #
+##########################################
 
 esp32_family.hide=true
 esp32c2.hide=true
