@@ -26,7 +26,6 @@
  ********************************************************************************/
 
 #include "HomeSpan.h"
-#include "FeatherPins.h"
 #include "SpanRollback.h"
 
 int watchDogSeconds=0;

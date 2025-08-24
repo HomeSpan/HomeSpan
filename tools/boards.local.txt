@@ -129,18 +129,6 @@ esp32c6.compiler.cpp.extra_flags=-DF12=9 -DF27=6 -DF15=7 -DF32=10 -DF14=11 -DF16
 
 wesp32.compiler.cpp.extra_flags=-DF12=2 -DF27=32 -DF26=12 -DF25=14 -DF32=18 -DF14=23 -DF21=5 -DF33=13 -DF34=35 -DF39=34 -DF36=36 -DF4=33 -DF22=4 -DF23=15 -DDEVICE_SUFFIX="-WESP32"
 
-
-
-
-
-
-
-
-
-
-
-
-
 ##################################################     
 ##### HIDE ALL OTHER BOARDS FROM ARDUINO IDE #####
 
