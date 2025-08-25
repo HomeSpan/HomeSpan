@@ -3,7 +3,8 @@
 # DEFINE "HOMESPAN DEFAULTS" MENU THAT WILL OVERRIDE OTHER ARDUINO IDE SETTINGS 
 #
 #  - set Partition to "Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)"
-#  - enable PSRAM if it is available but not already enabled 
+#  - enable PSRAM if it is available
+#  - override Upload Speed and any other board settings as needed 
 #
 ###############################################################################
 
@@ -17,26 +18,33 @@ featheresp32.menu.HomeSpan.disable=Disable Defaults
 adafruit_feather_esp32_v2.menu.HomeSpan.enable=HomeSpan Defaults
 adafruit_feather_esp32_v2.menu.HomeSpan.enable.build.partitions=min_spiffs
 adafruit_feather_esp32_v2.menu.HomeSpan.enable.upload.maximum_size=1966080
+adafruit_feather_esp32_v2.menu.HomeSpan.enable.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
+adafruit_feather_esp32_v2.menu.HomeSpan.enable.upload.speed=460800
 adafruit_feather_esp32_v2.menu.HomeSpan.disable=Disable Defaults
 
 adafruit_feather_esp32s2.menu.HomeSpan.enable=HomeSpan Defaults
 adafruit_feather_esp32s2.menu.HomeSpan.enable.build.partitions=min_spiffs
 adafruit_feather_esp32s2.menu.HomeSpan.enable.upload.maximum_size=1966080
+adafruit_feather_esp32s2.menu.HomeSpan.enable.build.defines=-DBOARD_HAS_PSRAM
 adafruit_feather_esp32s2.menu.HomeSpan.disable=Disable Defaults
 
 adafruit_feather_esp32s3.menu.HomeSpan.enable=HomeSpan Defaults
 adafruit_feather_esp32s3.menu.HomeSpan.enable.build.partitions=min_spiffs
 adafruit_feather_esp32s3.menu.HomeSpan.enable.upload.maximum_size=1966080
+adafruit_feather_esp32s3.menu.HomeSpan.enable.build.defines=-DBOARD_HAS_PSRAM
+adafruit_feather_esp32s3.menu.HomeSpan.enable.build.psram_type=qspi
 adafruit_feather_esp32s3.menu.HomeSpan.disable=Disable Defaults
 
 adafruit_qtpy_esp32_pico.menu.HomeSpan.enable=HomeSpan Defaults
 adafruit_qtpy_esp32_pico.menu.HomeSpan.enable.build.partitions=min_spiffs
 adafruit_qtpy_esp32_pico.menu.HomeSpan.enable.upload.maximum_size=1966080
+adafruit_qtpy_esp32_pico.menu.HomeSpan.enable.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
 adafruit_qtpy_esp32_pico.menu.HomeSpan.disable=Disable Defaults
 
 adafruit_qtpy_esp32s2.menu.HomeSpan.enable=HomeSpan Defaults
 adafruit_qtpy_esp32s2.menu.HomeSpan.enable.build.partitions=min_spiffs
 adafruit_qtpy_esp32s2.menu.HomeSpan.enable.upload.maximum_size=1966080
+adafruit_qtpy_esp32s2.menu.HomeSpan.enable.build.defines=-DBOARD_HAS_PSRAM
 adafruit_qtpy_esp32s2.menu.HomeSpan.disable=Disable Defaults
 
 wesp32.menu.HomeSpan.enable=HomeSpan Defaults
