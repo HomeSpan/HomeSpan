@@ -72,7 +72,7 @@ HomeSpan provides a microcontroller-focused implementation of Apple's HomeKit Ac
   * Launch the WiFi Access Point
 * A standalone, detailed End-User Guide
 
-## ❗Latest Update - HomeSpan 2.1.4 (XX Aug 2025)
+## ❗Latest Update - HomeSpan 2.1.4 (25 Aug 2025)
 
 ### Updates and Corrections
 
