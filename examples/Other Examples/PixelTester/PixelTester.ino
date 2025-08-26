@@ -36,7 +36,7 @@
 
 #include "HomeSpan.h"
 
-#define MAX_BRIGHTNESS  255     // lower this value (max=255) if pixels LEDs are too bright to look at when perfoming this test
+#define MAX_BRIGHTNESS  255     // lower this value (max=255) if pixels LEDs are too bright to look at when performing this test
 
 int pin=-1;
 int nPixels=0;
@@ -160,6 +160,18 @@ void loop(){
         testPixel->set(Pixel::RGB(i==0?v:0,i==1?v:0,i==2?v:0,i==3?v:0,i==4?v:0),nPixels);
         delay(4*255/MAX_BRIGHTNESS);
       }
+
+      if(nPixels>1){
+        delay(500);
+        for(int n=1;n<=nPixels;n++){
+          testPixel->set(Pixel::RGB(i==0?MAX_BRIGHTNESS:0,i==1?MAX_BRIGHTNESS:0,i==2?MAX_BRIGHTNESS:0,i==3?MAX_BRIGHTNESS:0,i==4?MAX_BRIGHTNESS:0),n);
+          delay(500);
+        }
+        for(int n=1;n<=nPixels;n++){
+          testPixel->set(Pixel::RGB(0,0,0,0,0),n);
+          delay(500);
+        }
+      }       
     }
   }
   testPixel->set(Pixel::RGB(0,0,0,0,0),nPixels);

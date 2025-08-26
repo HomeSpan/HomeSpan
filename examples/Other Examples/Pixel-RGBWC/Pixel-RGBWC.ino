@@ -35,7 +35,12 @@
 // one to the other, divide into 1 million:  Mirek=1.0e6/Kelvin and Kelvin=1.0e6/Mirek.
 //
 
-#define NEOPIXEL_PIN    23        // pin number to which NeoPixel strand is attached
+#ifndef HS_FEATHER_PINS
+  #define NEOPIXEL_PIN    23        // CHANGE THIS PIN TO MATCH YOUR BOARD
+#else
+  #define NEOPIXEL_PIN    F23       // FEATHER PIN MAPPING - FOR HOMESPAN DEVELOPER USE ONLY
+#endif
+ 
 #define NPIXELS         100       // number of controllable pixels in strand (which may be less than actual number of LEDs)
 #define WARM_LED_TEMP   3000      // temperature (in Kelvin) of Warm-White LED
 #define COOL_LED_TEMP   6500      // temperature (in Kelvin) of Cool-White LED
