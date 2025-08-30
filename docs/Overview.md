@@ -115,7 +115,7 @@ void setup() {
    new Service::LightBulb();
     new Characteristic::On();
     
-  new SpanAccessory()        // Table Lamp with Dimmable Light
+  new SpanAccessory();        // Table Lamp with Dimmable Light
    new Service::LightBulb();
     new Characteristic::On();
     new Characteristic::Brightness(50);     // initializes default brightness to be 50%
