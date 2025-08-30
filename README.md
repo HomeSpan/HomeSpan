@@ -131,6 +131,10 @@ HomeSpan includes the following documentation:
 
 Note that all documentation is version-controlled and tied to each branch.  The *master* branch generally points to the latest release.  The *dev* branch, when available, will contain code under active development.
 
+### Translated Documentation
+
+A user-created repository containing a Chinese translation of the HomeSpan documentation can be found at [https://github.com/abackup/HomeSpan-Chinese](https://github.com/abackup/HomeSpan-Chinese).  Note HomeSpan is not responsible for the content of this repository - please direct any questions about the content of the translations to the issues page for that repository. 
+
 # External Resources
 
 In addition to HomeSpan resources, developers who are new to HomeKit programming may find useful Chapters 8 and 9 of Apple's HomeKit Accessory Protocol Specification, Non-Commercial Version, Release R2 (HAP-R2). This document is unfortunately no longer available from Apple (perhaps because it was last updated July, 2019, and is now somewhat out-of-date).  However, you may be able find copies of this document elsewhere on the web.  Note Apple has not replaced the HAP-R2 document with any other versions for non-commercial use, and Apple's open-source [HomeKit ADK](https://github.com/apple/HomeKitADK) only reflects the original HAP-R2 specs (rather than all the latest Services and Characteristics available in HomeKit for commercial devices).
