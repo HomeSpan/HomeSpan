@@ -77,13 +77,14 @@ HomeSpan provides a microcontroller-focused implementation of Apple's HomeKit Ac
 ### Updates and Corrections
 
 * **Added new *homeSpan* method `setWebLogFavicon(const char *faviconURL)`**
-
+  
   * adds a favicon to the HomeSpan Web Log, where *faviconURL* points to a hosted **PNG** image file containing the favicon
-    
-  * if left unspecified, *faviconURL* defaults to "https://raw.githubusercontent.com/HomeSpan/HomeSpan/refs/heads/master/docs/images/HomeSpanLogo.png"
-  * note HomeSpan also provides two other variations of the HomeSpanLogo specifically designed for use as a favicon:
-    * white background -  "https://raw.githubusercontent.com/HomeSpan/HomeSpan/refs/heads/master/docs/images/HomeSpanLogoW.png"
-    * transparent background - "https://raw.githubusercontent.com/HomeSpan/HomeSpan/refs/heads/master/docs/images/HomeSpanLogoX.png"
+  * if left unspecified, *faviconURL* defaults to the standard HomeSpan logo:
+    * https://raw.githubusercontent.com/HomeSpan/HomeSpan/refs/heads/master/docs/images/HomeSpanLogo.png
+  * for a version of the logo re-centered on a white background, set *faviconURL* to:
+    * https://raw.githubusercontent.com/HomeSpan/HomeSpan/refs/heads/master/docs/images/HomeSpanLogoW.png
+  * for a version of the logo on a transparent background, set *faviconURL* to:
+    * https://raw.githubusercontent.com/HomeSpan/HomeSpan/refs/heads/master/docs/images/HomeSpanLogoX.png 
               
 See [Releases](https://github.com/HomeSpan/HomeSpan/releases) for details on all changes and bug fixes included in this update.
 
