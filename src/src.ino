@@ -33,7 +33,7 @@ void setup() {
 
   homeSpan.setLogLevel(2);
   homeSpan.enableOTA();
-  homeSpan.enableWebLog(50).setWebLogFavicon("https://raw.githubusercontent.com/HomeSpan/HomeSpan/refs/heads/favicon/docs/images/HomeSpanLogoX.png");
+  homeSpan.enableWebLog(50).setWebLogFavicon();
   homeSpan.setCompileTime();
              
   homeSpan.begin(Category::Lighting,"HomeSpan Basic");
