@@ -26,46 +26,17 @@
  ********************************************************************************/
 
 #include "HomeSpan.h"
-#include "SpanRollback.h"
-
-int watchDogSeconds=0;
 
 void setup() {
  
   Serial.begin(115200);
 
-  delay(1000);
-
-//  homeSpan.setStatusPixel(18);
-  homeSpan.setControlPin(0);
-
-  WiFi.enableIPv6();
-  
-//  homeSpan.enableWatchdog();
   homeSpan.setLogLevel(2);
   homeSpan.enableOTA();
-  homeSpan.setSketchVersion("1.9");
-  homeSpan.enableWebLog(50);
+  homeSpan.enableWebLog(50).setWebLogFavicon("https://raw.githubusercontent.com/HomeSpan/HomeSpan/refs/heads/favicon/docs/images/HomeSpanLogoX.png");
   homeSpan.setCompileTime();
-  homeSpan.setStatusCallback([](HS_STATUS status){Serial.printf("\n*** HOMESPAN STATUS: %s\n\n",homeSpan.statusString(status));});
-
-  new SpanUserCommand('T'," - time delay",[](const char *buf){delay(20000);});
-  new SpanUserCommand('B'," - rollback",[](const char *buf){esp_ota_mark_app_invalid_rollback_and_reboot();});
-  new SpanUserCommand('v'," - validate sketch",[](const char *buf){homeSpan.markSketchOK();});
-  
-  new SpanUserCommand('w'," - watchdog",[](const char *buf){
-    for(int i=0;i<CONFIG_FREERTOS_NUMBER_OF_CORES;i++){
-    TaskHandle_t th;
-    th=xTaskGetIdleTaskHandleForCore(i);
-    char *name=pcTaskGetName(th);
-    boolean wdt=(ESP_OK==esp_task_wdt_status(th));
-    Serial.printf("%s: %s\n",name,wdt?"Enabled":"Disabled");
-  }});
-  
-  new SpanUserCommand('e'," - enable HomeSpan watchdog",[](const char *buf){homeSpan.enableWatchdog(atoi(buf+1));});
-  new SpanUserCommand('d'," - disable HomeSpan watchdog",[](const char *buf){homeSpan.disableWatchdog();});
              
-  homeSpan.begin(Category::Lighting,"HomeSpan Test");
+  homeSpan.begin(Category::Lighting,"HomeSpan Basic");
 
   new SpanAccessory();
     new Service::AccessoryInformation();  
@@ -73,20 +44,5 @@ void setup() {
     new Service::LightBulb();
       new Characteristic::On();
 
-//  homeSpan.setPollingCallback([](){homeSpan.markSketchOK();});
-//  sprintf(NULL,"HERE IS AN ERROR!");
-
-homeSpan.autoPoll(8192,1,1);
-
-//delay(20000);
-//int i=0; while(1) i++;
-
-}
-
-
-//////////////////////////////////////
-
-void loop(){
-  
-//  homeSpan.poll();
+  homeSpan.autoPoll();
 }
