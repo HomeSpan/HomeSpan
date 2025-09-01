@@ -292,6 +292,11 @@ The following **optional** `homeSpan` methods enable additional features and pro
 * `Span& setWebLogCSS(const char *css)`
   * sets the format of the HomeSpan Web Log to the custom style sheet specified by *css*
   * see [Message Logging](Logging.md) for details on how to construct *css*
+ 
+* `Span& setWebLogFavicon(const char *faviconURL)`
+  * adds a favicon to the HomeSpan Web Log, where *faviconURL* points to a hosted **PNG** image file containing the favicon
+  * if left unspecified, *faviconURL* defaults to [docs/images/HomeSpanLogo.png](images/HomeSpanLogo.png) hosted in the master branch of this repository
+  * see [Message Logging](Logging.md) for further details
 
 * `Span& setWebLogCallback(void (*func)(String &htmlText))`
   * sets an optional user-defined callback function, *func*, to be called by HomeSpan whenever the Web Log is produced
