@@ -104,6 +104,20 @@ void extraData(String &r){
 
 To embed this custom HTML text in the Web Log, call `homeSpan.setWebLogCallback(extraData)` in your sketch.
 
+### Adding a Web Log Favicon
+
+You can add a favicon to the Web Log that is displayed by your browser in its tabs, bookmarks, and reading lists, as well as in the browser bar itself.  To add a favicon, call `homeSpan.setWebLogFavicon(const char *faviconURL)` from your sketch, where *faviconURL* points to a hosted image in **PNG format** that contains your favicon.  Most browsers support PNG-formatted favicons and will re-scale the image automatically as needed.  If you call `setWebLogFavicon()` without any argument HomeSpan will default to using the standard HomeSpan logo found at:
+* https://raw.githubusercontent.com/HomeSpan/HomeSpan/refs/heads/master/docs/images/HomeSpanLogo.png
+  
+For a version of the HomeSpan logo re-centered on a white background, set *faviconURL* to:
+* https://raw.githubusercontent.com/HomeSpan/HomeSpan/refs/heads/master/docs/images/HomeSpanLogoW.png
+
+For a version of the logo on a transparent background, set *faviconURL* to:
+* https://raw.githubusercontent.com/HomeSpan/HomeSpan/refs/heads/master/docs/images/HomeSpanLogoX.png
+
+Note that if you create your own PNG-formatted favicon and host it on your own GitHub repository, make sure to set the *faviconURL* to the link pointing to the "raw" image (e.g. https:://raw.githubusercontent.com/...), **not** the link pointing to the GitHub-wrapped image (e.g. http:://github.com/...)
+
+
 ### Accessing Web Log HTML from within your sketch
 
 In addition to (or as an alternative to) having HomeSpan serve HTML Web Log pages in response to HTTP requests, users can directly access the HTML text for a Web Log page from within their sketch for customized processing and handling.  Since the HTML for a Web Log page can be very large, HomeSpan only generates the HTML for a Web Log page when the page has been requested, and streams the HTML in sequential chunks of 1024 bytes in response to a Web Log HTTP request.  It is therefore not possible for HomeSpan to simply provide the user with a `char *` pointer to the HTML text for a complete Web Log.  Instead, HomeSpan provides the user with the following *homeSpan* method to trigger the production of a Web Log page and access the resulting HTML text whenever needed:
