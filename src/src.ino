@@ -26,68 +26,83 @@
  ********************************************************************************/
 
 #include "HomeSpan.h"
-#include "FeatherPins.h"
-#include "SpanRollback.h"
 
-int watchDogSeconds=0;
+struct RemoteTempSensor : Service::TemperatureSensor {
+
+  SpanCharacteristic *temp;
+  SpanCharacteristic *fault;
+  SpanPoint *remoteTemp;
+  const char *name;
+  float temperature;
+  
+  RemoteTempSensor(const char *name, const char*macAddress, boolean is8266=false) : Service::TemperatureSensor(){
+
+    this->name=name;
+    
+    temp=new Characteristic::CurrentTemperature(-10.0);      // set initial temperature
+    temp->setRange(-50,100);                                 // expand temperature range to allow negative values
+
+    fault=new Characteristic::StatusFault(1);                // set initial state = fault
+
+    remoteTemp=new SpanPoint(macAddress,0,sizeof(float),1,is8266);    // create a SpanPoint with send size=0 and receive size=sizeof(float)
+
+  } // end constructor
+
+  void loop(){
+       
+    if(remoteTemp->get(&temperature)){      // if there is data from the remote sensor
+      temp->setVal(temperature);            // update temperature
+      fault->setVal(0);                     // clear fault
+       
+      LOG1("Sensor %s update: Temperature=%0.2f\n",name,temperature*9/5+32);
+      
+    } else if(remoteTemp->time()>60000 && !fault->getVal()){    // else if it has been a while since last update (60 seconds), and there is no current fault
+      fault->setVal(1);                                         // set fault state
+      LOG1("Sensor %s update: FAULT\n",name);
+    }
+    
+  } // loop
+  
+};
+
+//////////////////////////////////////
 
 void setup() {
- 
+  
   Serial.begin(115200);
 
-  delay(1000);
-
-//  homeSpan.setStatusPixel(18);
-  homeSpan.setControlPin(0);
-
-  WiFi.enableIPv6();
-  
-//  homeSpan.enableWatchdog();
   homeSpan.setLogLevel(2);
-  homeSpan.enableOTA();
-  homeSpan.setSketchVersion("1.9");
-  homeSpan.enableWebLog(50);
-  homeSpan.setCompileTime();
-  homeSpan.setStatusCallback([](HS_STATUS status){Serial.printf("\n*** HOMESPAN STATUS: %s\n\n",homeSpan.statusString(status));});
 
-  new SpanUserCommand('T'," - time delay",[](const char *buf){delay(20000);});
-  new SpanUserCommand('B'," - rollback",[](const char *buf){esp_ota_mark_app_invalid_rollback_and_reboot();});
-  new SpanUserCommand('v'," - validate sketch",[](const char *buf){homeSpan.markSketchOK();});
-  
-  new SpanUserCommand('w'," - watchdog",[](const char *buf){
-    for(int i=0;i<CONFIG_FREERTOS_NUMBER_OF_CORES;i++){
-    TaskHandle_t th;
-    th=xTaskGetIdleTaskHandleForCore(i);
-    char *name=pcTaskGetName(th);
-    boolean wdt=(ESP_OK==esp_task_wdt_status(th));
-    Serial.printf("%s: %s\n",name,wdt?"Enabled":"Disabled");
-  }});
-  
-  new SpanUserCommand('e'," - enable HomeSpan watchdog",[](const char *buf){homeSpan.enableWatchdog(atoi(buf+1));});
-  new SpanUserCommand('d'," - disable HomeSpan watchdog",[](const char *buf){homeSpan.disableWatchdog();});
-             
-  homeSpan.begin(Category::Lighting,"HomeSpan Test");
+  // SpanPoint::setEncryption(false);
+
+  homeSpan.begin(Category::Bridges,"Sensor Hub");
+
+  new SpanAccessory();  
+    new Service::AccessoryInformation();
+      new Characteristic::Identify(); 
+      
+  new SpanAccessory();
+    new Service::AccessoryInformation();
+      new Characteristic::Identify();
+      new Characteristic::Name("Indoor Temp");
+    new RemoteTempSensor("Device 1","BC:FF:4D:40:8E:71",true);        // pass MAC Address of Remote Device with flag noting it is an ESP8266
 
   new SpanAccessory();
-    new Service::AccessoryInformation();  
-      new Characteristic::Identify();
-    new Service::LightBulb();
-      new Characteristic::On();
+    new Service::AccessoryInformation();
+      new Characteristic::Identify(); 
+      new Characteristic::Name("Outdoor Temp");
+//    new RemoteTempSensor("Device 2","70:04:1D:CD:B1:74");             // pass MAC Address of Remote Device
+//    new RemoteTempSensor("Device 2","FF:FF:01:02:03:05");             // pass MAC Address of Remote Device
 
-//  homeSpan.setPollingCallback([](){homeSpan.markSketchOK();});
-//  sprintf(NULL,"HERE IS AN ERROR!");
-
-homeSpan.autoPoll(8192,1,1);
-
-//delay(20000);
-//int i=0; while(1) i++;
-
-}
-
+  
+} // end of setup()
 
 //////////////////////////////////////
 
 void loop(){
   
-//  homeSpan.poll();
-}
+  homeSpan.poll();
+  
+} // end of loop()
+
+//////////////////////////////////////

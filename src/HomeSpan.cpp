@@ -2949,8 +2949,12 @@ SpanPoint::SpanPoint(const char *macAddress, int sendSize, int receiveSize, int 
   peerInfo.channel=0;                 // 0 = matches current WiFi channel
   
   peerInfo.ifidx=useAPaddress?WIFI_IF_AP:WIFI_IF_STA;         // specify interface as either STA or AP
+
+  if(peerInfo.peer_addr[0] & 0x01)    // if this is a multi-cast address...
+    peerInfo.encrypt=false;           // ...don't use any encryption
+  else   
+    peerInfo.encrypt=useEncryption;   // ...else set encryption for this peer based on user preference
   
-  peerInfo.encrypt=useEncryption;     // set encryption for this peer
   memcpy(peerInfo.lmk, lmk, 16);      // set local key
   esp_now_add_peer(&peerInfo);        // add peer to ESP-NOW
 
@@ -3092,7 +3096,15 @@ boolean SpanPoint::send(const void *data){
 void SpanPoint::dataReceived(const esp_now_recv_info *info, const uint8_t *incomingData, int len){
 
   const uint8_t *mac=info->src_addr;
-  
+  const uint8_t *macd=info->des_addr;
+
+  LOG2("SpanPoint: Received %d bytes from %02X:%02X:%02X:%02X:%02X:%02X sent to %02X:%02X:%02X:%02X:%02X:%02X\n",len,mac[0],mac[1],mac[2],mac[3],mac[4],mac[5],macd[0],macd[1],macd[2],macd[3],macd[4],macd[5]);
+
+  esp_now_peer_info_t peer;
+  if((macd[0] & 0x01) && esp_now_get_peer(macd,&peer)==ESP_OK){
+    LOG1("SpanPoint: Broadcast ID matched\n");
+  }
+
   auto it=SpanPoints.begin();
   for(;it!=SpanPoints.end() && memcmp((*it)->peerInfo.peer_addr,mac,6)!=0; it++);
   

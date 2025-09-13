@@ -87,7 +87,8 @@ void setup() {
   
   Serial.begin(115200);
 
-  homeSpan.setLogLevel(1);
+  homeSpan.setLogLevel(2);
+//  SpanPoint::setEncryption(false);
 
   homeSpan.begin(Category::Bridges,"Sensor Hub");
 
@@ -105,7 +106,8 @@ void setup() {
     new Service::AccessoryInformation();
       new Characteristic::Identify(); 
       new Characteristic::Name("Outdoor Temp");
-    new RemoteTempSensor("Device 2","84:CC:A8:11:B4:84");             // pass MAC Address of Remote Device
+//    new RemoteTempSensor("Device 2","84:CC:A8:11:B4:84");             // pass MAC Address of Remote Device
+    new RemoteTempSensor("Device 2","FF:FF:01:02:03:04");             // pass MAC Address of Remote Device
 
   
 } // end of setup()
