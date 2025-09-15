@@ -901,8 +901,14 @@ class SpanPoint {
 
   friend class Span;
 
+  struct {
+    uint32_t id;
+    uint32_t nonce;
+  } pairingData;
+
   int receiveSize;                            // size (in bytes) of messages to receive
   int sendSize;                               // size (in bytes) of messages to send
+  uint16_t queueSize;                         // size (in bytes) of receive queue for a single message
   esp_now_peer_info_t peerInfo;               // structure for all ESP-NOW peer data
   QueueHandle_t receiveQueue;                 // queue to store data after it is received
   uint32_t receiveTime=0;                     // time (in millis) of most recent data received
@@ -933,11 +939,13 @@ class SpanPoint {
   public:
 
   SpanPoint(const char *macAddress, int sendSize, int receiveSize, int queueDepth=1, boolean useAPaddress=false);
+  SpanPoint(uint32_t id, uint16_t queueSize=64, uint8_t queueDepth=1, boolean useAPaddress=false);
   static void setPassword(const char *pwd){init(pwd);}
   static void setChannelMask(uint16_t mask);
   static void setEncryption(boolean encrypt){useEncryption=encrypt;}
   boolean get(void *dataBuf);
   boolean send(const void *data);
+  boolean send(const void *data, size_t nBytes);
   uint32_t time(){return(millis()-receiveTime);}
 };
 

@@ -2923,6 +2923,31 @@ boolean SpanOTA::auth;
 //        SpanPoint          //
 ///////////////////////////////
 
+SpanPoint::SpanPoint(uint32_t id, uint16_t queueSize, uint8_t queueDepth, boolean useAPaddress){
+
+  this->queueSize=queueSize;
+  pairingData.id=id;
+  
+  if(queueSize>0){
+    receiveQueue = xQueueCreate(queueDepth,queueSize); 
+    WiFi.mode(WIFI_AP_STA);
+  } else if(WiFi.getMode()==WIFI_OFF)
+    WiFi.mode(WIFI_STA);    
+
+  init();                             // initialize SpanPoint  
+
+  peerInfo.channel=0;                                     // 0 = matches current WiFi channel
+  peerInfo.ifidx=useAPaddress?WIFI_IF_AP:WIFI_IF_STA;     // specify interface as either STA or AP
+  memcpy(peerInfo.lmk, lmk, 16);                          // set local key
+  memset(peerInfo.peer_addr,0xFF,6);                      // use broadcast address
+  peerInfo.encrypt=false;                                 // don't use any encryption for broadcasting 
+  esp_now_add_peer(&peerInfo);                            // add peer to ESP-NOW  
+
+  SpanPoints.push_back(this);             
+}
+
+///////////////////////////////
+
 SpanPoint::SpanPoint(const char *macAddress, int sendSize, int receiveSize, int queueDepth, boolean useAPaddress){
 
   if(sscanf(macAddress,"%hhx:%hhx:%hhx:%hhx:%hhx:%hhx",peerInfo.peer_addr,peerInfo.peer_addr+1,peerInfo.peer_addr+2,peerInfo.peer_addr+3,peerInfo.peer_addr+4,peerInfo.peer_addr+5)!=6){
@@ -3007,7 +3032,14 @@ void SpanPoint::init(const char *password){
 ///////////////////////////////
 
 void SpanPoint::setChannelMask(uint16_t mask){
-  channelMask = mask & 0x3FFE;
+
+  uint16_t countryMask=0;
+  wifi_country_t countryData;
+  esp_wifi_get_country(&countryData);
+  for(uint16_t i=countryData.schan;i<countryData.schan+countryData.nchan;i++)
+    countryMask|=(1<<i);
+  
+  channelMask = mask & countryMask;
 
   if(isHub)
     return;
@@ -3058,6 +3090,49 @@ boolean SpanPoint::get(void *dataBuf){
 
   return(xQueueReceive(receiveQueue, dataBuf, 0));
 }
+
+///////////////////////////////
+
+boolean SpanPoint::send(const void *data, size_t nBytes){
+
+  if(nBytes==0)
+    return(false);
+  
+  uint8_t channel;
+  wifi_second_chan_t channel2; 
+  esp_wifi_get_channel(&channel,&channel2);     // get current channel
+  uint8_t startingChannel=channel;              // set starting channel to current channel
+
+  esp_now_send_status_t status=ESP_NOW_SEND_FAIL;
+
+  do {
+    for(int i=1;i<=3;i++){
+      
+      if(peerInfo.peer_addr[0]!=0xFF){ 
+        LOG1("SpanPoint ID=%lu: Sending %d bytes to MAC Address %02X:%02X:%02X:%02X:%02X:%02X using channel %hhu...\n",
+          pairingData.id,nBytes,peerInfo.peer_addr[0],peerInfo.peer_addr[1],peerInfo.peer_addr[2],peerInfo.peer_addr[3],peerInfo.peer_addr[4],peerInfo.peer_addr[5],channel);
+          
+        esp_now_send(peerInfo.peer_addr, (uint8_t *) data, nBytes);
+        xQueueReceive(statusQueue, &status, pdMS_TO_TICKS(2000));
+      } else {
+        LOG1("SpanPoint ID=%lu: Sending Broadcast Pairing Request using channel %hhu...\n",pairingData.id,channel);
+
+        // randombytes_buf(&pairingData.nonce,4);          
+        // esp_now_send(peerInfo.peer_addr, (uint8_t *) &pairingData, sizeof(pairingData));
+      }
+      
+      if(status==ESP_NOW_SEND_SUCCESS)
+        return(true);
+      delay(10);
+      Serial.printf("Try %d.  Channel %d\n",i,channel);
+    }
+    Serial.printf("channel-1: %d %d\n",channel,startingChannel);
+    channel=nextChannel();           
+    Serial.printf("channel-2: %d %d\n",channel,startingChannel);
+  } while(channel!=startingChannel);
+
+  return(false);
+} 
 
 ///////////////////////////////
 
