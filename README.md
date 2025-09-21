@@ -11,7 +11,7 @@ HomeSpan provides a microcontroller-focused implementation of Apple's HomeKit Ac
 |Current HomeSpan Production Release | **2.1.5** | - |
 | Supported Chips | **ESP32, S2, S3, C3, and C6** | [^8266] |
 | Minimum Required [Arduino-ESP32 Core](https://github.com/espressif/arduino-esp32) | **3.1.0** | [^fail] |
-| Latest Core fully tested with HomeSpan | **3.3.0** | [^tested] |
+| Latest Core fully tested with HomeSpan | **3.3.1** | [^tested] |
 | Minimum Flash Partition Size | **1.9MB** | - |
 | Recommended Partition Scheme | **Minimal SPIFFS (1.9MB APP with OTA)** | [^partition] |
 | HomeKit Hub | **HomePod or Apple TV** | [^homehub] |
@@ -84,7 +84,12 @@ HomeSpan provides a microcontroller-focused implementation of Apple's HomeKit Ac
   * for a version of the logo re-centered on a white background, set *faviconURL* to:
     * https://raw.githubusercontent.com/HomeSpan/HomeSpan/refs/heads/master/docs/images/HomeSpanLogoW.png
   * for a version of the logo on a transparent background, set *faviconURL* to:
-    * https://raw.githubusercontent.com/HomeSpan/HomeSpan/refs/heads/master/docs/images/HomeSpanLogoX.png 
+    * https://raw.githubusercontent.com/HomeSpan/HomeSpan/refs/heads/master/docs/images/HomeSpanLogoX.png
+  * see [HomeSpan Message Logging](docs/Logging.md) for details 
+
+* **Minor update to the touch-sensor logic in SpanButton to ensure compatibility with [breaking changes](https://github.com/espressif/arduino-esp32/pull/11643) introduced in Arduino-ESP32 core version 3.3.1**
+
+  * removed `SpanButton::setTouchCycles()` since the underlying Arduino-ESP32 `touchSetCycles()` function was removed as part of the changeover to new ESP-IDF touch-sensor logic
               
 See [Releases](https://github.com/HomeSpan/HomeSpan/releases) for details on all changes and bug fixes included in this update.
 
