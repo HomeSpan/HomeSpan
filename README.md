@@ -8,10 +8,10 @@ HomeSpan provides a microcontroller-focused implementation of Apple's HomeKit Ac
 
 |Component | Requirement | See Note |
 |---|:---:|:---:|
-|Current HomeSpan Production Release | **2.1.4** | - |
+|Current HomeSpan Production Release | **2.1.5** | - |
 | Supported Chips | **ESP32, S2, S3, C3, and C6** | [^8266] |
 | Minimum Required [Arduino-ESP32 Core](https://github.com/espressif/arduino-esp32) | **3.1.0** | [^fail] |
-| Latest Core fully tested with HomeSpan | **3.3.0** | [^tested] |
+| Latest Core fully tested with HomeSpan | **3.3.1** | [^tested] |
 | Minimum Flash Partition Size | **1.9MB** | - |
 | Recommended Partition Scheme | **Minimal SPIFFS (1.9MB APP with OTA)** | [^partition] |
 | HomeKit Hub | **HomePod or Apple TV** | [^homehub] |
@@ -72,31 +72,25 @@ HomeSpan provides a microcontroller-focused implementation of Apple's HomeKit Ac
   * Launch the WiFi Access Point
 * A standalone, detailed End-User Guide
 
-## ❗Latest Update - HomeSpan 2.1.4 (25 Aug 2025)
+## ❗Latest Update - HomeSpan 2.1.5 (21 Sep 2025)
 
 ### Updates and Corrections
 
-* **Refactored *Pixel* Library for Improved Performance**
+* **Added new *homeSpan* method `setWebLogFavicon(const char *faviconURL)`**
   
-  * also addresses a latent issue introduced during the original re-factoring of the Pixel library in HomeSpan 2.0.0 that prevented certain pixels strands from operating
-  * kudos to Randy for [identifying the issue and providing a solution](https://github.com/HomeSpan/HomeSpan/pull/1102)!
-  * IMPORTANT: this fix utilizes IDF functionality only available since IDF 5.3.  As a result:
-    
-    * **HomeSpan 2.1.4 requires Arduino-ESP32 version 3.1.0 or later**
-    * **HomeSpan will *not* compile on prior versions of the Arduino-ESP32 library**
+  * adds a favicon to the HomeSpan Web Log, where *faviconURL* points to a hosted **PNG** image file containing the favicon
+  * if left unspecified, *faviconURL* defaults to the standard HomeSpan logo:
+    * https://raw.githubusercontent.com/HomeSpan/HomeSpan/refs/heads/master/docs/images/HomeSpanLogo.png
+  * for a version of the logo re-centered on a white background, set *faviconURL* to:
+    * https://raw.githubusercontent.com/HomeSpan/HomeSpan/refs/heads/master/docs/images/HomeSpanLogoW.png
+  * for a version of the logo on a transparent background, set *faviconURL* to:
+    * https://raw.githubusercontent.com/HomeSpan/HomeSpan/refs/heads/master/docs/images/HomeSpanLogoX.png
+  * see [HomeSpan Message Logging](docs/Logging.md) for details 
 
-  * removed the following *deprecated* Pixel constructors and method:
-    
-    * `Pixel(uint8_t pin, boolean isRGBW)`      
-      * deprecated since HomeSpan 1.9.1
-      * use `Pixel(int pin, const char *pixelType)` instead
-    * `Pixel(int pin, pixelType_t pixelType)`
-      * deprecated since HomeSpan 2.0.0
-      * use `Pixel(int pin, const char *pixelType)` instead
-    * `boolean isRGBW()`
-      *  deprecated since HomeSpan 2.0.0
-      *  use `boolean hasColor(char c)` instead
-        
+* **Minor update to the touch-sensor logic in SpanButton to ensure compatibility with [breaking changes](https://github.com/espressif/arduino-esp32/pull/11643) introduced in Arduino-ESP32 core version 3.3.1**
+
+  * removed `SpanButton::setTouchCycles()` since the underlying Arduino-ESP32 `touchSetCycles()` function was removed as part of the changeover to new ESP-IDF touch-sensor logic
+              
 See [Releases](https://github.com/HomeSpan/HomeSpan/releases) for details on all changes and bug fixes included in this update.
 
 # HomeSpan Resources
