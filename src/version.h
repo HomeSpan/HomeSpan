@@ -34,7 +34,7 @@
  
 #define     HS_MAJOR  2
 #define     HS_MINOR  1
-#define     HS_PATCH  3
+#define     HS_PATCH  5
 #define     HS_EXTENSION  ""
 
 //////////////////////////////////////////////////////
@@ -51,8 +51,8 @@
 
 #include <esp_arduino_version.h>
 
-#if ESP_ARDUINO_VERSION < ESP_ARDUINO_VERSION_VAL(3, 0, 2)
-  #error ERROR: THIS VERSION OF HOMESPAN REQUIRES VERSION 3.0.2 OR GREATER OF THE ARDUINO-ESP32 BOARD MANAGER 
+#if ESP_ARDUINO_VERSION < ESP_ARDUINO_VERSION_VAL(3, 1, 0)
+  #error ERROR: THIS VERSION OF HOMESPAN REQUIRES VERSION 3.1.0 OR GREATER OF THE ARDUINO-ESP32 BOARD MANAGER 
   #include <FATAL_ERROR>
 #endif
 

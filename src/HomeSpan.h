@@ -214,6 +214,7 @@ struct SpanWebLog{                            // optional web status/log data
   boolean timeInit=false;                     // flag to indicate time has been initialized
   char bootTime[33]="Unknown";                // boot time
   char *statusURL=NULL;                       // URL of status log
+  char *faviconURL=NULL;                      // optional URL for favicon PNG image
   uint32_t waitTime=120000;                   // number of milliseconds to wait for initial connection to time server
   String css="";                              // optional user-defined style sheet for web log
   std::shared_mutex mux;                      // shared read/write lock
@@ -470,7 +471,8 @@ class Span{
   }
 
   Span& setWebLogCSS(const char *css){webLog.css="\n" + String(css) + "\n";return(*this);}
-  Span& setWebLogCallback(void (*f)(String &)){weblogCallback=f;return(*this);} 
+  Span& setWebLogCallback(void (*f)(String &)){weblogCallback=f;return(*this);}
+  Span& setWebLogFavicon(const char *favicon=DEFAULT_FAVICON){asprintf(&webLog.faviconURL,"%s",favicon);return(*this);}
   void getWebLog(void (*f)(const char *, void *), void *);
   void assumeTimeAcquired(){webLog.timeInit=true;}
 

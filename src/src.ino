@@ -71,6 +71,7 @@ void setup() {
   
   Serial.begin(115200);
 
+
   homeSpan.setLogLevel(2);
 
   // SpanPoint::setEncryption(false);
@@ -106,3 +107,4 @@ void loop(){
 } // end of loop()
 
 //////////////////////////////////////
+

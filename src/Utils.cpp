@@ -147,15 +147,21 @@ PushButton::PushButton(int pin, triggerType_t triggerType){
   else if(triggerType==TRIGGER_ON_HIGH)
     pinMode(pin, INPUT_PULLDOWN);
   
-#if SOC_TOUCH_SENSOR_NUM > 0
-  else if (triggerType==TRIGGER_ON_TOUCH && threshold==0){    
+#if SOC_TOUCH_SENSOR_SUPPORTED
+  else if (triggerType==TRIGGER_ON_TOUCH && threshold==0){
+    touchRead(pin);      // dummy-value to provide time for touch hardware to stabilize
+    delay(200);
     for(int i=0;i<calibCount;i++)
       threshold+=touchRead(pin);
     threshold/=calibCount;
-#if defined(SOC_TOUCH_VERSION_1) || SOC_TOUCH_SENSOR_VERSION==1
+#if SOC_TOUCH_SENSOR_VERSION==1
     threshold/=2;
+#if ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(5, 5, 0)
     LOG0("Touch Sensor at pin=%d used for calibration.  Triggers when sensor reading < %u.\n",pin,threshold);
 #else
+    LOG0("Touch Sensor at pin=%d used for calibration.  Triggers when sensor reading < %lu.\n",pin,threshold);
+#endif
+#elif SOC_TOUCH_SENSOR_VERSION==2
     threshold*=2;
     LOG0("Touch Sensor at pin=%d used for calibration.  Triggers when sensor reading > %lu.\n",pin,threshold);
 #endif
@@ -322,7 +328,9 @@ void PushButton::reset(){
 
 //////////////////////////////////////
 
-PushButton::touch_value_t PushButton::threshold=0;
+#if SOC_TOUCH_SENSOR_SUPPORTED
+touch_value_t PushButton::threshold=0;
+#endif
 
 ////////////////////////////////
 //      hsWatchdogTimer       //

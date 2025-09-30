@@ -292,6 +292,11 @@ The following **optional** `homeSpan` methods enable additional features and pro
 * `Span& setWebLogCSS(const char *css)`
   * sets the format of the HomeSpan Web Log to the custom style sheet specified by *css*
   * see [Message Logging](Logging.md) for details on how to construct *css*
+ 
+* `Span& setWebLogFavicon(const char *faviconURL)`
+  * adds a favicon to the HomeSpan Web Log, where *faviconURL* points to a hosted **PNG** image file containing the favicon
+  * if left unspecified, *faviconURL* defaults to [docs/images/HomeSpanLogo.png](images/HomeSpanLogo.png) hosted in the master branch of this repository
+  * see [Message Logging](Logging.md) for further details
 
 * `Span& setWebLogCallback(void (*func)(String &htmlText))`
   * sets an optional user-defined callback function, *func*, to be called by HomeSpan whenever the Web Log is produced
@@ -734,19 +739,14 @@ HomeSpan automatically calls the `button(int pin, int pressType)` method of a Se
   
 HomeSpan will report a warning, but not an error, during initialization if the user had not overridden the virtual button() method for a Service contaning one or more Buttons; triggers of those Buttons will simply ignored.
  
-When using one or more Touch Sensors, HomeSpan automatically calibrates the threshold at which they are triggered by polling the baseline sensor reading upon instantiation of first SpanButton of type `SpanButton::TRIGGER_ON_TOUCH`.  For ESP32 devices, the threshold is set to 50% of the baseline value since triggers occur when a sensor value falls *below* the threhold level.  For ESP32-S2 and ESP32-S3 devices, the threshold is set to 200% of the baseline value since triggers occur when a sensor value rises *above* the threhold level.  Normally HomeSpan's auto calibration will result in accurate detection of SINGLE, DOUBLE, and LONG presses of touch sensors.  However, if needed you can override the calibration and set your own threshold value using the following class-level method:
+When using one or more Touch Sensors, HomeSpan automatically calibrates the threshold at which they are triggered by polling the baseline sensor reading upon instantiation of first SpanButton of type `SpanButton::TRIGGER_ON_TOUCH`.  For ESP32 devices, the threshold is set to 50% of the baseline value since triggers occur when a sensor value falls *below* the threhold level.  For ESP32-S2 and ESP32-S3 devices, the threshold is set to 200% of the baseline value since triggers occur when a sensor value rises *above* the threhold level.  Normally HomeSpan's auto calibration will result in accurate detection of SINGLE, DOUBLE, and LONG presses of touch sensors.  However, if needed you can set your own threshold value using the following class-level method:
 
- * `void SpanButton::setTouchThreshold(uintXX_t thresh)`
+ * `void SpanButton::setTouchThreshold(uint32_t thresh)`
    * sets the threshold value above (for ESP32 devices) or below (for ESP32-S2 and ESP32-S3 devices) which touch sensors are triggered to *thresh*
-   * *XX* is 16 (for ESP32 devices) or 32 (for ESP32-S2 and ESP32-S3 devices)
    * the threshold specified is considered global and used for *all* SpanButton instances of type `SpanButton::TRIGGER_ON_TOUCH`
    * this method can be called either before or after SpanButtons are created
  
-In addition, you can also override the ESP32's touch sensor timing parameters using the following class-level method:
-
-* `void SpanButton::setTouchCycles(uint16_t measureTime, uint16_t sleepTime)`
-  * changes the measurement time and sleep time clock cycles to *measureTime* and *sleepTime*, respectively.  This is simply a pass-though call to the Arduino-ESP32 library `touchSetCycles()` function
-  * unless a specific threshold value has been set with `setTouchThreshold()`, `setTouchCycles()` must be called *before* instantiating the first SpanButton() of type `SpanButton::TRIGGER_ON_TOUCH` so that HomeSpan will calibrate the touch threshold based on the new timing parameters specified
+Note the Arduino-ESP32 core and ESP-IDF include other functions you can use to more finely tune the ESP32 touch-sensor peripheral logic if needed.
 
 ### *SpanToggle(int pin, boolean (\*triggerType)(int)=PushButton::TRIGGER_ON_LOW, uint16_32 toggleTime=5)*
  
