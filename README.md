@@ -4,6 +4,10 @@ Welcome to HomeSpan - a robust and extremely easy-to-use Arduino library for cre
 
 HomeSpan provides a microcontroller-focused implementation of Apple's HomeKit Accessory Protocol Specification Release R2 (HAP-R2) designed specifically for the Espressif ESP32 microcontroller running within the Arduino IDE.  HomeSpan pairs directly to HomeKit via your home WiFi network without the need for any external bridges or components.  With HomeSpan you can use the full power of the ESP32's I/O functionality to create custom control software and/or hardware to automatically operate external devices from the Home App on your iPhone, iPad, or Mac, or with Siri.
 
+
+>[!WARNING]
+>DO **NOT** UPDATE TO ARDUINO-ESP32 VERSION 3.3.1 (OR GREATER) IF YOU USE OTA WITH A PASSWORD TO UPLOAD SKETCHES TO YOUR DEVICE.  ESPRESSIF MODIFIED THE HASHING MECHANISM FOR OTA PASSWORDS IN A WAY THAT IS INCOMPATIBLE WITH PREVIOUSLY-STORED PASSWORDS SUCH THAT IF YOU UPDATE TO 3.3.1 YOU WILL NOT BE ABLE TO USE OTA FOR ANY FURTHER UPDATES.  IF YOU ARE USING OTA FOR UPLOADS, EITHER STAY WITH VERSION 3.3.0 OF THE CORE FOR NOW, OR CHANGE YOUR SKETCH TO ELIMINATE THE USE OF AN OTA PASSWORD USING `homeSpan.enableOTA(false)`, BEFORE MAKING THE SWITCH TO 3.3.1. 
+
 ### Requirements
 
 |Component | Requirement | See Note |
@@ -11,11 +15,10 @@ HomeSpan provides a microcontroller-focused implementation of Apple's HomeKit Ac
 |Current HomeSpan Production Release | **2.1.5** | - |
 | Supported Chips | **ESP32, S2, S3, C3, and C6** | [^8266] |
 | Minimum Required [Arduino-ESP32 Core](https://github.com/espressif/arduino-esp32) | **3.1.0** | [^fail] |
-| Latest Core fully tested with HomeSpan | **3.3.1** | [^tested] |
+| Latest Core fully tested with HomeSpan | **3.3.0** | [^tested] |
 | Minimum Flash Partition Size | **1.9MB** | - |
 | Recommended Partition Scheme | **Minimal SPIFFS (1.9MB APP with OTA)** | [^partition] |
 | HomeKit Hub | **HomePod or Apple TV** | [^homehub] |
-
 
 [^8266]:HomeSpan cannot be run on an ESP-8266, though an ESP-8266 can be used as a remote sensor in conjunction with HomeSpan's SpanPoint functionality
 
