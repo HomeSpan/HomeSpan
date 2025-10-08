@@ -29,7 +29,6 @@
  
 #include <ESPmDNS.h>
 #include <sodium.h>
-#include <MD5Builder.h>
 #include <mbedtls/version.h>
 
 #include "HAP.h"

@@ -39,6 +39,7 @@
 #include <esp_wifi.h>
 #include <esp_app_format.h>
 #include <esp_flash.h>
+#include <SHA2Builder.h>
 
 #include "HomeSpan.h"
 #include "HAP.h"
@@ -2852,7 +2853,7 @@ int SpanOTA::setPassword(const char *pwd){
     return(-1);
   }
 
-  MD5Builder otaPwdHash;
+  SHA256Builder otaPwdHash;
   otaPwdHash.begin();
   otaPwdHash.add(pwd);
   otaPwdHash.calculate();
