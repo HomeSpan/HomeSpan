@@ -39,7 +39,14 @@
 #include <esp_wifi.h>
 #include <esp_app_format.h>
 #include <esp_flash.h>
-#include <SHA2Builder.h>
+
+#if ESP_ARDUINO_VERSION >= ESP_ARDUINO_VERSION_VAL(3, 3, 2)
+  #include <SHA2Builder.h>
+  typedef SHA256Builder hsOtaHash_t;
+#else
+  #include <MD5Builder.h>
+  typedef MD5Builder hsOtaHash_t;
+#endif
 
 #include "HomeSpan.h"
 #include "HAP.h"
@@ -647,10 +654,14 @@ void Span::configureNetwork(){
       ArduinoOTA.setPasswordHash(spanOTA.otaPwd);
 
     ArduinoOTA.onStart(spanOTA.start).onEnd(spanOTA.end).onProgress(spanOTA.progress).onError(spanOTA.error);  
-    
     ArduinoOTA.begin();
+
     LOG0("Starting OTA Server:    %s\n",displayName);
-    LOG0("Authorization Password: %s",spanOTA.auth?"Enabled\n":"DISABLED!\n");
+    LOG0("Authorization Password: ");
+    if(spanOTA.auth)
+      LOG0("Enabled with %s Hash = %s\n",strlen(spanOTA.otaPwd)==32 ? "MD5" : "SHA256", spanOTA.otaPwd);
+    else
+      LOG0("DISABLED!\n");    
     LOG0("Auto Rollback:          %s",verifyRollbackLater()?"Enabled\n\n":"Disabled\n\n");
   }
   
@@ -2853,7 +2864,7 @@ int SpanOTA::setPassword(const char *pwd){
     return(-1);
   }
 
-  SHA256Builder otaPwdHash;
+  hsOtaHash_t otaPwdHash;
   otaPwdHash.begin();
   otaPwdHash.add(pwd);
   otaPwdHash.calculate();
