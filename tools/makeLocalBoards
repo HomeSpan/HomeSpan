@@ -25,8 +25,8 @@ BEGIN {
 	outputFile=inputFile
 	gsub("boards.txt","boards.local.txt",outputFile)
 
-	print "Input File:  " inputFile
-	print "Output File: " outputFile
+	print "Input File:   " inputFile
+	print "Output File:  " outputFile
 
 	while(getline < inputFile){
 		if($2=="name")
@@ -56,7 +56,10 @@ BEGIN {
 		}
 	}
 
-	while(getline rec < "featherpins.txt")
+	featherFile=ENVIRON["HOME"] "/Documents/Arduino/libraries/HomeSpan/tools/featherpins.txt"
+	print "Feather File: " featherFile
+	
+	while(getline rec < featherFile > 0)
 		print rec > outputFile
 
 	if(HIDE==1){
