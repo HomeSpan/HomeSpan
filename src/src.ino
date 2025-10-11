@@ -30,6 +30,7 @@
 void setup() {
  
   Serial.begin(115200);
+  delay(2000);
 
   homeSpan.setLogLevel(2);
   homeSpan.enableOTA();

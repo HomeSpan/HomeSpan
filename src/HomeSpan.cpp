@@ -859,23 +859,20 @@ void Span::processSerialCommand(const char *c){
     
     case 'O': {
 
-      char textPwd[34]="\0";
+      char textPwd[68]="\0";
       
       LOG0("\n>>> New OTA Password, or <return> to cancel request: ");
-      readSerial(textPwd,33);
+      readSerial(textPwd,67);
       
       if(strlen(textPwd)==0){
         LOG0("(cancelled)\n\n");
         return;
       }
 
-      if(strlen(textPwd)==33){
-        LOG0("\n*** Sorry, 32 character limit - request cancelled\n\n");
+      if(spanOTA.setPassword(textPwd)==-1)
         return;
-      }
-      
+
       LOG0("%s\n",mask(textPwd,2).c_str());
-      spanOTA.setPassword(textPwd);
       nvs_set_str(otaNVS,"OTADATA",spanOTA.otaPwd);                 // update data
       nvs_commit(otaNVS);          
       
@@ -2859,8 +2856,24 @@ int SpanOTA::init(boolean _auth, boolean _safeLoad, const char *pwd){
 ///////////////////////////////
 
 int SpanOTA::setPassword(const char *pwd){
+
+#ifdef SHA2Builder_h
+  const int hashSize=64;
+#else
+  const int hashSize=32;
+#endif
+
+  int x=0, y=0;
+  sscanf(pwd,"0%*1[xX]%*[0-9A-Fa-f]%n%*c%n",&x,&y);
+
+  if(x==hashSize+2 && y==0){
+    for(int i=0;i<=hashSize;i++)
+      homeSpan.spanOTA.otaPwd[i]=tolower(pwd[i+2]);
+    return(0);
+  }
+
   if(strlen(pwd)<1 || strlen(pwd)>32){
-    LOG0("\n*** WARNING: Cannot change OTA password to '%s'. Password length must be between 1 and 32 characters.\n\n",pwd);
+    LOG0("\n*** WARNING: Cannot change OTA password to '%s'. Password length must be between 1 and 32 characters, or a valid %s hash.\n\n",pwd,hashSize==32?"MD5":"SHA256");
     return(-1);
   }
 
