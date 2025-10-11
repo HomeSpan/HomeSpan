@@ -872,11 +872,15 @@ void Span::processSerialCommand(const char *c){
       if(spanOTA.setPassword(textPwd)==-1)
         return;
 
-      LOG0("%s\n",mask(textPwd,2).c_str());
+      if(strlen(textPwd)<=32)
+        LOG0("%s\n",textPwd);
+      else
+        LOG0("(accepted as valid hash)\n");
+      LOG0(">>> Hash stored in NVS as: %s\n",spanOTA.otaPwd);
+
       nvs_set_str(otaNVS,"OTADATA",spanOTA.otaPwd);                 // update data
       nvs_commit(otaNVS);          
       
-      LOG0("... Accepted! Password change will take effect after next restart.\n");
       if(!spanOTA.enabled)
         LOG0("... Note: OTA has not been enabled in this sketch.\n");
       LOG0("\n");
