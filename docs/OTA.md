@@ -8,7 +8,16 @@ By default, HomeSpan requires the use of a password whenever you begin an OTA up
 
 You can change the password for a HomeSpan device from the [HomeSpan CLI](CLI.md) with the 'O' command.  Similar to a device's Setup Code, HomeSpan saves a non-recoverable hashed version of the OTA password you specify in non-volatile storage (NVS).  If you forget the password you specified, you'll need to create a new one using the 'O' command, or you can restore the default OTA password by fully erasing the NVS with the 'E' command.
 
-You can also change the password programmatically from within a sketch by calling `homeSpan.enableOTA(const char *pwd)`.  This is not as secure as setting the password using the method above since your sketch will contain a plaintext-version, instead of a hashed-version, or your password.  Note that setting your password this way causes HomeSpan to ignore, but does not alter, any password you have saved in NVS using the 'O' command.
+You can also change the password programmatically from within a sketch by calling `homeSpan.enableOTA(const char *pwd)`, where *pwd* is a plain-text password that HomeSpan converts to a hash before saving in NVS.  However, this is not as secure as using the "O" command since it means your sketch includes a copy of your plain-text password.
+
+As an alternative, you can use `homeSpan.enableOTA(const char *pwd)` to instead provide a hash of your plain-text password that you pre-compute yourself instead of specifying the actual plain-text password as follows:
+
+* if *pwd* begins with "0x" followed by *exactly* 64 hexidecimal digits HomeSpan interprets *pwd* as a SHA256 hash
+* if *pwd* begins with "0x" followed by *exactly* 32 hexidecimal digits HomeSpan interprets *pwd* as an MD5 hash
+
+When HomeSpan interprets *pwd* as a hash, it saves it directly in NVS.  The same logic above applies to setting your password with the "O" command - if the password you specify is in the form of a SH256 or MD5 hash, it is interpreted as such and saved directly in NVS.  Since SHA256 is more secure than MD5, HomeSpan always uses SHA256 whenever it creates a hash of your plain-text password.  If you set your own hash, SHA256 is recommended.  If you specify an MD5 hash, the Arduino IDE will warn you of your use of a less-secure hash whenever you upload your sketch via OTA.
+
+Note that setting your plain-text password (or a hash of your plain-text password) from within your sketch using `homeSpan.enableOTA(const char *pwd)` causes HomeSpan to use that *pwd* instead of the hash saved in NVS with the "O" command, but it does not alter the one saved. 
 
 > :exclamation: Though not recommended, you can override the requirement for a password when enabling OTA for your sketch by including *false* as a parameter to the enabling method as such: `homeSpan.enableOTA(false)`.  Use with caution!  Anyone who can access the device over your network will now be able to upload a new sketch.
 
