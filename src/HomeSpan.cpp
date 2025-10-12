@@ -150,64 +150,7 @@ void Span::begin(Category catID, const char *_displayName, const char *_hostName
                  "************************************************************\n\n"
                  "** Please ensure serial monitor is set to transmit <newlines>\n\n");
 
-  LOG0("Message Logs:     Level %d",logLevel);
-  LOG0("\nStatus LED:       Pin ");
-  if(getStatusPin()>=0){
-    LOG0(getStatusPin());
-    if(autoOffLED>0)
-      LOG0("  (Auto Off=%d sec)",autoOffLED);
-  }
-  else
-    LOG0("-  *** WARNING: Status LED Pin is UNDEFINED");
-  LOG0("\nDevice Control:   Pin ");
-  if(getControlPin()>=0){
-    LOG0(getControlPin());
-  }
-  else{
-    LOG0("-  *** WARNING: Device Control Pin is UNDEFINED");
-  }
-  LOG0("\nSketch Version:   %s",getSketchVersion());  
-  LOG0("\nHomeSpan Version: %s",HOMESPAN_VERSION);
-  LOG0("\nArduino-ESP Ver.: %s",ARDUINO_ESP_VERSION);
-  LOG0("\nESP-IDF Version:  %d.%d.%d",ESP_IDF_VERSION_MAJOR,ESP_IDF_VERSION_MINOR,ESP_IDF_VERSION_PATCH);
-  LOG0("\nESP32 Chip:       %s Rev %d %s-core %luMB Flash", ESP.getChipModel(),ESP.getChipRevision(),
-                ESP.getChipCores()==1?"single":"dual",ESP.getFlashChipSize()/1024/1024);
-  
-  #ifdef ARDUINO_VARIANT
-    LOG0("\nESP32 Board:      ");
-    LOG0(ARDUINO_VARIANT);
-  #endif
-  
-  LOG0("\nPWM Resources:    %d channels, %d timers, max %d-bit duty resolution",
-                (int)LEDC_SPEED_MODE_MAX*(int)LEDC_CHANNEL_MAX,(int)LEDC_SPEED_MODE_MAX*(int)LEDC_TIMER_MAX,LEDC_TIMER_BIT_MAX-1);
-  LOG0("\nRMT Resources:    %d transmission channels of %d symbols each",SOC_RMT_TX_CANDIDATES_PER_GROUP,SOC_RMT_MEM_WORDS_PER_CHANNEL);
-  
-  #ifdef SOC_TOUCH_SENSOR_NUM
-    LOG0("\nTouch Sensors:    %d pins",SOC_TOUCH_SENSOR_NUM);
-  #else
-    LOG0("\nTouch Sensors:    none");
-  #endif
-
-  LOG0("\nSodium Version:   %s  Lib %d.%d",sodium_version_string(),sodium_library_version_major(),sodium_library_version_minor());
-  char mbtlsv[64];
-  mbedtls_version_get_string_full(mbtlsv);
-  LOG0("\nMbedTLS Version:  %s",mbtlsv);
-
-  LOG0("\nSketch Compiled:  %s",compileTime?compileTime:"N/A");
-  LOG0("\nPartition:        %s",esp_ota_get_running_partition()->label);
-  if(hsWDT.getSeconds())
-    LOG0("\nHS Watchdog:      %d seconds",hsWDT.getSeconds());
-  else
-    LOG0("\nHS Watchdog:      DISABLED");
-
-  for(int i=0;i<CONFIG_FREERTOS_NUMBER_OF_CORES;i++)
-    LOG0("\nIDLE-%d Watchdog:  %s",i,(ESP_OK==esp_task_wdt_status(xTaskGetIdleTaskHandleForCore(i)))?"ENABLED":"DISABLED");
-
-  LOG0("\nReset Reason:     %s",Utils::resetReason());
-  LOG0("\nMAC Address:      %s",Network.macAddress().c_str());
-  LOG0("\nInterface:        %s",ethernetEnabled?"ETHERNET":"WIFI");
-  
-  LOG0("\n\nDevice Name:      %s\n\n",displayName);
+  processSerialCommand("c");        // print homeSpan configuration
 
   uint8_t otaRequired=0;
   nvs_get_u8(otaNVS,"OTA_REQUIRED",&otaRequired);
@@ -711,7 +654,68 @@ void Span::processSerialCommand(const char *c){
   switch(c[0]){
 
     case '-': {
-      LOG0("Please type '?' for list of commands\n");
+      LOG0("Please type '?' for a list of commands\n\n");
+    }
+    break;
+
+    case 'c': {
+      LOG0("Message Logs:     Level %d",logLevel);
+      LOG0("\nStatus LED:       Pin ");
+      if(getStatusPin()>=0){
+        LOG0(getStatusPin());
+        if(autoOffLED>0)
+          LOG0("  (Auto Off=%d sec)",autoOffLED);
+      }
+      else
+        LOG0("-  *** WARNING: Status LED Pin is UNDEFINED");
+      LOG0("\nDevice Control:   Pin ");
+      if(getControlPin()>=0){
+        LOG0(getControlPin());
+      }
+      else{
+        LOG0("-  *** WARNING: Device Control Pin is UNDEFINED");
+      }
+      LOG0("\nSketch Version:   %s",getSketchVersion());  
+      LOG0("\nHomeSpan Version: %s",HOMESPAN_VERSION);
+      LOG0("\nArduino-ESP Ver.: %s",ARDUINO_ESP_VERSION);
+      LOG0("\nESP-IDF Version:  %d.%d.%d",ESP_IDF_VERSION_MAJOR,ESP_IDF_VERSION_MINOR,ESP_IDF_VERSION_PATCH);
+      LOG0("\nESP32 Chip:       %s Rev %d %s-core %luMB Flash", ESP.getChipModel(),ESP.getChipRevision(),
+                    ESP.getChipCores()==1?"single":"dual",ESP.getFlashChipSize()/1024/1024);
+      
+      #ifdef ARDUINO_VARIANT
+        LOG0("\nESP32 Board:      ");
+        LOG0(ARDUINO_VARIANT);
+      #endif
+      
+      LOG0("\nPWM Resources:    %d channels, %d timers, max %d-bit duty resolution",
+                    (int)LEDC_SPEED_MODE_MAX*(int)LEDC_CHANNEL_MAX,(int)LEDC_SPEED_MODE_MAX*(int)LEDC_TIMER_MAX,LEDC_TIMER_BIT_MAX-1);
+      LOG0("\nRMT Resources:    %d transmission channels of %d symbols each",SOC_RMT_TX_CANDIDATES_PER_GROUP,SOC_RMT_MEM_WORDS_PER_CHANNEL);
+      
+      #ifdef SOC_TOUCH_SENSOR_NUM
+        LOG0("\nTouch Sensors:    %d pins",SOC_TOUCH_SENSOR_NUM);
+      #else
+        LOG0("\nTouch Sensors:    none");
+      #endif
+
+      LOG0("\nSodium Version:   %s  Lib %d.%d",sodium_version_string(),sodium_library_version_major(),sodium_library_version_minor());
+      char mbtlsv[64];
+      mbedtls_version_get_string_full(mbtlsv);
+      LOG0("\nMbedTLS Version:  %s",mbtlsv);
+
+      LOG0("\nSketch Compiled:  %s",compileTime?compileTime:"N/A");
+      LOG0("\nPartition:        %s",esp_ota_get_running_partition()->label);
+      if(hsWDT.getSeconds())
+        LOG0("\nHS Watchdog:      %d seconds",hsWDT.getSeconds());
+      else
+        LOG0("\nHS Watchdog:      DISABLED");
+
+      for(int i=0;i<CONFIG_FREERTOS_NUMBER_OF_CORES;i++)
+        LOG0("\nIDLE-%d Watchdog:  %s",i,(ESP_OK==esp_task_wdt_status(xTaskGetIdleTaskHandleForCore(i)))?"ENABLED":"DISABLED");
+
+      LOG0("\nReset Reason:     %s",Utils::resetReason());
+      LOG0("\nMAC Address:      %s",Network.macAddress().c_str());
+      LOG0("\nInterface:        %s",ethernetEnabled?"ETHERNET":"WIFI");
+      LOG0("\nDevice Name:      %s\n\n",displayName);
     }
     break;
     
@@ -1325,6 +1329,7 @@ void Span::processSerialCommand(const char *c){
     case '?': {    
       
       LOG0("\n*** HomeSpan Commands ***\n\n");
+      LOG0("  c - print configuration info\n");
       LOG0("  s - print connection status\n");
       LOG0("  i - print summary information about the HAP Database\n");
       LOG0("  d - print the full HAP Accessory Attributes Database in JSON format\n");
@@ -1376,13 +1381,13 @@ void Span::processSerialCommand(const char *c){
         else
           uCom->second->userFunction2(c+1,uCom->second->userArg);
       } else {
-        LOG0("*** Undefined user command: '%s'.  Type '?' for list of commands.\n",c);
+        LOG0("*** Undefined user command: '%s'.  Type '?' for list of commands.\n\n",c);
       }
     }
     break;
 
     default:
-      LOG0("*** Unknown command: '%s'.  Type '?' for list of commands.\n",c);
+      LOG0("*** Unknown command: '%s'.  Type '?' for list of commands.\n\n",c);
     break;
     
   } // switch
