@@ -67,6 +67,12 @@ In addition to listening for incoming HAP requests, HomeSpan also continuously p
   * HomeSpan supports [Over-the-Air (OTA) Updating](OTA.md) but, by default, requires the use of a password.  Similar to a device's Setup Code, HomeSpan saves a non-recoverable *hashed* version of the OTA password you set with this command in NVS.  If you forget the password you specified, you'll need to create a new one using this command.  Alternatively, you can restore the default OTA password by fully erasing the NVS with the 'E' command.
   * HomeSpan uses "homespan-ota" as its default OTA password for new devices.
   * Changes to the OTA password do not take effect until the device is restarted.
+  * OTA passwords must be between 1 and 32 characters.
+  * As an alternative to entering your plain-text password, which HomeSpan will hash and store for you using either SHA256 (default) or MD5 (for legacy devices), you can instead supply a hashed version of your plain-text password, which HomeSpan will store directly, using the following format:
+    * if your password begins with "0x" followed by exactly 64 hexidecimal digits, HomeSpan interprets this as a SHA256 hash
+    * if your password begins with "0x" followed by exactly 32 hexidecimal digits, HomeSpan interprets this as an MD5 hash
+  * SHA256 is preferred on all devices running Arduino-ESP32 Core version 3.3.2 or later.
+  * You should only use MD5 for legacy devices running on Cores prior to version 3.3.2.   
   * OTA is not active unless specifically enabled for a sketch using the method `homeSpan.enableOTA()`.  
   * You can disable the use an authorizing password by invoking `homeSpan.enableOTA(false)` instead, though this creates a security risk and is therefore **not** recommended.  See the [HomeSpan API Reference](Reference.md) for details. 
   
