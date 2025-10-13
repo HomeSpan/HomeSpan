@@ -182,7 +182,7 @@ Dot::Dot(uint8_t dataPin, uint8_t clockPin){
   #define OUT_W1TC  &GPIO.out_w1tc.val
   #define OUT1_W1TS  NULL
   #define OUT1_W1TC  NULL
-#elif defined(CONFIG_IDF_TARGET_ESP32C6)
+#elif defined(CONFIG_IDF_TARGET_ESP32C6) || defined(CONFIG_IDF_TARGET_ESP32C5)
   #define OUT_W1TS  &GPIO.out_w1ts.val
   #define OUT_W1TC  &GPIO.out_w1tc.val
   #define OUT1_W1TS  &GPIO.out1_w1ts.val
