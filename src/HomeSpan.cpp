@@ -797,6 +797,7 @@ void Span::processSerialCommand(const char *c){
 
       if(!ethernetEnabled){
         LOG0("IP Addresses:      IPv4 = %s  IPv6 = %s  (RSI=%d  BSSID=%s",WiFi.localIP().toString().c_str(),getUniqueLocalIPv6(WiFi).toString().c_str(),WiFi.RSSI(),WiFi.BSSIDstr().c_str());
+        LOG0("IP Addresses:      IPv4 = %s  IPv6 = %s  (Band: %s  RSSI=%d  BSSID=%s",WiFi.localIP().toString().c_str(),getUniqueLocalIPv6(WiFi).toString().c_str(),WiFi.getBand()==1?"2.4 GHz":"5.0 GHz",WiFi.RSSI(),WiFi.BSSIDstr().c_str());
         if(bssidNames.count(WiFi.BSSIDstr().c_str()))
           LOG0("  \"%s\"",bssidNames[WiFi.BSSIDstr().c_str()].c_str());
         LOG0(")\n");
