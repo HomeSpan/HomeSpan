@@ -146,7 +146,7 @@ void Span::begin(Category catID, const char *_displayName, const char *_hostName
 
   LOG0("\n************************************************************\n"
                  "Welcome to HomeSpan!\n"
-                 "Apple HomeKit for the Espressif ESP-32/S2/S3/C3/C6 chips\n"
+                 "Apple HomeKit for the Espressif ESP-32/S2/S3/C3/C5/C6 chips\n"
                  "************************************************************\n\n"
                  "** Please ensure serial monitor is set to transmit <newlines>\n\n");
 
