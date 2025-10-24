@@ -36,19 +36,8 @@ void setup() {
   homeSpan.enableOTA();
   homeSpan.enableWebLog(50).setWebLogFavicon();
   homeSpan.setCompileTime();
-
- homeSpan.setConnectionTimes(30,60,5);
-
-  homeSpan.addBssidName("34:98:B5:DB:3E:C0","Great Room")
-          .addBssidName("3A:98:B5:db:53:5e","Upstairs Hallway")
-          .addBssidName("3A:98:B5:EF:BF:69","Kitchen")
-          .addBssidName("3A:98:B5:DB:54:86","Basement");
-
-  // WiFi.STA.begin();
-  // WiFi.setBandMode(WIFI_BAND_MODE_5G_ONLY);        
-             
+                    
   homeSpan.begin(Category::Lighting,"HomeSpan Basic");
-
 
   new SpanAccessory();
     new Service::AccessoryInformation();  
