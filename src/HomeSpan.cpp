@@ -681,12 +681,7 @@ void Span::processSerialCommand(const char *c){
       LOG0("\nESP-IDF Version:  %d.%d.%d",ESP_IDF_VERSION_MAJOR,ESP_IDF_VERSION_MINOR,ESP_IDF_VERSION_PATCH);
       LOG0("\nESP32 Chip:       %s Rev %d %s-core %luMB Flash", ESP.getChipModel(),ESP.getChipRevision(),
                     ESP.getChipCores()==1?"single":"dual",ESP.getFlashChipSize()/1024/1024);
-      
-      #ifdef ARDUINO_VARIANT
-        LOG0("\nESP32 Board:      ");
-        LOG0(ARDUINO_VARIANT);
-      #endif
-      
+      LOG0("\nESP32 Board:      %s",ARDUINO_BOARD);      
       LOG0("\nPWM Resources:    %d channels, %d timers, max %d-bit duty resolution",
                     (int)LEDC_SPEED_MODE_MAX*(int)LEDC_CHANNEL_MAX,(int)LEDC_SPEED_MODE_MAX*(int)LEDC_TIMER_MAX,LEDC_TIMER_BIT_MAX-1);
       LOG0("\nRMT Resources:    %d transmission channels of %d symbols each",SOC_RMT_TX_CANDIDATES_PER_GROUP,SOC_RMT_MEM_WORDS_PER_CHANNEL);
