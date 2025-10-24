@@ -146,7 +146,7 @@ void Span::begin(Category catID, const char *_displayName, const char *_hostName
 
   LOG0("\n************************************************************\n"
                  "Welcome to HomeSpan!\n"
-                 "Apple HomeKit for the Espressif ESP-32/S2/S3/C3/C6 chips\n"
+                 "Apple HomeKit for the Espressif ESP-32/S2/S3/C3/C5/C6 chips\n"
                  "************************************************************\n\n"
                  "** Please ensure serial monitor is set to transmit <newlines>\n\n");
 
@@ -681,12 +681,7 @@ void Span::processSerialCommand(const char *c){
       LOG0("\nESP-IDF Version:  %d.%d.%d",ESP_IDF_VERSION_MAJOR,ESP_IDF_VERSION_MINOR,ESP_IDF_VERSION_PATCH);
       LOG0("\nESP32 Chip:       %s Rev %d %s-core %luMB Flash", ESP.getChipModel(),ESP.getChipRevision(),
                     ESP.getChipCores()==1?"single":"dual",ESP.getFlashChipSize()/1024/1024);
-      
-      #ifdef ARDUINO_VARIANT
-        LOG0("\nESP32 Board:      ");
-        LOG0(ARDUINO_VARIANT);
-      #endif
-      
+      LOG0("\nESP32 Board:      %s",ARDUINO_BOARD);      
       LOG0("\nPWM Resources:    %d channels, %d timers, max %d-bit duty resolution",
                     (int)LEDC_SPEED_MODE_MAX*(int)LEDC_CHANNEL_MAX,(int)LEDC_SPEED_MODE_MAX*(int)LEDC_TIMER_MAX,LEDC_TIMER_BIT_MAX-1);
       LOG0("\nRMT Resources:    %d transmission channels of %d symbols each",SOC_RMT_TX_CANDIDATES_PER_GROUP,SOC_RMT_MEM_WORDS_PER_CHANNEL);
@@ -796,7 +791,7 @@ void Span::processSerialCommand(const char *c){
       LOG0("\n*** HomeSpan Status ***\n\n");
 
       if(!ethernetEnabled){
-        LOG0("IP Addresses:      IPv4 = %s  IPv6 = %s  (RSI=%d  BSSID=%s",WiFi.localIP().toString().c_str(),getUniqueLocalIPv6(WiFi).toString().c_str(),WiFi.RSSI(),WiFi.BSSIDstr().c_str());
+        LOG0("IP Addresses:      IPv4 = %s  IPv6 = %s  (Band: %s  RSSI=%d  BSSID=%s",WiFi.localIP().toString().c_str(),getUniqueLocalIPv6(WiFi).toString().c_str(),WiFi.getBand()==1?"2.4 GHz":"5.0 GHz",WiFi.RSSI(),WiFi.BSSIDstr().c_str());
         if(bssidNames.count(WiFi.BSSIDstr().c_str()))
           LOG0("  \"%s\"",bssidNames[WiFi.BSSIDstr().c_str()].c_str());
         LOG0(")\n");

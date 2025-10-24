@@ -14,6 +14,7 @@ BEGIN {
 	newBoard["esp32s3"]="HS ESP32-S3 Dev Module"
 	newBoard["esp32c3"]="HS ESP32-C3 Dev Module"
 	newBoard["esp32c6"]="HS ESP32-C6 Dev Module"
+	newBoard["esp32c5"]="HS ESP32-C5 Dev Module"
 
 	"find ~/Library/Arduino15/packages/esp32/hardware/esp32 -name boards.txt" | getline inputFile
 
