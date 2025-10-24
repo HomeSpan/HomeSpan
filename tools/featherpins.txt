@@ -61,6 +61,17 @@ hs_esp32s3.compiler.cpp.extra_flags=-DF13=5 -DF12=6 -DF27=7 -DF15=16 -DF32=17 -D
 
 hs_esp32c6.compiler.cpp.extra_flags=-DF12=9 -DF27=6 -DF15=7 -DF32=10 -DF14=11 -DF16=13 -DF17=12 -DF21=15 -DF26=3 -DF25=2 -DF34=1 -DF39=0 -DF36=5 -DF4=4 -DF22=22 -DF23=23 -DF5=21 -DF18=19 -DF19=20 -DF33=18 -DBUILTIN_PIXEL=8 -DDEVICE_SUFFIX="-C6" -DHS_FEATHER_PINS
 
+#################### 
+# ESP32C5 Dev Module
+####################
+
+# F12=24,F27=3,F15=7,F32=26,F14=25,F16=23,F17=14,F21=13,F13=27     // Digital Only (9 pins)
+# F26=4,F25=5,F4=2                               		       // A0/A1/A5
+# F22=1,F23=0						       // I2C SCL/SDA
+# F5=10,F18=8,F19=9,F33=6   	                                 // SPI SCK/SDO/SDI/CS
+
+hs_esp32c5.compiler.cpp.extra_flags=-DF12=24 -DF27=3 -DF15=7 -DF32=26 -DF14=25 -DF16=23 -DF17=14 -DF21=13 -DF13=27 -DF26=4 -DF25=5 -DF4=2 -DF22=1 -DF23=0 -DF5=10 -DF18=8 -DF19=9 -DF33=6 -DBUILTIN_PIXEL=27 -DDEVICE_SUFFIX="-C5" -DHS_FEATHER_PINS
+
 ######################
 # Silicognition wESP32
 ######################
