@@ -2923,7 +2923,7 @@ boolean SpanOTA::auth;
 //        SpanPoint          //
 ///////////////////////////////
 
-SpanPoint::SpanPoint(const char *macAddress, int sendSize, int receiveSize, int queueDepth, boolean useAPaddress){
+SpanPoint::SpanPoint(const char *macAddress, int sendSize, int receiveSize, int queueDepth, boolean useAPaddress, boolean useQueueOverwrite){
 
   if(sscanf(macAddress,"%hhx:%hhx:%hhx:%hhx:%hhx:%hhx",peerInfo.peer_addr,peerInfo.peer_addr+1,peerInfo.peer_addr+2,peerInfo.peer_addr+3,peerInfo.peer_addr+4,peerInfo.peer_addr+5)!=6){
     LOG0("\nFATAL ERROR!  Can't create new SpanPoint(\"%s\") - Invalid MAC Address ***\n",macAddress);
@@ -2937,6 +2937,8 @@ SpanPoint::SpanPoint(const char *macAddress, int sendSize, int receiveSize, int 
     while(1);
   }
 
+  this->useQueueOverwrite=useQueueOverwrite;
+ 
   this->sendSize=sendSize;
   this->receiveSize=receiveSize;
   
@@ -3108,7 +3110,10 @@ void SpanPoint::dataReceived(const esp_now_recv_info *info, const uint8_t *incom
   }
 
   (*it)->receiveTime=millis();                             // set time of receive
-  xQueueSend((*it)->receiveQueue, incomingData, 0);        // send to queue - do not wait if queue is full and instead fail immediately since we need to return from this function ASAP
+  if((*it)->useQueueOverwrite)
+    xQueueOverwrite((*it)->receiveQueue, incomingData, 0);   // send to queue - overwrite the last value if full.
+  else
+    xQueueSend((*it)->receiveQueue, incomingData, 0);        // send to queue - do not wait if queue is full and instead fail immediately since we need to return from this function ASAP
 }
 
 ///////////////////////////////
