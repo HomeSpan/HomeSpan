@@ -7,13 +7,25 @@
 # Adafruit ESP32 Feather
 ########################
 
-# F13=13,F12=12,F27=27                                             // Digital w/Touch (3 pins)
-# F15=15,F32=32,F14=14,F16=16,F17=17,F21=21                        // Digital Only (6 pins)
+# F13=13,F12=12,F27=27,F15=15,F32=32,F14=14                        // Digital w/Touch (6 pins)
+# F16=16,F17=17,F21=21                        			   // Digital Only (3 pins)
 # F26=26,F25=25,F34=34,F39=39,F36=36,F4=4                          // A0-A5
 # F22=22,F23=23                                                    // I2C SCL/SDA
 # F5=5,F18=18,F19=19,F33=33                                        // SPI SCK/SDO/SDI/CS
 
 hs_featheresp32.compiler.cpp.extra_flags=-DF13=13 -DF12=12 -DF27=27 -DF15=15 -DF32=32 -DF14=14 -DF16=16 -DF17=17 -DF21=21 -DF26=26 -DF25=25 -DF34=34 -DF39=39 -DF36=36 -DF4=4 -DF22=22 -DF23=23 -DF5=5 -DF18=18 -DF19=19 -DF33=33 -DDEVICE_SUFFIX="" -DHS_FEATHER_PINS
+
+###########################
+# Adafruit ESP32 Feather V2
+###########################
+
+# F13=13,F12=12,F27=27,F15=15,F32=32,F14=14                        // Digital w/Touch (6 pins)
+# F16=7,F17=8,F21=37                        			   // Digital Only (3 pins, except F21 is input-only)
+# F26=26,F25=25,F34=34,F39=39,F36=36,F4=4                          // A0-A5
+# F22=20,F23=22                                                    // I2C SCL/SDA
+# F5=5,F18=19,F19=21,F33=33                                        // SPI SCK/SDO/SDI/CS
+
+hs_adafruit_feather_esp32_v2.compiler.cpp.extra_flags=-DF13=13 -DF12=12 -DF27=27 -DF15=15 -DF32=32 -DF14=14 -DF16=7 -DF17=8 -DF21=37 -DF26=26 -DF25=25 -DF34=34 -DF39=39 -DF36=36 -DF4=4 -DF22=20 -DF23=22 -DF5=5 -DF18=19 -DF19=21 -DF33=33 -DDEVICE_SUFFIX="" -DHS_FEATHER_PINS
 
 ###########################
 # Adafruit ESP32-S2 Feather
