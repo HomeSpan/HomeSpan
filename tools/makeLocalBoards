@@ -7,6 +7,7 @@ BEGIN {
 	newBoard["adafruit_feather_esp32_v2"]="HS ESP32 Feather V2"
 	newBoard["adafruit_feather_esp32s2"]="HS ESP32-S2 Feather"
 	newBoard["adafruit_feather_esp32s3"]="HS ESP32-S3 Feather"
+	newBoard["adafruit_feather_esp32c6"]="HS ESP32-C6 Feather"
 	newBoard["adafruit_qtpy_esp32_pico"]="HS ESP32 QtPy"
 	newBoard["adafruit_qtpy_esp32s2"]="HS ESP32-S2 QtPy"
 	newBoard["wesp32"]="HS WESP32"
