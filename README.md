@@ -8,8 +8,8 @@ HomeSpan provides a microcontroller-focused implementation of Apple's HomeKit Ac
 
 |Component | Requirement | See Note |
 |---|:---:|:---:|
-|Current HomeSpan Production Release | **2.1.5** | - |
-| Supported Chips | **ESP32, S2, S3, C3, and C6** | [^8266] |
+|Current HomeSpan Production Release | **2.1.6** | - |
+| Supported Chips | **ESP32, S2, S3, C3, C5, and C6** | [^8266] |
 | Minimum Required [Arduino-ESP32 Core](https://github.com/espressif/arduino-esp32) | **3.1.0** | [^fail] |
 | Latest Core fully tested with HomeSpan | **3.3.2** | [^tested] |
 | Minimum Flash Partition Size | **1.9MB** | - |
@@ -74,24 +74,31 @@ HomeSpan provides a microcontroller-focused implementation of Apple's HomeKit Ac
   * Launch the WiFi Access Point
 * A standalone, detailed End-User Guide
 
-## ❗Latest Update - HomeSpan 2.1.5 (21 Sep 2025)
+## ❗Latest Update - HomeSpan 2.1.6 (26 Oct 2025)
+
+### New Features
+
+* **HomeSpan now supports the ESP32-C5!**
+
+  * the ESP32-C5 has the ability to use both the **5.0 GHz** and **2.4 GHz** WiFi bands 
+    * added WiFi band information to all log file output to indicate which band is being used
+  * to require the ESP-C5 to use the 5.0 GHz band, add the following to the `setup()` function in your sketch:
+    * `WiFi.STA.begin(); WiFi.setBandMode(WIFI_BAND_MODE_5G_ONLY);`
+    * note: `setBandMode()` is only available in Arduino-ESP32 Core 3.3.0 or greater
+  * see [WiFi and Ethernet Connectivity](docs/Networks.md) for details
 
 ### Updates and Corrections
 
-* **Added new *homeSpan* method `setWebLogFavicon(const char *faviconURL)`**
-  
-  * adds a favicon to the HomeSpan Web Log, where *faviconURL* points to a hosted **PNG** image file containing the favicon
-  * if left unspecified, *faviconURL* defaults to the standard HomeSpan logo:
-    * https://raw.githubusercontent.com/HomeSpan/HomeSpan/refs/heads/master/docs/images/HomeSpanLogo.png
-  * for a version of the logo re-centered on a white background, set *faviconURL* to:
-    * https://raw.githubusercontent.com/HomeSpan/HomeSpan/refs/heads/master/docs/images/HomeSpanLogoW.png
-  * for a version of the logo on a transparent background, set *faviconURL* to:
-    * https://raw.githubusercontent.com/HomeSpan/HomeSpan/refs/heads/master/docs/images/HomeSpanLogoX.png
-  * see [HomeSpan Message Logging](docs/Logging.md) for details 
+* **Updated OTA password storage to use SHA256 instead of MD5 hashing to conform with latest ArduinoOTA library protocol**
+  * for backwards compatibility with prior Cores, HomeSpan uses SHA256 hashing only if compiled under Core 3.3.2 or greater, else it continues to use MD5
+  * if you set your OTA password from within your sketch using `homeSpan.enableOTA(char *pwd)`, the new hashing will be automatic
+  * if instead you previously entered your password into the Serial Monitor using the "O" CLI command, you will need to re-enter it again so that HomeSpan can save it as SHA256
+    * if not re-entered, uploading OTA sketches using Core 3.3.2 or greater will still work, but a diagnostic message will warn you to migrate from MD5 to SHA256 hashing
+  * to facilitate the ability to set a password as a **hash** instead of **plain-text** from within a sketch, `homeSpan.enableOTA(char *pwd)` has been modified so that if *pwd* starts with "0x" followed by 64 hexidecimal characters, *pwd* will be interpreted as a SHA256 hash instead of plain-text and HomeSpan will store it directly instead of first hashing it
+    * specifying the hash of your OTA password inside a sketch is more secure than specifying the plain-text password
+    * useful for devices that cannot be readily connected to a Serial port, which prevents you from using the "O" CLI command to enter your OTA password
 
-* **Minor update to the touch-sensor logic in SpanButton to ensure compatibility with [breaking changes](https://github.com/espressif/arduino-esp32/pull/11643) introduced in Arduino-ESP32 core version 3.3.1**
-
-  * removed `SpanButton::setTouchCycles()` since the underlying Arduino-ESP32 `touchSetCycles()` function was removed as part of the changeover to new ESP-IDF touch-sensor logic
+* **Added new "c" CLI command that outputs to the Serial Monitor the same chip and sketch configuration information HomeSpan displays during initial start-up**
               
 See [Releases](https://github.com/HomeSpan/HomeSpan/releases) for details on all changes and bug fixes included in this update.
 

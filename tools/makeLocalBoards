@@ -1,0 +1,72 @@
+#!/usr/bin/awk -f
+
+BEGIN {
+	FS="[.=]"
+
+	newBoard["featheresp32"]="HS ESP32 Feather"
+	newBoard["adafruit_feather_esp32_v2"]="HS ESP32 Feather V2"
+	newBoard["adafruit_feather_esp32s2"]="HS ESP32-S2 Feather"
+	newBoard["adafruit_feather_esp32s3"]="HS ESP32-S3 Feather"
+	newBoard["adafruit_feather_esp32c6"]="HS ESP32-C6 Feather"
+	newBoard["adafruit_qtpy_esp32_pico"]="HS ESP32 QtPy"
+	newBoard["adafruit_qtpy_esp32s2"]="HS ESP32-S2 QtPy"
+	newBoard["wesp32"]="HS WESP32"
+	newBoard["esp32s2"]="HS ESP32-S2 Dev Module"
+	newBoard["esp32s3"]="HS ESP32-S3 Dev Module"
+	newBoard["esp32c3"]="HS ESP32-C3 Dev Module"
+	newBoard["esp32c6"]="HS ESP32-C6 Dev Module"
+	newBoard["esp32c5"]="HS ESP32-C5 Dev Module"
+
+	"find ~/Library/Arduino15/packages/esp32/hardware/esp32 -name boards.txt" | getline inputFile
+
+	if(inputFile==""){
+		print("ERROR: Can't find boards.txt file")
+		exit
+	}
+
+	outputFile=inputFile
+	gsub("boards.txt","boards.local.txt",outputFile)
+
+	print "Input File:   " inputFile
+	print "Output File:  " outputFile
+
+	while(getline < inputFile){
+		if($2=="name")
+			hide[$1]=1	
+
+		if(newBoard[$1]!=""){
+
+			if($2=="menu")
+				block=$3
+			else
+				block=$2
+
+			if(block!=lastBlock){
+				print "" > outputFile
+				lastBlock=block
+			}
+
+			if($2=="name"){
+				print "#######################################\n" > outputFile
+				print "hs_" $1 ".name=" newBoard[$1] "\n" > outputFile
+				print "hs_" $1 ".menu.PartitionScheme.homeSpan=HomeSpan (1.9MB APP with OTA/190KB SPIFFS)" > outputFile
+				print "hs_" $1 ".menu.PartitionScheme.homeSpan.build.partitions=min_spiffs" > outputFile
+				print "hs_" $1 ".menu.PartitionScheme.homeSpan.upload.maximum_size=1966080" > outputFile
+			}
+			else
+				print "hs_" $0 > outputFile
+		}
+	}
+
+	featherFile=ENVIRON["HOME"] "/Documents/Arduino/libraries/HomeSpan/tools/featherpins.txt"
+	print "Feather File: " featherFile
+	
+	while(getline rec < featherFile > 0)
+		print rec > outputFile
+
+	if(HIDE==1){
+		print "\n######## HIDE ALL OTHER BOARDS ################\n" > outputFile
+		for(name in hide)
+			print name ".hide=true" > outputFile
+	}
+}

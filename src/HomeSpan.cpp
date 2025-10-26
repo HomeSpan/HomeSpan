@@ -40,6 +40,14 @@
 #include <esp_app_format.h>
 #include <esp_flash.h>
 
+#if ESP_ARDUINO_VERSION >= ESP_ARDUINO_VERSION_VAL(3, 3, 2)
+  #include <SHA2Builder.h>
+  typedef SHA256Builder hsOtaHash_t;
+#else
+  #include <MD5Builder.h>
+  typedef MD5Builder hsOtaHash_t;
+#endif
+
 #include "HomeSpan.h"
 #include "HAP.h"
 #include <mutex>
@@ -138,68 +146,11 @@ void Span::begin(Category catID, const char *_displayName, const char *_hostName
 
   LOG0("\n************************************************************\n"
                  "Welcome to HomeSpan!\n"
-                 "Apple HomeKit for the Espressif ESP-32/S2/S3/C3/C6 chips\n"
+                 "Apple HomeKit for the Espressif ESP-32/S2/S3/C3/C5/C6 chips\n"
                  "************************************************************\n\n"
                  "** Please ensure serial monitor is set to transmit <newlines>\n\n");
 
-  LOG0("Message Logs:     Level %d",logLevel);
-  LOG0("\nStatus LED:       Pin ");
-  if(getStatusPin()>=0){
-    LOG0(getStatusPin());
-    if(autoOffLED>0)
-      LOG0("  (Auto Off=%d sec)",autoOffLED);
-  }
-  else
-    LOG0("-  *** WARNING: Status LED Pin is UNDEFINED");
-  LOG0("\nDevice Control:   Pin ");
-  if(getControlPin()>=0){
-    LOG0(getControlPin());
-  }
-  else{
-    LOG0("-  *** WARNING: Device Control Pin is UNDEFINED");
-  }
-  LOG0("\nSketch Version:   %s",getSketchVersion());  
-  LOG0("\nHomeSpan Version: %s",HOMESPAN_VERSION);
-  LOG0("\nArduino-ESP Ver.: %s",ARDUINO_ESP_VERSION);
-  LOG0("\nESP-IDF Version:  %d.%d.%d",ESP_IDF_VERSION_MAJOR,ESP_IDF_VERSION_MINOR,ESP_IDF_VERSION_PATCH);
-  LOG0("\nESP32 Chip:       %s Rev %d %s-core %luMB Flash", ESP.getChipModel(),ESP.getChipRevision(),
-                ESP.getChipCores()==1?"single":"dual",ESP.getFlashChipSize()/1024/1024);
-  
-  #ifdef ARDUINO_VARIANT
-    LOG0("\nESP32 Board:      ");
-    LOG0(ARDUINO_VARIANT);
-  #endif
-  
-  LOG0("\nPWM Resources:    %d channels, %d timers, max %d-bit duty resolution",
-                (int)LEDC_SPEED_MODE_MAX*(int)LEDC_CHANNEL_MAX,(int)LEDC_SPEED_MODE_MAX*(int)LEDC_TIMER_MAX,LEDC_TIMER_BIT_MAX-1);
-  LOG0("\nRMT Resources:    %d transmission channels of %d symbols each",SOC_RMT_TX_CANDIDATES_PER_GROUP,SOC_RMT_MEM_WORDS_PER_CHANNEL);
-  
-  #ifdef SOC_TOUCH_SENSOR_NUM
-    LOG0("\nTouch Sensors:    %d pins",SOC_TOUCH_SENSOR_NUM);
-  #else
-    LOG0("\nTouch Sensors:    none");
-  #endif
-
-  LOG0("\nSodium Version:   %s  Lib %d.%d",sodium_version_string(),sodium_library_version_major(),sodium_library_version_minor());
-  char mbtlsv[64];
-  mbedtls_version_get_string_full(mbtlsv);
-  LOG0("\nMbedTLS Version:  %s",mbtlsv);
-
-  LOG0("\nSketch Compiled:  %s",compileTime?compileTime:"N/A");
-  LOG0("\nPartition:        %s",esp_ota_get_running_partition()->label);
-  if(hsWDT.getSeconds())
-    LOG0("\nHS Watchdog:      %d seconds",hsWDT.getSeconds());
-  else
-    LOG0("\nHS Watchdog:      DISABLED");
-
-  for(int i=0;i<CONFIG_FREERTOS_NUMBER_OF_CORES;i++)
-    LOG0("\nIDLE-%d Watchdog:  %s",i,(ESP_OK==esp_task_wdt_status(xTaskGetIdleTaskHandleForCore(i)))?"ENABLED":"DISABLED");
-
-  LOG0("\nReset Reason:     %s",Utils::resetReason());
-  LOG0("\nMAC Address:      %s",Network.macAddress().c_str());
-  LOG0("\nInterface:        %s",ethernetEnabled?"ETHERNET":"WIFI");
-  
-  LOG0("\n\nDevice Name:      %s\n\n",displayName);
+  processSerialCommand("c");        // print homeSpan configuration
 
   uint8_t otaRequired=0;
   nvs_get_u8(otaNVS,"OTA_REQUIRED",&otaRequired);
@@ -646,10 +597,14 @@ void Span::configureNetwork(){
       ArduinoOTA.setPasswordHash(spanOTA.otaPwd);
 
     ArduinoOTA.onStart(spanOTA.start).onEnd(spanOTA.end).onProgress(spanOTA.progress).onError(spanOTA.error);  
-    
     ArduinoOTA.begin();
+
     LOG0("Starting OTA Server:    %s\n",displayName);
-    LOG0("Authorization Password: %s",spanOTA.auth?"Enabled\n":"DISABLED!\n");
+    LOG0("Authorization Password: ");
+    if(spanOTA.auth)
+      LOG0("Enabled with %s Hash = %s\n",strlen(spanOTA.otaPwd)==32 ? "MD5" : "SHA256", spanOTA.otaPwd);
+    else
+      LOG0("DISABLED!\n");    
     LOG0("Auto Rollback:          %s",verifyRollbackLater()?"Enabled\n\n":"Disabled\n\n");
   }
   
@@ -699,7 +654,63 @@ void Span::processSerialCommand(const char *c){
   switch(c[0]){
 
     case '-': {
-      LOG0("Please type '?' for list of commands\n");
+      LOG0("Please type '?' for a list of commands\n\n");
+    }
+    break;
+
+    case 'c': {
+      LOG0("Message Logs:     Level %d",logLevel);
+      LOG0("\nStatus LED:       Pin ");
+      if(getStatusPin()>=0){
+        LOG0(getStatusPin());
+        if(autoOffLED>0)
+          LOG0("  (Auto Off=%d sec)",autoOffLED);
+      }
+      else
+        LOG0("-  *** WARNING: Status LED Pin is UNDEFINED");
+      LOG0("\nDevice Control:   Pin ");
+      if(getControlPin()>=0){
+        LOG0(getControlPin());
+      }
+      else{
+        LOG0("-  *** WARNING: Device Control Pin is UNDEFINED");
+      }
+      LOG0("\nSketch Version:   %s",getSketchVersion());  
+      LOG0("\nHomeSpan Version: %s",HOMESPAN_VERSION);
+      LOG0("\nArduino-ESP Ver.: %s",ARDUINO_ESP_VERSION);
+      LOG0("\nESP-IDF Version:  %d.%d.%d",ESP_IDF_VERSION_MAJOR,ESP_IDF_VERSION_MINOR,ESP_IDF_VERSION_PATCH);
+      LOG0("\nESP32 Chip:       %s Rev %d %s-core %luMB Flash", ESP.getChipModel(),ESP.getChipRevision(),
+                    ESP.getChipCores()==1?"single":"dual",ESP.getFlashChipSize()/1024/1024);
+      LOG0("\nESP32 Board:      %s",ARDUINO_BOARD);      
+      LOG0("\nPWM Resources:    %d channels, %d timers, max %d-bit duty resolution",
+                    (int)LEDC_SPEED_MODE_MAX*(int)LEDC_CHANNEL_MAX,(int)LEDC_SPEED_MODE_MAX*(int)LEDC_TIMER_MAX,LEDC_TIMER_BIT_MAX-1);
+      LOG0("\nRMT Resources:    %d transmission channels of %d symbols each",SOC_RMT_TX_CANDIDATES_PER_GROUP,SOC_RMT_MEM_WORDS_PER_CHANNEL);
+      
+      #ifdef SOC_TOUCH_SENSOR_NUM
+        LOG0("\nTouch Sensors:    %d pins",SOC_TOUCH_SENSOR_NUM);
+      #else
+        LOG0("\nTouch Sensors:    none");
+      #endif
+
+      LOG0("\nSodium Version:   %s  Lib %d.%d",sodium_version_string(),sodium_library_version_major(),sodium_library_version_minor());
+      char mbtlsv[64];
+      mbedtls_version_get_string_full(mbtlsv);
+      LOG0("\nMbedTLS Version:  %s",mbtlsv);
+
+      LOG0("\nSketch Compiled:  %s",compileTime?compileTime:"N/A");
+      LOG0("\nPartition:        %s",esp_ota_get_running_partition()->label);
+      if(hsWDT.getSeconds())
+        LOG0("\nHS Watchdog:      %d seconds",hsWDT.getSeconds());
+      else
+        LOG0("\nHS Watchdog:      DISABLED");
+
+      for(int i=0;i<CONFIG_FREERTOS_NUMBER_OF_CORES;i++)
+        LOG0("\nIDLE-%d Watchdog:  %s",i,(ESP_OK==esp_task_wdt_status(xTaskGetIdleTaskHandleForCore(i)))?"ENABLED":"DISABLED");
+
+      LOG0("\nReset Reason:     %s",Utils::resetReason());
+      LOG0("\nMAC Address:      %s",Network.macAddress().c_str());
+      LOG0("\nInterface:        %s",ethernetEnabled?"ETHERNET":"WIFI");
+      LOG0("\nDevice Name:      %s\n\n",displayName);
     }
     break;
     
@@ -780,7 +791,7 @@ void Span::processSerialCommand(const char *c){
       LOG0("\n*** HomeSpan Status ***\n\n");
 
       if(!ethernetEnabled){
-        LOG0("IP Addresses:      IPv4 = %s  IPv6 = %s  (RSI=%d  BSSID=%s",WiFi.localIP().toString().c_str(),getUniqueLocalIPv6(WiFi).toString().c_str(),WiFi.RSSI(),WiFi.BSSIDstr().c_str());
+        LOG0("IP Addresses:      IPv4 = %s  IPv6 = %s  (Band: %s  RSSI=%d  BSSID=%s",WiFi.localIP().toString().c_str(),getUniqueLocalIPv6(WiFi).toString().c_str(),WiFi.getBand()==1?"2.4 GHz":"5.0 GHz",WiFi.RSSI(),WiFi.BSSIDstr().c_str());
         if(bssidNames.count(WiFi.BSSIDstr().c_str()))
           LOG0("  \"%s\"",bssidNames[WiFi.BSSIDstr().c_str()].c_str());
         LOG0(")\n");
@@ -847,27 +858,28 @@ void Span::processSerialCommand(const char *c){
     
     case 'O': {
 
-      char textPwd[34]="\0";
+      char textPwd[68]="\0";
       
       LOG0("\n>>> New OTA Password, or <return> to cancel request: ");
-      readSerial(textPwd,33);
+      readSerial(textPwd,67);
       
       if(strlen(textPwd)==0){
         LOG0("(cancelled)\n\n");
         return;
       }
 
-      if(strlen(textPwd)==33){
-        LOG0("\n*** Sorry, 32 character limit - request cancelled\n\n");
+      if(spanOTA.setPassword(textPwd)==-1)
         return;
-      }
-      
-      LOG0("%s\n",mask(textPwd,2).c_str());
-      spanOTA.setPassword(textPwd);
+
+      if(strlen(textPwd)<=32)
+        LOG0("%s\n",textPwd);
+      else
+        LOG0("(accepted as valid hash)\n");
+      LOG0(">>> Hash stored in NVS as: %s\n",spanOTA.otaPwd);
+
       nvs_set_str(otaNVS,"OTADATA",spanOTA.otaPwd);                 // update data
       nvs_commit(otaNVS);          
       
-      LOG0("... Accepted! Password change will take effect after next restart.\n");
       if(!spanOTA.enabled)
         LOG0("... Note: OTA has not been enabled in this sketch.\n");
       LOG0("\n");
@@ -1312,6 +1324,7 @@ void Span::processSerialCommand(const char *c){
     case '?': {    
       
       LOG0("\n*** HomeSpan Commands ***\n\n");
+      LOG0("  c - print configuration info\n");
       LOG0("  s - print connection status\n");
       LOG0("  i - print summary information about the HAP Database\n");
       LOG0("  d - print the full HAP Accessory Attributes Database in JSON format\n");
@@ -1363,13 +1376,13 @@ void Span::processSerialCommand(const char *c){
         else
           uCom->second->userFunction2(c+1,uCom->second->userArg);
       } else {
-        LOG0("*** Undefined user command: '%s'.  Type '?' for list of commands.\n",c);
+        LOG0("*** Undefined user command: '%s'.  Type '?' for list of commands.\n\n",c);
       }
     }
     break;
 
     default:
-      LOG0("*** Unknown command: '%s'.  Type '?' for list of commands.\n",c);
+      LOG0("*** Unknown command: '%s'.  Type '?' for list of commands.\n\n",c);
     break;
     
   } // switch
@@ -2847,12 +2860,28 @@ int SpanOTA::init(boolean _auth, boolean _safeLoad, const char *pwd){
 ///////////////////////////////
 
 int SpanOTA::setPassword(const char *pwd){
+
+#ifdef SHA2Builder_h
+  const int hashSize=64;
+#else
+  const int hashSize=32;
+#endif
+
+  int x=0, y=0;
+  sscanf(pwd,"0%*1[xX]%*[0-9A-Fa-f]%n%*c%n",&x,&y);
+
+  if(x==hashSize+2 && y==0){
+    for(int i=0;i<=hashSize;i++)
+      homeSpan.spanOTA.otaPwd[i]=tolower(pwd[i+2]);
+    return(0);
+  }
+
   if(strlen(pwd)<1 || strlen(pwd)>32){
-    LOG0("\n*** WARNING: Cannot change OTA password to '%s'. Password length must be between 1 and 32 characters.\n\n",pwd);
+    LOG0("\n*** WARNING: Cannot change OTA password to '%s'. Password length must be between 1 and 32 characters, or a valid %s hash.\n\n",pwd,hashSize==32?"MD5":"SHA256");
     return(-1);
   }
 
-  MD5Builder otaPwdHash;
+  hsOtaHash_t otaPwdHash;
   otaPwdHash.begin();
   otaPwdHash.add(pwd);
   otaPwdHash.calculate();

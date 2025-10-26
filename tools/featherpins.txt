@@ -1,0 +1,130 @@
+
+##########################################
+# ADD CONVENIENCE "FEATHER" PIN MAPPINGS #
+##########################################
+
+########################
+# Adafruit ESP32 Feather
+########################
+
+# F13=13,F12=12,F27=27,F15=15,F32=32,F14=14                        // Digital w/Touch (6 pins)
+# F16=16,F17=17,F21=21                        			   // Digital Only (3 pins)
+# F26=26,F25=25,F34=34,F39=39,F36=36,F4=4                          // A0-A5
+# F22=22,F23=23                                                    // I2C SCL/SDA
+# F5=5,F18=18,F19=19,F33=33                                        // SPI SCK/SDO/SDI/CS
+
+hs_featheresp32.compiler.cpp.extra_flags=-DF13=13 -DF12=12 -DF27=27 -DF15=15 -DF32=32 -DF14=14 -DF16=16 -DF17=17 -DF21=21 -DF26=26 -DF25=25 -DF34=34 -DF39=39 -DF36=36 -DF4=4 -DF22=22 -DF23=23 -DF5=5 -DF18=18 -DF19=19 -DF33=33 -DDEVICE_SUFFIX="" -DHS_FEATHER_PINS
+
+###########################
+# Adafruit ESP32 Feather V2
+###########################
+
+# F13=13,F12=12,F27=27,F15=15,F32=32,F14=14                        // Digital w/Touch (6 pins)
+# F16=7,F17=8,F21=37                        			   // Digital Only (3 pins, except F21 is input-only)
+# F26=26,F25=25,F34=34,F39=39,F36=36,F4=4                          // A0-A5
+# F22=20,F23=22                                                    // I2C SCL/SDA
+# F5=5,F18=19,F19=21,F33=33                                        // SPI SCK/SDO/SDI/CS
+
+hs_adafruit_feather_esp32_v2.compiler.cpp.extra_flags=-DF13=13 -DF12=12 -DF27=27 -DF15=15 -DF32=32 -DF14=14 -DF16=7 -DF17=8 -DF21=37 -DF26=26 -DF25=25 -DF34=34 -DF39=39 -DF36=36 -DF4=4 -DF22=20 -DF23=22 -DF5=5 -DF18=19 -DF19=21 -DF33=33 -DDEVICE_SUFFIX="" -DHS_FEATHER_PINS
+
+###########################
+# Adafruit ESP32-S2 Feather
+###########################
+
+# F13=13,F12=12,F27=11,F15=9,F32=6,F14=5,F16=38,F17=39,F21=43      // Digital w/Touch (9 pins)
+# F26=18,F25=17,F34=16,F39=15,F36=14,F4=8                          // A0-A5
+# F22=4,F23=3                                                      // I2C SCL/SDA
+# F5=36,F18=35,F19=37,F33=10                                       // SPI SCK/SDO/SDI/CS
+
+hs_adafruit_feather_esp32s2.compiler.cpp.extra_flags=-DF13=13 -DF12=12 -DF27=11 -DF15=9 -DF32=6 -DF14=5 -DF16=38 -DF17=39 -DF21=43 -DF26=18 -DF25=17 -DF34=16 -DF39=15 -DF36=14 -DF4=8 -DF22=4 -DF23=3 -DF5=36 -DF18=35 -DF19=37 -DF33=10 -DDEVICE_SUFFIX="" -DHS_FEATHER_PINS
+
+###########################
+# Adafruit ESP32-S3 Feather
+###########################
+
+# F13=13,F12=12,F27=11,F15=9,F32=6,F14=5,F16=38,F17=39,F21=43      // Digital w/Touch (9 pins)
+# F26=18,F25=17,F34=16,F39=15,F36=14,F4=8                          // A0-A5
+# F22=4,F23=3                                                      // I2C SCL/SDA
+# F5=36,F18=35,F19=37,F33=10                                       // SPI SCK/SDO/SDI/CS
+
+hs_adafruit_feather_esp32s3.compiler.cpp.extra_flags=-DF13=13 -DF12=12 -DF27=11 -DF15=9 -DF32=6 -DF14=5 -DF16=38 -DF17=39 -DF21=43 -DF26=18 -DF25=17 -DF34=16 -DF39=15 -DF36=14 -DF4=8 -DF22=4 -DF23=3 -DF5=36 -DF18=35 -DF19=37 -DF33=10 -DDEVICE_SUFFIX="" -DHS_FEATHER_PINS
+
+###########################
+# Adafruit ESP32-C6 Feather
+###########################
+
+# F13=15,F12=14,F27=0,F15=7,F32=6,F14=5,F16=17,F17=16,F21=9        // Digital Only (9 pins)
+# F26=1,F25=4,F34=6,F39=5,F36=3,F4=2                          	   // A0-A5 (note shared use of A2 [F34=F32] and A3 [F39=F14])
+# F22=18,F23=19                                                    // I2C SCL/SDA
+# F5=21,F18=22,F19=23,F33=8                                        // SPI SCK/SDO/SDI/CS
+
+hs_adafruit_feather_esp32c6.compiler.cpp.extra_flags=-DF13=15 -DF12=14 -DF27=0 -DF15=7 -DF32=6 -DF14=5 -DF16=17 -DF17=16 -DF21=9 -DF26=1 -DF25=4 -DF34=6 -DF39=5 -DF36=3 -DF4=2 -DF22=18 -DF23=19 -DF5=21 -DF18=22 -DF19=23 -DF33=8 -DDEVICE_SUFFIX="" -DHS_FEATHER_PINS
+
+####################
+# ESP32S2 Dev Module
+####################
+
+# F13=1,F12=3,F27=7                                                // Digital w/Touch (3 pins)
+# F15=10,F32=42,F14=11,F16=20,F17=21,F21=16                        // Digital Only (6 pins)
+# F26=17,F25=14,F34=13,F39=12,F36=18,F4=19                         // A0-A5
+# F22=9,F23=8                                                      // I2C SCL/SDA
+# F5=36,F18=35,F19=37,F33=34                                       // SPI SCK/SDO/SDI/CS
+
+hs_esp32s2.compiler.cpp.extra_flags=-DF13=1 -DF12=3 -DF27=7 -DF15=10 -DF32=42 -DF14=11 -DF16=20 -DF17=21 -DF21=16 -DF26=17 -DF25=14 -DF34=13 -DF39=12 -DF36=18 -DF4=19  -DF22=9 -DF23=8 -DF5=36 -DF18=35 -DF19=37 -DF33=34 -DBUILTIN_PIXEL=18 -DDEVICE_SUFFIX="-S2" -DHS_FEATHER_PINS
+
+####################
+# ESP32C3 Dev Module
+####################
+
+# F27=19,F32=2,F14=10,F16=20,F17=21,F21=18                         // Digital Only (6 pins, but F16 and F17 used for Serial)
+# F26=0,F25=1,F4=3                                                 // A0/A1/A5
+# F22=9,F23=8                                                      // I2C SCL/SDA
+# F5=4,F18=6,F19=5,F33=7                                           // SPI SCK/SDO/SDI/CS
+
+hs_esp32c3.compiler.cpp.extra_flags=-DF27=19 -DF32=2 -DF14=10 -DF16=20 -DF17=21 -DF21=18 -DF26=0 -DF25=1 -DF4=3 -DF22=9 -DF23=8 -DF5=4 -DF18=6 -DF19=5 -DF33=7 -DBUILTIN_PIXEL=8 -DDEVICE_SUFFIX="-C3" -DHS_FEATHER_PINS
+
+###################
+# ESP32S3 Dev Module
+####################
+
+# F13=5,F12=6,F27=7                                                // Digital w/Touch (3 pins)
+# F15=16,F32=17,F14=18,F16=41,F17=40,F21=38                        // Digital Only (6 pins)
+# F26=1,F25=2,F34=20,F39=19,F36=15,F4=4                            // A0-A5
+# F22=9,F23=8                                                      // I2C SCL/SDA
+# F5=12,F18=11,F19=13,F33=10                                       // SPI SCK/SDO/SDI/CS
+
+hs_esp32s3.compiler.cpp.extra_flags=-DF13=5 -DF12=6 -DF27=7 -DF15=16 -DF32=17 -DF14=18 -DF16=41 -DF17=40 -DF21=38 -DF26=1 -DF25=2 -DF34=20 -DF39=19 -DF36=15 -DF4=4 -DF22=9 -DF23=8 -DF5=12 -DF18=11 -DF19=13 -DF33=10 -DBUILTIN_PIXEL=48 -DDEVICE_SUFFIX="-S3" -DHS_FEATHER_PINS
+
+#################### 
+# ESP32C6 Dev Module
+####################
+
+# F12=9,F27=6,F15=7,F32=10,F14=11,F16=13,F17=12,F21=15             // Digital Only (8 pins)
+# F26=3,F25=2,F34=1,F39=0,F36=5,F4=4                               // A0-A5
+# F22=22,F23=23                                                    // I2C SCL/SDA
+# F5=21,F18=19,F19=20,F33=18                                       // SPI SCK/SDO/SDI/CS
+
+hs_esp32c6.compiler.cpp.extra_flags=-DF12=9 -DF27=6 -DF15=7 -DF32=10 -DF14=11 -DF16=13 -DF17=12 -DF21=15 -DF26=3 -DF25=2 -DF34=1 -DF39=0 -DF36=5 -DF4=4 -DF22=22 -DF23=23 -DF5=21 -DF18=19 -DF19=20 -DF33=18 -DBUILTIN_PIXEL=8 -DDEVICE_SUFFIX="-C6" -DHS_FEATHER_PINS
+
+#################### 
+# ESP32C5 Dev Module
+####################
+
+# F12=24,F27=3,F15=7,F32=26,F14=25,F16=23,F17=14,F21=13,F13=27     // Digital Only (9 pins)
+# F26=4,F25=5,F4=2                               		       // A0/A1/A5
+# F22=1,F23=0						       // I2C SCL/SDA
+# F5=10,F18=8,F19=9,F33=6   	                                 // SPI SCK/SDO/SDI/CS
+
+hs_esp32c5.compiler.cpp.extra_flags=-DF12=24 -DF27=3 -DF15=7 -DF32=26 -DF14=25 -DF16=23 -DF17=14 -DF21=13 -DF13=27 -DF26=4 -DF25=5 -DF4=2 -DF22=1 -DF23=0 -DF5=10 -DF18=8 -DF19=9 -DF33=6 -DBUILTIN_PIXEL=27 -DDEVICE_SUFFIX="-C5" -DHS_FEATHER_PINS
+
+######################
+# Silicognition wESP32
+######################
+
+# F12=2,F27=32                                                     // Digital w/Touch (2 pins)
+# F26=12,F25=14,F32=18,F14=23,F21=5,F33=13                         // Digital Only (6 pins)
+# F34=35,F39=34,F36=36,F4=33                                       // A2-A5
+# F22=4,F23=15                                                     // I2C SCL/SDA
+
+hs_wesp32.compiler.cpp.extra_flags=-DF12=2 -DF27=32 -DF26=12 -DF25=14 -DF32=18 -DF14=23 -DF21=5 -DF33=13 -DF34=35 -DF39=34 -DF36=36 -DF4=33 -DF22=4 -DF23=15 -DDEVICE_SUFFIX="-WESP32" -DHS_FEATHER_PINS
+

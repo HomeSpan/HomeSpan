@@ -156,10 +156,14 @@ PushButton::PushButton(int pin, triggerType_t triggerType){
     threshold/=calibCount;
 #if SOC_TOUCH_SENSOR_VERSION==1
     threshold/=2;
+#if ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(5, 5, 1)
     LOG0("Touch Sensor at pin=%d used for calibration.  Triggers when sensor reading < %u.\n",pin,threshold);
+#else
+    LOG0("Touch Sensor at pin=%d used for calibration.  Triggers when sensor reading < %lu.\n",pin,threshold);
+#endif
 #elif SOC_TOUCH_SENSOR_VERSION==2
     threshold*=2;
-    LOG0("Touch Sensor at pin=%d used for calibration.  Triggers when sensor reading > %u.\n",pin,threshold);
+    LOG0("Touch Sensor at pin=%d used for calibration.  Triggers when sensor reading > %lu.\n",pin,threshold);
 #endif
   }
 #endif

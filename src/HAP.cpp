@@ -29,7 +29,6 @@
  
 #include <ESPmDNS.h>
 #include <sodium.h>
-#include <MD5Builder.h>
 #include <mbedtls/version.h>
 
 #include "HAP.h"
@@ -1132,7 +1131,7 @@ void HAPClient::getStatusURL(HAPClient *hapClient, void (*callBack)(const char *
 
   if(!homeSpan.ethernetEnabled){
     hapOut << "<tr><td>WiFi Disconnects:</td><td>" << homeSpan.connected/2 << "</td></tr>\n";
-    hapOut << "<tr><td>WiFi Signal:</td><td>" << (int)WiFi.RSSI() << " dBm</td></tr>\n";
+    hapOut << "<tr><td>WiFi Signal:</td><td>" << (WiFi.getBand()==1?"2.4 GHz @ ":"5.0 GHz @ ") << (int)WiFi.RSSI() << " dBm</td></tr>\n";
     if(homeSpan.bssidNames.count(WiFi.BSSIDstr().c_str()))
       hapOut << "<tr><td>BSSID:</td><td>" << WiFi.BSSIDstr().c_str() << " \"" << homeSpan.bssidNames[WiFi.BSSIDstr().c_str()].c_str() << "\"" << "</td></tr>\n";
     else

@@ -31,6 +31,9 @@ In addition to listening for incoming HAP requests, HomeSpan also continuously p
   
 * **i** - print summary information about the HAP Database
   * This provides an outline of the device's HAP Database showing all Accessories, Services, and Characteristics you instantiated in your HomeSpan sketch, followed by a table showing whether you have overridden any of the virtual methods for each Service.  Note this output is also provided at startup after the Welcome Message as HomeSpan check the database for errors.
+ 
+* **c** - print sketch and chip configuration information
+  * This produces the same output that HomeSpan normally displays whenever the device first starts up.  Information includes details about the ESP32 chip, built-in peripherals, which partition is being used, which pins are used for the Status LED and Control Button, and other related settings.
   
 * **d** - print the full HAP Accessory Attributes Database in JSON format
   * This outputs the full HAP Database in JSON format, exactly as it is transmitted to any HomeKit device that requests it (with the exception of the newlines and spaces that make it easier to read on the screen).  Note that the value tag for each Characteristic will reflect the *current* value on the device for that Characteristic.
@@ -48,12 +51,12 @@ In addition to listening for incoming HAP requests, HomeSpan also continuously p
   * This command deletes whatever WiFi Credentials have been stored in the device NVS, and restarts.
  
 * **D** - disconnect/reconnect to WiFi
-  * This command forces HomeSpan to disconnect from any WiFi network, after which it will automatically restart the connection process
+  * This command forces HomeSpan to disconnect from any WiFi network, after which it will automatically restart the connection process.
 
 * **Z** - scan for available WiFi networks
-  * This command scans your WiFi network environment and displays the results on the Serial Monitor
-  * For mesh networks containing multiple access points sharing the same SSID, HomeSpan displays each access point separately
-  * It is okay to run this command regardless of whether or not HomeSpan is currently connected to a WiFi network
+  * This command scans your WiFi network environment and displays the results on the Serial Monitor.
+  * For mesh networks containing multiple access points sharing the same SSID, HomeSpan displays each access point separately.
+  * It is okay to run this command regardless of whether or not HomeSpan is currently connected to a WiFi network.
  
 * **S** \<code\> - change the HomeKit Pairing Setup Code to \<code\>
   * Every HomeKit device requires a unique 8-digit Setup Code used for pairing.  When HomeSpan is run for the first time on a new device it sets the HomeKit Setup Code to a default value of **466-37-726**, and stores it in a dedicated NVS partition.  This command allows you to update the stored Setup Code to any other 8-digit code.  Note that in accordance with HAP specifications, HomeSpan actually stores a hashed version of the Setup Code, rather than the Setup Code itself.  This means the actual value is not recoverable, so if you forget your Setup Code you'll need to run this command and create a new one.  Alternatively, you can restore the default Setup Code by fully erasing the NVS with the 'E' command.
@@ -67,6 +70,12 @@ In addition to listening for incoming HAP requests, HomeSpan also continuously p
   * HomeSpan supports [Over-the-Air (OTA) Updating](OTA.md) but, by default, requires the use of a password.  Similar to a device's Setup Code, HomeSpan saves a non-recoverable *hashed* version of the OTA password you set with this command in NVS.  If you forget the password you specified, you'll need to create a new one using this command.  Alternatively, you can restore the default OTA password by fully erasing the NVS with the 'E' command.
   * HomeSpan uses "homespan-ota" as its default OTA password for new devices.
   * Changes to the OTA password do not take effect until the device is restarted.
+  * OTA passwords must be between 1 and 32 characters.
+  * As an alternative to entering your plain-text password, which HomeSpan will hash and store for you using either SHA256 (default) or MD5 (for legacy devices), you can instead supply a hashed version of your plain-text password, which HomeSpan will store directly, using the following format:
+    * if your password begins with "0x" followed by exactly 64 hexidecimal digits, HomeSpan interprets this as a SHA256 hash
+    * if your password begins with "0x" followed by exactly 32 hexidecimal digits, HomeSpan interprets this as an MD5 hash
+  * SHA256 is preferred on all devices running Arduino-ESP32 Core version 3.3.2 or later.
+  * You should only use MD5 for legacy devices running on Cores prior to version 3.3.2.   
   * OTA is not active unless specifically enabled for a sketch using the method `homeSpan.enableOTA()`.  
   * You can disable the use an authorizing password by invoking `homeSpan.enableOTA(false)` instead, though this creates a security risk and is therefore **not** recommended.  See the [HomeSpan API Reference](Reference.md) for details. 
   
@@ -85,10 +94,10 @@ In addition to listening for incoming HAP requests, HomeSpan also continuously p
   * This command also restores the device's default Setup ID, which is used for optional pairing with QR codes, to "HSPN".
   
 * **P** - prints the device's Pairing Data in base-64 chunks
-  * Used for [Cloning](Cloning.md) the Pairing Data from one device to another
+  * Used for [Cloning](Cloning.md) the Pairing Data from one device to another.
   
 * **C** - prompts you to input the Pairing Data from another device in base-64 chunks
-  * Used for [Cloning](Cloning.md) the Pairing Data from one device to another
+  * Used for [Cloning](Cloning.md) the Pairing Data from one device to another.
 
 * **R** - restart the device
   * This command simply reboots HomeSpan.

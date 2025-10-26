@@ -236,7 +236,7 @@ struct SpanWebLog{                            // optional web status/log data
 
 struct SpanOTA{                               // manages OTA process
   
-  char otaPwd[33]="";                         // MD5 Hash of OTA password, represented as a string of hexidecimal characters
+  char otaPwd[65]="";                         // room for either MD5 or SHA256 Hash of OTA password, represented as a string of LOWERCASE hexidecimal characters
 
   static boolean enabled;                     // enables OTA - default if not enabled
   static boolean auth;                        // indicates whether OTA password is required

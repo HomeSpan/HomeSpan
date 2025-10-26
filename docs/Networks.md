@@ -2,7 +2,7 @@
 
 HomeSpan can connect to your home network either via WiFi or Ethernet. All of the ESP32 chips supported by HomeSpan come with built-in WiFi so no additional hardware is needed. Only a small number of ESP32 development boards come with an Ethernet interface (such as this [Silicognition wESP32](https://wesp32.com)) so additional hardware (such as this [Adafruit Ethernet FeatherWing](https://www.adafruit.com/product/3201)) would be needed to connect via Ethernet.
 
-## HomeSpan WiFi connectivity
+## HomeSpan WiFi Connectivity
 
 Unless HomeSpan detects that you installed and configured an Ethernet interface (see below), it will default to using WiFi to connect to your home network.  To make the connection HomeSpan requires the SSID and password for your network (your "WiFi Credentials"), which it saves in non-volatile storage (NVS) for retention even when power is lost.  At start-up HomeSpan checks its NVS for your WiFi Credentials.  If found, they are used to make the WiFi connection.  If not, HomeSpan outputs a message to the Serial Interface (if your device is connected to a computer) and flashes the HomeSpan Status LED (if you've added one) indicating that it requires you to provide your WiFi Credentials.  There are three ways of doing so:
 
@@ -28,19 +28,37 @@ When HomeSpan tries to connect to your home network using your WiFi Credentials,
 
 Once connected, HomeSpan automatically manages all reconnects if connectivity is lost (using the same request/response wait pattern as above).  If you have enabled Web Logging, all disconnects and reconnects are logged.
 
+#### Use with WiFi Mesh Networks
+
 If your home network is based on a mesh router with multiple access points sharing the same SSID, HomeSpan automatically connects the access point with the strongest RSSI signal.  As an option, you can add the homeSpan `enableWiFiRescan()` method to your sketch to have HomeSpan periodically recan your WiFi network to see if there is a stronger access point with the same SSID.  If one is found, HomeSpan disconnects from the existing access point and reconnects to the stronger one.  In both the Serial Monitor and the Web Log (if enabled), HomeSpan indicates the BSSID (i.e. the 6-byte MAC address) of the specific access point to which it is connected.  As an option, you can map BSSIDs to custom display names using the homeSpan `addBssidName()` method.  When specified, HomeSpan will show these display names next to any BSSID in a log file to make it easier to track which access point is being used.
+
+#### Use with Enterprise WiFi Networks or Specialized WiFi Configurations
 
 Internally, HomeSpan manages WiFi connectivity using the Arduino-ESP32 library's global `WiFi` object and initiates connections using the `WiFi.begin()` method.  This method assumes connectivity to standard WiFi network requiring an SSID and password.  If you are trying to connect to an enterprise WiFi network, or if you have other specialized configuration requirements that need to be made while connecting to your WiFi network (such as changing the power of your WiFi antenna), you can create your own "begin" function for HomeSpan will call instead by implementing the homeSpan `setWifiBegin()` method in your sketch.
 
-Lastly, if you need to call any other functions either once, or every time, a WiFi connection is established (or re-established after a disconnect) you can implement the homeSpan `setConnectionCallback()` method in your sketch.
+#### Connectivity CallBacks
 
-## HomeSpan Ethernet connectivity
+If you need to call any other functions either once, or every time, a WiFi connection is established (or re-established after a disconnect) you can implement the homeSpan `setConnectionCallback()` method in your sketch.
+
+#### WiFi Frequency Bands: 2.4 GHz vs 5.0 GHz
+
+All ESP32 chips supported by HomeSpan include a 2.4 GHz WiFi radio, which is the default for most IoT devices that prioritize range over speed.  However, the ESP32-C5 chip also includes a 5.0 GHz WiFi radio.  To enable the use of the 5.0 GHz band on the ESP32-C5, add the following to the `setup()` function in your sketch:
+
+```
+WiFi.STA.begin();
+WiFi.setBandMode(WIFI_BAND_MODE_5G_ONLY);
+```
+Note that `setBandMode()` is only supported by Arduino-ESP32 Core 3.3.0 or greater.
+
+## HomeSpan Ethernet Connectivity
 
 HomeSpan utilizes the Arduino-ESP32 library's global `ETH` object to manage Ethernet connectivity and thus supports any Ethernet board that is supported by the Arduino-ESP32 library.  To establish an Ethernet connection, simply add `ETH.begin()` in the `setup()` section of your sketch somewhere before calling `homeSpan.begin()`.  The `ETH.begin()` function requires different parameters depending the specific Ethernet interface, or external board, you are using.  Please consult the instructions that came with your Ethernet interface/board and work with the Ethernet examples Espressif provides in the Arduino-ESP32 library to determine the correct parameters for your board.
 
 There is nothing you need to add in your HomeSpan sketch to inform it that you will be using an Ethernet connection instead of WiFi.  Rather, at startup, if HomeSpan detects an Ethernet interface device has been *properly* configured and initialized using `ETH.begin()`, HomeSpan will automatically switch into "Ethernet mode" and use Ethernet instead of WiFi for all communications to and from your home network.  Note that the Ethernet cable itself does not need to be plugged into your router for HomeSpan to switch into "Ethernet mode" during start-up.
 
 However, if for some reason HomeSpan is not able to auto-detect an Ethernet interface has been configured, or initialization of your Ethernet interface using `ETH.begin()` is being done outside of the main Arduino `setup()` function, you can force HomeSpan into using Ethernet mode instead of WiFi by calling `homeSpan.useEthernet()` prior to `homeSpan.begin()`
+
+#### Connectivity CallBacks
 
 Similar to WiFi connectivity, HomeSpan automatically handles all Ethernet disconnects/reconnects (e.g. if you unplug the Ethernet cable and then plug it back into the router, or if the router itself reboots) and records such events in the Web Log (if enabled).  Also similar to using WiFi, to run a custom function either once, or every time, an Ethernet connection is established (or re-established after a disconnect) you can implement the homeSpan `setConnectionCallback()` method in your sketch.
 
