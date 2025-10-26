@@ -82,7 +82,7 @@ HomeSpan provides a microcontroller-focused implementation of Apple's HomeKit Ac
   * added WiFi band information to all log file output to indicate which band is being used
   * to require the ESP-C5 to use the 5.0 GHz band, add the following to the `setup()` function in your sketch:
     * `WiFi.STA.begin(); WiFi.setBandMode(WIFI_BAND_MODE_5G_ONLY);`
-  * see [WiFi and Ethernet Connectivity](Networks.md) for details
+  * see [WiFi and Ethernet Connectivity](docs/Networks.md) for details
 
 ### Updates and Corrections
 
