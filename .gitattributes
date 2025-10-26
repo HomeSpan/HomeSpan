@@ -4,7 +4,8 @@
 # Files to exclude from archives/releases
 docs export-ignore
 documents export-ignore
+tools export-ignore
 .gitattributes export-ignore
 .gitignore export-ignore
 src/src.ino export-ignore
-src/extras/extras.ino export-ignore
+src/src/extras/extras.ino export-ignore
