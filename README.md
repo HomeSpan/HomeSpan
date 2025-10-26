@@ -72,7 +72,17 @@ HomeSpan provides a microcontroller-focused implementation of Apple's HomeKit Ac
   * Launch the WiFi Access Point
 * A standalone, detailed End-User Guide
 
-## ❗Latest Update - HomeSpan 2.1.6 (XX Oct 2025)
+## ❗Latest Update - HomeSpan 2.1.6 (26 Oct 2025)
+
+### New Features
+
+* **HomeSpan now supports the ESP32-C5!**
+
+  * the ESP32-C5 has the ability to use both the **5.0 GHz** and **2.4 GHz** WiFi bands 
+  * added WiFi band information to all log file output to indicate which band is being used
+  * to require the ESP-C5 to use the 5.0 GHz band, add the following to the `setup()` function in your sketch:
+    * `WiFi.STA.begin(); WiFi.setBandMode(WIFI_BAND_MODE_5G_ONLY);`
+  * see [WiFi and Ethernet Connectivity](Networks.md) for details
 
 ### Updates and Corrections
 
