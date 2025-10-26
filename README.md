@@ -16,9 +16,6 @@ HomeSpan provides a microcontroller-focused implementation of Apple's HomeKit Ac
 | Recommended Partition Scheme | **Minimal SPIFFS (1.9MB APP with OTA)** | [^partition] |
 | HomeKit Hub | **HomePod or Apple TV** | [^homehub] |
 
->[!NOTE]
->There are known issues when trying to upload sketches using OTA under Arduino-ESP32 Core 3.3.1.  **These have been addressed by Espressif in Arduino-ESP32 Core 3.3.2.**  Using Core version 3.3.2 will allow you to upload sketches via OTA regardless of what version of the Core you are currently running on a HomeSpan device, though you will receive warnings about your sketch using an older form of hashing (MD5) for storing OTA passwords instead of the more secure form (SHA256) that Espressif adopted in Core 3.3.1.  These warnings can be ignored for now and will be addressed in the next version of HomeSpan that will use SHA256 instead of MD5 for storing OTA passwords.
-
 [^8266]:HomeSpan cannot be run on an ESP-8266, though an ESP-8266 can be used as a remote sensor in conjunction with HomeSpan's SpanPoint functionality
 
 [^fail]: The current production release of HomeSpan will fail to compile under any Arduino-ESP32 Core release earlier than the minimum version listed.  However, prior versions of HomeSpan can be compiled and run under earlier versions of the Core.  The README file under the [HomeSpan branch](https://github.com/HomeSpan/HomeSpan/branches/all) for each release provides details on which version of the Core can be used for that release
