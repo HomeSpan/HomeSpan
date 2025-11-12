@@ -241,8 +241,8 @@ void Network_HS::apConfigure(){
 void Network_HS::processRequest(char *body, char *formData){
   
   String responseHead="HTTP/1.1 200 OK\r\nContent-type: text/html\r\n";
-  
-  String responseBody="<html><meta charset=\"utf-8\"><head><style>"
+  String metaTags = "<meta charset=\"utf-8\">";
+  String responseBody="<html><head>__META__<style>"
                         "p{font-size:300%; margin:1em}"
                         "label{font-size:300%; margin:1em}"
                         "input{font-size:250%; margin:1em}"
@@ -281,8 +281,8 @@ void Network_HS::processRequest(char *body, char *formData){
       apStatus=1;
       
     } else {
-    responseBody+="<meta http-equiv = \"refresh\" content = \"4; url = /wifi-status\" />"
-                  "<p><b>Disallowed Setup Code - too simple!</b></p><p>Returning to configuration page...</p>";      
+      metaTags+="<meta http-equiv=\"refresh\" content=\"4;url=/wifi-status\" />";
+      responseBody+="<p><b>Disallowed Setup Code - too simple!</b></p><p>Returning to configuration page...</p>";      
     }
     
   } else
@@ -356,8 +356,10 @@ void Network_HS::processRequest(char *body, char *formData){
     responseHead="HTTP/1.1 302 Found\r\nLocation: /homespan-landing\r\n";    
   }
 
-  responseHead+="\r\n";               // add blank line between reponse header and body
-  responseBody+="</body></html>";     // close out body and html tags
+  responseBody+="</body></html>\r\n\r\n";     // close out body and html tags
+  responseBody.replace("__META__", metaTags); // insert meta tag in <head>
+  responseHead+="Content-Length: " + String(responseBody.length()) + "\r\n";
+  responseHead+="\r\n";                       // add blank line between reponse header and body
 
   LOG2("\n>>>>>>>>>> ");
   LOG2(client.remoteIP());
