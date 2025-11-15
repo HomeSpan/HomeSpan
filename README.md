@@ -11,7 +11,7 @@ HomeSpan provides a microcontroller-focused implementation of Apple's HomeKit Ac
 |Current HomeSpan Production Release | **2.1.6** | - |
 | Supported Chips | **ESP32, S2, S3, C3, C5, and C6** | [^8266] |
 | Minimum Required [Arduino-ESP32 Core](https://github.com/espressif/arduino-esp32) | **3.1.0** | [^fail] |
-| Latest Core fully tested with HomeSpan | **3.3.2** | [^tested] |
+| Latest Core fully tested with HomeSpan | **3.3.4** | [^tested] |
 | Minimum Flash Partition Size | **1.9MB** | - |
 | Recommended Partition Scheme | **Minimal SPIFFS (1.9MB APP with OTA)** | [^partition] |
 | HomeKit Hub | **HomePod or Apple TV** | [^homehub] |
