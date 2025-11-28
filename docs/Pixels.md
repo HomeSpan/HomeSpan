@@ -155,7 +155,7 @@ Note the **RFControl** class also uses the ESP32's RMT peripheral so any instanc
 
 ## *Dot(uint8_t dataPin, uint8_t clockPin)*
 
-Creating an instance of this **class** configures the specified pins to output waveform signals suitable for controlling a two-wire, addressable RGB LED device with an arbitrary number of pixels.  Such devices typically contain SK9822 or APA102 LEDs, or an embedded WS2801 driver chip.  Arguments, along with their defaults if left unspecified, are as follows:
+Creating an instance of this **class** configures the specified pins to output waveform signals suitable for controlling two-wire, addressable RGB LED devices with an arbitrary number of pixels AND where a current-limiter for each RGB LED can be individually specified.  Such devices typically contain SK9822 or APA102 LEDs.  Arguments are as follows:
 
   * *dataPin* - the pin on which the RGB data signal will be output; normally connected to the "data" input of the addressable LED device
   * *clockPin* - the pin on which the RGB clock signal will be output; normally connected to the "clock" input of the addressable LED device
