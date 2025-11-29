@@ -204,8 +204,9 @@ Dot::Dot(uint8_t dataPin, uint8_t clockPin){
 
 void Dot::set(Color *c, size_t nPixels, boolean multiColor){
   
-  *dataClearReg=dataMask;           // send all zeros
-  for(int j=0;j<31;j++){
+  *dataClearReg=dataMask;           // send 0x0000
+  *clockClearReg=clockMask;    
+  for(int j=0;j<32;j++){
     *clockSetReg=clockMask;
     *clockClearReg=clockMask;    
   }
@@ -222,10 +223,19 @@ void Dot::set(Color *c, size_t nPixels, boolean multiColor){
     c+=multiColor;
   }
 
-  *dataClearReg=dataMask;           // send all zeros
-  for(int j=0;j<31;j++){
-    *clockSetReg=clockMask;
-    *clockClearReg=clockMask;    
+  int nEndBlocks=(nPixels-1)/64+1;  // need an end block of 32 bits for every 64 pixels in strand (i.e. 128 pixels requires 2 end blocks)
+
+  for(int i=0;i<nEndBlocks;i++) {
+    *dataSetReg=dataMask;           // send 0xE000 (i.e. a valid blank pixel - needed if nPixels is set to less than total number in strand)
+    for(int j=0;j<3;j++){
+      *clockSetReg=clockMask;
+      *clockClearReg=clockMask;    
+    }
+    *dataClearReg=dataMask;         
+    for(int j=0;j<29;j++){
+      *clockSetReg=clockMask;
+      *clockClearReg=clockMask;    
+    }
   }
 }
 
