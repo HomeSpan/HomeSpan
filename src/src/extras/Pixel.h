@@ -44,9 +44,9 @@
 
 [[maybe_unused]] static const char* PIXEL_TAG = "Pixel";
 
-////////////////////////////////////////////
-//     Single-Wire RGB/RGBW NeoPixels     //
-////////////////////////////////////////////
+//////////////////////////////////////////////////
+//     Single-Wire RGB/RGBW/RGBWC NeoPixels     //
+//////////////////////////////////////////////////
 
 class Pixel : public Blinkable {
 
@@ -157,11 +157,13 @@ class Pixel : public Blinkable {
     float coolTemp=7000;           // defult temperature (in Kelvin) of cool-white LED
     uint8_t map[5];                // color map representing order in which color bytes are transmitted
     Color onColor;                 // color used for on() command
-  
+
+    void transmit(Color *c, size_t nPixels, boolean multiColor);          // transmits Colors to the LED strand; setting multiColor to false repeats Color in c[0] for all nPixels
+
   public:
-    Pixel(int pin, const char *pixelType="GRB");                     // creates addressable single-wire LED of pixelType connected to pin (such as the SK68 or WS28)   
-    void set(Color *c, size_t nPixels, boolean multiColor=true);     // sets colors of nPixels based on array of Colors c; setting multiColor to false repeats Color in c[0] for all nPixels
-    void set(Color c, size_t nPixels=1){set(&c,nPixels,false);}      // sets color of nPixels to be equal to specific Color c
+    Pixel(int pin, const char *pixelType="GRB");                          // creates addressable single-wire LED of pixelType connected to pin (such as the SK68 or WS28)   
+    void set(Color *c, size_t nPixels){transmit(c,nPixels,true);}         // sets colors of nPixels based on array of Colors c
+    void set(Color c, size_t nPixels=1){transmit(&c,nPixels,false);}      // sets color of nPixels to be equal to specific Color c
     
     static Color RGB(uint8_t r, uint8_t g, uint8_t b, uint8_t w=0, uint8_t c=0){return(Color().RGB(r,g,b,w,c));}   // a static method for returning an RGB(WC) Color
     static Color HSV(float h, float s, float v, double w=0, double c=0){return(Color().HSV(h,s,v,w,c));}           // a static method for returning an HSV(WC) Color
@@ -278,11 +280,12 @@ class Dot {
     volatile uint32_t *dataClearReg;
     volatile uint32_t *clockSetReg;
     volatile uint32_t *clockClearReg;
+    void transmit(Color *c, size_t nPixels, boolean multiColor);                            // transmits Colors to the LED strand; setting multiColor to false repeats Color in c[0] for all nPixels
 
   public:
-    Dot(uint8_t dataPin, uint8_t clockPin);                                                 // creates addressable two-wire RGB LED connected to dataPin and clockPin (such as the DotStar SK9822 or APA102)
-    void set(Color *c, size_t nPixels, boolean multiColor=true);                            // sets colors of nPixels based on array of Colors c; setting multiColor to false repeats Color in c[0] for all nPixels
-    void set(Color c, size_t nPixels=1){set(&c,nPixels,false);}                             // sets color of nPixels to be equal to specific Color c
+    Dot(uint8_t dataPin, uint8_t clockPin);                                                 // creates addressable two-wire LED connected to dataPin and clockPin (such as the DotStar SK9822 or APA102)
+    void set(Color *c, size_t nPixels){transmit(c,nPixels,true);}                           // sets colors of nPixels based on array of Colors c
+    void set(Color c, size_t nPixels=1){transmit(&c,nPixels,false);}                        // sets color of nPixels to be equal to specific Color c
     
     static Color RGB(uint8_t r, uint8_t g, uint8_t b, uint8_t driveLevel=31){return(Color().RGB(r,g,b,driveLevel));}  // an alternative method for returning an RGB Color
     static Color HSV(float h, float s, float v, double drivePercent=100){return(Color().HSV(h,s,v,drivePercent));}    // an alternative method for returning an HSV Color

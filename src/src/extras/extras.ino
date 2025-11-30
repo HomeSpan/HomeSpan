@@ -36,11 +36,13 @@ void setup() {
   Serial.begin(115200);
   delay(2000);
   Serial.printf("\n\nReady\n");
+  p.set(Dot::RGB(0,255,0,5),9);
+  delay(5000);
 }
 
 void loop() {
-  p.set(colors,8);
+  p.set(Dot::RGB(255,0,0,2),8);
   delay(1000);
-  p.set(empty, 8);
+  p.set(Dot::RGB(0,0,255,2),8);
   delay(1000);    
 }

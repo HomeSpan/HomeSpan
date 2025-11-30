@@ -148,7 +148,7 @@ Pixel *Pixel::setTiming(float high0, float low0, float high1, float low1, uint32
 
 ///////////////////
 
-void Pixel::set(Color *c, size_t nPixels, boolean multiColor){
+void Pixel::transmit(Color *c, size_t nPixels, boolean multiColor){
 
   if(channel<0 || nPixels==0)
     return;
@@ -202,7 +202,10 @@ Dot::Dot(uint8_t dataPin, uint8_t clockPin){
 
 ///////////////////
 
-void Dot::set(Color *c, size_t nPixels, boolean multiColor){
+void Dot::transmit(Color *c, size_t nPixels, boolean multiColor){
+  
+  if(nPixels==0)
+    return;
   
   *dataClearReg=dataMask;           // send 0x0000
   *clockClearReg=clockMask;    
