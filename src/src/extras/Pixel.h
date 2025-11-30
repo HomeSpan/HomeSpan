@@ -293,3 +293,92 @@ class Dot {
 };
 
 ////////////////////////////////////////////
+//          Two-Wire RGB WS2801           //
+////////////////////////////////////////////
+
+class WS2801_LED {
+
+  public:
+    struct Color {
+      uint8_t col[3];
+
+      Color(){
+        col[0]=0;
+        col[1]=0;
+        col[2]=0;
+      }
+
+      Color RGB(uint8_t r, uint8_t g, uint8_t b){         // returns Color based on provided RGB values where r/g/b=[0-255]
+        col[0]=r;
+        col[1]=g;
+        col[2]=b;
+        return(*this);
+      }
+
+      Color HSV(float h, float s, float v){               // returns Color based on provided HSV values where h=[0,360] and s/v=[0,100]
+        float r,g,b;
+        LedPin::HSVtoRGB(h,s/100.0,v/100.0,&r,&g,&b);
+        col[0]=r*255;
+        col[1]=g*255;
+        col[2]=b*255;
+        return(*this);
+      }
+
+      bool operator==(const Color& color){
+        boolean eq=true;
+        for(int i=0;i<3;i++)
+          eq&=(col[i]==color.col[i]);
+        return(eq);          
+      }
+      
+      bool operator!=(const Color& color){
+        return(!(*this==color));
+      }
+
+      Color operator+(const Color& color){
+        Color newColor;
+        for(int i=0;i<3;i++)
+          newColor.col[i]=col[i]+color.col[i];
+        return(newColor);
+      }
+
+      Color& operator+=(const Color& color){
+        for(int i=0;i<3;i++)
+          col[i]+=color.col[i];
+        return(*this);
+      }
+
+      Color operator-(const Color& color){
+        Color newColor;
+        for(int i=0;i<3;i++)
+          newColor.col[i]=col[i]-color.col[i];
+        return(newColor);
+      }
+
+      Color& operator-=(const Color& color){
+        for(int i=0;i<3;i++)
+          col[i]-=color.col[i];
+        return(*this);
+      }                               
+    }; // Color
+
+  private:
+    uint32_t dataMask;
+    uint32_t clockMask;
+    volatile uint32_t *dataSetReg;
+    volatile uint32_t *dataClearReg;
+    volatile uint32_t *clockSetReg;
+    volatile uint32_t *clockClearReg;
+    void transmit(Color *c, size_t nPixels, boolean multiColor);                            // transmits Colors to the LED strand; setting multiColor to false repeats Color in c[0] for all nPixels
+
+  public:
+    WS2801_LED(uint8_t dataPin, uint8_t clockPin);                                          // creates addressable two-wire LED connected to dataPin and clockPin usig the WS2801 protocol
+    void set(Color *c, size_t nPixels){transmit(c,nPixels,true);}                           // sets colors of nPixels based on array of Colors c
+    void set(Color c, size_t nPixels=1){transmit(&c,nPixels,false);}                        // sets color of nPixels to be equal to specific Color c
+    
+    static Color RGB(uint8_t r, uint8_t g, uint8_t b){return(Color().RGB(r,g,b));}          // an alternative method for returning an RGB Color
+    static Color HSV(float h, float s, float v){return(Color().HSV(h,s,v));}                // an alternative method for returning an HSV Color
+    
+};
+
+////////////////////////////////////////////

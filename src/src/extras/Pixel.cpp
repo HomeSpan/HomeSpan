@@ -243,3 +243,66 @@ void Dot::transmit(Color *c, size_t nPixels, boolean multiColor){
 }
 
 ////////////////////////////////////////////
+//          Two-Wire RGB WS2801           //
+////////////////////////////////////////////
+
+WS2801_LED::WS2801_LED(uint8_t dataPin, uint8_t clockPin){
+
+  pinMode(dataPin,OUTPUT);
+  pinMode(clockPin,OUTPUT);
+  digitalWrite(dataPin,LOW);
+  digitalWrite(clockPin,LOW);
+
+  delay(1);  // ensure clock pin is in low state for 1ms to reset latching and prepare for incoming data whenever transmitted
+
+  dataMask=1<<(dataPin%32);
+  clockMask=1<<(clockPin%32);
+
+#if defined(CONFIG_IDF_TARGET_ESP32C3)
+  #define OUT_W1TS  &GPIO.out_w1ts.val
+  #define OUT_W1TC  &GPIO.out_w1tc.val
+  #define OUT1_W1TS  NULL
+  #define OUT1_W1TC  NULL
+#elif defined(CONFIG_IDF_TARGET_ESP32C6) || defined(CONFIG_IDF_TARGET_ESP32C5)
+  #define OUT_W1TS  &GPIO.out_w1ts.val
+  #define OUT_W1TC  &GPIO.out_w1tc.val
+  #define OUT1_W1TS  &GPIO.out1_w1ts.val
+  #define OUT1_W1TC  &GPIO.out1_w1tc.val
+#else
+  #define OUT_W1TS  &GPIO.out_w1ts
+  #define OUT_W1TC  &GPIO.out_w1tc
+  #define OUT1_W1TS  &GPIO.out1_w1ts.val
+  #define OUT1_W1TC  &GPIO.out1_w1tc.val
+#endif
+
+  dataSetReg=     dataPin<32 ? (OUT_W1TS) : (OUT1_W1TS);
+  dataClearReg=   dataPin<32 ? (OUT_W1TC) : (OUT1_W1TC);
+  clockSetReg=    clockPin<32 ? (OUT_W1TS) : (OUT1_W1TS);
+  clockClearReg=  clockPin<32 ? (OUT_W1TC) : (OUT1_W1TC);
+}
+
+///////////////////
+
+void WS2801_LED::transmit(Color *c, size_t nPixels, boolean multiColor){
+  
+  if(nPixels==0)
+    return;
+  
+  for(int i=0;i<nPixels;i++){
+    for(int j=0;j<3;j++){
+      for(int b=7;b>=0;b--){
+        if((c->col[j]>>b)&1)
+          *dataSetReg=dataMask;
+        else
+          *dataClearReg=dataMask;
+        *clockSetReg=clockMask;
+        *clockClearReg=clockMask;
+      }
+    }
+    c+=multiColor;
+  }
+
+  delay(1);   // time for latching and reset to get ready for next data transmit
+}
+
+////////////////////////////////////////////
