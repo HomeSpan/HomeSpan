@@ -136,7 +136,6 @@ struct DotStar_RGB : Service::LightBulb {      // Addressable two-wire RGB LED S
     pixel=new Dot(dataPin,clockPin);          // creates Dot LED on specified pins
     this->nPixels=nPixels;                    // save number of Pixels in this LED Strand
     update();                                 // manually call update() to set pixel with restored initial values
-    update();                                 // call second update() a second time - DotStar seems to need to be "refreshed" upon start-up
   }
 
   boolean update() override {
