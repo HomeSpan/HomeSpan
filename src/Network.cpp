@@ -80,7 +80,12 @@ void Network_HS::serialConfigure(){
     LOG0("\n>>> WiFi SSID: ");
     readSerial(wifiData.ssid,MAX_SSID);
     if(atoi(wifiData.ssid)>0 && atoi(wifiData.ssid)<=numSSID){
-      strcpy(wifiData.ssid,ssidList[atoi(wifiData.ssid)-1]);
+      char *selectedSSID=ssidList[atoi(wifiData.ssid)-1];
+      if(strlen(selectedSSID)>MAX_SSID){
+        LOG0("\n*** ERROR: Invalid SSID length.  Please select a different network.\n");
+        wifiData.ssid[0]='\0';
+      }
+      else strcpy(wifiData.ssid,selectedSSID);
     }
     LOG0("%s\n",wifiData.ssid);
   }

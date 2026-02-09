@@ -104,6 +104,8 @@ void Span::init(){
 
   log_i("Initializing Span");
 
+  WiFi.mode(WIFI_STA);                                    // enable WiFi radio - required for random number generator entropy seeding
+ 
   WiFi.setAutoReconnect(false);                           // allow HomeSpan to handle disconnect/reconnect logic
   WiFi.persistent(false);                                 // do not permanently store WiFi configuration data
   WiFi.setScanMethod(WIFI_ALL_CHANNEL_SCAN);              // scan ALL channels - do NOT stop at first SSID match, else you could connect to weaker BSSID

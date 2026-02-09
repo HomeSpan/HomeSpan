@@ -170,8 +170,14 @@ void HAPClient::processRequest(){
   uint8_t *content=(uint8_t *)p+4;    // byte pointer to start of optional HTTP Content
   int cLen=0;                         // length of optional HTTP Content
 
-  if((p=strstr(body,"Content-Length: ")))       // Content-Length is specified
-    cLen=atoi(p+16);
+  if((p=strstr(body,"Content-Length: "))){       // Content-Length is specified
+    if(sscanf(p+16, "%d", &cLen) != 1 || cLen < 0 || cLen > MAX_HTTP){       // Verify parsing succeeded and specified Content-Length is within limits
+      badRequestError();
+      LOG0("\n*** ERROR: Invalid Content-Length\n\n");
+      return;
+    }
+  }
+ 
   if(nBytes!=strlen(body)+4+cLen){
     badRequestError();
     LOG0("\n*** ERROR:  Malformed HTTP request (Content-Length plus Body Length does not equal total number of bytes read)\n\n");
@@ -1299,8 +1305,8 @@ int HAPClient::receiveEncrypted(uint8_t *httpBuf, int messageSize){
 
     int n=aad[0]+aad[1]*256;                // compute number of bytes expected in message after decoding
 
-    if(nBytes+n>messageSize){      // exceeded maximum number of bytes allowed in plaintext message
-      LOG0("\n\n*** ERROR:  Decrypted message of %d bytes exceeded maximum expected message length of %d bytes\n\n",nBytes+n,messageSize);
+    if(n>messageSize-nBytes){      // exceeded maximum number of bytes allowed in plaintext message
+      LOG0("\n\n*** ERROR:  Decrypted message of %d + %d bytes exceeded maximum expected message length of %d bytes\n\n",nBytes,n,messageSize);
       return(0);
       }
 
@@ -1525,9 +1531,10 @@ uint8_t *Nonce::get(){
 //////////////////////////////////////
 
 void Nonce::inc(){
-  x[4]++;
-  if(x[4]==0)
-    x[5]++;
+  for(int i=4; i<12; i++){         // Loop through bytes 4-11
+    x[i]++;
+    if(x[i] != 0) break;           // No overflow occurred, no carry
+  }
 }
 
 //////////////////////////////////////
