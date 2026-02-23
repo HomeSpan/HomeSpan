@@ -42,7 +42,7 @@ void loop(){
 } // end of loop()
 ```
 
-Note that as an *alternative*, you can intruct HomeSpan to create separate task that repeatedly calls `homeSpan.poll()` in the background.  To do so, **replace** the call to `homeSpan.poll()` in the main `loop()` with a call to  `homeSpan.autoPoll()` at the end of the `setup()` function:
+Note that as an *alternative*, you can instruct HomeSpan to create separate task that repeatedly calls `homeSpan.poll()` in the background.  To do so, **replace** the call to `homeSpan.poll()` in the main `loop()` with a call to  `homeSpan.autoPoll()` at the end of the `setup()` function:
 
 ```C++
 #include "HomeSpan.h"         // include the HomeSpan library
@@ -129,7 +129,7 @@ void loop(){
 } // end of loop()
 ```
 
-As you can see, you do not need to name any objects, or specify any HAP parameters, such a format types, UUID codes, etc.  However, the *order* in which you instantiate objects is critical.  Characteristics are automatically associated with the last Service instantiated, and Services are automatically associated with the last Accessory instantiated.
+As you can see, you do not need to name any objects, or specify any HAP parameters, such as format types, UUID codes, etc.  However, the *order* in which you instantiate objects is critical.  Characteristics are automatically associated with the last Service instantiated, and Services are automatically associated with the last Accessory instantiated.
 
 > :heavy_check_mark: HomeSpan has extensive error checking.  At start-up, HomeSpan will validate the configuration of the HAP Accessory Attribute Database you instantiated to ensure that every Accessory has all the required Services, and that each Service has all its required Characteristics.  If HomeSpan finds an Accessory is missing a required Service, a Service is missing a required Characteristic, or a Characteristic that is neither required nor optional has been added to a Service that does not support that Characteristic, HomeSpan will report these errors and halt the program.
 
