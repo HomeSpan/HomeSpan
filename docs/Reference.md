@@ -784,6 +784,7 @@ Creating an instance of this **class** adds a user-defined command to the HomeSp
     1. `void f(const char *buf)`, or
     1. `void f(const char *buf, void *obj)`
   * *userObject* is a pointer to an arbitrary object HomeSpan passes to the function *f* as the second argument when the second form of *f* is used.  Note it is an error to include *userObject* when the first form of *f* is used, and it is similarly an error to exclude *userObject* when the second form of *f* is used
+  * tip: the first form of *f* is internally declared as a `std::function<const char *buf>`.  This allows the user to optionally define *f* as an inline lamba-function *with variable capture* (other HomeSpan callbacks, including the second form of *f* above, allow for lambda functions, but *without* any variable capture)
 
 To invoke your custom command from the CLI, preface the single-letter name *c* with '@'.  This allows HomeSpan to distinguish user-defined commands from its built-in commands.  For example,
 
