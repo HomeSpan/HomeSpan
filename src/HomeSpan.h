@@ -37,6 +37,7 @@
 #include <vector>
 #include <list>
 #include <shared_mutex>
+#include <functional>
 #include <nvs.h>
 #include <ArduinoOTA.h>
 #include <ETH.h>
@@ -917,13 +918,13 @@ class SpanUserCommand {
   friend class Span;
   
   const char *s;                                            // description of command
-  void (*userFunction1)(const char *v)=NULL;                // user-defined function to call
+  std::function<void(const char *)> userFunction1=NULL;     // user-defined function to call - compatible with lambda-captures
   void (*userFunction2)(const char *v, void *arg)=NULL;     // user-defined function to call with user-defined arg
-  void *userArg;
+  void *userArg;                                            // optional pointer to user argument
 
   public:
 
-  SpanUserCommand(char c, const char *s, void (*f)(const char *));  
+  SpanUserCommand(char c, const char *s, std::function<void(const char *)>);  
   SpanUserCommand(char c, const char *s, void (*f)(const char *, void *), void *arg);  
 };
 

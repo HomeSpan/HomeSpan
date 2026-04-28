@@ -2816,7 +2816,7 @@ void SpanButton::check(){
 //     SpanUserCommand       //
 ///////////////////////////////
 
-SpanUserCommand::SpanUserCommand(char c, const char *s, void (*f)(const char *)){
+SpanUserCommand::SpanUserCommand(char c, const char *s, std::function<void(const char *)> f){
   this->s=s;
   userFunction1=f;
    
