@@ -565,6 +565,7 @@ void Span::configureNetwork(){
   MDNS.begin(hostName);                         // set server host name (.local implied)
   MDNS.setInstanceName(displayName);            // set server display name
   MDNS.addService("_hap","_tcp",tcpPortNum);    // advertise HAP service on specified port
+  hapServiceMDNSStarted=true;
 
   // add MDNS (Bonjour) TXT records for configurable as well as fixed values (HAP Table 6-7)
 
@@ -580,10 +581,7 @@ void Span::configureNetwork(){
   mdns_service_txt_item_set("_hap","_tcp","pv","1.1");           // HAP version - MUST be set to "1.1" (HAP Section 6.6.3)
   mdns_service_txt_item_set("_hap","_tcp","s#","1");             // HAP current state - MUST be set to "1"
 
-  if(!HAPClient::nAdminControllers())                            // Accessory is not yet paired
-    mdns_service_txt_item_set("_hap","_tcp","sf","1");           // set Status Flag = 1 (Table 6-8)
-  else
-    mdns_service_txt_item_set("_hap","_tcp","sf","0");           // set Status Flag = 0
+  updatePairingStatusFlag();                                     // set Status Flag (Table 6-8)
 
   mdns_service_txt_item_set("_hap","_tcp","hspn",HOMESPAN_VERSION);             // HomeSpan Version Number (info only - NOT used by HAP)
   mdns_service_txt_item_set("_hap","_tcp","ard-esp32",ARDUINO_ESP_VERSION);     // Arduino-ESP32 Version Number (info only - NOT used by HAP)
@@ -642,6 +640,25 @@ void Span::configureNetwork(){
     wifiCallback();
   
 } // initWiFi
+
+///////////////////////////////
+
+void Span::updatePairingStatusFlag(){
+
+  if(!hapServiceMDNSStarted)
+    return;
+
+  mdns_service_txt_item_set("_hap","_tcp","sf",(!HAPClient::nAdminControllers() || additionalPairingEnabled) ? "1" : "0");
+}
+
+///////////////////////////////
+
+Span& Span::setAdditionalPairing(boolean enabled){
+
+  additionalPairingEnabled=enabled;
+  updatePairingStatusFlag();
+  return(*this);
+}
 
 ///////////////////////////////
 
@@ -910,7 +927,7 @@ void Span::processSerialCommand(const char *c){
       HAPClient::tearDown(NULL);                                                // tear down all verified connections
             
       LOG0("\nDEVICE NOT YET PAIRED -- PLEASE PAIR WITH HOMEKIT APP\n\n");
-      mdns_service_txt_item_set("_hap","_tcp","sf","1");                        // set Status Flag = 1 (Table 6-8)
+      updatePairingStatusFlag();                                                // update Status Flag (Table 6-8)
 
       if(homeSpan.pairCallback)
         homeSpan.pairCallback(false);

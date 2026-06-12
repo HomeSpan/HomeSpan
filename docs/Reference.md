@@ -243,6 +243,15 @@ The following **optional** `homeSpan` methods enable additional features and pro
   * note this method differs from `setPairCallback()`, which is only called if the device's pairing status changes, such as when the first controller is added during initial pairing, or the last controller is removed when unpairing
   * the function *func* must be of type *void* and have no arguments
   * see the `controllerListBegin()` and `controllerListEnd()` methods for details on how to read the pairing data for each paired controller (*only needed to support certain advanced use cases*)
+
+* `Span& setAdditionalPairing(boolean enabled=true)`
+  * allows a device that is already paired with at least one controller to accept another HomeKit Pair-Setup request, so a sketch can temporarily open a pairing window for additional controllers
+  * when enabled, HomeSpan advertises the accessory as pairable in its HAP MDNS Status Flag even if one or more admin controllers are already paired
+  * when disabled, HomeSpan returns to its default behavior and rejects Pair-Setup requests once at least one admin controller is paired
+  * sketches should only enable this while the user has explicitly requested pairing, for example after a physical button press or through a trusted local maintenance interface, and should disable it again after a short pairing window
+
+* `boolean getAdditionalPairing()`
+  * returns true if additional Pair-Setup is currently enabled, else false
  
 * `std::pair< HS_STATUS, uint32_t > getStatus()`
   * returns a std::pair containing:
