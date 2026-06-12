@@ -333,7 +333,7 @@ int HAPClient::postPairSetupURL(uint8_t *content, size_t len){
 
   int tlvState=itState->getVal();
 
-  if(nAdminControllers()){                                  // error: Device already paired (i.e. there is at least one admin Controller). We should not be receiving any requests for Pair-Setup!
+  if(nAdminControllers() && !homeSpan.getAdditionalPairing()){ // error: Device already paired and additional Pair-Setup is not enabled
     LOG0("\n*** ERROR: Device already paired!\n\n");
     responseTLV.add(kTLVType_State,tlvState+1);             // set response STATE to requested state+1 (which should match the state that was expected by the controller)
     responseTLV.add(kTLVType_Error,tagError_Unavailable);   // set Error=Unavailable
@@ -539,7 +539,7 @@ int HAPClient::postPairSetupURL(uint8_t *content, size_t len){
       delete srp;                                           // delete SRP - no longer needed once pairing is completed
       srp=NULL;                                             // reset to NULL
 
-      mdns_service_txt_item_set("_hap","_tcp","sf","0");    // broadcast new status
+      homeSpan.updatePairingStatusFlag();                   // broadcast new status
       
       LOG1("\n*** ACCESSORY PAIRED! ***\n");
 
@@ -1431,7 +1431,7 @@ void HAPClient::removeController(uint8_t *id){
     
     tearDown(NULL);                                              // teardown all remaining connections
     controllerList.clear();                                      // remove all remaining Controllers
-    mdns_service_txt_item_set("_hap","_tcp","sf","1");           // set Status Flag = 1 (Table 6-8)
+    homeSpan.updatePairingStatusFlag();                          // update Status Flag (Table 6-8)
     homeSpan.resetStatus();                                      // reset hsStatus and StatusLED
     if(homeSpan.pairCallback)                                    // if set, invoke user-defined Pairing Callback to indicate device has been un-paired
       homeSpan.pairCallback(false);    

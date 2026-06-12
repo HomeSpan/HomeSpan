@@ -295,6 +295,8 @@ class Span{
   boolean ethernetEnabled=false;                // flag to indicate whether Ethernet is being used instead of WiFi
   boolean initialPollingCompleted=false;        // flag to indicate whether polling task has initially completed
   boolean forceConfigIncrement=false;           // flag to indicate whether configuration number (MDNS C# value) should be incremented even if database config has not changed
+  boolean additionalPairingEnabled=false;       // flag to allow Pair-Setup for additional Controllers after initial pairing
+  boolean hapServiceMDNSStarted=false;          // flag indicating whether the HAP MDNS service has been started
   char *compileTime=NULL;                       // optional compile time string --- can be set with call to setCompileTime()
   HS_STATUS hsStatus=HS_INITIAL_SETUP;          // current HomeSpan status
   uint32_t hsStatusTime;                        // timestamp (in seconds) of latest recent HomeSpan status update
@@ -369,6 +371,7 @@ class Span{
 
   void pollTask();                                                       // poll HAP Clients and process any new HAP requests
   void configureNetwork();                                               // configure Network services (MDNS, WebLog,  OTA, etc.) and start HAP Server
+  void updatePairingStatusFlag();                                        // update MDNS Status Flag according to current pairing state
   void commandMode();                                                    // allows user to control and reset HomeSpan settings with the control button
   void setStatus(HS_STATUS hst);                                         // sets hsStatus to hst, updates statusLED, and calls statusCallback
   void resetStatus();                                                    // resets hsStatus, updates statusLED, and calls statusCallback
@@ -467,6 +470,8 @@ class Span{
   void deleteStoredValues(){processSerialCommand("V");}                                  // deletes stored Characteristic values from NVS
   Span& resetIID(uint32_t newIID);                                                       // resets the IID count for the current Accessory to start at newIID
   Span& setControllerCallback(void (*f)()){controllerCallback=f;return(*this);}          // sets an optional user-defined function to call whenever a Controller is added/removed
+  Span& setAdditionalPairing(boolean enabled=true);                                      // enables/disables additional Pair-Setup after initial pairing
+  boolean getAdditionalPairing(){return(additionalPairingEnabled);}                       // returns true if additional Pair-Setup is enabled
   Span& setWifiBegin(void (*f)(const char *, const char *)){wifiBegin=f;return(*this);}  // sets an optional user-defined function to over-ride WiFi.begin() with additional logic
   Span& setPollingCallback(void (*f)()){pollingCallback=f;return(*this);}                // sets an optional user-defined function to call upon INITIAL completion of the polling task (only called once)
   Span& useEthernet(){ethernetEnabled=true;return(*this);}                               // force use of Ethernet instead of WiFi, even if ETH not called or Ethernet card not detected
