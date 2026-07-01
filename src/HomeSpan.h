@@ -976,3 +976,4 @@ class SpanPoint {
 /////////////////////////////////////////////////
 
 #include "Span.h"
+#include "AdaptiveLighting.h"

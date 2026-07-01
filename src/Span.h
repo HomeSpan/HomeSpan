@@ -79,6 +79,9 @@ namespace Service {
     OPT(Hue);
     OPT(Saturation);
     OPT(ColorTemperature);
+    OPT(SupportedCharacteristicValueTransitionConfiguration);   // Adaptive Lighting -- see docs/AdaptiveLighting.md
+    OPT(CharacteristicValueTransitionControl);                  // Adaptive Lighting
+    OPT(CharacteristicValueActiveTransitionCount);              // Adaptive Lighting
     OPT(ConfiguredName);
     OPT_DEP(Name);
   END_SERV
@@ -492,6 +495,8 @@ namespace Characteristic {
   CREATE_CHAR(FLOAT_t,CarbonDioxidePeakLevel,0,0,100000);  // measured in parts per million (ppm)
   CREATE_CHAR(UINT8_t,CarbonDioxideDetected,0,0,1,NORMAL,ABNORMAL); // indicates if abnormal level is detected
   CREATE_CHAR(UINT8_t,ChargingState,0,0,2,NOT_CHARGING,CHARGING,NOT_CHARGEABLE); // indicates state of battery charging
+  CREATE_CHAR(UINT8_t,CharacteristicValueActiveTransitionCount,0,0,255);  // Adaptive Lighting: number of currently-active transitions (typically 0 or 1)
+  CREATE_CHAR(TLV_ENC_t,CharacteristicValueTransitionControl,NULL_TLV,NULL_TLV,NULL_TLV);  // Adaptive Lighting: control-point Characteristic used by the controller to READ/UPDATE a transition schedule
   CREATE_CHAR(UINT8_t,ClosedCaptions,0,0,1);  // unused by any Service
   CREATE_CHAR(FLOAT_t,CoolingThresholdTemperature,10,10,35);   // cooling turns on when temperature (in Celsius) rises above this threshold
   CREATE_CHAR(UINT32_t,ColorTemperature,200,140,500);  // measured in inverse megaKelvin (= 1,000,000 / Kelvin)
@@ -572,6 +577,7 @@ namespace Characteristic {
   CREATE_CHAR(UINT8_t,StatusLowBattery,0,0,1,NOT_LOW_BATTERY,LOW_BATTERY);  // indicates state of battery
   CREATE_CHAR(UINT8_t,StatusTampered,0,0,1,NOT_TAMPERED,TAMPERED);  // indicates whether the Service has been tampered with
   CREATE_CHAR(FLOAT_t,SulphurDioxideDensity,0,0,1000);  // measured in &micro;g/m<sup>3</sup>
+  CREATE_CHAR(TLV_ENC_t,SupportedCharacteristicValueTransitionConfiguration,NULL_TLV,NULL_TLV,NULL_TLV);  // Adaptive Lighting: static description of the Characteristics that support transitions in this Service
   CREATE_CHAR(UINT8_t,SwingMode,0,0,1,SWING_DISABLED,SWING_ENABLED);  // indicates whether swing-mode is enabled
   CREATE_CHAR(UINT8_t,TargetAirPurifierState,1,0,1,MANUAL,AUTO);  // indicates desired state of air purifier
   CREATE_CHAR(UINT8_t,TargetFanState,1,0,1,MANUAL,AUTO);  // indicates desired state of fan

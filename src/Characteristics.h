@@ -82,6 +82,8 @@ struct HapCharacteristics {
   HAPCHAR( CarbonDioxidePeakLevel, 94, PR+EV, FLOAT, false );
   HAPCHAR( CarbonMonoxideDetected, 69, PR+EV, UINT8, true );
   HAPCHAR( ChargingState, 8F, PR+EV, UINT8, true );
+  HAPCHAR( CharacteristicValueActiveTransitionCount, 24B, PR+EV, UINT8, true );        // Adaptive Lighting: number of active transitions (typ 0 or 1)
+  HAPCHAR( CharacteristicValueTransitionControl, 143, PR+PW+WR, TLV_ENC, true );        // Adaptive Lighting: read/write control point (schedule)
   HAPCHAR( ClosedCaptions, DD, PW+PR+EV, UINT8, true );
   HAPCHAR( CoolingThresholdTemperature, D, PR+PW+EV, FLOAT, false );
   HAPCHAR( ColorTemperature, CE, PR+PW+EV, UINT32, false );
@@ -162,6 +164,7 @@ struct HapCharacteristics {
   HAPCHAR( StatusLowBattery, 79, PR+EV, UINT8, true );
   HAPCHAR( StatusTampered, 7A, PR+EV, UINT8, true );
   HAPCHAR( SulphurDioxideDensity, C5, PR+EV, FLOAT, false );
+  HAPCHAR( SupportedCharacteristicValueTransitionConfiguration, 144, PR, TLV_ENC, true ); // Adaptive Lighting: static list of transition-capable Characteristics
   HAPCHAR( SwingMode, B6, PR+EV+PW, UINT8, true );
   HAPCHAR( TargetAirPurifierState, A8, PW+PR+EV, UINT8, true );
   HAPCHAR( TargetFanState, BF, PW+PR+EV, UINT8, true );

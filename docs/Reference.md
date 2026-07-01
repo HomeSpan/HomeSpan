@@ -808,6 +808,22 @@ might be used to save all the elements in *myArray* when called with just the '@
 
 To create more than one user-defined command, simply create multiple instances of SpanUserCommand, each with its own single-letter name.  Note that re-using the same single-letter name in an instance of SpanUserCommand over-rides any previous instances using that same letter.
 
+### *AdaptiveLightingController(SpanCharacteristic \*brightness, SpanCharacteristic \*colorTemperature)*
+
+Creating an instance of this **class** attaches an Apple HomeKit *Adaptive Lighting* controller to the LightBulb Service that is currently being constructed.  The two arguments are pointers to the `Brightness` and `ColorTemperature` Characteristics of that Service.  See the [HomeSpan Adaptive Lighting](AdaptiveLighting.md) page for full details, protocol description, and a complete API reference.
+
+Must be instantiated **inside a LightBulb Service constructor** and **after** the Service's `Brightness` and `ColorTemperature` Characteristics have been constructed.  The controller internally creates the three (undocumented) Adaptive-Lighting Characteristics required by HAP.
+
+The class provides the following methods (see the [HomeSpan Adaptive Lighting](AdaptiveLighting.md) page for details):
+
+* `boolean handleUpdate()` - call from Service::update()
+* `void poll()` - call from Service::loop() or the main Arduino loop()
+* `boolean isActive() const` - true if a schedule is currently loaded
+* `void disable()` - cancel any active schedule
+* `void printSchedule() const` - dump the active schedule to Serial
+* `void setColorTemperatureCallback(std::function<void(uint32_t newMired)> cb)`
+* `void setStateCallback(std::function<void(bool active)> cb)`
+
 ## Custom Characteristics and Custom Services Macros
 
 ### *CUSTOM_CHAR(name,uuid,perms,format,defaultValue,minValue,maxValue,staticRange)*

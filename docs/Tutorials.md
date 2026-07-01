@@ -119,6 +119,13 @@ Example 22 demonstrates how to create and utilize TLV8-based Characteristics thr
 * creating TLV8 objects using HomeSpan's TLV8 class
 * updating TLV8 Characteristics using `setTLV()`
 
+### [Example 23 - AdaptiveLighting](../examples/23-AdaptiveLighting)
+Example 23 demonstrates how to add Apple HomeKit's *Adaptive Lighting* feature to a LightBulb Service by attaching an `AdaptiveLightingController` to a Service that exposes both `Brightness` and `ColorTemperature` Characteristics.  Includes a `SpanUserCommand` that prints the currently-loaded schedule to the Serial Monitor for inspection.  See the [HomeSpan Adaptive Lighting](AdaptiveLighting.md) page for full details.  New HomeSpan API topics covered in this example include:
+
+* using `AdaptiveLightingController` to auto-instantiate the three (undocumented) Adaptive-Lighting Characteristics required by HAP
+* forwarding writes to `handleUpdate()` and calling `poll()` from a Service's `loop()` override
+* registering optional per-tick and enable/disable callbacks
+
  
 ## Other Examples
 

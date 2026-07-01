@@ -151,6 +151,7 @@ HomeSpan includes the following documentation:
 * [HomeSpan Television Services](docs/TVServices.md) - how to use HomeKit's undocumented Television Services and Characteristics
 * [HomeSpan Message Logging](docs/Logging.md) - how to generate log messages for display on the Arduino Serial Monitor as well as optionally posted to an integrated Web Log page
 * [HomeSpan TLV8 Characteristics](docs/TLV8.md) - classes and methods for creating TLV8 objects to use with TLV8-based Characteristics
+* [HomeSpan Adaptive Lighting](docs/AdaptiveLighting.md) - drop-in helper that implements Apple HomeKit's Adaptive Lighting feature for any LightBulb Service with both Brightness and ColorTemperature Characteristics
 * [HomeSpan Device Cloning](docs/Cloning.md) - seamlessly swap a broken device for a new one without needing to re-pair and lose HomeKit automations
 * [HomeSpan Projects](https://github.com/topics/homespan) - real-world applications of the HomeSpan Library
 * [HomeSpan FAQ](docs/FAQ.md) - answers to frequently-asked questions
