@@ -71,58 +71,17 @@ HomeSpan provides a microcontroller-focused implementation of Apple's HomeKit Ac
   * Launch the WiFi Access Point
 * A standalone, detailed End-User Guide
 
-## ❗Latest Update - HomeSpan 2.1.8 (26 APR 2026)
+## ❗Latest Update - HomeSpan 2.1.9 (DD MMM 2026)
 
 ### New Features
 
-* **Updated HomeSpan Status logic and functionality for improved diagnostics**
-  * Added new *HS_STATUS* enum type **HS_CONNECTED**
-    * reflects fully operational state where HomeSpan is connected to a WiFi or Ethernet network, paired to HomeKit *and* is maintaining one or more secure connections to HomeKit
-    * Status LED set to steady ON when in this state
-  * Modified *HS_STATUS* enum type **HS_PAIRED** 
-    * reflects potential "No Response" state where HomeSpan is connected to a WiFi or Ethernet network, paired to HomeKit *but* does **not** (yet) have any open secure connections to HomeKit
-    * Status LED set to inverted double-blink when in this state
-  * Added new `std::pair<HS_STATUS,uint32_t> homeSpan.getStatus()` method
-    * returns *std::pair* containing:
-      * current HomeSpan Status as *HS_STATUS* enum type
-      * duration (in seconds) since HomeSpan first changed to that Status
-    * this thread-safe method allows user to actively poll HomeSpan status and duration from the main `loop()` as alternative to using `homeSpan.setStatusCallback()` (which is only called when the HomeSpan Status changes)
-  * Added new `void homeSpan.resetStatusDuration()` method
-    * this thread-safe method allows user to reset current HomeSpan Status duration to zero
-  * Complete re-write of HomeSpan Status documentation
-    * demonstrates how to use the new methods above
-    * provides example of using `homeSpan.getStatus()` to reboot HomeSpan if the device has lost secure HomeKit connections for an extended period of time
-    * adds table providing graphic representation of all Status LED patterns for each HomeSpan Status state
-    * adds direct link to this documentation on the main HomeSpan README.md page
-  * See [HomeSpan Status and the HomeSpan Status LED](docs/HS_STATUS.md) for details
+### New Features
 
-* **Improvements to Web Log output**
-  * Added new **Client Connections Table** (similar output to 's' CLI command)
-    * used as diagnostic to check whether HomeSpan has any active secure connections to HomeKit
-  * Added descriptive class names for use with custom style sheets
-    * *body* - background and header text (can use *bod1* for backwards compatibility)
-    * *infoTable* - the top table that provides general information about the device (can use *tab1* for backwards compatibility)
-    * *clientTable* - the newly-added table listing all active client connections (can use *tab2* for backwards compatibility)
-    *  *logTable* - the bottom table listed all the individual Web Log entries (can also use *tab2* for backwards compatibility)
-  * See [Message Logging](docs/Logging.md) for details
- 
-* **Created ability to programmatically retrieve base-64 encoded Pairing Data from within a sketch**
-  * Added the following two new methods:
-    * `const char* homeSpan.getPairingInfo(char **buf)`
-      * allocates memory to *buf* and fills with HomeSpan's Device Pairing Data
-      * returns *buf*, which must be de-allocated with `free(buf)` when no longer needed
-    * `const char* Controller::getPairingInfo(char **buf)`
-      *  allocates memory to *buf* and fills with a Controller's Pairing Data
-      * returns *buf*, which must be de-allocated with `free(buf)` when no longer needed
-  * Using these methods duplicates the exact Accessory and Controller Pairing Data provided by the 'P' CLI Command needed to clone devices
-  * See the [API Reference](docs/Reference.md) for details on these methods and the [Cloning Pairing Data](docs/Cloning.md) page for a full example 
-
-* **Added new `boolean homeSpan.usingEthernet()` method**
-  * returns true if Ethernet interface is being used, else false if WiFi is being used
-* **Added new `homeSpan.setControlTimes(uint32_t comTime, uint32_t resTime)` method**
-  * allows users to customize the hold times required for the Control Button to trigger either the Command Mode or a Factory Reset
-* **Redirected `setVal()` out-of-range warnings to WEBLOG instead of LOG0 so these warnings will be displayed in both the Serial Monitor and the Web Log**
-* **Updated `CUSTOM_CHAR()` logic so that the HAP range and HAP description are automatically set based on the range and name specified in the macro**
+* **Added ability to use inline lambda-functions *with variable capture* in the first form of `SpanUserCommand()` (the one that does not include a user-defined argument)**
+  * other HomeSpan callbacks, including the second form of `SpanUserCommand()` (the one that includes a user-defined argument), have always allowed for lambda functions, but *without* any variable capture
+  * allows capture of objects using the `this` pointer, and subsequent reference to object members
+  * example: `new SpanUserCommand('N',"<name> - rename NeoPixel",[this](const char *buf){cfgName.setString(buf+1);});`
+  * see [API Reference](docs/Reference.md) for details
               
 See [Releases](https://github.com/HomeSpan/HomeSpan/releases) for details on all changes and bug fixes included in this update.
 
