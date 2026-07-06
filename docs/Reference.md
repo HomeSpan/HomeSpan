@@ -772,7 +772,7 @@ SpanToggle also supports the following additional method:
    * returns the current position of the toggle switch (i.e. SpanToggle::CLOSED or SpanToggle::OPEN)
    * is equivalent to the *pressType* parameter passed to the `button()` method, but can be called from anywhere in a sketch
    * useful for reading the initial state of a contact switch upon start-up so that the initial value of Characteristic::ContactSensorState can be set accordingly
-   * example `sensorState=new Characteristic::ContactSensorState(toggleSwitch->position()==SpanToggle::OPEN);`
+   * example: `sensorState=new Characteristic::ContactSensorState(toggleSwitch->position()==SpanToggle::OPEN);`
  
 ### *SpanUserCommand(char c, const char \*desc, void (\*f)(const char \*buf [,void \*obj]) [,void \*userObject])*
 
@@ -784,7 +784,8 @@ Creating an instance of this **class** adds a user-defined command to the HomeSp
     1. `void f(const char *buf)`, or
     1. `void f(const char *buf, void *obj)`
   * *userObject* is a pointer to an arbitrary object HomeSpan passes to the function *f* as the second argument when the second form of *f* is used.  Note it is an error to include *userObject* when the first form of *f* is used, and it is similarly an error to exclude *userObject* when the second form of *f* is used
-  * tip: the first form of *f* is internally declared as a `std::function<void(const char *buf)>`.  This allows the user to optionally define *f* as an inline lamba-function *with variable capture* (unless otherwise noted, all other HomeSpan callbacks, including the second form of *f* above, allow for lambda functions, but *without* any variable capture)
+  * tip: the first form of *f* is internally declared as a `std::function<void(const char *buf)>`.  This allows the user to optionally define *f* as an inline lamba-function *with variable capture* (unless otherwise noted, all other HomeSpan callbacks, including the second form of *f* above, allow for lambda-functions, but *without* any variable capture)
+    * example: `new SpanUserCommand('N',"<name> - rename NeoPixel",[this](const char *buf){cfgName.setString(buf+1);});` 
 
 To invoke your custom command from the CLI, preface the single-letter name *c* with '@'.  This allows HomeSpan to distinguish user-defined commands from its built-in commands.  For example,
 
