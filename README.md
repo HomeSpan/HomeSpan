@@ -75,8 +75,6 @@ HomeSpan provides a microcontroller-focused implementation of Apple's HomeKit Ac
 
 ### New Features
 
-### New Features
-
 * **Added ability to use inline lambda-functions *with variable capture* in the first form of `SpanUserCommand()` (the one that does not include a user-defined argument)**
   * other HomeSpan callbacks, including the second form of `SpanUserCommand()` (the one that includes a user-defined argument), have always allowed for lambda functions, but *without* any variable capture
   * allows capture of objects using the `this` pointer, and subsequent reference to object members
