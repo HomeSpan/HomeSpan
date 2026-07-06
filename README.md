@@ -8,7 +8,7 @@ HomeSpan provides a microcontroller-focused implementation of Apple's HomeKit Ac
 
 |Component | Requirement | See Note |
 |---|:---:|:---:|
-|Current HomeSpan Production Release | **2.1.8** | - |
+|Current HomeSpan Production Release | **2.1.9** | - |
 | Supported Chips | **ESP32, S2, S3, C3, C5, and C6** | [^8266] |
 | Minimum Required [Arduino-ESP32 Core](https://github.com/espressif/arduino-esp32) | **3.3.0** | [^fail] |
 | Latest Core fully tested with HomeSpan | **3.3.8** | [^tested] |
