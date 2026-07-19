@@ -1102,7 +1102,7 @@ void HAPClient::getStatusURL(HAPClient *hapClient, void (*callBack)(const char *
     hapOut << "\r\n";
   }
     
-  hapOut << "<html><head><title>" << homeSpan.displayName << "</title>\n";
+  hapOut << "<html><head><meta charset=\"utf-8\"><title>" << homeSpan.displayName << "</title>\n";
 
   if(homeSpan.webLog.faviconURL)
     hapOut << "<link rel=\"icon\" href=\"" << homeSpan.webLog.faviconURL << "\" type=\"image/png\" />\n";

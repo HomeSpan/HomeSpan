@@ -240,16 +240,21 @@ void Network_HS::apConfigure(){
 
 void Network_HS::processRequest(char *body, char *formData){
   
-  String responseHead="HTTP/1.1 200 OK\r\nContent-type: text/html\r\n";
+  String responseHead="HTTP/1.1 200 OK\r\nContent-type: text/html; charset=utf-8\r\n\r\n";
+
+  String messageHead= "<html>"
+                        "<head>"
+                          "<meta charset=\"utf-8\">"
+                          "<title>HomeSpan Setup</title>"
+                          "<style>"
+                            "p{font-size:300%; margin:1em}"
+                            "label{font-size:300%; margin:1em}"
+                            "input{font-size:250%; margin:1em}"
+                            "button{font-size:250%; margin:1em}"
+                            "body{background-color:lightyellow}"
+                          "</style>";
   
-  String responseBody="<html><meta charset=\"utf-8\"><head><style>"
-                        "p{font-size:300%; margin:1em}"
-                        "label{font-size:300%; margin:1em}"
-                        "input{font-size:250%; margin:1em}"
-                        "button{font-size:250%; margin:1em}"
-                      "</style></head>"
-                      "<body style=\"background-color:lightyellow;\">"
-                      "<center><p><b>HomeSpan Setup</b></p></center>";
+  String messageBody= "<body><center><p><b>HomeSpan Setup</b></p></center>";
 
   if(!strncmp(body,"POST /configure ",16) &&                              // POST CONFIGURE
      strstr(body,"Content-Type: application/x-www-form-urlencoded")){     // check that content is from a form
@@ -263,9 +268,10 @@ void Network_HS::processRequest(char *body, char *formData){
     getFormValue(formData,"pwd",wifiData.pwd,MAX_PWD);
 
     homeSpan.setStatus(HS_WIFI_CONNECTING);
-        
-    responseBody+="<meta http-equiv = \"refresh\" content = \"" + String(homeSpan.wifiTimeCounter/1000) + "; url = /wifi-status\" />"
-                  "<p>Initiating WiFi connection to:</p><p><b>" + String(wifiData.ssid) + "</b></p>"
+
+    messageHead+= "<meta http-equiv = \"refresh\" content = \"" + String(homeSpan.wifiTimeCounter/1000) + "; url = /wifi-status\" />";
+
+    messageBody+= "<p>Initiating WiFi connection to:</p><p><b>" + String(wifiData.ssid) + "</b></p>"
                   "<p>(waiting " + String((homeSpan.wifiTimeCounter++)/1000) + " seconds to check for response)</p>";
                   
     WiFi.begin(wifiData.ssid,wifiData.pwd);              
@@ -276,19 +282,19 @@ void Network_HS::processRequest(char *body, char *formData){
     getFormValue(formData,"code",setupCode,8);
 
     if(allowedCode(setupCode)){
-      responseBody+="<p><b>Settings saved!</b></p><p>Restarting HomeSpan.</p><p>Closing window...</p>";
+      messageBody+= "<p><b>Settings saved!</b></p><p>Restarting HomeSpan.</p><p>Closing window...</p>";
       alarmTimeOut=millis()+2000;
       apStatus=1;
       
     } else {
-    responseBody+="<meta http-equiv = \"refresh\" content = \"4; url = /wifi-status\" />"
-                  "<p><b>Disallowed Setup Code - too simple!</b></p><p>Returning to configuration page...</p>";      
+    messageHead+= "<meta http-equiv = \"refresh\" content = \"4; url = /wifi-status\" />";
+    messageBody+= "<p><b>Disallowed Setup Code - too simple!</b></p><p>Returning to configuration page...</p>";      
     }
     
   } else
 
   if(!strncmp(body,"GET /cancel ",12)){                                   // GET CANCEL
-    responseBody+="<p><b>Configuration Canceled!</b></p><p>Restarting HomeSpan.</p><p>Closing window...</p>";
+    messageBody+= "<p><b>Configuration Canceled!</b></p><p>Restarting HomeSpan.</p><p>Closing window...</p>";
     alarmTimeOut=millis()+2000;
     apStatus=-1;
     
@@ -299,27 +305,27 @@ void Network_HS::processRequest(char *body, char *formData){
     LOG1("In Get WiFi Status...\n");
 
     if(WiFi.status()!=WL_CONNECTED){
-      responseHead+="Refresh: " + String(homeSpan.wifiTimeCounter/1000) + "\r\n";     
-      responseBody+="<p>Re-initiating connection to:</p><p><b>" + String(wifiData.ssid) + "</b></p>";
-      responseBody+="<p>(waiting " + String((homeSpan.wifiTimeCounter++)/1000) + " seconds to check for response)</p>";
-      responseBody+="<p>Access Point termination in " + String((alarmTimeOut-millis())/1000) + " seconds.</p>";
-      responseBody+="<center><button onclick=\"document.location='/hotspot-detect.html'\">Cancel</button></center>";
+      messageHead+= "<meta http-equiv = \"refresh\" content = \"" + String(homeSpan.wifiTimeCounter/1000) + "; url = /wifi-status\" />";
+      messageBody+= "<p>Re-initiating connection to:</p><p><b>" + String(wifiData.ssid) + "</b></p>";
+      messageBody+= "<p>(waiting " + String((homeSpan.wifiTimeCounter++)/1000) + " seconds to check for response)</p>";
+      messageBody+= "<p>Access Point termination in " + String((alarmTimeOut-millis())/1000) + " seconds.</p>";
+      messageBody+= "<center><button onclick=\"document.location='/hotspot-detect.html'\">Cancel</button></center>";
       WiFi.begin(wifiData.ssid,wifiData.pwd);
       
     } else {
 
       homeSpan.setStatus(HS_AP_CONNECTED);
           
-      responseBody+="<p>SUCCESS! Connected to:</p><p><b>" + String(wifiData.ssid) + "</b></p>";
-      responseBody+="<p>You may enter new 8-digit Setup Code below, or leave blank to retain existing code.</p>";
+      messageBody+= "<p>SUCCESS! Connected to:</p><p><b>" + String(wifiData.ssid) + "</b></p>";
+      messageBody+= "<p>You may enter new 8-digit Setup Code below, or leave blank to retain existing code.</p>";
 
-      responseBody+="<form action=\"/save\" method=\"post\">"
-                    "<label for=\"code\">Setup Code:</label>"
-                    "<center><input size=\"32\" type=\"tel\" id=\"code\" name=\"code\" placeholder=\"12345678\" pattern=\"[0-9]{8}\" maxlength=8></center>"
-                    "<center><input style=\"font-size:300%\" type=\"submit\" value=\"SAVE Settings\"></center>"
+      messageBody+= "<form action=\"/save\" method=\"post\">"
+                      "<label for=\"code\">Setup Code:</label>"
+                      "<center><input size=\"32\" type=\"tel\" id=\"code\" name=\"code\" placeholder=\"12345678\" pattern=\"[0-9]{8}\" maxlength=8></center>"
+                      "<center><input style=\"font-size:300%\" type=\"submit\" value=\"SAVE Settings\"></center>"
                     "</form>";
                     
-      responseBody+="<center><button style=\"font-size:300%\" onclick=\"document.location='/cancel'\">CANCEL Configuration</button></center>";
+      messageBody+= "<center><button style=\"font-size:300%\" onclick=\"document.location='/cancel'\">CANCEL Configuration</button></center>";
     }
   
   } else                                                                
@@ -330,43 +336,42 @@ void Network_HS::processRequest(char *body, char *formData){
     homeSpan.setStatus(HS_AP_CONNECTED);
     homeSpan.wifiTimeCounter.reset();
 
-    responseBody+="<p>Welcome to HomeSpan! This page allows you to configure the above HomeSpan device to connect to your WiFi network.</p>"
+    messageBody+= "<p>Welcome to HomeSpan! This page allows you to configure the above HomeSpan device to connect to your WiFi network.</p>"
                   "<p>The LED on this device should be <em>double-blinking</em> during this configuration.</p>"
                   "<form action=\"/configure\" method=\"post\">"
-                  "<label for=\"ssid\">WiFi Network:</label>"
-                  "<center><input size=\"32\" list=\"network\" name=\"network\" placeholder=\"Choose or Type\" required maxlength=" + String(MAX_SSID) + "></center>"
-                  "<datalist id=\"network\">";
+                    "<label for=\"ssid\">WiFi Network:</label>"
+                    "<center><input size=\"32\" list=\"network\" name=\"network\" placeholder=\"Choose or Type\" required maxlength=" + String(MAX_SSID) + "></center>"
+                    "<datalist id=\"network\">";
 
     for(int i=0;i<numSSID;i++)
-        responseBody+="<option value=\"" + String(ssidList[i]) + "\">" + String(ssidList[i]) + "</option>";  
+      messageBody+=   "<option value=\"" + String(ssidList[i]) + "\">" + String(ssidList[i]) + "</option>";  
     
-    responseBody+="</datalist><br><br>"
-                  "<label for=\"pwd\">WiFi Password:</label>"
-                  "<center><input size=\"32\" type=\"password\" id=\"pwd\" name=\"pwd\" required maxlength=" + String(MAX_PWD) + "></center>"
-                  "<br><br>";
-                  
-    responseBody+="<center><input style=\"font-size:300%\" type=\"submit\" value=\"SUBMIT\"></center>"
-                  "</form>";
-
-    responseBody+="<center><button style=\"font-size:300%\" onclick=\"document.location='/cancel'\">CANCEL Configuration</button></center>";                  
-                  
+    messageBody+=   "</datalist><br><br>"
+                    "<label for=\"pwd\">WiFi Password:</label>"
+                    "<center><input size=\"32\" type=\"password\" id=\"pwd\" name=\"pwd\" required maxlength=" + String(MAX_PWD) + "></center>"
+                    "<br><br>"
+                    "<center><input style=\"font-size:300%\" type=\"submit\" value=\"SUBMIT\"></center>"
+                  "</form>"
+                  "<center><button style=\"font-size:300%\" onclick=\"document.location='/cancel'\">CANCEL Configuration</button></center>";                                    
   } else 
   
   if(!strstr(body,"wispr")){
-    responseHead="HTTP/1.1 302 Found\r\nLocation: /homespan-landing\r\n";    
+    responseHead="HTTP/1.1 302 Found\r\nLocation: /homespan-landing\r\n\r\n";    
   }
 
-  responseHead+="\r\n";               // add blank line between reponse header and body
-  responseBody+="</body></html>";     // close out body and html tags
+  messageHead+= "</head>";            // close out head tag
+  messageBody+= "</body></html>";     // close out body and html tags
 
   LOG2("\n>>>>>>>>>> ");
   LOG2(client.remoteIP());
   LOG2(" >>>>>>>>>>\n");
   LOG2(responseHead);
-  LOG2(responseBody);
+  LOG2(messageHead);
+  LOG2(messageBody);
   LOG2("\n");
   client.print(responseHead);
-  client.print(responseBody);
+  client.print(messageHead);
+  client.print(messageBody);
   LOG2("------------ SENT! --------------\n");
     
 } // processRequest
