@@ -3167,7 +3167,10 @@ void SpanPoint::init(const char *password){
 ///////////////////////////////
 
 void SpanPoint::setChannelMask(uint16_t mask){
-  channelMask = mask & 0x3FFE;
+
+  wifi_country_t country;
+  esp_wifi_get_country(&country);
+  channelMask=mask & ((1<<country.nchan)-1)<<country.schan;
 
   if(isHub)
     return;
@@ -3282,7 +3285,7 @@ boolean SpanPoint::initialized=false;
 boolean SpanPoint::isHub=false;
 boolean SpanPoint::useEncryption=true;
 vector<SpanPoint *, Mallocator<SpanPoint *>> SpanPoint::SpanPoints;
-uint16_t SpanPoint::channelMask=0x3FFE;
+uint16_t SpanPoint::channelMask=0xFFFF;
 QueueHandle_t SpanPoint::statusQueue;
 nvs_handle SpanPoint::pointNVS;
 

@@ -57,13 +57,7 @@ void setup() {
   Serial.begin(115200);
   delay(1000);
 
-  Serial.printf("\n\nThis is a REMOTE Device with MAC Address = %s\n",Network.macAddress().c_str());
-  Serial.printf("NOTE: This MAC Address must be entered into the corresponding SpanPoint() call of the MAIN Device.\n\n");
-
   SpanPoint::configure(1);
-  SpanPoint::setChannelMask(1<<1 | 1<<2 | 1<<3 | 1<<4 | 1<<5 | 1<<6 | 1<<7 | 1<<8 | 1<<9 | 1<<10 | 1<<11);
-
-  // In the line below, replace the MAC Address with that of your MAIN HOMESPAN DEVICE
 
   mainDevice=new SpanPoint(0x12,sizeof(float),0);    // create a SpanPoint with send size=sizeof(float) and receive size=0     
 
