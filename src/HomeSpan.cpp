@@ -3055,10 +3055,10 @@ SpanPoint::SpanPoint(const char *macAddress, int sendSize, int receiveSize, int 
   this->sendSize=sendSize;
   this->receiveSize=receiveSize;
   
-  if(receiveSize>0)
+  if(receiveSize>0 && WiFi.getMode()!=WIFI_AP_STA){
     WiFi.mode(WIFI_AP_STA);
-  else if(WiFi.getMode()==WIFI_OFF)
-    WiFi.mode(WIFI_STA);    
+    delay(10);
+  }
 
   init();                             // initialize SpanPoint
   peerInfo.channel=0;                 // 0 = matches current WiFi channel
@@ -3077,13 +3077,62 @@ SpanPoint::SpanPoint(const char *macAddress, int sendSize, int receiveSize, int 
 
 ///////////////////////////////
 
+void SpanPoint::configure(uint8_t deviceID, const char *password, uint32_t networkID){
+
+  uint8_t mac[6];
+
+  mac[0]=0xF2;
+  mac[1]=deviceID;
+  
+  for(int i=3;i>=0;i--){
+    mac[i+2]=networkID & 0xFF;
+    networkID=networkID>>8;
+  }
+
+  WiFi.mode(WIFI_AP_STA); 
+  delay(10);
+  esp_wifi_set_mac(WIFI_IF_AP, mac);
+
+  if(password)
+    init(password);
+  else
+    init();
+}
+
+///////////////////////////////
+
+SpanPoint::SpanPoint(uint8_t deviceID, int sendSize, int receiveSize, int queueDepth){
+
+  WiFi.softAPmacAddress(peerInfo.peer_addr);
+  peerInfo.peer_addr[1]=deviceID;
+
+  if(sendSize<0 || sendSize>200 || receiveSize<0 || receiveSize>200 || queueDepth<1 || (sendSize==0 && receiveSize==0)){
+    LOG0("\nFATAL ERROR!  Can't create new SpanPoint(%d,%d,%d,%d) - one or more invalid parameters ***\n",deviceID,sendSize,receiveSize,queueDepth);
+    LOG0("\n=== PROGRAM HALTED ===");
+    while(1);
+  }
+
+  this->sendSize=sendSize;
+  this->receiveSize=receiveSize;
+  
+  peerInfo.channel=0;                 // 0 = matches current WiFi channel
+  peerInfo.ifidx=WIFI_IF_AP;          // specify interface as AP
+  peerInfo.encrypt=useEncryption;     // set encryption for this peer
+  memcpy(peerInfo.lmk, lmk, 16);      // set local key
+  esp_now_add_peer(&peerInfo);        // add peer to ESP-NOW
+
+  if(receiveSize>0)
+    receiveQueue = xQueueCreate(queueDepth,receiveSize);  
+
+  SpanPoints.push_back(this);             
+}
+
+///////////////////////////////
+
 void SpanPoint::init(const char *password){
 
   if(initialized)
-    return;
-
-  if(WiFi.getMode()==WIFI_OFF)
-    WiFi.mode(WIFI_STA);  
+    return;  
   
   wifi_config_t conf;                       // make sure AP is hidden (if WIFI_AP_STA is used), since it is just a "dummy" AP to keep WiFi alive for ESP-NOW
   esp_wifi_get_config(WIFI_IF_AP,&conf);

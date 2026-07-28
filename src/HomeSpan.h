@@ -966,9 +966,11 @@ class SpanPoint {
   public:
 
   SpanPoint(const char *macAddress, int sendSize, int receiveSize, int queueDepth=1, boolean useAPaddress=false);
+  SpanPoint(uint8_t deviceID, int sendSize, int receiveSize, int queueDepth=1);
   static void setPassword(const char *pwd){init(pwd);}
   static void setChannelMask(uint16_t mask);
   static void setEncryption(boolean encrypt){useEncryption=encrypt;}
+  static void configure(uint8_t deviceID, const char *password=NULL, uint32_t networkID=0x46637726);
   boolean get(void *dataBuf);
   boolean send(const void *data);
   uint32_t time(){return(millis()-receiveTime);}
