@@ -57,7 +57,8 @@ void setup() {
   Serial.begin(115200);
   delay(1000);
 
-  SpanPoint::configure(1);
+  SpanPoint::configure(1,"GLOP");
+//  SpanPoint::setEncryption(false);
 
   mainDevice=new SpanPoint(0x12,sizeof(float),0);    // create a SpanPoint with send size=sizeof(float) and receive size=0     
 
@@ -66,8 +67,8 @@ void setup() {
 
 void loop() {
 
-  boolean success = mainDevice->send(&temperature);                 // this will show as success as long as the MAIN DEVICE is running
-  Serial.printf("Send %s\n",success?"Succeded":"Failed");
+  boolean success = mainDevice->send(&temperature,sizeof(float));                 // this will show as success as long as the MAIN DEVICE is running
+  Serial.printf("Send %s\n",success?"Succeeded":"Failed");
   temperature+=0.5;
   if(temperature>35.0)
     temperature=-30.0;

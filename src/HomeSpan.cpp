@@ -3170,7 +3170,7 @@ void SpanPoint::setChannelMask(uint16_t mask){
 
   wifi_country_t country;
   esp_wifi_get_country(&country);
-  channelMask=mask & ((1<<country.nchan)-1)<<country.schan;
+  channelMask=mask & ((1<<country.nchan)-1)<<country.schan;     // overlay country-specific mask (channels 1-11, 1-13, or 1-14 only)
 
   if(isHub)
     return;
@@ -3256,10 +3256,47 @@ boolean SpanPoint::send(const void *data){
 
 ///////////////////////////////
 
+boolean SpanPoint::send(const void *data, size_t len){
+
+  if(len==0)
+    return(false);
+  
+  uint8_t mac[6];
+  uint8_t channel;
+  wifi_second_chan_t channel2; 
+  esp_wifi_get_channel(&channel,&channel2);     // get current channel
+  uint8_t startingChannel=channel;              // set starting channel to current channel
+  esp_now_send_status_t status = ESP_NOW_SEND_FAIL;
+
+  WiFi.softAPmacAddress(mac);
+
+  do {
+    for(int i=1;i<=3;i++){
+      
+      LOG1("SpanPoint: %02X:%02X:%02X:%02X:%02X:%02X sending %d bytes to %02X:%02X:%02X:%02X:%02X:%02X using channel %hhu...\n",mac[0],mac[1],mac[2],mac[3],mac[4],mac[5],
+        len,peerInfo.peer_addr[0],peerInfo.peer_addr[1],peerInfo.peer_addr[2],peerInfo.peer_addr[3],peerInfo.peer_addr[4],peerInfo.peer_addr[5],channel);
+        
+      esp_now_send(peerInfo.peer_addr, (uint8_t *) data, len);
+      xQueueReceive(statusQueue, &status, pdMS_TO_TICKS(2000));
+      if(status==ESP_NOW_SEND_SUCCESS)
+        return(true);
+      delay(10);
+    }    
+    channel=nextChannel();
+  } while(channel!=startingChannel);
+
+  return(false);
+} 
+
+///////////////////////////////
+
 void SpanPoint::dataReceived(const esp_now_recv_info *info, const uint8_t *incomingData, int len){
 
   const uint8_t *mac=info->src_addr;
+  const uint8_t *rmac=info->des_addr;
   
+  LOG2("SpanPoint: %02X:%02X:%02X:%02X:%02X:%02X received %d bytes from %02X:%02X:%02X:%02X:%02X:%02X\n",rmac[0],rmac[1],rmac[2],rmac[3],rmac[4],rmac[5],len,mac[0],mac[1],mac[2],mac[3],mac[4],mac[5]);
+
   auto it=SpanPoints.begin();
   for(;it!=SpanPoints.end() && memcmp((*it)->peerInfo.peer_addr,mac,6)!=0; it++);
   
@@ -3285,7 +3322,7 @@ boolean SpanPoint::initialized=false;
 boolean SpanPoint::isHub=false;
 boolean SpanPoint::useEncryption=true;
 vector<SpanPoint *, Mallocator<SpanPoint *>> SpanPoint::SpanPoints;
-uint16_t SpanPoint::channelMask=0xFFFF;
+uint16_t SpanPoint::channelMask=0x3FFE;
 QueueHandle_t SpanPoint::statusQueue;
 nvs_handle SpanPoint::pointNVS;
 

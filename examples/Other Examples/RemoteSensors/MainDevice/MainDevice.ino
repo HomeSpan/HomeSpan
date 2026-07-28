@@ -87,10 +87,11 @@ void setup() {
   
   Serial.begin(115200);
 
-  homeSpan.setLogLevel(1);
+  homeSpan.setLogLevel(2);
 
   delay(1000);
-  SpanPoint::configure(0x12);
+  SpanPoint::configure(0x12,"GLOP");
+//  SpanPoint::setEncryption(false);
 
   homeSpan.begin(Category::Bridges,"Sensor Hub");
 

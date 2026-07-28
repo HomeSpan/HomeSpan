@@ -973,6 +973,7 @@ class SpanPoint {
   static void configure(uint8_t deviceID, const char *password=NULL, uint32_t networkID=0x46637726);
   boolean get(void *dataBuf);
   boolean send(const void *data);
+  boolean send(const void *data, size_t len);
   uint32_t time(){return(millis()-receiveTime);}
 };
 
