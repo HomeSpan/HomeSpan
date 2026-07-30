@@ -57,12 +57,12 @@ void setup() {
   Serial.begin(115200);
   delay(1000);
 
-  SpanPoint::configure(1,"GLOP");
-//  SpanPoint::setEncryption(false);
+  SpanPoint::configure(2);
+  SpanPoint::setEncryption(false);
 
-  mainDevice=new SpanPoint(0x12,sizeof(float),0);    // create a SpanPoint with send size=sizeof(float) and receive size=0     
+  mainDevice=new SpanPoint(18,sizeof(float),0);    // create a SpanPoint with send size=sizeof(float) and receive size=0     
 
-  homeSpan.setLogLevel(1);
+  homeSpan.setLogLevel(2);
 }
 
 void loop() {

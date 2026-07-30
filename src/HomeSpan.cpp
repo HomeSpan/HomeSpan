@@ -3077,34 +3077,48 @@ SpanPoint::SpanPoint(const char *macAddress, int sendSize, int receiveSize, int 
 
 ///////////////////////////////
 
-void SpanPoint::configure(uint8_t deviceID, const char *password, uint32_t networkID){
+void SpanPoint::configure(uint8_t deviceID, const char *password, uint16_t networkID){
 
-  uint8_t mac[6];
-
-  mac[0]=0xF2;
-  mac[1]=deviceID;
-  
-  for(int i=3;i>=0;i--){
-    mac[i+2]=networkID & 0xFF;
-    networkID=networkID>>8;
-  }
+  deviceAddress = new SpAddress(deviceID,networkID);
 
   WiFi.mode(WIFI_AP_STA); 
   delay(10);
-  esp_wifi_set_mac(WIFI_IF_AP, mac);
+  esp_wifi_set_mac(WIFI_IF_AP, deviceAddress->mac);
 
-  if(password)
-    init(password);
-  else
-    init();
+  wifi_config_t conf;                       // make sure AP is hidden (if WIFI_AP_STA is used), since it is just a "dummy" AP to keep WiFi alive for ESP-NOW
+  esp_wifi_get_config(WIFI_IF_AP,&conf);
+  conf.ap.ssid_hidden=1;
+  esp_wifi_set_config(WIFI_IF_AP,&conf);
+    
+  uint8_t hash[32];
+  mbedtls_sha256((const unsigned char *)password,strlen(password),hash,0);      // produce 256-bit bit hash from password
+
+  esp_now_init();                           // initialize ESP-NOW
+  memcpy(lmk, hash, 16);                    // store first 16 bytes of hash for later use as local key
+  esp_now_set_pmk(hash+16);                 // set hash for primary key using last 16 bytes of hash
+  esp_now_register_recv_cb(dataReceived);   // set callback for receiving data
+  esp_now_register_send_cb(dataSent);       // set callback for sending data
+  
+  statusQueue = xQueueCreate(1,sizeof(esp_now_send_status_t));    // create statusQueue even if not needed
+  setChannelMask(channelMask);                                    // default channel mask at start-up uses channels 1-13  
+
+  uint8_t channel;
+  if(!isHub){                                                   // this is not a hub
+    nvs_flash_init();                                           // initialize NVS
+    nvs_open("POINT",NVS_READWRITE,&pointNVS);                  // open SpanPoint data namespace in NVS
+    if(!nvs_get_u8(pointNVS,"CHANNEL",&channel)){               // if channel found in NVS...
+      if(channelMask & (1<<channel))                            // ... and if channel is allowed by channel mask
+        esp_wifi_set_channel(channel, WIFI_SECOND_CHAN_NONE);   // set the WiFi channel
+    }
+  }  
 }
 
 ///////////////////////////////
 
 SpanPoint::SpanPoint(uint8_t deviceID, int sendSize, int receiveSize, int queueDepth){
 
-  WiFi.softAPmacAddress(peerInfo.peer_addr);
-  peerInfo.peer_addr[1]=deviceID;
+  SpAddress destAddress(deviceID, deviceAddress->netID);
+  memcpy(peerInfo.peer_addr,destAddress.mac,6);
 
   if(sendSize<0 || sendSize>200 || receiveSize<0 || receiveSize>200 || queueDepth<1 || (sendSize==0 && receiveSize==0)){
     LOG0("\nFATAL ERROR!  Can't create new SpanPoint(%d,%d,%d,%d) - one or more invalid parameters ***\n",deviceID,sendSize,receiveSize,queueDepth);
@@ -3145,7 +3159,7 @@ void SpanPoint::init(const char *password){
   esp_now_init();                           // initialize ESP-NOW
   memcpy(lmk, hash, 16);                    // store first 16 bytes of hash for later use as local key
   esp_now_set_pmk(hash+16);                 // set hash for primary key using last 16 bytes of hash
-  esp_now_register_recv_cb(dataReceived);   // set callback for receiving data
+  esp_now_register_recv_cb(dataRecv);       // set callback for receiving data
   esp_now_register_send_cb(dataSent);       // set callback for sending data
   
   statusQueue = xQueueCreate(1,sizeof(esp_now_send_status_t));    // create statusQueue even if not needed
@@ -3261,36 +3275,36 @@ boolean SpanPoint::send(const void *data, size_t len){
   if(len==0)
     return(false);
   
-  uint8_t mac[6];
   uint8_t channel;
   wifi_second_chan_t channel2; 
   esp_wifi_get_channel(&channel,&channel2);     // get current channel
   uint8_t startingChannel=channel;              // set starting channel to current channel
   esp_now_send_status_t status = ESP_NOW_SEND_FAIL;
 
-  WiFi.softAPmacAddress(mac);
+  const SpAddress *destAddress = (SpAddress *)peerInfo.peer_addr;
 
   do {
-    for(int i=1;i<=3;i++){
-      
-      LOG1("SpanPoint: %02X:%02X:%02X:%02X:%02X:%02X sending %d bytes to %02X:%02X:%02X:%02X:%02X:%02X using channel %hhu...\n",mac[0],mac[1],mac[2],mac[3],mac[4],mac[5],
-        len,peerInfo.peer_addr[0],peerInfo.peer_addr[1],peerInfo.peer_addr[2],peerInfo.peer_addr[3],peerInfo.peer_addr[4],peerInfo.peer_addr[5],channel);
-        
+    for(int i=1;i<=3;i++){      
+      LOG2("SpanPoint Network %hu: Node %hhu sending %d bytes to Node %hhu using WiFi channel %hhu... ",deviceAddress->netID,deviceAddress->devID,len,destAddress->devID,channel);        
       esp_now_send(peerInfo.peer_addr, (uint8_t *) data, len);
       xQueueReceive(statusQueue, &status, pdMS_TO_TICKS(2000));
-      if(status==ESP_NOW_SEND_SUCCESS)
+      if(status==ESP_NOW_SEND_SUCCESS){
+        LOG2("Success!\n");
         return(true);
+      }
+      LOG2("Failed.\n");
       delay(10);
     }    
     channel=nextChannel();
   } while(channel!=startingChannel);
 
+  LOG2("SpanPoint Network %hu: Node %hhu unreachable!\n",deviceAddress->netID,destAddress->devID);        
   return(false);
 } 
 
 ///////////////////////////////
 
-void SpanPoint::dataReceived(const esp_now_recv_info *info, const uint8_t *incomingData, int len){
+void SpanPoint::dataRecv(const esp_now_recv_info *info, const uint8_t *incomingData, int len){
 
   const uint8_t *mac=info->src_addr;
   const uint8_t *rmac=info->des_addr;
@@ -3317,6 +3331,37 @@ void SpanPoint::dataReceived(const esp_now_recv_info *info, const uint8_t *incom
 
 ///////////////////////////////
 
+void SpanPoint::dataReceived(const esp_now_recv_info *info, const uint8_t *incomingData, int len){
+
+  const SpAddress *srcAddress = (SpAddress *)info->src_addr;
+
+  LOG2("SpanPoint Network %hu: Node %hhu received %d bytes from Node %hhu. ",deviceAddress->netID,deviceAddress->devID,len,srcAddress->devID);        
+
+  auto it=SpanPoints.begin();
+  for(;it!=SpanPoints.end() && memcmp((*it)->peerInfo.peer_addr,info->src_addr,6)!=0; it++);
+  
+  if(it==SpanPoints.end()){
+    LOG2("Warning! Sending node does not match any defined SpanPoint.\n");
+    return;
+  }
+
+  if((*it)->receiveSize==0){
+    LOG2("Warning! Receiving queue for data sent by this node was not configured.\n");
+    return;
+  }
+
+  if(len>(*it)->receiveSize){
+    LOG2("Warning! Number of bytes received exceeds %d-byte size of receiving queue for this node.\n",(*it)->receiveSize);
+    return;
+  }
+
+  (*it)->receiveTime=millis();                             // set time of receive
+  xQueueSend((*it)->receiveQueue, incomingData, 0);        // send to queue - do not wait if queue is full and instead fail immediately since we need to return from this function ASAP
+  LOG2("Succcess - data sent to receiving queue for this node.\n");
+}
+
+///////////////////////////////
+
 uint8_t SpanPoint::lmk[16];
 boolean SpanPoint::initialized=false;
 boolean SpanPoint::isHub=false;
@@ -3325,6 +3370,7 @@ vector<SpanPoint *, Mallocator<SpanPoint *>> SpanPoint::SpanPoints;
 uint16_t SpanPoint::channelMask=0x3FFE;
 QueueHandle_t SpanPoint::statusQueue;
 nvs_handle SpanPoint::pointNVS;
+SpanPoint::SpAddress *SpanPoint::deviceAddress=NULL;
 
 ///////////////////////////////
 //          MISC             //

@@ -934,6 +934,23 @@ class SpanPoint {
 
   friend class Span;
 
+  union SpAddress {
+    struct {
+      uint8_t firstByte=0xF2;
+      uint8_t devID;
+      uint16_t netID;
+      uint16_t checkSum;
+    };
+    uint8_t mac[6];
+
+    SpAddress(uint8_t deviceID, uint16_t networkID){
+      devID=deviceID;
+      netID=networkID;
+      mac[4]=mac[0]^mac[2];
+      mac[5]=mac[1]^mac[3];
+    }
+  };
+
   int receiveSize;                            // size (in bytes) of messages to receive
   int sendSize;                               // size (in bytes) of messages to send
   esp_now_peer_info_t peerInfo;               // structure for all ESP-NOW peer data
@@ -948,8 +965,10 @@ class SpanPoint {
   static uint16_t channelMask;                // channel mask (only used for remote devices)
   static QueueHandle_t statusQueue;           // queue for communication between SpanPoint::dataSend and SpanPoint::send
   static nvs_handle pointNVS;                 // NVS storage for channel number (only used for remote devices)
+  static SpAddress *deviceAddress;            // SpanPoint Address of this device (will be used for AP Mac)
 
   static void dataReceived(const esp_now_recv_info *info, const uint8_t *incomingData, int len);
+  static void dataRecv(const esp_now_recv_info *info, const uint8_t *incomingData, int len);
   static void init(const char *password="HomeSpan");
   static void setAsHub(){isHub=true;}
   static uint8_t nextChannel();
@@ -970,7 +989,7 @@ class SpanPoint {
   static void setPassword(const char *pwd){init(pwd);}
   static void setChannelMask(uint16_t mask);
   static void setEncryption(boolean encrypt){useEncryption=encrypt;}
-  static void configure(uint8_t deviceID, const char *password=NULL, uint32_t networkID=0x46637726);
+  static void configure(uint8_t deviceID, const char *password="HomeSpan", uint16_t networkID=1);
   boolean get(void *dataBuf);
   boolean send(const void *data);
   boolean send(const void *data, size_t len);
