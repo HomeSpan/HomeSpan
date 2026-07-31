@@ -3115,18 +3115,14 @@ void SpanPoint::configure(uint8_t deviceID, const char *password, uint16_t netwo
 
 ///////////////////////////////
 
-SpanPoint::SpanPoint(uint8_t deviceID, int sendSize, int receiveSize, int queueDepth){
+SpanPoint::SpanPoint(uint8_t deviceID, size_t receiveSize, size_t queueDepth){
 
   SpAddress destAddress(deviceID, deviceAddress->netID);
   memcpy(peerInfo.peer_addr,destAddress.mac,6);
 
-  if(sendSize<0 || sendSize>200 || receiveSize<0 || receiveSize>200 || queueDepth<1 || (sendSize==0 && receiveSize==0)){
-    LOG0("\nFATAL ERROR!  Can't create new SpanPoint(%d,%d,%d,%d) - one or more invalid parameters ***\n",deviceID,sendSize,receiveSize,queueDepth);
-    LOG0("\n=== PROGRAM HALTED ===");
-    while(1);
-  }
-
-  this->sendSize=sendSize;
+  if(receiveSize>ESP_NOW_MAX_DATA_LEN_V2)
+    receiveSize=ESP_NOW_MAX_DATA_LEN_V2;
+  
   this->receiveSize=receiveSize;
   
   peerInfo.channel=0;                 // 0 = matches current WiFi channel
@@ -3135,8 +3131,10 @@ SpanPoint::SpanPoint(uint8_t deviceID, int sendSize, int receiveSize, int queueD
   memcpy(peerInfo.lmk, lmk, 16);      // set local key
   esp_now_add_peer(&peerInfo);        // add peer to ESP-NOW
 
-  if(receiveSize>0)
-    receiveQueue = xQueueCreate(queueDepth,receiveSize);  
+  if(receiveSize>0){
+    receiveQueue = xQueueCreate(queueDepth>0?queueDepth:1,receiveSize);
+    overwriteQueue=(queueDepth==0);
+  }
 
   SpanPoints.push_back(this);             
 }
@@ -3285,7 +3283,7 @@ boolean SpanPoint::send(const void *data, size_t len){
 
   do {
     for(int i=1;i<=3;i++){      
-      LOG2("SpanPoint Network %hu: Node %hhu sending %d bytes to Node %hhu using WiFi channel %hhu... ",deviceAddress->netID,deviceAddress->devID,len,destAddress->devID,channel);        
+      LOG2("SpanPoint: Sending %d bytes to node %hhu using WiFi channel %hhu... ",len,destAddress->devID,channel);        
       esp_now_send(peerInfo.peer_addr, (uint8_t *) data, len);
       xQueueReceive(statusQueue, &status, pdMS_TO_TICKS(2000));
       if(status==ESP_NOW_SEND_SUCCESS){
@@ -3298,7 +3296,7 @@ boolean SpanPoint::send(const void *data, size_t len){
     channel=nextChannel();
   } while(channel!=startingChannel);
 
-  LOG2("SpanPoint Network %hu: Node %hhu unreachable!\n",deviceAddress->netID,destAddress->devID);        
+  LOG2("SpanPoint: ERROR! Node %hhu on Network %hu unreachable.\n",destAddress->devID,deviceAddress->netID);        
   return(false);
 } 
 
@@ -3335,29 +3333,32 @@ void SpanPoint::dataReceived(const esp_now_recv_info *info, const uint8_t *incom
 
   const SpAddress *srcAddress = (SpAddress *)info->src_addr;
 
-  LOG2("SpanPoint Network %hu: Node %hhu received %d bytes from Node %hhu. ",deviceAddress->netID,deviceAddress->devID,len,srcAddress->devID);        
+  LOG2("SpanPoint: Received %d bytes from node %hhu. ",len,srcAddress->devID);        
 
   auto it=SpanPoints.begin();
   for(;it!=SpanPoints.end() && memcmp((*it)->peerInfo.peer_addr,info->src_addr,6)!=0; it++);
   
   if(it==SpanPoints.end()){
-    LOG2("Warning! Sending node does not match any defined SpanPoint.\n");
+    LOG2("ERROR! Unknown node.\n");
     return;
   }
 
   if((*it)->receiveSize==0){
-    LOG2("Warning! Receiving queue for data sent by this node was not configured.\n");
+    LOG2("ERROR! Node not configured for receiving.\n");
     return;
   }
 
   if(len>(*it)->receiveSize){
-    LOG2("Warning! Number of bytes received exceeds %d-byte size of receiving queue for this node.\n",(*it)->receiveSize);
+    LOG2("ERROR! Number of bytes received exceeds %d-byte size of queue.\n",(*it)->receiveSize);
     return;
   }
 
-  (*it)->receiveTime=millis();                             // set time of receive
-  xQueueSend((*it)->receiveQueue, incomingData, 0);        // send to queue - do not wait if queue is full and instead fail immediately since we need to return from this function ASAP
-  LOG2("Succcess - data sent to receiving queue for this node.\n");
+  if( ((*it)->overwriteQueue && xQueueOverwrite((*it)->receiveQueue, incomingData)) || xQueueSend((*it)->receiveQueue, incomingData, 0) ){       // overwrite or send to queue immediately
+    LOG2("Queue updated.\n");
+    (*it)->receiveTime=millis();                   // set time of receive
+  } else {
+    LOG2("ERROR! Queue full.\n");
+  }
 }
 
 ///////////////////////////////

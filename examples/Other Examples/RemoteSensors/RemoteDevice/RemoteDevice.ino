@@ -60,7 +60,7 @@ void setup() {
   SpanPoint::configure(2);
   SpanPoint::setEncryption(false);
 
-  mainDevice=new SpanPoint(18,sizeof(float),0);    // create a SpanPoint with send size=sizeof(float) and receive size=0     
+  mainDevice=new SpanPoint(18);    // create a SpanPoint     
 
   homeSpan.setLogLevel(2);
 }

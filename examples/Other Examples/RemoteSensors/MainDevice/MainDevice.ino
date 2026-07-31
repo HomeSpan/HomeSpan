@@ -60,13 +60,13 @@ struct RemoteTempSensor : Service::TemperatureSensor {
 
     fault=new Characteristic::StatusFault(1);                // set initial state = fault
 
-    remoteTemp=new SpanPoint(deviceID,0,sizeof(float),1);    // create a SpanPoint with send size=0 and receive size=sizeof(float)
+    remoteTemp=new SpanPoint(deviceID,sizeof(float),2);    // create a SpanPoint with receive size=sizeof(float)
 
   } // end constructor
 
   void loop(){
        
-    if(remoteTemp->get(&temperature)){      // if there is data from the remote sensor
+    if(millis()>90000 && remoteTemp->get(&temperature)){      // if there is data from the remote sensor
       temp->setVal(temperature);            // update temperature
       fault->setVal(0);                     // clear fault
        

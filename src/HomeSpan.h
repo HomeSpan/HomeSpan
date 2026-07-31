@@ -955,6 +955,7 @@ class SpanPoint {
   int sendSize;                               // size (in bytes) of messages to send
   esp_now_peer_info_t peerInfo;               // structure for all ESP-NOW peer data
   QueueHandle_t receiveQueue;                 // queue to store data after it is received
+  boolean overwriteQueue;                     // flag to indicate whether receiving queue should be overridden
   uint32_t receiveTime=0;                     // time (in millis) of most recent data received
   
   static uint8_t lmk[16];
@@ -985,7 +986,7 @@ class SpanPoint {
   public:
 
   SpanPoint(const char *macAddress, int sendSize, int receiveSize, int queueDepth=1, boolean useAPaddress=false);
-  SpanPoint(uint8_t deviceID, int sendSize, int receiveSize, int queueDepth=1);
+  SpanPoint(uint8_t deviceID, size_t receiveSize=0, size_t queueDepth=0);
   static void setPassword(const char *pwd){init(pwd);}
   static void setChannelMask(uint16_t mask);
   static void setEncryption(boolean encrypt){useEncryption=encrypt;}
