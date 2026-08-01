@@ -60,7 +60,7 @@ struct RemoteTempSensor : Service::TemperatureSensor {
 
     fault=new Characteristic::StatusFault(1);                // set initial state = fault
 
-    remoteTemp=new SpanPoint(deviceID,sizeof(float),2);    // create a SpanPoint with receive size=sizeof(float)
+    remoteTemp=new SpanPoint(deviceID,0,sizeof(float),2);    // create a SpanPoint with receive size=sizeof(float)
 
   } // end constructor
 

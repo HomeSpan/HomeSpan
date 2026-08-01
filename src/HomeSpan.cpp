@@ -3072,6 +3072,8 @@ SpanPoint::SpanPoint(const char *macAddress, int sendSize, int receiveSize, int 
   if(receiveSize>0)
     receiveQueue = xQueueCreate(queueDepth,receiveSize);  
 
+  sendFunction=&SpanPoint::sendV1;    // use version 1 of send()
+
   SpanPoints.push_back(this);             
 }
 
@@ -3096,7 +3098,7 @@ void SpanPoint::configure(uint8_t deviceID, const char *password, uint16_t netwo
   esp_now_init();                           // initialize ESP-NOW
   memcpy(lmk, hash, 16);                    // store first 16 bytes of hash for later use as local key
   esp_now_set_pmk(hash+16);                 // set hash for primary key using last 16 bytes of hash
-  esp_now_register_recv_cb(dataReceived);   // set callback for receiving data
+  esp_now_register_recv_cb(dataReceivedV2); // set callback for receiving data
   esp_now_register_send_cb(dataSent);       // set callback for sending data
   
   statusQueue = xQueueCreate(1,sizeof(esp_now_send_status_t));    // create statusQueue even if not needed
@@ -3115,14 +3117,18 @@ void SpanPoint::configure(uint8_t deviceID, const char *password, uint16_t netwo
 
 ///////////////////////////////
 
-SpanPoint::SpanPoint(uint8_t deviceID, size_t receiveSize, size_t queueDepth){
+SpanPoint::SpanPoint(uint8_t deviceID, size_t sendSize, size_t receiveSize, size_t queueDepth){
 
   SpAddress destAddress(deviceID, deviceAddress->netID);
   memcpy(peerInfo.peer_addr,destAddress.mac,6);
 
-  if(receiveSize>ESP_NOW_MAX_DATA_LEN_V2)
-    receiveSize=ESP_NOW_MAX_DATA_LEN_V2;
+  if(sendSize>ESP_NOW_MAX_DATA_LEN_V2 || receiveSize>ESP_NOW_MAX_DATA_LEN_V2 || (sendSize==0 && receiveSize==0)){
+    LOG0("\nFATAL ERROR!  Can't create new SpanPoint(%d,%d,%d,%d) - invalid parameters ***\n",deviceID,sendSize,receiveSize,queueDepth);
+    LOG0("\n=== PROGRAM HALTED ===");
+    while(1);
+  }
   
+  this->sendSize=sendSize;
   this->receiveSize=receiveSize;
   
   peerInfo.channel=0;                 // 0 = matches current WiFi channel
@@ -3135,6 +3141,8 @@ SpanPoint::SpanPoint(uint8_t deviceID, size_t receiveSize, size_t queueDepth){
     receiveQueue = xQueueCreate(queueDepth>0?queueDepth:1,receiveSize);
     overwriteQueue=(queueDepth==0);
   }
+
+  sendFunction=&SpanPoint::sendV2;    // use version 2 of send()
 
   SpanPoints.push_back(this);             
 }
@@ -3154,11 +3162,11 @@ void SpanPoint::init(const char *password){
   uint8_t hash[32];
   mbedtls_sha256((const unsigned char *)password,strlen(password),hash,0);      // produce 256-bit bit hash from password
 
-  esp_now_init();                           // initialize ESP-NOW
-  memcpy(lmk, hash, 16);                    // store first 16 bytes of hash for later use as local key
-  esp_now_set_pmk(hash+16);                 // set hash for primary key using last 16 bytes of hash
-  esp_now_register_recv_cb(dataRecv);       // set callback for receiving data
-  esp_now_register_send_cb(dataSent);       // set callback for sending data
+  esp_now_init();                              // initialize ESP-NOW
+  memcpy(lmk, hash, 16);                       // store first 16 bytes of hash for later use as local key
+  esp_now_set_pmk(hash+16);                    // set hash for primary key using last 16 bytes of hash
+  esp_now_register_recv_cb(dataReceivedV1);    // set callback for receiving data
+  esp_now_register_send_cb(dataSent);          // set callback for sending data
   
   statusQueue = xQueueCreate(1,sizeof(esp_now_send_status_t));    // create statusQueue even if not needed
   setChannelMask(channelMask);                                    // default channel mask at start-up uses channels 1-13  
@@ -3236,7 +3244,7 @@ boolean SpanPoint::get(void *dataBuf){
 
 ///////////////////////////////
 
-boolean SpanPoint::send(const void *data){
+boolean SpanPoint::sendV1(const void *data){
 
   if(sendSize==0)
     return(false);
@@ -3268,9 +3276,9 @@ boolean SpanPoint::send(const void *data){
 
 ///////////////////////////////
 
-boolean SpanPoint::send(const void *data, size_t len){
+boolean SpanPoint::sendV2(const void *data){
 
-  if(len==0)
+  if(sendSize==0)
     return(false);
   
   uint8_t channel;
@@ -3283,8 +3291,8 @@ boolean SpanPoint::send(const void *data, size_t len){
 
   do {
     for(int i=1;i<=3;i++){      
-      LOG2("SpanPoint: Sending %d bytes to node %hhu using WiFi channel %hhu... ",len,destAddress->devID,channel);        
-      esp_now_send(peerInfo.peer_addr, (uint8_t *) data, len);
+      LOG2("SpanPoint: Sending %d bytes to node %hhu using WiFi channel %hhu... ",sendSize,destAddress->devID,channel);        
+      esp_now_send(peerInfo.peer_addr, (uint8_t *) data, sendSize);
       xQueueReceive(statusQueue, &status, pdMS_TO_TICKS(2000));
       if(status==ESP_NOW_SEND_SUCCESS){
         LOG2("Success!\n");
@@ -3302,7 +3310,7 @@ boolean SpanPoint::send(const void *data, size_t len){
 
 ///////////////////////////////
 
-void SpanPoint::dataRecv(const esp_now_recv_info *info, const uint8_t *incomingData, int len){
+void SpanPoint::dataReceivedV1(const esp_now_recv_info *info, const uint8_t *incomingData, int len){
 
   const uint8_t *mac=info->src_addr;
   const uint8_t *rmac=info->des_addr;
@@ -3329,7 +3337,7 @@ void SpanPoint::dataRecv(const esp_now_recv_info *info, const uint8_t *incomingD
 
 ///////////////////////////////
 
-void SpanPoint::dataReceived(const esp_now_recv_info *info, const uint8_t *incomingData, int len){
+void SpanPoint::dataReceivedV2(const esp_now_recv_info *info, const uint8_t *incomingData, int len){
 
   const SpAddress *srcAddress = (SpAddress *)info->src_addr;
 
@@ -3348,8 +3356,8 @@ void SpanPoint::dataReceived(const esp_now_recv_info *info, const uint8_t *incom
     return;
   }
 
-  if(len>(*it)->receiveSize){
-    LOG2("ERROR! Number of bytes received exceeds %d-byte size of queue.\n",(*it)->receiveSize);
+  if(len!=(*it)->receiveSize){
+    LOG2("ERROR! Number of bytes received does not match %d-byte size of queue.\n",(*it)->receiveSize);
     return;
   }
 
