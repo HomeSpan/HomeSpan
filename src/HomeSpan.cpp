@@ -1229,7 +1229,7 @@ void Span::processSerialCommand(const char *c){
         uint8_t channel;
         wifi_second_chan_t channel2; 
         esp_wifi_get_channel(&channel,&channel2);
-        LOG0("\nFound %d %s SpanPoint Links:\n\n",SpanPoint::SpanPoints.size(),SpanPoint::useEncryption?"encrypted":"unencrypted");
+        LOG0("\nFound %d %s SpanPoint Links:\n\n",SpanPoint::SpanPoints.size(),SpanPoint::getEncryption()?"encrypted":"unencrypted");
         LOG0("%-17s  %18s  %7s  %7s  %7s\n","Local MAC Address","Remote MAC Address","Send","Receive","Depth"); 
         LOG0("%.17s  %.18s  %.7s  %.7s  %.7s\n",d,d,d,d,d);
         for(auto it=SpanPoint::SpanPoints.begin();it!=SpanPoint::SpanPoints.end();it++)
@@ -3065,7 +3065,7 @@ SpanPoint::SpanPoint(const char *macAddress, int sendSize, int receiveSize, int 
   
   peerInfo.ifidx=useAPaddress?WIFI_IF_AP:WIFI_IF_STA;         // specify interface as either STA or AP
   
-  peerInfo.encrypt=useEncryption;     // set encryption for this peer
+  peerInfo.encrypt=spConf.encrypt;    // set encryption for this peer
   memcpy(peerInfo.lmk, lmk, 16);      // set local key
   esp_now_add_peer(&peerInfo);        // add peer to ESP-NOW
 
@@ -3102,7 +3102,10 @@ void SpanPoint::configure(uint8_t deviceID, SpConfig_t cfg){
   esp_now_register_send_cb(dataSent);       // set callback for sending data
   
   statusQueue = xQueueCreate(1,sizeof(esp_now_send_status_t));    // create statusQueue even if not needed
-  spConf.channelMask=cfg.channelMask;                             // save channel mask
+
+  spConf.channelMask=cfg.channelMask;                             // save a subset of the config data that will needed in other functions
+  spConf.encrypt=cfg.encrypt;                                         
+
   initializeChannels();                                           // verify channel mask and set first channel
 }
 
@@ -3124,7 +3127,7 @@ SpanPoint::SpanPoint(uint8_t deviceID, size_t sendSize, size_t receiveSize, size
   
   peerInfo.channel=0;                 // 0 = matches current WiFi channel
   peerInfo.ifidx=WIFI_IF_AP;          // specify interface as AP
-  peerInfo.encrypt=useEncryption;     // set encryption for this peer
+  peerInfo.encrypt=spConf.encrypt;    // set encryption for this peer
   memcpy(peerInfo.lmk, lmk, 16);      // set local key
   esp_now_add_peer(&peerInfo);        // add peer to ESP-NOW
 
@@ -3362,7 +3365,6 @@ void SpanPoint::dataReceivedV2(const esp_now_recv_info *info, const uint8_t *inc
 uint8_t SpanPoint::lmk[16];
 boolean SpanPoint::initialized=false;
 boolean SpanPoint::isHub=false;
-boolean SpanPoint::useEncryption=true;
 vector<SpanPoint *, Mallocator<SpanPoint *>> SpanPoint::SpanPoints;
 QueueHandle_t SpanPoint::statusQueue;
 nvs_handle SpanPoint::pointNVS;

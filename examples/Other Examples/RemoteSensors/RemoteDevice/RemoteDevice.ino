@@ -60,7 +60,7 @@ void setup() {
 //  SpanPoint::setChannelMask(1<<1 | 1<<11);
 
 //  SpanPoint::configure(2,{.channelMask=(1<<1 | 1<<4 | 1<<10 | 1<<11)});
-  SpanPoint::configure(2);
+  SpanPoint::configure(2,{.encrypt=false});
 
 //  SpanPoint::setEncryption(false);
 
@@ -77,5 +77,5 @@ void loop() {
   if(temperature>35.0)
     temperature=-30.0;
    
-  delay(20000);
+  delay(10000);
 }

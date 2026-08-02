@@ -954,6 +954,7 @@ class SpanPoint {
   struct SpConfig_t {
     uint16_t network=1;
     const char *password="HomeSpan";
+    boolean encrypt=true;
     uint16_t channelMask=0x3FFE;
   };
 
@@ -967,7 +968,6 @@ class SpanPoint {
   static uint8_t lmk[16];
   static boolean initialized;
   static boolean isHub;
-  static boolean useEncryption;
   static vector<SpanPoint *, Mallocator<SpanPoint *>> SpanPoints;
   static QueueHandle_t statusQueue;           // queue for communication between SpanPoint::dataSend and SpanPoint::send
   static nvs_handle pointNVS;                 // NVS storage for channel number (only used for remote devices)
@@ -998,12 +998,14 @@ class SpanPoint {
   SpanPoint(const char *macAddress, int sendSize, int receiveSize, int queueDepth=1, boolean useAPaddress=false);
   SpanPoint(uint8_t deviceID, size_t sendSize, size_t receiveSize=0, size_t queueDepth=0);
   static void setPassword(const char *pwd){init(pwd);}
-  static void setEncryption(boolean encrypt){useEncryption=encrypt;}
+  static void setEncryption(boolean encrypt){spConf.encrypt=encrypt;}
   static void configure(uint8_t deviceID, SpConfig_t cfg=spConf);
   static void setChannelMask(uint16_t mask){spConf.channelMask=mask;}
   boolean send(const void *data){return((this->*sendFunction)(data));}
   boolean get(void *dataBuf);
   uint32_t time(){return(millis()-receiveTime);}
+  static uint16_t getChannelMask(){return(spConf.channelMask);}
+  static boolean getEncryption(){return(spConf.encrypt);}
 };
 
 /////////////////////////////////////////////////
