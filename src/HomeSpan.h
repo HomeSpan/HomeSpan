@@ -973,6 +973,7 @@ class SpanPoint {
   static void init(const char *password="HomeSpan");
   static void setAsHub(){isHub=true;}
   static uint8_t nextChannel();
+  static void initializeChannels();
 
   boolean sendV1(const void *data);                       // send data - version 1 (to be deprecated)
   boolean sendV2(const void *data);                       // send data - version 2
@@ -991,9 +992,9 @@ class SpanPoint {
   SpanPoint(const char *macAddress, int sendSize, int receiveSize, int queueDepth=1, boolean useAPaddress=false);
   SpanPoint(uint8_t deviceID, size_t sendSize, size_t receiveSize=0, size_t queueDepth=0);
   static void setPassword(const char *pwd){init(pwd);}
-  static void setChannelMask(uint16_t mask);
   static void setEncryption(boolean encrypt){useEncryption=encrypt;}
   static void configure(uint8_t deviceID, const char *password="HomeSpan", uint16_t networkID=1);
+  static void setChannelMask(uint16_t mask){if(!channelMask)channelMask=mask;}
   boolean send(const void *data){return((this->*sendFunction)(data));}
   boolean get(void *dataBuf);
   uint32_t time(){return(millis()-receiveTime);}

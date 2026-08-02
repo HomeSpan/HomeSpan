@@ -3102,17 +3102,7 @@ void SpanPoint::configure(uint8_t deviceID, const char *password, uint16_t netwo
   esp_now_register_send_cb(dataSent);       // set callback for sending data
   
   statusQueue = xQueueCreate(1,sizeof(esp_now_send_status_t));    // create statusQueue even if not needed
-  setChannelMask(channelMask);                                    // default channel mask at start-up uses channels 1-13  
-
-  uint8_t channel;
-  if(!isHub){                                                   // this is not a hub
-    nvs_flash_init();                                           // initialize NVS
-    nvs_open("POINT",NVS_READWRITE,&pointNVS);                  // open SpanPoint data namespace in NVS
-    if(!nvs_get_u8(pointNVS,"CHANNEL",&channel)){               // if channel found in NVS...
-      if(channelMask & (1<<channel))                            // ... and if channel is allowed by channel mask
-        esp_wifi_set_channel(channel, WIFI_SECOND_CHAN_NONE);   // set the WiFi channel
-    }
-  }  
+  initializeChannels();                                           // initialize channel mask and set first channel
 }
 
 ///////////////////////////////
@@ -3169,44 +3159,44 @@ void SpanPoint::init(const char *password){
   esp_now_register_send_cb(dataSent);          // set callback for sending data
   
   statusQueue = xQueueCreate(1,sizeof(esp_now_send_status_t));    // create statusQueue even if not needed
-  setChannelMask(channelMask);                                    // default channel mask at start-up uses channels 1-13  
-
-  uint8_t channel;
-  if(!isHub){                                                   // this is not a hub
-    nvs_flash_init();                                           // initialize NVS
-    nvs_open("POINT",NVS_READWRITE,&pointNVS);                  // open SpanPoint data namespace in NVS
-    if(!nvs_get_u8(pointNVS,"CHANNEL",&channel)){               // if channel found in NVS...
-      if(channelMask & (1<<channel))                            // ... and if channel is allowed by channel mask
-        esp_wifi_set_channel(channel, WIFI_SECOND_CHAN_NONE);   // set the WiFi channel
-    }
-  }
+  initializeChannels();                                           // initialize channel mask and set first channel
   
   initialized=true;
 }
 
 ///////////////////////////////
 
-void SpanPoint::setChannelMask(uint16_t mask){
-
-  wifi_country_t country;
-  esp_wifi_get_country(&country);
-  channelMask=mask & ((1<<country.nchan)-1)<<country.schan;     // overlay country-specific mask (channels 1-11, 1-13, or 1-14 only)
+void SpanPoint::initializeChannels(){
 
   if(isHub)
     return;
 
+  setChannelMask(0x3FFE);       // set channel mask (if NOT already set by user) to use channels 1-13, subject to any country-specific settings below
+
+  uint16_t originalMask=channelMask;
+  wifi_country_t country;
+  esp_wifi_get_country(&country);
+  channelMask=channelMask & ((1<<country.nchan)-1)<<country.schan;     // overlay country-specific mask (e.g. channels 1-11, 1-13, or 1-14 only)
+
   uint8_t channel=0;
+  nvs_flash_init();                                           // initialize NVS
+  nvs_open("POINT",NVS_READWRITE,&pointNVS);                  // open SpanPoint data namespace in NVS
+  nvs_get_u8(pointNVS,"CHANNEL",&channel);                    // load channel, if found
 
-  for(int i=1;i<=13 && channel==0;i++)          // find first "allowed" channel based on mask
-    channel=(channelMask & (1<<i))?i:0;
-
-  if(channel==0){
-    LOG0("\nFATAL ERROR!  SpanPoint::setChannelMask(0x%04X) - mask must allow for at least one channel ***\n",mask);
-    LOG0("\n=== PROGRAM HALTED ===");
-    while(1);
+  for(int i=0;i<16;i++,channel=(channel+1)%16){               // loop over all mask bits (starting with saved channel)
+    if(channelMask & (1<<channel)){                           // if channel is allowed by channel mask
+      if(i>0){
+        nvs_set_u8(pointNVS,"CHANNEL",channel);
+        nvs_commit(pointNVS);
+      }
+      esp_wifi_set_channel(channel, WIFI_SECOND_CHAN_NONE);   // set the WiFi channel
+      return;
+    }
   }
 
-  esp_wifi_set_channel(channel, WIFI_SECOND_CHAN_NONE);
+  LOG0("\nFATAL ERROR!  SpanPoint::setChannelMask(0x%04X) - mask must allow for at least one channel ***\n",originalMask);
+  LOG0("\n=== PROGRAM HALTED ===");
+  while(1);
 }
 
 ///////////////////////////////
@@ -3376,7 +3366,7 @@ boolean SpanPoint::initialized=false;
 boolean SpanPoint::isHub=false;
 boolean SpanPoint::useEncryption=true;
 vector<SpanPoint *, Mallocator<SpanPoint *>> SpanPoint::SpanPoints;
-uint16_t SpanPoint::channelMask=0x3FFE;
+uint16_t SpanPoint::channelMask=0;
 QueueHandle_t SpanPoint::statusQueue;
 nvs_handle SpanPoint::pointNVS;
 SpanPoint::SpAddress *SpanPoint::deviceAddress=NULL;
