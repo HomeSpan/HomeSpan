@@ -224,6 +224,7 @@ struct SpanWebLog{                            // optional web status/log data
   char *faviconURL=NULL;                      // optional URL for favicon PNG image
   uint32_t waitTime=120000;                   // number of milliseconds to wait for initial connection to time server
   String css="";                              // optional user-defined style sheet for web log
+  boolean cssURI=false;                      // flag to indicate whether user-defined style sheet is a URI or inline CSS
   std::shared_mutex mux;                      // shared read/write lock
     
   struct log_t {                              // log entry type
@@ -494,7 +495,7 @@ class Span{
     va_end(ap);    
   }
 
-  Span& setWebLogCSS(const char *css){webLog.css="\n" + String(css) + "\n";return(*this);}
+  Span& setWebLogCSS(const char *css, boolean isURI=false){if (isURI) webLog.css=css; else webLog.css="\n" + String(css) + "\n"; webLog.cssURI=isURI; return(*this);}
   Span& setWebLogCallback(void (*f)(String &)){weblogCallback=f;return(*this);}
   Span& setWebLogFavicon(const char *favicon=DEFAULT_FAVICON){asprintf(&webLog.faviconURL,"%s",favicon);return(*this);}
   void getWebLog(void (*f)(const char *, void *), void *);

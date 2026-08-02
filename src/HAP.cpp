@@ -1106,8 +1106,12 @@ void HAPClient::getStatusURL(HAPClient *hapClient, void (*callBack)(const char *
 
   if(homeSpan.webLog.faviconURL)
     hapOut << "<link rel=\"icon\" href=\"" << homeSpan.webLog.faviconURL << "\" type=\"image/png\" />\n";
-    
-  hapOut << "<style>body {background-color:lightblue;} th, td {padding-right: 10px; padding-left: 10px; border:1px solid black;}" << homeSpan.webLog.css.c_str() << "</style></head>\n";
+  
+  if (homeSpan.webLog.cssURI)
+    hapOut << "<link rel=\"stylesheet\" href=\"" << homeSpan.webLog.css.c_str() << "\" type=\"text/css\" />\n";
+  else
+    hapOut << "<style>body {background-color:lightblue;} th, td {padding-right: 10px; padding-left: 10px; border:1px solid black;}" << homeSpan.webLog.css.c_str() << "</style></head>\n";
+  
   hapOut << "<body class=\"body bod1\"><h2>" << homeSpan.displayName << "</h2>\n";
   
   hapOut << "<table class=\"infoTable tab1\">\n";
