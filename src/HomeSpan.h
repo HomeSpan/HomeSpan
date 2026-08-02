@@ -951,6 +951,12 @@ class SpanPoint {
     }
   };
 
+  struct SpConfig_t {
+    uint16_t network=1;
+    const char *password="HomeSpan";
+    uint16_t channelMask=0x3FE;
+  };
+
   int receiveSize;                            // size (in bytes) of messages to receive
   int sendSize;                               // size (in bytes) of messages to send
   esp_now_peer_info_t peerInfo;               // structure for all ESP-NOW peer data
@@ -967,13 +973,14 @@ class SpanPoint {
   static QueueHandle_t statusQueue;           // queue for communication between SpanPoint::dataSend and SpanPoint::send
   static nvs_handle pointNVS;                 // NVS storage for channel number (only used for remote devices)
   static SpAddress *deviceAddress;            // SpanPoint Address of this device (will be used for AP Mac)
+  static SpConfig_t defaultConfig;            // default configuration if none specified on configure()
 
   static void dataReceivedV2(const esp_now_recv_info *info, const uint8_t *incomingData, int len);
   static void dataReceivedV1(const esp_now_recv_info *info, const uint8_t *incomingData, int len);
   static void init(const char *password="HomeSpan");
   static void setAsHub(){isHub=true;}
   static uint8_t nextChannel();
-  static void initializeChannels();
+  static void initializeChannels(uint16_t mask);
 
   boolean sendV1(const void *data);                       // send data - version 1 (to be deprecated)
   boolean sendV2(const void *data);                       // send data - version 2
@@ -993,8 +1000,8 @@ class SpanPoint {
   SpanPoint(uint8_t deviceID, size_t sendSize, size_t receiveSize=0, size_t queueDepth=0);
   static void setPassword(const char *pwd){init(pwd);}
   static void setEncryption(boolean encrypt){useEncryption=encrypt;}
-  static void configure(uint8_t deviceID, const char *password="HomeSpan", uint16_t networkID=1);
-  static void setChannelMask(uint16_t mask){if(!channelMask)channelMask=mask;}
+  static void configure(uint8_t deviceID, SpConfig_t cfg=defaultConfig);
+  static void setChannelMask(uint16_t mask){channelMask=mask;}
   boolean send(const void *data){return((this->*sendFunction)(data));}
   boolean get(void *dataBuf);
   uint32_t time(){return(millis()-receiveTime);}

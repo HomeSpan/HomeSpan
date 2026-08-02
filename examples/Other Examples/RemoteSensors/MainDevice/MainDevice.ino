@@ -66,7 +66,7 @@ struct RemoteTempSensor : Service::TemperatureSensor {
 
   void loop(){
        
-    if(millis()>90000 && remoteTemp->get(&temperature)){      // if there is data from the remote sensor
+    if(remoteTemp->get(&temperature)){      // if there is data from the remote sensor
       temp->setVal(temperature);            // update temperature
       fault->setVal(0);                     // clear fault
        
