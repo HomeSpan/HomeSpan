@@ -57,9 +57,11 @@ void setup() {
   Serial.begin(115200);
   delay(1000);
 
+//  SpanPoint::setChannelMask(1<<1 | 1<<11);
+
+//  SpanPoint::configure(2,{.channelMask=(1<<1 | 1<<4 | 1<<10 | 1<<11)});
   SpanPoint::configure(2);
 
-//  SpanPoint::setChannelMask(/*1<<3 | 1<<0 |*/ 1<<7 | 1<<10 | 1<<13);
 //  SpanPoint::setEncryption(false);
 
   mainDevice=new SpanPoint(18,sizeof(float));    // create a SpanPoint with sending size but no receiving size (defaults to zero)

@@ -3102,7 +3102,8 @@ void SpanPoint::configure(uint8_t deviceID, SpConfig_t cfg){
   esp_now_register_send_cb(dataSent);       // set callback for sending data
   
   statusQueue = xQueueCreate(1,sizeof(esp_now_send_status_t));    // create statusQueue even if not needed
-  initializeChannels(cfg.channelMask);                            // initialize channel mask and set first channel
+  spConf.channelMask=cfg.channelMask;                             // save channel mask
+  initializeChannels();                                           // verify channel mask and set first channel
 }
 
 ///////////////////////////////
@@ -3159,21 +3160,21 @@ void SpanPoint::init(const char *password){
   esp_now_register_send_cb(dataSent);          // set callback for sending data
   
   statusQueue = xQueueCreate(1,sizeof(esp_now_send_status_t));    // create statusQueue even if not needed
-  initializeChannels(channelMask);                                // initialize channel mask and set first channel
+  initializeChannels();                                           // verify channel mask and set first channel
   
   initialized=true;
 }
 
 ///////////////////////////////
 
-void SpanPoint::initializeChannels(uint16_t mask){
+void SpanPoint::initializeChannels(){
 
   if(isHub)
     return;
 
   wifi_country_t country;
   esp_wifi_get_country(&country);
-  channelMask=mask & ((1<<country.nchan)-1)<<country.schan;     // overlay country-specific mask (e.g. channels 1-11, 1-13, or 1-14 only)
+  spConf.channelMask=spConf.channelMask & ((1<<country.nchan)-1)<<country.schan;     // overlay country-specific mask (e.g. channels 1-11, 1-13, or 1-14 only)
 
   uint8_t channel=0;
   nvs_flash_init();                                           // initialize NVS
@@ -3181,7 +3182,7 @@ void SpanPoint::initializeChannels(uint16_t mask){
   nvs_get_u8(pointNVS,"CHANNEL",&channel);                    // load channel, if found
 
   for(int i=0;i<16;i++,channel=(channel+1)%16){               // loop over all mask bits (starting with saved channel)
-    if(channelMask & (1<<channel)){                           // if channel is allowed by channel mask
+    if(spConf.channelMask & (1<<channel)){                    // if channel is allowed by channel mask
       if(i>0){
         nvs_set_u8(pointNVS,"CHANNEL",channel);
         nvs_commit(pointNVS);
@@ -3202,14 +3203,14 @@ uint8_t SpanPoint::nextChannel(){
 
   uint8_t channel;
   wifi_second_chan_t channel2; 
-  esp_wifi_get_channel(&channel,&channel2);     // get current channel
+  esp_wifi_get_channel(&channel,&channel2);       // get current channel
 
-  if(isHub || channelMask==(1<<channel))        // do not change channel if device is either a hub, or channel mask does not allow for any other channels
+  if(isHub || spConf.channelMask==(1<<channel))   // do not change channel if device is either a hub, or channel mask does not allow for any other channels
     return(channel);
 
   do {
-    channel=(channel<13)?channel+1:1;       // advance to next channel
-  } while(!(channelMask & (1<<channel)));   // until we find next valid one
+    channel=(channel<13)?channel+1:1;              // advance to next channel
+  } while(!(spConf.channelMask & (1<<channel)));   // until we find next valid one
 
   esp_wifi_set_channel(channel, WIFI_SECOND_CHAN_NONE);         // set the WiFi channel
   
@@ -3363,11 +3364,10 @@ boolean SpanPoint::initialized=false;
 boolean SpanPoint::isHub=false;
 boolean SpanPoint::useEncryption=true;
 vector<SpanPoint *, Mallocator<SpanPoint *>> SpanPoint::SpanPoints;
-uint16_t SpanPoint::channelMask=0x3FE;
 QueueHandle_t SpanPoint::statusQueue;
 nvs_handle SpanPoint::pointNVS;
 SpanPoint::SpAddress *SpanPoint::deviceAddress=NULL;
-SpanPoint::SpConfig_t SpanPoint::defaultConfig{};
+SpanPoint::SpConfig_t SpanPoint::spConf{};
 
 ///////////////////////////////
 //          MISC             //
