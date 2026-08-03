@@ -3081,6 +3081,9 @@ SpanPoint::SpanPoint(const char *macAddress, int sendSize, int receiveSize, int 
 
 void SpanPoint::configure(uint8_t deviceID, SpConfig_t cfg){
 
+
+  Serial.printf("\n\n*** '%s'\n",cfg.password.c_str());
+
   deviceAddress = new SpAddress(deviceID,cfg.network);
 
   WiFi.mode(WIFI_AP_STA); 
@@ -3093,7 +3096,7 @@ void SpanPoint::configure(uint8_t deviceID, SpConfig_t cfg){
   esp_wifi_set_config(WIFI_IF_AP,&conf);
     
   uint8_t hash[32];
-  mbedtls_sha256((const unsigned char *)cfg.password,strlen(cfg.password),hash,0);      // produce 256-bit bit hash from password
+  mbedtls_sha256((const unsigned char *)cfg.password.c_str(),cfg.password.length(),hash,0);      // produce 256-bit bit hash from password
 
   esp_now_init();                           // initialize ESP-NOW
   memcpy(lmk, hash, 16);                    // store first 16 bytes of hash for later use as local key

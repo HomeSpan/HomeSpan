@@ -953,7 +953,7 @@ class SpanPoint {
 
   struct SpConfig_t {
     uint16_t network=1;
-    const char *password="HomeSpan";
+    String password="HomeSpan";
     boolean encrypt=true;
     uint16_t channelMask=0x3FFE;
   };
@@ -996,13 +996,16 @@ class SpanPoint {
   public:
 
   SpanPoint(const char *macAddress, int sendSize, int receiveSize, int queueDepth=1, boolean useAPaddress=false);
-  SpanPoint(uint8_t deviceID, size_t sendSize, size_t receiveSize=0, size_t queueDepth=0);
-  static void setPassword(const char *pwd){init(pwd);}
+  static void setPassword(String pwd){spConf.password=pwd;}
   static void setEncryption(boolean encrypt){spConf.encrypt=encrypt;}
-  static void configure(uint8_t deviceID, SpConfig_t cfg=spConf);
   static void setChannelMask(uint16_t mask){spConf.channelMask=mask;}
+
+  SpanPoint(uint8_t deviceID, size_t sendSize, size_t receiveSize=0, size_t queueDepth=0);
+  static void configure(uint8_t deviceID, SpConfig_t cfg=spConf);
+
   boolean send(const void *data){return((this->*sendFunction)(data));}
   boolean get(void *dataBuf);
+
   uint32_t time(){return(millis()-receiveTime);}
   static uint16_t getChannelMask(){return(spConf.channelMask);}
   static boolean getEncryption(){return(spConf.encrypt);}
