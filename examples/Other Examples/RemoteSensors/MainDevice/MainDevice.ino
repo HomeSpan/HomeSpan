@@ -90,8 +90,8 @@ void setup() {
   homeSpan.setLogLevel(2);
 
   delay(1000);
-  SpanPoint::setEncryption(false);
-  SpanPoint::configure(18);
+//  SpanPoint::setEncryption(false);
+  SpanPoint::configure(18,{.password="New Password"});
 
   homeSpan.begin(Category::Bridges,"Sensor Hub");
 

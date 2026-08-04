@@ -966,17 +966,17 @@ class SpanPoint {
   uint32_t receiveTime=0;                     // time (in millis) of most recent data received
   
   static uint8_t lmk[16];
-  static boolean initialized;
   static boolean isHub;
   static vector<SpanPoint *, Mallocator<SpanPoint *>> SpanPoints;
   static QueueHandle_t statusQueue;           // queue for communication between SpanPoint::dataSend and SpanPoint::send
   static nvs_handle pointNVS;                 // NVS storage for channel number (only used for remote devices)
   static SpAddress *deviceAddress;            // SpanPoint Address of this device (will be used for AP Mac)
-  static SpConfig_t spConf;                     // stores all configuration settings
+  static SpConfig_t spConf;                   // stores all configuration settings
+  static uint8_t version;                     // SpanPoint version number (v1 or v2)
+  static boolean configured;                  // flag indicating SpanPoint has been configured
 
   static void dataReceivedV2(const esp_now_recv_info *info, const uint8_t *incomingData, int len);
   static void dataReceivedV1(const esp_now_recv_info *info, const uint8_t *incomingData, int len);
-  static void init(const char *password="HomeSpan");
   static void setAsHub(){isHub=true;}
   static uint8_t nextChannel();
   static void initializeChannels();
@@ -984,15 +984,7 @@ class SpanPoint {
   boolean sendV1(const void *data);                       // send data - version 1 (to be deprecated)
   boolean sendV2(const void *data);                       // send data - version 2
   boolean (SpanPoint::*sendFunction)(const void *data);   // pointer to either sendV1 or sendV2  
-
-#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 5, 0)
-  static void dataSent(const esp_now_send_info_t *mac, esp_now_send_status_t status) {
-#else
-  static void dataSent(const uint8_t *mac, esp_now_send_status_t status) {
-#endif
-    xQueueOverwrite( statusQueue, &status );
-  }
-  
+ 
   public:
 
   SpanPoint(const char *macAddress, int sendSize, int receiveSize, int queueDepth=1, boolean useAPaddress=false);

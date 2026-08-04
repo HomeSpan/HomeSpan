@@ -3040,6 +3040,11 @@ boolean SpanOTA::auth;
 
 SpanPoint::SpanPoint(const char *macAddress, int sendSize, int receiveSize, int queueDepth, boolean useAPaddress){
 
+  if(!configured){
+    version=1;
+    configure(0);
+  }
+
   if(sscanf(macAddress,"%hhx:%hhx:%hhx:%hhx:%hhx:%hhx",peerInfo.peer_addr,peerInfo.peer_addr+1,peerInfo.peer_addr+2,peerInfo.peer_addr+3,peerInfo.peer_addr+4,peerInfo.peer_addr+5)!=6){
     LOG0("\nFATAL ERROR!  Can't create new SpanPoint(\"%s\") - Invalid MAC Address ***\n",macAddress);
     LOG0("\n=== PROGRAM HALTED ===");
@@ -3060,7 +3065,6 @@ SpanPoint::SpanPoint(const char *macAddress, int sendSize, int receiveSize, int 
     delay(10);
   }
 
-  init();                             // initialize SpanPoint
   peerInfo.channel=0;                 // 0 = matches current WiFi channel
   
   peerInfo.ifidx=useAPaddress?WIFI_IF_AP:WIFI_IF_STA;         // specify interface as either STA or AP
@@ -3081,14 +3085,13 @@ SpanPoint::SpanPoint(const char *macAddress, int sendSize, int receiveSize, int 
 
 void SpanPoint::configure(uint8_t deviceID, SpConfig_t cfg){
 
-
-  Serial.printf("\n\n*** '%s'\n",cfg.password.c_str());
-
-  deviceAddress = new SpAddress(deviceID,cfg.network);
-
   WiFi.mode(WIFI_AP_STA); 
   delay(10);
-  esp_wifi_set_mac(WIFI_IF_AP, deviceAddress->mac);
+
+  if(version==2){                                             // in v2, reset AP address to match deviceID and network
+    deviceAddress = new SpAddress(deviceID,cfg.network);
+    esp_wifi_set_mac(WIFI_IF_AP, deviceAddress->mac);
+  }
 
   wifi_config_t conf;                       // make sure AP is hidden (if WIFI_AP_STA is used), since it is just a "dummy" AP to keep WiFi alive for ESP-NOW
   esp_wifi_get_config(WIFI_IF_AP,&conf);
@@ -3101,15 +3104,19 @@ void SpanPoint::configure(uint8_t deviceID, SpConfig_t cfg){
   esp_now_init();                           // initialize ESP-NOW
   memcpy(lmk, hash, 16);                    // store first 16 bytes of hash for later use as local key
   esp_now_set_pmk(hash+16);                 // set hash for primary key using last 16 bytes of hash
-  esp_now_register_recv_cb(dataReceivedV2); // set callback for receiving data
-  esp_now_register_send_cb(dataSent);       // set callback for sending data
-  
-  statusQueue = xQueueCreate(1,sizeof(esp_now_send_status_t));    // create statusQueue even if not needed
+
+  esp_now_register_recv_cb(version==2 ? dataReceivedV2 : dataReceivedV1);                       // set callback for receiving data based on version
+  statusQueue = xQueueCreate(1,sizeof(esp_now_send_status_t));                                  // create statusQueue even if not needed
+
+  esp_now_register_send_cb([](const esp_now_send_info_t *mac, esp_now_send_status_t status){    // create callback for sending data
+    xQueueOverwrite( statusQueue, &status );
+  });
 
   spConf.channelMask=cfg.channelMask;                             // save a subset of the config data that will needed in other functions
   spConf.encrypt=cfg.encrypt;                                         
 
   initializeChannels();                                           // verify channel mask and set first channel
+  configured=true;                                                // set configured to true 
 }
 
 ///////////////////////////////
@@ -3142,33 +3149,6 @@ SpanPoint::SpanPoint(uint8_t deviceID, size_t sendSize, size_t receiveSize, size
   sendFunction=&SpanPoint::sendV2;    // use version 2 of send()
 
   SpanPoints.push_back(this);             
-}
-
-///////////////////////////////
-
-void SpanPoint::init(const char *password){
-
-  if(initialized)
-    return;  
-  
-  wifi_config_t conf;                       // make sure AP is hidden (if WIFI_AP_STA is used), since it is just a "dummy" AP to keep WiFi alive for ESP-NOW
-  esp_wifi_get_config(WIFI_IF_AP,&conf);
-  conf.ap.ssid_hidden=1;
-  esp_wifi_set_config(WIFI_IF_AP,&conf);
-    
-  uint8_t hash[32];
-  mbedtls_sha256((const unsigned char *)password,strlen(password),hash,0);      // produce 256-bit bit hash from password
-
-  esp_now_init();                              // initialize ESP-NOW
-  memcpy(lmk, hash, 16);                       // store first 16 bytes of hash for later use as local key
-  esp_now_set_pmk(hash+16);                    // set hash for primary key using last 16 bytes of hash
-  esp_now_register_recv_cb(dataReceivedV1);    // set callback for receiving data
-  esp_now_register_send_cb(dataSent);          // set callback for sending data
-  
-  statusQueue = xQueueCreate(1,sizeof(esp_now_send_status_t));    // create statusQueue even if not needed
-  initializeChannels();                                           // verify channel mask and set first channel
-  
-  initialized=true;
 }
 
 ///////////////////////////////
@@ -3366,13 +3346,14 @@ void SpanPoint::dataReceivedV2(const esp_now_recv_info *info, const uint8_t *inc
 ///////////////////////////////
 
 uint8_t SpanPoint::lmk[16];
-boolean SpanPoint::initialized=false;
 boolean SpanPoint::isHub=false;
 vector<SpanPoint *, Mallocator<SpanPoint *>> SpanPoint::SpanPoints;
 QueueHandle_t SpanPoint::statusQueue;
 nvs_handle SpanPoint::pointNVS;
 SpanPoint::SpAddress *SpanPoint::deviceAddress=NULL;
 SpanPoint::SpConfig_t SpanPoint::spConf{};
+boolean SpanPoint::configured=false;
+uint8_t SpanPoint::version=2;
 
 ///////////////////////////////
 //          MISC             //
