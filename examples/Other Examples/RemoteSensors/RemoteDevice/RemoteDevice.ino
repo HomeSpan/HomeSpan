@@ -51,32 +51,33 @@
 
 float temperature=-10.0;
 SpanPoint *mainDevice;
+uint32_t timer=0;
+char msg[61];
 
 void setup() {
   
   Serial.begin(115200);
   delay(1000);
 
-//  SpanPoint::setChannelMask(1<<1 | 1<<11);
-
-  SpanPoint::setPassword("New Password");
   SpanPoint::configure(2);
-//  SpanPoint::configure(2,{.password="ABCDEFGHIJKLM",.encrypt=false});
 
-//  SpanPoint::setEncryption(false);
-
-  mainDevice=new SpanPoint(18,sizeof(float));    // create a SpanPoint with sending size but no receiving size (defaults to zero)
+  mainDevice=new SpanPoint(18,sizeof(float),61);    // create a SpanPoint with sending size of float and receiving size of string
 
   homeSpan.setLogLevel(2);
 }
 
 void loop() {
 
-  boolean success = mainDevice->send(&temperature);                 // this will show as success as long as the MAIN DEVICE is running
-  Serial.printf("Send %s\n",success?"Succeeded":"Failed");
-  temperature+=0.5;
-  if(temperature>35.0)
-    temperature=-30.0;
-   
-  delay(10000);
+  if(millis()>timer+5000){
+    timer=millis();
+    boolean success = mainDevice->send(&temperature);                 // this will show as success as long as the MAIN DEVICE is running
+    Serial.printf("Send %s\n",success?"Succeeded":"Failed");
+    temperature+=0.5;
+    if(temperature>35.0)
+      temperature=-30.0;
+  }
+
+  if(mainDevice->get(msg))  
+    Serial.printf("%s\n",msg);
+
 }

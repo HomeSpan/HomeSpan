@@ -50,6 +50,8 @@ struct RemoteTempSensor : Service::TemperatureSensor {
   SpanPoint *remoteTemp;
   const char *name;
   float temperature;
+  char msg[61];
+  uint32_t timer=0;
   
   RemoteTempSensor(const char *name, uint8_t deviceID) : Service::TemperatureSensor(){
 
@@ -60,7 +62,7 @@ struct RemoteTempSensor : Service::TemperatureSensor {
 
     fault=new Characteristic::StatusFault(1);                // set initial state = fault
 
-    remoteTemp=new SpanPoint(deviceID,0,sizeof(float),2);    // create a SpanPoint with receive size=sizeof(float)
+    remoteTemp=new SpanPoint(deviceID,61,sizeof(float));    // create a SpanPoint with receive size=sizeof(float)
 
   } // end constructor
 
@@ -76,6 +78,13 @@ struct RemoteTempSensor : Service::TemperatureSensor {
       fault->setVal(1);                                         // set fault state
       LOG1("Sensor %s update: FAULT\n",name);
     }
+
+    if(millis()>timer+10000){
+      timer=millis();
+      sprintf(msg,"TEMP IS %0.1f DEGREES!",temperature*9/5+32);
+      // Serial.printf("Sending: %s\n",msg);
+      remoteTemp->send(msg);
+    }
     
   } // loop
   
@@ -90,8 +99,8 @@ void setup() {
   homeSpan.setLogLevel(2);
 
   delay(1000);
-//  SpanPoint::setEncryption(false);
-  SpanPoint::configure(18,{.password="New Password"});
+
+  SpanPoint::configure(18,{.channelSelector=false,.channelMask=(1<<8)});
 
   homeSpan.begin(Category::Bridges,"Sensor Hub");
 
@@ -99,11 +108,11 @@ void setup() {
     new Service::AccessoryInformation();
       new Characteristic::Identify(); 
       
-  new SpanAccessory();
-    new Service::AccessoryInformation();
-      new Characteristic::Identify();
-      new Characteristic::Name("Indoor Temp");
-    new RemoteTempSensor("Device 1",1);
+  // new SpanAccessory();
+  //   new Service::AccessoryInformation();
+  //     new Characteristic::Identify();
+  //     new Characteristic::Name("Indoor Temp");
+  //   new RemoteTempSensor("Device 1",1);
 
   new SpanAccessory();
     new Service::AccessoryInformation();

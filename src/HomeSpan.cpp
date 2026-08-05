@@ -3114,6 +3114,7 @@ void SpanPoint::configure(uint8_t deviceID, SpConfig_t cfg){
 
   spConf.channelMask=cfg.channelMask;                             // save a subset of the config data that will needed in other functions
   spConf.encrypt=cfg.encrypt;                                         
+  spConf.channelSelector=cfg.channelSelector;                                         
 
   initializeChannels();                                           // verify channel mask and set first channel
   configured=true;                                                // set configured to true 
@@ -3155,7 +3156,7 @@ SpanPoint::SpanPoint(uint8_t deviceID, size_t sendSize, size_t receiveSize, size
 
 void SpanPoint::initializeChannels(){
 
-  if(isHub)
+  if((version==1 && isHub) || (version==2 && !spConf.channelSelector))
     return;
 
   wifi_country_t country;
@@ -3191,7 +3192,9 @@ uint8_t SpanPoint::nextChannel(){
   wifi_second_chan_t channel2; 
   esp_wifi_get_channel(&channel,&channel2);       // get current channel
 
-  if(isHub || spConf.channelMask==(1<<channel))   // do not change channel if device is either a hub, or channel mask does not allow for any other channels
+   // do NOT change channel if device is either a hub (V1), channel selector is false (V2), or channel mask does not allow for any other channels
+
+  if((version==1 && isHub) || (version==2 && !spConf.channelSelector) || spConf.channelMask==(1<<channel))
     return(channel);
 
   do {

@@ -953,6 +953,7 @@ class SpanPoint {
 
   struct SpConfig_t {
     uint16_t network=1;
+    boolean channelSelector=true;
     String password="HomeSpan";
     boolean encrypt=true;
     uint16_t channelMask=0x3FFE;
@@ -966,7 +967,6 @@ class SpanPoint {
   uint32_t receiveTime=0;                     // time (in millis) of most recent data received
   
   static uint8_t lmk[16];
-  static boolean isHub;
   static vector<SpanPoint *, Mallocator<SpanPoint *>> SpanPoints;
   static QueueHandle_t statusQueue;           // queue for communication between SpanPoint::dataSend and SpanPoint::send
   static nvs_handle pointNVS;                 // NVS storage for channel number (only used for remote devices)
@@ -974,6 +974,7 @@ class SpanPoint {
   static SpConfig_t spConf;                   // stores all configuration settings
   static uint8_t version;                     // SpanPoint version number (v1 or v2)
   static boolean configured;                  // flag indicating SpanPoint has been configured
+  static boolean isHub;                       // used in V1 only so that HomeSpan turn off auto channel selection
 
   static void dataReceivedV2(const esp_now_recv_info *info, const uint8_t *incomingData, int len);
   static void dataReceivedV1(const esp_now_recv_info *info, const uint8_t *incomingData, int len);
