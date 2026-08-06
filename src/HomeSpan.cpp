@@ -1229,13 +1229,25 @@ void Span::processSerialCommand(const char *c){
         uint8_t channel;
         wifi_second_chan_t channel2; 
         esp_wifi_get_channel(&channel,&channel2);
-        LOG0("\nFound %d %s SpanPoint Links:\n\n",SpanPoint::SpanPoints.size(),SpanPoint::getEncryption()?"encrypted":"unencrypted");
-        LOG0("%-17s  %18s  %7s  %7s  %7s\n","Local MAC Address","Remote MAC Address","Send","Receive","Depth"); 
-        LOG0("%.17s  %.18s  %.7s  %.7s  %.7s\n",d,d,d,d,d);
-        for(auto it=SpanPoint::SpanPoints.begin();it!=SpanPoint::SpanPoints.end();it++)
-          LOG0("%-18s  %02X:%02X:%02X:%02X:%02X:%02X  %7d  %7d  %7d  %s\n",(*it)->peerInfo.ifidx==WIFI_IF_AP?WiFi.softAPmacAddress().c_str():WiFi.macAddress().c_str(),
-                 (*it)->peerInfo.peer_addr[0],(*it)->peerInfo.peer_addr[1],(*it)->peerInfo.peer_addr[2],(*it)->peerInfo.peer_addr[3],(*it)->peerInfo.peer_addr[4],(*it)->peerInfo.peer_addr[5],
-                 (*it)->sendSize,(*it)->receiveSize,(*it)->receiveSize?uxQueueSpacesAvailable((*it)->receiveQueue):0,esp_now_is_peer_exist((*it)->peerInfo.peer_addr)?"":"(max connections exceeded!)");           
+
+        if(SpanPoint::getVersion()==1){
+          LOG0("\nFound %d %s SpanPoint links on :\n\n",SpanPoint::SpanPoints.size(),SpanPoint::getEncryption()?"encrypted":"unencrypted");
+          LOG0("%-17s  %18s  %7s  %7s  %7s\n","Local MAC Address","Remote MAC Address","Send","Receive","Depth"); 
+          LOG0("%.17s  %.18s  %.7s  %.7s  %.7s\n",d,d,d,d,d);
+          for(auto it=SpanPoint::SpanPoints.begin();it!=SpanPoint::SpanPoints.end();it++)
+            LOG0("%-18s  %02X:%02X:%02X:%02X:%02X:%02X  %7d  %7d  %7d  %s\n",(*it)->peerInfo.ifidx==WIFI_IF_AP?WiFi.softAPmacAddress().c_str():WiFi.macAddress().c_str(),
+                   (*it)->peerInfo.peer_addr[0],(*it)->peerInfo.peer_addr[1],(*it)->peerInfo.peer_addr[2],(*it)->peerInfo.peer_addr[3],(*it)->peerInfo.peer_addr[4],(*it)->peerInfo.peer_addr[5],
+                   (*it)->sendSize,(*it)->receiveSize,(*it)->receiveSize?uxQueueSpacesAvailable((*it)->receiveQueue):0,esp_now_is_peer_exist((*it)->peerInfo.peer_addr)?"":"(max connections exceeded!)");           
+        } else {
+          LOG0("\nSpanPoint configured as Node %hhu on Network %hu.  Found %d %s remote node(s):\n\n",
+                SpanPoint::getAddress()->devID,SpanPoint::getAddress()->netID,SpanPoint::SpanPoints.size(),SpanPoint::getEncryption()?"encrypted":"unencrypted");
+          LOG0("%-4s  %7s  %7s  %7s\n","Node","Send","Receive","Depth"); 
+          LOG0("%.4s  %.7s  %.7s  %.7s\n",d,d,d,d,d);
+          for(auto it=SpanPoint::SpanPoints.begin();it!=SpanPoint::SpanPoints.end();it++)
+            LOG0("%4hhu  %7d  %7d  %7d  %s\n",(*it)->peerInfo.peer_addr[1],(*it)->sendSize,(*it)->receiveSize,
+                  (*it)->receiveSize?uxQueueSpacesAvailable((*it)->receiveQueue):0,esp_now_is_peer_exist((*it)->peerInfo.peer_addr)?"":"(max connections exceeded!)");
+        }
+        
         LOG0("\nSpanPoint using WiFi Channel %d%s\n",channel,WiFi.status()!=WL_CONNECTED?" (subject to change once WiFi connection established)":"");
       }
 

@@ -1002,6 +1002,8 @@ class SpanPoint {
   uint32_t time(){return(millis()-receiveTime);}
   static uint16_t getChannelMask(){return(spConf.channelMask);}
   static boolean getEncryption(){return(spConf.encrypt);}
+  static uint8_t getVersion(){return(version);}
+  static const SpAddress *getAddress(){return(deviceAddress);}
 };
 
 /////////////////////////////////////////////////

@@ -108,11 +108,11 @@ void setup() {
     new Service::AccessoryInformation();
       new Characteristic::Identify(); 
       
-  // new SpanAccessory();
-  //   new Service::AccessoryInformation();
-  //     new Characteristic::Identify();
-  //     new Characteristic::Name("Indoor Temp");
-  //   new RemoteTempSensor("Device 1",1);
+  new SpanAccessory();
+    new Service::AccessoryInformation();
+      new Characteristic::Identify();
+      new Characteristic::Name("Indoor Temp");
+    new RemoteTempSensor("Device 1",1);
 
   new SpanAccessory();
     new Service::AccessoryInformation();
