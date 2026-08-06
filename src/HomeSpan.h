@@ -988,7 +988,7 @@ class SpanPoint {
  
   public:
 
-  SpanPoint(const char *macAddress, int sendSize, int receiveSize, int queueDepth=1, boolean useAPaddress=false);
+  SpanPoint(const char *macAddress, size_t sendSize, size_t receiveSize, size_t queueDepth=1, boolean useAPaddress=false);
   static void setPassword(String pwd){spConf.password=pwd;}
   static void setEncryption(boolean encrypt){spConf.encrypt=encrypt;}
   static void setChannelMask(uint16_t mask){spConf.channelMask=mask;}

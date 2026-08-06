@@ -3038,7 +3038,7 @@ boolean SpanOTA::auth;
 //        SpanPoint          //
 ///////////////////////////////
 
-SpanPoint::SpanPoint(const char *macAddress, int sendSize, int receiveSize, int queueDepth, boolean useAPaddress){
+SpanPoint::SpanPoint(const char *macAddress, size_t sendSize, size_t receiveSize, size_t queueDepth, boolean useAPaddress){
 
   if(!configured){
     version=1;
@@ -3046,12 +3046,12 @@ SpanPoint::SpanPoint(const char *macAddress, int sendSize, int receiveSize, int 
   }
 
   if(sscanf(macAddress,"%hhx:%hhx:%hhx:%hhx:%hhx:%hhx",peerInfo.peer_addr,peerInfo.peer_addr+1,peerInfo.peer_addr+2,peerInfo.peer_addr+3,peerInfo.peer_addr+4,peerInfo.peer_addr+5)!=6){
-    LOG0("\nFATAL ERROR!  Can't create new SpanPoint(\"%s\") - Invalid MAC Address ***\n",macAddress);
+    LOG0("\nFATAL ERROR!  Can't create new SpanPoint(\"%s\") - invalid MAC Address ***\n",macAddress);
     LOG0("\n=== PROGRAM HALTED ===");
     while(1);
   }
 
-  if(sendSize<0 || sendSize>200 || receiveSize<0 || receiveSize>200 || queueDepth<1 || (sendSize==0 && receiveSize==0)){
+  if(sendSize>ESP_NOW_MAX_DATA_LEN_V2 || receiveSize>ESP_NOW_MAX_DATA_LEN_V2 || queueDepth<1 || (sendSize==0 && receiveSize==0)){
     LOG0("\nFATAL ERROR!  Can't create new SpanPoint(\"%s\",%d,%d,%d) - one or more invalid parameters ***\n",macAddress,sendSize,receiveSize,queueDepth);
     LOG0("\n=== PROGRAM HALTED ===");
     while(1);
@@ -3065,13 +3065,11 @@ SpanPoint::SpanPoint(const char *macAddress, int sendSize, int receiveSize, int 
     delay(10);
   }
 
-  peerInfo.channel=0;                 // 0 = matches current WiFi channel
-  
+  peerInfo.channel=0;                                         // 0 = matches current WiFi channel
   peerInfo.ifidx=useAPaddress?WIFI_IF_AP:WIFI_IF_STA;         // specify interface as either STA or AP
-  
-  peerInfo.encrypt=spConf.encrypt;    // set encryption for this peer
-  memcpy(peerInfo.lmk, lmk, 16);      // set local key
-  esp_now_add_peer(&peerInfo);        // add peer to ESP-NOW
+  peerInfo.encrypt=spConf.encrypt;                            // set encryption for this peer
+  memcpy(peerInfo.lmk, lmk, 16);                              // set local key
+  esp_now_add_peer(&peerInfo);                                // add peer to ESP-NOW
 
   if(receiveSize>0)
     receiveQueue = xQueueCreate(queueDepth,receiveSize);  
@@ -3085,10 +3083,22 @@ SpanPoint::SpanPoint(const char *macAddress, int sendSize, int receiveSize, int 
 
 void SpanPoint::configure(uint8_t deviceID, SpConfig_t cfg){
 
-  WiFi.mode(WIFI_AP_STA); 
-  delay(10);
+  if(configured){
+    LOG0("\nFATAL ERROR!  SpanPoint already configured with Device ID of %hhu! ***\n",deviceID);
+    LOG0("\n=== PROGRAM HALTED ===");
+    while(1);
+  }
 
   if(version==2){                                             // in v2, reset AP address to match deviceID and network
+
+    if(deviceID==0){
+      LOG0("\nFATAL ERROR!  Can't configure SpanPoint - Device ID must be greater than zero ***\n");
+      LOG0("\n=== PROGRAM HALTED ===");
+      while(1);
+    }
+
+    WiFi.mode(WIFI_AP_STA); 
+    delay(10);
     deviceAddress = new SpAddress(deviceID,cfg.network);
     esp_wifi_set_mac(WIFI_IF_AP, deviceAddress->mac);
   }
@@ -3123,6 +3133,12 @@ void SpanPoint::configure(uint8_t deviceID, SpConfig_t cfg){
 ///////////////////////////////
 
 SpanPoint::SpanPoint(uint8_t deviceID, size_t sendSize, size_t receiveSize, size_t queueDepth){
+
+  if(!configured){
+    LOG0("\nFATAL ERROR!  Can't create new SpanPoint(%d,%d,%d,%d) - SpanPoint not yet configured! ***\n",deviceID,sendSize,receiveSize,queueDepth);
+    LOG0("\n=== PROGRAM HALTED ===");
+    while(1);
+  }
 
   SpAddress destAddress(deviceID, deviceAddress->netID);
   memcpy(peerInfo.peer_addr,destAddress.mac,6);
