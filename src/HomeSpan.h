@@ -979,7 +979,7 @@ class SpanPoint {
   static void dataReceivedV2(const esp_now_recv_info *info, const uint8_t *incomingData, int len);
   static void dataReceivedV1(const esp_now_recv_info *info, const uint8_t *incomingData, int len);
   static void setAsHub(){isHub=true;}
-  static uint8_t nextChannel();
+  static uint8_t nextChannel(uint8_t channel);
   static void initializeChannels();
 
   boolean sendV1(const void *data);                       // send data - version 1 (to be deprecated)

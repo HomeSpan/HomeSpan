@@ -3214,13 +3214,9 @@ void SpanPoint::initializeChannels(){
 
 ///////////////////////////////
 
-uint8_t SpanPoint::nextChannel(){
+uint8_t SpanPoint::nextChannel(uint8_t channel){
 
-  uint8_t channel;
-  wifi_second_chan_t channel2; 
-  esp_wifi_get_channel(&channel,&channel2);       // get current channel
-
-   // do NOT change channel if device is either a hub (V1), channel selector is false (V2), or channel mask does not allow for any other channels
+  // do NOT change channel if device is either a hub (V1), channel selector is false (V2), or channel mask does not allow for any other channels
 
   if((version==1 && isHub) || (version==2 && !spConf.channelSelector) || spConf.channelMask==(1<<channel))
     return(channel);
@@ -3273,7 +3269,7 @@ boolean SpanPoint::sendV1(const void *data){
         return(true);
       delay(10);
     }    
-    channel=nextChannel();
+    channel=nextChannel(channel);
   } while(channel!=startingChannel);
 
   return(false);
@@ -3306,7 +3302,7 @@ boolean SpanPoint::sendV2(const void *data){
       LOG2("Failed.\n");
       delay(10);
     }    
-    channel=nextChannel();
+    channel=nextChannel(channel);
   } while(channel!=startingChannel);
 
   LOG2("SpanPoint: ERROR! Node %hhu on Network %hu unreachable.\n",destAddress->devID,deviceAddress->netID);        
