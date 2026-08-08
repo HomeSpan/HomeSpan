@@ -100,7 +100,7 @@ void setup() {
 
   delay(1000);
 
-  SpanPoint::configure(18,{.channelSelector=false,.channelMask=(1<<8)});
+  SpanPoint::configure(18,{.network=4,.channelSelector=false});
 
   homeSpan.begin(Category::Bridges,"Sensor Hub");
 
@@ -112,7 +112,7 @@ void setup() {
     new Service::AccessoryInformation();
       new Characteristic::Identify();
       new Characteristic::Name("Indoor Temp");
-    new RemoteTempSensor("Device 1",1);
+    new RemoteTempSensor("Device 1",48);
 
   new SpanAccessory();
     new Service::AccessoryInformation();

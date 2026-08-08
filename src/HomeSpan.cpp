@@ -29,7 +29,6 @@
  
 #include <ESPmDNS.h>
 #include <nvs_flash.h>
-#include <sodium.h>
 #include <WiFi.h>
 #include <driver/ledc.h>
 #include <mbedtls/version.h>
@@ -3080,7 +3079,9 @@ SpanPoint::SpanPoint(const char *macAddress, size_t sendSize, size_t receiveSize
   peerInfo.channel=0;                                         // 0 = matches current WiFi channel
   peerInfo.ifidx=useAPaddress?WIFI_IF_AP:WIFI_IF_STA;         // specify interface as either STA or AP
   peerInfo.encrypt=spConf.encrypt;                            // set encryption for this peer
-  memcpy(peerInfo.lmk, lmk, 16);                              // set local key
+
+  const char *keyContext="Key for LMK";
+  crypto_kdf_hkdf_sha256_expand(peerInfo.lmk,ESP_NOW_KEY_LEN,keyContext,strlen(keyContext),masterKey);
   esp_now_add_peer(&peerInfo);                                // add peer to ESP-NOW
 
   if(receiveSize>0)
@@ -3119,13 +3120,20 @@ void SpanPoint::configure(uint8_t deviceID, SpConfig_t cfg){
   esp_wifi_get_config(WIFI_IF_AP,&conf);
   conf.ap.ssid_hidden=1;
   esp_wifi_set_config(WIFI_IF_AP,&conf);
-    
-  uint8_t hash[32];
-  mbedtls_sha256((const unsigned char *)cfg.password.c_str(),cfg.password.length(),hash,0);      // produce 256-bit bit hash from password
 
-  esp_now_init();                           // initialize ESP-NOW
-  memcpy(lmk, hash, 16);                    // store first 16 bytes of hash for later use as local key
-  esp_now_set_pmk(hash+16);                 // set hash for primary key using last 16 bytes of hash
+  // create Master Key for all of SpanPoint base on SpanPoint password
+
+  const char *salt="SpanPoint";
+  crypto_kdf_hkdf_sha256_extract(masterKey,(unsigned char *)salt,strlen(salt),(unsigned char *)cfg.password.c_str(),cfg.password.length());
+
+  // derive ESP-NOW PMK from Master Key
+
+  uint8_t pmk[ESP_NOW_KEY_LEN];
+  const char *keyContext="Key for PMK";
+  crypto_kdf_hkdf_sha256_expand(pmk,ESP_NOW_KEY_LEN,keyContext,strlen(keyContext),masterKey);
+  
+  esp_now_init();                       // initialize ESP-NOW
+  esp_now_set_pmk(pmk);                 // set PMK from HKDF above
 
   esp_now_register_recv_cb(version==2 ? dataReceivedV2 : dataReceivedV1);                       // set callback for receiving data based on version
   statusQueue = xQueueCreate(1,sizeof(esp_now_send_status_t));                                  // create statusQueue even if not needed
@@ -3167,8 +3175,20 @@ SpanPoint::SpanPoint(uint8_t deviceID, size_t sendSize, size_t receiveSize, size
   peerInfo.channel=0;                 // 0 = matches current WiFi channel
   peerInfo.ifidx=WIFI_IF_AP;          // specify interface as AP
   peerInfo.encrypt=spConf.encrypt;    // set encryption for this peer
-  memcpy(peerInfo.lmk, lmk, 16);      // set local key
+  
+  char *keyContext;
+  asprintf(&keyContext,"Key for LMK: NetID=%hu DevID1=%hhu DevID2=%hhu",deviceAddress->netID,
+          deviceID<(deviceAddress->devID)?deviceID:deviceAddress->devID,
+          deviceID>(deviceAddress->devID)?deviceID:deviceAddress->devID);
+
+  crypto_kdf_hkdf_sha256_expand(peerInfo.lmk,ESP_NOW_KEY_LEN,keyContext,strlen(keyContext),masterKey);
   esp_now_add_peer(&peerInfo);        // add peer to ESP-NOW
+
+  Serial.printf("\n *** %s\n",HAPClient::hex2String(masterKey,crypto_kdf_hkdf_sha256_KEYBYTES).c_str());
+  Serial.printf(" *** %s\n",keyContext);
+  Serial.printf(" *** %s\n",HAPClient::hex2String(peerInfo.lmk,ESP_NOW_KEY_LEN).c_str());
+
+  free(keyContext);
 
   if(receiveSize>0){
     receiveQueue = xQueueCreate(queueDepth>0?queueDepth:1,receiveSize);
@@ -3372,7 +3392,6 @@ void SpanPoint::dataReceivedV2(const esp_now_recv_info *info, const uint8_t *inc
 
 ///////////////////////////////
 
-uint8_t SpanPoint::lmk[16];
 boolean SpanPoint::isHub=false;
 vector<SpanPoint *, Mallocator<SpanPoint *>> SpanPoint::SpanPoints;
 QueueHandle_t SpanPoint::statusQueue;
@@ -3381,6 +3400,7 @@ SpanPoint::SpAddress *SpanPoint::deviceAddress=NULL;
 SpanPoint::SpConfig_t SpanPoint::spConf{};
 boolean SpanPoint::configured=false;
 uint8_t SpanPoint::version=2;
+uint8_t SpanPoint::masterKey[crypto_kdf_hkdf_sha256_KEYBYTES];
 
 ///////////////////////////////
 //          MISC             //

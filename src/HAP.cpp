@@ -28,7 +28,6 @@
 #include "version.h"
  
 #include <ESPmDNS.h>
-#include <sodium.h>
 #include <mbedtls/version.h>
 
 #include "HAP.h"
