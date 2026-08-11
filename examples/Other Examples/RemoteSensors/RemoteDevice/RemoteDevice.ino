@@ -59,7 +59,7 @@ void setup() {
   Serial.begin(115200);
   delay(1000);
 
-  SpanPoint::configure(2,{.network=4});
+  SpanPoint::configure(2,{.network=4,.password="HomeSpan",.encrypt=false});
 
   mainDevice=new SpanPoint(18,sizeof(float),61);    // create a SpanPoint with sending size of float and receiving size of string
 

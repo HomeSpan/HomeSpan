@@ -3113,7 +3113,7 @@ void SpanPoint::configure(uint8_t deviceID, SpConfig_t cfg){
     WiFi.mode(WIFI_AP_STA); 
     delay(10);
     deviceAddress = new SpAddress(deviceID,cfg.network);
-    esp_wifi_set_mac(WIFI_IF_AP, deviceAddress->mac);
+    esp_wifi_set_mac(WIFI_IF_AP, deviceAddress->mac);    
   }
 
   wifi_config_t conf;                       // make sure AP is hidden (if WIFI_AP_STA is used), since it is just a "dummy" AP to keep WiFi alive for ESP-NOW
@@ -3130,7 +3130,10 @@ void SpanPoint::configure(uint8_t deviceID, SpConfig_t cfg){
 
   uint8_t pmk[ESP_NOW_KEY_LEN];
   const char *keyContext="Key for PMK";
-  crypto_kdf_hkdf_sha256_expand(pmk,ESP_NOW_KEY_LEN,keyContext,strlen(keyContext),masterKey);
+  crypto_kdf_hkdf_sha256_expand(pmk,ESP_NOW_KEY_LEN,keyContext,strlen(keyContext),masterKey);             // PMK key used for encryption
+  crypto_kdf_hkdf_sha256_expand(authKey,crypto_auth_KEYBYTES,(char *)deviceAddress->mac,6,masterKey);     // authentication key used in V2 where context is MAC address
+
+  Serial.printf(" *** %s\n",HAPClient::hex2String(authKey,crypto_auth_KEYBYTES).c_str());
   
   esp_now_init();                       // initialize ESP-NOW
   esp_now_set_pmk(pmk);                 // set PMK from HKDF above
@@ -3175,20 +3178,23 @@ SpanPoint::SpanPoint(uint8_t deviceID, size_t sendSize, size_t receiveSize, size
   peerInfo.channel=0;                 // 0 = matches current WiFi channel
   peerInfo.ifidx=WIFI_IF_AP;          // specify interface as AP
   peerInfo.encrypt=spConf.encrypt;    // set encryption for this peer
-  
-  char *keyContext;
-  asprintf(&keyContext,"Key for LMK: NetID=%hu DevID1=%hhu DevID2=%hhu",deviceAddress->netID,
-          deviceID<(deviceAddress->devID)?deviceID:deviceAddress->devID,
-          deviceID>(deviceAddress->devID)?deviceID:deviceAddress->devID);
 
-  crypto_kdf_hkdf_sha256_expand(peerInfo.lmk,ESP_NOW_KEY_LEN,keyContext,strlen(keyContext),masterKey);
+  if(spConf.encrypt){
+    char *keyContext;
+
+    asprintf(&keyContext,"Key for LMK: NetID=%hu DevID1=%hhu DevID2=%hhu",deviceAddress->netID,
+             deviceID<(deviceAddress->devID)?deviceID:deviceAddress->devID,
+            deviceID>(deviceAddress->devID)?deviceID:deviceAddress->devID);
+
+    crypto_kdf_hkdf_sha256_expand(peerInfo.lmk,ESP_NOW_KEY_LEN,keyContext,strlen(keyContext),masterKey);
+
+    Serial.printf(" *** %s\n",keyContext);
+    Serial.printf(" *** %s\n",HAPClient::hex2String(peerInfo.lmk,ESP_NOW_KEY_LEN).c_str());
+
+    free(keyContext);
+  }
+
   esp_now_add_peer(&peerInfo);        // add peer to ESP-NOW
-
-  Serial.printf("\n *** %s\n",HAPClient::hex2String(masterKey,crypto_kdf_hkdf_sha256_KEYBYTES).c_str());
-  Serial.printf(" *** %s\n",keyContext);
-  Serial.printf(" *** %s\n",HAPClient::hex2String(peerInfo.lmk,ESP_NOW_KEY_LEN).c_str());
-
-  free(keyContext);
 
   if(receiveSize>0){
     receiveQueue = xQueueCreate(queueDepth>0?queueDepth:1,receiveSize);
@@ -3306,27 +3312,32 @@ boolean SpanPoint::sendV2(const void *data){
   wifi_second_chan_t channel2; 
   esp_wifi_get_channel(&channel,&channel2);     // get current channel
   uint8_t startingChannel=channel;              // set starting channel to current channel
-  esp_now_send_status_t status = ESP_NOW_SEND_FAIL;
 
   const SpAddress *destAddress = (SpAddress *)peerInfo.peer_addr;
 
+  size_t msgSize=sendSize+crypto_auth_BYTES;            // size of message with HMAC
+  uint8_t *msg=(uint8_t *)HS_MALLOC(msgSize);           // allocate new memory reflecting large size
+  memcpy(msg,data,sendSize);                            // copy data into first part of memory block
+  crypto_auth(msg+sendSize, msg, sendSize, authKey);    // create HMAC from authKey and load into second part of memory block
+
+  esp_now_send_status_t status = ESP_NOW_SEND_FAIL;
+
   do {
-    for(int i=1;i<=3;i++){      
+    for(int i=0; status!=ESP_NOW_SEND_SUCCESS && i<3; i++){      
       LOG2("SpanPoint: Sending %d bytes to node %hhu using WiFi channel %hhu... ",sendSize,destAddress->devID,channel);        
-      esp_now_send(peerInfo.peer_addr, (uint8_t *) data, sendSize);
+      esp_now_send(peerInfo.peer_addr, msg, msgSize);
       xQueueReceive(statusQueue, &status, pdMS_TO_TICKS(2000));
-      if(status==ESP_NOW_SEND_SUCCESS){
-        LOG2("Success!\n");
-        return(true);
-      }
-      LOG2("Failed.\n");
+      LOG2("%s\n",status==ESP_NOW_SEND_SUCCESS ? "Success!" : "Failed.");
       delay(10);
     }    
-    channel=nextChannel(channel);
-  } while(channel!=startingChannel);
+  } while(status!=ESP_NOW_SEND_SUCCESS && (channel=nextChannel(channel))!=startingChannel);
 
-  LOG2("SpanPoint: ERROR! Node %hhu on Network %hu unreachable.\n",destAddress->devID,deviceAddress->netID);        
-  return(false);
+  if(status!=ESP_NOW_SEND_SUCCESS)
+    LOG2("SpanPoint: ERROR! Node %hhu on Network %hu unreachable.\n",destAddress->devID,deviceAddress->netID);
+
+  free(msg);
+
+  return(status==ESP_NOW_SEND_SUCCESS);
 } 
 
 ///////////////////////////////
@@ -3362,13 +3373,24 @@ void SpanPoint::dataReceivedV2(const esp_now_recv_info *info, const uint8_t *inc
 
   const SpAddress *srcAddress = (SpAddress *)info->src_addr;
 
-  LOG2("SpanPoint: Received %d bytes from node %hhu. ",len,srcAddress->devID);        
+  uint8_t remoteKey[crypto_auth_KEYBYTES];
+  crypto_kdf_hkdf_sha256_expand(remoteKey,crypto_auth_KEYBYTES,(char *)info->src_addr,6,masterKey);     // expected authentication key of remote device
+
+  LOG2("SpanPoint: ");
+  
+  len-=crypto_auth_BYTES;
+  if(len<1 || crypto_auth_verify(incomingData+len, incomingData, len, remoteKey)!=0){
+    LOG2("ERROR! Received unverifiable message of %d bytes from node %hhu.\n",len+crypto_auth_BYTES,srcAddress->devID);
+    return;
+  }
+
+  LOG2("Received %d bytes from node %hhu. ",len,srcAddress->devID);        
 
   auto it=SpanPoints.begin();
   for(;it!=SpanPoints.end() && memcmp((*it)->peerInfo.peer_addr,info->src_addr,6)!=0; it++);
   
   if(it==SpanPoints.end()){
-    LOG2("ERROR! Unknown node.\n");
+    LOG2("ERROR! No matching SpanPoint for this node.\n");
     return;
   }
 
@@ -3401,6 +3423,7 @@ SpanPoint::SpConfig_t SpanPoint::spConf{};
 boolean SpanPoint::configured=false;
 uint8_t SpanPoint::version=2;
 uint8_t SpanPoint::masterKey[crypto_kdf_hkdf_sha256_KEYBYTES];
+uint8_t SpanPoint::authKey[crypto_auth_KEYBYTES];
 
 ///////////////////////////////
 //          MISC             //

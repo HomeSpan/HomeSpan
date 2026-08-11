@@ -967,8 +967,11 @@ class SpanPoint {
   boolean overwriteQueue;                     // flag to indicate whether receiving queue should be overridden
   uint32_t receiveTime=0;                     // time (in millis) of most recent data received
   
-  static uint8_t masterKey[crypto_kdf_hkdf_sha256_KEYBYTES];        // master key for SpanPoint based on SpanPoint password
+  static uint8_t masterKey[crypto_kdf_hkdf_sha256_KEYBYTES];      // master key for SpanPoint based on SpanPoint password
+  static uint8_t authKey[crypto_auth_KEYBYTES];                   // message authentication key (only used in V2)
+
   static vector<SpanPoint *, Mallocator<SpanPoint *>> SpanPoints;
+
   static QueueHandle_t statusQueue;           // queue for communication between SpanPoint::dataSend and SpanPoint::send
   static nvs_handle pointNVS;                 // NVS storage for channel number (only used for remote devices)
   static SpAddress *deviceAddress;            // SpanPoint Address of this device (will be used for AP Mac)
