@@ -3081,7 +3081,8 @@ SpanPoint::SpanPoint(const char *macAddress, size_t sendSize, size_t receiveSize
   peerInfo.encrypt=spConf.encrypt;                            // set encryption for this peer
 
   const char *keyContext="Key for LMK";
-  crypto_kdf_hkdf_sha256_expand(peerInfo.lmk,ESP_NOW_KEY_LEN,keyContext,strlen(keyContext),masterKey);
+  crypto_kdf_hkdf_sha256_expand(peerInfo.lmk,ESP_NOW_KEY_LEN,keyContext,strlen(keyContext),masterKey);    // derive generic LMK from Master Key
+  
   esp_now_add_peer(&peerInfo);                                // add peer to ESP-NOW
 
   if(receiveSize>0)
@@ -3121,19 +3122,17 @@ void SpanPoint::configure(uint8_t deviceID, SpConfig_t cfg){
   conf.ap.ssid_hidden=1;
   esp_wifi_set_config(WIFI_IF_AP,&conf);
 
-  // create Master Key for all of SpanPoint base on SpanPoint password
+  // create Master Key for all SpanPoint functions based on SpanPoint password
 
   const char *salt="SpanPoint";
   crypto_kdf_hkdf_sha256_extract(masterKey,(unsigned char *)salt,strlen(salt),(unsigned char *)cfg.password.c_str(),cfg.password.length());
 
-  // derive ESP-NOW PMK from Master Key
+  // derive context-based keys from Master Key
 
   uint8_t pmk[ESP_NOW_KEY_LEN];
   const char *keyContext="Key for PMK";
   crypto_kdf_hkdf_sha256_expand(pmk,ESP_NOW_KEY_LEN,keyContext,strlen(keyContext),masterKey);             // PMK key used for encryption
   crypto_kdf_hkdf_sha256_expand(authKey,crypto_auth_KEYBYTES,(char *)deviceAddress->mac,6,masterKey);     // authentication key used in V2 where context is MAC address
-
-  Serial.printf(" *** %s\n",HAPClient::hex2String(authKey,crypto_auth_KEYBYTES).c_str());
   
   esp_now_init();                       // initialize ESP-NOW
   esp_now_set_pmk(pmk);                 // set PMK from HKDF above
@@ -3179,20 +3178,15 @@ SpanPoint::SpanPoint(uint8_t deviceID, size_t sendSize, size_t receiveSize, size
   peerInfo.ifidx=WIFI_IF_AP;          // specify interface as AP
   peerInfo.encrypt=spConf.encrypt;    // set encryption for this peer
 
-  if(spConf.encrypt){
-    char *keyContext;
+  char *keyContext;
 
-    asprintf(&keyContext,"Key for LMK: NetID=%hu DevID1=%hhu DevID2=%hhu",deviceAddress->netID,
-             deviceID<(deviceAddress->devID)?deviceID:deviceAddress->devID,
+  asprintf(&keyContext,"Key for LMK: NetID=%hu DevID1=%hhu DevID2=%hhu",deviceAddress->netID,
+            deviceID<(deviceAddress->devID)?deviceID:deviceAddress->devID,
             deviceID>(deviceAddress->devID)?deviceID:deviceAddress->devID);
 
-    crypto_kdf_hkdf_sha256_expand(peerInfo.lmk,ESP_NOW_KEY_LEN,keyContext,strlen(keyContext),masterKey);
+  crypto_kdf_hkdf_sha256_expand(peerInfo.lmk,ESP_NOW_KEY_LEN,keyContext,strlen(keyContext),masterKey);      // derive peer-specific LMK from Master Key
 
-    Serial.printf(" *** %s\n",keyContext);
-    Serial.printf(" *** %s\n",HAPClient::hex2String(peerInfo.lmk,ESP_NOW_KEY_LEN).c_str());
-
-    free(keyContext);
-  }
+  free(keyContext);
 
   esp_now_add_peer(&peerInfo);        // add peer to ESP-NOW
 
@@ -3384,7 +3378,7 @@ void SpanPoint::dataReceivedV2(const esp_now_recv_info *info, const uint8_t *inc
     return;
   }
 
-  LOG2("Received %d bytes from node %hhu. ",len,srcAddress->devID);        
+  LOG2("Received %d verified bytes from node %hhu. ",len,srcAddress->devID);        
 
   auto it=SpanPoints.begin();
   for(;it!=SpanPoints.end() && memcmp((*it)->peerInfo.peer_addr,info->src_addr,6)!=0; it++);
