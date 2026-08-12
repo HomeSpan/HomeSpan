@@ -950,6 +950,10 @@ class SpanPoint {
       mac[4]=mac[0]^mac[2];
       mac[5]=mac[1]^mac[3];
     }
+
+    boolean isValid() const {
+      return(firstByte==0xF2 && mac[4]==mac[0]^mac[2] && mac[5]==mac[1]^mac[3]);
+    }
   };
 
   struct SpConfig_t {

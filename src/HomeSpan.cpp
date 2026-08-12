@@ -3366,12 +3366,18 @@ void SpanPoint::dataReceivedV1(const esp_now_recv_info *info, const uint8_t *inc
 void SpanPoint::dataReceivedV2(const esp_now_recv_info *info, const uint8_t *incomingData, int len){
 
   const SpAddress *srcAddress = (SpAddress *)info->src_addr;
+  const uint8_t *mac=info->src_addr;
+
+  LOG2("SpanPoint: ");
+
+  if(!srcAddress->isValid()){
+    LOG2("WARNING! Ignoring %d-byte message received from invalid SpanPoint MAC Address %02X:%02X:%02X:%02X:%02X:%02X.\n",len,mac[0],mac[1],mac[2],mac[3],mac[4],mac[5]);
+    return;
+  }
 
   uint8_t remoteKey[crypto_auth_KEYBYTES];
   crypto_kdf_hkdf_sha256_expand(remoteKey,crypto_auth_KEYBYTES,(char *)info->src_addr,6,masterKey);     // expected authentication key of remote device
-
-  LOG2("SpanPoint: ");
-  
+ 
   len-=crypto_auth_BYTES;
   if(len<1 || crypto_auth_verify(incomingData+len, incomingData, len, remoteKey)!=0){
     LOG2("ERROR! Received unverifiable message of %d bytes from node %hhu.\n",len+crypto_auth_BYTES,srcAddress->devID);
