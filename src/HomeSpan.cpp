@@ -3165,8 +3165,14 @@ SpanPoint::SpanPoint(uint8_t deviceID, size_t sendSize, size_t receiveSize, size
   SpAddress destAddress(deviceID, deviceAddress->netID);
   memcpy(peerInfo.peer_addr,destAddress.mac,6);
 
-  if(sendSize>ESP_NOW_MAX_DATA_LEN_V2 || receiveSize>ESP_NOW_MAX_DATA_LEN_V2 || (sendSize==0 && receiveSize==0)){
-    LOG0("\nFATAL ERROR!  Can't create new SpanPoint(%d,%d,%d,%d) - invalid parameters ***\n",deviceID,sendSize,receiveSize,queueDepth);
+  if(deviceID==deviceAddress->devID || esp_now_is_peer_exist(destAddress.mac)){
+    LOG0("\nFATAL ERROR!  Can't create new SpanPoint(%d,%d,%d,%d) - deviceID already used ***\n",deviceID,sendSize,receiveSize,queueDepth);
+    LOG0("\n=== PROGRAM HALTED ===");
+    while(1);
+  }
+
+  if(sendSize>ESP_NOW_MAX_DATA_LEN_V2-crypto_auth_BYTES || receiveSize>ESP_NOW_MAX_DATA_LEN_V2-crypto_auth_BYTES || (sendSize==0 && receiveSize==0)){
+    LOG0("\nFATAL ERROR!  Can't create new SpanPoint(%d,%d,%d,%d) - invalid send/receive size parameters ***\n",deviceID,sendSize,receiveSize,queueDepth);
     LOG0("\n=== PROGRAM HALTED ===");
     while(1);
   }
