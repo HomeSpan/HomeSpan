@@ -1230,7 +1230,7 @@ void Span::processSerialCommand(const char *c){
         esp_wifi_get_channel(&channel,&channel2);
 
         if(SpanPoint::getVersion()==1){
-          LOG0("\nFound %d %s SpanPoint links on :\n\n",SpanPoint::SpanPoints.size(),SpanPoint::getEncryption()?"encrypted":"unencrypted");
+          LOG0("\nFound %d %s SpanPoint Links:\n\n",SpanPoint::SpanPoints.size(),SpanPoint::getEncryption()?"encrypted":"unencrypted");
           LOG0("%-17s  %18s  %7s  %7s  %7s\n","Local MAC Address","Remote MAC Address","Send","Receive","Depth"); 
           LOG0("%.17s  %.18s  %.7s  %.7s  %.7s\n",d,d,d,d,d);
           for(auto it=SpanPoint::SpanPoints.begin();it!=SpanPoint::SpanPoints.end();it++)
