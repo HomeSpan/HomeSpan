@@ -3080,8 +3080,9 @@ SpanPoint::SpanPoint(const char *macAddress, size_t sendSize, size_t receiveSize
   peerInfo.ifidx=useAPaddress?WIFI_IF_AP:WIFI_IF_STA;         // specify interface as either STA or AP
   peerInfo.encrypt=spConf.encrypt;                            // set encryption for this peer
 
-  const char *keyContext="Key for LMK";
-  crypto_kdf_hkdf_sha256_expand(peerInfo.lmk,ESP_NOW_KEY_LEN,keyContext,strlen(keyContext),masterKey);    // derive generic LMK from Master Key
+  uint8_t hash[32];
+  mbedtls_sha256((const unsigned char *)spConf.password.c_str(),spConf.password.length(),hash,0);      // produce 256-bit (32-byte) hash from password
+  memcpy(peerInfo.lmk, hash, 16);                                                                      // set LMK equal to first 16 bytes of hash
   
   esp_now_add_peer(&peerInfo);                                // add peer to ESP-NOW
 
@@ -3103,7 +3104,7 @@ void SpanPoint::configure(uint8_t deviceID, SpConfig_t cfg){
     while(1);
   }
 
-  if(version==2){                                             // in v2, reset AP address to match deviceID and network
+  if(version==2){                           // in v2, reset AP address to match deviceID and network
 
     if(deviceID==0){
       LOG0("\nFATAL ERROR!  Can't configure SpanPoint - Device ID must be greater than zero ***\n");
@@ -3117,25 +3118,32 @@ void SpanPoint::configure(uint8_t deviceID, SpConfig_t cfg){
     esp_wifi_set_mac(WIFI_IF_AP, deviceAddress->mac);    
   }
 
-  wifi_config_t conf;                       // make sure AP is hidden (if WIFI_AP_STA is used), since it is just a "dummy" AP to keep WiFi alive for ESP-NOW
+  wifi_config_t conf;                       // make sure AP is hidden
   esp_wifi_get_config(WIFI_IF_AP,&conf);
   conf.ap.ssid_hidden=1;
   esp_wifi_set_config(WIFI_IF_AP,&conf);
 
-  // create Master Key for all SpanPoint functions based on SpanPoint password
+  esp_now_init();                           // initialize ESP-NOW
 
-  const char *salt="SpanPoint";
-  crypto_kdf_hkdf_sha256_extract(masterKey,(unsigned char *)salt,strlen(salt),(unsigned char *)cfg.password.c_str(),cfg.password.length());
+  if(version==2){                           // in V2, use HKDF to create Master Key for all SpanPoint functions based on SpanPoint password
 
-  // derive context-based keys from Master Key
+    const char *salt="SpanPoint";
+    crypto_kdf_hkdf_sha256_extract(masterKey,(unsigned char *)salt,strlen(salt),(unsigned char *)cfg.password.c_str(),cfg.password.length());
 
-  uint8_t pmk[ESP_NOW_KEY_LEN];
-  const char *keyContext="Key for PMK";
-  crypto_kdf_hkdf_sha256_expand(pmk,ESP_NOW_KEY_LEN,keyContext,strlen(keyContext),masterKey);             // PMK key used for encryption
-  crypto_kdf_hkdf_sha256_expand(authKey,crypto_auth_KEYBYTES,(char *)deviceAddress->mac,6,masterKey);     // authentication key used in V2 where context is MAC address
-  
-  esp_now_init();                       // initialize ESP-NOW
-  esp_now_set_pmk(pmk);                 // set PMK from HKDF above
+    // derive context-based keys from Master Key
+
+    uint8_t pmk[ESP_NOW_KEY_LEN];
+    const char *keyContext="Key for PMK";
+    crypto_kdf_hkdf_sha256_expand(pmk,ESP_NOW_KEY_LEN,keyContext,strlen(keyContext),masterKey);             // PMK key used for encryption
+    crypto_kdf_hkdf_sha256_expand(authKey,crypto_auth_KEYBYTES,(char *)deviceAddress->mac,6,masterKey);     // authentication key used in V2 where context is MAC address
+    esp_now_set_pmk(pmk);                                                                                   // set PMK from HKDF above
+
+  } else {                                  // in V1, using hash of password for backwards compatibility
+
+    uint8_t hash[32];
+    mbedtls_sha256((const unsigned char *)spConf.password.c_str(),spConf.password.length(),hash,0);         // produce 256-bit (32-byte) hash from password
+    esp_now_set_pmk(hash+16);                                                                               // set PMK equal to last 16 bytes of hash
+  }
 
   esp_now_register_recv_cb(version==2 ? dataReceivedV2 : dataReceivedV1);                       // set callback for receiving data based on version
   statusQueue = xQueueCreate(1,sizeof(esp_now_send_status_t));                                  // create statusQueue even if not needed
