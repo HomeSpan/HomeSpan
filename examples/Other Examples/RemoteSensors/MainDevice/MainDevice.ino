@@ -112,7 +112,7 @@ void setup() {
     new Service::AccessoryInformation();
       new Characteristic::Identify();
       new Characteristic::Name("Indoor Temp");
-    new RemoteTempSensor("Device 1",48);
+    new RemoteTempSensor("Device 1",46);
 
   new SpanAccessory();
     new Service::AccessoryInformation();
