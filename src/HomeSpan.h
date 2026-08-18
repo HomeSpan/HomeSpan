@@ -971,7 +971,7 @@ class SpanPoint {
   boolean overwriteQueue;                     // flag to indicate whether receiving queue should be overridden
   uint32_t receiveTime=0;                     // time (in millis) of most recent data received
   
-  static uint8_t masterKey[crypto_kdf_hkdf_sha256_KEYBYTES];      // master key for SpanPoint based on SpanPoint password
+  static uint8_t masterKey[crypto_kdf_hkdf_sha256_KEYBYTES];      // master key for SpanPoint based on SpanPoint password (only used in V2)
   static uint8_t authKey[crypto_auth_KEYBYTES];                   // message authentication key for transmissions from this device (only used in V2)
 
   static vector<SpanPoint *, Mallocator<SpanPoint *>> SpanPoints;

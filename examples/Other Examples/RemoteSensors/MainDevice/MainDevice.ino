@@ -79,7 +79,7 @@ struct RemoteTempSensor : Service::TemperatureSensor {
       LOG1("Sensor %s update: FAULT\n",name);
     }
 
-    if(millis()>timer+10000){
+    if(millis()>timer+1000000){
       timer=millis();
       sprintf(msg,"TEMP IS %0.1f DEGREES!",temperature*9/5+32);
       // Serial.printf("Sending: %s\n",msg);
@@ -100,7 +100,9 @@ void setup() {
 
   delay(1000);
 
-  SpanPoint::configure(18,{.network=4,.channelSelector=false});
+  SpanPoint::configure(18,{.network=4,.channelSelector=false,.encrypt=true});
+
+  Serial.printf("\nAP MAC: %s\n",WiFi.softAPmacAddress().c_str());
 
   homeSpan.begin(Category::Bridges,"Sensor Hub");
 

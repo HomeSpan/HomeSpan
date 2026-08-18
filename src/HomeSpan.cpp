@@ -3138,7 +3138,7 @@ void SpanPoint::configure(uint8_t deviceID, SpConfig_t cfg){
     crypto_kdf_hkdf_sha256_expand(authKey,crypto_auth_KEYBYTES,(char *)deviceAddress->mac,6,masterKey);     // authentication key used in V2 where context is MAC address
     esp_now_set_pmk(pmk);                                                                                   // set PMK from HKDF above
 
-  } else {                                  // in V1, using hash of password for backwards compatibility
+  } else {                                  // in V1, use hash of password for backwards compatibility
 
     uint8_t hash[32];
     mbedtls_sha256((const unsigned char *)spConf.password.c_str(),spConf.password.length(),hash,0);         // produce 256-bit (32-byte) hash from password
