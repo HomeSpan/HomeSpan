@@ -41,9 +41,7 @@
 
 #include <ESP8266WiFi.h>                 
 #include <espnow.h>
-#include <Crypto.h>       // this library is needed to implement the hash-code process SpanPoint uses to generate ESP-NOW encryption keys
 #include <bearssl/bearssl_kdf.h>
-#include <bearssl/bearssl_hash.h>
 
 class KeyGen {
 
@@ -60,44 +58,24 @@ class KeyGen {
     br_hkdf_flip(&masterContext);
   }
 
-  void extract(const char *keyInfo, uint8_t *keyOutput, size_t keyLength){
+  void extract(const char *keyInfo, uint8_t *keyOutput, size_t outLen){
+
+    extract(keyInfo,strlen(keyInfo),keyOutput,outLen);   
+  }
+
+  void extract(const void *keyInfo, size_t inLen, uint8_t *keyOutput, size_t outLen){
   
     br_hkdf_context tempContext=masterContext;  
-    br_hkdf_produce(&tempContext, keyInfo, strlen(keyInfo), keyOutput, keyLength);
+    br_hkdf_produce(&tempContext, keyInfo, inLen, keyOutput, outLen);
 
-    Serial.printf("KeyGen '%s': ",keyInfo);
-
-    for(int i=0;i<keyLength;i++)
+    for(int i=0;i<outLen;i++)
       Serial.printf("%02X%s",keyOutput[i],i%4==3?" ":"");
     Serial.printf("\n\n");    
-  }
+  }  
 };
-
-extern "C" {
-  #include "user_interface.h"
-}
 
 float temp=-10.0;         // this global variable represents our "simulated" temperature (in degrees C)
 
-// Below we encode the MAC Address of the Main ESP32 Device running HomeSpan to which this ESP8266 device will connect
-
-// IMPORTANT:  ESP32 devices have TWO MAC Addresses.  One is used when the ESP32 is operating in Station (STA) mode. It is the address returned
-// by the WiFi.macAddress() function.  The other is used when the ESP32 is operating in Access Point (AP) mode.  This address is returned by the 
-// WiFi.softAPmacAddress() function.  HomeSpan normally operates the ESP32 with both modes (STA+AP), so both MAC Addresses are active.
-
-// On ESP32 devices, ESP-NOW seems to work fine when each device sends data to other devices via their STA MAC Address.  The same is true for ESP8266
-// devices sending data to an ESP32 device via ESP-NOW with one critical exception: Once the ESP32 connects (via STA mode) to a WiFi network, which it must 
-// do to run HomeSpan, for some reason ESP8266 devices can no longer send data via ESP-NOW to the ESP32 using its STA MAC Address.
-
-// The solution is to instead have the ESP8266 send data via ESP-NOW to the ESP32's AP MAC Address.  This seems to work regardless of whether or not
-// the ESP32 is connected to a central WiFi newtork.  To support such use on the ESP32, the SpanPoint constructor includes a fifth, optional parameter
-// called "useAPaddress".  When creating SpanPoint links of the ESP32 using HomeSpan, set useAPaddress to TRUE if the Remote Device SpanPoint is connecting
-// to is an ESP8266.  Set "useAPaddress" to FALSE (or leave unspecified, since FALSE is the default) if the Remote Device is an ESP32.
-
-// When HomeSpan first starts (and whenever you type 'i' into the CLI), the Serial Monitor will display the details of each SpanPoint object you instantiated
-// in your ESP32 sketch.  This  output includes the MAC Address at which SpanPoint will be listening for incoming data from Remote Devices.  The MAC Address
-// shown for the instance of SpanPoint corresponding to this Remote Deivce (i.e. this sketch) is the MAC Address you should use below.
- 
 struct SpAddress {
 
   union {
@@ -121,8 +99,6 @@ struct SpAddress {
 SpAddress remoteAddress(18,4);
 SpAddress localAddress(46,4);
 
-// uint8_t main_mac[6];
-//uint8_t local_mac[6];
 
 // Next we create a simple, standard ESP-NOW callback function to report on the status of each data transmission
 
@@ -149,32 +125,13 @@ void setup() {
   Serial.begin(115200);
   delay(1000); 
 
-
-
   Serial.printf("\n\nREMOTE ADDRESS = %02X:%02X:%02X:%02X:%02X:%02X\n",remoteAddress.mac[0],remoteAddress.mac[1],remoteAddress.mac[2],remoteAddress.mac[3],remoteAddress.mac[4],remoteAddress.mac[5]);
   Serial.printf("REMOTE DEVID=%hhu  NETID=%hu\n",remoteAddress.devID,remoteAddress.netID);
 
-  // main_mac[0]=0xF2;
-  // main_mac[1]=18;
-  // main_mac[2]=4;
-  // main_mac[3]=0;
-  // main_mac[4]=main_mac[0]^main_mac[2];
-  // main_mac[5]=main_mac[1]^main_mac[3];
-
   WiFi.mode(WIFI_AP);            // set the mode to Station
   wifi_set_channel(1);            // you also need to manually set the channel to match whatever channel is used by the ESP32 after it connects to your WiFi network
- 
-  // local_mac[0]=0xF2;
-  // local_mac[1]=46;
-  // local_mac[2]=4;
-  // local_mac[3]=0;
-  // local_mac[4]=local_mac[0]^local_mac[2];
-  // local_mac[5]=local_mac[1]^local_mac[3];
 
   wifi_set_macaddr(SOFTAP_IF, localAddress.mac);
-
-  // Hint: As an alterntive, you can add code to this sketch to connect to the same WiFi network that HomeSpan uses.  Though this sketch won't make any use of that WiFi network,
-  // by establishing the connection the ESP8266 automatically configures the channel, which will now match the ESP32.
 
   // Next, initialize ESP-NOW
   
@@ -182,15 +139,6 @@ void setup() {
     Serial.println("Error initializing ESP-NOW");
     return;
   }
-
-
-
-
-
-  // SpanPoint uses ESP-NOW encryption for all communication.  This encrpytion is based on two 16-byte keys: a local master key (LMK) and a primary master key (PMK).  To generate
-  // these keys, SpanPoint takes a text-based password (the default is the word "HomeSpan"), creates a 32 byte (256 bit) hash of the text (using the SHA256 method), and uses
-  // the first 16 bytes as the LMK and the last 16 bytes as the PMK.  This is easily replicated as follows:
-  
 
   KeyGen mKey("HomeSpan","SpanPoint");
 
@@ -209,16 +157,14 @@ void setup() {
   mKey.extract(lmkContext,lmk,16);
   free(lmkContext);
 
-  // uint8_t hash[32];                 // create space to store as 32-byte hash code
-  // experimental::crypto::SHA256::hash(password,strlen(password),hash);     // create the hash code to be used further below
-  // esp_now_set_kok(hash+16,16);        // next we set the PMK.  For some reason this is called KOK on the ESP8266.  Note you must set the PMK BEFORE adding any peers
+  uint8_t authKey[32];
+  mKey.extract(localAddress.mac,6,authKey,32);
 
   esp_now_register_send_cb(OnDataSent);                   // register the callback function we defined above
   esp_now_set_self_role(ESP_NOW_ROLE_CONTROLLER);         // set the role of this device to be a controller (i.e. it sends data to the ESP32)
-
-       
+    
   // esp_now_add_peer(remoteAddress.mac, ESP_NOW_ROLE_COMBO, 0, hash, 16);    // now we add in the peer, set its role, and specify the LMK
-  esp_now_add_peer(remoteAddress.mac, ESP_NOW_ROLE_SLAVE, 1, lmk, 16);    // now we add in the peer, set its role, and specify the LMK
+  esp_now_add_peer(remoteAddress.mac, ESP_NOW_ROLE_SLAVE, 0, lmk, 16);    // now we add in the peer, set its role, and specify the LMK
 
   // Hint:  The third argument above is the WiFi Channel.  However, this is only a reference number stored by ESP-NOW.  ESP-NOW does NOT actually set the channel for you.
   // We already set the WiFi channel above.  To make things easier, ESP-NOW allows you to set the channel as zero, which means ESP-NOW should expect the channel to be whatever was
