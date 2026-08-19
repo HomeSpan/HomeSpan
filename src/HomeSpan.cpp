@@ -3323,10 +3323,10 @@ boolean SpanPoint::sendV2(const void *data){
 
   const SpAddress *destAddress = (SpAddress *)peerInfo.peer_addr;
 
-  size_t msgSize=sendSize+crypto_auth_BYTES;            // size of message with HMAC
-  uint8_t *msg=(uint8_t *)HS_MALLOC(msgSize);           // allocate new memory reflecting large size
-  memcpy(msg,data,sendSize);                            // copy data into first part of memory block
-  crypto_auth(msg+sendSize, msg, sendSize, authKey);    // create HMAC from authKey and load into second part of memory block
+  size_t msgSize=sendSize+crypto_auth_BYTES;                       // size of message with HMAC
+  uint8_t *msg=(uint8_t *)HS_MALLOC(msgSize);                      // allocate new memory reflecting large size
+  memcpy(msg,data,sendSize);                                       // copy data into first part of memory block
+  crypto_auth_hmacsha256(msg+sendSize, msg, sendSize, authKey);    // create HMAC from authKey and load into second part of memory block
 
   esp_now_send_status_t status = ESP_NOW_SEND_FAIL;
 
@@ -3391,9 +3391,9 @@ void SpanPoint::dataReceivedV2(const esp_now_recv_info *info, const uint8_t *inc
 
   uint8_t remoteKey[crypto_auth_KEYBYTES];
   crypto_kdf_hkdf_sha256_expand(remoteKey,crypto_auth_KEYBYTES,(char *)info->src_addr,6,masterKey);     // expected authentication key of remote device
- 
+
   len-=crypto_auth_BYTES;
-  if(len<1 || crypto_auth_verify(incomingData+len, incomingData, len, remoteKey)!=0){
+  if(len<1 || crypto_auth_hmacsha256_verify(incomingData+len, incomingData, len, remoteKey)!=0){
     LOG2("ERROR! Received unverifiable message of %d bytes from node %hhu.\n",len+crypto_auth_BYTES,srcAddress->devID);
     return;
   }

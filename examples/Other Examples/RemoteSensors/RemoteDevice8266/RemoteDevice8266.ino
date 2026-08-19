@@ -41,7 +41,7 @@
 
 #include <ESP8266WiFi.h>                 
 #include <espnow.h>
-#include <bearssl/bearssl_kdf.h>
+#include <bearssl/bearssl.h>
 
 class KeyGen {
 
@@ -69,12 +69,14 @@ class KeyGen {
     br_hkdf_produce(&tempContext, keyInfo, inLen, keyOutput, outLen);
 
     for(int i=0;i<outLen;i++)
-      Serial.printf("%02X%s",keyOutput[i],i%4==3?" ":"");
+//      Serial.printf("%02X%s",keyOutput[i],i%4==3?" ":"");
+      Serial.printf("0x%02X,",keyOutput[i]);
     Serial.printf("\n\n");    
   }  
 };
 
 float temp=-10.0;         // this global variable represents our "simulated" temperature (in degrees C)
+uint8_t authKey[32];
 
 struct SpAddress {
 
@@ -157,7 +159,6 @@ void setup() {
   mKey.extract(lmkContext,lmk,16);
   free(lmkContext);
 
-  uint8_t authKey[32];
   mKey.extract(localAddress.mac,6,authKey,32);
 
   esp_now_register_send_cb(OnDataSent);                   // register the callback function we defined above
@@ -177,8 +178,20 @@ void loop() {
 
   Serial.printf("\nMAC Address: %s\n",WiFi.softAPmacAddress().c_str());         // enter this MAC address as the first argument of the matching SpanPoint object on the ESP32 running HomeSpan
 
-  Serial.printf("Sending Temperature: %f\n",temp);  
-  esp_now_send(remoteAddress.mac, (uint8_t *)&temp, sizeof(temp));     // Send the Data to the Main Device!
+  Serial.printf("Sending Temperature: %f\n",temp);
+
+  uint8_t msg[36];
+  memcpy(msg,&temp,4);
+
+  br_hmac_key_context kc;
+  br_hmac_key_init(&kc, &br_sha256_vtable, authKey, 32);
+  br_hmac_context mc;
+  br_hmac_init(&mc, &kc, 32);
+  br_hmac_update(&mc, msg, 4);
+  br_hmac_out(&mc, msg+4);
+
+//  esp_now_send(remoteAddress.mac, (uint8_t *)&temp, sizeof(temp));     // Send the Data to the Main Device!
+  esp_now_send(remoteAddress.mac, msg, 36);     // Send the Data to the Main Device!
 
   temp+=0.5;       // increment the "temperature" by 0.5 C
   if(temp>35.0)
