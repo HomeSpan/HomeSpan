@@ -43,6 +43,8 @@
 #include <espnow.h>
 #include <bearssl/bearssl.h>
 
+///////////////////////////////
+
 class KeyGen {
 
   private:
@@ -68,15 +70,38 @@ class KeyGen {
     br_hkdf_context tempContext=masterContext;  
     br_hkdf_produce(&tempContext, keyInfo, inLen, keyOutput, outLen);
 
-    for(int i=0;i<outLen;i++)
+//    for(int i=0;i<outLen;i++)
 //      Serial.printf("%02X%s",keyOutput[i],i%4==3?" ":"");
-      Serial.printf("0x%02X,",keyOutput[i]);
-    Serial.printf("\n\n");    
+//      Serial.printf("0x%02X,",keyOutput[i]);
+//    Serial.printf("\n\n");    
   }  
 };
 
+class HMAC {
+
+  private:
+
+  br_hmac_key_context kc;
+
+  public:
+  
+  HMAC(KeyGen *masterKey, const void *keyInfo, size_t inLen){
+
+    uint8_t authKey[32];
+    masterKey->extract(keyInfo,inLen,authKey,32);
+    br_hmac_key_init(&kc, &br_sha256_vtable, authKey, 32);
+  }
+
+  br_hmac_key_context *context(){return(&kc);}
+};
+  
+  
+///////////////////////////////
+
 float temp=-10.0;         // this global variable represents our "simulated" temperature (in degrees C)
-uint8_t authKey[32];
+
+KeyGen *mKey;
+HMAC *localHMAC;
 
 struct SpAddress {
 
@@ -108,8 +133,9 @@ void OnDataSent(uint8_t *mac_addr, uint8_t sendStatus) {
   Serial.printf("Last Packet Send Status: %02X:%02X:%02X:%02X:%02X:%02X %s\n",mac_addr[0],mac_addr[1],mac_addr[2],mac_addr[3],mac_addr[4],mac_addr[5],sendStatus==0?"Success":"Fail");
 }
 
-void onDataRecv(uint8_t * mac_addr, uint8_t *incomingData, uint8_t len) {
+void OnDataRecv(uint8_t * mac_addr, uint8_t *incomingData, uint8_t len) {
   Serial.printf("Received %hhu bytes from: %02X:%02X:%02X:%02X:%02X:%02X\n",len,mac_addr[0],mac_addr[1],mac_addr[2],mac_addr[3],mac_addr[4],mac_addr[5]);
+  HMAC remoteHMAC(mKey,mac_addr,6);
 }
 
 struct SpConfig_t {
@@ -142,10 +168,10 @@ void setup() {
     return;
   }
 
-  KeyGen mKey("HomeSpan","SpanPoint");
+  mKey = new KeyGen("HomeSpan","SpanPoint");
 
   uint8_t pmk[16];
-  mKey.extract("Key for PMK",pmk,16); 
+  mKey->extract("Key for PMK",pmk,16); 
   esp_now_set_kok(pmk,16);
 
   uint8_t lmk[16];
@@ -156,12 +182,13 @@ void setup() {
 
   Serial.printf("LMK Context = '%s'\n",lmkContext);
 
-  mKey.extract(lmkContext,lmk,16);
+  mKey->extract(lmkContext,lmk,16);
   free(lmkContext);
 
-  mKey.extract(localAddress.mac,6,authKey,32);
+  localHMAC = new HMAC(mKey,localAddress.mac,6);
 
   esp_now_register_send_cb(OnDataSent);                   // register the callback function we defined above
+  esp_now_register_recv_cb(OnDataRecv);                   // register the callback function we defined above
   esp_now_set_self_role(ESP_NOW_ROLE_CONTROLLER);         // set the role of this device to be a controller (i.e. it sends data to the ESP32)
     
   // esp_now_add_peer(remoteAddress.mac, ESP_NOW_ROLE_COMBO, 0, hash, 16);    // now we add in the peer, set its role, and specify the LMK
@@ -183,10 +210,8 @@ void loop() {
   uint8_t msg[36];
   memcpy(msg,&temp,4);
 
-  br_hmac_key_context kc;
-  br_hmac_key_init(&kc, &br_sha256_vtable, authKey, 32);
   br_hmac_context mc;
-  br_hmac_init(&mc, &kc, 32);
+  br_hmac_init(&mc, localHMAC->context(), 32);
   br_hmac_update(&mc, msg, 4);
   br_hmac_out(&mc, msg+4);
 

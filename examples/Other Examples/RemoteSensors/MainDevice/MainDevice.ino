@@ -79,7 +79,7 @@ struct RemoteTempSensor : Service::TemperatureSensor {
       LOG1("Sensor %s update: FAULT\n",name);
     }
 
-    if(millis()>timer+1000000){
+    if(millis()>timer+10000){
       timer=millis();
       sprintf(msg,"TEMP IS %0.1f DEGREES!",temperature*9/5+32);
       // Serial.printf("Sending: %s\n",msg);
