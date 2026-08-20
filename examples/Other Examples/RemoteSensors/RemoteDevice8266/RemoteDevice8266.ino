@@ -45,7 +45,7 @@
 
 ///////////////////////////////
 
-class KeyGen {
+class MasterKey {
 
   private:
   
@@ -53,22 +53,22 @@ class KeyGen {
 
   public:
 
-  KeyGen(const char *password, const char *salt){
+  MasterKey(const char *password, const char *salt){
 
 	  br_hkdf_init(&masterContext, &br_sha256_vtable, salt, strlen(salt));
     br_hkdf_inject(&masterContext, password, strlen(password));
     br_hkdf_flip(&masterContext);
   }
 
-  void extract(const char *keyInfo, uint8_t *keyOutput, size_t outLen){
+  void create(const char *keyInfo, uint8_t *newKey, size_t newKeyLen){
 
-    extract(keyInfo,strlen(keyInfo),keyOutput,outLen);   
+    create(keyInfo,strlen(keyInfo),newKey,newKeyLen);   
   }
 
-  void extract(const void *keyInfo, size_t inLen, uint8_t *keyOutput, size_t outLen){
+  void create(const void *keyInfo, size_t keyInfoLen, uint8_t *newKey, size_t newKeyLen){
   
     br_hkdf_context tempContext=masterContext;  
-    br_hkdf_produce(&tempContext, keyInfo, inLen, keyOutput, outLen);
+    br_hkdf_produce(&tempContext, keyInfo, keyInfoLen, newKey, newKeyLen);
 
 //    for(int i=0;i<outLen;i++)
 //      Serial.printf("%02X%s",keyOutput[i],i%4==3?" ":"");
@@ -85,14 +85,31 @@ class HMAC {
 
   public:
   
-  HMAC(KeyGen *masterKey, const void *keyInfo, size_t inLen){
+  HMAC(MasterKey *masterKey, const void *keyInfo, size_t keyInfoLen){
 
     uint8_t authKey[32];
-    masterKey->extract(keyInfo,inLen,authKey,32);
+    masterKey->create(keyInfo,keyInfoLen,authKey,32);
     br_hmac_key_init(&kc, &br_sha256_vtable, authKey, 32);
   }
 
-  br_hmac_key_context *context(){return(&kc);}
+  void create(const void *data, size_t dataLen, uint8_t *hmac){
+
+    br_hmac_context mc;
+    br_hmac_init(&mc, &kc, 32);
+    br_hmac_update(&mc, data, dataLen);
+    br_hmac_out(&mc, hmac);
+  }
+
+  boolean verify(const uint8_t *data,  size_t dataLen){
+
+    if(dataLen<33)
+      return(false);
+    
+    dataLen-=32;
+    uint8_t hmac[32];
+    create(data,dataLen,hmac);
+    return(memcmp(data+dataLen,hmac,32)==0);
+  }
 };
   
   
@@ -100,7 +117,7 @@ class HMAC {
 
 float temp=-10.0;         // this global variable represents our "simulated" temperature (in degrees C)
 
-KeyGen *mKey;
+MasterKey *mKey;
 HMAC *localHMAC;
 
 struct SpAddress {
@@ -121,6 +138,10 @@ struct SpAddress {
     mac[4]=mac[0]^mac[2];
     mac[5]=mac[1]^mac[3];
   }
+
+  boolean isValid() const {
+    return(firstByte==0xF2 && mac[4]==mac[0]^mac[2] && mac[5]==mac[1]^mac[3]);
+  }
 };
 
 SpAddress remoteAddress(18,4);
@@ -134,8 +155,26 @@ void OnDataSent(uint8_t *mac_addr, uint8_t sendStatus) {
 }
 
 void OnDataRecv(uint8_t * mac_addr, uint8_t *incomingData, uint8_t len) {
-  Serial.printf("Received %hhu bytes from: %02X:%02X:%02X:%02X:%02X:%02X\n",len,mac_addr[0],mac_addr[1],mac_addr[2],mac_addr[3],mac_addr[4],mac_addr[5]);
+
+  const SpAddress *srcAddress = (SpAddress *)mac_addr;
+
+  Serial.printf("SpanPoint: ");
+
+  if(!srcAddress->isValid()){
+    Serial.printf("WARNING! Ignoring %d-byte message received from invalid SpanPoint MAC Address %02X:%02X:%02X:%02X:%02X:%02X.\n",len,
+        mac_addr[0],mac_addr[1],mac_addr[2],mac_addr[3],mac_addr[4],mac_addr[5]);
+    return;
+  }
+
   HMAC remoteHMAC(mKey,mac_addr,6);
+  if(!remoteHMAC.verify(incomingData, len)){
+    Serial.printf("ERROR! Received unverifiable message of %d bytes from node %d.\n",len,srcAddress->devID);
+    return;
+  }
+
+  len-=32;
+  Serial.printf("Received %d verified bytes from node %d. ",len,srcAddress->devID);
+  Serial.printf("Message='%s'\n",incomingData);
 }
 
 struct SpConfig_t {
@@ -168,10 +207,10 @@ void setup() {
     return;
   }
 
-  mKey = new KeyGen("HomeSpan","SpanPoint");
+  mKey = new MasterKey("HomeSpan","SpanPoint");
 
   uint8_t pmk[16];
-  mKey->extract("Key for PMK",pmk,16); 
+  mKey->create("Key for PMK",pmk,16); 
   esp_now_set_kok(pmk,16);
 
   uint8_t lmk[16];
@@ -182,7 +221,7 @@ void setup() {
 
   Serial.printf("LMK Context = '%s'\n",lmkContext);
 
-  mKey->extract(lmkContext,lmk,16);
+  mKey->create(lmkContext,lmk,16);
   free(lmkContext);
 
   localHMAC = new HMAC(mKey,localAddress.mac,6);
@@ -210,10 +249,7 @@ void loop() {
   uint8_t msg[36];
   memcpy(msg,&temp,4);
 
-  br_hmac_context mc;
-  br_hmac_init(&mc, localHMAC->context(), 32);
-  br_hmac_update(&mc, msg, 4);
-  br_hmac_out(&mc, msg+4);
+  localHMAC->create(msg,4,msg+4);
 
 //  esp_now_send(remoteAddress.mac, (uint8_t *)&temp, sizeof(temp));     // Send the Data to the Main Device!
   esp_now_send(remoteAddress.mac, msg, 36);     // Send the Data to the Main Device!
