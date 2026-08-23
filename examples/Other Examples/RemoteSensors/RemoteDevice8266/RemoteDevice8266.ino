@@ -29,124 +29,17 @@
 #error ERROR: THIS SKETCH IS DESIGNED FOR ESP8266 MICROCONTROLLERS!
 #endif
 
-// *** THIS SKETCH IS FOR AN ESP8266, NOT AN ESP32 *** //
-
-// This sketch is similar to HomeSpan's RemoteDevice.ino example (designed for an ESP32 running HomeSpan) in which we simulate
-// a Remote Temperature Sensor using HomeSpan's SpanPoint class.  However, since neither HomeSpan nor SpanPoint is designed to
-// run on an ESP8266, we will implement the BASIC communication functionality of SpanPoint by directly calling the equivalent
-// ESP-NOW commands that are supported by the ESP8266.  This sketch does NOT seek to replicate all of SpanPoint's features, and
-// does not include automatic channel calibration or queue management.
-
-// Start by including the following ESP8266 libraries
-
-#include <ESP8266WiFi.h>                 
-#include <espnow.h>
-#include <bearssl/bearssl.h>
-
-///////////////////////////////
-
-class MasterKey {
-
-  private:
-  
-  br_hkdf_context masterContext;
-
-  public:
-
-  MasterKey(const char *password, const char *salt){
-
-	  br_hkdf_init(&masterContext, &br_sha256_vtable, salt, strlen(salt));
-    br_hkdf_inject(&masterContext, password, strlen(password));
-    br_hkdf_flip(&masterContext);
-  }
-
-  void create(const char *keyInfo, uint8_t *newKey, size_t newKeyLen){
-
-    create(keyInfo,strlen(keyInfo),newKey,newKeyLen);   
-  }
-
-  void create(const void *keyInfo, size_t keyInfoLen, uint8_t *newKey, size_t newKeyLen){
-  
-    br_hkdf_context tempContext=masterContext;  
-    br_hkdf_produce(&tempContext, keyInfo, keyInfoLen, newKey, newKeyLen);
-
-//    for(int i=0;i<outLen;i++)
-//      Serial.printf("%02X%s",keyOutput[i],i%4==3?" ":"");
-//      Serial.printf("0x%02X,",keyOutput[i]);
-//    Serial.printf("\n\n");    
-  }  
-};
-
-class HMAC {
-
-  private:
-
-  br_hmac_key_context kc;
-
-  public:
-  
-  HMAC(MasterKey *masterKey, const void *keyInfo, size_t keyInfoLen){
-
-    uint8_t authKey[32];
-    masterKey->create(keyInfo,keyInfoLen,authKey,32);
-    br_hmac_key_init(&kc, &br_sha256_vtable, authKey, 32);
-  }
-
-  void create(const void *data, size_t dataLen, uint8_t *hmac){
-
-    br_hmac_context mc;
-    br_hmac_init(&mc, &kc, 32);
-    br_hmac_update(&mc, data, dataLen);
-    br_hmac_out(&mc, hmac);
-  }
-
-  boolean verify(const uint8_t *data,  size_t dataLen){
-
-    if(dataLen<33)
-      return(false);
-    
-    dataLen-=32;
-    uint8_t hmac[32];
-    create(data,dataLen,hmac);
-    return(memcmp(data+dataLen,hmac,32)==0);
-  }
-};
-  
+#include "SpanPoint.h"  
   
 ///////////////////////////////
+
+SpanPoint::SpAddress remoteAddress(18,4);
+SpanPoint::SpAddress localAddress(46,4);
 
 float temp=-10.0;         // this global variable represents our "simulated" temperature (in degrees C)
 
-MasterKey *mKey;
-HMAC *localHMAC;
-
-struct SpAddress {
-
-  union {
-    struct {
-      uint8_t firstByte=0xF2;
-      uint8_t devID;
-      uint16_t netID;
-      uint16_t checkSum;
-    };
-    uint8_t mac[6];
-  };
-
-  SpAddress(uint8_t deviceID, uint16_t networkID){
-    devID=deviceID;
-    netID=networkID;
-    mac[4]=mac[0]^mac[2];
-    mac[5]=mac[1]^mac[3];
-  }
-
-  boolean isValid() const {
-    return(firstByte==0xF2 && mac[4]==mac[0]^mac[2] && mac[5]==mac[1]^mac[3]);
-  }
-};
-
-SpAddress remoteAddress(18,4);
-SpAddress localAddress(46,4);
-
+boolean msgReceived=false;
+uint8_t buffer[128];
 
 // Next we create a simple, standard ESP-NOW callback function to report on the status of each data transmission
 
@@ -156,7 +49,10 @@ void OnDataSent(uint8_t *mac_addr, uint8_t sendStatus) {
 
 void OnDataRecv(uint8_t * mac_addr, uint8_t *incomingData, uint8_t len) {
 
-  const SpAddress *srcAddress = (SpAddress *)mac_addr;
+  if(msgReceived)
+    return;
+
+  const SpanPoint::SpAddress *srcAddress = (SpanPoint::SpAddress *)mac_addr;
 
   Serial.printf("SpanPoint: ");
 
@@ -166,24 +62,26 @@ void OnDataRecv(uint8_t * mac_addr, uint8_t *incomingData, uint8_t len) {
     return;
   }
 
-  HMAC remoteHMAC(mKey,mac_addr,6);
+  HMAC remoteHMAC(SpanPoint::mKey,mac_addr,6);
   if(!remoteHMAC.verify(incomingData, len)){
     Serial.printf("ERROR! Received unverifiable message of %d bytes from node %d.\n",len,srcAddress->devID);
     return;
   }
 
   len-=32;
-  Serial.printf("Received %d verified bytes from node %d. ",len,srcAddress->devID);
-  Serial.printf("Message='%s'\n",incomingData);
+  Serial.printf("Received %d verified bytes from node %d.\n",len,srcAddress->devID);
+  memcpy(buffer,incomingData,len);
+  msgReceived=true;
 }
 
-struct SpConfig_t {
-  uint16_t network=1;
-  boolean channelSelector=true;
-  String password="HomeSpan";
-  boolean encrypt=true;
-  uint16_t channelMask=0x3FFE;
-} spConf;
+boolean getData(uint8_t *data){
+  if(msgReceived){
+    memcpy(data,buffer,61);
+    msgReceived=false;
+    return(true);
+  }
+  return(false);
+}
 
 //////////////////////
 
@@ -192,26 +90,28 @@ void setup() {
   Serial.begin(115200);
   delay(1000); 
 
+  SpanPoint::configure(46,{.network=4,.password="HomeSpan2"});
+
   Serial.printf("\n\nREMOTE ADDRESS = %02X:%02X:%02X:%02X:%02X:%02X\n",remoteAddress.mac[0],remoteAddress.mac[1],remoteAddress.mac[2],remoteAddress.mac[3],remoteAddress.mac[4],remoteAddress.mac[5]);
   Serial.printf("REMOTE DEVID=%hhu  NETID=%hu\n",remoteAddress.devID,remoteAddress.netID);
 
-  WiFi.mode(WIFI_AP);            // set the mode to Station
-  wifi_set_channel(1);            // you also need to manually set the channel to match whatever channel is used by the ESP32 after it connects to your WiFi network
+  // WiFi.mode(WIFI_AP);            // set the mode to Station
+  // wifi_set_channel(1);            // you also need to manually set the channel to match whatever channel is used by the ESP32 after it connects to your WiFi network
 
-  wifi_set_macaddr(SOFTAP_IF, localAddress.mac);
+  // wifi_set_macaddr(SOFTAP_IF, localAddress.mac);
 
-  // Next, initialize ESP-NOW
+  // // Next, initialize ESP-NOW
   
-  if (esp_now_init() != 0) {
-    Serial.println("Error initializing ESP-NOW");
-    return;
-  }
+  // if (esp_now_init() != 0) {
+  //   Serial.println("Error initializing ESP-NOW");
+  //   return;
+  // }
 
-  mKey = new MasterKey("HomeSpan","SpanPoint");
+//  mKey = new MasterKey("HomeSpan2","SpanPoint");
 
-  uint8_t pmk[16];
-  mKey->create("Key for PMK",pmk,16); 
-  esp_now_set_kok(pmk,16);
+  // uint8_t pmk[16];
+  // mKey->create("Key for PMK",pmk,16); 
+  // esp_now_set_kok(pmk,16);
 
   uint8_t lmk[16];
   char *lmkContext;
@@ -221,10 +121,8 @@ void setup() {
 
   Serial.printf("LMK Context = '%s'\n",lmkContext);
 
-  mKey->create(lmkContext,lmk,16);
+  SpanPoint::mKey->create(lmkContext,lmk,16);
   free(lmkContext);
-
-  localHMAC = new HMAC(mKey,localAddress.mac,6);
 
   esp_now_register_send_cb(OnDataSent);                   // register the callback function we defined above
   esp_now_register_recv_cb(OnDataRecv);                   // register the callback function we defined above
@@ -240,23 +138,34 @@ void setup() {
 
 //////////////////////
 
+uint32_t aTime=0;
+uint8_t msgData[61];
+
 void loop() {
 
-  Serial.printf("\nMAC Address: %s\n",WiFi.softAPmacAddress().c_str());         // enter this MAC address as the first argument of the matching SpanPoint object on the ESP32 running HomeSpan
+ // Serial.printf("\nMAC Address: %s\n",WiFi.softAPmacAddress().c_str());         // enter this MAC address as the first argument of the matching SpanPoint object on the ESP32 running HomeSpan
 
-  Serial.printf("Sending Temperature: %f\n",temp);
+  if(millis()-aTime>5000){
 
-  uint8_t msg[36];
-  memcpy(msg,&temp,4);
+    Serial.printf("Sending Temperature: %f\n",temp);
 
-  localHMAC->create(msg,4,msg+4);
+    uint8_t msg[36];
+    memcpy(msg,&temp,4);
 
-//  esp_now_send(remoteAddress.mac, (uint8_t *)&temp, sizeof(temp));     // Send the Data to the Main Device!
-  esp_now_send(remoteAddress.mac, msg, 36);     // Send the Data to the Main Device!
+    SpanPoint::localHMAC->create(msg,4,msg+4);
 
-  temp+=0.5;       // increment the "temperature" by 0.5 C
-  if(temp>35.0)
-    temp=-10.0;
+  //  esp_now_send(remoteAddress.mac, (uint8_t *)&temp, sizeof(temp));     // Send the Data to the Main Device!
+    esp_now_send(remoteAddress.mac, msg, 36);     // Send the Data to the Main Device!
 
-  delay(5000);    // wait 5 seconds before sending another update
+    temp+=0.5;       // increment the "temperature" by 0.5 C
+    if(temp>35.0)
+      temp=-10.0;
+
+    aTime=millis();
+  }
+
+  if(getData(msgData))
+    Serial.printf("Message Received = '%s'\n",msgData);
+
+//  delay(5000);    // wait 5 seconds before sending another update
 }

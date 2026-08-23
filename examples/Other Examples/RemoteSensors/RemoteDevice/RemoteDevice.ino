@@ -74,7 +74,8 @@ void loop() {
   if(millis()>timer+5000){
     timer=millis();
     boolean success = mainDevice->send(&temperature);                 // this will show as success as long as the MAIN DEVICE is running
-    Serial.printf("Send %s\n",success?"Succeeded":"Failed");
+    Serial.printf("Send %0.1f %s\n",temperature,success?"Succeeded":"Failed");
+
     temperature+=0.5;
     if(temperature>35.0)
       temperature=-30.0;

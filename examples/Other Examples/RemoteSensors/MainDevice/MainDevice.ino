@@ -100,7 +100,7 @@ void setup() {
 
   delay(1000);
 
-  SpanPoint::configure(18,{.network=4,.channelSelector=false,.encrypt=true});
+  SpanPoint::configure(18,{.network=4,.channelSelector=false,.password="HomeSpan2",.encrypt=true});
 
   Serial.printf("\nAP MAC: %s\n",WiFi.softAPmacAddress().c_str());
 
