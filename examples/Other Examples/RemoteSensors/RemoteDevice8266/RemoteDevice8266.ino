@@ -167,5 +167,6 @@ void loop() {
   if(getData(msgData))
     Serial.printf("Message Received = '%s'\n",msgData);
 
+
 //  delay(5000);    // wait 5 seconds before sending another update
 }
