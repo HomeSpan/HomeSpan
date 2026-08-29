@@ -74,6 +74,20 @@ class HMAC {
 
 class SpanPoint {
 
+static const int ESP_NOW_KEY_LEN        = 16;
+static const int crypto_auth_BYTES      = 32;
+static const int ESP_NOW_MAX_DATA_LEN   = 250;
+
+enum esp_now_send_status_t {
+  ESP_NOW_SEND_SUCCESS,
+  ESP_NOW_SEND_FAIL,
+  ESP_NOW_SEND_IDLE
+};
+
+struct esp_now_peer_info_t {
+  uint8_t peer_addr[6];
+};
+
 public: 
 
   union SpAddress {
@@ -107,6 +121,7 @@ public:
 
   int receiveSize;                            // size (in bytes) of messages to receive
   int sendSize;                               // size (in bytes) of messages to send
+  esp_now_peer_info_t peerInfo;               // structure for all ESP-NOW peer data
   uint32_t receiveTime=0;                     // time (in millis) of most recent data received
 
   static MasterKey *mKey;
@@ -117,8 +132,9 @@ public:
   static SpAddress *deviceAddress;            // SpanPoint Address of this device (will be used for AP Mac)
   static SpConfig_t spConf;                   // stores all configuration settings
   static boolean configured;                  // flag indicating SpanPoint has been configured
-  static volatile int sendStatus;             // flag to wait for send status
 
+  static volatile esp_now_send_status_t sendStatus;   
+ 
   static void dataReceived(uint8_t * mac_addr, uint8_t *incomingData, uint8_t len);
   static uint8_t nextChannel(uint8_t channel);
   static void initializeChannels();
@@ -128,7 +144,7 @@ public:
   static void configure(uint8_t deviceID, SpConfig_t cfg=spConf);
   SpanPoint(uint8_t deviceID, size_t sendSize, size_t receiveSize=0, size_t queueDepth=0);
 
-  static boolean send(const void *data);
+  boolean send(const void *data);
   boolean get(void *dataBuf);
 
   uint32_t time(){return(millis()-receiveTime);}
