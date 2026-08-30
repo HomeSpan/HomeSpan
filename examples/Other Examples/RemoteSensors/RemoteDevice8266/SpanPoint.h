@@ -113,10 +113,9 @@ public:
 
   struct SpConfig_t {
     uint16_t network=1;
-    boolean channelSelector=true;
     String password="HomeSpan";
     boolean encrypt=true;
-    uint16_t channelMask=0x3FFE;
+    uint16_t channelMask=0x0FFE;
   };
 
   int receiveSize;                            // size (in bytes) of messages to receive

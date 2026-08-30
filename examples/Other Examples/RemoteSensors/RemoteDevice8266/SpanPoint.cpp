@@ -1,5 +1,6 @@
 
 #include "SpanPoint.h"
+#include <EEPROM.h>
 
 ///////////////////////////////
 
@@ -7,12 +8,6 @@ void SpanPoint::configure(uint8_t deviceID, SpConfig_t cfg){
 
   if(configured){
     Serial.printf("\nFATAL ERROR!  SpanPoint already configured with Device ID of %hhu! ***\n",deviceID);
-    Serial.printf("\n=== PROGRAM HALTED ===");
-    while(1);
-  }
-
-  if(deviceID==0){
-    Serial.printf("\nFATAL ERROR!  Can't configure SpanPoint - Device ID must be greater than zero ***\n");
     Serial.printf("\n=== PROGRAM HALTED ===");
     while(1);
   }
@@ -138,23 +133,26 @@ boolean SpanPoint::send(const void *data){
 
 void SpanPoint::initializeChannels(){
 
-  spConf.channelMask=spConf.channelMask & 0x3FFE;
+  wifi_country_t country;
+  wifi_get_country(&country);
+  spConf.channelMask=spConf.channelMask & ((1<<country.nchan)-1)<<country.schan;     // overlay country-specific mask (e.g. channels 1-11, 1-13, or 1-14 only)  
 
   if(spConf.channelMask==0)
     return;
 
   uint8_t channel=0;
-//  nvs_flash_init();                                           // initialize NVS
-//  nvs_open("POINT",NVS_READWRITE,&pointNVS);                  // open SpanPoint data namespace in NVS
-//  nvs_get_u8(pointNVS,"CHANNEL",&channel);                    // load channel, if found
+  EEPROM.begin(1);
+  channel=EEPROM.read(0) & 0x0F;
 
   for(int i=0;i<16;i++,channel=(channel+1)%16){               // loop over all mask bits (starting with saved channel)
     if(spConf.channelMask & (1<<channel)){                    // if channel is allowed by channel mask
       if(i>0){
-//        nvs_set_u8(pointNVS,"CHANNEL",channel);
-//        nvs_commit(pointNVS);
+        EEPROM.write(0,channel);
+        EEPROM.commit();
       }
+      wifi_promiscuous_enable(true);
       wifi_set_channel(channel);
+      wifi_promiscuous_enable(false);
       return;
     }
   }
@@ -177,8 +175,8 @@ uint8_t SpanPoint::nextChannel(uint8_t channel){
   wifi_set_channel(channel);                       // set the WiFi channel
   wifi_promiscuous_enable(false);
   
-  // nvs_set_u8(pointNVS,"CHANNEL",channel);
-  // nvs_commit(pointNVS);  
+  EEPROM.write(0,channel);
+  EEPROM.commit();  
      
   return(channel);  
 }

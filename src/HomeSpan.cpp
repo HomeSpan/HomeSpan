@@ -3106,12 +3106,6 @@ void SpanPoint::configure(uint8_t deviceID, SpConfig_t cfg){
 
   if(version==2){                           // in v2, reset AP address to match deviceID and network
 
-    if(deviceID==0){
-      LOG0("\nFATAL ERROR!  Can't configure SpanPoint - Device ID must be greater than zero ***\n");
-      LOG0("\n=== PROGRAM HALTED ===");
-      while(1);
-    }
-
     WiFi.mode(WIFI_AP_STA); 
     delay(10);
     deviceAddress = new SpAddress(deviceID,cfg.network);
