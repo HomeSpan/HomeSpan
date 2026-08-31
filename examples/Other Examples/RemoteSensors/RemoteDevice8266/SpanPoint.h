@@ -3,6 +3,7 @@
 #include <ESP8266WiFi.h>                 
 #include <espnow.h>
 #include <bearssl/bearssl.h>
+#include <vector>
 
 ///////////////////////////////
 
@@ -72,23 +73,75 @@ class HMAC {
 
 ///////////////////////////////
 
+class SimpleQueue {
+
+  size_t depth;
+  size_t nBytes;
+  uint8_t **queue;
+  volatile int index=0;
+  volatile int nEntries=0;
+  
+  public:
+
+  SimpleQueue(size_t depth, size_t nBytes){
+
+    this->depth=depth;
+    this->nBytes=nBytes;
+    
+    queue=(uint8_t **)calloc(depth,sizeof(uint8_t *));
+    for(int i=0;i<depth;i++)
+      queue[i]=(uint8_t *)calloc(nBytes,sizeof(uint8_t));
+  }
+
+  void send(const void *data, boolean overWrite){
+
+    if(nEntries<depth){
+      memcpy(queue[index],data,nBytes);
+      nEntries++;
+      index=(index+1)%depth;
+    } else if(depth==1 && overWrite) {
+      memcpy(queue[index],data,nBytes);
+    }
+  }
+
+  boolean receive(void *data){
+
+    if(nEntries==0)
+      return(false);
+
+    memcpy(data,queue[(index-nEntries+depth)%depth],nBytes);
+    nEntries--;
+
+    return(true);
+  }
+};
+
+using QueueHandle_t = SimpleQueue*;
+
+#define xQueueCreate(depth, nBytes) new SimpleQueue(depth, nBytes)
+#define xQueueSend(queue, data, unused_waitTime) queue->send(data,false)
+#define xQueueOverwrite(queue, data, unused_waitTime) queue->send(data,true)
+#define xQueueReceive(queue, data, unused_waitTime) queue->receive(data)
+
+///////////////////////////////
+
 class SpanPoint {
 
-static const int ESP_NOW_KEY_LEN        = 16;
-static const int crypto_auth_BYTES      = 32;
-static const int ESP_NOW_MAX_DATA_LEN   = 250;
+public:   // To Be DELETED
 
-enum esp_now_send_status_t {
-  ESP_NOW_SEND_SUCCESS,
-  ESP_NOW_SEND_FAIL,
-  ESP_NOW_SEND_IDLE
-};
+  static const int ESP_NOW_KEY_LEN        = 16;
+  static const int crypto_auth_BYTES      = 32;
+  static const int ESP_NOW_MAX_DATA_LEN   = 250;
 
-struct esp_now_peer_info_t {
-  uint8_t peer_addr[6];
-};
+  enum esp_now_send_status_t {
+    ESP_NOW_SEND_SUCCESS,
+    ESP_NOW_SEND_FAIL,
+    ESP_NOW_SEND_IDLE
+  };
 
-public: 
+  struct esp_now_peer_info_t {
+    uint8_t peer_addr[6];
+  };
 
   union SpAddress {
     struct {
@@ -121,12 +174,14 @@ public:
   int receiveSize;                            // size (in bytes) of messages to receive
   int sendSize;                               // size (in bytes) of messages to send
   esp_now_peer_info_t peerInfo;               // structure for all ESP-NOW peer data
+  QueueHandle_t receiveQueue;                 // queue to store data after it is received
+  boolean overwriteQueue;                     // flag to indicate whether receiving queue should be overridden
   uint32_t receiveTime=0;                     // time (in millis) of most recent data received
 
   static MasterKey *mKey;
   static HMAC *localHMAC;
     
-  ///static vector<SpanPoint *, Mallocator<SpanPoint *>> SpanPoints;
+  static std::vector<SpanPoint *> SpanPoints;
 
   static SpAddress *deviceAddress;            // SpanPoint Address of this device (will be used for AP Mac)
   static SpConfig_t spConf;                   // stores all configuration settings

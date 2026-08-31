@@ -82,13 +82,12 @@ SpanPoint::SpanPoint(uint8_t deviceID, size_t sendSize, size_t receiveSize, size
   else
     esp_now_add_peer(peerInfo.peer_addr, ESP_NOW_ROLE_COMBO, 0, NULL, 0);
 
-  // if(receiveSize>0){
-  //   receiveQueue = xQueueCreate(queueDepth>0?queueDepth:1,receiveSize);
-  //   overwriteQueue=(queueDepth==0);
-  // }
+  if(receiveSize>0){
+    receiveQueue = xQueueCreate(queueDepth>0?queueDepth:1,receiveSize);
+    overwriteQueue=(queueDepth==0);
+  }
 
-
-//  SpanPoints.push_back(this);             
+  SpanPoints.push_back(this);             
 }
 
 ///////////////////////////////
@@ -183,7 +182,7 @@ uint8_t SpanPoint::nextChannel(uint8_t channel){
 
 ///////////////////////////////
 
-//vector<SpanPoint *, Mallocator<SpanPoint *>> SpanPoint::SpanPoints;
+std::vector<SpanPoint *> SpanPoint::SpanPoints;
 SpanPoint::SpAddress *SpanPoint::deviceAddress=NULL;
 SpanPoint::SpConfig_t SpanPoint::spConf{};
 boolean SpanPoint::configured=false;

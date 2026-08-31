@@ -86,10 +86,39 @@ void setup() {
   Serial.begin(115200);
   delay(1000); 
 
-  SpanPoint::configure(46,{.network=4,.password="HomeSpan2"});
 
-  Serial.printf("\n\nREMOTE ADDRESS = %02X:%02X:%02X:%02X:%02X:%02X\n",remoteAddress.mac[0],remoteAddress.mac[1],remoteAddress.mac[2],remoteAddress.mac[3],remoteAddress.mac[4],remoteAddress.mac[5]);
-  Serial.printf("REMOTE DEVID=%hhu  NETID=%hu\n",remoteAddress.devID,remoteAddress.netID);
+  Serial.printf("\n\nReady.\n\n");
+
+  QueueHandle_t myQueue = xQueueCreate(1,16);
+
+  char buf[16];
+
+  sprintf(buf,"Hello"); xQueueSend(myQueue,buf,0);
+  sprintf(buf,"Goodbye"); xQueueSend(myQueue,buf,0);
+  sprintf(buf,"Yo!"); xQueueOverwrite(myQueue,buf,0);
+  sprintf(buf,"One"); xQueueSend(myQueue,buf,0);
+
+  while(xQueueReceive(myQueue,buf,0))
+    Serial.printf("Queue: '%s'\n",buf);
+
+  sprintf(buf,"Two"); xQueueOverwrite(myQueue,buf,0);
+  sprintf(buf,"Three"); xQueueSend(myQueue,buf,0);
+
+   while(xQueueReceive(myQueue,buf,0))
+    Serial.printf("Queue: '%s'\n",buf);
+
+  sprintf(buf,"Four"); xQueueOverwrite(myQueue,buf,0);
+  sprintf(buf,"Five"); xQueueOverwrite(myQueue,buf,0);
+  sprintf(buf,"Six"); xQueueOverwrite(myQueue,buf,0);
+
+  while(xQueueReceive(myQueue,buf,0))
+    Serial.printf("Queue: '%s'\n",buf);
+
+  while(1)
+    delay(1000);
+
+
+  SpanPoint::configure(46,{.network=4,.password="HomeSpan2"});
 
   esp_now_register_recv_cb(OnDataRecv);                   // register the callback function we defined above
     
