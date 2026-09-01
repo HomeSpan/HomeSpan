@@ -34,50 +34,7 @@
 ///////////////////////////////
 
 SpanPoint *mainDevice;
-
-SpanPoint::SpAddress remoteAddress(18,4);
-SpanPoint::SpAddress localAddress(46,4);
-
 float temp=-10.0;         // this global variable represents our "simulated" temperature (in degrees C)
-
-boolean msgReceived=false;
-uint8_t buffer[128];
-
-void OnDataRecv(uint8_t * mac_addr, uint8_t *incomingData, uint8_t len) {
-
-  if(msgReceived)
-    return;
-
-  const SpanPoint::SpAddress *srcAddress = (SpanPoint::SpAddress *)mac_addr;
-
-  Serial.printf("SpanPoint: ");
-
-  if(!srcAddress->isValid()){
-    Serial.printf("WARNING! Ignoring %d-byte message received from invalid SpanPoint MAC Address %02X:%02X:%02X:%02X:%02X:%02X.\n",len,
-        mac_addr[0],mac_addr[1],mac_addr[2],mac_addr[3],mac_addr[4],mac_addr[5]);
-    return;
-  }
-
-  HMAC remoteHMAC(SpanPoint::mKey,mac_addr,6);
-  if(!remoteHMAC.verify(incomingData, len)){
-    Serial.printf("ERROR! Received unverifiable message of %d bytes from node %d.\n",len,srcAddress->devID);
-    return;
-  }
-
-  len-=32;
-  Serial.printf("Received %d verified bytes from node %d.\n",len,srcAddress->devID);
-  memcpy(buffer,incomingData,len);
-  msgReceived=true;
-}
-
-boolean getData(uint8_t *data){
-  if(msgReceived){
-    memcpy(data,buffer,61);
-    msgReceived=false;
-    return(true);
-  }
-  return(false);
-}
 
 //////////////////////
 
@@ -86,41 +43,9 @@ void setup() {
   Serial.begin(115200);
   delay(1000); 
 
-
   Serial.printf("\n\nReady.\n\n");
 
-  QueueHandle_t myQueue = xQueueCreate(1,16);
-
-  char buf[16];
-
-  sprintf(buf,"Hello"); xQueueSend(myQueue,buf,0);
-  sprintf(buf,"Goodbye"); xQueueSend(myQueue,buf,0);
-  sprintf(buf,"Yo!"); xQueueOverwrite(myQueue,buf,0);
-  sprintf(buf,"One"); xQueueSend(myQueue,buf,0);
-
-  while(xQueueReceive(myQueue,buf,0))
-    Serial.printf("Queue: '%s'\n",buf);
-
-  sprintf(buf,"Two"); xQueueOverwrite(myQueue,buf,0);
-  sprintf(buf,"Three"); xQueueSend(myQueue,buf,0);
-
-   while(xQueueReceive(myQueue,buf,0))
-    Serial.printf("Queue: '%s'\n",buf);
-
-  sprintf(buf,"Four"); xQueueOverwrite(myQueue,buf,0);
-  sprintf(buf,"Five"); xQueueOverwrite(myQueue,buf,0);
-  sprintf(buf,"Six"); xQueueOverwrite(myQueue,buf,0);
-
-  while(xQueueReceive(myQueue,buf,0))
-    Serial.printf("Queue: '%s'\n",buf);
-
-  while(1)
-    delay(1000);
-
-
   SpanPoint::configure(46,{.network=4,.password="HomeSpan2"});
-
-  esp_now_register_recv_cb(OnDataRecv);                   // register the callback function we defined above
     
   mainDevice=new SpanPoint(18,sizeof(float),61);
 }
@@ -145,7 +70,7 @@ void loop() {
     aTime=millis();
   }
 
-  if(getData(msgData))
+  if(mainDevice->get(msgData))
     Serial.printf("Message Received = '%s'\n",msgData);
 
 }

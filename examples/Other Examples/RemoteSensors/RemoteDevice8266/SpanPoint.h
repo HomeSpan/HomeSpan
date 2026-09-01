@@ -93,15 +93,19 @@ class SimpleQueue {
       queue[i]=(uint8_t *)calloc(nBytes,sizeof(uint8_t));
   }
 
-  void send(const void *data, boolean overWrite){
+  boolean send(const void *data, boolean overWrite){
 
     if(nEntries<depth){
       memcpy(queue[index],data,nBytes);
       nEntries++;
       index=(index+1)%depth;
+      return(true);
     } else if(depth==1 && overWrite) {
       memcpy(queue[index],data,nBytes);
+      return(true);
     }
+
+    return(false);
   }
 
   boolean receive(void *data){
@@ -120,7 +124,7 @@ using QueueHandle_t = SimpleQueue*;
 
 #define xQueueCreate(depth, nBytes) new SimpleQueue(depth, nBytes)
 #define xQueueSend(queue, data, unused_waitTime) queue->send(data,false)
-#define xQueueOverwrite(queue, data, unused_waitTime) queue->send(data,true)
+#define xQueueOverwrite(queue, data) queue->send(data,true)
 #define xQueueReceive(queue, data, unused_waitTime) queue->receive(data)
 
 ///////////////////////////////
@@ -189,7 +193,7 @@ public:   // To Be DELETED
 
   static volatile esp_now_send_status_t sendStatus;   
  
-  static void dataReceived(uint8_t * mac_addr, uint8_t *incomingData, uint8_t len);
+  static void dataReceived(uint8_t *mac, uint8_t *incomingData, uint8_t len);
   static uint8_t nextChannel(uint8_t channel);
   static void initializeChannels();
  

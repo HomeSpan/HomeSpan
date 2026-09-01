@@ -29,13 +29,14 @@ void SpanPoint::configure(uint8_t deviceID, SpConfig_t cfg){
 
   esp_now_set_self_role(ESP_NOW_ROLE_COMBO);
 
-  // esp_now_register_recv_cb(version==2 ? dataReceivedV2 : dataReceivedV1);                       // set callback for receiving data based on version
+  esp_now_register_recv_cb(dataReceived);                               // set callback for receiving data based on version
 
   esp_now_register_send_cb([](uint8_t *mac_addr, uint8_t status){                                  // create callback for sending data
     SpanPoint::sendStatus = (status==0 ? SpanPoint::ESP_NOW_SEND_SUCCESS : SpanPoint::ESP_NOW_SEND_FAIL);
   });
 
   spConf.channelMask=cfg.channelMask;                             // save a subset of the config data that will needed in other functions
+  spConf.encrypt=cfg.encrypt;                                         
   initializeChannels();                                           // verify channel mask and set first channel
   configured=true;                                                // set configured to true 
 }
@@ -126,6 +127,74 @@ boolean SpanPoint::send(const void *data){
   free(msg);
 
   return(sendStatus==ESP_NOW_SEND_SUCCESS);
+}
+
+///////////////////////////////
+
+boolean SpanPoint::get(void *dataBuf){
+
+  if(receiveSize==0)
+    return(false);
+
+  return(xQueueReceive(receiveQueue, dataBuf, 0));
+}
+
+///////////////////////////////
+
+void SpanPoint::dataReceived(uint8_t *mac, uint8_t *incomingData, uint8_t len){
+
+  const SpAddress *srcAddress = (SpAddress *)mac;
+
+  Serial.printf("SpanPoint: ");
+
+  if(!srcAddress->isValid()){
+    Serial.printf("WARNING! Ignoring %d-byte message received from invalid SpanPoint MAC Address %02X:%02X:%02X:%02X:%02X:%02X.\n",len,mac[0],mac[1],mac[2],mac[3],mac[4],mac[5]);
+    return;
+  }
+
+  HMAC remoteHMAC(SpanPoint::mKey,mac,6);
+  if(!remoteHMAC.verify(incomingData, len)){
+    Serial.printf("ERROR! Received unverifiable message of %d bytes from node %d.\n",len,srcAddress->devID);
+    return;
+  }
+
+  len-=32;
+
+  // uint8_t remoteKey[crypto_auth_KEYBYTES];
+  // crypto_kdf_hkdf_sha256_expand(remoteKey,crypto_auth_KEYBYTES,(char *)info->src_addr,6,masterKey);     // expected authentication key of remote device
+
+  // len-=crypto_auth_BYTES;
+  // if(len<1 || crypto_auth_hmacsha256_verify(incomingData+len, incomingData, len, remoteKey)!=0){
+  //   Serial.printf("ERROR! Received unverifiable message of %d bytes from node %hhu.\n",len+crypto_auth_BYTES,srcAddress->devID);
+  //   return;
+  // }
+
+  Serial.printf("Received %d verified bytes from node %hhu. ",len,srcAddress->devID);        
+
+  auto it=SpanPoints.begin();
+  for(;it!=SpanPoints.end() && memcmp((*it)->peerInfo.peer_addr,mac,6)!=0; it++);
+  
+  if(it==SpanPoints.end()){
+    Serial.printf("ERROR! No matching SpanPoint for this node.\n");
+    return;
+  }
+
+  if((*it)->receiveSize==0){
+    Serial.printf("ERROR! Node not configured for receiving.\n");
+    return;
+  }
+
+  if(len!=(*it)->receiveSize){
+    Serial.printf("ERROR! Number of bytes received does not match %d-byte size of queue.\n",(*it)->receiveSize);
+    return;
+  }
+
+  if( ((*it)->overwriteQueue && xQueueOverwrite((*it)->receiveQueue, incomingData)) || xQueueSend((*it)->receiveQueue, incomingData, 0) ){       // overwrite or send to queue immediately
+    Serial.printf("Queue updated.\n");
+    (*it)->receiveTime=millis();                   // set time of receive
+  } else {
+    Serial.printf("ERROR! Queue full.\n");
+  }
 }
 
 ///////////////////////////////

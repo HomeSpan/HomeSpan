@@ -62,9 +62,6 @@ void setup() {
   SpanPoint::configure(2,{.network=4,.password="HomeSpan"});
 
   mainDevice=new SpanPoint(18,sizeof(float),61);    // create a SpanPoint with sending size of float and receiving size of string
-  new SpanPoint(6,16);
-  new SpanPoint(0,20);
-
 
   homeSpan.setLogLevel(2);
 }
