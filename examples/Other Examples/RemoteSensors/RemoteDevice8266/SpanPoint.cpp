@@ -7,8 +7,8 @@
 void SpanPoint::configure(uint8_t deviceID, SpConfig_t cfg){
 
   if(configured){
-    Serial.printf("\nFATAL ERROR!  SpanPoint already configured with Device ID of %hhu! ***\n",deviceID);
-    Serial.printf("\n=== PROGRAM HALTED ===");
+    LOG2("\nFATAL ERROR!  SpanPoint already configured with Device ID of %hhu! ***\n",deviceID);
+    LOG2("\n=== PROGRAM HALTED ===");
     while(1);
   }
 
@@ -30,9 +30,10 @@ void SpanPoint::configure(uint8_t deviceID, SpConfig_t cfg){
   esp_now_set_self_role(ESP_NOW_ROLE_COMBO);
 
   esp_now_register_recv_cb(dataReceived);                               // set callback for receiving data based on version
+  statusQueue = xQueueCreate(1,sizeof(esp_now_send_status_t));                                  // create statusQueue even if not needed
 
-  esp_now_register_send_cb([](uint8_t *mac_addr, uint8_t status){                                  // create callback for sending data
-    SpanPoint::sendStatus = (status==0 ? SpanPoint::ESP_NOW_SEND_SUCCESS : SpanPoint::ESP_NOW_SEND_FAIL);
+  esp_now_register_send_cb([](esp_now_send_info_t *mac, esp_now_send_status_t status){    // create callback for sending data
+  xQueueOverwrite(statusQueue, &status );
   });
 
   spConf.channelMask=cfg.channelMask;                             // save a subset of the config data that will needed in other functions
@@ -46,8 +47,8 @@ void SpanPoint::configure(uint8_t deviceID, SpConfig_t cfg){
 SpanPoint::SpanPoint(uint8_t deviceID, size_t sendSize, size_t receiveSize, size_t queueDepth){
 
   if(!configured){
-    Serial.printf("\nFATAL ERROR!  Can't create new SpanPoint(%d,%d,%d,%d) - SpanPoint not yet configured! ***\n",deviceID,sendSize,receiveSize,queueDepth);
-    Serial.printf("\n=== PROGRAM HALTED ===");
+    LOG2("\nFATAL ERROR!  Can't create new SpanPoint(%d,%d,%d,%d) - SpanPoint not yet configured! ***\n",deviceID,sendSize,receiveSize,queueDepth);
+    LOG2("\n=== PROGRAM HALTED ===");
     while(1);
   }
 
@@ -55,14 +56,14 @@ SpanPoint::SpanPoint(uint8_t deviceID, size_t sendSize, size_t receiveSize, size
   memcpy(peerInfo.peer_addr,destAddress.mac,6);
 
   if(deviceID==deviceAddress->devID || esp_now_is_peer_exist(destAddress.mac)){
-    Serial.printf("\nFATAL ERROR!  Can't create new SpanPoint(%d,%d,%d,%d) - deviceID already used ***\n",deviceID,sendSize,receiveSize,queueDepth);
-    Serial.printf("\n=== PROGRAM HALTED ===");
+    LOG2("\nFATAL ERROR!  Can't create new SpanPoint(%d,%d,%d,%d) - deviceID already used ***\n",deviceID,sendSize,receiveSize,queueDepth);
+    LOG2("\n=== PROGRAM HALTED ===");
     while(1);
   }
 
   if(sendSize>(ESP_NOW_MAX_DATA_LEN-crypto_auth_BYTES) || receiveSize>(ESP_NOW_MAX_DATA_LEN-crypto_auth_BYTES) || (sendSize==0 && receiveSize==0)){
-    Serial.printf("\nFATAL ERROR!  Can't create new SpanPoint(%d,%d,%d,%d) - invalid send/receive size parameters ***\n",deviceID,sendSize,receiveSize,queueDepth);
-    Serial.printf("\n=== PROGRAM HALTED ===");
+    LOG2("\nFATAL ERROR!  Can't create new SpanPoint(%d,%d,%d,%d) - invalid send/receive size parameters ***\n",deviceID,sendSize,receiveSize,queueDepth);
+    LOG2("\n=== PROGRAM HALTED ===");
     while(1);
   }
   
@@ -108,21 +109,20 @@ boolean SpanPoint::send(const void *data){
   memcpy(msg,data,sendSize);                                       // copy data into first part of memory block
   localHMAC->create(msg,sendSize,msg+sendSize);                    // create HMAC from authKey and load into second part of memory block
 
-  sendStatus=ESP_NOW_SEND_IDLE;
+  esp_now_send_status_t status = ESP_NOW_SEND_FAIL;
 
   do {
-    for(int i=0; sendStatus!=ESP_NOW_SEND_SUCCESS && i<3; i++){      
-      Serial.printf("SpanPoint: Sending %d bytes to node %hhu using WiFi channel %hhu... ",sendSize,destAddress->devID,channel);
-      sendStatus=ESP_NOW_SEND_IDLE;
+    for(int i=0; status!=ESP_NOW_SEND_SUCCESS && i<3; i++){      
+      LOG2("SpanPoint: Sending %d bytes to node %hhu using WiFi channel %hhu... ",sendSize,destAddress->devID,channel);        
       esp_now_send(peerInfo.peer_addr, msg, msgSize);
-      while(sendStatus==ESP_NOW_SEND_IDLE)
-        delay(10);
-      Serial.printf("%s\n",sendStatus==ESP_NOW_SEND_SUCCESS ? "Success!" : "Failed.");
+      xQueueReceive(statusQueue, &status, pdMS_TO_TICKS(2000));
+      LOG2("%s\n",status==ESP_NOW_SEND_SUCCESS ? "Success!" : "Failed.");
+      delay(10);
     }    
-  } while(sendStatus!=ESP_NOW_SEND_SUCCESS && (channel=nextChannel(channel))!=startingChannel);
+  } while(status!=ESP_NOW_SEND_SUCCESS && (channel=nextChannel(channel))!=startingChannel);
 
   if(sendStatus!=ESP_NOW_SEND_SUCCESS)
-    Serial.printf("SpanPoint: ERROR! Node %hhu on Network %hu unreachable.\n",destAddress->devID,deviceAddress->netID);
+    LOG2("SpanPoint: ERROR! Node %hhu on Network %hu unreachable.\n",destAddress->devID,deviceAddress->netID);
 
   free(msg);
 
@@ -145,55 +145,46 @@ void SpanPoint::dataReceived(uint8_t *mac, uint8_t *incomingData, uint8_t len){
 
   const SpAddress *srcAddress = (SpAddress *)mac;
 
-  Serial.printf("SpanPoint: ");
+  LOG2("SpanPoint: ");
 
   if(!srcAddress->isValid()){
-    Serial.printf("WARNING! Ignoring %d-byte message received from invalid SpanPoint MAC Address %02X:%02X:%02X:%02X:%02X:%02X.\n",len,mac[0],mac[1],mac[2],mac[3],mac[4],mac[5]);
+    LOG2("WARNING! Ignoring %d-byte message received from invalid SpanPoint MAC Address %02X:%02X:%02X:%02X:%02X:%02X.\n",len,mac[0],mac[1],mac[2],mac[3],mac[4],mac[5]);
     return;
   }
 
   HMAC remoteHMAC(SpanPoint::mKey,mac,6);
   if(!remoteHMAC.verify(incomingData, len)){
-    Serial.printf("ERROR! Received unverifiable message of %d bytes from node %d.\n",len,srcAddress->devID);
+    LOG2("ERROR! Received unverifiable message of %d bytes from node %d.\n",len,srcAddress->devID);
     return;
   }
 
   len-=32;
 
-  // uint8_t remoteKey[crypto_auth_KEYBYTES];
-  // crypto_kdf_hkdf_sha256_expand(remoteKey,crypto_auth_KEYBYTES,(char *)info->src_addr,6,masterKey);     // expected authentication key of remote device
-
-  // len-=crypto_auth_BYTES;
-  // if(len<1 || crypto_auth_hmacsha256_verify(incomingData+len, incomingData, len, remoteKey)!=0){
-  //   Serial.printf("ERROR! Received unverifiable message of %d bytes from node %hhu.\n",len+crypto_auth_BYTES,srcAddress->devID);
-  //   return;
-  // }
-
-  Serial.printf("Received %d verified bytes from node %hhu. ",len,srcAddress->devID);        
+  LOG2("Received %d verified bytes from node %hhu. ",len,srcAddress->devID);        
 
   auto it=SpanPoints.begin();
   for(;it!=SpanPoints.end() && memcmp((*it)->peerInfo.peer_addr,mac,6)!=0; it++);
   
   if(it==SpanPoints.end()){
-    Serial.printf("ERROR! No matching SpanPoint for this node.\n");
+    LOG2("ERROR! No matching SpanPoint for this node.\n");
     return;
   }
 
   if((*it)->receiveSize==0){
-    Serial.printf("ERROR! Node not configured for receiving.\n");
+    LOG2("ERROR! Node not configured for receiving.\n");
     return;
   }
 
   if(len!=(*it)->receiveSize){
-    Serial.printf("ERROR! Number of bytes received does not match %d-byte size of queue.\n",(*it)->receiveSize);
+    LOG2("ERROR! Number of bytes received does not match %d-byte size of queue.\n",(*it)->receiveSize);
     return;
   }
 
   if( ((*it)->overwriteQueue && xQueueOverwrite((*it)->receiveQueue, incomingData)) || xQueueSend((*it)->receiveQueue, incomingData, 0) ){       // overwrite or send to queue immediately
-    Serial.printf("Queue updated.\n");
+    LOG2("Queue updated.\n");
     (*it)->receiveTime=millis();                   // set time of receive
   } else {
-    Serial.printf("ERROR! Queue full.\n");
+    LOG2("ERROR! Queue full.\n");
   }
 }
 
@@ -252,6 +243,7 @@ uint8_t SpanPoint::nextChannel(uint8_t channel){
 ///////////////////////////////
 
 std::vector<SpanPoint *> SpanPoint::SpanPoints;
+QueueHandle_t SpanPoint::statusQueue;
 SpanPoint::SpAddress *SpanPoint::deviceAddress=NULL;
 SpanPoint::SpConfig_t SpanPoint::spConf{};
 boolean SpanPoint::configured=false;

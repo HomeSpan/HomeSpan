@@ -70,7 +70,9 @@ void loop() {
     aTime=millis();
   }
 
+
   if(mainDevice->get(msgData))
     Serial.printf("Message Received = '%s'\n",msgData);
+
 
 }

@@ -3143,7 +3143,7 @@ void SpanPoint::configure(uint8_t deviceID, SpConfig_t cfg){
   statusQueue = xQueueCreate(1,sizeof(esp_now_send_status_t));                                  // create statusQueue even if not needed
 
   esp_now_register_send_cb([](const esp_now_send_info_t *mac, esp_now_send_status_t status){    // create callback for sending data
-    xQueueOverwrite( statusQueue, &status );
+    xQueueOverwrite(statusQueue, &status );
   });
 
   spConf.channelMask=cfg.channelMask;                             // save a subset of the config data that will needed in other functions

@@ -5,6 +5,10 @@
 #include <bearssl/bearssl.h>
 #include <vector>
 
+
+#define LOG2(format,...) Serial.print ##__VA_OPT__(f)(format __VA_OPT__(,) __VA_ARGS__);
+#define pdMS_TO_TICKS(N) (N)
+
 ///////////////////////////////
 
 class MasterKey {
@@ -108,7 +112,12 @@ class SimpleQueue {
     return(false);
   }
 
-  boolean receive(void *data){
+  boolean receive(void *data, uint32_t waitTime){
+
+    uint32_t t=millis();
+
+    while(nEntries==0 && millis()-t<waitTime)
+      delay(1);
 
     if(nEntries==0)
       return(false);
@@ -125,7 +134,7 @@ using QueueHandle_t = SimpleQueue*;
 #define xQueueCreate(depth, nBytes) new SimpleQueue(depth, nBytes)
 #define xQueueSend(queue, data, unused_waitTime) queue->send(data,false)
 #define xQueueOverwrite(queue, data) queue->send(data,true)
-#define xQueueReceive(queue, data, unused_waitTime) queue->receive(data)
+#define xQueueReceive(queue, data, waitTime) queue->receive(data,waitTime)
 
 ///////////////////////////////
 
@@ -137,15 +146,17 @@ public:   // To Be DELETED
   static const int crypto_auth_BYTES      = 32;
   static const int ESP_NOW_MAX_DATA_LEN   = 250;
 
-  enum esp_now_send_status_t {
+  enum {
     ESP_NOW_SEND_SUCCESS,
-    ESP_NOW_SEND_FAIL,
-    ESP_NOW_SEND_IDLE
+    ESP_NOW_SEND_FAIL
   };
 
   struct esp_now_peer_info_t {
     uint8_t peer_addr[6];
   };
+
+  using esp_now_send_info_t = uint8_t;
+  using esp_now_send_status_t = uint8_t;
 
   union SpAddress {
     struct {
@@ -187,6 +198,7 @@ public:   // To Be DELETED
     
   static std::vector<SpanPoint *> SpanPoints;
 
+  static QueueHandle_t statusQueue;           // queue for communication between SpanPoint::dataSend and SpanPoint::send
   static SpAddress *deviceAddress;            // SpanPoint Address of this device (will be used for AP Mac)
   static SpConfig_t spConf;                   // stores all configuration settings
   static boolean configured;                  // flag indicating SpanPoint has been configured
