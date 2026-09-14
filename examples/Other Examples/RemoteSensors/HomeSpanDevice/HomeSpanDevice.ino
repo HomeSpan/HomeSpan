@@ -55,7 +55,7 @@
 struct RemoteTempSensor : Service::TemperatureSensor {
 
   SpanCharacteristic *temp;
-  SpanCharacteristic *fault;
+  SpanCharacteristic *active;
   SpanCast *remoteTemp;
   char *deviceName;
   uint32_t timer=0;
@@ -67,7 +67,7 @@ struct RemoteTempSensor : Service::TemperatureSensor {
     temp=new Characteristic::CurrentTemperature(-10.0);      // create Temperature Characteristic and set initial temperature to -10 Celsius
     temp->setRange(-50,100);                                 // remember to expand the allowed temperature range to include negative values
 
-    fault=new Characteristic::StatusFault(1);                // create Fault Characteristic and set initial state to true
+    active=new Characteristic::StatusActive(0);              // create Active Characteristic and set initial state to false
 
     // Configure a SpanCast connection to send an arbitrary message of up to 48 bytes to the remote device,
     // as well as receive a 4-byte message containing the remote device temperature (as a float).  Receipt
@@ -85,25 +85,26 @@ struct RemoteTempSensor : Service::TemperatureSensor {
        
     if(remoteTemp->get(&temperature)){      // try to read temperature data from the remote sensor
       temp->setVal(temperature);            // if a message is available, update the temperature characteristic
-      fault->setVal(0);                     // clear fault
+      active->setVal(1);                    // and set Active to true
        
-      LOG1("Sensor %s update: Temperature=%0.2f\n",deviceName,temperature*9/5+32);
+      LOG1("Sensor %s update: Temperature=%0.1f °F\n",deviceName,temperature*9/5+32);
       
-    } else if(remoteTemp->time()>60000 && !fault->getVal()){    // else if it has been a while since last update (60 seconds), and there is no current fault
-      fault->setVal(1);                                         // set fault state
-      LOG1("Sensor %s update: FAULT\n",deviceName);
+    } else if(remoteTemp->time()>60000 && active->getVal()){     // else if it has been a while since last update (60 seconds), and the sensor is Active
+      active->setVal(0);                                         // set Active to false
+      LOG1("Sensor %s update: NOT ACTIVE\n",deviceName);
     }
 
-    if(millis()-timer>10000){               // every 10 seconds, send an arbitrary message (max 48 bytes) back to remote sensor (for illustrative purposes only)
+    if(millis()-timer>12000 && active->getVal()){                // every 12 seconds, send an arbitrary message (max 48 bytes) back to remote sensor (for illustrative purposes only)
       timer=millis();
       char msg[48];
-      sprintf(msg,"Confirming your temp is %0.1f F!",temp->getVal<float>()*9/5+32);
-      LOG1("Sending to %s: %s\n",deviceName,msg);
-      remoteTemp->send(msg);
-    }
-    
+      sprintf(msg,"Confirming your temp is %0.1f °F!",temp->getVal<float>()*9/5+32);
+      LOG1("Sending to %s: '%s'\n",deviceName,msg);
+      if(remoteTemp->send(msg))
+        LOG1("Send Succeeded\n");
+      else
+        LOG1("Send Failed\n");
+    }  
   } // loop
-  
 };
 
 //////////////////////////////////////
