@@ -125,7 +125,7 @@ void Network_HS::apConfigure(){
   DNSServer dnsServer;
   IPAddress apIP(192, 168, 4, 1);
 
-  WiFi.mode(WIFI_AP);
+  WiFi.mode(WIFI_AP_STA);
   WiFi.softAP(apSSID,apPassword);             // start access point
   dnsServer.start(DNS_PORT, "*", apIP);       // start DNS server that resolves every request to the address of this device
   apServer.begin();
