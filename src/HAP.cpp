@@ -428,7 +428,7 @@ int HAPClient::postPairSetupURL(uint8_t *content, size_t len){
 
       auto itEncryptedData=iosTLV.find(kTLVType_EncryptedData);
 
-      if(iosTLV.len(itEncryptedData)<=0){            
+      if(iosTLV.len(itEncryptedData)<=crypto_aead_chacha20poly1305_IETF_ABYTES){            
         LOG0("\n*** ERROR: Required 'EncryptedData' TLV record for this step is bad or missing\n\n");
         responseTLV.add(kTLVType_Error,tagError_Unknown);               // set Error=Unknown (there is no specific error type for missing/bad TLV data)
         tlvRespond(responseTLV);                                        // send response to client
@@ -648,7 +648,7 @@ int HAPClient::postPairVerifyURL(uint8_t *content, size_t len){
 
       auto itEncryptedData=iosTLV.find(kTLVType_EncryptedData);
 
-      if(iosTLV.len(itEncryptedData)<=0){            
+      if(iosTLV.len(itEncryptedData)<=crypto_aead_chacha20poly1305_IETF_ABYTES){            
         LOG0("\n*** ERROR: Required 'EncryptedData' TLV record for this step is bad or missing\n\n");
         responseTLV.add(kTLVType_State,pairState_M4);               // set State=<M4>
         responseTLV.add(kTLVType_Error,tagError_Unknown);           // set Error=Unknown (there is no specific error type for missing/bad TLV data)
