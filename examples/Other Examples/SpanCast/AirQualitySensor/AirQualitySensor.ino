@@ -1,7 +1,7 @@
 /*********************************************************************************
  *  MIT License
  *  
- *  Copyright (c) 2026 Gregg E. Berman
+ *  Copyright (c) 2020-2026 Gregg E. Berman
  *  
  *  https://github.com/HomeSpan/HomeSpan
  *  
@@ -25,55 +25,40 @@
  *  
  ********************************************************************************/
 
-#include "SpanCast.h"  
-  
-///////////////////////////////
+#include "SpanCast.h"
 
-SpanCast *mainDevice;     // pointer to SpanCast connection to Main (HomeSpan) Device
-float temp=-10.0;         // variable to store our "simulated" temperature (in degrees C)
+///////////
 
-#define THIS_DEVICE_NAME    "Outdoor Temperature Sensor"
+void setup(){
 
-#define THIS_DEVICE_ID      2     // SpanCast Device ID configured for THIS Device
-#define MAIN_DEVICE_ID      18    // SpanCast Device ID of the MAIN Device to which this device sends (and optionally receives) messages
+  struct SensorData {
+    uint8_t quality;
+    float o3;
+    float no2;
+    float so2;
+    float pm25;
+    float pm10;
+    float voc;
+  } sensorData;
 
-//////////////////////
+  SpanCast::configure(2, {.channelMask=SpanCast::range(1,11)} );
+  SpanCast station(1,sizeof(sensorData),0);
 
-void setup() {
+  sensorData.quality=random(1,6);
+  sensorData.o3=random(0,100);
+  sensorData.no2=random(100,300);
+  sensorData.so2=random(0,500);
+  sensorData.pm25=random(200,800);
+  sensorData.pm10=random(50,250);
+  sensorData.voc=random(300,600);
 
-  Serial.begin(115200);
-  delay(1000); 
+  station.send(&sensorData);
 
-  Serial.printf("\n\n%s Ready.\n\n",THIS_DEVICE_NAME);
+  esp_deep_sleep(10*1000*1000);     // enter deep sleep mode for 5 seconds -- reboot after resuming
 
-  SpanCast::configure(THIS_DEVICE_ID,{.channelMask=SpanCast::range(1,11)});
-    
-  mainDevice=new SpanCast(MAIN_DEVICE_ID,sizeof(float),48);
 }
 
-//////////////////////
+///////////
 
-uint32_t aTime=0;
-uint8_t msgData[48];
+void loop(){}
 
-void loop() {
-
-  if(millis()-aTime>5000){
-
-    Serial.printf("Sending Temperature: %0.1f °F\n",temp*9/5+32);
-
-    if(mainDevice->send(&temp))
-      Serial.printf("Send Succeeded\n");
-    else
-      Serial.printf("Send Failed\n");
-
-    temp+=0.5;       // increment the "temperature" by 0.5 C
-    if(temp>35.0)
-      temp=-10.0;
-
-    aTime=millis();
-  }
-
-  if(mainDevice->get(msgData))
-    Serial.printf("Message Received = '%s'\n",msgData);
-}
