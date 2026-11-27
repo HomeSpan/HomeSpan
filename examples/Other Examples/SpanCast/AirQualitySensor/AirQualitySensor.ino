@@ -54,7 +54,7 @@ void setup(){
 
   station.send(&sensorData);
 
-  esp_deep_sleep(10*1000*1000);     // enter deep sleep mode for 5 seconds -- reboot after resuming
+  esp_deep_sleep(30*1000*1000);     // enter deep sleep mode for 5 seconds -- reboot after resuming
 
 }
 
