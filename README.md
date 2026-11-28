@@ -115,7 +115,6 @@ HomeSpan includes the following documentation:
 * [HomeSpan RFControl](docs/RMT.md) - easy generation of RF and IR Remote Control signals using the ESP32's on-chip RMT peripheral
 * [HomeSpan Pixels](docs/Pixels.md) - integrated control of addressable one- and two-wire RGB and RGBW LEDs and LED strips
 * [HomeSpan Stepper Motor Control](docs/Stepper.md) - integrated control of stepper motors, including PWM microstepping
-* [HomeSpan SpanCast](https://github.com/HomeSpan/SpanCast) - a standalone companion library that facilitates point-to-point, bi-directional communication between ESP32 Devices using ESP-NOW
 * [HomeSpan Television Services](docs/TVServices.md) - how to use HomeKit's undocumented Television Services and Characteristics
 * [HomeSpan Message Logging](docs/Logging.md) - how to generate log messages for display on the Arduino Serial Monitor as well as optionally posted to an integrated Web Log page
 * [HomeSpan TLV8 Characteristics](docs/TLV8.md) - classes and methods for creating TLV8 objects to use with TLV8-based Characteristics
@@ -126,6 +125,12 @@ HomeSpan includes the following documentation:
 * [HomeSpan Reference Sketches](https://github.com/HomeSpan/HomeSpanReferenceSketches) - a collection of self-contained Reference Sketches showcasing some of the more complex HomeKit Services, such as Thermostats and Irrigation Systems
 
 Note that all documentation is version-controlled and tied to each branch.  The *master* branch generally points to the latest release.  The *dev* branch, when available, will contain code under active development.
+
+### Companion Libraries
+
+Standalone libraries designed to work with HomeSpan.  Links to separate repositories with full documentation and complete examples:
+
+* [HomeSpan SpanCast](https://github.com/HomeSpan/SpanCast) - provides point-to-point, bi-directional communication between ESP32 Devices using ESP-NOW.  See also the [RemoteSensors](docs/Tutorials.md#remotesensors) example on the Tutorials page
 
 ### Translated Documentation
 
