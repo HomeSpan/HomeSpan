@@ -77,14 +77,14 @@ HomeSpan provides a microcontroller-focused implementation of Apple's HomeKit Ac
 
 * **Introducing SpanCast!**
   * a new standalone companion library for HomeSpan that provides seamless point-to-point communication between devices using ESP-NOW
-  * offers significant advantages over HomeSpan's current SpanPoint class:
+  * offers significant advantages over HomeSpan's current **SpanPoint** class, including:
     * full support for ESP32 *and* ESP8266 devices
     * more robust WiFi synchronization
     * more options for queue management and per-device encryption settings
-    * and most importantly --- users **do not** need know the MAC addresses of any device or hardcode MAC addresses into any sketch
-  * see the [SpanCast](https://github.com/HomeSpan/SpanCast) repository for details and complete documentation
-  * also see HomeSpan's Air Quality Sensor demonstrating how to integrate SpanCast into your HomeSpan sketches
-
+    * **and most importantly --- users *do not* need know the MAC addresses of any device or hardcode MAC addresses into any sketch!**
+  * see HomeSpan's [SpanCast Repository](https://github.com/HomeSpan/SpanCast) for details and complete documentation
+  * also see the new [SpanCast Remote Sensor Example](docs/Tutorials.md) demonstrating how **SpanCast** can be used to create a remote simulated Air Quality Sensor linked to HomeKit
+  * ❗note **SpanPoint** is now marked as **deprecated** in HomeSpan and will be removed from the library in a future release.  Please use **SpanCast** instead
       
 * **Added ability to use inline lambda-functions *with variable capture* in the first form of `SpanUserCommand()` (the one that does not include a user-defined argument)**
   * other HomeSpan callbacks, including the second form of `SpanUserCommand()` (the one that includes a user-defined argument), have always allowed for lambda functions, but *without* any variable capture
