@@ -83,7 +83,7 @@ HomeSpan provides a microcontroller-focused implementation of Apple's HomeKit Ac
     * more options for queue management and per-device encryption settings
     * **and most importantly --- users *do not* need know the MAC addresses of any device or hardcode MAC addresses into any sketch!**
   * see HomeSpan's [SpanCast Repository](https://github.com/HomeSpan/SpanCast) for details and complete documentation
-  * also see the new [SpanCast Remote Sensor Example](docs/Tutorials.md) demonstrating how **SpanCast** can be used to create a remote simulated Air Quality Sensor linked to HomeKit
+  * also see the new [RemoteSensors](docs/Tutorials.md#remotesensors) example demonstrating how **SpanCast** can be used to create a remote simulated Air Quality Sensor linked to HomeKit
   * ❗note **SpanPoint** is now marked as **deprecated** in HomeSpan and will be removed from the library in a future release.  Please use **SpanCast** instead
       
 * **Added ability to use inline lambda-functions *with variable capture* in the first form of `SpanUserCommand()` (the one that does not include a user-defined argument)**
