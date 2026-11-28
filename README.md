@@ -16,7 +16,7 @@ HomeSpan provides a microcontroller-focused implementation of Apple's HomeKit Ac
 | Recommended Partition Scheme | **Minimal SPIFFS (1.9MB APP with OTA)** | [^partition] |
 | HomeKit Hub | **HomePod or Apple TV** | [^homehub] |
 
-[^8266]:HomeSpan cannot be run on an ESP-8266, though an ESP-8266 can be used as a remote sensor in conjunction with HomeSpan's SpanPoint functionality
+[^8266]:HomeSpan cannot be run on an ESP-8266, though HomeSpan's [SpanCast](https://github.com/HomeSpan/SpanCast) companion library does provide full support for ESP-8266 devices to be used as remote sensors for HomeSpan
 
 [^fail]: The current production release of HomeSpan will fail to compile under any Arduino-ESP32 Core release earlier than the minimum version listed.  However, prior versions of HomeSpan can be compiled and run under earlier versions of the Core.  The README file under the [HomeSpan branch](https://github.com/HomeSpan/HomeSpan/branches/all) for each release provides details on which version of the Core can be used for that release
 
@@ -54,7 +54,7 @@ HomeSpan provides a microcontroller-focused implementation of Apple's HomeKit Ac
 * Integrated access to the ESP32's on-chip Remote Control peripheral for easy generation of IR and RF signals
 * Dedicated classes to control one- and two-wire addressable RGB LEDs and LED strips
 * Dedicated classes to control stepper motors that can run smoothly in the background without interfering with HomeSpan
-* Dedicated class that faciliates seamless point-to-point communication between ESP32 devices using ESP-NOW
+* Dedicated companion library that facilitates seamless point-to-point communication between ESP32 devices using ESP-NOW
 * Integrated Web Log for user-defined log messages
 * Extensively-commented Tutorial Sketches taking you from the very basics of HomeSpan through advanced HomeKit topics
 * Additional examples and projects showcasing real-world implementations of HomeSpan
@@ -75,6 +75,17 @@ HomeSpan provides a microcontroller-focused implementation of Apple's HomeKit Ac
 
 ### New Features
 
+* **Introducing SpanCast!**
+  * a new standalone companion library for HomeSpan that provides seamless point-to-point communication between devices using ESP-NOW
+  * offers significant advantages over HomeSpan's current SpanPoint class:
+    * full support for ESP32 *and* ESP8266 devices
+    * more robust WiFi synchronization
+    * more options for queue management and per-device encryption settings
+    * and most importantly --- users **do not** need know the MAC addresses of any device or hardcode MAC addresses into any sketch
+  * see the [SpanCast](https://github.com/HomeSpan/SpanCast) repository for details and complete documentation
+  * also see HomeSpan's Air Quality Sensor demonstrating how to integrate SpanCast into your HomeSpan sketches
+
+      
 * **Added ability to use inline lambda-functions *with variable capture* in the first form of `SpanUserCommand()` (the one that does not include a user-defined argument)**
   * other HomeSpan callbacks, including the second form of `SpanUserCommand()` (the one that includes a user-defined argument), have always allowed for lambda functions, but *without* any variable capture
   * allows capture of objects using the `this` pointer, and subsequent reference to object members
@@ -104,7 +115,7 @@ HomeSpan includes the following documentation:
 * [HomeSpan RFControl](docs/RMT.md) - easy generation of RF and IR Remote Control signals using the ESP32's on-chip RMT peripheral
 * [HomeSpan Pixels](docs/Pixels.md) - integrated control of addressable one- and two-wire RGB and RGBW LEDs and LED strips
 * [HomeSpan Stepper Motor Control](docs/Stepper.md) - integrated control of stepper motors, including PWM microstepping
-* [HomeSpan SpanPoint](docs/NOW.md) - facilitates point-to-point, bi-directional communication between ESP32 Devices using ESP-NOW
+* [HomeSpan SpanCast](https://github.com/HomeSpan/SpanCast) - a standalone companion library that facilitates point-to-point, bi-directional communication between ESP32 Devices using ESP-NOW
 * [HomeSpan Television Services](docs/TVServices.md) - how to use HomeKit's undocumented Television Services and Characteristics
 * [HomeSpan Message Logging](docs/Logging.md) - how to generate log messages for display on the Arduino Serial Monitor as well as optionally posted to an integrated Web Log page
 * [HomeSpan TLV8 Characteristics](docs/TLV8.md) - classes and methods for creating TLV8 objects to use with TLV8-based Characteristics
